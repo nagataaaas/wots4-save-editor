@@ -1,0 +1,104 @@
+import { useRef } from 'react'
+import { Download, FileUp } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from '@/components/ui/sidebar'
+import { sectionGroups, type SectionId } from '@/features/sections'
+import { useSave } from '@/lib/save-context'
+
+type Props = {
+  active: SectionId
+  onSelect: (id: SectionId) => void
+}
+
+export function AppSidebar({ active, onSelect }: Props) {
+  return (
+    <Sidebar>
+      <SidebarHeader>
+        <div className="px-2 pt-1 text-base font-bold">侍道4 セーブエディタ</div>
+        <FilePanel />
+      </SidebarHeader>
+      <SidebarSeparator />
+      <SidebarContent>
+        {sectionGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.sections.map((s) => (
+                  <SidebarMenuItem key={s.id}>
+                    <SidebarMenuButton isActive={s.id === active} onClick={() => onSelect(s.id)}>
+                      <s.icon />
+                      <span>{s.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
+    </Sidebar>
+  )
+}
+
+/** セーブファイルの読み込み・書き出し */
+function FilePanel() {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const { save, error, load, downloadBackup, downloadEdited } = useSave()
+
+  return (
+    <div className="flex flex-col gap-2 p-2">
+      <input
+        ref={inputRef}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) void load(file)
+          e.target.value = ''
+        }}
+      />
+      <Button size="sm" onClick={() => inputRef.current?.click()}>
+        <FileUp />
+        ファイルを開く
+      </Button>
+      {save ? (
+        <div className="text-muted-foreground flex items-baseline justify-between gap-2 text-xs">
+          <span className="truncate font-mono" title={save.name}>
+            {save.name}
+          </span>
+          <span className="shrink-0">{save.original.byteLength.toLocaleString()} B</span>
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-xs">S4-DATA_00〜04 を選択。ファイルはブラウザ内でのみ処理されます。</p>
+      )}
+      <div className="grid grid-cols-2 gap-2">
+        <Button size="sm" variant="outline" disabled={!save} onClick={downloadBackup}>
+          <Download />
+          バックアップ
+        </Button>
+        <Button size="sm" variant="outline" disabled={!save} onClick={downloadEdited}>
+          <Download />
+          保存
+        </Button>
+      </div>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription className="text-xs">{error}</AlertDescription>
+        </Alert>
+      )}
+    </div>
+  )
+}
