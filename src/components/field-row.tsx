@@ -1,0 +1,87 @@
+import { useId, useState, type ReactNode } from 'react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { formatOffset } from '@/lib/format'
+
+export type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string }
+
+type Props<T> = {
+  label: string
+  offset: number
+  badges?: ReactNode
+  /** null はセーブ未読み込み。入力欄を無効にして空欄で表示する */
+  value: T | null
+  /** 妥当性検証に落ちた理由。あれば読み取り専用 */
+  problem: string | null
+  /** 編集はできるが注意が必要な理由（正規範囲外の値など） */
+  warning?: string | null
+  format: (value: T) => string
+  parse: (input: string) => ParseResult<T>
+  /** 入力が妥当で、現在値と異なるときだけ呼ばれる */
+  apply: (value: T) => void
+  inputMode?: 'numeric' | 'decimal' | 'text'
+  hint?: ReactNode
+}
+
+/**
+ * 1フィールド分の入力欄。入力途中の文字列は手元に持ち、妥当な値になったときだけセーブに反映する。
+ * 読み込み直したときに入力途中の値を捨てるため、呼び出し側で key に loadId を含めること。
+ */
+export function FieldRow<T>({ label, offset, badges, value, problem, warning, format, parse, apply, inputMode, hint }: Props<T>) {
+  const id = useId()
+  const [draft, setDraft] = useState(() => (value === null ? '' : format(value)))
+  const [error, setError] = useState<string | null>(null)
+
+  function handleChange(input: string) {
+    if (value === null) return
+    setDraft(input)
+    const result = parse(input)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    setError(null)
+    if (format(result.value) === format(value)) return
+    try {
+      apply(result.value)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <Label htmlFor={id}>{label}</Label>
+        <span className="text-muted-foreground font-mono text-xs">{formatOffset(offset)}</span>
+        {badges}
+      </div>
+      <Input
+        id={id}
+        value={value === null ? '' : problem ? format(value) : draft}
+        disabled={value === null}
+        placeholder={value === null ? '未読み込み' : undefined}
+        readOnly={problem !== null}
+        inputMode={inputMode}
+        aria-invalid={error !== null}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={() => {
+          // 不正な入力のまま離れたら、セーブ上の値に戻す
+          if (error && value !== null) {
+            setDraft(format(value))
+            setError(null)
+          }
+        }}
+      />
+      {problem ? (
+        <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>
+      ) : error ? (
+        <p className="text-destructive text-xs">{error}</p>
+      ) : warning ? (
+        <p className="text-xs text-amber-600 dark:text-amber-400">⚠ {warning}</p>
+      ) : (
+        hint && <p className="text-muted-foreground text-xs">{hint}</p>
+      )}
+    </div>
+  )
+}
