@@ -22,6 +22,17 @@ export function writeU8(bytes: Uint8Array, offset: number, value: number): void 
   bytes[offset] = value
 }
 
+export function readU16(bytes: Uint8Array, offset: number): number {
+  assertRange(bytes, offset, 2)
+  return view(bytes).getUint16(offset, true)
+}
+
+export function writeU16(bytes: Uint8Array, offset: number, value: number): void {
+  assertRange(bytes, offset, 2)
+  if (!Number.isInteger(value) || value < 0 || value > 0xffff) throw new RangeError(`u16 の範囲外です: ${value}`)
+  view(bytes).setUint16(offset, value, true)
+}
+
 export function readU32(bytes: Uint8Array, offset: number): number {
   assertRange(bytes, offset, 4)
   return view(bytes).getUint32(offset, true)

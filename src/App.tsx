@@ -1,17 +1,12 @@
-import { useState, type ComponentType } from 'react'
+import { useState } from 'react'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SectionPlaceholder } from '@/components/section-placeholder'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { HeroPage } from '@/features/hero/hero-page'
+import { pages } from '@/features/pages'
 import { sections, type SectionId } from '@/features/sections'
 import { SaveProvider } from '@/lib/save-provider'
-
-/** 実装済みの画面。ここにない項目は仮表示になる */
-const pages: Partial<Record<SectionId, ComponentType>> = {
-  hero: HeroPage,
-}
 
 export default function App() {
   const [active, setActive] = useState<SectionId>('hero')
