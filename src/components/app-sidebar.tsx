@@ -56,7 +56,7 @@ export function AppSidebar({ active, onSelect }: Props) {
 /** セーブファイルの読み込み・書き出し */
 function FilePanel() {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { save, error, load, downloadBackup, downloadEdited } = useSave()
+  const { save, error, changedBytes, unsavedBytes, load, downloadBackup, downloadEdited } = useSave()
 
   return (
     <div className="flex flex-col gap-2 p-2">
@@ -94,6 +94,14 @@ function FilePanel() {
           保存
         </Button>
       </div>
+      {save && (
+        <div className="text-muted-foreground flex flex-col text-xs">
+          <span className={unsavedBytes > 0 ? 'font-medium text-amber-600 dark:text-amber-400' : undefined}>
+            {unsavedBytes > 0 ? `未保存の変更：${unsavedBytes.toLocaleString()} B` : '保存済み'}
+          </span>
+          <span>読み込み時からの変更：{changedBytes.toLocaleString()} B</span>
+        </div>
+      )}
       {error && (
         <Alert variant="destructive">
           <AlertDescription className="text-xs">{error}</AlertDescription>
