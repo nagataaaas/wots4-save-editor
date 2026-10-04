@@ -133,13 +133,6 @@ export function HeroPage() {
         </Alert>
       )}
 
-      <Alert>
-        <AlertTitle>要ゲーム内確認</AlertTitle>
-        <AlertDescription>
-          この画面の書き込みは、実セーブでの往復テストをまだ行っていません。編集したファイルは、バックアップを取ったうえでゲーム内で確認してください。
-        </AlertDescription>
-      </Alert>
-
       <Card>
         <CardHeader>
           <CardTitle>名前</CardTitle>
