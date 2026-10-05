@@ -13,7 +13,8 @@
 // 02 などほかの値（大成功など）は ❓。A の長さは B との間隔 0x190 から 166 B と置いた（❓ 200 B の可能性もある）。
 //
 // B の値：
-//   FF チャートに出ない。✅ [U] 記録が FF の阿片密売で A を 05 にしても、チャートには出ないまま失敗扱いになった
+//   FF チャートに出ない。✅ [U] 記録が FF の阿片密売で A を 05 にしても、チャートには出ないまま失敗扱いになった。
+//      ただし A が 04（成功）なら FF でもチャートに出る（✅ [U] 2026-10-06）。A が 01・03 のときは ❓
 //   04 チャートに出る。✅ [U] チャート表示に効くのは FF と 04 だけ（ユーザー確認 2026-10-05）。
 //      03 copy の阿片密売（添字10）で A を FF のまま B を FF → 04 にすると、チャートに「未達成」で出た
 //   00 ❓ 名無し侍の添字 13・21・24・48 で見た値。チャート表示の値ではない（[U] 2026-10-05）ので、読むだけで選択肢には出さない
@@ -41,9 +42,9 @@ export const EVENT_STATES = [
   { value: 0x05, label: '失敗', confirmed: true },
 ] as const
 
-/** 周回をまたぐ記録（B）のうち、チャート表示に効く値。✅ [U] 2026-10-05 */
+/** 周回をまたぐ記録（B）のうち、チャート表示に効く値。✅ [U] 2026-10-05。FF でも状態が成功（04）なら出る（✅ [U] 2026-10-06） */
 export const EVENT_RECORDS = [
-  { value: 0xff, label: '出ない' },
+  { value: 0xff, label: '出ない（成功なら出る）' },
   { value: 0x04, label: '出る' },
 ] as const
 
@@ -62,7 +63,9 @@ export type EventName = {
 
 /**
  * 名前の分かっている添字。§3.5「未確定のこと」。day は docs/event.md（Wiki）の時間帯。
- * 2〜46 の名前はユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）。47 以降はチャートにまだ出ていない（剣術大会開催より後のイベントか ❓）
+ * 2〜46 の名前はユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）。52〜98 も同じ（[U] 2026-10-06）。
+ * 4日目以降のイベントの day は時間帯ではなく、docs/event.md の節（ルート・エンディング）を入れる。
+ * 47〜51・67・84 は ❓。未対応のイベントとして「大老は生きていた」「夜の墓場で」が分かっているが、どの添字かは根拠がない
  */
 export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   0: { name: '船上の侍', day: '1日目昼', basis: 'guess' }, // どのセーブでも 04。名前は [U] 2026-10-05（Samurai on Board、オープニング）
@@ -112,6 +115,51 @@ export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   44: { name: '志士の刀', day: '4日目以降', basis: 'chart' },
   45: { name: '根無し草', day: '4日目以降', basis: 'chart' },
   46: { name: '剣術大会開催', day: '4日目以降', basis: 'chart' },
+  52: { name: '最後通告', day: '4日目以降', basis: 'chart' },
+  53: { name: '闇黒の意志', day: '幕府ルート', basis: 'chart' },
+  54: { name: '大老武断', day: '幕府ルート', basis: 'chart' },
+  55: { name: '憂国の士', day: '幕府ルート', basis: 'chart' },
+  56: { name: '願い虚しく', day: '外国ルート', basis: 'chart' },
+  57: { name: '臆病風', day: '攘夷ルート', basis: 'chart' },
+  58: { name: '同士救出', day: '攘夷ルート', basis: 'chart' },
+  59: { name: '般若党壊滅', day: '幕府ルート', basis: 'chart' },
+  60: { name: '黒船を我が手に', day: '幕府ルート', basis: 'chart' },
+  61: { name: '鬼怒川の魔手', day: '外国ルート', basis: 'chart' },
+  62: { name: '領事館斬り込み', day: '攘夷ルート', basis: 'chart' },
+  63: { name: '武士の魂', day: '攘夷ルート', basis: 'chart' },
+  64: { name: '三匹で斬る', day: '幕府ルート', basis: 'chart' },
+  65: { name: '剣客　茂呂茂', day: '幕府ルート', basis: 'chart' },
+  66: { name: '武人　琴吹光', day: '幕府ルート', basis: 'chart' },
+  68: { name: '夕暮れの船上', day: '外国ルート', basis: 'chart' },
+  69: { name: '討ち入り', day: '外国ルート', basis: 'chart' },
+  70: { name: '三姉妹見参', day: '隠しルート', basis: 'chart' },
+  71: { name: 'お早い到着', day: '隠しルート', basis: 'chart' },
+  72: { name: '再起の望み', day: '隠しルート', basis: 'chart' },
+  73: { name: '将の器', day: '隠しルート', basis: 'chart' },
+  74: { name: '怒りの矛先', day: '隠しルート', basis: 'chart' },
+  75: { name: '伯爵に刺激を', day: '隠しルート', basis: 'chart' },
+  76: { name: '運命のルーレット', day: '隠しルート', basis: 'chart' },
+  77: { name: '闇討ち', day: '隠しルート', basis: 'chart' },
+  78: { name: '学問のすすめ', day: '隠しルート', basis: 'chart' },
+  79: { name: '刺激が欲しい', day: '隠しルート', basis: 'chart' },
+  80: { name: '傷心の帰国船', day: '隠しルート', basis: 'chart' },
+  81: { name: '伯爵救出', day: '隠しルート', basis: 'chart' },
+  82: { name: '人間湯通しの恐怖', day: '隠しルート', basis: 'chart' },
+  83: { name: '大老暗殺計画', day: '隠しルート', basis: 'chart' },
+  85: { name: 'ローラの決意', day: '隠しルート', basis: 'chart' },
+  86: { name: '士魂は屈せず', day: '隠しルート', basis: 'chart' },
+  87: { name: 'ローラ奪還', day: '隠しルート', basis: 'chart' },
+  88: { name: '鬼怒川を追え', day: '隠しルート', basis: 'chart' },
+  89: { name: '黒船の決闘', day: '隠しルート', basis: 'chart' },
+  90: { name: '希望の光', day: 'エンディング', basis: 'chart' },
+  91: { name: '熱き魂', day: 'エンディング', basis: 'chart' },
+  92: { name: '攘夷の炎', day: 'エンディング', basis: 'chart' },
+  93: { name: '破滅への道', day: 'エンディング', basis: 'chart' },
+  94: { name: '変わり往く心', day: 'エンディング', basis: 'chart' },
+  95: { name: '海外雄飛', day: 'エンディング', basis: 'chart' },
+  96: { name: '侍一直線', day: 'エンディング', basis: 'chart' },
+  97: { name: '魔鱗組として', day: '不明', basis: 'chart' }, // docs/event.md に記載なし
+  98: { name: '釜茹で侍', day: '不明', basis: 'chart' }, // docs/event.md に記載なし
 }
 
 export type EventEntry = {

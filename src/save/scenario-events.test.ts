@@ -107,7 +107,15 @@ describe('書き込み 🔶 要ゲーム内確認', () => {
   })
 })
 
-describe('記録の書き込み（✅ [U] FF・04 がチャート表示に効く）', () => {
+describe('記録の書き込み（✅ [U] FF・04 がチャート表示に効く。FF でも状態が 04 なら出る、2026-10-06）', () => {
+  it('記録を FF にしても状態（0x36A8〜）は変えない（成功のイベントはチャートに残る）', () => {
+    const before = makeSave(A_DAY2)
+    const after = before.slice()
+    writeEventRecord(after, 9, 0xff, { advanced: false })
+    expect(diffOffsets(before, after)).toEqual([EVENT_RECORD_OFFSET + 9])
+    expect(readEvents(after).entries[9]).toEqual({ index: 9, state: 0x04, record: 0xff })
+  })
+
   it('1件の書き込みは 0x3838＋添字 の1バイトだけを変える', () => {
     const before = makeSave(A_START)
     const after = before.slice()
@@ -140,8 +148,10 @@ describe('一括設定（デバッグ用）', () => {
     const before = makeSave(A_START)
     const after = before.slice()
     writeEventStates(after, bulkIndices('named'), 0x05, { advanced: false })
-    // 名前の分かる添字は 0〜46（✅ [U] チャートで確認、2026-10-05）。もとが 05 の添字はないので、すべて変わる
-    expect(bulkIndices('named')).toEqual(Array.from({ length: 47 }, (_, i) => i))
+    // 名前の分かる添字は 0〜46（✅ [U] 2026-10-05）と、52〜98 のうち 67・84 を除いたもの（✅ [U] 2026-10-06、ゲーム内のチャートで確認）。
+    // 47〜51・67・84 は ❓。もとが 05 の添字はないので、すべて変わる
+    const unknown = [47, 48, 49, 50, 51, 67, 84]
+    expect(bulkIndices('named')).toEqual(Array.from({ length: EVENT_USED_COUNT }, (_, i) => i).filter((i) => !unknown.includes(i)))
     expect(diffOffsets(before, after)).toEqual(bulkIndices('named').map((i) => EVENT_STATE_OFFSET + i))
   })
 
