@@ -250,14 +250,14 @@ describe('武器レコード（合成）', () => {
     expect(() => writeWeaponNumber(b, o, 'attack', 1)).toThrow()
   })
 
-  it('✅ §5.4 銘：<0x6A+番号> 01 <番号>。なしは FF FF FF。❓ U-2 人斬りは両方のバイト列を読み、書かない', () => {
+  it('✅ §5.4 銘：<0x6A+番号> 01 <番号>。なしは FF FF FF。✅ U-2 人斬りは案A（6A 01 00）', () => {
     expect(encodeTitle(0x01)).toBe(0x01016b)
     expect(encodeTitle(0x13)).toBe(0x13017d)
     expect(encodeTitle(null)).toBe(0xffffff)
-    expect(decodeTitle(0x00016a)).toBe(0) // 6A 01 00（案A）
-    expect(decodeTitle(0x016a00)).toBe(0) // 00 6A 01（案B）
+    expect(encodeTitle(0x00)).toBe(0x00016a) // 6A 01 00（✅ U-2 案A）
+    expect(decodeTitle(0x00016a)).toBe(0)
+    expect(decodeTitle(0x016a00)).toBeUndefined() // 00 6A 01（案B）はゲーム内で「……」と表示された
     expect(decodeTitle(0x12345)).toBeUndefined()
-    expect(() => encodeTitle(0)).toThrow()
     const b = makeSave()
     const o = beltOffset(0)
     writeWeaponTitle(b, o, 0x0a)
@@ -265,7 +265,7 @@ describe('武器レコード（合成）', () => {
     expect(readWeapon(b, o).title).toMatchObject({ value: 0x0a, label: '一輝' })
   })
 
-  it('正規範囲を超える値・17文字を超える名前（U-5）は拒否し、バイト列を変えない', () => {
+  it('正規範囲を超える値・17文字を超える名前（✅ U-5 案A）は拒否し、バイト列を変えない', () => {
     const before = makeSave()
     const b = before.slice()
     const o = beltOffset(0)

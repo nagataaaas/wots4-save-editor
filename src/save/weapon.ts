@@ -30,7 +30,7 @@ export const WEAPON_FIELDS = {
   weaponType: 0x1e,
   qualityMax: 0x1c, // u16 ✅
   charms: 0x24, // 4 B × 3組 ✅
-  name: 0x30, // UTF-16LE 64 B ✅位置 ／ ❓最大文字数（U-5）
+  name: 0x30, // UTF-16LE 64 B ✅位置 ／ ✅最大17文字（U-5）
   /** u32 🔶 手に持っていた時間（秒。メニュー画面は数えない）。+0x8A と常に同じ値（§3.4、[U] 2026-10-05）。表示だけ */
   heldTime: 0x86,
   durability: 0x92, // u16 ✅ 現在の耐久
@@ -45,7 +45,7 @@ const PART_LISTS: Record<PartKind, readonly PartOption[]> = { blade: BLADES, gua
 const PART_NOUNS: Record<PartKind, string> = { blade: '刃', guard: '鍔', grip: '柄' }
 
 export const WEAPON_NAME_BYTES = 64
-/** ❓ U-5 判定待ち。採用までの扱いは 17文字まで（案A、[TS] 作者の注記） */
+/** ✅ 17文字まで（U-5 案A で確定、[U] 2026-10-05。[TS] 作者の注記「ゲーム内では17文字まで」） */
 export const WEAPON_NAME_MAX_CHARS = 17
 
 export type NumberKey = 'attack' | 'durabilityMax' | 'durability' | 'quality' | 'qualityMax' | 'kills' | 'tsumaKills'
@@ -129,12 +129,6 @@ export const TITLES: readonly { no: number; label: string }[] = [
   { no: 0x12, label: '鬼神' },
   { no: 0x13, label: '散華' },
 ]
-
-/** ❓ U-2：人斬り（番号 0）はバイト列が未判定なので書かない。読み取りでは `6A 01 00` と `00 6A 01` の両方を人斬りとする */
-export const HITOKIRI = 0x00
-
-/** 選択肢に出す銘（人斬りを除く） */
-export const SELECTABLE_TITLES = TITLES.filter((t) => t.no !== HITOKIRI)
 
 export type Field<T> = {
   value: T
@@ -228,15 +222,13 @@ export function decodeTitle(raw: number): number | null | undefined {
   const b0 = raw & 0xff
   const b1 = (raw >>> 8) & 0xff
   const b2 = raw >>> 16
-  // U-2：人斬りの案B（[TS] の定義値 0x016A00 → `00 6A 01`）
-  if (raw === 0x016a00) return HITOKIRI
+  // ✅ U-2 案A：人斬りもほかの19種と同じ規則（6A 01 00）。[TS] の定義値 00 6A 01 はゲーム内で「……」と表示されたので未知として扱う
   if (b1 === 0x01 && b2 <= 0x13 && b0 === 0x6a + b2) return b2
   return undefined
 }
 
 export function encodeTitle(no: number | null): number {
   if (no === null) return 0xffffff
-  if (no === HITOKIRI) throw new RangeError('人斬りはバイト列が判定待ち（U-2）のため書き込めません')
   if (!TITLES.some((t) => t.no === no)) throw new RangeError(`未知の銘です（${no}）`)
   return (0x6a + no) | (0x01 << 8) | (no << 16)
 }
@@ -248,7 +240,7 @@ function hasControlChar(text: string): boolean {
 
 export function validateWeaponName(text: string): string | null {
   if (text.length === 0) return '名前が空です'
-  if (text.length > WEAPON_NAME_MAX_CHARS) return `武器名は${WEAPON_NAME_MAX_CHARS}文字までです（${text.length}文字。U-5 判定待ちのため安全側）`
+  if (text.length > WEAPON_NAME_MAX_CHARS) return `武器名は${WEAPON_NAME_MAX_CHARS}文字までです（${text.length}文字）`
   if (hasControlChar(text)) return '制御文字は使えません'
   return null
 }
@@ -365,7 +357,7 @@ export function readWeapon(bytes: Uint8Array, offset: number, layoutProblem: str
     name: f(
       nameRaw.text,
       null,
-      nameLength > WEAPON_NAME_MAX_CHARS ? `${WEAPON_NAME_MAX_CHARS}文字を超えています（${nameLength}文字。U-5 判定待ち）` : null,
+      nameLength > WEAPON_NAME_MAX_CHARS ? `${WEAPON_NAME_MAX_CHARS}文字を超えています（${nameLength}文字）` : null,
     ),
     weaponId: { ...f(weaponId, null, weaponIdLabel(weaponId) ? null : `未知の完成武器ID です（${formatHex4(weaponId)}）`), label: weaponIdLabel(weaponId) },
     special,
@@ -480,7 +472,7 @@ export function writeWeaponCharms(bytes: Uint8Array, offset: number, charms: rea
   }
 }
 
-/** 銘（+0x96 の 3 B）だけを書く。null は銘なし。人斬りは U-2 判定待ちのため拒否する */
+/** 銘（+0x96 の 3 B）だけを書く。null は銘なし */
 export function writeWeaponTitle(bytes: Uint8Array, offset: number, no: number | null): void {
   const raw = encodeTitle(no)
   assertEditable(bytes, offset)

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { createElement, useMemo, useState, type ReactNode } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
@@ -23,7 +23,7 @@ import {
 } from "@/save/belt";
 import {
   CHARMS,
-  SELECTABLE_TITLES,
+  TITLES,
   WEAPON_FIELDS,
   WEAPON_TYPES,
   WEAPON_LIMITS,
@@ -45,11 +45,31 @@ import {
   type PartKind,
   type WeaponView,
 } from "@/save/weapon";
+import { charmEffects, titleEffect } from "@/save/weapon-effects";
+import type { LucideIcon } from "lucide-react";
+import { charmIcon, titleIcon } from "./effect-icons";
 import { SHEATHS, WEAPON_IDS } from "@/save/weapon-ids";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 /** 帯刀の状態：[U] の差分で読みは確認したが、書き込みはゲーム内で未確認 */
 const stateBadge = <CertaintyBadge mark="🔶" text="差分で確認・書き込み未検証" />;
+
+/** 効果の行の先頭に付けるアイコン */
+function EffectIcon({ icon }: { icon: LucideIcon | null }) {
+  return icon
+    ? createElement(icon, { className: "mt-0.5 size-4 shrink-0", "aria-hidden": true })
+    : null;
+}
+
+/** 銘・魅力の下に出す「今の効果」の枠。効果は [W] 鍛冶屋ページ（p20）の記載で、確定として扱う */
+function EffectBox({ children }: { children: ReactNode }) {
+  return (
+    <div className="bg-muted/40 flex flex-col gap-1 rounded-md border p-3 text-sm">
+      <span className="text-muted-foreground text-xs font-medium">今の効果</span>
+      {children}
+    </div>
+  );
+}
 
 const hex = (v: number, digits: number) =>
   `0x${v.toString(16).toUpperCase().padStart(digits, "0")}`;
@@ -81,7 +101,7 @@ const WEAPON_ID_OPTIONS: SelectOption[] = WEAPON_IDS.map((w) => ({
 const NONE = "none";
 const CHARM_OPTIONS: SelectOption[] = [
   { value: NONE, label: "なし" },
-  ...CHARMS.map((c) => ({ value: String(c.id), label: c.label })),
+  ...CHARMS.map((c) => ({ value: String(c.id), label: c.label, icon: charmIcon(c.id) })),
 ];
 const TYPE_OPTIONS: SelectOption[] = WEAPON_TYPES.map((t) => ({
   value: String(t.id),
@@ -94,7 +114,7 @@ const SHEATH_OPTIONS: SelectOption[] = SHEATHS.map((x) => ({
 const ADVANCED_OFF = "上級者モードをオンにすると変更できます";
 const TITLE_OPTIONS: SelectOption[] = [
   { value: NONE, label: "なし" },
-  ...SELECTABLE_TITLES.map((t) => ({ value: String(t.no), label: t.label })),
+  ...TITLES.map((t) => ({ value: String(t.no), label: t.label, icon: titleIcon(t.no) })),
 ];
 
 function parseNumber(key: NumberKey, input: string): ParseResult<number> {
@@ -434,6 +454,8 @@ function WeaponCard({
   };
 
   const charms = weapon?.charms ?? null;
+  const effects = charms ? charmEffects(charms.value) : [];
+  const title = titleEffect(weapon?.title.value ?? null);
   const charmRow = (slot: number) => (
     <SelectRow
       key={slot}
@@ -474,7 +496,6 @@ function WeaponCard({
           <FieldRow
             label="武器名"
             offset={base + WEAPON_FIELDS.name}
-            badges={<CertaintyBadge mark="❓" text="最大文字数 U-5" />}
             value={weapon?.name.value ?? null}
             problem={weapon?.name.problem ?? null}
             warning={weapon?.name.warning ?? null}
@@ -482,7 +503,6 @@ function WeaponCard({
             parse={parseName}
             apply={(v) => update((b, o) => writeWeaponName(b, o, v))}
             hint={`最大${WEAPON_NAME_MAX_CHARS}文字`}
-            note="U-5 判定待ちのため安全側の上限"
           />
           <SelectRow
             label="完成武器"
@@ -540,26 +560,66 @@ function WeaponCard({
             </InfoTip>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">{[0, 1, 2].map(charmRow)}</div>
+          {weapon && !charms?.problem && (
+            <EffectBox>
+              {effects.length === 0 ? (
+                <p className="text-muted-foreground">魅力なし</p>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {effects.map((e) => (
+                    <li key={e.id} className="flex gap-2">
+                      <EffectIcon icon={charmIcon(e.id)} />
+                      <span>
+                        <span className="font-medium">
+                          {e.label} ×{e.count}
+                        </span>
+                        ：{e.summary}
+                        {e.amount && <span className="font-medium">（{e.amount}）</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </EffectBox>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <SelectRow
-            label="銘"
-            offset={base + WEAPON_FIELDS.title}
-            value={
-              weapon ? (weapon.title.value === null ? NONE : String(weapon.title.value)) : null
-            }
-            currentLabel={
-              weapon ? (weapon.title.label ?? `未知（${hex(weapon.title.raw, 6)}）`) : undefined
-            }
-            options={TITLE_OPTIONS}
-            problem={weapon?.title.problem ?? null}
-            warning={weapon?.title.warning ?? null}
-            note="人斬りはバイト列が判定待ち（❓ U-2）のため選べません"
-            onChange={(v) =>
-              update((b, o) => writeWeaponTitle(b, o, v === NONE ? null : Number(v)))
-            }
-          />
+          <div className="flex flex-col gap-2">
+            <SelectRow
+              label="銘"
+              offset={base + WEAPON_FIELDS.title}
+              value={
+                weapon ? (weapon.title.value === null ? NONE : String(weapon.title.value)) : null
+              }
+              currentLabel={
+                weapon ? (weapon.title.label ?? `未知（${hex(weapon.title.raw, 6)}）`) : undefined
+              }
+              options={TITLE_OPTIONS}
+              problem={weapon?.title.problem ?? null}
+              warning={weapon?.title.warning ?? null}
+              onChange={(v) =>
+                update((b, o) => writeWeaponTitle(b, o, v === NONE ? null : Number(v)))
+              }
+            />
+            {weapon && !weapon.title.problem && (
+              <EffectBox>
+                {title ? (
+                  <>
+                    <p className="flex gap-2">
+                      <EffectIcon icon={titleIcon(weapon.title.value ?? -1)} />
+                      {title.effect}
+                    </p>
+                    {title.note && <p className="text-muted-foreground text-xs">{title.note}</p>}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {weapon.title.value === null ? "銘なし" : "効果は不明"}
+                  </p>
+                )}
+              </EffectBox>
+            )}
+          </div>
           {numberRow("kills")}
           {numberRow("tsumaKills")}
           <div className="flex flex-col gap-1.5">

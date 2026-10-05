@@ -1,9 +1,10 @@
+import type { LucideIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { InfoTip } from '@/components/info-tip'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-export type SelectOption = { value: string; label: string; disabled?: boolean }
+export type SelectOption = { value: string; label: string; disabled?: boolean; icon?: LucideIcon | null }
 
 type Props = {
   label: string
@@ -62,6 +63,7 @@ export function SelectRow({ label, offset, badges, value, currentLabel, options,
           )}
           {options.map((o) => (
             <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
+              {o.icon && <o.icon />}
               {o.label}
             </SelectItem>
           ))}
