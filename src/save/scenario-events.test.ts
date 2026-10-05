@@ -7,8 +7,7 @@ import {
   EVENT_COUNT,
   EVENT_RECORD_OFFSET,
   EVENT_STATE_OFFSET,
-  EVENT_USED_COUNT,
-  bulkIndices,
+  namedIndices,
   readEvents,
   writeEventRecord,
   writeEventRecords,
@@ -147,43 +146,36 @@ describe('一括設定（デバッグ用）', () => {
   it('名前の分かる添字だけ、状態の範囲だけを変える', () => {
     const before = makeSave(A_START)
     const after = before.slice()
-    writeEventStates(after, bulkIndices('named'), 0x05, { advanced: false })
-    // 名前の分かる添字は 0〜46（✅ [U] 2026-10-05）と、52〜98 のうち 67・84 を除いたもの（✅ [U] 2026-10-06、ゲーム内のチャートで確認）。
-    // 51＝覇者となる、99＝大老は生きていた、116＝夜の墓場で（✅ [U] 2026-10-06）。47〜50・67・84 は ❓。もとが 05 の添字はないので、すべて変わる
+    writeEventStates(after, namedIndices(), 0x05, { advanced: false })
+    // 名前の分かる添字は 0〜46（✅ [U] 2026-10-05）と、51〜99 のうち 67・84 を除いたもの、116（✅ [U] 2026-10-06、ゲーム内のチャートで確認）。
+    // 47〜50・67・84 は ❓（表示しない）。もとが 05 の添字はないので、すべて変わる
     const unknown = [47, 48, 49, 50, 67, 84]
-    const named = [...Array.from({ length: EVENT_USED_COUNT }, (_, i) => i).filter((i) => !unknown.includes(i)), 99, 116]
-    expect(bulkIndices('named')).toEqual(named)
-    expect(diffOffsets(before, after)).toEqual(bulkIndices('named').map((i) => EVENT_STATE_OFFSET + i))
+    const named = [...Array.from({ length: 100 }, (_, i) => i).filter((i) => !unknown.includes(i)), 116]
+    expect(namedIndices()).toEqual(named)
+    expect(diffOffsets(before, after)).toEqual(named.map((i) => EVENT_STATE_OFFSET + i))
   })
 
-  it('🔶 使われている添字（0〜98 と ✅ [U] 99＝大老は生きていた・116＝夜の墓場で）だけを書き、ほかの 99 以降は変えない', () => {
+  it('記録の一括書き込みは、名前の分かる添字の記録だけを変える', () => {
     const before = makeSave(A_START)
     const after = before.slice()
-    expect(bulkIndices('used')).toEqual([...Array.from({ length: EVENT_USED_COUNT }, (_, i) => i), 99, 116])
-    writeEventRecords(after, bulkIndices('used'), 0x04, { advanced: false })
-    const entries = readEvents(after).entries
-    expect(entries.slice(0, EVENT_USED_COUNT).every((e) => e.record === 0x04)).toBe(true)
-    expect(entries[99].record).toBe(0x04)
-    expect(entries[116].record).toBe(0x04)
-    expect(entries.slice(EVENT_USED_COUNT).filter((e) => e.index !== 99 && e.index !== 116).every((e) => e.record === 0xff)).toBe(true)
-  })
-
-  it('すべての添字の記録を 04 にすると、記録の 166 B だけが 04 になる', () => {
-    const before = makeSave(A_START)
-    const after = before.slice()
-    writeEventRecords(after, bulkIndices('all'), 0x04, { advanced: false })
+    writeEventRecords(after, namedIndices(), 0x04, { advanced: false })
+    const named = new Set(namedIndices())
     for (const off of diffOffsets(before, after)) {
       expect(off).toBeGreaterThanOrEqual(EVENT_RECORD_OFFSET)
-      expect(off).toBeLessThan(EVENT_RECORD_OFFSET + EVENT_COUNT)
+      expect(named.has(off - EVENT_RECORD_OFFSET)).toBe(true)
     }
-    expect(readEvents(after).entries.every((e) => e.record === 0x04)).toBe(true)
+    const entries = readEvents(after).entries
+    expect(entries.filter((e) => named.has(e.index)).every((e) => e.record === 0x04)).toBe(true)
+    // 対応のない添字（❓ 47、120 など）はそのまま
+    expect(entries[47].record).toBe(0xff)
+    expect(entries[120].record).toBe(0xff)
   })
 
   it('値が通常モードで許されなければ、1バイトも書かない', () => {
     const before = makeSave(A_START)
     const after = before.slice()
-    expect(() => writeEventStates(after, bulkIndices('all'), 0x02, { advanced: false })).toThrow(RangeError)
-    expect(() => writeEventRecords(after, bulkIndices('all'), 0x00, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventStates(after, namedIndices(), 0x02, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventRecords(after, namedIndices(), 0x00, { advanced: false })).toThrow(RangeError)
     expect(() => writeEventStates(after, [0, EVENT_COUNT], 0x04, { advanced: false })).toThrow(RangeError)
     expect(diffOffsets(before, after)).toEqual([])
   })
@@ -192,7 +184,7 @@ describe('一括設定（デバッグ用）', () => {
     const b = makeSave(A_START)
     writeU8(b, EVENT_STATE_OFFSET + 20, 0x40)
     const before = b.slice()
-    expect(() => writeEventStates(b, bulkIndices('named'), 0x04, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventStates(b, namedIndices(), 0x04, { advanced: false })).toThrow(RangeError)
     expect(diffOffsets(before, b)).toEqual([])
   })
 })

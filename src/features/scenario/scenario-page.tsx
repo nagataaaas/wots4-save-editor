@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { ChevronRight } from "lucide-react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
@@ -15,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { WORLD_FLAGS, readWorldFlags, writeWorldFlag, type WorldFlagsView } from "@/save/world-flags";
 import { formatHex2 } from "@/lib/format";
@@ -53,15 +51,12 @@ import {
   type DateView,
 } from "@/save/scenario-date";
 import {
-  EVENT_COUNT,
   EVENT_NAMES,
   EVENT_RECORDS,
   EVENT_RECORD_OFFSET,
   EVENT_STATES,
   EVENT_STATE_OFFSET,
-  EVENT_USED_COUNT,
-  bulkIndices,
-  usedIndices,
+  namedIndices,
   readEvents,
   recordLabel,
   stateLabel,
@@ -69,7 +64,6 @@ import {
   writeEventRecords,
   writeEventState,
   writeEventStates,
-  type BulkScope,
   type EventEntry,
   type EventsView,
 } from "@/save/scenario-events";
@@ -409,9 +403,8 @@ const recordOptions: SelectOption[] = EVENT_RECORDS.map((r) => ({
 function EventsCard({ view }: { view: EventsView | null }) {
   const { advanced } = useAdvancedMode();
   const options = useMemo(() => stateOptions(advanced), [advanced]);
-  // 使われている添字（0〜98 と、それより後で名前の分かる添字）は添字順に並べ、残りはトグルの中に入れる
-  const used = usedIndices();
-  const unused = view?.entries.filter((e) => !used.includes(e.index)) ?? [];
+  // イベントと対応のついた添字だけを添字順に並べる。対応のない添字は表示しない（ユーザー判断 2026-10-06）
+  const indices = namedIndices();
 
   return (
     <Card>
@@ -426,7 +419,7 @@ function EventsCard({ view }: { view: EventsView | null }) {
       <CardContent className="flex flex-col gap-4">
         <BulkEventsPanel problem={view?.problem ?? null} disabled={!view} stateOptions={options} />
         <div className="grid gap-4 sm:grid-cols-2">
-          {used.map((i) => (
+          {indices.map((i) => (
             <EventBox
               key={i}
               index={i}
@@ -436,44 +429,12 @@ function EventsCard({ view }: { view: EventsView | null }) {
             />
           ))}
         </div>
-
-        <Collapsible className="flex flex-col">
-          <CollapsibleTrigger className="group hover:text-foreground text-muted-foreground flex items-center gap-1 border-b pb-1 text-left text-sm font-medium">
-            <ChevronRight
-              className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-90"
-              aria-hidden
-            />
-            使われていないように見える添字 {EVENT_USED_COUNT}〜{EVENT_COUNT - 1}（名前の分かるものを除く、{unused.length}件）
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="grid gap-4 pt-3 sm:grid-cols-2 lg:grid-cols-3">
-              {unused.map((e) => (
-                <EventBox
-                  key={e.index}
-                  index={e.index}
-                  entry={e}
-                  problem={view?.problem ?? null}
-                  options={options}
-                />
-              ))}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
       </CardContent>
     </Card>
   );
 }
 
-const scopeOptions: { value: BulkScope; label: string }[] = [
-  { value: "named", label: `名前の分かる添字（${bulkIndices("named").length}件）` },
-  {
-    value: "used",
-    label: `使われている添字 0〜${EVENT_USED_COUNT - 1}＋名前の分かる添字（${bulkIndices("used").length}件）`,
-  },
-  { value: "all", label: `すべての添字（${EVENT_COUNT}件）` },
-];
-
-/** デバッグ用：状態・チャート表示を範囲内の添字にまとめて書く */
+/** デバッグ用：状態・チャート表示を、イベントと対応のついた添字すべてにまとめて書く */
 function BulkEventsPanel({
   problem,
   disabled,
@@ -485,7 +446,6 @@ function BulkEventsPanel({
 }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
-  const [scope, setScope] = useState<BulkScope>("named");
   const [state, setState] = useState<string>("");
   const [record, setRecord] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -507,17 +467,9 @@ function BulkEventsPanel({
         <CertaintyBadge mark="❓" text="ゲームへの影響は未確認" />
       </div>
       <p className="text-muted-foreground text-xs">
-        選んだ範囲の添字に、同じ値をまとめて書きます。添字 99 以降は名前の分かるもの（99・116 など）を除いて使われていないように見える（状態・記録とも FF）ため、
-        「すべて」で FF 以外を書くとゲームが想定しない並びになるかもしれません。
+        下に並んでいるイベント（{namedIndices().length}件）すべてに、同じ値をまとめて書きます。
       </p>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <BulkSelect
-          label="範囲"
-          value={scope}
-          options={scopeOptions}
-          disabled={locked}
-          onChange={(v) => setScope(v as BulkScope)}
-        />
+      <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex items-end gap-2">
           <BulkSelect
             label="状態"
@@ -531,7 +483,7 @@ function BulkEventsPanel({
             variant="outline"
             disabled={locked || state === ""}
             onClick={() =>
-              run((b) => writeEventStates(b, bulkIndices(scope), Number(state), { advanced }))
+              run((b) => writeEventStates(b, namedIndices(), Number(state), { advanced }))
             }
           >
             書く
@@ -550,7 +502,7 @@ function BulkEventsPanel({
             variant="outline"
             disabled={locked || record === ""}
             onClick={() =>
-              run((b) => writeEventRecords(b, bulkIndices(scope), Number(record), { advanced }))
+              run((b) => writeEventRecords(b, namedIndices(), Number(record), { advanced }))
             }
           >
             書く

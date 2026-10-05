@@ -26,12 +26,6 @@ import { checkLayout } from './hero'
 export const EVENT_STATE_OFFSET = 0x36a8 // 🔶 §3.5
 export const EVENT_RECORD_OFFSET = 0x3838 // 🔶 §3.5
 export const EVENT_COUNT = 166 // ❓ §3.5
-/**
- * 🔶 イベントとして使われている添字の数（0〜98）。sample の13件すべてで、添字 99〜165 は A・B とも FF だった
- * （1周目の S4-DATA_04 を除く）。docs/event.md の Wiki の一覧は約91件で、数は合っていない（❓）
- * ただし 99 以降にもイベントはある（✅ [U] 2026-10-06：99＝大老は生きていた、116＝夜の墓場で）。99 以降で名前の分かる添字は usedIndices に含める
- */
-export const EVENT_USED_COUNT = 99
 
 /** 周回中の状態（A）。confirmed は書き込みでゲーム内の表示を確かめたもの */
 export const EVENT_STATES = [
@@ -66,7 +60,11 @@ export type EventName = {
  * 名前の分かっている添字。§3.5「未確定のこと」。day は docs/event.md（Wiki）の時間帯。
  * 2〜46 の名前はユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）。52〜98 も同じ（[U] 2026-10-06）。
  * 4日目以降のイベントの day は時間帯ではなく、docs/event.md の節（ルート・エンディング）を入れる。
- * 51・99・116 も [U] 2026-10-06。47〜50・67・84 は ❓
+ * 51・99・116 も [U] 2026-10-06。docs/event.md（Wiki）に載っているイベントは、これですべて対応がついた。
+ *
+ * 画面に出すのはここにある添字だけ（ユーザー判断 2026-10-06）。対応のない添字は、チャートに出ない内部用か未使用か分からないので表示しない。覚え書き：
+ *   47〜50・67・84  ❓ 名前の付いた添字に挟まれていて、何かに使われていそうな欠番
+ *   100〜165（116 以外）❓ sample の13件すべてで A・B とも FF（1周目の S4-DATA_04 を除く）。99・116 のようにイベントが見つかる可能性はある
  */
 export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   0: { name: '船上の侍', day: '1日目昼', basis: 'guess' }, // どのセーブでも 04。名前は [U] 2026-10-05（Samurai on Board、オープニング）
@@ -246,19 +244,11 @@ export function writeEventRecord(bytes: Uint8Array, index: number, value: number
   writeU8(bytes, EVENT_RECORD_OFFSET + index, value)
 }
 
-/** 使われている添字：0〜EVENT_USED_COUNT−1 と、それより後で名前の分かる添字（116 など）。昇順 */
-export function usedIndices(): number[] {
-  const named = Object.keys(EVENT_NAMES).map(Number).filter((i) => i >= EVENT_USED_COUNT)
-  return [...Array.from({ length: EVENT_USED_COUNT }, (_, i) => i), ...named.sort((a, b) => a - b)]
-}
-
-/** 一括設定の範囲。'named' は EVENT_NAMES の添字、'used' は usedIndices()、'all' は 0〜EVENT_COUNT−1 */
-export type BulkScope = 'named' | 'used' | 'all'
-
-export function bulkIndices(scope: BulkScope): number[] {
-  if (scope === 'named') return Object.keys(EVENT_NAMES).map(Number)
-  if (scope === 'used') return usedIndices()
-  return Array.from({ length: EVENT_COUNT }, (_, i) => i)
+/** イベントと対応のついた添字（EVENT_NAMES のキー）。昇順 */
+export function namedIndices(): number[] {
+  return Object.keys(EVENT_NAMES)
+    .map(Number)
+    .sort((a, b) => a - b)
 }
 
 function writeBulk(bytes: Uint8Array, base: number, indices: readonly number[], value: number, problem: string | null): void {
