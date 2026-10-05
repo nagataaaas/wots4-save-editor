@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { WORLD_FLAGS, readWorldFlags, writeWorldFlag, type WorldFlagsView } from "@/save/world-flags";
 import { formatHex2 } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
@@ -74,7 +75,13 @@ import {
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-type Views = { date: DateView; events: EventsView; factions: FactionsView; route: RouteJudgeView };
+type Views = {
+  date: DateView;
+  events: EventsView;
+  factions: FactionsView;
+  route: RouteJudgeView;
+  flags: WorldFlagsView;
+};
 
 function parseInteger(input: string, validate: (v: number) => string | null): ParseResult<number> {
   if (!/^\d+$/.test(input.trim())) return { ok: false, error: "0以上の整数を入力してください" };
@@ -96,6 +103,7 @@ export function ScenarioPage() {
           events: readEvents(b),
           factions: readFactions(b),
           route: readRouteJudge(b),
+          flags: readWorldFlags(b),
         },
       };
     } catch (e) {
@@ -148,6 +156,7 @@ export function ScenarioPage() {
         view={views?.factions ?? null}
         route={views?.route ?? null}
       />
+      <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
       <EventsCard key={`${k}-events`} view={views?.events ?? null} />
     </div>
   );
@@ -214,7 +223,46 @@ function DateCard({ view }: { view: DateView | null }) {
   );
 }
 
-const hostileOptions: SelectOption[] = HOSTILE_VALUES.map((v) => ({
+const flagOptions: SelectOption[] = [
+  { value: "0", label: "0" },
+  { value: "1", label: "1" },
+];
+
+/** 門・柵のフラグ候補。view が null ならセーブ未読み込み */
+function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>門・柵のフラグ（候補）</CardTitle>
+        <CardDescription>
+          ルート分岐を書き換えても、門が閉じたままだとそのルートに進めませんでした。
+          大寄せのあと、根無し草では 0x37FA・0x37FB が 1、幕府ルートでは 0 だったので、門の候補として表示しています。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3">
+        {WORLD_FLAGS.map((flag, i) => (
+          <SelectRow
+            key={flag.offset}
+            label={flag.label}
+            offset={flag.offset}
+            badges={<CertaintyBadge mark="🔶" text="差分から推定・書き込み未検証" />}
+            value={view ? String(view.values[i]) : null}
+            currentLabel={view ? String(view.values[i]) : undefined}
+            options={flagOptions}
+            problem={view?.problem ?? null}
+            note={flag.note}
+            onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+const hostileOptions: SelectOption[] =HOSTILE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${v.value} ${v.label}`,
 }));
