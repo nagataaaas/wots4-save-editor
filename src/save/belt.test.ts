@@ -2,11 +2,13 @@
 import { describe, expect, it } from 'vitest'
 import { BELT_STATE, NO_LEFT, beltOffset, readBelt, writeBeltDual, writeBeltMineuchi, writeBeltRight } from './belt'
 import { TS_SAVE_SIZE } from './hero'
+import { BLADES } from './weapon-ids'
 import {
   WEAPON_FIELDS,
   WEAPON_NAME_MAX_CHARS,
   decodeTitle,
   encodeTitle,
+  isXUnknown,
   readWeapon,
   validateWeaponNumber,
   writeWeaponCharms,
@@ -183,18 +185,28 @@ describe('武器レコード（合成）', () => {
     expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0x19, 0x01, 0xbc, 0x00])
   })
 
-  it('❓ U-3 案B（ユーザー判断 2026-10-05）：X 不明の [CT] の刃は ID だけを書き、X は元のまま残して警告する', () => {
+  it('❓ U-3 案B（ユーザー判断 2026-10-05）：X 不明の [CT] の刃は今はない。x が null の刃だけが X 不明になる', () => {
+    expect(BLADES.filter((p) => isXUnknown('blade', p))).toEqual([])
+    expect(isXUnknown('blade', { source: 'ct', value: 0x999, label: '仮', x: null })).toBe(true)
+    expect(isXUnknown('guard', { source: 'ct', value: 0x999, label: '仮' })).toBe(false)
+  })
+
+  it('U-3 [U] 2026-10-05 X が 0x100 以上の刃は、ID と実測の X を 2 B ずつ書く（和泉守兼定 0x162、活火山 0x163、夜葬 0x167）', () => {
     const before = makeSave()
     const o = beltOffset(0)
-    const b = before.slice()
-    const x = [...before.subarray(o + 0x0a, o + 0x0c)]
-    // 和泉守兼定 0x165（規則外）
-    writeWeaponPart(b, o, 'blade', ct(0x165))
-    expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0x65, 0x01, ...x])
-    expect(onlyChanged(before, b, o + 0x08, 2)).toBe(true)
-    const blade = readWeapon(b, o).blade
-    expect(blade.value).toMatchObject({ label: '和泉守兼定', key: ct(0x165) })
-    expect(blade.warning).toContain('分解→組み立て')
+    for (const [id, x, label] of [
+      [0x165, 0x162, '和泉守兼定'],
+      [0x166, 0x163, '活火山'],
+      [0x168, 0x167, '夜葬'],
+    ] as const) {
+      const b = before.slice()
+      writeWeaponPart(b, o, 'blade', ct(id))
+      expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([id & 0xff, id >> 8, x & 0xff, x >> 8])
+      expect(onlyChanged(before, b, o + 0x08, 4)).toBe(true)
+      const w = readWeapon(b, o)
+      expect(w.blade).toMatchObject({ value: { label }, warning: null })
+      expect(w.sheath.label).toBe(label)
+    }
   })
 
   it('U-3 [U] 2026-10-05 ゲーム内で分解→組み立てて分かった X：貫誠 0xA8、美帝骨 0x39、鮫肌丸 0x53、大黒生 0x54、微熱 0x55、ハルユキ 0x34、空道刀 0xAB、虎吉竹刀 0x56、残月 0x28', () => {

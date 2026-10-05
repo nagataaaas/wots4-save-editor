@@ -16,7 +16,7 @@ export type PartOption = {
   source: 'ts' | 'ct'
   value: number
   label: string
-  /** 刃（source が 'ct'）だけ：🔶 規則で計算した X（u16）。null は規則外で X 不明（ID だけ書く。U-3 案B） */
+  /** 刃（source が 'ct'）だけ：🔶 規則で計算した X、または ✅ 実セーブで確かめた X（u16）。null は規則外で X 不明（ID だけ書く。U-3 案B） */
   x?: number | null
   /** x が、規則を確かめた範囲（0x3F〜0x51、0x109〜0x134）の外に規則を延ばして計算した値（ユーザー判断 2026-10-05、ゲーム内で確認待ち） */
   xExtended?: boolean
@@ -124,9 +124,10 @@ export const BLADES: readonly PartOption[] = [
   { source: 'ts', value: 0x460147, label: '珍比羅' },
   { source: 'ts', value: 0x580157, label: '陸奥守吉行' },
   { source: 'ts', value: 0x610164, label: '虎徹' },
-  { source: 'ct', value: 0x165, label: '和泉守兼定', x: null },
-  { source: 'ct', value: 0x166, label: '活火山', x: null },
-  { source: 'ct', value: 0x168, label: '夜葬', x: null },
+  // X が 0x100 以上で 3 B 値に収まらないので、ID と実測の X を 2 B ずつ書く（U-3 [U] 分解→組み立て後の実セーブ sample/S4-DATA_01）
+  { source: 'ct', value: 0x165, label: '和泉守兼定', x: 0x162 },
+  { source: 'ct', value: 0x166, label: '活火山', x: 0x163 },
+  { source: 'ct', value: 0x168, label: '夜葬', x: 0x167 },
 ]
 
 /** 鍔。ts は +0x0B〜+0x0D の 3 B（1バイト目は 🔶 X の上位バイト）、ct は +0x0C〜+0x0D の ID（u16） */
@@ -359,6 +360,9 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0x146, label: '珍比羅' },
   { id: 0x158, label: '陸奥守吉行' },
   { id: 0x161, label: '虎徹' },
+  { id: 0x162, label: '和泉守兼定' },
+  { id: 0x163, label: '活火山' },
+  { id: 0x167, label: '夜葬' },
   { id: 0xffff, label: '鞘なし' },
 ]
 
