@@ -1,7 +1,7 @@
 import { useId, useState, type ReactNode } from 'react'
 import { Input } from '@/components/ui/input'
+import { InfoTip } from '@/components/info-tip'
 import { Label } from '@/components/ui/label'
-import { formatOffset } from '@/lib/format'
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string }
 
@@ -20,14 +20,17 @@ type Props<T> = {
   /** 入力が妥当で、現在値と異なるときだけ呼ばれる */
   apply: (value: T) => void
   inputMode?: 'numeric' | 'decimal' | 'text'
+  /** バリデーション（文字数・数値の範囲など）だけを簡潔に書く。下に常に表示する */
   hint?: ReactNode
+  /** 備考。項目名の端の丸ハテナにホバーで表示する */
+  note?: ReactNode
 }
 
 /**
  * 1フィールド分の入力欄。入力途中の文字列は手元に持ち、妥当な値になったときだけセーブに反映する。
  * 読み込み直したときに入力途中の値を捨てるため、呼び出し側で key に loadId を含めること。
  */
-export function FieldRow<T>({ label, offset, badges, value, problem, warning, format, parse, apply, inputMode, hint }: Props<T>) {
+export function FieldRow<T>({ label, offset, badges, value, problem, warning, format, parse, apply, inputMode, hint, note }: Props<T>) {
   const id = useId()
   const [draft, setDraft] = useState(() => (value === null ? '' : format(value)))
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +56,7 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
     <div className="flex flex-col gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
         <Label htmlFor={id}>{label}</Label>
-        <span className="text-muted-foreground font-mono text-xs">{formatOffset(offset)}</span>
+        <InfoTip offset={offset}>{note}</InfoTip>
         {badges}
       </div>
       <Input

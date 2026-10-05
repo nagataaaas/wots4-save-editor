@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
+import { InfoTip } from "@/components/info-tip";
 import { ItemSlotRow } from "@/components/item-slot-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,13 +93,13 @@ export function ValuablesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>重要品</CardTitle>
-          <CardDescription>
-            {formatOffset(VALUABLES_OFFSET)} から 8 B × {VALUABLE_SLOT_COUNT}
-            件。各枠の地金と個数を設定できます。
-            チップ・木札は、Steam版で書き込むとゲーム内でセーブできなくなったため選択肢に出しません（❓
-            U-12）。
-          </CardDescription>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            重要品
+            <InfoTip offset={`${formatOffset(VALUABLES_OFFSET)} から 8 B × ${VALUABLE_SLOT_COUNT} 件`}>
+              チップ・木札は、Steam版で書き込むとゲーム内でセーブできなくなったため選択肢に出しません（❓ U-12）
+            </InfoTip>
+          </CardTitle>
+          <CardDescription>各枠の地金と個数を設定できます。</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col divide-y">
           {Array.from({ length: VALUABLE_SLOT_COUNT }, (_, i) => {

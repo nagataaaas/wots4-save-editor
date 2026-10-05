@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { InfoTip } from '@/components/info-tip'
 import { ItemSlotRow } from '@/components/item-slot-row'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -79,11 +80,13 @@ export function ToolsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>道具</CardTitle>
-          <CardDescription>
-            手持ちの道具。{formatOffset(TOOLS_OFFSET)} から 8 B × {TOOL_SLOT_COUNT} 件。各枠の道具を設定できます（1枠に1個）。
-            「🔶 手持ちでは未確認」の道具は、重要品の枠で名前だけ確認した ID です（U-14）。
-          </CardDescription>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            道具
+            <InfoTip offset={`${formatOffset(TOOLS_OFFSET)} から 8 B × ${TOOL_SLOT_COUNT} 件`}>
+              「🔶 手持ちでは未確認」の道具は、重要品の枠で名前だけ確認した ID です（U-14）
+            </InfoTip>
+          </CardTitle>
+          <CardDescription>手持ちの道具。各枠の道具を設定できます（1枠に1個）。</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col divide-y">
           {Array.from({ length: TOOL_SLOT_COUNT }, (_, i) => {

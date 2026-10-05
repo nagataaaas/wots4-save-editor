@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
+import { InfoTip } from '@/components/info-tip'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { formatOffset } from '@/lib/format'
 
 export type SelectOption = { value: string; label: string; disabled?: boolean }
 
@@ -17,13 +17,16 @@ type Props = {
   /** 妥当性検証に落ちた理由。あれば読み取り専用 */
   problem: string | null
   warning?: string | null
+  /** バリデーション（文字数・数値の範囲など）だけを簡潔に書く。下に常に表示する */
   hint?: ReactNode
+  /** 備考。項目名の端の丸ハテナにホバーで表示する */
+  note?: ReactNode
   /** 現在値と違う値を選んだときだけ呼ばれる。例外はその場で表示する */
   onChange: (value: string) => void
 }
 
 /** 選択肢から1つ選ぶ1フィールド分の欄。FieldRow と同じ見た目にする */
-export function SelectRow({ label, offset, badges, value, currentLabel, options, problem, warning, hint, onChange }: Props) {
+export function SelectRow({ label, offset, badges, value, currentLabel, options, problem, warning, hint, note, onChange }: Props) {
   const [error, setError] = useState<string | null>(null)
   const listed = value === null || options.some((o) => o.value === value)
 
@@ -31,7 +34,7 @@ export function SelectRow({ label, offset, badges, value, currentLabel, options,
     <div className="flex flex-col gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
         <Label>{label}</Label>
-        <span className="text-muted-foreground font-mono text-xs">{formatOffset(offset)}</span>
+        <InfoTip offset={offset}>{note}</InfoTip>
         {badges}
       </div>
       <Select

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { InfoTip } from '@/components/info-tip'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -9,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { formatHex4, formatOffset } from '@/lib/format'
+import { formatHex4 } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { EMPTY_ID, validateItemCount, type ItemOptionGroup, type ItemSlot } from '@/save/item-slot'
 
@@ -114,7 +115,7 @@ export function ItemSlotRow({
     <div className="flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="font-medium">{index + 1}件目</span>
-        <span className="text-muted-foreground font-mono text-xs">{formatOffset(offset)}</span>
+        <InfoTip offset={offset} />
         {slot && (
           <span className="text-muted-foreground ml-auto font-mono text-xs" title="+0x04〜+0x07（用途不明）">
             ❓ {slot.unknown.toString(16).toUpperCase().padStart(8, '0')}
