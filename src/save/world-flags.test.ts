@@ -1,6 +1,6 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。
-// 代官所の門（0x37FA）は書き換えで門が開くことを確認（✅ [U] 2026-10-06）。ほかは 🔶（要ゲーム内確認）
+// 代官所（0x37FA）・居留地（0x3764）・神社（0x37C3）の門は、書き換えで門が開くことを確認（✅ [U] 2026-10-06）。ほかは 🔶／❓
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -9,7 +9,7 @@ import { WORLD_FLAGS, readWorldFlags, writeWorldFlag } from './world-flags'
 const offsets = WORLD_FLAGS.map((f) => f.offset)
 
 /** 04 copy 11（根無し草、大寄せのあと。3つの門がすべて閉じている）のフラグ。WORLD_FLAGS の順 */
-const NO_ROUTE = [1, 0, 1, 1, 1, 1, 1, 2]
+const NO_ROUTE = [1, 1, 1, 0, 1, 1, 1, 2]
 
 function makeSave(values: number[], size = TS_SAVE_SIZE): Uint8Array {
   const b = new Uint8Array(size)
@@ -29,27 +29,33 @@ describe('門・柵のフラグ §3.5', () => {
   })
 
   it('見た値より大きければ読み取り専用にする（0x37A2 だけは 2 まで）', () => {
-    expect(readWorldFlags(makeSave([2, 0, 1, 1, 1, 1, 1, 2])).problem).not.toBeNull()
-    expect(readWorldFlags(makeSave([1, 0, 1, 1, 1, 1, 1, 3])).problem).not.toBeNull()
+    expect(readWorldFlags(makeSave([2, 1, 1, 0, 1, 1, 1, 2])).problem).not.toBeNull()
+    expect(readWorldFlags(makeSave([1, 1, 1, 0, 1, 1, 1, 3])).problem).not.toBeNull()
   })
 
   it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     expect(readWorldFlags(makeSave(NO_ROUTE, TS_SAVE_SIZE + 4)).problem).not.toBeNull()
   })
 
-  it('✅ [U] 代官所の門を開ける書き込みは 0x37FA の1バイトだけを変える', () => {
-    const before = makeSave(NO_ROUTE)
-    const after = before.slice()
-    writeWorldFlag(after, 0, 0, { advanced: false })
-    expect(diffOffsets(before, after)).toEqual([0x37fa])
+  it('✅ [U] 門を開ける書き込みは、その門の1バイトだけを変える（代官所 0x37FA・居留地 0x3764・神社 0x37C3）', () => {
+    for (const [index, offset] of [
+      [0, 0x37fa],
+      [1, 0x3764],
+      [2, 0x37c3],
+    ]) {
+      const before = makeSave(NO_ROUTE)
+      const after = before.slice()
+      writeWorldFlag(after, index, 0, { advanced: false })
+      expect(diffOffsets(before, after)).toEqual([offset])
+    }
   })
 
   it('通常モードは見た値の範囲だけ。上級者モードでは任意の u8', () => {
     const b = makeSave(NO_ROUTE)
-    expect(() => writeWorldFlag(b, 1, 2, { advanced: false })).toThrow(RangeError)
+    expect(() => writeWorldFlag(b, 3, 2, { advanced: false })).toThrow(RangeError)
     expect(() => writeWorldFlag(b, WORLD_FLAGS.length, 0, { advanced: false })).toThrow(RangeError)
     writeWorldFlag(b, 7, 2, { advanced: false })
-    writeWorldFlag(b, 1, 2, { advanced: true })
+    writeWorldFlag(b, 3, 2, { advanced: true })
     expect(b[0x377f]).toBe(2)
   })
 

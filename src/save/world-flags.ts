@@ -5,8 +5,9 @@
 //   0x37FA  ✅ [U] 代官所の門（1＝閉じている）。大寄せのあと、根無し草（03 copy 9・04 copy 11）では 1、幕府ルート（04 copy 12）では 0。
 //              04 copy 11（代官所・領事館・神社の3つの門がすべて閉じている）で 0 にすると、代官所の門だけが開いた（2026-10-06）
 //   0x37FB  ❓ 0x37FA と同じく根無し草で 1、幕府ルートで 0。04 copy 11 で 0 にしても、どの門も変わらなかった
-//   0x3761・0x3764・0x37C3・0x37C6（大寄せで 0 → 1）、0x37A2（大寄せで 0 → 2）
-//          🔶 領事館・神社の門の候補。根無し草でも幕府ルートでも同じ値なので、どちらのルートでも閉じる門と考えると合う
+//   0x3764  ✅ [U] 居留地の門（1＝閉じている）。大寄せで 0 → 1。04 copy 11 で 0 にすると開いた（2026-10-06）
+//   0x37C3  ✅ [U] 神社の門（1＝閉じている）。大寄せで 0 → 1。04 copy 11 で 0 にすると開いた（2026-10-06）
+//   0x3761・0x37C6（大寄せで 0 → 1）、0x37A2（大寄せで 0 → 2）❓ 門ではなかった（0 にしてもどの門も変わらない）
 // ルート分岐を書き換えても、門が閉じたままだとそのルートに進めない（[U] 2026-10-05）。
 //
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
@@ -25,13 +26,13 @@ export type WorldFlag = {
 
 export const WORLD_FLAGS: readonly WorldFlag[] = [
   { offset: 0x37fa, label: '代官所の門', note: '1 で閉じる。大寄せのあと、根無し草では 1、幕府ルートでは 0', confirmed: true, max: 1 },
+  { offset: 0x3764, label: '居留地の門', note: '1 で閉じる。大寄せで 0 → 1（根無し草・幕府ルートとも）', confirmed: true, max: 1 },
+  { offset: 0x37c3, label: '神社の門', note: '1 で閉じる。大寄せで 0 → 1（根無し草・幕府ルートとも）', confirmed: true, max: 1 },
   { offset: 0x377f, label: '神社入口の柵', note: '志士との出会いの最初で 0 → 1（柵が上がる）', confirmed: false, max: 1 },
   { offset: 0x37fb, label: '不明（0x37FB）', note: '代官所の門と一緒に変わるが、0 にしてもどの門も変わらなかった', confirmed: false, max: 1 },
-  { offset: 0x3761, label: '門の候補（0x3761）', note: '大寄せで 0 → 1（根無し草・幕府ルートとも）', confirmed: false, max: 1 },
-  { offset: 0x3764, label: '門の候補（0x3764）', note: '大寄せで 0 → 1（根無し草・幕府ルートとも）', confirmed: false, max: 1 },
-  { offset: 0x37c3, label: '門の候補（0x37C3）', note: '大寄せで 0 → 1（根無し草・幕府ルートとも）', confirmed: false, max: 1 },
-  { offset: 0x37c6, label: '門の候補（0x37C6）', note: '大寄せで 0 → 1（根無し草・幕府ルートとも）', confirmed: false, max: 1 },
-  { offset: 0x37a2, label: '門の候補（0x37A2）', note: '大寄せで 0 → 2（根無し草・幕府ルートとも）', confirmed: false, max: 2 },
+  { offset: 0x3761, label: '不明（0x3761）', note: '大寄せで 0 → 1。0 にしてもどの門も変わらなかった', confirmed: false, max: 1 },
+  { offset: 0x37c6, label: '不明（0x37C6）', note: '大寄せで 0 → 1。0 にしてもどの門も変わらなかった', confirmed: false, max: 1 },
+  { offset: 0x37a2, label: '不明（0x37A2）', note: '大寄せで 0 → 2。0 にしてもどの門も変わらなかった', confirmed: false, max: 2 },
 ]
 
 export type WorldFlagsView = {
