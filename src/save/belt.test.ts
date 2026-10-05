@@ -6,13 +6,14 @@ import { describe, expect, it } from 'vitest'
 import { BELT_STATE, NO_LEFT, beltOffset, readBelt, writeBeltDual, writeBeltMineuchi, writeBeltRight } from './belt'
 import { TS_SAVE_SIZE } from './hero'
 import {
+  NUMBER_KEYS,
   WEAPON_FIELDS,
-  WEAPON_LIMITS,
   WEAPON_NAME_MAX_CHARS,
   WEAPON_RECORD_BYTES,
   decodeTitle,
   encodeTitle,
   readWeapon,
+  validateWeaponNumber,
   writeWeaponCharms,
   writeWeaponId,
   writeWeaponName,
@@ -125,11 +126,8 @@ describe.skipIf(!hasSamples)('実セーブ（sample/）', () => {
         const o = beltOffset(i)
         writeWeaponName(b, o, w.name.value)
         writeWeaponId(b, o, w.weaponId.value)
-        for (const key of ['attack', 'durabilityMax', 'durability', 'kills', 'tsumaKills'] as const) {
-          writeWeaponNumber(b, o, key, w.numbers[key].value)
-        }
-        if (w.numbers.quality.value <= WEAPON_LIMITS.quality) writeWeaponNumber(b, o, 'quality', w.numbers.quality.value)
-        writeWeaponNumber(b, o, 'qualityMax', w.numbers.qualityMax.value)
+        // 実セーブにはゲーム上の範囲外の値（質など）もあるので、上級者モード（システム上の範囲）で書き戻す
+        for (const key of NUMBER_KEYS) writeWeaponNumber(b, o, key, w.numbers[key].value, { advanced: true })
         for (const kind of ['blade', 'guard', 'grip'] as const) {
           const key = w[kind].value.key
           // [TS] の値と完全一致するものだけ（[CT] の刃は X を規則で計算し直すので一致しないことがある）
@@ -276,7 +274,28 @@ describe('武器レコード（合成）', () => {
     expect(() => writeWeaponName(b, o, '')).toThrow()
     expect(() => writeWeaponId(b, o, 0x1234)).toThrow()
     expect(() => writeWeaponPart(b, o, 'blade', ts(0x123456))).toThrow()
+    // 上級者モードでもシステム上の範囲（攻撃力・質は ✅ int16）は超えられない
+    expect(() => writeWeaponNumber(b, o, 'attack', 32768, { advanced: true })).toThrow()
+    expect(() => writeWeaponNumber(b, o, 'quality', 32768, { advanced: true })).toThrow()
+    expect(() => writeWeaponNumber(b, o, 'durability', 32768, { advanced: true })).toThrow()
+    expect(() => writeWeaponNumber(b, o, 'kills', 65536, { advanced: true })).toThrow()
     expect(diffOffsets(before, b)).toEqual([])
+  })
+
+  it('上級者モードではゲーム上の範囲外も書け、攻撃力は ✅ int16 で読み戻せる', () => {
+    const b = makeSave()
+    const o = beltOffset(0)
+    writeWeaponNumber(b, o, 'attack', -1, { advanced: true })
+    expect([...b.subarray(o + WEAPON_FIELDS.attack, o + WEAPON_FIELDS.attack + 2)]).toEqual([0xff, 0xff])
+    expect(readWeapon(b, o).numbers.attack).toMatchObject({ value: -1, warning: expect.any(String) })
+    writeWeaponNumber(b, o, 'attack', 32767, { advanced: true })
+    expect(readWeapon(b, o).numbers.attack.value).toBe(32767)
+    // ✅ 質・質の最大値も int16
+    writeWeaponNumber(b, o, 'quality', -2, { advanced: true })
+    expect([...b.subarray(o + WEAPON_FIELDS.quality, o + WEAPON_FIELDS.quality + 2)]).toEqual([0xfe, 0xff])
+    expect(readWeapon(b, o).numbers.quality.value).toBe(-2)
+    writeWeaponNumber(b, o, 'qualityMax', -1, { advanced: true })
+    expect(readWeapon(b, o).numbers.qualityMax.value).toBe(-1)
   })
 
   it('✅ U-3 案A：パーツは [TS] の値のまま、刃・鍔は 3 B、柄は 2 B を書く', () => {
@@ -468,5 +487,31 @@ describe('武器レコード（合成）', () => {
     b[BELT_STATE.dual] = 1 // 左手が 0xFF のまま二刀流
     expect(readBelt(b).state.problem).not.toBeNull()
     expect(() => writeBeltMineuchi(b, true)).toThrow()
+  })
+})
+
+describe('武器の数値：ゲーム上の範囲とシステム上の範囲', () => {
+  it('通常はゲーム上の範囲（§5.7）で、上級者モードではシステム上の範囲で検証する', () => {
+    expect(validateWeaponNumber('attack', 500)).toBeNull()
+    expect(validateWeaponNumber('attack', 501)).not.toBeNull()
+    expect(validateWeaponNumber('attack', -1)).not.toBeNull()
+    // ✅ 攻撃力は int16（ユーザー確認 2026-10-05）
+    expect(validateWeaponNumber('attack', 32767, { advanced: true })).toBeNull()
+    expect(validateWeaponNumber('attack', -32768, { advanced: true })).toBeNull()
+    expect(validateWeaponNumber('attack', 32768, { advanced: true })).not.toBeNull()
+    // ✅ 質・質の最大値も int16（ユーザー確認 2026-10-05）
+    expect(validateWeaponNumber('quality', -32768, { advanced: true })).toBeNull()
+    expect(validateWeaponNumber('quality', 32768, { advanced: true })).not.toBeNull()
+    expect(validateWeaponNumber('qualityMax', -1, { advanced: true })).toBeNull()
+    // ✅ 耐久（現在・最大）も int16（ユーザー確認 2026-10-05）
+    expect(validateWeaponNumber('durability', -1, { advanced: true })).toBeNull()
+    expect(validateWeaponNumber('durabilityMax', 32768, { advanced: true })).not.toBeNull()
+    // ✅ 斬殺数は uint16（ユーザー確認 2026-10-05）
+    expect(validateWeaponNumber('kills', 65535, { advanced: true })).toBeNull()
+    expect(validateWeaponNumber('kills', 65536, { advanced: true })).not.toBeNull()
+    expect(validateWeaponNumber('kills', -1, { advanced: true })).not.toBeNull()
+    // 🔶 つま斬り数も uint16 と推測
+    expect(validateWeaponNumber('tsumaKills', 65535, { advanced: true })).toBeNull()
+    expect(validateWeaponNumber('tsumaKills', -1, { advanced: true })).not.toBeNull()
   })
 })

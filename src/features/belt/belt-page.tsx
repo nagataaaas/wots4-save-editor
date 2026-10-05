@@ -1,14 +1,25 @@
-import { createElement, useMemo, useState, type ReactNode } from "react";
+import {
+  createElement,
+  useMemo,
+  useState,
+  type ComponentProps,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
+import { ChevronRight } from "lucide-react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
 import { SelectRow, type SelectOption } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { formatOffset } from "@/lib/format";
+import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
 import {
   BELT_COUNT,
@@ -26,7 +37,8 @@ import {
   TITLES,
   WEAPON_FIELDS,
   WEAPON_TYPES,
-  WEAPON_LIMITS,
+  WEAPON_NUMBER_RANGES,
+  formatRange,
   WEAPON_NAME_MAX_CHARS,
   isPartWritable,
   partKey,
@@ -71,6 +83,51 @@ function EffectBox({ children }: { children: ReactNode }) {
   );
 }
 
+/** 開閉の三角（Collapsible の Trigger の中に置く。開いていると下向き） */
+const chevron = (
+  <ChevronRight
+    className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-90"
+    aria-hidden
+  />
+);
+
+/**
+ * 開閉で高さが伸び縮みする中身（tw-animate-css の collapsible-down/up）。
+ * 高さ 0 でも余白が残らないよう、間隔は中に置いた要素の padding で取る
+ */
+const COLLAPSIBLE_ANIMATION =
+  "overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up";
+
+/** クリックがボタン（開閉の Trigger、丸ハテナなど）の上か。ボタンは自分の動作だけをさせる */
+const isOnButton = (e: MouseEvent<HTMLElement>) =>
+  e.target instanceof Element && e.target.closest("button") !== null;
+
+/** 武器カードの中の、開閉できるひとまとまり */
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <Collapsible defaultOpen className="flex flex-col">
+      <CollapsibleTrigger className="group hover:text-foreground text-muted-foreground flex items-center gap-1 border-b pb-1 text-left text-sm font-medium">
+        {chevron}
+        {title}
+      </CollapsibleTrigger>
+      {/* overflow-hidden で入力欄のフォーカスリングが切れないよう、-mx-1 px-1 で少し広げる */}
+      <CollapsibleContent className={`${COLLAPSIBLE_ANIMATION} -mx-1 px-1`}>
+        <div className="flex flex-col gap-4 pt-4 pb-1">{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+/** 現在値と最大値のように、2つで1組の数値をまとめる枠 */
+function NumberPair({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-md border p-3">
+      <span className="text-sm font-medium">{title}</span>
+      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    </div>
+  );
+}
+
 const hex = (v: number, digits: number) =>
   `0x${v.toString(16).toUpperCase().padStart(digits, "0")}`;
 
@@ -111,17 +168,24 @@ const SHEATH_OPTIONS: SelectOption[] = SHEATHS.map((x) => ({
   value: String(x.id),
   label: `${x.label}（${hex(x.id, 4)}）`,
 }));
-const ADVANCED_OFF = "上級者モードをオンにすると変更できます";
 const TITLE_OPTIONS: SelectOption[] = [
   { value: NONE, label: "なし" },
   ...TITLES.map((t) => ({ value: String(t.no), label: t.label, icon: titleIcon(t.no) })),
 ];
 
-function parseNumber(key: NumberKey, input: string): ParseResult<number> {
-  if (!/^\d+$/.test(input.trim())) return { ok: false, error: "0以上の整数を入力してください" };
+function parseNumber(key: NumberKey, input: string, advanced: boolean): ParseResult<number> {
+  if (!/^-?\d+$/.test(input.trim())) return { ok: false, error: "整数を入力してください" };
   const value = Number(input.trim());
-  const error = validateWeaponNumber(key, value);
+  const error = validateWeaponNumber(key, value, { advanced });
   return error ? { ok: false, error } : { ok: true, value };
+}
+
+/** 入力欄の下に出す範囲。上級者モードではシステム上の範囲も出す */
+function numberHint(key: NumberKey, advanced: boolean) {
+  const { game, system } = WEAPON_NUMBER_RANGES[key];
+  return advanced
+    ? `ゲーム上 ${formatRange(game)}／システム上 ${formatRange(system)}`
+    : `${formatRange(game)}`;
 }
 
 function parseName(input: string): ParseResult<string> {
@@ -134,8 +198,6 @@ const weaponTitle = (w: WeaponView | undefined, i: number) =>
 
 export function BeltPage() {
   const { save, update } = useSave();
-  // 鞘・武器種を書ける上級者モード（ユーザー判断 2026-10-05）。明示的に有効にしたときだけ使える
-  const [advanced, setAdvanced] = useState(false);
 
   const result = useMemo((): { view: BeltView } | { error: string } | null => {
     if (!save) return null;
@@ -176,8 +238,6 @@ export function BeltPage() {
         </Alert>
       )}
 
-      <AdvancedCard enabled={advanced} onToggle={setAdvanced} />
-
       <StateCard
         view={view}
         onRight={(i) => update((b) => writeBeltRight(b, i))}
@@ -191,7 +251,6 @@ export function BeltPage() {
           index={i}
           weapon={view?.weapons[i] ?? null}
           state={view?.state ?? null}
-          advanced={advanced}
           update={(mutate) => update((b) => mutate(b, beltOffset(i)))}
         />
       ))}
@@ -203,34 +262,6 @@ export function BeltPage() {
         付近にある帯刀武器のコピー（🔶）は書き換えません。ゲームが本体（0xA4C2〜）のほうを読むことは、既存エディタ（[TS]）の実績から推測しています。
       </p>
     </div>
-  );
-}
-
-/** 上級者モード（鞘・武器種）の切り替え */
-function AdvancedCard({
-  enabled,
-  onToggle,
-}: {
-  enabled: boolean;
-  onToggle: (enabled: boolean) => void;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            上級者モード（鞘・武器種）
-            <CertaintyBadge mark="🔶" text="データ破損のおそれ" />
-          </CardTitle>
-          <Switch checked={enabled} onCheckedChange={onToggle} aria-label="上級者モード" />
-        </div>
-        <CardDescription>
-          各武器の鞘（X）と武器種を変更できるようにします。鞘は一覧にあるものだけを選べます（一覧にない値ではロード時にエラーが出て鞘が表示されませんでした。
-          ゲーム内で分解・再組み立てすると直りました）。パーツと合わない武器種にしたときの動作は未確認です。
-          必ずバックアップを取ってから試してください。
-        </CardDescription>
-      </CardHeader>
-    </Card>
   );
 }
 
@@ -362,21 +393,70 @@ function SwitchRow({
   );
 }
 
+/**
+ * ふだんは変更不可にし、武器ごとに「○○を上書き」を押したときだけ選べる欄（鞘・武器種。ユーザー判断 2026-10-05）。
+ * 押したことを、書き込み関数の「明示した」印（AdvancedOptions）として渡す。どちらも 🔶 データ破損のおそれ
+ */
+function OverrideRow({
+  label,
+  idleHint,
+  overrideHint,
+  ...props
+}: Omit<ComponentProps<typeof SelectRow>, "badges" | "disabled" | "hint"> & {
+  /** 上書きしていないときの説明 */
+  idleHint: string;
+  /** 上書き中の注意 */
+  overrideHint: string;
+}) {
+  const [override, setOverride] = useState(false);
+  return (
+    <SelectRow
+      {...props}
+      label={label}
+      badges={
+        props.value !== null &&
+        !props.problem && (
+          // 負のマージンで、ボタンが項目名の行の高さを変えないようにする（隣の欄と高さを揃える）
+          <Button
+            variant="outline"
+            size="xs"
+            className="-my-1.5 ml-auto"
+            onClick={() => setOverride(!override)}
+          >
+            {override ? "上書きをやめる" : `${label}を上書き`}
+          </Button>
+        )
+      }
+      disabled={!override}
+      hint={
+        override ? (
+          <span className="text-amber-600 dark:text-amber-400">
+            🔶 データ破損のおそれ。{overrideHint}
+          </span>
+        ) : (
+          idleHint
+        )
+      }
+    />
+  );
+}
+
 /** 帯刀1本分。weapon が null ならセーブ未読み込み */
 function WeaponCard({
   index,
   weapon,
   state,
-  advanced,
   update,
 }: {
   index: number;
   weapon: WeaponView | null;
   state: BeltState | null;
-  advanced: boolean;
   update: (mutate: (bytes: Uint8Array, offset: number) => void) => void;
 }) {
   const base = beltOffset(index);
+  const { advanced } = useAdvancedMode();
+  // 最初は閉じておく（ユーザー判断 2026-10-05）
+  const [open, setOpen] = useState(false);
   const roles = [state?.right === index && "右手", state?.left === index && "左手"].filter(
     Boolean,
   ) as string[];
@@ -398,19 +478,20 @@ function WeaponCard({
   }
 
   const recordProblem = weapon?.problem ?? null;
-  const numberRow = (key: NumberKey) => (
+  const numberRow = (key: NumberKey, label = NUMBER_LABELS[key]) => (
     <FieldRow
       key={key}
-      label={NUMBER_LABELS[key]}
+      label={label}
       offset={base + WEAPON_FIELDS[key]}
       value={weapon?.numbers[key].value ?? null}
       problem={weapon?.numbers[key].problem ?? null}
       warning={weapon?.numbers[key].warning ?? null}
       format={String}
-      parse={(input) => parseNumber(key, input)}
-      apply={(v) => update((b, o) => writeWeaponNumber(b, o, key, v))}
-      inputMode="numeric"
-      hint={`0〜${WEAPON_LIMITS[key].toLocaleString()}`}
+      parse={(input) => parseNumber(key, input, advanced)}
+      apply={(v) => update((b, o) => writeWeaponNumber(b, o, key, v, { advanced }))}
+      // 負の値を書けるときは、スマホでもマイナスを打てるよう text にする
+      inputMode={advanced && WEAPON_NUMBER_RANGES[key].system.min < 0 ? "text" : "numeric"}
+      hint={numberHint(key, advanced)}
       note={NUMBER_NOTES[key]}
     />
   );
@@ -456,6 +537,7 @@ function WeaponCard({
   const charms = weapon?.charms ?? null;
   const effects = charms ? charmEffects(charms.value) : [];
   const title = titleEffect(weapon?.title.value ?? null);
+  const num = (key: NumberKey) => weapon?.numbers[key].value.toLocaleString() ?? "—";
   const charmRow = (slot: number) => (
     <SelectRow
       key={slot}
@@ -475,165 +557,221 @@ function WeaponCard({
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          {weaponTitle(weapon ?? undefined, index)}
-          <InfoTip offset={`${formatOffset(base)} から 0xA0 B`} />
-          {roles.map((r) => (
-            <Badge key={r}>{r}</Badge>
-          ))}
-          {state?.mineuchi && state.right === index && <Badge variant="outline">峰打</Badge>}
-        </CardTitle>
-        {recordProblem && (
-          <CardDescription className="text-destructive">
-            読み取り専用：{recordProblem}
-          </CardDescription>
-        )}
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FieldRow
-            label="武器名"
-            offset={base + WEAPON_FIELDS.name}
-            value={weapon?.name.value ?? null}
-            problem={weapon?.name.problem ?? null}
-            warning={weapon?.name.warning ?? null}
-            format={(v) => v}
-            parse={parseName}
-            apply={(v) => update((b, o) => writeWeaponName(b, o, v))}
-            hint={`最大${WEAPON_NAME_MAX_CHARS}文字`}
-          />
-          <SelectRow
-            label="完成武器"
-            offset={base + WEAPON_FIELDS.weaponId}
-            value={weapon ? String(weapon.weaponId.value) : null}
-            currentLabel={weapon ? `未知（${hex(weapon.weaponId.value, 4)}）` : undefined}
-            options={WEAPON_ID_OPTIONS}
-            problem={weapon?.weaponId.problem ?? null}
-            warning={weapon?.weaponId.warning ?? null}
-            note="名前・パーツは変わりません"
-            onChange={(v) => update((b, o) => writeWeaponId(b, o, Number(v)))}
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          {(["blade", "guard", "grip"] as const).map(partRow)}
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <SelectRow
-            label="武器種"
-            offset={base + WEAPON_FIELDS.weaponType}
-            value={weapon ? String(weapon.weaponType.value) : null}
-            currentLabel={weapon ? `未知（${weapon.weaponType.value}）` : undefined}
-            options={TYPE_OPTIONS}
-            problem={weapon?.weaponType.problem ?? (advanced ? null : ADVANCED_OFF)}
-            warning={weapon?.weaponType.warning ?? null}
-            note="U-8 で確定。パーツは変わりません"
-            onChange={(v) => update((b, o) => writeWeaponType(b, o, Number(v), { advanced }))}
-          />
-          <SelectRow
-            label="鞘（X）"
-            offset={base + WEAPON_FIELDS.sheath}
-            value={weapon ? String(weapon.sheath.value) : null}
-            currentLabel={weapon ? `表にない鞘（${hex(weapon.sheath.value, 4)}）` : undefined}
-            options={SHEATH_OPTIONS}
-            problem={weapon?.sheath.problem ?? (advanced ? null : ADVANCED_OFF)}
-            warning={weapon?.sheath.warning ?? null}
-            note="名前は同じ鞘を使う刃。刃を選び直すと、鞘も刃に合わせて書き換わります"
-            onChange={(v) => update((b, o) => writeWeaponSheath(b, o, Number(v), { advanced }))}
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {(["attack", "durabilityMax", "durability", "quality", "qualityMax"] as const).map(
-            numberRow,
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium">魅力</span>
-            <InfoTip offset={`${formatOffset(base + WEAPON_FIELDS.charms)} から 4 B × 3組`}>
-              同じ魅力は1組にまとめて個数で書きます
-            </InfoTip>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">{[0, 1, 2].map(charmRow)}</div>
-          {weapon && !charms?.problem && (
-            <EffectBox>
-              {effects.length === 0 ? (
-                <p className="text-muted-foreground">魅力なし</p>
-              ) : (
-                <ul className="flex flex-col gap-1">
-                  {effects.map((e) => (
-                    <li key={e.id} className="flex gap-2">
-                      <EffectIcon icon={charmIcon(e.id)} />
-                      <span>
-                        <span className="font-medium">
-                          {e.label} ×{e.count}
-                        </span>
-                        ：{e.summary}
-                        {e.amount && <span className="font-medium">（{e.amount}）</span>}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+    // 閉じているときはカード全体、開いているときは見出しの欄で開閉する（ユーザー判断 2026-10-05）。
+    // キーボードでは見出しの Trigger で開閉できる
+    <Collapsible asChild open={open} onOpenChange={setOpen}>
+      <Card
+        className={open ? "gap-0" : "hover:bg-muted/40 cursor-pointer gap-0"}
+        onClick={(e) => {
+          if (!open && !isOnButton(e)) setOpen(true);
+        }}
+      >
+        <CardHeader
+          className={open ? "cursor-pointer" : undefined}
+          onClick={(e) => {
+            if (open && !isOnButton(e)) setOpen(false);
+          }}
+        >
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            <CollapsibleTrigger className="group flex flex-wrap items-center gap-2 text-left hover:underline">
+              {chevron}
+              {`${index + 1}本目`}
+              {weapon && (
+                <span className="flex flex-wrap items-center gap-2">
+                  ：{/* 銘は武器名の左にラベルとして付ける（ユーザー判断 2026-10-05） */}
+                  {weapon.title.label && <Badge variant="secondary">{weapon.title.label}</Badge>}
+                  {weapon.name.value || "（名前なし）"}
+                </span>
               )}
-            </EffectBox>
+            </CollapsibleTrigger>
+            <InfoTip offset={`${formatOffset(base)} から 0xA0 B`} />
+            {roles.map((r) => (
+              <Badge key={r}>{r}</Badge>
+            ))}
+            {state?.mineuchi && state.right === index && <Badge variant="outline">峰打</Badge>}
+          </CardTitle>
+          {weapon && (
+            <CardDescription>
+              攻撃力 {num("attack")}・耐久 {num("durability")}/{num("durabilityMax")}・質{" "}
+              {num("quality")}/{num("qualityMax")}
+            </CardDescription>
           )}
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <SelectRow
-              label="銘"
-              offset={base + WEAPON_FIELDS.title}
-              value={
-                weapon ? (weapon.title.value === null ? NONE : String(weapon.title.value)) : null
-              }
-              currentLabel={
-                weapon ? (weapon.title.label ?? `未知（${hex(weapon.title.raw, 6)}）`) : undefined
-              }
-              options={TITLE_OPTIONS}
-              problem={weapon?.title.problem ?? null}
-              warning={weapon?.title.warning ?? null}
-              onChange={(v) =>
-                update((b, o) => writeWeaponTitle(b, o, v === NONE ? null : Number(v)))
-              }
-            />
-            {weapon && !weapon.title.problem && (
-              <EffectBox>
-                {title ? (
-                  <>
-                    <p className="flex gap-2">
-                      <EffectIcon icon={titleIcon(weapon.title.value ?? -1)} />
-                      {title.effect}
-                    </p>
-                    {title.note && <p className="text-muted-foreground text-xs">{title.note}</p>}
-                  </>
-                ) : (
-                  <p className="text-muted-foreground">
-                    {weapon.title.value === null ? "銘なし" : "効果は不明"}
-                  </p>
-                )}
-              </EffectBox>
-            )}
-          </div>
-          {numberRow("kills")}
-          {numberRow("tsumaKills")}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Label>手に持っていた時間</Label>
-              <InfoTip offset={base + WEAPON_FIELDS.heldTime}>
-                表示だけ。メニュー画面にいる間は増えないように見える（§3.4）
-              </InfoTip>
-              <CertaintyBadge mark="🔶" text="推測" />
+          {recordProblem && (
+            <CardDescription className="text-destructive">
+              読み取り専用：{recordProblem}
+            </CardDescription>
+          )}
+        </CardHeader>
+        <CollapsibleContent className={COLLAPSIBLE_ANIMATION}>
+          <CardContent className="flex flex-col gap-6 pt-6">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <FieldRow
+                label="武器名"
+                offset={base + WEAPON_FIELDS.name}
+                value={weapon?.name.value ?? null}
+                problem={weapon?.name.problem ?? null}
+                warning={weapon?.name.warning ?? null}
+                format={(v) => v}
+                parse={parseName}
+                apply={(v) => update((b, o) => writeWeaponName(b, o, v))}
+                hint={`最大${WEAPON_NAME_MAX_CHARS}文字`}
+              />
+              <SelectRow
+                label="完成武器"
+                offset={base + WEAPON_FIELDS.weaponId}
+                value={weapon ? String(weapon.weaponId.value) : null}
+                currentLabel={weapon ? `未知（${hex(weapon.weaponId.value, 4)}）` : undefined}
+                options={WEAPON_ID_OPTIONS}
+                problem={weapon?.weaponId.problem ?? null}
+                warning={weapon?.weaponId.warning ?? null}
+                note="名前・パーツは変わりません"
+                onChange={(v) => update((b, o) => writeWeaponId(b, o, Number(v)))}
+              />
+              <OverrideRow
+                label="武器種"
+                offset={base + WEAPON_FIELDS.weaponType}
+                value={weapon ? String(weapon.weaponType.value) : null}
+                currentLabel={weapon ? `未知（${weapon.weaponType.value}）` : undefined}
+                options={TYPE_OPTIONS}
+                problem={weapon?.weaponType.problem ?? null}
+                warning={weapon?.weaponType.warning ?? null}
+                note="パーツは変わりません"
+                idleHint="パーツに合わせて決まります"
+                overrideHint="バックアップを取ってから試してください"
+                onChange={(v) =>
+                  update((b, o) => writeWeaponType(b, o, Number(v), { advanced: true }))
+                }
+              />
             </div>
-            <p className="text-sm">{weapon ? `${weapon.heldTime.toLocaleString()} 秒？` : "—"}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              {/* 鞘は刃に合わせて決まるので、刃のすぐ下に置く */}
+              <div className="flex flex-col gap-4">
+                {partRow("blade")}
+                <OverrideRow
+                  label="鞘"
+                  offset={base + WEAPON_FIELDS.sheath}
+                  value={weapon ? String(weapon.sheath.value) : null}
+                  currentLabel={weapon ? `表にない鞘（${hex(weapon.sheath.value, 4)}）` : undefined}
+                  options={SHEATH_OPTIONS}
+                  problem={weapon?.sheath.problem ?? null}
+                  warning={weapon?.sheath.warning ?? null}
+                  // 一覧にない値ではロード時にエラーが出たので、一覧にあるものだけ選べる
+                  note="名前は同じ鞘を使う刃。一覧にない鞘ではロード時にエラーが出て鞘が表示されませんでした（ゲーム内で分解・再組み立てすると直りました）"
+                  idleHint="刃を選び直すと、刃に合わせて書き換わります"
+                  overrideHint="バックアップを取ってから試してください"
+                  onChange={(v) =>
+                    update((b, o) => writeWeaponSheath(b, o, Number(v), { advanced: true }))
+                  }
+                />
+              </div>
+              {partRow("guard")}
+              {partRow("grip")}
+            </div>
+
+            <Section title="攻撃力・耐久・質">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{numberRow("attack")}</div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <NumberPair title="耐久">
+                  {numberRow("durability", "現在")}
+                  {numberRow("durabilityMax", "最大")}
+                </NumberPair>
+                <NumberPair title="質">
+                  {numberRow("quality", "現在")}
+                  {numberRow("qualityMax", "最大")}
+                </NumberPair>
+              </div>
+            </Section>
+
+            <Section title="銘・魅力">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <SelectRow
+                    label="銘"
+                    offset={base + WEAPON_FIELDS.title}
+                    value={
+                      weapon
+                        ? weapon.title.value === null
+                          ? NONE
+                          : String(weapon.title.value)
+                        : null
+                    }
+                    currentLabel={
+                      weapon
+                        ? (weapon.title.label ?? `未知（${hex(weapon.title.raw, 6)}）`)
+                        : undefined
+                    }
+                    options={TITLE_OPTIONS}
+                    problem={weapon?.title.problem ?? null}
+                    warning={weapon?.title.warning ?? null}
+                    onChange={(v) =>
+                      update((b, o) => writeWeaponTitle(b, o, v === NONE ? null : Number(v)))
+                    }
+                  />
+                  {weapon && !weapon.title.problem && (
+                    <EffectBox>
+                      {title ? (
+                        <>
+                          <p className="flex gap-2">
+                            <EffectIcon icon={titleIcon(weapon.title.value ?? -1)} />
+                            {title.effect}
+                          </p>
+                          {title.note && (
+                            <p className="text-muted-foreground text-xs">{title.note}</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-muted-foreground">
+                          {weapon.title.value === null ? "銘なし" : "効果は不明"}
+                        </p>
+                      )}
+                    </EffectBox>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium">魅力</span>
+                  <InfoTip offset={`${formatOffset(base + WEAPON_FIELDS.charms)} から 4 B × 3組`}>
+                    同じ魅力は1組にまとめて個数で書きます
+                  </InfoTip>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">{[0, 1, 2].map(charmRow)}</div>
+                {weapon && !charms?.problem && (
+                  <EffectBox>
+                    {effects.length === 0 ? (
+                      <p className="text-muted-foreground">魅力なし</p>
+                    ) : (
+                      <ul className="flex flex-col gap-1">
+                        {effects.map((e) => (
+                          <li key={e.id} className="flex gap-2">
+                            <EffectIcon icon={charmIcon(e.id)} />
+                            <span>
+                              <span className="font-medium">
+                                {e.label} ×{e.count}
+                              </span>
+                              ：{e.summary}
+                              {e.amount && <span className="font-medium">（{e.amount}）</span>}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </EffectBox>
+                )}
+              </div>
+            </Section>
+
+            <Section title="斬殺数・つま斬り数">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {numberRow("kills")}
+                {numberRow("tsumaKills")}
+              </div>
+            </Section>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }

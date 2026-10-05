@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { readF32, readU32, readUtf16Fixed, writeF32, writeU32, writeU8, writeUtf16Fixed } from './binary'
+import { readF32, readI16, readU32, readUtf16Fixed, writeF32, writeI16, writeU32, writeU8, writeUtf16Fixed } from './binary'
+
+describe('i16（リトルエンディアン ✅ §2）', () => {
+  it('負の値を 2 の補数の LE で読み書きする', () => {
+    const b = new Uint8Array(2)
+    writeI16(b, 0, -2)
+    expect([...b]).toEqual([0xfe, 0xff])
+    expect(readI16(b, 0)).toBe(-2)
+    writeI16(b, 0, 0x7fff)
+    expect(readI16(b, 0)).toBe(32767)
+  })
+
+  it('i16 の範囲外は拒否する', () => {
+    const b = new Uint8Array(2)
+    expect(() => writeI16(b, 0, 32768)).toThrow(RangeError)
+    expect(() => writeI16(b, 0, -32769)).toThrow(RangeError)
+    expect([...b]).toEqual([0, 0])
+  })
+})
 
 describe('u32 / f32（リトルエンディアン ✅ §2）', () => {
   it('u32 を LE で読み書きする', () => {

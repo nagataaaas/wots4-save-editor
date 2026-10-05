@@ -1,6 +1,7 @@
 import { useId, useState, type ReactNode } from 'react'
 import { Input } from '@/components/ui/input'
 import { InfoTip } from '@/components/info-tip'
+import { WarningTip } from '@/components/warning-tip'
 import { Label } from '@/components/ui/label'
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string }
@@ -13,7 +14,7 @@ type Props<T> = {
   value: T | null
   /** 妥当性検証に落ちた理由。あれば読み取り専用 */
   problem: string | null
-  /** 編集はできるが注意が必要な理由（正規範囲外の値など） */
+  /** 編集はできるが注意が必要な理由（正規範囲外の値など）。項目名の横の警告アイコンにホバーで表示する */
   warning?: string | null
   format: (value: T) => string
   parse: (input: string) => ParseResult<T>
@@ -57,6 +58,7 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
       <div className="flex flex-wrap items-center gap-2">
         <Label htmlFor={id}>{label}</Label>
         <InfoTip offset={offset}>{note}</InfoTip>
+        {!problem && <WarningTip warning={warning} />}
         {badges}
       </div>
       <Input
@@ -78,12 +80,12 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
       />
       {problem ? (
         <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>
-      ) : error ? (
-        <p className="text-destructive text-xs">{error}</p>
-      ) : warning ? (
-        <p className="text-xs text-amber-600 dark:text-amber-400">⚠ {warning}</p>
       ) : (
-        hint && <p className="text-muted-foreground text-xs">{hint}</p>
+        // hint（範囲など）は常に出し、エラーはその下に足す。警告は項目名の横のアイコン（WarningTip）
+        <>
+          {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
+          {error && <p className="text-destructive text-xs">{error}</p>}
+        </>
       )}
     </div>
   )

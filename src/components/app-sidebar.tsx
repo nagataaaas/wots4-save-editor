@@ -17,7 +17,10 @@ import {
   SidebarMenuSubItem,
   SidebarSeparator,
 } from '@/components/ui/sidebar'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { isFolder, sectionGroups, type SectionId } from '@/features/sections'
+import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { useSave } from '@/lib/save-context'
 
 type Props = {
@@ -132,6 +135,29 @@ function FilePanel() {
           <AlertDescription className="text-xs">{error}</AlertDescription>
         </Alert>
       )}
+      <AdvancedModeSwitch />
+    </div>
+  )
+}
+
+/** 上級者モードの切り替え。ゲーム上の範囲を超える値を、システム上の範囲まで受け付ける */
+function AdvancedModeSwitch() {
+  const { advanced, setAdvanced } = useAdvancedMode()
+  return (
+    <div
+      className={`flex flex-col gap-1 rounded-md border p-2 ${advanced ? 'border-amber-500 bg-amber-500/10' : ''}`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor="advanced-mode" className="text-xs">
+          上級者モード
+        </Label>
+        <Switch id="advanced-mode" checked={advanced} onCheckedChange={setAdvanced} />
+      </div>
+      <p className="text-muted-foreground text-xs">
+        {advanced
+          ? '🔶 ゲーム上の範囲を超える値も書けます。データ破損のおそれがあるので、バックアップを取ってから試してください'
+          : 'オンにすると、ゲーム上の範囲を超える値もシステム上の範囲まで書けます'}
+      </p>
     </div>
   )
 }

@@ -33,6 +33,17 @@ export function writeU16(bytes: Uint8Array, offset: number, value: number): void
   view(bytes).setUint16(offset, value, true)
 }
 
+export function readI16(bytes: Uint8Array, offset: number): number {
+  assertRange(bytes, offset, 2)
+  return view(bytes).getInt16(offset, true)
+}
+
+export function writeI16(bytes: Uint8Array, offset: number, value: number): void {
+  assertRange(bytes, offset, 2)
+  if (!Number.isInteger(value) || value < -0x8000 || value > 0x7fff) throw new RangeError(`i16 の範囲外です: ${value}`)
+  view(bytes).setInt16(offset, value, true)
+}
+
 export function readU32(bytes: Uint8Array, offset: number): number {
   assertRange(bytes, offset, 4)
   return view(bytes).getUint32(offset, true)
