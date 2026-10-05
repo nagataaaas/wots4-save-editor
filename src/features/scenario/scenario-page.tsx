@@ -61,6 +61,7 @@ import {
   EVENT_STATE_OFFSET,
   EVENT_USED_COUNT,
   bulkIndices,
+  usedIndices,
   readEvents,
   recordLabel,
   stateLabel,
@@ -408,9 +409,9 @@ const recordOptions: SelectOption[] = EVENT_RECORDS.map((r) => ({
 function EventsCard({ view }: { view: EventsView | null }) {
   const { advanced } = useAdvancedMode();
   const options = useMemo(() => stateOptions(advanced), [advanced]);
-  // 使われている添字（0〜98）は名前の有無にかかわらず添字順に並べ、それより後はトグルの中に入れる
-  const used = Array.from({ length: EVENT_USED_COUNT }, (_, i) => i);
-  const unused = view?.entries.slice(EVENT_USED_COUNT) ?? [];
+  // 使われている添字（0〜98 と、それより後で名前の分かる添字）は添字順に並べ、残りはトグルの中に入れる
+  const used = usedIndices();
+  const unused = view?.entries.filter((e) => !used.includes(e.index)) ?? [];
 
   return (
     <Card>
@@ -442,7 +443,7 @@ function EventsCard({ view }: { view: EventsView | null }) {
               className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-90"
               aria-hidden
             />
-            使われていないように見える添字 {EVENT_USED_COUNT}〜{EVENT_COUNT - 1}（{unused.length}件）
+            使われていないように見える添字 {EVENT_USED_COUNT}〜{EVENT_COUNT - 1}（名前の分かるものを除く、{unused.length}件）
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid gap-4 pt-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -465,7 +466,10 @@ function EventsCard({ view }: { view: EventsView | null }) {
 
 const scopeOptions: { value: BulkScope; label: string }[] = [
   { value: "named", label: `名前の分かる添字（${bulkIndices("named").length}件）` },
-  { value: "used", label: `使われている添字 0〜${EVENT_USED_COUNT - 1}（${EVENT_USED_COUNT}件）` },
+  {
+    value: "used",
+    label: `使われている添字 0〜${EVENT_USED_COUNT - 1}＋名前の分かる添字（${bulkIndices("used").length}件）`,
+  },
   { value: "all", label: `すべての添字（${EVENT_COUNT}件）` },
 ];
 
@@ -503,7 +507,7 @@ function BulkEventsPanel({
         <CertaintyBadge mark="❓" text="ゲームへの影響は未確認" />
       </div>
       <p className="text-muted-foreground text-xs">
-        選んだ範囲の添字に、同じ値をまとめて書きます。添字 99 以降は使われていないように見える（状態・記録とも FF）ため、
+        選んだ範囲の添字に、同じ値をまとめて書きます。添字 99 以降は名前の分かるもの（116 など）を除いて使われていないように見える（状態・記録とも FF）ため、
         「すべて」で FF 以外を書くとゲームが想定しない並びになるかもしれません。
       </p>
       <div className="grid gap-3 sm:grid-cols-3">

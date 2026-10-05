@@ -29,6 +29,7 @@ export const EVENT_COUNT = 166 // ❓ §3.5
 /**
  * 🔶 イベントとして使われている添字の数（0〜98）。sample の13件すべてで、添字 99〜165 は A・B とも FF だった
  * （1周目の S4-DATA_04 を除く）。docs/event.md の Wiki の一覧は約91件で、数は合っていない（❓）
+ * ただし 99 以降にもイベントはある（✅ [U] 2026-10-06：116＝夜の墓場で）。99 以降で名前の分かる添字は usedIndices に含める
  */
 export const EVENT_USED_COUNT = 99
 
@@ -160,6 +161,7 @@ export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   96: { name: '侍一直線', day: 'エンディング', basis: 'chart' },
   97: { name: '魔鱗組として', day: '不明', basis: 'chart' }, // docs/event.md に記載なし
   98: { name: '釜茹で侍', day: '不明', basis: 'chart' }, // docs/event.md に記載なし
+  116: { name: '夜の墓場で', day: '3日目夜', basis: 'chart' }, // [U] 2026-10-06。99 以降で初めて見つかった添字
 }
 
 export type EventEntry = {
@@ -242,12 +244,19 @@ export function writeEventRecord(bytes: Uint8Array, index: number, value: number
   writeU8(bytes, EVENT_RECORD_OFFSET + index, value)
 }
 
-/** 一括設定の範囲。'named' は EVENT_NAMES の添字、'used' は 0〜EVENT_USED_COUNT−1、'all' は 0〜EVENT_COUNT−1 */
+/** 使われている添字：0〜EVENT_USED_COUNT−1 と、それより後で名前の分かる添字（116 など）。昇順 */
+export function usedIndices(): number[] {
+  const named = Object.keys(EVENT_NAMES).map(Number).filter((i) => i >= EVENT_USED_COUNT)
+  return [...Array.from({ length: EVENT_USED_COUNT }, (_, i) => i), ...named.sort((a, b) => a - b)]
+}
+
+/** 一括設定の範囲。'named' は EVENT_NAMES の添字、'used' は usedIndices()、'all' は 0〜EVENT_COUNT−1 */
 export type BulkScope = 'named' | 'used' | 'all'
 
 export function bulkIndices(scope: BulkScope): number[] {
   if (scope === 'named') return Object.keys(EVENT_NAMES).map(Number)
-  return Array.from({ length: scope === 'used' ? EVENT_USED_COUNT : EVENT_COUNT }, (_, i) => i)
+  if (scope === 'used') return usedIndices()
+  return Array.from({ length: EVENT_COUNT }, (_, i) => i)
 }
 
 function writeBulk(bytes: Uint8Array, base: number, indices: readonly number[], value: number, problem: string | null): void {
