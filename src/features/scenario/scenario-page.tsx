@@ -507,7 +507,7 @@ function BulkEventsPanel({
         <CertaintyBadge mark="❓" text="ゲームへの影響は未確認" />
       </div>
       <p className="text-muted-foreground text-xs">
-        選んだ範囲の添字に、同じ値をまとめて書きます。添字 99 以降は名前の分かるもの（116 など）を除いて使われていないように見える（状態・記録とも FF）ため、
+        選んだ範囲の添字に、同じ値をまとめて書きます。添字 99 以降は名前の分かるもの（99・116 など）を除いて使われていないように見える（状態・記録とも FF）ため、
         「すべて」で FF 以外を書くとゲームが想定しない並びになるかもしれません。
       </p>
       <div className="grid gap-3 sm:grid-cols-3">

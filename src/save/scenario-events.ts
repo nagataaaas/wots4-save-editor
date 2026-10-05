@@ -29,7 +29,7 @@ export const EVENT_COUNT = 166 // ❓ §3.5
 /**
  * 🔶 イベントとして使われている添字の数（0〜98）。sample の13件すべてで、添字 99〜165 は A・B とも FF だった
  * （1周目の S4-DATA_04 を除く）。docs/event.md の Wiki の一覧は約91件で、数は合っていない（❓）
- * ただし 99 以降にもイベントはある（✅ [U] 2026-10-06：116＝夜の墓場で）。99 以降で名前の分かる添字は usedIndices に含める
+ * ただし 99 以降にもイベントはある（✅ [U] 2026-10-06：99＝大老は生きていた、116＝夜の墓場で）。99 以降で名前の分かる添字は usedIndices に含める
  */
 export const EVENT_USED_COUNT = 99
 
@@ -66,7 +66,7 @@ export type EventName = {
  * 名前の分かっている添字。§3.5「未確定のこと」。day は docs/event.md（Wiki）の時間帯。
  * 2〜46 の名前はユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）。52〜98 も同じ（[U] 2026-10-06）。
  * 4日目以降のイベントの day は時間帯ではなく、docs/event.md の節（ルート・エンディング）を入れる。
- * 47〜51・67・84 は ❓。未対応のイベントとして「大老は生きていた」「夜の墓場で」が分かっているが、どの添字かは根拠がない
+ * 51・99・116 も [U] 2026-10-06。47〜50・67・84 は ❓
  */
 export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   0: { name: '船上の侍', day: '1日目昼', basis: 'guess' }, // どのセーブでも 04。名前は [U] 2026-10-05（Samurai on Board、オープニング）
@@ -116,6 +116,7 @@ export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   44: { name: '志士の刀', day: '4日目以降', basis: 'chart' },
   45: { name: '根無し草', day: '4日目以降', basis: 'chart' },
   46: { name: '剣術大会開催', day: '4日目以降', basis: 'chart' },
+  51: { name: '覇者となる', day: '4日目以降', basis: 'chart' }, // [U] 2026-10-06
   52: { name: '最後通告', day: '4日目以降', basis: 'chart' },
   53: { name: '闇黒の意志', day: '幕府ルート', basis: 'chart' },
   54: { name: '大老武断', day: '幕府ルート', basis: 'chart' },
@@ -159,8 +160,9 @@ export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   94: { name: '変わり往く心', day: 'エンディング', basis: 'chart' },
   95: { name: '海外雄飛', day: 'エンディング', basis: 'chart' },
   96: { name: '侍一直線', day: 'エンディング', basis: 'chart' },
-  97: { name: '魔鱗組として', day: '不明', basis: 'chart' }, // docs/event.md に記載なし
-  98: { name: '釜茹で侍', day: '不明', basis: 'chart' }, // docs/event.md に記載なし
+  97: { name: '魔鱗組として', day: 'エンディング', basis: 'chart' }, // docs/event.md に記載なし。エンディングなのは [U] 2026-10-06
+  98: { name: '釜茹で侍', day: 'エンディング', basis: 'chart' }, // 同上
+  99: { name: '大老は生きていた', day: 'エンディング', basis: 'chart' }, // [U] 2026-10-06
   116: { name: '夜の墓場で', day: '3日目夜', basis: 'chart' }, // [U] 2026-10-06。99 以降で初めて見つかった添字
 }
 

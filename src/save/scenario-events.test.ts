@@ -149,22 +149,23 @@ describe('一括設定（デバッグ用）', () => {
     const after = before.slice()
     writeEventStates(after, bulkIndices('named'), 0x05, { advanced: false })
     // 名前の分かる添字は 0〜46（✅ [U] 2026-10-05）と、52〜98 のうち 67・84 を除いたもの（✅ [U] 2026-10-06、ゲーム内のチャートで確認）。
-    // 116＝夜の墓場で（✅ [U] 2026-10-06）。47〜51・67・84 は ❓。もとが 05 の添字はないので、すべて変わる
-    const unknown = [47, 48, 49, 50, 51, 67, 84]
-    const named = [...Array.from({ length: EVENT_USED_COUNT }, (_, i) => i).filter((i) => !unknown.includes(i)), 116]
+    // 51＝覇者となる、99＝大老は生きていた、116＝夜の墓場で（✅ [U] 2026-10-06）。47〜50・67・84 は ❓。もとが 05 の添字はないので、すべて変わる
+    const unknown = [47, 48, 49, 50, 67, 84]
+    const named = [...Array.from({ length: EVENT_USED_COUNT }, (_, i) => i).filter((i) => !unknown.includes(i)), 99, 116]
     expect(bulkIndices('named')).toEqual(named)
     expect(diffOffsets(before, after)).toEqual(bulkIndices('named').map((i) => EVENT_STATE_OFFSET + i))
   })
 
-  it('🔶 使われている添字（0〜98 と ✅ [U] 116＝夜の墓場で）だけを書き、ほかの 99 以降は変えない', () => {
+  it('🔶 使われている添字（0〜98 と ✅ [U] 99＝大老は生きていた・116＝夜の墓場で）だけを書き、ほかの 99 以降は変えない', () => {
     const before = makeSave(A_START)
     const after = before.slice()
-    expect(bulkIndices('used')).toEqual([...Array.from({ length: EVENT_USED_COUNT }, (_, i) => i), 116])
+    expect(bulkIndices('used')).toEqual([...Array.from({ length: EVENT_USED_COUNT }, (_, i) => i), 99, 116])
     writeEventRecords(after, bulkIndices('used'), 0x04, { advanced: false })
     const entries = readEvents(after).entries
     expect(entries.slice(0, EVENT_USED_COUNT).every((e) => e.record === 0x04)).toBe(true)
+    expect(entries[99].record).toBe(0x04)
     expect(entries[116].record).toBe(0x04)
-    expect(entries.slice(EVENT_USED_COUNT).filter((e) => e.index !== 116).every((e) => e.record === 0xff)).toBe(true)
+    expect(entries.slice(EVENT_USED_COUNT).filter((e) => e.index !== 99 && e.index !== 116).every((e) => e.record === 0xff)).toBe(true)
   })
 
   it('すべての添字の記録を 04 にすると、記録の 166 B だけが 04 になる', () => {
