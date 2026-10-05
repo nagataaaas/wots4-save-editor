@@ -1,7 +1,7 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。
 // 時間帯（0x0010・0x0014）と保留量（0x0012）はゲーム内で書き込みの反映を確認済み（✅ [U]）。
-// 0x0010 の日の部分だけを書き換えても日数は変わらなかったので、日数は 0x0BD8（🔶 経過日数、要ゲーム内確認）と置いている
+// 0x0010 の日の部分だけを書き換えても日数は変わらず、0x0BD8（経過日数）も一緒に書くと変わった（✅ [U] 2026-10-05）
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32, writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -85,7 +85,7 @@ describe('書き込み', () => {
     expect(Array.from(after.slice(0x10, 0x15))).toEqual(SEEN.day1Night.head)
   })
 
-  it('🔶 日数の変更は 0x0010・0x0011・0x0014・0x0BD8 だけを変える（要ゲーム内確認）', () => {
+  it('日数の変更は 0x0010・0x0011・0x0014・0x0BD8 だけを変える（✅ [U] ゲーム内で反映）', () => {
     const before = makeSave(SEEN.day1Evening)
     const after = before.slice()
     writeDayTime(after, 3, 2, { advanced: false })

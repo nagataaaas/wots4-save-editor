@@ -120,7 +120,7 @@ export function ScenarioPage() {
         <AlertTitle>検証用（要ゲーム内確認）</AlertTitle>
         <AlertDescription>
           この画面の項目は、どれもセーブの差分から推定したものです（解析ノート §3.5）。
-          書き換えたセーブがゲームで読めるか、意図どおりに反映されるかは確かめていません。
+          日数・時間帯、イベントの失敗（05）・未到達（FF）、チャート表示は書き換えの反映を確認済みですが、勢力の記録やほかの値は確かめていません。
           書き換える前のセーブを残してから試してください。
         </AlertDescription>
       </Alert>
@@ -150,8 +150,8 @@ function DateCard({ view }: { view: DateView | null }) {
       <CardHeader>
         <CardTitle>日数・時間帯</CardTitle>
         <CardDescription>
-          時間帯（0x0010・0x0014）と保留量（0x0012）は、書き換えがゲームに反映されることを確認済みです。
-          日数は 0x0010 の日の部分では変わらなかったため、0x0BD8（経過日数）を候補として一緒に書きます（未確認）。
+          日数（0x0BD8・0x0010・0x0014）・時間帯（0x0010・0x0014）・保留量（0x0012）は、書き換えがゲームに反映されることを確認済みです。
+          日を進めると、過ぎた時間帯に済ませていないイベントはロード時に失敗になります。
           {view &&
             ` 生の値：0x0010＝${view.raw.dayTime}、0x0012＝${view.pending}、0x0014＝${view.raw.slot}、0x0BD8＝${view.raw.dayIndex}`}
         </CardDescription>
@@ -160,7 +160,6 @@ function DateCard({ view }: { view: DateView | null }) {
         <FieldRow
           label="日数"
           offset={DATE_OFFSETS.dayIndex}
-          badges={diffBadge}
           value={view?.day ?? null}
           problem={problem}
           warning={view?.warning}
@@ -169,7 +168,7 @@ function DateCard({ view }: { view: DateView | null }) {
           apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
           inputMode="numeric"
           hint={`${range.min}〜${range.max}日目`}
-          note="0x0BD8（u32、経過日数）・0x0010（u16）・0x0014（u8）を書きます。0x0010 だけでは日数は変わりませんでした"
+          note="0x0BD8（u32、経過日数）・0x0010（u16）・0x0014（u8）を書きます。0x0010 だけでは日数は変わりませんでした。日を進めると、過ぎた時間帯のイベントはゲームが失敗にします"
         />
         <SelectRow
           label="時間帯"
