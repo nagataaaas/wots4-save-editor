@@ -336,8 +336,20 @@ describe('武器レコード（合成）', () => {
     // 色違い系：X = ID − 0x5D（霊禍 0x119 → X 0xBC）
     writeWeaponPart(b, o, 'blade', ct(0x119))
     expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0x19, 0x01, 0xbc, 0x00])
-    // 規則外の刃（貫誠 0x37）は書けない
-    expect(() => writeWeaponPart(b, o, 'blade', ct(0x37))).toThrow()
+  })
+
+  it('❓ U-3 案B（ユーザー判断 2026-10-05）：X 不明の [CT] の刃は ID だけを書き、X は元のまま残して警告する', () => {
+    const before = makeSave()
+    const o = beltOffset(0)
+    const b = before.slice()
+    const x = [...before.subarray(o + 0x0a, o + 0x0c)]
+    // 貫誠 0x37（規則外）
+    writeWeaponPart(b, o, 'blade', ct(0x37))
+    expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0x37, 0x00, ...x])
+    expect(onlyChanged(before, b, o + 0x08, 2)).toBe(true)
+    const blade = readWeapon(b, o).blade
+    expect(blade.value).toMatchObject({ label: '貫誠', key: ct(0x37) })
+    expect(blade.warning).toContain('分解→組み立て')
   })
 
   it('[CT] の鍔は +0x0C の ID（u16）だけ、柄は +0x0E の ID だけを書く', () => {

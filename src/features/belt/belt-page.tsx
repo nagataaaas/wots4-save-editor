@@ -40,7 +40,7 @@ import {
   WEAPON_NUMBER_RANGES,
   formatRange,
   WEAPON_NAME_MAX_CHARS,
-  isPartWritable,
+  isXUnknown,
   partKey,
   partOptions,
   validateWeaponName,
@@ -499,13 +499,12 @@ function WeaponCard({
   const partRow = (kind: PartKind) => {
     const field = weapon?.[kind] ?? null;
     const options = partOptions(kind, weapon?.special ?? false).map((p) => {
-      const writable = isPartWritable(kind, p);
-      const label = !writable
-        ? `${p.label}（X 不明のため選べません）`
+      const label = isXUnknown(kind, p)
+        ? `${p.label}（X 不明・要分解→組み立て）`
         : p.xExtended
           ? `${p.label}（X は推測・要確認）`
           : p.label;
-      return { value: partKey(p), label, disabled: !writable };
+      return { value: partKey(p), label };
     });
     const digits = kind === "grip" ? 4 : 6;
     return (
@@ -527,7 +526,7 @@ function WeaponCard({
             ? undefined
             : weapon?.special
               ? "特殊武器の刃は特殊武器の刃の間だけで変えられます"
-              : "[CT] だけにある刃は、X を 🔶 規則で計算して書きます（U-3 案C、要ゲーム内確認）"
+              : "[CT] だけにある刃は、X を 🔶 規則で計算して書きます（U-3 案C、要ゲーム内確認）。X 不明の刃は ID だけを書き X は元のまま残すので、ゲーム内で分解→組み立てて正しい X にしてください（U-3 案B）"
         }
         onChange={(v) => update((b, o) => writeWeaponPart(b, o, kind, v))}
       />

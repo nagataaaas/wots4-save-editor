@@ -442,9 +442,11 @@ export function readWeapon(
         ? `ゲーム内での名前が未確認の ID です（U-13）。ゲーム内の表示を教えてください`
         : hit.xDiffers && kind === "blade"
           ? `鞘（X）がこの刃の標準の鞘と違います（${raw.toString(16).padStart(6, "0")}）。刃を選び直すと標準の鞘に戻ります`
-          : hit.option.xExtended
-            ? `X は規則を確かめた範囲の外に延ばして計算した値です（U-3）。ゲーム内の名前・外観を確認してください`
-            : null;
+          : isXUnknown(kind, hit.option)
+            ? `この刃の X（鞘、+0x0A〜）は不明で、元の値のままです（U-3 案B）。ゲーム内で分解→組み立てると正しい X になります`
+            : hit.option.xExtended
+              ? `X は規則を確かめた範囲の外に延ばして計算した値です（U-3）。ゲーム内の名前・外観を確認してください`
+              : null;
     return f(view, kind === "blade" ? null : specialProblem, warning);
   };
 
@@ -540,7 +542,7 @@ export function writeWeaponId(bytes: Uint8Array, offset: number, id: number): vo
 
 /**
  * 選択肢の一覧。特殊武器の刃は特殊武器の刃の間だけで変えられ、鍔・柄は変えられない（D-15）。
- * 規則で X を計算できない [CT] の刃（x が null）も含む。書けるかは isPartWritable で判定する
+ * 規則で X を計算できない [CT] の刃（x が null）も含む（isXUnknown）
  */
 export function partOptions(kind: PartKind, special: boolean): readonly PartOption[] {
   if (kind === "blade") return special ? SPECIAL_BLADES : BLADES;
@@ -548,9 +550,12 @@ export function partOptions(kind: PartKind, special: boolean): readonly PartOpti
   return PART_LISTS[kind];
 }
 
-/** [CT] の刃は、🔶 X を規則で計算できるものだけ書ける（U-3 案C） */
-export function isPartWritable(kind: PartKind, option: PartOption): boolean {
-  return !(kind === "blade" && option.source === "ct" && option.x == null);
+/**
+ * ❓ X（§5.5）を規則で計算できない [CT] の刃。ID だけを書き、X は元の値のまま残す（U-3 案B）。
+ * ゲーム内で分解→組み立てると正しい X になるので、それで X を調べる（ユーザー判断 2026-10-05、要ゲーム内確認）
+ */
+export function isXUnknown(kind: PartKind, option: PartOption): boolean {
+  return kind === "blade" && option.source === "ct" && option.x == null;
 }
 
 /**
@@ -558,7 +563,8 @@ export function isPartWritable(kind: PartKind, option: PartOption): boolean {
  * - [TS] の値（source 'ts'）：❓ U-3 案A（✅ I-3 の範囲）。刃・鍔は 3 B、柄は 2 B をそのまま書く。
  *   刃・鍔の 3 B には 🔶 X（§5.5）の一部が含まれ、[TS] と同じく一緒に書き換わる
  * - [CT] の ID（source 'ct'、ユーザー判断で確定扱い 2026-10-05）：❓ U-3 案C（ユーザー判断 2026-10-05、要ゲーム内確認）。
- *   刃は ID（+0x08）と 🔶 規則で計算した X（+0x0A〜+0x0B の u16）、鍔は ID（+0x0C）、柄は ID（+0x0E）を書く
+ *   刃は ID（+0x08）と 🔶 規則で計算した X（+0x0A〜+0x0B の u16）、鍔は ID（+0x0C）、柄は ID（+0x0E）を書く。
+ *   規則外の刃（isXUnknown）は ID だけを書き、X は元の値のまま残す（❓ U-3 案B、ユーザー判断 2026-10-05）
  */
 export function writeWeaponPart(
   bytes: Uint8Array,
@@ -570,16 +576,13 @@ export function writeWeaponPart(
   if (view.problem) throw new RangeError(view.problem);
   const option = partOptions(kind, view.special).find((p) => partKey(p) === key);
   if (!option) throw new RangeError(`書き込めないパーツです（${key}）`);
-  if (!isPartWritable(kind, option))
-    throw new RangeError(
-      `${option.label}は X（§5.5）を規則で計算できないため書き込めません（U-3）`,
-    );
 
   if (kind === "grip") return writeU16(bytes, offset + WEAPON_FIELDS.grip, option.value);
   if (option.source === "ts") return writeU24(bytes, offset + WEAPON_FIELDS[kind], option.value);
   if (kind === "guard") return writeU16(bytes, offset + WEAPON_FIELDS.guard + 1, option.value);
   writeU16(bytes, offset + WEAPON_FIELDS.blade, option.value);
-  writeU16(bytes, offset + WEAPON_FIELDS.blade + 2, option.x as number);
+  // X 不明の刃は X を変えない（U-3 案B。isXUnknown）
+  if (option.x != null) writeU16(bytes, offset + WEAPON_FIELDS.blade + 2, option.x);
 }
 
 /**
