@@ -35,9 +35,9 @@ export const BLADES: readonly PartOption[] = [
   { source: 'ts', value: 0x270020, label: '寂蓮' },
   { source: 'ts', value: 0x280023, label: '曼珠沙華' },
   { source: 'ts', value: 0x30002f, label: '風花' },
-  { source: 'ct', value: 0x37, label: '貫誠', x: null },
-  { source: 'ct', value: 0x38, label: '美帝骨', x: null },
-  { source: 'ct', value: 0x3c, label: '鮫肌丸', x: null },
+  { source: 'ts', value: 0xa80037, label: '貫誠' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
+  { source: 'ts', value: 0x390038, label: '美帝骨' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
+  { source: 'ts', value: 0x53003c, label: '鮫肌丸' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
   { source: 'ct', value: 0x3d, label: '大黒生', x: null },
   { source: 'ct', value: 0x3e, label: '微熱', x: null },
   { source: 'ts', value: 0x56003f, label: '竹刀' },
@@ -302,6 +302,8 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0x2d, label: '徳母里' },
   { id: 0x2e, label: '与根助' },
   { id: 0x30, label: '風花' },
+  { id: 0x39, label: '美帝骨' },
+  { id: 0x53, label: '鮫肌丸' },
   { id: 0x56, label: '竹刀' },
   { id: 0x58, label: '精霊舞' },
   { id: 0x59, label: '炎天過' },
@@ -321,6 +323,7 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0xa2, label: '数寄者' },
   { id: 0xa4, label: '一発丸' },
   { id: 0xa7, label: '絶天' },
+  { id: 0xa8, label: '貫誠' },
   { id: 0xab, label: '高楊枝' },
   { id: 0xac, label: '正道刀' },
   { id: 0xad, label: '天道刀' },
