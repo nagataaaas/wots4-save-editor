@@ -62,8 +62,8 @@ export const BLADES: readonly PartOption[] = [
   { source: 'ts', value: 0x9e0052, label: '藤奈美' },
   { source: 'ts', value: 0x9b009a, label: '真心' },
   { source: 'ts', value: 0x34009f, label: 'ハルユキ' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
-  { source: 'ct', value: 0xa3, label: '空道刀', x: null },
-  { source: 'ct', value: 0xa9, label: '虎吉竹刀', x: null },
+  { source: 'ts', value: 0xab00a3, label: '空道刀' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
+  { source: 'ts', value: 0x5600a9, label: '虎吉竹刀' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
   { source: 'ts', value: 0x6200aa, label: '馬通二' },
   { source: 'ts', value: 0xac0109, label: '正道刀' },
   { source: 'ts', value: 0xad010a, label: '天道刀' },
@@ -115,7 +115,7 @@ export const BLADES: readonly PartOption[] = [
   { source: 'ts', value: 0x390138, label: 'クルセイダー' }, // D-14
   { source: 'ts', value: 0x5b013a, label: 'イプスカリバ' }, // U-13
   { source: 'ts', value: 0x18013b, label: 'なまくら刀' }, // D-14
-  { source: 'ct', value: 0x13e, label: '残月', x: null },
+  { source: 'ts', value: 0x28013e, label: '残月' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
   { source: 'ts', value: 0xab0141, label: '高楊枝' },
   { source: 'ts', value: 0xb00142, label: '無天下' },
   { source: 'ts', value: 0x600143, label: '乃理州' },
@@ -298,7 +298,7 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0x1a, label: '黒獅子' },
   { id: 0x26, label: '天井割・見栄春' },
   { id: 0x27, label: '寂蓮・大天狗' },
-  { id: 0x28, label: '曼珠沙華' },
+  { id: 0x28, label: '曼珠沙華・残月' },
   { id: 0x2d, label: '徳母里' },
   { id: 0x2e, label: '与根助' },
   { id: 0x30, label: '風花' },
@@ -307,7 +307,7 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0x53, label: '鮫肌丸' },
   { id: 0x54, label: '大黒生' },
   { id: 0x55, label: '微熱' },
-  { id: 0x56, label: '竹刀' },
+  { id: 0x56, label: '竹刀・虎吉竹刀' },
   { id: 0x58, label: '精霊舞' },
   { id: 0x59, label: '炎天過' },
   { id: 0x5a, label: '氷天過' },
@@ -327,7 +327,7 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0xa4, label: '一発丸' },
   { id: 0xa7, label: '絶天' },
   { id: 0xa8, label: '貫誠' },
-  { id: 0xab, label: '高楊枝' },
+  { id: 0xab, label: '高楊枝・空道刀' },
   { id: 0xac, label: '正道刀' },
   { id: 0xad, label: '天道刀' },
   { id: 0xae, label: '源平' },

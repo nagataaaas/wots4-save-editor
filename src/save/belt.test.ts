@@ -1,15 +1,10 @@
-// 帯刀と武器レコード。実セーブ（sample/S4-DATA_00、02、02 copy、02 copy 2）があるときはそれでテストし、ないときは飛ばす。
-// 合成したバイト列のテストは、実セーブから帯刀の範囲を写したものを使う（実セーブがないときは飛ばす）。
-/// <reference types="node" />
-import { existsSync, readFileSync } from 'node:fs'
+// 帯刀と武器レコード。合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
 import { BELT_STATE, NO_LEFT, beltOffset, readBelt, writeBeltDual, writeBeltMineuchi, writeBeltRight } from './belt'
 import { TS_SAVE_SIZE } from './hero'
 import {
-  NUMBER_KEYS,
   WEAPON_FIELDS,
   WEAPON_NAME_MAX_CHARS,
-  WEAPON_RECORD_BYTES,
   decodeTitle,
   encodeTitle,
   readWeapon,
@@ -23,11 +18,6 @@ import {
   writeWeaponTitle,
   writeWeaponType,
 } from './weapon'
-
-const sample = (name: string) => new URL(`../../sample/${name}`, import.meta.url)
-const SAMPLES = ['S4-DATA_00', 'S4-DATA_02', 'S4-DATA_02 copy', 'S4-DATA_02 copy 2']
-const hasSamples = SAMPLES.every((n) => existsSync(sample(n)))
-const load = (name: string) => new Uint8Array(readFileSync(sample(name)))
 
 /** 選択肢の識別子（partKey） */
 const ts = (v: number) => `ts:${v}`
@@ -45,152 +35,7 @@ function onlyChanged(a: Uint8Array, b: Uint8Array, offset: number, len: number):
   return d.length > 0 && d.every((i) => i >= offset && i < offset + len)
 }
 
-// 2026-10-05：ゲーム内で見栄春を組み直したあとの S4-DATA_02（帯刀3本目が見栄春）
-describe.skipIf(!existsSync(sample('S4-DATA_02')))('実セーブ（sample/S4-DATA_02、見栄春を組み直したもの）', () => {
-  it('[U] 帯刀3本目の刃は見栄春（36 01 26）', () => {
-    const b = load('S4-DATA_02')
-    const w = readBelt(b).weapons[2]
-    if (w.name.value !== '無名') return // 組み直す前の S4-DATA_02 なら確かめない
-    expect(w.blade.value).toEqual({ value: 0x260136, label: '見栄春', key: ts(0x260136) })
-  })
-})
-
-// 2026-10-05：ゲーム内で大天狗・イプスカリバ・立奈美を組み立てた S4-DATA_02 copy（質の最大値は 13・20・12 とユーザーが確認）
-describe.skipIf(!existsSync(sample('S4-DATA_02 copy')))('実セーブ（sample/S4-DATA_02 copy、U-13 の3本）', () => {
-  it('[U] 帯刀の刃と質の最大値', () => {
-    const ws = readBelt(load('S4-DATA_02 copy')).weapons
-    if (ws.some((w) => w.name.value !== '無名')) return // 峰打の差分に使った前の 02 copy なら確かめない
-    expect(ws.map((w) => w.blade.value.label)).toEqual(['大天狗', 'イプスカリバ', '立奈美'])
-    expect(ws.map((w) => w.numbers.qualityMax.value)).toEqual([13, 20, 12])
-  })
-})
-
-// 2026-10-05：帯刀に上から刀・槍・拳銃を置いた S4-DATA_02 copy 2（U-8 の根拠）
-describe.skipIf(!existsSync(sample('S4-DATA_02 copy 2')))('実セーブ（sample/S4-DATA_02 copy 2、刀・槍・拳銃）', () => {
-  it('[U] U-8：武器種は +0x1E（刀 0・槍 1・拳銃 3）', () => {
-    const ws = readBelt(load('S4-DATA_02 copy 2')).weapons
-    if (ws[2].name.value !== 'M2リボルバー') return // 二刀流の差分に使った前の 02 copy 2 なら確かめない
-    expect(ws.map((w) => [w.weaponType.value, w.weaponType.label])).toEqual([
-      [0, '刀'],
-      [1, '槍'],
-      [3, '拳銃'],
-    ])
-  })
-})
-
-describe.skipIf(!hasSamples)('実セーブ（sample/）', () => {
-  it('✅ [TS][I-3] 帯刀3本を読む（S4-DATA_02 copy 2）', () => {
-    const v = readBelt(load('S4-DATA_02 copy 2'))
-    expect(v.layoutProblem).toBeNull()
-    const [w0, w1, w2] = v.weapons
-    expect(w0).toMatchObject({ offset: 0xa4c2, empty: false, problem: null, special: false })
-    expect(w0.name.value).toBe('Heavy Wisp')
-    expect(w0.weaponId).toMatchObject({ value: 0xffff, label: '自作' })
-    expect(w0.blade.value).toEqual({ value: 0x5a0043, label: '氷天過', key: ts(0x5a0043) })
-    expect(w0.grip.value).toEqual({ value: 0x14, label: '絶天', key: ts(0x14) })
-    // 鍔 0x015400 は [TS] に定義がないが、ゲーム内の表示で霊禍と確認した（[U] 2026-10-05）
-    expect(w0.guard.value).toEqual({ value: 0x015400, label: '霊禍', key: ts(0x015400) })
-    expect(w0.guard).toMatchObject({ problem: null, warning: null })
-    expect(w0.numbers.attack.value).toBe(500)
-    expect(w0.numbers.durabilityMax.value).toBe(2000)
-    expect(w0.numbers.durability.value).toBe(2000)
-    // 質 24 は正規の上限 21 を超えている（警告だけ）
-    expect(w0.numbers.quality).toMatchObject({ value: 24, problem: null })
-    expect(w0.numbers.quality.warning).not.toBeNull()
-    expect(w0.charms.value).toEqual([9, 9, 9]) // 重撃×3（組は 09 00 03 00 の1つ）
-    expect(w0.title).toMatchObject({ value: null, label: 'なし' })
-    expect(w1.name.value).toBe('RainMaker')
-    expect(w1.blade.value.label).toBe('中道刀')
-    expect(w1.guard.value.label).toBe('中道刀')
-    expect(w2.name.value).toBe('Heal')
-    expect(w2.guard.value.label).toBe('数寄者')
-  })
-
-  it('[U] 2026-10-05 帯刀の状態：右手・二刀流の左手・峰打（§3.4 の差分）', () => {
-    expect(readBelt(load('S4-DATA_00')).state).toMatchObject({ count: 3, right: 0, left: null, mineuchi: false, problem: null })
-    expect(readBelt(load('S4-DATA_02')).state).toMatchObject({ right: 1, left: null, mineuchi: false, problem: null })
-    expect(readBelt(load('S4-DATA_02 copy')).state).toMatchObject({ right: 1, left: null, mineuchi: true, problem: null })
-    expect(readBelt(load('S4-DATA_02 copy 2')).state).toMatchObject({ right: 1, left: 2, mineuchi: true, problem: null })
-  })
-
-  it('🔶 手に持っていた時間（+0x86）を読む', () => {
-    expect(readBelt(load('S4-DATA_02')).weapons.map((w) => w.heldTime)).toEqual([715, 271, 77])
-  })
-
-  it('読み出した値をそのまま書き戻すとバイト一致する（往復テスト）', () => {
-    for (const name of SAMPLES) {
-      const before = load(name)
-      const b = before.slice()
-      const v = readBelt(before)
-      v.weapons.forEach((w, i) => {
-        const o = beltOffset(i)
-        writeWeaponName(b, o, w.name.value)
-        writeWeaponId(b, o, w.weaponId.value)
-        // 実セーブにはゲーム上の範囲外の値（質など）もあるので、上級者モード（システム上の範囲）で書き戻す
-        for (const key of NUMBER_KEYS) writeWeaponNumber(b, o, key, w.numbers[key].value, { advanced: true })
-        for (const kind of ['blade', 'guard', 'grip'] as const) {
-          const key = w[kind].value.key
-          // [TS] の値と完全一致するものだけ（[CT] の刃は X を規則で計算し直すので一致しないことがある）
-          if (key?.startsWith('ts:')) writeWeaponPart(b, o, kind, key)
-        }
-        writeWeaponCharms(b, o, w.charms.value)
-        writeWeaponTitle(b, o, w.title.value)
-      })
-      writeBeltMineuchi(b, v.state.mineuchi)
-      writeBeltDual(b, v.state.left)
-      writeBeltRight(b, v.state.right)
-      expect(diffOffsets(before, b), name).toEqual([])
-    }
-  })
-
-  it('状態の書き込みは各1バイトだけを変え、武器袋[0] のほかのバイトは変えない', () => {
-    const before = load('S4-DATA_02')
-    const b = before.slice()
-    writeBeltMineuchi(b, true)
-    expect(diffOffsets(before, b)).toEqual([BELT_STATE.mineuchi])
-    // 02 → 02 copy の差分と同じ値になる
-    expect(b[BELT_STATE.mineuchi]).toBe(load('S4-DATA_02 copy')[BELT_STATE.mineuchi])
-
-    const c = load('S4-DATA_02 copy')
-    const d = c.slice()
-    writeBeltDual(d, 2)
-    expect(diffOffsets(c, d)).toEqual([BELT_STATE.left, BELT_STATE.dual])
-    const want = load('S4-DATA_02 copy 2')
-    expect([...d.subarray(0xa6a8, 0xa6b0)]).toEqual([...want.subarray(0xa6a8, 0xa6b0)])
-
-    writeBeltDual(d, null)
-    expect([...d.subarray(0xa6a8, 0xa6b0)]).toEqual([...c.subarray(0xa6a8, 0xa6b0)])
-  })
-
-  it('右手と左手に同じ武器は持てない', () => {
-    const b = load('S4-DATA_02 copy 2')
-    const before = b.slice()
-    expect(() => writeBeltRight(b, 2)).toThrow()
-    expect(() => writeBeltDual(b, 1)).toThrow()
-    expect(() => writeBeltRight(b, 3)).toThrow()
-    expect(diffOffsets(before, b)).toEqual([])
-    writeBeltRight(b, 0)
-    expect(readBelt(b).state).toMatchObject({ right: 0, left: 2 })
-  })
-
-  it('武器の書き込みは +0x00〜+0x05 を変えない（武器袋[0] の先頭は帯刀の状態と重なる。§3.4）', () => {
-    const before = load('S4-DATA_02 copy 2')
-    const b = before.slice()
-    const o = beltOffset(2)
-    writeWeaponName(b, o, 'Test')
-    writeWeaponNumber(b, o, 'attack', 123)
-    writeWeaponCharms(b, o, [0, 0, 5])
-    writeWeaponTitle(b, o, 0x13)
-    writeWeaponPart(b, o, 'blade', ts(0x5a0043))
-    writeWeaponId(b, o, 0x0002)
-    const d = diffOffsets(before, b)
-    expect(d.every((i) => i >= o + 6 && i < o + WEAPON_RECORD_BYTES)).toBe(true)
-    // 武器袋[0] の先頭（0xA6AA〜0xA6AF）とコピー領域（0x1A78C 付近）は変わらない
-    expect(d.some((i) => i >= 0xa6a8 || i < 0xa4c2)).toBe(false)
-  })
-})
-
-/** 実セーブがなくても動く、合成したバイト列のテスト。帯刀1本目にだけ武器を入れる */
+/** 合成したバイト列。帯刀1本目にだけ武器を入れる */
 function makeSave(): Uint8Array {
   const b = new Uint8Array(TS_SAVE_SIZE)
   for (let i = 0; i < 3; i++) {
@@ -343,16 +188,16 @@ describe('武器レコード（合成）', () => {
     const o = beltOffset(0)
     const b = before.slice()
     const x = [...before.subarray(o + 0x0a, o + 0x0c)]
-    // 空道刀 0xA3（規則外）
-    writeWeaponPart(b, o, 'blade', ct(0xa3))
-    expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0xa3, 0x00, ...x])
+    // 和泉守兼定 0x165（規則外）
+    writeWeaponPart(b, o, 'blade', ct(0x165))
+    expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0x65, 0x01, ...x])
     expect(onlyChanged(before, b, o + 0x08, 2)).toBe(true)
     const blade = readWeapon(b, o).blade
-    expect(blade.value).toMatchObject({ label: '空道刀', key: ct(0xa3) })
+    expect(blade.value).toMatchObject({ label: '和泉守兼定', key: ct(0x165) })
     expect(blade.warning).toContain('分解→組み立て')
   })
 
-  it('U-3 [U] 2026-10-05 ゲーム内で分解→組み立てて分かった X：貫誠 0xA8、美帝骨 0x39、鮫肌丸 0x53、大黒生 0x54、微熱 0x55、ハルユキ 0x34', () => {
+  it('U-3 [U] 2026-10-05 ゲーム内で分解→組み立てて分かった X：貫誠 0xA8、美帝骨 0x39、鮫肌丸 0x53、大黒生 0x54、微熱 0x55、ハルユキ 0x34、空道刀 0xAB、虎吉竹刀 0x56、残月 0x28', () => {
     const b = makeSave()
     const o = beltOffset(0)
     for (const [bytes, label] of [
@@ -362,10 +207,14 @@ describe('武器レコード（合成）', () => {
       [[0x3d, 0x00, 0x54], '大黒生'],
       [[0x3e, 0x00, 0x55], '微熱'],
       [[0x9f, 0x00, 0x34], 'ハルユキ'],
+      // 鞘はほかの武器と同じ（高楊枝・竹刀・曼珠沙華）
+      [[0xa3, 0x00, 0xab], '空道刀'],
+      [[0xa9, 0x00, 0x56], '虎吉竹刀'],
+      [[0x3e, 0x01, 0x28], '残月'],
     ] as const) {
       b.set(bytes, o + 0x08)
       expect(readWeapon(b, o).blade).toMatchObject({ value: { label }, warning: null })
-      expect(readWeapon(b, o).sheath.label).toBe(label)
+      expect(readWeapon(b, o).sheath.label).toContain(label)
     }
   })
 

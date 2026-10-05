@@ -1,5 +1,4 @@
-// 実セーブ（samples/）がまだないため、[TS] のレイアウトに沿って合成したバイト列でテストする。
-// 実セーブでの「読み出し→書き戻し→バイト一致」の往復テストは samples/ を用意してから追加する。
+// [TS] のレイアウトに沿って合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU32, writeU8, writeUtf16Fixed } from './binary'
 import {

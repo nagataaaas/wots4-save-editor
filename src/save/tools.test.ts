@@ -1,7 +1,4 @@
-// [TS] のレイアウトに沿って合成したバイト列と、実セーブ（sample/S4-DATA_03-*、S4-DATA_04）でテストする。
-// 実セーブは sample/ にあるときだけ使う（ないときは該当テストを飛ばす）。
-/// <reference types="node" />
-import { existsSync, readFileSync } from 'node:fs'
+// [TS] のレイアウトに沿って合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -189,49 +186,5 @@ describe('[U] 2026-10-05：+0x04 が 0x06 でない道具の枠', () => {
 
   it('U-1：サイズが違うファイルは修復しない', () => {
     expect(() => repairToolMarks(makeSave(TS_SAVE_SIZE + 8))).toThrow()
-  })
-})
-
-// 実セーブ（sample/）。-1 無編集で砥石1つ、-2 砥石→おにぎり、-3 →伯爵の寿司、-4 -3 におにぎりを追加（売却一覧で落ちた）、
-// -7 -4 の追加した枠の +0x04〜+0x07 を 06 00 00 00 にしたもの（売却一覧が開いた）。S4-DATA_04 は店で3つ買ったもの
-const sample = (name: string) => new URL(`../../sample/${name}`, import.meta.url)
-const hasSamples = ['S4-DATA_03-1', 'S4-DATA_03-3', 'S4-DATA_03-4', 'S4-DATA_03-7', 'S4-DATA_04'].every((n) =>
-  existsSync(sample(n)),
-)
-const load = (name: string) => new Uint8Array(readFileSync(sample(name)))
-
-describe.skipIf(!hasSamples)('実セーブ（sample/）', () => {
-  it('読み出し→書き戻しでバイト一致する', () => {
-    for (const name of ['S4-DATA_03-1', 'S4-DATA_03-7', 'S4-DATA_04']) {
-      const before = load(name)
-      const after = before.slice()
-      for (const s of readTools(before).slots) writeTool(after, s.index, s.id)
-      expect(diffOffsets(before, after)).toEqual([])
-    }
-  })
-
-  it('普通に手に入れた道具はすべて +0x04＝0x06', () => {
-    const v = readTools(load('S4-DATA_04'))
-    expect(v.layoutProblem).toBeNull()
-    expect(v.slots.slice(0, 4).map((s) => [s.id, s.count, s.unknown & 0xff])).toEqual([
-      [0x10, 1, 0x06],
-      [0x10, 1, 0x06],
-      [0x11, 1, 0x06],
-      [0x13, 1, 0x06],
-    ])
-    expect(slotsMissingMark(load('S4-DATA_03-1'))).toEqual([])
-  })
-
-  it('-3 におにぎりを追加すると、売却一覧が開いた -7 と同じバイト列になる', () => {
-    const b = load('S4-DATA_03-3')
-    writeTool(b, 1, 0x02)
-    expect(diffOffsets(b, load('S4-DATA_03-7'))).toEqual([])
-  })
-
-  it('落ちた -4 は警告が出て、修復すると -7 と同じバイト列になる', () => {
-    const b = load('S4-DATA_03-4')
-    expect(slotsMissingMark(b)).toEqual([1])
-    repairToolMarks(b)
-    expect(diffOffsets(b, load('S4-DATA_03-7'))).toEqual([])
   })
 })
