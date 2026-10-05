@@ -247,7 +247,7 @@ function stateOptions(advanced: boolean): SelectOption[] {
   }));
   // 上級者モードでは、まだ見ていない値（大成功などの候補）も選べるようにする
   if (advanced)
-    for (const v of [0x01, 0x02])
+    for (const v of [0x02])
       options.push({ value: String(v), label: `${formatHex2(v)} 不明`, group: "未確認の値" });
   return options;
 }

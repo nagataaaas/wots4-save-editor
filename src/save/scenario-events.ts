@@ -6,10 +6,11 @@
 // A の値：
 //   FF / 00 未到達。✅ [U] 記録が 04 の代官所潜入で A を FF にすると、チャートでは「未達成」と表示された（2026-10-05）。
 //           周回開始時、記録が FF の添字は FF、そうでない添字は 00 になっている（🔶 差分の観察）
+//   01 導入を見た  🔶 04 copy 9 → copy 10（剣術大会の準備の導入カットシーンを見たあと、添字36）
 //   03 進行中      🔶 03 copy 2 → copy 3（志士との出会いの途中）
 //   04 成功・完了  🔶 海兵隊の横暴（2回再現）、志士との出会い、阿片密売、辻斬り、代官所潜入
 //   05 失敗        ✅ [U] 書き込みでチャートに失敗のマークがついた（2026-10-05）。差分は 04 copy 2（海兵隊の横暴で赤城と戦闘）
-// 01・02 などほかの値（大成功など）は ❓。A の長さは B との間隔 0x190 から 166 B と置いた（❓ 200 B の可能性もある）。
+// 02 などほかの値（大成功など）は ❓。A の長さは B との間隔 0x190 から 166 B と置いた（❓ 200 B の可能性もある）。
 //
 // B の値：
 //   FF チャートに出ない。✅ [U] 記録が FF の阿片密売で A を 05 にしても、チャートには出ないまま失敗扱いになった
@@ -34,6 +35,7 @@ export const EVENT_USED_COUNT = 99
 export const EVENT_STATES = [
   { value: 0x00, label: '未到達', confirmed: false },
   { value: 0xff, label: '未到達（FF）', confirmed: true },
+  { value: 0x01, label: '導入を見た', confirmed: false },
   { value: 0x03, label: '進行中', confirmed: false },
   { value: 0x04, label: '成功', confirmed: false },
   { value: 0x05, label: '失敗', confirmed: true },
@@ -45,7 +47,7 @@ export const EVENT_RECORDS = [
   { value: 0x04, label: '出る' },
 ] as const
 
-/** 読み込み時に妥当とみなす値。🔶 EVENT_STATES に、まだ見ていない 01・02 を足したもの */
+/** 読み込み時に妥当とみなす値。🔶 EVENT_STATES に、まだ見ていない 02 を足したもの */
 const PLAUSIBLE_STATES = new Set([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0xff])
 
 export type EventName = {

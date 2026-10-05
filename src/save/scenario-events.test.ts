@@ -81,7 +81,8 @@ describe('書き込み 🔶 要ゲーム内確認', () => {
     expect(Array.from(b.slice(EVENT_STATE_OFFSET, EVENT_STATE_OFFSET + 16))).toEqual(A_DAY2)
   })
 
-  it('通常モードは確認済みの5つの値だけ。上級者モードでは任意の u8', () => {
+  it('通常モードは差分で見た6つの値だけ（🔶 01＝導入を見た、04 copy 10）。上級者モードでは任意の u8', () => {
+    writeEventState(makeSave(A_START), 36, 0x01, { advanced: false })
     const b = makeSave(A_START)
     expect(() => writeEventState(b, 9, 0x02, { advanced: false })).toThrow(RangeError)
     expect(() => writeEventState(b, 9, 0x100, { advanced: true })).toThrow(RangeError)
