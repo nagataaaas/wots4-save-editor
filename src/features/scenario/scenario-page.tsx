@@ -133,14 +133,16 @@ function DateCard({ view }: { view: DateView | null }) {
       <CardHeader>
         <CardTitle>日数・時間帯</CardTitle>
         <CardDescription>
-          0x0010 に「日×100＋時間帯×10」、0x0014 に時間帯が入っていると推定しています。
-          {view && ` 生の値：0x0010＝${view.raw.dayTime}、0x0012＝${view.pending}、0x0014＝${view.raw.slot}`}
+          時間帯（0x0010・0x0014）と保留量（0x0012）は、書き換えがゲームに反映されることを確認済みです。
+          日数は 0x0010 の日の部分では変わらなかったため、0x0BD8（経過日数）を候補として一緒に書きます（未確認）。
+          {view &&
+            ` 生の値：0x0010＝${view.raw.dayTime}、0x0012＝${view.pending}、0x0014＝${view.raw.slot}、0x0BD8＝${view.raw.dayIndex}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
         <FieldRow
           label="日数"
-          offset={DATE_OFFSETS.dayTime}
+          offset={DATE_OFFSETS.dayIndex}
           badges={diffBadge}
           value={view?.day ?? null}
           problem={problem}
@@ -150,22 +152,20 @@ function DateCard({ view }: { view: DateView | null }) {
           apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
           inputMode="numeric"
           hint={`${range.min}〜${range.max}日目`}
-          note="0x0010（u16）と 0x0014（u8）を書きます"
+          note="0x0BD8（u32、経過日数）・0x0010（u16）・0x0014（u8）を書きます。0x0010 だけでは日数は変わりませんでした"
         />
         <SelectRow
           label="時間帯"
           offset={DATE_OFFSETS.slot}
-          badges={diffBadge}
           value={view ? String(view.slot) : null}
           options={slotOptions}
           problem={problem}
-          note="0x0010（u16）と 0x0014（u8）を書きます"
+          note="0x0010（u16）と 0x0014（u8）を書きます。ゲーム内で反映を確認済み"
           onChange={(v) => update((b) => writeDayTime(b, view!.day, Number(v), { advanced }))}
         />
         <SelectRow
           label="時間帯を進める保留量"
           offset={DATE_OFFSETS.pending}
-          badges={diffBadge}
           value={view ? String(view.pending) : null}
           options={pendingOptions}
           problem={problem}
