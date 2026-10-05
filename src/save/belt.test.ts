@@ -2,15 +2,23 @@
 import { describe, expect, it } from 'vitest'
 import { BELT_STATE, NO_LEFT, beltOffset, readBelt, writeBeltDual, writeBeltMineuchi, writeBeltRight } from './belt'
 import { TS_SAVE_SIZE } from './hero'
-import { BLADES, GRIPS, GUARDS, PART_READINGS, SHEATHS, type PartOption } from './weapon-ids'
+import { WEAPON_NAMES, weaponKind } from './master/weapon-names'
+import {
+  BLADES,
+  GRIPS,
+  GUARDS,
+  SHEATHS,
+  SPECIAL_BLADES,
+  sheathKind,
+  sheathName,
+  type PartOption,
+} from './weapon-ids'
 import {
   WEAPON_FIELDS,
   WEAPON_NAME_MAX_CHARS,
   decodeTitle,
   encodeTitle,
-  compareByReading,
   isXUnknown,
-  partWeaponKind,
   readWeapon,
   validateWeaponNumber,
   writeWeaponCharms,
@@ -217,28 +225,29 @@ describe('武器レコード（合成）', () => {
 
   it('❓ U-3 案B（ユーザー判断 2026-10-05）：X 不明の [CT] の刃は今はない。x が null の刃だけが X 不明になる', () => {
     expect(BLADES.filter((p) => isXUnknown('blade', p))).toEqual([])
-    expect(isXUnknown('blade', { source: 'ct', value: 0x999, label: '仮', x: null })).toBe(true)
-    expect(isXUnknown('guard', { source: 'ct', value: 0x999, label: '仮' })).toBe(false)
+    expect(isXUnknown('blade', { source: 'ct', value: 0x999, name: '中道刀', x: null })).toBe(true)
+    expect(isXUnknown('guard', { source: 'ct', value: 0x999, name: '中道刀' })).toBe(false)
   })
 
   it('通常パーツを刀と槍に分ける（[CT] の英語名「Spear …」。焔魔・霜柱・立奈美・藤奈美は [U] でも槍）', () => {
-    const spears = (list: readonly PartOption[]) => list.filter((p) => partWeaponKind(p.label) === '槍').map((p) => p.label)
+    const spears = (list: readonly PartOption[]) => list.filter((p) => weaponKind(p.name) === 'spear').map((p) => p.name)
     expect(spears(BLADES)).toEqual([
       '黒獅子', '風花', '羅刹', '藤奈美', '富士ヶ根', '大文字', '麒麟児', '焔魔', '霜柱', '立奈美', '霧単穂',
     ])
     expect(spears(GUARDS)).toEqual(['黒獅子', '風花', '羅刹', '藤奈美', '霜柱', '立奈美'])
     expect(spears(GRIPS)).toEqual(['黒獅子', '風花', '羅刹', '藤奈美', '富士ヶ根', '大文字', '麒麟児', '焔魔', '霜柱', '立奈美'])
-    expect(partWeaponKind(BLADES[0].label)).toBe('刀') // 中道刀
-    // 鞘は同じ鞘を使う刃の名前の最初の1つで決める
-    expect(partWeaponKind('麒麟児・霧単穂')).toBe('槍')
-    expect(partWeaponKind('中道刀・なまくら刀')).toBe('刀')
+    expect([...BLADES, ...GUARDS, ...GRIPS].some((p) => weaponKind(p.name) === 'special')).toBe(false)
+    expect(SPECIAL_BLADES.every((p) => weaponKind(p.name) === 'special')).toBe(true)
+    // 鞘は同じ鞘を使う刃の最初の1つで決める。鞘なしはどちらでもない
+    const sheath = (id: number) => SHEATHS.find((s) => s.id === id)!
+    expect(sheathKind(sheath(0xd5))).toBe('spear') // 麒麟児・霧単穂
+    expect(sheathKind(sheath(0x18))).toBe('sword') // 中道刀・なまくら刀
+    expect(sheathKind(sheath(0xffff))).toBeNull()
   })
 
-  it('パーツは読み（PART_READINGS）の五十音順に並べられる。どの通常パーツにも読みがある', () => {
-    const names = new Set([...BLADES, ...GUARDS, ...GRIPS].map((p) => p.label))
-    expect([...names].filter((n) => !(n in PART_READINGS))).toEqual([])
-    const sorted = ['虎徹', '中道刀', '阿修羅', 'ハルユキ', '浅餓王'].sort(compareByReading)
-    expect(sorted).toEqual(['浅餓王', '阿修羅', '虎徹', '中道刀', 'ハルユキ'])
+  it('どの通常パーツにも読みがある（五十音順に並べるため）', () => {
+    const missing = [...BLADES, ...GUARDS, ...GRIPS].filter((p) => !('reading' in WEAPON_NAMES[p.name]))
+    expect(missing.map((p) => p.name)).toEqual([])
   })
 
   it('🔶 U-3 案C（ユーザー判断 2026-10-05）：どの刃の X も鞘の表にある（規則で計算した X は、その刃の名前の鞘として足した）', () => {
@@ -249,10 +258,11 @@ describe('武器レコード（合成）', () => {
       const low = (p.value >>> 16) & 0xff
       return !SHEATHS.some((s) => (s.id & 0xff) === low)
     })
-    expect(missing.map((p) => p.label)).toEqual([])
-    expect(SHEATHS.find((s) => s.id === 0x57)?.label).toBe('龍魔治')
-    expect(SHEATHS.find((s) => s.id === 0xbc)?.label).toBe('霊禍')
-    expect(SHEATHS.find((s) => s.id === 0xd2)?.label).toBe('二心')
+    expect(missing.map((p) => p.name)).toEqual([])
+    const label = (id: number) => sheathName(SHEATHS.find((s) => s.id === id)!)
+    expect(label(0x57)).toBe('龍魔治')
+    expect(label(0xbc)).toBe('霊禍')
+    expect(label(0xd2)).toBe('二心')
   })
 
   it('U-3 [U] 2026-10-05 X が 0x100 以上の刃は、ID と実測の X を 2 B ずつ書く（和泉守兼定 0x162、活火山 0x163、夜葬 0x167）', () => {

@@ -22,10 +22,11 @@ import {
   GRIPS,
   GUARDS,
   SHEATHS,
-  PART_READINGS,
-  SPEAR_PART_NAMES,
   SPECIAL_BLADES,
   WEAPON_IDS,
+  partName,
+  sheathName,
+  weaponIdName,
   type PartOption,
 } from "./weapon-ids";
 import { formatHex4 } from "@/lib/format";
@@ -269,7 +270,8 @@ export function isSpecialBlade(value: number): boolean {
 }
 
 export function weaponIdLabel(id: number): string | null {
-  return WEAPON_IDS.find((w) => w.id === id)?.label ?? null;
+  const option = WEAPON_IDS.find((w) => w.id === id);
+  return option ? weaponIdName(option) : null;
 }
 
 export function charmLabel(id: number): string | null {
@@ -418,7 +420,8 @@ export function readWeapon(
         : (TITLES.find((t) => t.no === titleNo)?.label ?? null);
 
   const sheathValue = readU16(bytes, at("sheath"));
-  const sheathLabel = SHEATHS.find((x) => x.id === sheathValue)?.label ?? null;
+  const sheath = SHEATHS.find((x) => x.id === sheathValue);
+  const sheathLabel = sheath ? sheathName(sheath) : null;
   const typeValue = readU8(bytes, at("weaponType"));
   const typeLabel = WEAPON_TYPES.find((t) => t.id === typeValue)?.label ?? null;
 
@@ -432,7 +435,7 @@ export function readWeapon(
     );
     const view = {
       value: raw,
-      label: hit?.option.label ?? null,
+      label: hit ? partName(hit.option) : null,
       key: hit ? partKey(hit.option) : null,
     };
     const noun = PART_NOUNS[kind];
@@ -443,7 +446,7 @@ export function readWeapon(
       ? special && kind !== "blade"
         ? null
         : `ID 表にない${noun}です（U-10）。既知の${noun}への変更だけができます`
-      : hit.option.label.includes("？")
+      : partName(hit.option).includes("？")
         ? `ゲーム内での名前が未確認の ID です（U-13）。ゲーム内の表示を教えてください`
         : xDiffers
           ? `鞘（X ${formatHex4(sheathValue)}）がこの刃の標準の鞘（${formatHex4(standardX)}）と違います。刃を選び直すと標準の鞘に戻ります`
@@ -553,19 +556,6 @@ export function partOptions(kind: PartKind, special: boolean): readonly PartOpti
   if (kind === "blade") return special ? SPECIAL_BLADES : BLADES;
   if (special) return [];
   return PART_LISTS[kind];
-}
-
-/** 通常パーツが刀用か槍用か（SPEAR_PART_NAMES。[CT] の英語名から）。鞘は同じ鞘を使う刃の名前（最初の1つ）で決める */
-export function partWeaponKind(label: string): "刀" | "槍" {
-  return SPEAR_PART_NAMES.has(label.split("・")[0]) ? "槍" : "刀";
-}
-
-const collator = new Intl.Collator("ja");
-
-/** 名前を読み（PART_READINGS）の五十音順に比べる。読みがない名前は名前のまま比べる */
-export function compareByReading(a: string, b: string): number {
-  const key = (s: string) => PART_READINGS[s.split("・")[0]] ?? s;
-  return collator.compare(key(a), key(b));
 }
 
 /**

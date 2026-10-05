@@ -40,9 +40,7 @@ import {
   WEAPON_NUMBER_RANGES,
   formatRange,
   WEAPON_NAME_MAX_CHARS,
-  compareByReading,
   isXUnknown,
-  partWeaponKind,
   partKey,
   partOptions,
   validateWeaponName,
@@ -62,7 +60,16 @@ import {
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import type { LucideIcon } from "lucide-react";
 import { charmIcon, titleIcon } from "./effect-icons";
-import { SHEATHS, WEAPON_IDS } from "@/save/weapon-ids";
+import { WEAPON_KIND_LABELS, compareWeaponNames, weaponKind } from "@/save/master/weapon-names";
+import {
+  NO_SHEATH,
+  SHEATHS,
+  WEAPON_IDS,
+  partName,
+  sheathKind,
+  sheathName,
+  weaponIdName,
+} from "@/save/weapon-ids";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 /** 帯刀の状態：[U] の差分で読みは確認したが、書き込みはゲーム内で未確認 */
@@ -155,7 +162,7 @@ const PART_LABELS: Record<PartKind, string> = { blade: "刃", guard: "鍔", grip
 
 const WEAPON_ID_OPTIONS: SelectOption[] = WEAPON_IDS.map((w) => ({
   value: String(w.id),
-  label: `${w.label}（${hex(w.id, 4)}）`,
+  label: `${weaponIdName(w)}（${hex(w.id, 4)}）`,
 }));
 const NONE = "none";
 const CHARM_OPTIONS: SelectOption[] = [
@@ -168,12 +175,15 @@ const TYPE_OPTIONS: SelectOption[] = WEAPON_TYPES.map((t) => ({
 }));
 // 鞘も刀・槍に分ける（ユーザー判断 2026-10-05）。鞘なし（0xFFFF）はどちらにも入れず先頭に置く
 const SHEATH_OPTIONS: SelectOption[] = [...SHEATHS]
-  .sort((a, b) => Number(a.id !== 0xffff) - Number(b.id !== 0xffff))
-  .map((x) => ({
-    value: String(x.id),
-    label: `${x.label}（${hex(x.id, 4)}）`,
-    group: x.id === 0xffff ? undefined : partWeaponKind(x.label),
-  }));
+  .sort((a, b) => Number(a.id !== NO_SHEATH) - Number(b.id !== NO_SHEATH))
+  .map((x) => {
+    const kind = sheathKind(x);
+    return {
+      value: String(x.id),
+      label: `${sheathName(x)}（${hex(x.id, 4)}）`,
+      group: kind ? WEAPON_KIND_LABELS[kind].ja : undefined,
+    };
+  });
 const TITLE_OPTIONS: SelectOption[] = [
   { value: NONE, label: "なし" },
   ...TITLES.map((t) => ({ value: String(t.no), label: t.label, icon: titleIcon(t.no) })),
@@ -510,16 +520,18 @@ function WeaponCard({
       ? partOptions(kind, special)
       : [...partOptions(kind, special)].sort(
           (a, b) =>
-            Number(partWeaponKind(a.label) === "槍") - Number(partWeaponKind(b.label) === "槍") ||
-            compareByReading(a.label, b.label),
+            Number(weaponKind(a.name) === "spear") - Number(weaponKind(b.name) === "spear") ||
+            compareWeaponNames(a.name, b.name),
         );
     const options = list.map((p) => {
+      const name = partName(p);
       const label = isXUnknown(kind, p)
-        ? `${p.label}（X 不明・要分解→組み立て）`
+        ? `${name}（X 不明・要分解→組み立て）`
         : p.xExtended
-          ? `${p.label}（X は推測・要確認）`
-          : p.label;
-      return { value: partKey(p), label, group: special ? undefined : partWeaponKind(p.label) };
+          ? `${name}（X は推測・要確認）`
+          : name;
+      const group = special ? undefined : WEAPON_KIND_LABELS[weaponKind(p.name)].ja;
+      return { value: partKey(p), label, group };
     });
     const digits = kind === "grip" ? 4 : 6;
     return (
