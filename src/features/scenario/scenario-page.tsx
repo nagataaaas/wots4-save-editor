@@ -23,11 +23,18 @@ import {
   FACTIONS,
   FACTION_ROWS,
   FACTION_VALUE_MAX,
+  ROUTE_JUDGE_OFFSET,
+  ROUTE_JUDGE_VALUES,
+  ROUTE_NONE_OFFSET,
+  ROUTE_NONE_VALUES,
   factionOffset,
   readFactions,
+  readRouteJudge,
   validateFactionValue,
   writeFactionValue,
+  writeRouteJudge,
   type FactionsView,
+  type RouteJudgeView,
 } from "@/save/factions";
 import {
   DATE_OFFSETS,
@@ -65,7 +72,7 @@ const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e)
 /** シナリオ差分（§3.5）で読みを推定した。書き込みはゲーム内で未確認 */
 const diffBadge = <CertaintyBadge mark="🔶" text="差分から推定・書き込み未検証" />;
 
-type Views = { date: DateView; events: EventsView; factions: FactionsView };
+type Views = { date: DateView; events: EventsView; factions: FactionsView; route: RouteJudgeView };
 
 function parseInteger(input: string, validate: (v: number) => string | null): ParseResult<number> {
   if (!/^\d+$/.test(input.trim())) return { ok: false, error: "0以上の整数を入力してください" };
@@ -81,7 +88,14 @@ export function ScenarioPage() {
     if (!save) return null;
     try {
       const b = save.working;
-      return { views: { date: readDate(b), events: readEvents(b), factions: readFactions(b) } };
+      return {
+        views: {
+          date: readDate(b),
+          events: readEvents(b),
+          factions: readFactions(b),
+          route: readRouteJudge(b),
+        },
+      };
     } catch (e) {
       return { error: errorMessage(e) };
     }
@@ -127,7 +141,11 @@ export function ScenarioPage() {
       </Alert>
 
       <DateCard key={`${k}-date`} view={views?.date ?? null} />
-      <FactionCard key={`${k}-factions`} view={views?.factions ?? null} />
+      <FactionCard
+        key={`${k}-factions`}
+        view={views?.factions ?? null}
+        route={views?.route ?? null}
+      />
       <EventsCard key={`${k}-events`} view={views?.events ?? null} />
     </div>
   );
@@ -194,8 +212,59 @@ function DateCard({ view }: { view: DateView | null }) {
   );
 }
 
+const judgeOptions: SelectOption[] = ROUTE_JUDGE_VALUES.map((v) => ({
+  value: String(v.value),
+  label: `${formatHex2(v.value)} ${v.label}`,
+}));
+const noneOptions: SelectOption[] = ROUTE_NONE_VALUES.map((v) => ({
+  value: String(v.value),
+  label: `${formatHex2(v.value)} ${v.label}`,
+}));
+
+/** 大寄せの判定（0x3789〜0x378C）。view が null ならセーブ未読み込み */
+function RouteJudgeRows({ view }: { view: RouteJudgeView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const problem = view?.problem ?? null;
+  const current = (v: number) => `${formatHex2(v)} 不明`;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+        大寄せの判定
+        <CertaintyBadge mark="🔶" text="3回の差分から推定・書き込み未検証" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-4">
+        {FACTIONS.map((faction, c) => (
+          <SelectRow
+            key={faction}
+            label={faction}
+            offset={ROUTE_JUDGE_OFFSET + c}
+            value={view ? String(view.judges[c]) : null}
+            currentLabel={view ? current(view.judges[c]) : undefined}
+            options={judgeOptions}
+            problem={problem}
+            note="大寄せのときに書かれる。協力・成功した回数が 3 以上で 01（公儀の剣が出た）、2 以下で 02。敵対しているときの値は未確認"
+            onChange={(v) => update((b) => writeRouteJudge(b, c, Number(v), { advanced }))}
+          />
+        ))}
+        <SelectRow
+          label="無所属"
+          offset={ROUTE_NONE_OFFSET}
+          value={view ? String(view.none) : null}
+          currentLabel={view ? current(view.none) : undefined}
+          options={noneOptions}
+          problem={problem}
+          note="どの勢力にも入れないとき 01（根無し草）"
+          onChange={(v) => update((b) => writeRouteJudge(b, FACTIONS.length, Number(v), { advanced }))}
+        />
+      </div>
+    </div>
+  );
+}
+
 /** 勢力の 3×3 表。view が null ならセーブ未読み込み */
-function FactionCard({ view }: { view: FactionsView | null }) {
+function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJudgeView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const max = advanced ? FACTION_VALUE_MAX.system : FACTION_VALUE_MAX.normal;
@@ -206,10 +275,12 @@ function FactionCard({ view }: { view: FactionsView | null }) {
         <CardTitle>勢力の記録</CardTitle>
         <CardDescription>
           0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。
-          項目の意味と勢力の並びは、6回の差分からの推測です。友好度そのもの（符号つきの値）は別の場所にある可能性があります。
+          列の並びと「協力・成功した回数」は差分で何度も合っています。大寄せの時点で協力・成功した回数が 3 以上の勢力のルートに入れるようです（幕府で1回確認）。
+          友好度そのもの（符号つきの値）は別の場所にある可能性があります。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        <RouteJudgeRows view={route} />
         {FACTION_ROWS.map((row, r) => (
           <div key={row.label} className="flex flex-col gap-2">
             <p className="text-sm font-medium">{row.label}</p>

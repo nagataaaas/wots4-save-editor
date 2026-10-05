@@ -2,7 +2,15 @@
 // 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。どれも 🔶（意味も書き込みも要ゲーム内確認）
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
-import { FACTION_TABLE_OFFSET, readFactions, writeFactionValue } from './factions'
+import {
+  FACTION_TABLE_OFFSET,
+  ROUTE_JUDGE_OFFSET,
+  ROUTE_NONE_OFFSET,
+  readFactions,
+  readRouteJudge,
+  writeFactionValue,
+  writeRouteJudge,
+} from './factions'
 import { TS_SAVE_SIZE } from './hero'
 
 /** 0x3780〜0x3788。04 copy 3（志士との出会い完了、海兵隊の横暴で赤城と戦って失敗、阿片密売で密売人を斬る） */
@@ -72,5 +80,55 @@ describe('書き込み 🔶 要ゲーム内確認', () => {
     expect(() => writeFactionValue(b, 3, 0, 1, { advanced: false })).toThrow(RangeError)
     writeFactionValue(b, 0, 0, 10, { advanced: true })
     expect(readFactions(b).values[0][0]).toBe(10)
+  })
+})
+
+/** 0x3780〜0x378C。04 copy 12（幕府に3回参加、剣術大会の準備で攘夷と戦う、大寄せのあと。公儀の剣が出た） */
+const BAKUFU_ROUTE = [0x03, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x01, 0x01, 0x02, 0x02, 0x00]
+/** 04 copy 11・03 copy 9 の 0x3789〜0x378C（どの勢力にも入れない） */
+const NO_ROUTE = [0x02, 0x02, 0x02, 0x01]
+
+describe('大寄せの判定 🔶 §3.5（0x3789〜0x378C）', () => {
+  it('勢力ごとの判定と無所属を読む', () => {
+    expect(readRouteJudge(makeSave(BAKUFU_ROUTE))).toEqual({ judges: [1, 2, 2], none: 0, problem: null })
+    const b = makeSave(BAKUFU_ROUTE)
+    b.set(NO_ROUTE, ROUTE_JUDGE_OFFSET)
+    expect(readRouteJudge(b)).toEqual({ judges: [2, 2, 2], none: 1, problem: null })
+    // 大寄せ前はすべて 00
+    expect(readRouteJudge(makeSave(AFTER_SNEAK))).toEqual({ judges: [0, 0, 0], none: 0, problem: null })
+  })
+
+  it('剣術大会の準備で攘夷と戦った回数は 2 として読む（行1）', () => {
+    expect(readFactions(makeSave(BAKUFU_ROUTE)).values).toEqual([
+      [3, 0, 0],
+      [0, 0, 2],
+      [0, 0, 1],
+    ])
+  })
+
+  it('見たことのない値なら読み取り専用にする', () => {
+    const b = makeSave(BAKUFU_ROUTE)
+    writeU8(b, ROUTE_NONE_OFFSET, 0x02)
+    expect(readRouteJudge(b).problem).not.toBeNull()
+  })
+
+  it('要ゲーム内確認：1バイトだけを書き、通常モードでは見た値だけ', () => {
+    const before = makeSave(BAKUFU_ROUTE)
+    const after = before.slice()
+    writeRouteJudge(after, 2, 0x01, { advanced: false })
+    writeRouteJudge(after, 3, 0x01, { advanced: false })
+    expect(diffOffsets(before, after)).toEqual([ROUTE_JUDGE_OFFSET + 2, ROUTE_NONE_OFFSET])
+    expect(() => writeRouteJudge(after, 0, 0x03, { advanced: false })).toThrow(RangeError)
+    expect(() => writeRouteJudge(after, 3, 0x02, { advanced: false })).toThrow(RangeError)
+    expect(() => writeRouteJudge(after, 4, 0x00, { advanced: true })).toThrow(RangeError)
+  })
+
+  it('読み出し→書き戻しでバイト列が一致する', () => {
+    const before = makeSave(BAKUFU_ROUTE)
+    const after = before.slice()
+    const v = readRouteJudge(after)
+    v.judges.forEach((j, c) => writeRouteJudge(after, c, j, { advanced: false }))
+    writeRouteJudge(after, 3, v.none, { advanced: false })
+    expect(diffOffsets(before, after)).toEqual([])
   })
 })
