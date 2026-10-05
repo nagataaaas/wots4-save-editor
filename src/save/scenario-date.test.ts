@@ -17,6 +17,12 @@ const SEEN = {
   day1Night: { head: [0x78, 0x00, 0x00, 0x06, 0x02], dayIndex: 0 },
   /** 04 copy 3：2日目朝 */
   day2Noon: { head: [0xc8, 0x00, 0x00, 0x06, 0x00], dayIndex: 1 },
+  /** 🔶 03 copy 7：5日目昼（港で寝て、大老 鬼怒川怨仙の前）。0x0010 は 400 で止まる */
+  day5Noon: { head: [0x90, 0x01, 0x00, 0x01, 0x00], dayIndex: 4 },
+  /** 🔶 03 copy 8：5日目夕（大老 鬼怒川怨仙のあと） */
+  day5Evening: { head: [0x90, 0x01, 0x00, 0x06, 0x01], dayIndex: 4 },
+  /** 🔶 03 copy 9：6日目昼（大老の大寄せのあと） */
+  day6Noon: { head: [0x90, 0x01, 0x00, 0x06, 0x00], dayIndex: 5 },
 }
 
 function makeSave(seen: { head: number[]; dayIndex: number }, size = TS_SAVE_SIZE): Uint8Array {
@@ -39,6 +45,18 @@ describe('readDate §3.5', () => {
     expect(readDate(makeSave(SEEN.day2Noon))).toMatchObject({ day: 2, slot: 0, problem: null })
   })
 
+  it('🔶 4日目以降は 0x0010 が 400 のままで、日数は 0x0BD8、時間帯は 0x0014 から読む', () => {
+    expect(readDate(makeSave(SEEN.day5Noon))).toMatchObject({ day: 5, slot: 0, problem: null, warning: null })
+    expect(readDate(makeSave(SEEN.day5Evening))).toMatchObject({ day: 5, slot: 1, problem: null })
+    expect(readDate(makeSave(SEEN.day6Noon))).toMatchObject({ day: 6, slot: 0, problem: null })
+  })
+
+  it('🔶 0x0010 が 400 なのに 0x0BD8 が3日目以前なら読み取り専用にする', () => {
+    const b = makeSave(SEEN.day5Noon)
+    writeU32(b, DATE_OFFSETS.dayIndex, 2)
+    expect(readDate(b).problem).toMatch(/400/)
+  })
+
   it('保留量が入っていれば警告する', () => {
     const v = readDate(makeSave(SEEN.day1NoonPending))
     expect(v).toMatchObject({ day: 1, slot: 0, pending: 10, problem: null })
@@ -58,7 +76,7 @@ describe('readDate §3.5', () => {
   })
 
   it('0x0010 が「日×100＋時間帯×10」の形でなければ読み取り専用にする', () => {
-    for (const v of [0, 105, 130, 99]) {
+    for (const v of [0, 105, 130, 99, 410, 500]) {
       const b = makeSave(SEEN.day1Evening)
       writeU16(b, DATE_OFFSETS.dayTime, v)
       expect(readDate(b).problem).not.toBeNull()
@@ -111,14 +129,27 @@ describe('書き込み', () => {
     }
   })
 
-  it('通常モードは1〜99日目まで。上級者モードでは655日目まで。🔶 4日目以降は警告する', () => {
+  it('🔶 4日目以降を書くと 0x0010 は 400 になる（03 copy 8・9 と同じ並び。要ゲーム内確認）', () => {
+    const b = makeSave(SEEN.day1Evening)
+    writeDayTime(b, 5, 1, { advanced: false })
+    expect(diffOffsets(makeSave(SEEN.day5Evening), b)).toEqual([])
+    writeDayTime(b, 6, 0, { advanced: false })
+    expect(diffOffsets(makeSave(SEEN.day6Noon), b)).toEqual([])
+    // 4日目以降から3日目以前へ戻すと、0x0010 は「日×100＋時間帯×10」に戻る
+    writeDayTime(b, 3, 2, { advanced: false })
+    expect(readDate(b)).toMatchObject({ day: 3, slot: 2, problem: null, raw: { dayTime: 320 } })
+  })
+
+  it('通常モードは1〜99日目まで。上級者モードでは655日目まで。🔶 7日目以降は警告する', () => {
     const b = makeSave(SEEN.day1Evening)
     expect(() => writeDayTime(b, 100, 0, { advanced: false })).toThrow(RangeError)
     expect(() => writeDayTime(b, 656, 0, { advanced: true })).toThrow(RangeError)
     expect(() => writeDayTime(b, 0, 0, { advanced: true })).toThrow(RangeError)
     expect(() => writeDayTime(b, 1, 3, { advanced: true })).toThrow(RangeError)
-    writeDayTime(b, 4, 0, { advanced: false })
-    expect(readDate(b)).toMatchObject({ day: 4, slot: 0, problem: null })
+    writeDayTime(b, 6, 0, { advanced: false })
+    expect(readDate(b).warning).toBeNull()
+    writeDayTime(b, 7, 0, { advanced: false })
+    expect(readDate(b)).toMatchObject({ day: 7, slot: 0, problem: null })
     expect(readDate(b).warning).toMatch(/確かめていません/)
     writeDayTime(b, 99, 2, { advanced: false })
     expect(readDate(b)).toMatchObject({ day: 99, slot: 2, problem: null })

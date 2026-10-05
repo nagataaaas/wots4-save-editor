@@ -169,7 +169,7 @@ function DateCard({ view }: { view: DateView | null }) {
           apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
           inputMode="numeric"
           hint={`${range.min}〜${range.max}日目`}
-          note="0x0BD8（u32、経過日数）・0x0010（u16）・0x0014（u8）を書きます。0x0010 だけでは日数は変わりませんでした。日を進めると、過ぎた時間帯のイベントはゲームが失敗にします"
+          note="0x0BD8（u32、経過日数）・0x0010（u16）・0x0014（u8）を書きます。0x0010 だけでは日数は変わりませんでした。日を進めると、過ぎた時間帯のイベントはゲームが失敗にします。4日目以降は 0x0010 に 400 を書きます（実データで 5・6日目が 400 だったため。要ゲーム内確認）"
         />
         <SelectRow
           label="時間帯"

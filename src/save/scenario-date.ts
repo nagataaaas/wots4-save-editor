@@ -8,14 +8,18 @@
 //   0x0BD8 u32  経過日数（1日目＝0）。2日目に入った3つのセーブ（04 copy 3・03 copy 6・04 copy 5）だけが 1、ほかの11件は 0。
 //               ✅ [U] 03 copy 5（1日目夕）を 2日目に書き換えると、ゲームでも2日目になった（2026-10-05。0x0010・0x0014 と同時に書いた）。
 //               このとき、2日目昼までに済ませていないイベントは、ロード時にすべて失敗になった
-// 4日目以降（勢力ルート）でこれらがどうなるかは ❓。
+//
+// 4日目以降（🔶 03 copy 7・8・9、[U] 2026-10-05）：
+//   0x0010 は 400 で止まり、時間帯の部分も 0 のまま。0x0BD8 と 0x0014 は進む。
+//   copy 7（5日目昼）＝0x0BD8 4・0x0014 0、copy 8（5日目夕）＝4・1、copy 9（6日目昼）＝5・0。いずれも 0x0010＝400。
+//   4日目ちょうどと 7日目以降の値は見ていない。
 //
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from './binary'
 import { checkLayout } from './hero'
 
 export const DATE_OFFSETS = {
-  /** u16 日×100＋時間帯×10（🔶） */
+  /** u16 日×100＋時間帯×10。4日目以降は 400 で止まる（🔶） */
   dayTime: 0x10,
   /** u8 ✅ [U] 時間帯を進める保留量（イベント完了で 10） */
   pending: 0x12,
@@ -30,11 +34,13 @@ export const TIME_SLOTS = ['昼（朝）', '夕', '夜'] as const
 
 /**
  * 日数の正規の範囲。通常モードは 99 日目まで（[U] 2026-10-05 の要望）。上級者モードは 0x0010 に収まる 655 日目まで。
- * 🔶 1〜3日目は昼・夕・夜の3枠（§9.5）。4日目以降は値を見ていないので、DAY_SEEN_MAX を超えると警告する
+ * 🔶 1〜3日目は昼・夕・夜の3枠（§9.5）。DAY_SEEN_MAX を超えると警告する
  */
 export const DAY_RANGE = { normal: { min: 1, max: 99 }, system: { min: 1, max: 655 } } as const
-/** 実データで値を見た最後の日 */
-export const DAY_SEEN_MAX = 3
+/** 実データで値を見た最後の日（03 copy 9） */
+export const DAY_SEEN_MAX = 6
+/** 🔶 4日目以降の 0x0010 の値（03 copy 7・8・9） */
+export const DAY_TIME_AFTER_DAY3 = 400
 
 /** 保留量の正規の値。🔶 差分で見たのは 0 と 10 だけ */
 export const PENDING_VALUES = [0, 10] as const
@@ -60,16 +66,22 @@ export function readDate(bytes: Uint8Array): DateView {
   const slotRaw = readU8(bytes, DATE_OFFSETS.slot)
   const pending = readU8(bytes, DATE_OFFSETS.pending)
   const dayIndex = readU32(bytes, DATE_OFFSETS.dayIndex)
-  const dayFromTime = Math.floor(dayTime / 100)
-  const slot = (dayTime % 100) / 10
   const day = dayIndex + 1
+  // 4日目以降は 0x0010 が 400 で止まるので、時間帯は 0x0014 から読む
+  const slot = dayTime === DAY_TIME_AFTER_DAY3 ? slotRaw : (dayTime % 100) / 10
 
   let problem: string | null = null
-  if (dayFromTime < 1 || !Number.isInteger(slot) || slot >= TIME_SLOTS.length)
-    problem = `0x0010 の値（${dayTime}）が「日×100＋時間帯×10」の形になっていません`
-  else if (slotRaw !== slot) problem = `0x0010 の時間帯（${slot}）と 0x0014 の時間帯（${slotRaw}）が一致しません`
-  else if (dayFromTime !== day) problem = `0x0010 の日（${dayFromTime}）と 0x0BD8 の日（${day}）が一致しません`
-  else if (!(PENDING_VALUES as readonly number[]).includes(pending)) problem = `0x0012 の値が想定外です（${pending}）`
+  if (dayTime === DAY_TIME_AFTER_DAY3) {
+    if (day <= 3) problem = `0x0010 が ${DAY_TIME_AFTER_DAY3}（4日目以降）なのに、0x0BD8 の日が ${day} です`
+    else if (slotRaw >= TIME_SLOTS.length) problem = `0x0014 の時間帯が想定外です（${slotRaw}）`
+  } else {
+    const dayFromTime = Math.floor(dayTime / 100)
+    if (dayFromTime < 1 || dayFromTime > 3 || !Number.isInteger(slot) || slot >= TIME_SLOTS.length)
+      problem = `0x0010 の値（${dayTime}）が「日×100＋時間帯×10」（1〜3日目）か ${DAY_TIME_AFTER_DAY3}（4日目以降）になっていません`
+    else if (slotRaw !== slot) problem = `0x0010 の時間帯（${slot}）と 0x0014 の時間帯（${slotRaw}）が一致しません`
+    else if (dayFromTime !== day) problem = `0x0010 の日（${dayFromTime}）と 0x0BD8 の日（${day}）が一致しません`
+  }
+  if (!problem && !(PENDING_VALUES as readonly number[]).includes(pending)) problem = `0x0012 の値が想定外です（${pending}）`
 
   const warnings: string[] = []
   if (pending !== 0) warnings.push('時間帯を進める保留量が入っています。エリア移動・ロードで時間帯が1つ進みます')
@@ -101,14 +113,15 @@ function editable(bytes: Uint8Array): DateView {
 
 /**
  * 日数と時間帯を書く。0x0010（u16）・0x0014（u8）・0x0BD8（u32）だけを変える。保留量（0x0012）は変えない。
- * 時間帯・日数とも ✅ [U] ゲーム内で反映を確認。日を進めると、過ぎた時間帯のイベントはゲームが失敗にする
+ * 時間帯・日数とも ✅ [U] ゲーム内で反映を確認（1〜3日目）。日を進めると、過ぎた時間帯のイベントはゲームが失敗にする。
+ * 4日目以降は 0x0010 に 400 を書く（🔶 03 copy 7・8・9 の観察。書き込みは要ゲーム内確認）
  */
 export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts: { advanced: boolean }): void {
   editable(bytes)
   const problem = validateDay(day, opts)
   if (problem) throw new RangeError(problem)
   if (!Number.isInteger(slot) || slot < 0 || slot >= TIME_SLOTS.length) throw new RangeError(`時間帯が範囲外です: ${slot}`)
-  writeU16(bytes, DATE_OFFSETS.dayTime, day * 100 + slot * 10)
+  writeU16(bytes, DATE_OFFSETS.dayTime, day <= 3 ? day * 100 + slot * 10 : DAY_TIME_AFTER_DAY3)
   writeU8(bytes, DATE_OFFSETS.slot, slot)
   writeU32(bytes, DATE_OFFSETS.dayIndex, day - 1)
 }
