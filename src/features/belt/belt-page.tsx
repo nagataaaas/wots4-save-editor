@@ -40,6 +40,7 @@ import {
   WEAPON_NUMBER_RANGES,
   formatRange,
   WEAPON_NAME_MAX_CHARS,
+  compareByReading,
   isXUnknown,
   partWeaponKind,
   partKey,
@@ -165,10 +166,14 @@ const TYPE_OPTIONS: SelectOption[] = WEAPON_TYPES.map((t) => ({
   value: String(t.id),
   label: `${t.label}（${t.id}）`,
 }));
-const SHEATH_OPTIONS: SelectOption[] = SHEATHS.map((x) => ({
-  value: String(x.id),
-  label: `${x.label}（${hex(x.id, 4)}）`,
-}));
+// 鞘も刀・槍に分ける（ユーザー判断 2026-10-05）。鞘なし（0xFFFF）はどちらにも入れず先頭に置く
+const SHEATH_OPTIONS: SelectOption[] = [...SHEATHS]
+  .sort((a, b) => Number(a.id !== 0xffff) - Number(b.id !== 0xffff))
+  .map((x) => ({
+    value: String(x.id),
+    label: `${x.label}（${hex(x.id, 4)}）`,
+    group: x.id === 0xffff ? undefined : partWeaponKind(x.label),
+  }));
 const TITLE_OPTIONS: SelectOption[] = [
   { value: NONE, label: "なし" },
   ...TITLES.map((t) => ({ value: String(t.no), label: t.label, icon: titleIcon(t.no) })),
@@ -500,14 +505,21 @@ function WeaponCard({
   const partRow = (kind: PartKind) => {
     const field = weapon?.[kind] ?? null;
     const special = weapon?.special ?? false;
-    const options = partOptions(kind, special).map((p) => {
+    // 通常パーツは刀・槍の順に分け、その中を読みの五十音順に並べる（ユーザー判断 2026-10-05）。特殊武器の刃は ID 順のまま
+    const list = special
+      ? partOptions(kind, special)
+      : [...partOptions(kind, special)].sort(
+          (a, b) =>
+            Number(partWeaponKind(a.label) === "槍") - Number(partWeaponKind(b.label) === "槍") ||
+            compareByReading(a.label, b.label),
+        );
+    const options = list.map((p) => {
       const label = isXUnknown(kind, p)
         ? `${p.label}（X 不明・要分解→組み立て）`
         : p.xExtended
           ? `${p.label}（X は推測・要確認）`
           : p.label;
-      // 通常パーツは刀と槍に分けて並べる（ユーザー判断 2026-10-05）。特殊武器の刃は分けない
-      return { value: partKey(p), label, group: special ? undefined : partWeaponKind(p) };
+      return { value: partKey(p), label, group: special ? undefined : partWeaponKind(p.label) };
     });
     const digits = kind === "grip" ? 4 : 6;
     return (

@@ -22,6 +22,7 @@ import {
   GRIPS,
   GUARDS,
   SHEATHS,
+  PART_READINGS,
   SPEAR_PART_NAMES,
   SPECIAL_BLADES,
   WEAPON_IDS,
@@ -554,9 +555,17 @@ export function partOptions(kind: PartKind, special: boolean): readonly PartOpti
   return PART_LISTS[kind];
 }
 
-/** 通常パーツが刀用か槍用か（SPEAR_PART_NAMES。[CT] の英語名から） */
-export function partWeaponKind(option: PartOption): "刀" | "槍" {
-  return SPEAR_PART_NAMES.has(option.label) ? "槍" : "刀";
+/** 通常パーツが刀用か槍用か（SPEAR_PART_NAMES。[CT] の英語名から）。鞘は同じ鞘を使う刃の名前（最初の1つ）で決める */
+export function partWeaponKind(label: string): "刀" | "槍" {
+  return SPEAR_PART_NAMES.has(label.split("・")[0]) ? "槍" : "刀";
+}
+
+const collator = new Intl.Collator("ja");
+
+/** 名前を読み（PART_READINGS）の五十音順に比べる。読みがない名前は名前のまま比べる */
+export function compareByReading(a: string, b: string): number {
+  const key = (s: string) => PART_READINGS[s.split("・")[0]] ?? s;
+  return collator.compare(key(a), key(b));
 }
 
 /**
