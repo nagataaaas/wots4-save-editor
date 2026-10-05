@@ -223,12 +223,10 @@ function DateCard({ view }: { view: DateView | null }) {
   );
 }
 
-const flagOptions: SelectOption[] = [
-  { value: "0", label: "0" },
-  { value: "1", label: "1" },
-];
+const flagOptions = (max: number): SelectOption[] =>
+  Array.from({ length: max + 1 }, (_, v) => ({ value: String(v), label: String(v) }));
 
-/** 門・柵のフラグ候補。view が null ならセーブ未読み込み */
+/** 門・柵のフラグ。view が null ならセーブ未読み込み */
 function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -236,10 +234,11 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>門・柵のフラグ（候補）</CardTitle>
+        <CardTitle>門・柵のフラグ</CardTitle>
         <CardDescription>
-          ルート分岐を書き換えても、門が閉じたままだとそのルートに進めませんでした。
-          大寄せのあと、根無し草では 0x37FA・0x37FB が 1、幕府ルートでは 0 だったので、門の候補として表示しています。
+          ルート分岐を書き換えても、門が閉じたままだとそのルートに進めません。
+          代官所の門（0x37FA）は、1 → 0 の書き換えで門が開くことを確認済みです。
+          領事館・神社の門は、大寄せで値が変わるバイトを候補として並べています（未確認）。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
@@ -248,10 +247,14 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
             key={flag.offset}
             label={flag.label}
             offset={flag.offset}
-            badges={<CertaintyBadge mark="🔶" text="差分から推定・書き込み未検証" />}
+            badges={
+              flag.confirmed ? undefined : (
+                <CertaintyBadge mark="🔶" text="差分から推定・書き込み未検証" />
+              )
+            }
             value={view ? String(view.values[i]) : null}
             currentLabel={view ? String(view.values[i]) : undefined}
-            options={flagOptions}
+            options={flagOptions(flag.max)}
             problem={view?.problem ?? null}
             note={flag.note}
             onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
