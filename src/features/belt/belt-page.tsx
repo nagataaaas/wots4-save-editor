@@ -10,7 +10,9 @@ import { ChevronRight } from "lucide-react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
-import { SelectRow, type SelectOption } from "@/components/select-row";
+import { SearchSelectRow } from "@/components/search-select-row";
+import type { SelectOption } from "@/components/select-options";
+import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,7 +64,12 @@ import {
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import type { LucideIcon } from "lucide-react";
 import { charmIcon, titleIcon } from "./effect-icons";
-import { WEAPON_KIND_LABELS, compareWeaponNames, weaponKind } from "@/save/master/weapon-names";
+import {
+  WEAPON_KIND_LABELS,
+  compareWeaponNames,
+  weaponKind,
+  weaponSearchTerms,
+} from "@/save/master/weapon-names";
 import {
   NO_SHEATH,
   SHEATHS,
@@ -182,8 +189,10 @@ const SHEATH_OPTIONS: SelectOption[] = [...SHEATHS]
     const kind = sheathKind(x);
     return {
       value: String(x.id),
-      label: `${sheathName(x)}（${hex(x.id, 4)}）`,
+      // ID は出さない（ユーザー判断 2026-10-05）。同じ鞘を使う刃の読み・ja・en で検索できる
+      label: sheathName(x),
       group: kind ? WEAPON_KIND_LABELS[kind].ja : undefined,
+      keywords: x.names.flatMap((n) => weaponSearchTerms(n)),
     };
   });
 const TITLE_OPTIONS: SelectOption[] = [
@@ -419,43 +428,44 @@ function OverrideRow({
   label,
   idleHint,
   overrideHint,
+  searchPlaceholder,
   ...props
 }: Omit<ComponentProps<typeof SelectRow>, "badges" | "disabled" | "hint"> & {
   /** 上書きしていないときの説明 */
   idleHint: string;
   /** 上書き中の注意 */
   overrideHint: string;
+  /** あれば検索つきの欄（SearchSelectRow）にする */
+  searchPlaceholder?: string;
 }) {
   const [override, setOverride] = useState(false);
-  return (
-    <SelectRow
-      {...props}
-      label={label}
-      badges={
-        props.value !== null &&
-        !props.problem && (
-          // 負のマージンで、ボタンが項目名の行の高さを変えないようにする（隣の欄と高さを揃える）
-          <Button
-            variant="outline"
-            size="xs"
-            className="-my-1.5 ml-auto"
-            onClick={() => setOverride(!override)}
-          >
-            {override ? "上書きをやめる" : `${label}を上書き`}
-          </Button>
-        )
-      }
-      disabled={!override}
-      hint={
-        override ? (
-          <span className="text-amber-600 dark:text-amber-400">
-            🔶 データ破損のおそれ。{overrideHint}
-          </span>
-        ) : (
-          idleHint
-        )
-      }
-    />
+  const rowProps = {
+    ...props,
+    label,
+    badges: props.value !== null && !props.problem && (
+      // 負のマージンで、ボタンが項目名の行の高さを変えないようにする（隣の欄と高さを揃える）
+      <Button
+        variant="outline"
+        size="xs"
+        className="-my-1.5 ml-auto"
+        onClick={() => setOverride(!override)}
+      >
+        {override ? "上書きをやめる" : `${label}を上書き`}
+      </Button>
+    ),
+    disabled: !override,
+    hint: override ? (
+      <span className="text-amber-600 dark:text-amber-400">
+        🔶 データ破損のおそれ。{overrideHint}
+      </span>
+    ) : (
+      idleHint
+    ),
+  };
+  return searchPlaceholder ? (
+    <SearchSelectRow {...rowProps} searchPlaceholder={searchPlaceholder} />
+  ) : (
+    <SelectRow {...rowProps} />
   );
 }
 
@@ -537,12 +547,14 @@ function WeaponCard({
           ? `${name}（X は推測・要確認）`
           : name;
       const group = special ? undefined : WEAPON_KIND_LABELS[weaponKind(p.name)].ja;
-      return { value: partKey(p), label, group };
+      // 読み・ja・en の部分一致で検索できる（ユーザー判断 2026-10-05）
+      return { value: partKey(p), label, group, keywords: weaponSearchTerms(p.name) };
     });
     const digits = kind === "grip" ? 4 : 6;
     return (
-      <SelectRow
+      <SearchSelectRow
         key={kind}
+        searchPlaceholder="読み・名前・英語名で検索"
         label={PART_LABELS[kind]}
         offset={base + WEAPON_FIELDS[kind]}
         value={field ? (field.value.key ?? `raw:${field.value.value}`) : null}
@@ -686,6 +698,7 @@ function WeaponCard({
                   value={weapon ? String(weapon.sheath.value) : null}
                   currentLabel={weapon ? `表にない鞘（${hex(weapon.sheath.value, 4)}）` : undefined}
                   options={SHEATH_OPTIONS}
+                  searchPlaceholder="刃の読み・名前・英語名で検索"
                   problem={weapon?.sheath.problem ?? null}
                   warning={weapon?.sheath.warning ?? null}
                   // 一覧にない値ではロード時にエラーが出たので、一覧にあるものだけ選べる

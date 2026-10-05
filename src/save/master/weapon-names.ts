@@ -150,6 +150,12 @@ export function weaponName(key: WeaponKey, lang: Lang = "ja"): string {
   return lang === "en" ? (e.en ?? e.ja) : e.ja;
 }
 
+/** 検索に使う語（読み・ja・en。ないものは除く） */
+export function weaponSearchTerms(key: WeaponKey): string[] {
+  const e = entry(key);
+  return [e.reading, e.ja, e.en].filter((s): s is string => !!s);
+}
+
 export function weaponKind(key: WeaponKey): WeaponKind {
   return entry(key).kind;
 }

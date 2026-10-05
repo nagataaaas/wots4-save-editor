@@ -1,6 +1,6 @@
-import type { LucideIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { InfoTip } from '@/components/info-tip'
+import { groupOptions, type SelectOption } from '@/components/select-options'
 import { WarningTip } from '@/components/warning-tip'
 import { Label } from '@/components/ui/label'
 import {
@@ -13,19 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-
-/** group があると、同じ group の選択肢を見出しつきでまとめる（最初に出てきた順） */
-export type SelectOption = { value: string; label: string; disabled?: boolean; icon?: LucideIcon | null; group?: string }
-
-function groupOptions(options: readonly SelectOption[]): { name: string | undefined; items: SelectOption[] }[] {
-  const groups: { name: string | undefined; items: SelectOption[] }[] = []
-  for (const o of options) {
-    const g = groups.find((x) => x.name === o.group)
-    if (g) g.items.push(o)
-    else groups.push({ name: o.group, items: [o] })
-  }
-  return groups
-}
 
 function OptionItem({ option: o }: { option: SelectOption }) {
   return (
