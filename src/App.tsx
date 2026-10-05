@@ -22,7 +22,10 @@ export default function App() {
             <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-              <h1 className="font-semibold">{section.label}</h1>
+              <h1 className="font-semibold">
+                {section.folder && <span className="text-muted-foreground font-normal">{section.folder} / </span>}
+                {section.label}
+              </h1>
             </header>
             <div className="p-4">
               {Page ? <Page /> : <SectionPlaceholder section={section} />}

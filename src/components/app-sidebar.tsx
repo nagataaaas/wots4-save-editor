@@ -12,9 +12,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarSeparator,
 } from '@/components/ui/sidebar'
-import { sectionGroups, type SectionId } from '@/features/sections'
+import { isFolder, sectionGroups, type SectionId } from '@/features/sections'
 import { useSave } from '@/lib/save-context'
 
 type Props = {
@@ -36,14 +39,36 @@ export function AppSidebar({ active, onSelect }: Props) {
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.sections.map((s) => (
-                  <SidebarMenuItem key={s.id}>
-                    <SidebarMenuButton isActive={s.id === active} onClick={() => onSelect(s.id)}>
-                      <s.icon />
-                      <span>{s.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {group.items.map((node) =>
+                  isFolder(node) ? (
+                    <SidebarMenuItem key={node.label}>
+                      <SidebarMenuButton asChild className="pointer-events-none">
+                        <div>
+                          <node.icon />
+                          <span>{node.label}</span>
+                        </div>
+                      </SidebarMenuButton>
+                      <SidebarMenuSub>
+                        {node.sections.map((s) => (
+                          <SidebarMenuSubItem key={s.id}>
+                            <SidebarMenuSubButton asChild isActive={s.id === active}>
+                              <button type="button" className="w-full" onClick={() => onSelect(s.id)}>
+                                <span>{s.label}</span>
+                              </button>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </SidebarMenuItem>
+                  ) : (
+                    <SidebarMenuItem key={node.id}>
+                      <SidebarMenuButton isActive={node.id === active} onClick={() => onSelect(node.id)}>
+                        <node.icon />
+                        <span>{node.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ),
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
