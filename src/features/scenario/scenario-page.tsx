@@ -33,11 +33,14 @@ import {
 } from "@/save/scenario-date";
 import {
   EVENT_NAMES,
+  EVENT_RECORDS,
   EVENT_RECORD_OFFSET,
   EVENT_STATES,
   EVENT_STATE_OFFSET,
   readEvents,
+  recordLabel,
   stateLabel,
+  writeEventRecord,
   writeEventState,
   type EventEntry,
   type EventsView,
@@ -226,14 +229,19 @@ function FactionCard({ view }: { view: FactionsView | null }) {
 function stateOptions(advanced: boolean): SelectOption[] {
   const options: SelectOption[] = EVENT_STATES.map((s) => ({
     value: String(s.value),
-    label: `${formatHex2(s.value)} ${s.label}`,
+    label: `${formatHex2(s.value)} ${s.label}${s.confirmed ? "" : "（未確認）"}`,
   }));
   // 上級者モードでは、まだ見ていない値（大成功などの候補）も選べるようにする
   if (advanced)
     for (const v of [0x01, 0x02])
-      options.push({ value: String(v), label: `${formatHex2(v)} 未確認`, group: "未確認の値" });
+      options.push({ value: String(v), label: `${formatHex2(v)} 不明`, group: "未確認の値" });
   return options;
 }
+
+const recordOptions: SelectOption[] = EVENT_RECORDS.map((r) => ({
+  value: String(r.value),
+  label: `${formatHex2(r.value)} ${r.label}`,
+}));
 
 /** イベントの状態。view が null ならセーブ未読み込み */
 function EventsCard({ view }: { view: EventsView | null }) {
@@ -247,14 +255,15 @@ function EventsCard({ view }: { view: EventsView | null }) {
       <CardHeader>
         <CardTitle>イベントの状態</CardTitle>
         <CardDescription>
-          周回中の状態（0x36A8＋添字）を書き換えます。周回をまたぐ記録（0x3838＋添字、🔶
-          生きた証）は表示だけで、書き換えません。
+          「状態」は周回中の状態（0x36A8＋添字）です。失敗（05）と未到達（FF）は、書き換えでチャートの表示が変わることを確認済みです。
+          「チャート表示」は周回をまたぐ記録（0x3838＋添字、🔶
+          生きた証）で、FF のイベントは状態を変えてもチャートに出ませんでした。記録の書き換えは未確認です。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           {named.map((i) => (
-            <EventRow
+            <EventBox
               key={i}
               index={i}
               entry={view?.entries[i] ?? null}
@@ -273,9 +282,9 @@ function EventsCard({ view }: { view: EventsView | null }) {
             名前の分からない添字（{others.length}件）
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="grid gap-4 pt-3 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid gap-4 pt-3 sm:grid-cols-2 lg:grid-cols-3">
               {others.map((e) => (
-                <EventRow
+                <EventBox
                   key={e.index}
                   index={e.index}
                   entry={e}
@@ -291,7 +300,8 @@ function EventsCard({ view }: { view: EventsView | null }) {
   );
 }
 
-function EventRow({
+/** 1イベント分の枠。周回中の状態とチャート表示（記録）を並べる */
+function EventBox({
   index,
   entry,
   problem,
@@ -305,27 +315,40 @@ function EventRow({
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const name = EVENT_NAMES[index];
-  const record = entry === null ? "" : `記録：${formatHex2(entry.record)} ${stateLabel(entry.record)}`;
 
   return (
-    <SelectRow
-      label={name ? `${index}. ${name.name}` : `添字 ${index}`}
-      offset={EVENT_STATE_OFFSET + index}
-      badges={
-        name && (
+    <div className="flex flex-col gap-3 rounded-md border p-3">
+      <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+        {name ? `${index}. ${name.name}` : `添字 ${index}`}
+        {name && (
           <CertaintyBadge
             mark="🔶"
             text={`${name.day}・${name.basis === "diff" ? "差分で確認" : "推測"}`}
           />
-        )
-      }
-      value={entry ? String(entry.state) : null}
-      currentLabel={entry ? `${formatHex2(entry.state)} ${stateLabel(entry.state)}` : undefined}
-      options={options}
-      problem={problem}
-      hint={record}
-      note={`記録の位置：0x${(EVENT_RECORD_OFFSET + index).toString(16).toUpperCase()}`}
-      onChange={(v) => update((b) => writeEventState(b, index, Number(v), { advanced }))}
-    />
+        )}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <SelectRow
+          label="状態"
+          offset={EVENT_STATE_OFFSET + index}
+          value={entry ? String(entry.state) : null}
+          currentLabel={entry ? `${formatHex2(entry.state)} ${stateLabel(entry.state)}` : undefined}
+          options={options}
+          problem={problem}
+          onChange={(v) => update((b) => writeEventState(b, index, Number(v), { advanced }))}
+        />
+        <SelectRow
+          label="チャート表示"
+          offset={EVENT_RECORD_OFFSET + index}
+          badges={<CertaintyBadge mark="🔶" text="書き込み未検証" />}
+          value={entry ? String(entry.record) : null}
+          currentLabel={entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined}
+          options={recordOptions}
+          problem={problem}
+          note="周回をまたぐ記録（生きた証）。ほかの周回にも引き継がれる可能性があります"
+          onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
+        />
+      </div>
+    </div>
   );
 }

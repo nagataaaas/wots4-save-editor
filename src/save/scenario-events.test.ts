@@ -1,9 +1,9 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。どれも 🔶（書き込みは要ゲーム内確認）
+// 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。周回中の状態の FF・05 はゲーム内で表示を確認（✅ [U]）、ほかは 🔶（要ゲーム内確認）
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
-import { EVENT_COUNT, EVENT_RECORD_OFFSET, EVENT_STATE_OFFSET, readEvents, writeEventState } from './scenario-events'
+import { EVENT_COUNT, EVENT_RECORD_OFFSET, EVENT_STATE_OFFSET, readEvents, writeEventRecord, writeEventState } from './scenario-events'
 
 /** 周回中の状態（A）の先頭16件。03 copy（阿弥浜港争乱をスキップした直後） */
 const A_START = [0x04, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x00]
@@ -79,10 +79,43 @@ describe('書き込み 🔶 要ゲーム内確認', () => {
     expect(readEvents(b).entries[9].state).toBe(0x02)
   })
 
-  it('記録（0x3838〜）は書き換えない', () => {
+  it('周回中の状態の書き込みは、記録（0x3838〜）を変えない', () => {
     const before = makeSave(A_START)
     const after = before.slice()
     for (let i = 0; i < 16; i++) writeEventState(after, i, 0x04, { advanced: false })
     for (const off of diffOffsets(before, after)) expect(off).toBeLessThan(EVENT_RECORD_OFFSET)
+  })
+
+  it('✅ [U] FF（未到達）と 05（失敗）を書ける（ゲーム内で表示を確認した値）', () => {
+    const b = makeSave(A_DAY2)
+    writeEventState(b, 12, 0xff, { advanced: false })
+    writeEventState(b, 10, 0x05, { advanced: false })
+    expect(readEvents(b).entries[12].state).toBe(0xff)
+    expect(readEvents(b).entries[10].state).toBe(0x05)
+  })
+})
+
+describe('記録の書き込み 🔶 要ゲーム内確認', () => {
+  it('1件の書き込みは 0x3838＋添字 の1バイトだけを変える', () => {
+    const before = makeSave(A_START)
+    const after = before.slice()
+    writeEventRecord(after, 10, 0x04, { advanced: false })
+    expect(diffOffsets(before, after)).toEqual([EVENT_RECORD_OFFSET + 10])
+    expect(readEvents(after).entries[10]).toEqual({ index: 10, state: 0xff, record: 0x04 })
+  })
+
+  it('読み出し→書き戻しでバイト列が一致する', () => {
+    const before = makeSave(A_DAY2)
+    const after = before.slice()
+    for (const e of readEvents(after).entries) writeEventRecord(after, e.index, e.record, { advanced: false })
+    expect(diffOffsets(before, after)).toEqual([])
+  })
+
+  it('通常モードは実データで見た FF・00・04 だけ', () => {
+    const b = makeSave(A_START)
+    expect(() => writeEventRecord(b, 10, 0x05, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventRecord(b, EVENT_COUNT, 0x04, { advanced: false })).toThrow(RangeError)
+    writeEventRecord(b, 10, 0x05, { advanced: true })
+    expect(readEvents(b).entries[10].record).toBe(0x05)
   })
 })
