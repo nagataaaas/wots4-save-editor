@@ -8,6 +8,7 @@ import {
   ROUTE_NONE_OFFSET,
   readFactions,
   readRouteJudge,
+  routeEligible,
   writeFactionValue,
   writeRouteJudge,
 } from './factions'
@@ -121,6 +122,27 @@ describe('大寄せの判定 🔶 §3.5（0x3789〜0x378C）', () => {
     expect(() => writeRouteJudge(after, 0, 0x03, { advanced: false })).toThrow(RangeError)
     expect(() => writeRouteJudge(after, 3, 0x02, { advanced: false })).toThrow(RangeError)
     expect(() => writeRouteJudge(after, 4, 0x00, { advanced: true })).toThrow(RangeError)
+  })
+
+  it('✅ [U] 行0 − 行1 ≥ 3 でルートに入れる。行2 は使わない（書き換えで5通り試した結果）', () => {
+    const cases: [number, number, number, boolean][] = [
+      [3, 0, 0, true],
+      [3, 1, 0, false],
+      [4, 1, 0, true],
+      [3, 0, 1, true],
+      [3, 0, 5, true],
+    ]
+    for (const [cooperate, fought, hostile, expected] of cases) {
+      const values = [
+        [0, 0, cooperate],
+        [0, 0, fought],
+        [0, 0, hostile],
+      ]
+      expect(routeEligible(values, 2)).toBe(expected)
+    }
+    // 04 copy 12：幕府だけが入れる
+    const values = readFactions(makeSave(BAKUFU_ROUTE)).values
+    expect([0, 1, 2].map((c) => routeEligible(values, c))).toEqual([true, false, false])
   })
 
   it('読み出し→書き戻しでバイト列が一致する', () => {

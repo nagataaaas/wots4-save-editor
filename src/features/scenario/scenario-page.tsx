@@ -27,7 +27,9 @@ import {
   ROUTE_JUDGE_VALUES,
   ROUTE_NONE_OFFSET,
   ROUTE_NONE_VALUES,
+  ROUTE_THRESHOLD,
   factionOffset,
+  routeEligible,
   readFactions,
   readRouteJudge,
   validateFactionValue,
@@ -135,7 +137,7 @@ export function ScenarioPage() {
         <AlertTitle>検証用（要ゲーム内確認）</AlertTitle>
         <AlertDescription>
           この画面の項目は、どれもセーブの差分から推定したものです（解析ノート §3.5）。
-          日数・時間帯、イベントの失敗（05）・未到達（FF）、チャート表示は書き換えの反映を確認済みですが、勢力の記録やほかの値は確かめていません。
+          日数・時間帯、イベントの失敗（05）・未到達（FF）、チャート表示、勢力の「協力・成功」「戦った」は書き換えの反映を確認済みです。そのほかの値は確かめていません。
           書き換える前のセーブを残してから試してください。
         </AlertDescription>
       </Alert>
@@ -222,7 +224,13 @@ const noneOptions: SelectOption[] = ROUTE_NONE_VALUES.map((v) => ({
 }));
 
 /** 大寄せの判定（0x3789〜0x378C）。view が null ならセーブ未読み込み */
-function RouteJudgeRows({ view }: { view: RouteJudgeView | null }) {
+function RouteJudgeRows({
+  view,
+  factions,
+}: {
+  view: RouteJudgeView | null;
+  factions: FactionsView | null;
+}) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const problem = view?.problem ?? null;
@@ -244,7 +252,12 @@ function RouteJudgeRows({ view }: { view: RouteJudgeView | null }) {
             currentLabel={view ? current(view.judges[c]) : undefined}
             options={judgeOptions}
             problem={problem}
-            note="大寄せのときに書かれる。協力・成功した回数が 3 以上で 01（公儀の剣が出た）、2 以下で 02。敵対しているときの値は未確認"
+            hint={
+              factions && !factions.problem
+                ? `今の記録なら大寄せで${routeEligible(factions.values, c) ? "入れる" : "入れない"}（協力 ${factions.values[0][c]} − 戦い ${factions.values[1][c]}）`
+                : undefined
+            }
+            note={`大寄せのときに書かれる。協力・成功した回数 − 人物と戦った回数 が ${ROUTE_THRESHOLD} 以上で 01（入れる）、それ未満で 02（入れない）。敵対イベントの記録は関係しない`}
             onChange={(v) => update((b) => writeRouteJudge(b, c, Number(v), { advanced }))}
           />
         ))}
@@ -275,12 +288,12 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
         <CardTitle>勢力の記録</CardTitle>
         <CardDescription>
           0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。
-          列の並びと「協力・成功した回数」は差分で何度も合っています。大寄せの時点で協力・成功した回数が 3 以上の勢力のルートに入れるようです（幕府で1回確認）。
+          列の並びと「協力・成功した回数」は差分で何度も合っています。大寄せの時点で「協力・成功した回数 − 人物と戦った回数」が 3 以上の勢力のルートに入れます（書き換えで確認済み）。
           友好度そのもの（符号つきの値）は別の場所にある可能性があります。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <RouteJudgeRows view={route} />
+        <RouteJudgeRows view={route} factions={view} />
         {FACTION_ROWS.map((row, r) => (
           <div key={row.label} className="flex flex-col gap-2">
             <p className="text-sm font-medium">{row.label}</p>
@@ -290,7 +303,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
                   key={faction}
                   label={faction}
                   offset={factionOffset(r, c)}
-                  badges={r === 0 && c === 0 ? diffBadge : undefined}
+                  badges={r === 2 && c === 0 ? diffBadge : undefined}
                   value={view?.values[r][c] ?? null}
                   problem={view?.problem ?? null}
                   format={String}
