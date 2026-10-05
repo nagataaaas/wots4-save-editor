@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { formatOffset } from "@/lib/format";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { usePartOrder } from "@/lib/part-order-context";
 import { useSave } from "@/lib/save-context";
 import {
   BELT_COUNT,
@@ -41,6 +42,7 @@ import {
   formatRange,
   WEAPON_NAME_MAX_CHARS,
   isXUnknown,
+  partId,
   partKey,
   partOptions,
   validateWeaponName,
@@ -471,6 +473,7 @@ function WeaponCard({
 }) {
   const base = beltOffset(index);
   const { advanced } = useAdvancedMode();
+  const { order: partOrder } = usePartOrder();
   // 最初は閉じておく（ユーザー判断 2026-10-05）
   const [open, setOpen] = useState(false);
   const roles = [state?.right === index && "右手", state?.left === index && "左手"].filter(
@@ -515,13 +518,16 @@ function WeaponCard({
   const partRow = (kind: PartKind) => {
     const field = weapon?.[kind] ?? null;
     const special = weapon?.special ?? false;
-    // 通常パーツは刀・槍の順に分け、その中を読みの五十音順に並べる（ユーザー判断 2026-10-05）。特殊武器の刃は ID 順のまま
+    // 通常パーツは刀・槍の順に分け、その中を読みの五十音順か ID 順（サイドバーで選ぶ）に並べる（ユーザー判断 2026-10-05）。
+    // 特殊武器の刃は ID 順のまま
     const list = special
       ? partOptions(kind, special)
       : [...partOptions(kind, special)].sort(
           (a, b) =>
             Number(weaponKind(a.name) === "spear") - Number(weaponKind(b.name) === "spear") ||
-            compareWeaponNames(a.name, b.name),
+            (partOrder === "reading"
+              ? compareWeaponNames(a.name, b.name)
+              : partId(kind, a.value, a.source) - partId(kind, b.value, b.source)),
         );
     const options = list.map((p) => {
       const name = partName(p);

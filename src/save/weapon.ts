@@ -244,7 +244,7 @@ function writeU24(bytes: Uint8Array, offset: number, value: number): void {
 export const partKey = (p: PartOption) => `${p.source}:${p.value}`;
 
 /** 3 B／2 B の値から部品の ID（u16）を取り出す（§5.5：刃は下位 2 B、鍔は上位 2 B） */
-function partId(kind: PartKind, raw: number, source: PartOption["source"]): number {
+export function partId(kind: PartKind, raw: number, source: PartOption["source"]): number {
   if (kind === "grip" || source === "ct") return raw;
   return kind === "blade" ? raw & 0xffff : (raw >>> 8) & 0xffff;
 }
