@@ -3,7 +3,17 @@
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
-import { EVENT_COUNT, EVENT_RECORD_OFFSET, EVENT_STATE_OFFSET, readEvents, writeEventRecord, writeEventState } from './scenario-events'
+import {
+  EVENT_COUNT,
+  EVENT_RECORD_OFFSET,
+  EVENT_STATE_OFFSET,
+  bulkIndices,
+  readEvents,
+  writeEventRecord,
+  writeEventRecords,
+  writeEventState,
+  writeEventStates,
+} from './scenario-events'
 
 /** 周回中の状態（A）の先頭16件。03 copy（阿弥浜港争乱をスキップした直後） */
 const A_START = [0x04, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x00]
@@ -95,7 +105,7 @@ describe('書き込み 🔶 要ゲーム内確認', () => {
   })
 })
 
-describe('記録の書き込み 🔶 要ゲーム内確認', () => {
+describe('記録の書き込み（✅ [U] FF・04 がチャート表示に効く）', () => {
   it('1件の書き込みは 0x3838＋添字 の1バイトだけを変える', () => {
     const before = makeSave(A_START)
     const after = before.slice()
@@ -107,15 +117,55 @@ describe('記録の書き込み 🔶 要ゲーム内確認', () => {
   it('読み出し→書き戻しでバイト列が一致する', () => {
     const before = makeSave(A_DAY2)
     const after = before.slice()
-    for (const e of readEvents(after).entries) writeEventRecord(after, e.index, e.record, { advanced: false })
+    // 添字13 の 00 は通常モードの選択肢にないので、上級者モードで書き戻す
+    for (const e of readEvents(after).entries) writeEventRecord(after, e.index, e.record, { advanced: true })
     expect(diffOffsets(before, after)).toEqual([])
   })
 
-  it('通常モードは実データで見た FF・00・04 だけ', () => {
+  it('通常モードは FF・04 だけ。00（❓ 名無し侍の一部で見た値）は読めるが書けない', () => {
     const b = makeSave(A_START)
+    expect(readEvents(b).problem).toBeNull()
+    expect(() => writeEventRecord(b, 10, 0x00, { advanced: false })).toThrow(RangeError)
     expect(() => writeEventRecord(b, 10, 0x05, { advanced: false })).toThrow(RangeError)
     expect(() => writeEventRecord(b, EVENT_COUNT, 0x04, { advanced: false })).toThrow(RangeError)
     writeEventRecord(b, 10, 0x05, { advanced: true })
     expect(readEvents(b).entries[10].record).toBe(0x05)
+  })
+})
+
+describe('一括設定（デバッグ用）', () => {
+  it('名前の分かる添字だけ、状態の範囲だけを変える', () => {
+    const before = makeSave(A_START)
+    const after = before.slice()
+    writeEventStates(after, bulkIndices('named'), 0x05, { advanced: false })
+    expect(diffOffsets(before, after)).toEqual([0, 1, 3, 6, 9, 10, 11, 12].map((i) => EVENT_STATE_OFFSET + i))
+  })
+
+  it('すべての添字の記録を 04 にすると、記録の 166 B だけが 04 になる', () => {
+    const before = makeSave(A_START)
+    const after = before.slice()
+    writeEventRecords(after, bulkIndices('all'), 0x04, { advanced: false })
+    for (const off of diffOffsets(before, after)) {
+      expect(off).toBeGreaterThanOrEqual(EVENT_RECORD_OFFSET)
+      expect(off).toBeLessThan(EVENT_RECORD_OFFSET + EVENT_COUNT)
+    }
+    expect(readEvents(after).entries.every((e) => e.record === 0x04)).toBe(true)
+  })
+
+  it('値が通常モードで許されなければ、1バイトも書かない', () => {
+    const before = makeSave(A_START)
+    const after = before.slice()
+    expect(() => writeEventStates(after, bulkIndices('all'), 0x02, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventRecords(after, bulkIndices('all'), 0x00, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventStates(after, [0, EVENT_COUNT], 0x04, { advanced: false })).toThrow(RangeError)
+    expect(diffOffsets(before, after)).toEqual([])
+  })
+
+  it('妥当性検証に落ちている状態では書かない', () => {
+    const b = makeSave(A_START)
+    writeU8(b, EVENT_STATE_OFFSET + 20, 0x40)
+    const before = b.slice()
+    expect(() => writeEventStates(b, bulkIndices('named'), 0x04, { advanced: false })).toThrow(RangeError)
+    expect(diffOffsets(before, b)).toEqual([])
   })
 })

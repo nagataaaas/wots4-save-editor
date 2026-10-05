@@ -11,11 +11,10 @@
 //   05 失敗        ✅ [U] 書き込みでチャートに失敗のマークがついた（2026-10-05）。差分は 04 copy 2（海兵隊の横暴で赤城と戦闘）
 // 01・02 などほかの値（大成功など）は ❓。A の長さは B との間隔 0x190 から 166 B と置いた（❓ 200 B の可能性もある）。
 //
-// B の値（🔶 ユーザーの推定 2026-10-05）：
+// B の値：
 //   FF チャートに出ない。✅ [U] 記録が FF の阿片密売で A を 05 にしても、チャートには出ないまま失敗扱いになった
-//   04 チャートに出る（過去の周回でクリア済み）
-//   00 ❓ 名無し侍の添字 13・21・24・48 だけ。チャートに出るがクリアしていない、と推定
-// B の書き込みはゲーム内で未確認（要ゲーム内確認）。
+//   04 チャートに出る。✅ [U] チャート表示に効くのは FF と 04 だけ（ユーザー確認 2026-10-05）
+//   00 ❓ 名無し侍の添字 13・21・24・48 で見た値。チャート表示の値ではない（[U] 2026-10-05）ので、読むだけで選択肢には出さない
 //
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from './binary'
@@ -34,11 +33,10 @@ export const EVENT_STATES = [
   { value: 0x05, label: '失敗', confirmed: true },
 ] as const
 
-/** 周回をまたぐ記録（B） */
+/** 周回をまたぐ記録（B）のうち、チャート表示に効く値。✅ [U] 2026-10-05 */
 export const EVENT_RECORDS = [
   { value: 0xff, label: '出ない' },
-  { value: 0x00, label: '出る？（未クリア）' },
-  { value: 0x04, label: '出る（クリア済み）' },
+  { value: 0x04, label: '出る' },
 ] as const
 
 /** 読み込み時に妥当とみなす値。🔶 EVENT_STATES に、まだ見ていない 01・02 を足したもの */
@@ -83,6 +81,7 @@ export function stateLabel(value: number): string {
 }
 
 export function recordLabel(value: number): string {
+  if (value === 0x00) return '不明（名無し侍の一部で見た値）'
   return EVENT_RECORDS.find((s) => s.value === value)?.label ?? '不明'
 }
 
@@ -132,12 +131,36 @@ export function writeEventState(bytes: Uint8Array, index: number, value: number,
 }
 
 /**
- * 添字 index の周回をまたぐ記録（0x3838＋index）の1バイトだけを書く。🔶 要ゲーム内確認。
- * 通常モードでは実データで見た FF・00・04 だけ。上級者モードでは任意の u8
+ * 添字 index の周回をまたぐ記録（0x3838＋index）の1バイトだけを書く。
+ * 通常モードでは FF・04 だけ（✅ [U]）。上級者モードでは任意の u8
  */
 export function writeEventRecord(bytes: Uint8Array, index: number, value: number, opts: { advanced: boolean }): void {
   editable(bytes, index)
   const problem = validateEventRecord(value, opts)
   if (problem) throw new RangeError(problem)
   writeU8(bytes, EVENT_RECORD_OFFSET + index, value)
+}
+
+/** 一括設定の範囲。'named' は EVENT_NAMES の添字、'all' は 0〜EVENT_COUNT−1 */
+export type BulkScope = 'named' | 'all'
+
+export function bulkIndices(scope: BulkScope): number[] {
+  return scope === 'named' ? Object.keys(EVENT_NAMES).map(Number) : Array.from({ length: EVENT_COUNT }, (_, i) => i)
+}
+
+function writeBulk(bytes: Uint8Array, base: number, indices: readonly number[], value: number, problem: string | null): void {
+  // 先に全部を検証してから書く。途中で止まって一部だけ書かれることがないようにする
+  if (problem) throw new RangeError(problem)
+  for (const i of indices) editable(bytes, i)
+  for (const i of indices) writeU8(bytes, base + i, value)
+}
+
+/** デバッグ用：indices の周回中の状態（0x36A8＋添字）をすべて value にする。値の制限は writeEventState と同じ */
+export function writeEventStates(bytes: Uint8Array, indices: readonly number[], value: number, opts: { advanced: boolean }): void {
+  writeBulk(bytes, EVENT_STATE_OFFSET, indices, value, validateEventState(value, opts))
+}
+
+/** デバッグ用：indices の周回をまたぐ記録（0x3838＋添字）をすべて value にする。値の制限は writeEventRecord と同じ */
+export function writeEventRecords(bytes: Uint8Array, indices: readonly number[], value: number, opts: { advanced: boolean }): void {
+  writeBulk(bytes, EVENT_RECORD_OFFSET, indices, value, validateEventRecord(value, opts))
 }

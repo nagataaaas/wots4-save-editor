@@ -1,10 +1,19 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
@@ -32,16 +41,21 @@ import {
   type DateView,
 } from "@/save/scenario-date";
 import {
+  EVENT_COUNT,
   EVENT_NAMES,
   EVENT_RECORDS,
   EVENT_RECORD_OFFSET,
   EVENT_STATES,
   EVENT_STATE_OFFSET,
+  bulkIndices,
   readEvents,
   recordLabel,
   stateLabel,
   writeEventRecord,
+  writeEventRecords,
   writeEventState,
+  writeEventStates,
+  type BulkScope,
   type EventEntry,
   type EventsView,
 } from "@/save/scenario-events";
@@ -257,10 +271,11 @@ function EventsCard({ view }: { view: EventsView | null }) {
         <CardDescription>
           「状態」は周回中の状態（0x36A8＋添字）です。失敗（05）と未到達（FF）は、書き換えでチャートの表示が変わることを確認済みです。
           「チャート表示」は周回をまたぐ記録（0x3838＋添字、🔶
-          生きた証）で、FF のイベントは状態を変えてもチャートに出ませんでした。記録の書き換えは未確認です。
+          生きた証）で、FF ならチャートに出ず、04 なら出ます（確認済み）。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        <BulkEventsPanel problem={view?.problem ?? null} disabled={!view} stateOptions={options} />
         <div className="grid gap-4 sm:grid-cols-2">
           {named.map((i) => (
             <EventBox
@@ -297,6 +312,133 @@ function EventsCard({ view }: { view: EventsView | null }) {
         </Collapsible>
       </CardContent>
     </Card>
+  );
+}
+
+const scopeOptions: { value: BulkScope; label: string }[] = [
+  { value: "named", label: `名前の分かる添字（${bulkIndices("named").length}件）` },
+  { value: "all", label: `すべての添字（${EVENT_COUNT}件）` },
+];
+
+/** デバッグ用：状態・チャート表示を範囲内の添字にまとめて書く */
+function BulkEventsPanel({
+  problem,
+  disabled,
+  stateOptions,
+}: {
+  problem: string | null;
+  disabled: boolean;
+  stateOptions: SelectOption[];
+}) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const [scope, setScope] = useState<BulkScope>("named");
+  const [state, setState] = useState<string>("");
+  const [record, setRecord] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const locked = disabled || problem !== null;
+
+  const run = (write: (b: Uint8Array) => void) => {
+    setError(null);
+    try {
+      update(write);
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3 rounded-md border border-dashed p-3">
+      <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+        一括設定（デバッグ用）
+        <CertaintyBadge mark="❓" text="ゲームへの影響は未確認" />
+      </div>
+      <p className="text-muted-foreground text-xs">
+        選んだ範囲の添字に、同じ値をまとめて書きます。添字 99 以降は使われていないように見える（状態・記録とも FF）ため、
+        「すべて」で FF 以外を書くとゲームが想定しない並びになるかもしれません。
+      </p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <BulkSelect
+          label="範囲"
+          value={scope}
+          options={scopeOptions}
+          disabled={locked}
+          onChange={(v) => setScope(v as BulkScope)}
+        />
+        <div className="flex items-end gap-2">
+          <BulkSelect
+            label="状態"
+            value={state}
+            options={stateOptions}
+            disabled={locked}
+            onChange={setState}
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={locked || state === ""}
+            onClick={() =>
+              run((b) => writeEventStates(b, bulkIndices(scope), Number(state), { advanced }))
+            }
+          >
+            書く
+          </Button>
+        </div>
+        <div className="flex items-end gap-2">
+          <BulkSelect
+            label="チャート表示"
+            value={record}
+            options={recordOptions}
+            disabled={locked}
+            onChange={setRecord}
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={locked || record === ""}
+            onClick={() =>
+              run((b) => writeEventRecords(b, bulkIndices(scope), Number(record), { advanced }))
+            }
+          >
+            書く
+          </Button>
+        </div>
+      </div>
+      {problem && <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>}
+      {error && <p className="text-destructive text-xs">{error}</p>}
+    </div>
+  );
+}
+
+function BulkSelect({
+  label,
+  value,
+  options,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <Label>{label}</Label>
+      <Select value={value} disabled={disabled} onValueChange={onChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="選ぶ" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
@@ -340,12 +482,11 @@ function EventBox({
         <SelectRow
           label="チャート表示"
           offset={EVENT_RECORD_OFFSET + index}
-          badges={<CertaintyBadge mark="🔶" text="書き込み未検証" />}
           value={entry ? String(entry.record) : null}
           currentLabel={entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined}
           options={recordOptions}
           problem={problem}
-          note="周回をまたぐ記録（生きた証）。ほかの周回にも引き継がれる可能性があります"
+          note="周回をまたぐ記録（生きた証）。FF で出ない、04 で出る。ほかの周回にも引き継がれる可能性があります"
           onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
         />
       </div>
