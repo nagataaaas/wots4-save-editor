@@ -38,8 +38,8 @@ export const BLADES: readonly PartOption[] = [
   { source: 'ts', value: 0xa80037, label: '貫誠' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
   { source: 'ts', value: 0x390038, label: '美帝骨' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
   { source: 'ts', value: 0x53003c, label: '鮫肌丸' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
-  { source: 'ct', value: 0x3d, label: '大黒生', x: null },
-  { source: 'ct', value: 0x3e, label: '微熱', x: null },
+  { source: 'ts', value: 0x54003d, label: '大黒生' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
+  { source: 'ts', value: 0x55003e, label: '微熱' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
   { source: 'ts', value: 0x56003f, label: '竹刀' },
   { source: 'ct', value: 0x40, label: '龍魔治', x: 0x57 },
   { source: 'ts', value: 0x580041, label: '精霊舞' },
@@ -61,7 +61,7 @@ export const BLADES: readonly PartOption[] = [
   { source: 'ts', value: 0x680051, label: '羅刹' },
   { source: 'ts', value: 0x9e0052, label: '藤奈美' },
   { source: 'ts', value: 0x9b009a, label: '真心' },
-  { source: 'ct', value: 0x9f, label: 'ハルユキ', x: null },
+  { source: 'ts', value: 0x34009f, label: 'ハルユキ' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
   { source: 'ct', value: 0xa3, label: '空道刀', x: null },
   { source: 'ct', value: 0xa9, label: '虎吉竹刀', x: null },
   { source: 'ts', value: 0x6200aa, label: '馬通二' },
@@ -302,8 +302,11 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0x2d, label: '徳母里' },
   { id: 0x2e, label: '与根助' },
   { id: 0x30, label: '風花' },
+  { id: 0x34, label: 'ハルユキ' },
   { id: 0x39, label: '美帝骨' },
   { id: 0x53, label: '鮫肌丸' },
+  { id: 0x54, label: '大黒生' },
+  { id: 0x55, label: '微熱' },
   { id: 0x56, label: '竹刀' },
   { id: 0x58, label: '精霊舞' },
   { id: 0x59, label: '炎天過' },

@@ -65,21 +65,6 @@ describe.skipIf(!existsSync(sample('S4-DATA_02 copy')))('実セーブ（sample/S
   })
 })
 
-// 2026-10-05：エディタで ID だけを書いた貫誠・美帝骨・鮫肌丸を、ゲーム内で分解→組み立てた S4-DATA_01（U-3 案B）
-describe.skipIf(!existsSync(sample('S4-DATA_01')))('実セーブ（sample/S4-DATA_01、X 不明の刃を組み直したもの）', () => {
-  it('[U] 帯刀の刃は貫誠（37 00 A8）・美帝骨（38 00 39）・鮫肌丸（3C 00 53）', () => {
-    const ws = readBelt(load('S4-DATA_01')).weapons
-    if (ws.map((w) => w.blade.value.value & 0xffff).join() !== '55,56,60') return // 別の S4-DATA_01 なら確かめない
-    expect(ws.map((w) => w.blade.value.value)).toEqual([0xa80037, 0x390038, 0x53003c])
-    expect(ws.map((w) => [w.blade.value.label, w.blade.warning])).toEqual([
-      ['貫誠', null],
-      ['美帝骨', null],
-      ['鮫肌丸', null],
-    ])
-    expect(ws.map((w) => w.sheath.label)).toEqual(['貫誠', '美帝骨', '鮫肌丸'])
-  })
-})
-
 // 2026-10-05：帯刀に上から刀・槍・拳銃を置いた S4-DATA_02 copy 2（U-8 の根拠）
 describe.skipIf(!existsSync(sample('S4-DATA_02 copy 2')))('実セーブ（sample/S4-DATA_02 copy 2、刀・槍・拳銃）', () => {
   it('[U] U-8：武器種は +0x1E（刀 0・槍 1・拳銃 3）', () => {
@@ -358,22 +343,25 @@ describe('武器レコード（合成）', () => {
     const o = beltOffset(0)
     const b = before.slice()
     const x = [...before.subarray(o + 0x0a, o + 0x0c)]
-    // 大黒生 0x3D（規則外）
-    writeWeaponPart(b, o, 'blade', ct(0x3d))
-    expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0x3d, 0x00, ...x])
+    // 空道刀 0xA3（規則外）
+    writeWeaponPart(b, o, 'blade', ct(0xa3))
+    expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0xa3, 0x00, ...x])
     expect(onlyChanged(before, b, o + 0x08, 2)).toBe(true)
     const blade = readWeapon(b, o).blade
-    expect(blade.value).toMatchObject({ label: '大黒生', key: ct(0x3d) })
+    expect(blade.value).toMatchObject({ label: '空道刀', key: ct(0xa3) })
     expect(blade.warning).toContain('分解→組み立て')
   })
 
-  it('U-3 [U] 2026-10-05 分解→組み立て後の実セーブ（sample/S4-DATA_01）：貫誠の X は 0xA8、美帝骨は 0x39、鮫肌丸は 0x53', () => {
+  it('U-3 [U] 2026-10-05 ゲーム内で分解→組み立てて分かった X：貫誠 0xA8、美帝骨 0x39、鮫肌丸 0x53、大黒生 0x54、微熱 0x55、ハルユキ 0x34', () => {
     const b = makeSave()
     const o = beltOffset(0)
     for (const [bytes, label] of [
       [[0x37, 0x00, 0xa8], '貫誠'],
       [[0x38, 0x00, 0x39], '美帝骨'],
       [[0x3c, 0x00, 0x53], '鮫肌丸'],
+      [[0x3d, 0x00, 0x54], '大黒生'],
+      [[0x3e, 0x00, 0x55], '微熱'],
+      [[0x9f, 0x00, 0x34], 'ハルユキ'],
     ] as const) {
       b.set(bytes, o + 0x08)
       expect(readWeapon(b, o).blade).toMatchObject({ value: { label }, warning: null })
