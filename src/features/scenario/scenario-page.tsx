@@ -237,7 +237,7 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
         <CardTitle>門・柵のフラグ</CardTitle>
         <CardDescription>
           ルート分岐を書き換えても、門が閉じたままだとそのルートに進めません。
-          代官所（0x37FA）・居留地（0x3764）・神社（0x37C3）の門は、1 → 0 の書き換えで開くことを確認済みです。
+          代官所（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、1 → 0 の書き換えで開くことを確認済みです。
           「不明」の欄は、大寄せなどで一緒に変わるが門ではなかったバイトです。
         </CardDescription>
       </CardHeader>
