@@ -24,6 +24,11 @@ import { checkLayout } from './hero'
 export const EVENT_STATE_OFFSET = 0x36a8 // 🔶 §3.5
 export const EVENT_RECORD_OFFSET = 0x3838 // 🔶 §3.5
 export const EVENT_COUNT = 166 // ❓ §3.5
+/**
+ * 🔶 イベントとして使われている添字の数（0〜98）。sample の13件すべてで、添字 99〜165 は A・B とも FF だった
+ * （1周目の S4-DATA_04 を除く）。docs/event.md の Wiki の一覧は約91件で、数は合っていない（❓）
+ */
+export const EVENT_USED_COUNT = 99
 
 /** 周回中の状態（A）。confirmed は書き込みでゲーム内の表示を確かめたもの */
 export const EVENT_STATES = [
@@ -52,7 +57,7 @@ export type EventName = {
 
 /** 名前の分かっている添字。§3.5「未確定のこと」 */
 export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
-  0: { name: 'オープニング（Samurai on Board）', day: '1日目昼', basis: 'guess' }, // どのセーブでも 04
+  0: { name: '船上の侍', day: '1日目昼', basis: 'guess' }, // どのセーブでも 04。名前は [U] 2026-10-05（Samurai on Board、オープニング）
   1: { name: '阿弥浜港争乱', day: '1日目昼', basis: 'guess' }, // スキップで 00、1周目で 04
   3: { name: '嵐の後', day: '1日目昼', basis: 'diff' }, // 03 copy → copy 2
   6: { name: '志士との出会い', day: '1日目昼', basis: 'diff' }, // 03 copy 2 → copy 3 → copy 4
@@ -142,11 +147,12 @@ export function writeEventRecord(bytes: Uint8Array, index: number, value: number
   writeU8(bytes, EVENT_RECORD_OFFSET + index, value)
 }
 
-/** 一括設定の範囲。'named' は EVENT_NAMES の添字、'all' は 0〜EVENT_COUNT−1 */
-export type BulkScope = 'named' | 'all'
+/** 一括設定の範囲。'named' は EVENT_NAMES の添字、'used' は 0〜EVENT_USED_COUNT−1、'all' は 0〜EVENT_COUNT−1 */
+export type BulkScope = 'named' | 'used' | 'all'
 
 export function bulkIndices(scope: BulkScope): number[] {
-  return scope === 'named' ? Object.keys(EVENT_NAMES).map(Number) : Array.from({ length: EVENT_COUNT }, (_, i) => i)
+  if (scope === 'named') return Object.keys(EVENT_NAMES).map(Number)
+  return Array.from({ length: scope === 'used' ? EVENT_USED_COUNT : EVENT_COUNT }, (_, i) => i)
 }
 
 function writeBulk(bytes: Uint8Array, base: number, indices: readonly number[], value: number, problem: string | null): void {

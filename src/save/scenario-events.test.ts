@@ -7,6 +7,7 @@ import {
   EVENT_COUNT,
   EVENT_RECORD_OFFSET,
   EVENT_STATE_OFFSET,
+  EVENT_USED_COUNT,
   bulkIndices,
   readEvents,
   writeEventRecord,
@@ -139,6 +140,15 @@ describe('一括設定（デバッグ用）', () => {
     const after = before.slice()
     writeEventStates(after, bulkIndices('named'), 0x05, { advanced: false })
     expect(diffOffsets(before, after)).toEqual([0, 1, 3, 6, 9, 10, 11, 12].map((i) => EVENT_STATE_OFFSET + i))
+  })
+
+  it('🔶 使われている添字（0〜98）だけを書き、99 以降は変えない', () => {
+    const before = makeSave(A_START)
+    const after = before.slice()
+    writeEventRecords(after, bulkIndices('used'), 0x04, { advanced: false })
+    const entries = readEvents(after).entries
+    expect(entries.slice(0, EVENT_USED_COUNT).every((e) => e.record === 0x04)).toBe(true)
+    expect(entries.slice(EVENT_USED_COUNT).every((e) => e.record === 0xff)).toBe(true)
   })
 
   it('すべての添字の記録を 04 にすると、記録の 166 B だけが 04 になる', () => {

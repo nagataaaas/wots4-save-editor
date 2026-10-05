@@ -47,6 +47,7 @@ import {
   EVENT_RECORD_OFFSET,
   EVENT_STATES,
   EVENT_STATE_OFFSET,
+  EVENT_USED_COUNT,
   bulkIndices,
   readEvents,
   recordLabel,
@@ -260,8 +261,9 @@ const recordOptions: SelectOption[] = EVENT_RECORDS.map((r) => ({
 function EventsCard({ view }: { view: EventsView | null }) {
   const { advanced } = useAdvancedMode();
   const options = useMemo(() => stateOptions(advanced), [advanced]);
-  const named = Object.keys(EVENT_NAMES).map(Number);
-  const others = view?.entries.filter((e) => !(e.index in EVENT_NAMES)) ?? [];
+  // 使われている添字（0〜98）は名前の有無にかかわらず添字順に並べ、それより後はトグルの中に入れる
+  const used = Array.from({ length: EVENT_USED_COUNT }, (_, i) => i);
+  const unused = view?.entries.slice(EVENT_USED_COUNT) ?? [];
 
   return (
     <Card>
@@ -276,7 +278,7 @@ function EventsCard({ view }: { view: EventsView | null }) {
       <CardContent className="flex flex-col gap-4">
         <BulkEventsPanel problem={view?.problem ?? null} disabled={!view} stateOptions={options} />
         <div className="grid gap-4 sm:grid-cols-2">
-          {named.map((i) => (
+          {used.map((i) => (
             <EventBox
               key={i}
               index={i}
@@ -293,11 +295,11 @@ function EventsCard({ view }: { view: EventsView | null }) {
               className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-90"
               aria-hidden
             />
-            名前の分からない添字（{others.length}件）
+            使われていないように見える添字 {EVENT_USED_COUNT}〜{EVENT_COUNT - 1}（{unused.length}件）
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid gap-4 pt-3 sm:grid-cols-2 lg:grid-cols-3">
-              {others.map((e) => (
+              {unused.map((e) => (
                 <EventBox
                   key={e.index}
                   index={e.index}
@@ -316,6 +318,7 @@ function EventsCard({ view }: { view: EventsView | null }) {
 
 const scopeOptions: { value: BulkScope; label: string }[] = [
   { value: "named", label: `名前の分かる添字（${bulkIndices("named").length}件）` },
+  { value: "used", label: `使われている添字 0〜${EVENT_USED_COUNT - 1}（${EVENT_USED_COUNT}件）` },
   { value: "all", label: `すべての添字（${EVENT_COUNT}件）` },
 ];
 
