@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { BELT_STATE, NO_LEFT, beltOffset, readBelt, writeBeltDual, writeBeltMineuchi, writeBeltRight } from './belt'
 import { TS_SAVE_SIZE } from './hero'
-import { BLADES } from './weapon-ids'
+import { BLADES, SHEATHS } from './weapon-ids'
 import {
   WEAPON_FIELDS,
   WEAPON_NAME_MAX_CHARS,
@@ -189,6 +189,20 @@ describe('武器レコード（合成）', () => {
     expect(BLADES.filter((p) => isXUnknown('blade', p))).toEqual([])
     expect(isXUnknown('blade', { source: 'ct', value: 0x999, label: '仮', x: null })).toBe(true)
     expect(isXUnknown('guard', { source: 'ct', value: 0x999, label: '仮' })).toBe(false)
+  })
+
+  it('🔶 U-3 案C（ユーザー判断 2026-10-05）：どの刃の X も鞘の表にある（規則で計算した X は、その刃の名前の鞘として足した）', () => {
+    const ids = new Set(SHEATHS.map((s) => s.id))
+    const missing = BLADES.filter((p) => {
+      if (p.source === 'ct') return p.x == null || !ids.has(p.x)
+      // [TS] の 3 B 値は X の下位バイトだけを持つ（上位バイトは鍔の 3 B の先頭）
+      const low = (p.value >>> 16) & 0xff
+      return !SHEATHS.some((s) => (s.id & 0xff) === low)
+    })
+    expect(missing.map((p) => p.label)).toEqual([])
+    expect(SHEATHS.find((s) => s.id === 0x57)?.label).toBe('龍魔治')
+    expect(SHEATHS.find((s) => s.id === 0xbc)?.label).toBe('霊禍')
+    expect(SHEATHS.find((s) => s.id === 0xd2)?.label).toBe('二心')
   })
 
   it('U-3 [U] 2026-10-05 X が 0x100 以上の刃は、ID と実測の X を 2 B ずつ書く（和泉守兼定 0x162、活火山 0x163、夜葬 0x167）', () => {

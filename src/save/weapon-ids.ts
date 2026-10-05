@@ -293,7 +293,9 @@ export const GRIPS: readonly PartOption[] = [
   { source: 'ct', value: 0x169, label: '夜葬' },
 ]
 
-/** 鞘（X、+0x0A〜+0x0B の u16。§5.5）。✅ X は鞘の ID（[U] 2026-10-05）。label は同じ X を使う刃の名前。0xFFFF は鞘なし（[U] 2026-10-05） */
+/** 鞘（X、+0x0A〜+0x0B の u16。§5.5）。✅ X は鞘の ID（[U] 2026-10-05）。label は同じ X を使う刃の名前。0xFFFF は鞘なし（[U] 2026-10-05）。
+ * 🔶 U-3 案C の行は、[CT] の刃の X を規則（ID＋0x17／ID−0x5D）で計算した値から逆算して足した鞘（ユーザー判断 2026-10-05）。ゲーム内では未確認
+ */
 export const SHEATHS: readonly IdOption[] = [
   { id: 0x18, label: '中道刀・なまくら刀' },
   { id: 0x1a, label: '黒獅子' },
@@ -309,6 +311,7 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0x54, label: '大黒生' },
   { id: 0x55, label: '微熱' },
   { id: 0x56, label: '竹刀・虎吉竹刀' },
+  { id: 0x57, label: '龍魔治' }, // 🔶 U-3 案C
   { id: 0x58, label: '精霊舞' },
   { id: 0x59, label: '炎天過' },
   { id: 0x5a, label: '氷天過' },
@@ -318,8 +321,12 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0x5e, label: 'センチュリオン' },
   { id: 0x5f, label: '闇緊' },
   { id: 0x60, label: '浅餓王・乃理州' },
+  { id: 0x61, label: '斬鬼丸' }, // 🔶 U-3 案C
   { id: 0x62, label: '馬通二' },
   { id: 0x63, label: '阿修羅' },
+  { id: 0x64, label: '凍雲小太刀' }, // 🔶 U-3 案C
+  { id: 0x65, label: '赤マムシ' }, // 🔶 U-3 案C
+  { id: 0x66, label: '村柾' }, // 🔶 U-3 案C
   { id: 0x67, label: '黒蜻蛉' },
   { id: 0x68, label: '羅刹' },
   { id: 0x9b, label: '真心' },
@@ -334,22 +341,40 @@ export const SHEATHS: readonly IdOption[] = [
   { id: 0xae, label: '源平' },
   { id: 0xaf, label: '汎来巣' },
   { id: 0xb0, label: '五郎縞・無天下' },
+  { id: 0xb1, label: '絶海' }, // 🔶 U-3 案C
+  { id: 0xb2, label: '奮発丸' }, // 🔶 U-3 案C
   { id: 0xb3, label: '律儀' },
+  { id: 0xb4, label: '賢皇骨' }, // 🔶 U-3 案C
+  { id: 0xb5, label: '鮫肌九' }, // 🔶 U-3 案C
+  { id: 0xb6, label: '大樽生' }, // 🔶 U-3 案C
   { id: 0xb7, label: '余熱' },
+  { id: 0xb8, label: 'マサトシ' }, // 🔶 U-3 案C
+  { id: 0xb9, label: '真啓通' }, // 🔶 U-3 案C
+  { id: 0xba, label: '粋逸' }, // 🔶 U-3 案C
+  { id: 0xbb, label: '断頭' }, // 🔶 U-3 案C
+  { id: 0xbc, label: '霊禍' }, // 🔶 U-3 案C
+  { id: 0xbd, label: 'ジョアンナ' }, // 🔶 U-3 案C
+  { id: 0xbe, label: '砕苦論' }, // 🔶 U-3 案C
+  { id: 0xbf, label: '零魂磨' }, // 🔶 U-3 案C
+  { id: 0xc0, label: 'チーフテン' }, // 🔶 U-3 案C
+  { id: 0xc1, label: '斗壱' }, // 🔶 U-3 案C
   { id: 0xc2, label: '物干竿' },
   { id: 0xc3, label: '日本橋' },
   { id: 0xc4, label: '手長' },
   { id: 0xc5, label: '幽餓王' },
   { id: 0xc6, label: '貪鬼丸' },
+  { id: 0xc7, label: '迦楼羅' }, // 🔶 U-3 案C
   { id: 0xc8, label: '猿丸' },
   { id: 0xc9, label: '蝉丸' },
   { id: 0xca, label: '小式部' },
   { id: 0xcb, label: '蒼伯' },
+  { id: 0xcc, label: '毒マムシ' }, // 🔶 U-3 案C
   { id: 0xcd, label: '柾重' },
   { id: 0xce, label: '蛇蜻蛉' },
   { id: 0xcf, label: '百代草' },
   { id: 0xd0, label: '不語仙' },
   { id: 0xd1, label: '金盞花' },
+  { id: 0xd2, label: '二心' }, // 🔶 U-3 案C
   { id: 0xd3, label: '富士ヶ根' },
   { id: 0xd4, label: '大文字' },
   { id: 0xd5, label: '麒麟児・霧単穂' },
