@@ -3,9 +3,38 @@ import { useState, type ReactNode } from 'react'
 import { InfoTip } from '@/components/info-tip'
 import { WarningTip } from '@/components/warning-tip'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-export type SelectOption = { value: string; label: string; disabled?: boolean; icon?: LucideIcon | null }
+/** group があると、同じ group の選択肢を見出しつきでまとめる（最初に出てきた順） */
+export type SelectOption = { value: string; label: string; disabled?: boolean; icon?: LucideIcon | null; group?: string }
+
+function groupOptions(options: readonly SelectOption[]): { name: string | undefined; items: SelectOption[] }[] {
+  const groups: { name: string | undefined; items: SelectOption[] }[] = []
+  for (const o of options) {
+    const g = groups.find((x) => x.name === o.group)
+    if (g) g.items.push(o)
+    else groups.push({ name: o.group, items: [o] })
+  }
+  return groups
+}
+
+function OptionItem({ option: o }: { option: SelectOption }) {
+  return (
+    <SelectItem value={o.value} disabled={o.disabled}>
+      {o.icon && <o.icon />}
+      {o.label}
+    </SelectItem>
+  )
+}
 
 type Props = {
   label: string
@@ -65,12 +94,19 @@ export function SelectRow({ label, offset, badges, value, currentLabel, options,
               {currentLabel ?? value}（現在の値）
             </SelectItem>
           )}
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
-              {o.icon && <o.icon />}
-              {o.label}
-            </SelectItem>
-          ))}
+          {groupOptions(options).map((g, i) =>
+            g.name === undefined ? (
+              g.items.map((o) => <OptionItem key={o.value} option={o} />)
+            ) : (
+              <SelectGroup key={g.name}>
+                {i > 0 && <SelectSeparator />}
+                <SelectLabel>{g.name}</SelectLabel>
+                {g.items.map((o) => (
+                  <OptionItem key={o.value} option={o} />
+                ))}
+              </SelectGroup>
+            ),
+          )}
         </SelectContent>
       </Select>
       {problem ? (

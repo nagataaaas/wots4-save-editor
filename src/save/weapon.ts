@@ -22,6 +22,7 @@ import {
   GRIPS,
   GUARDS,
   SHEATHS,
+  SPEAR_PART_NAMES,
   SPECIAL_BLADES,
   WEAPON_IDS,
   type PartOption,
@@ -551,6 +552,11 @@ export function partOptions(kind: PartKind, special: boolean): readonly PartOpti
   if (kind === "blade") return special ? SPECIAL_BLADES : BLADES;
   if (special) return [];
   return PART_LISTS[kind];
+}
+
+/** 通常パーツが刀用か槍用か（SPEAR_PART_NAMES。[CT] の英語名から） */
+export function partWeaponKind(option: PartOption): "刀" | "槍" {
+  return SPEAR_PART_NAMES.has(option.label) ? "槍" : "刀";
 }
 
 /**

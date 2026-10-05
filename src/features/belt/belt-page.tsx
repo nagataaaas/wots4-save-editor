@@ -41,6 +41,7 @@ import {
   formatRange,
   WEAPON_NAME_MAX_CHARS,
   isXUnknown,
+  partWeaponKind,
   partKey,
   partOptions,
   validateWeaponName,
@@ -498,13 +499,15 @@ function WeaponCard({
 
   const partRow = (kind: PartKind) => {
     const field = weapon?.[kind] ?? null;
-    const options = partOptions(kind, weapon?.special ?? false).map((p) => {
+    const special = weapon?.special ?? false;
+    const options = partOptions(kind, special).map((p) => {
       const label = isXUnknown(kind, p)
         ? `${p.label}（X 不明・要分解→組み立て）`
         : p.xExtended
           ? `${p.label}（X は推測・要確認）`
           : p.label;
-      return { value: partKey(p), label };
+      // 通常パーツは刀と槍に分けて並べる（ユーザー判断 2026-10-05）。特殊武器の刃は分けない
+      return { value: partKey(p), label, group: special ? undefined : partWeaponKind(p) };
     });
     const digits = kind === "grip" ? 4 : 6;
     return (

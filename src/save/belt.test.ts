@@ -2,13 +2,14 @@
 import { describe, expect, it } from 'vitest'
 import { BELT_STATE, NO_LEFT, beltOffset, readBelt, writeBeltDual, writeBeltMineuchi, writeBeltRight } from './belt'
 import { TS_SAVE_SIZE } from './hero'
-import { BLADES, SHEATHS } from './weapon-ids'
+import { BLADES, GRIPS, GUARDS, SHEATHS, type PartOption } from './weapon-ids'
 import {
   WEAPON_FIELDS,
   WEAPON_NAME_MAX_CHARS,
   decodeTitle,
   encodeTitle,
   isXUnknown,
+  partWeaponKind,
   readWeapon,
   validateWeaponNumber,
   writeWeaponCharms,
@@ -217,6 +218,16 @@ describe('武器レコード（合成）', () => {
     expect(BLADES.filter((p) => isXUnknown('blade', p))).toEqual([])
     expect(isXUnknown('blade', { source: 'ct', value: 0x999, label: '仮', x: null })).toBe(true)
     expect(isXUnknown('guard', { source: 'ct', value: 0x999, label: '仮' })).toBe(false)
+  })
+
+  it('通常パーツを刀と槍に分ける（[CT] の英語名「Spear …」。焔魔・霜柱・立奈美・藤奈美は [U] でも槍）', () => {
+    const spears = (list: readonly PartOption[]) => list.filter((p) => partWeaponKind(p) === '槍').map((p) => p.label)
+    expect(spears(BLADES)).toEqual([
+      '黒獅子', '風花', '羅刹', '藤奈美', '富士ヶ根', '大文字', '麒麟児', '焔魔', '霜柱', '立奈美', '霧単穂',
+    ])
+    expect(spears(GUARDS)).toEqual(['黒獅子', '風花', '羅刹', '藤奈美', '霜柱', '立奈美'])
+    expect(spears(GRIPS)).toEqual(['黒獅子', '風花', '羅刹', '藤奈美', '富士ヶ根', '大文字', '麒麟児', '焔魔', '霜柱', '立奈美'])
+    expect(partWeaponKind(BLADES[0])).toBe('刀') // 中道刀
   })
 
   it('🔶 U-3 案C（ユーザー判断 2026-10-05）：どの刃の X も鞘の表にある（規則で計算した X は、その刃の名前の鞘として足した）', () => {

@@ -134,6 +134,25 @@ export const BLADES: readonly PartOption[] = [
   { source: 'ct', value: 0x168, label: '夜葬', x: 0x167 },
 ]
 
+/**
+ * 槍のパーツの名前（刃・鍔・柄で共通）。ほかの通常パーツは刀。
+ * [CT] の英語名が「Spear Blade／Guard／Grip」のもの（ユーザー判断で [CT] を確定扱い 2026-10-05）。
+ * 焔魔・霜柱・立奈美の刃と藤奈美（武器種 1）はゲーム内でも槍と確認した（[U] 2026-10-05）
+ */
+export const SPEAR_PART_NAMES: ReadonlySet<string> = new Set([
+  '黒獅子',
+  '風花',
+  '羅刹',
+  '藤奈美',
+  '富士ヶ根',
+  '大文字',
+  '麒麟児',
+  '焔魔',
+  '霜柱',
+  '立奈美',
+  '霧単穂',
+])
+
 /** 鍔。ts は +0x0B〜+0x0D の 3 B（1バイト目は 🔶 X の上位バイト）、ct は +0x0C〜+0x0D の ID（u16） */
 export const GUARDS: readonly PartOption[] = [
   { source: 'ts', value: 0xd00, label: '中道刀' },
