@@ -1,7 +1,8 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。
 // 時間帯（0x0010・0x0014）と保留量（0x0012）はゲーム内で書き込みの反映を確認済み（✅ [U]）。
-// 0x0010 の日の部分だけを書き換えても日数は変わらず、0x0BD8（経過日数）も一緒に書くと変わった（✅ [U] 2026-10-05）
+// 0x0010 の日の部分だけを書き換えても日数は変わらず、0x0BD8（経過日数）も一緒に書くと変わった（✅ [U] 2026-10-05）。
+// 4日目以降は 0x0010＝400 で止まる（03 copy 7・8・9 の差分）。5日目への書き換えで大老 鬼怒川怨仙が発生した（✅ [U] 2026-10-05）
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32, writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -17,11 +18,11 @@ const SEEN = {
   day1Night: { head: [0x78, 0x00, 0x00, 0x06, 0x02], dayIndex: 0 },
   /** 04 copy 3：2日目朝 */
   day2Noon: { head: [0xc8, 0x00, 0x00, 0x06, 0x00], dayIndex: 1 },
-  /** 🔶 03 copy 7：5日目昼（港で寝て、大老 鬼怒川怨仙の前）。0x0010 は 400 で止まる */
+  /** 03 copy 7：5日目昼（港で寝て、大老 鬼怒川怨仙の前）。0x0010 は 400 で止まる */
   day5Noon: { head: [0x90, 0x01, 0x00, 0x01, 0x00], dayIndex: 4 },
-  /** 🔶 03 copy 8：5日目夕（大老 鬼怒川怨仙のあと） */
+  /** 03 copy 8：5日目夕（大老 鬼怒川怨仙のあと） */
   day5Evening: { head: [0x90, 0x01, 0x00, 0x06, 0x01], dayIndex: 4 },
-  /** 🔶 03 copy 9：6日目昼（大老の大寄せのあと） */
+  /** 03 copy 9：6日目昼（大老の大寄せのあと） */
   day6Noon: { head: [0x90, 0x01, 0x00, 0x06, 0x00], dayIndex: 5 },
 }
 
@@ -45,13 +46,13 @@ describe('readDate §3.5', () => {
     expect(readDate(makeSave(SEEN.day2Noon))).toMatchObject({ day: 2, slot: 0, problem: null })
   })
 
-  it('🔶 4日目以降は 0x0010 が 400 のままで、日数は 0x0BD8、時間帯は 0x0014 から読む', () => {
+  it('4日目以降は 0x0010 が 400 のままで、日数は 0x0BD8、時間帯は 0x0014 から読む', () => {
     expect(readDate(makeSave(SEEN.day5Noon))).toMatchObject({ day: 5, slot: 0, problem: null, warning: null })
     expect(readDate(makeSave(SEEN.day5Evening))).toMatchObject({ day: 5, slot: 1, problem: null })
     expect(readDate(makeSave(SEEN.day6Noon))).toMatchObject({ day: 6, slot: 0, problem: null })
   })
 
-  it('🔶 0x0010 が 400 なのに 0x0BD8 が3日目以前なら読み取り専用にする', () => {
+  it('0x0010 が 400 なのに 0x0BD8 が3日目以前なら読み取り専用にする', () => {
     const b = makeSave(SEEN.day5Noon)
     writeU32(b, DATE_OFFSETS.dayIndex, 2)
     expect(readDate(b).problem).toMatch(/400/)
@@ -69,7 +70,7 @@ describe('readDate §3.5', () => {
     expect(readDate(b).problem).toMatch(/一致しません/)
   })
 
-  it('🔶 0x0010 の日と 0x0BD8＋1 が食い違えば読み取り専用にする', () => {
+  it('0x0010 の日と 0x0BD8＋1 が食い違えば読み取り専用にする', () => {
     const b = makeSave(SEEN.day1Evening)
     writeU16(b, DATE_OFFSETS.dayTime, 210)
     expect(readDate(b).problem).toMatch(/0x0BD8/)
@@ -129,7 +130,7 @@ describe('書き込み', () => {
     }
   })
 
-  it('🔶 4日目以降を書くと 0x0010 は 400 になる（03 copy 8・9 と同じ並び。要ゲーム内確認）', () => {
+  it('✅ [U] 4日目以降を書くと 0x0010 は 400 になる（03 copy 8・9 と同じ並び）', () => {
     const b = makeSave(SEEN.day1Evening)
     writeDayTime(b, 5, 1, { advanced: false })
     expect(diffOffsets(makeSave(SEEN.day5Evening), b)).toEqual([])

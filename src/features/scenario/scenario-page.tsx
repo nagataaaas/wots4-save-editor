@@ -152,7 +152,7 @@ function DateCard({ view }: { view: DateView | null }) {
         <CardTitle>日数・時間帯</CardTitle>
         <CardDescription>
           日数（0x0BD8・0x0010・0x0014）・時間帯（0x0010・0x0014）・保留量（0x0012）は、書き換えがゲームに反映されることを確認済みです。
-          日を進めると、過ぎた時間帯に済ませていないイベントはロード時に失敗になります。
+          日を進めると、過ぎた時間帯に済ませていないイベントはチャートで失敗と表示されます（寝て日を飛ばしたときと同じ）。
           {view &&
             ` 生の値：0x0010＝${view.raw.dayTime}、0x0012＝${view.pending}、0x0014＝${view.raw.slot}、0x0BD8＝${view.raw.dayIndex}`}
         </CardDescription>
@@ -169,7 +169,7 @@ function DateCard({ view }: { view: DateView | null }) {
           apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
           inputMode="numeric"
           hint={`${range.min}〜${range.max}日目`}
-          note="0x0BD8（u32、経過日数）・0x0010（u16）・0x0014（u8）を書きます。0x0010 だけでは日数は変わりませんでした。日を進めると、過ぎた時間帯のイベントはゲームが失敗にします。4日目以降は 0x0010 に 400 を書きます（実データで 5・6日目が 400 だったため。要ゲーム内確認）"
+          note="0x0BD8（u32、経過日数）・0x0010（u16）・0x0014（u8）を書きます。0x0010 だけでは日数は変わりませんでした。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示されます（セーブ上の状態は変わりません）。4日目以降は 0x0010 に 400 を書きます"
         />
         <SelectRow
           label="時間帯"
