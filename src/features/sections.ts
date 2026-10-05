@@ -1,4 +1,4 @@
-import { Binary, Package, ScrollText, Store, Sword, Swords, User, type LucideIcon } from 'lucide-react'
+import { Binary, Flag, Package, ScrollText, Store, Sword, Swords, User, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
 // 各領域の確度は docs/wos4_save_format.md を参照（節番号を note に残す）。
@@ -11,6 +11,7 @@ export type SectionId =
   | 'tools'
   | 'chest'
   | 'valuables'
+  | 'scenario'
   | 'styles'
   | 'ore-ryu'
   | 'circulating'
@@ -67,6 +68,7 @@ export const sectionGroups: SectionGroup[] = [
           { id: 'valuables', label: '重要品', note: '§4（貴重品 8 B × 10件。[TS] は先頭4件＝製錬用の鉄のみ編集）' },
         ],
       },
+      { id: 'scenario', label: 'シナリオ', icon: Flag, note: '§3.5 🔶 日数・時間帯、イベントの状態、勢力の記録' },
       { id: 'styles', label: '流派', icon: ScrollText, note: '§3.1 🔶 0x018BC0 付近' },
       { id: 'ore-ryu', label: '俺流', icon: Swords, note: '§8.2 ❓ U-6' },
       { id: 'circulating', label: '流通中の刀', icon: Store, note: '§8.1 ❓ U-11' },

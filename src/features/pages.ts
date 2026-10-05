@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import { BeltPage } from '@/features/belt/belt-page'
 import { HeroPage } from '@/features/hero/hero-page'
+import { ScenarioPage } from '@/features/scenario/scenario-page'
 import { ToolsPage } from '@/features/tools/tools-page'
 import { ValuablesPage } from '@/features/valuables/valuables-page'
 import type { SectionId } from '@/features/sections'
@@ -11,4 +12,5 @@ export const pages: Partial<Record<SectionId, ComponentType>> = {
   belt: BeltPage,
   tools: ToolsPage,
   valuables: ValuablesPage,
+  scenario: ScenarioPage,
 }
