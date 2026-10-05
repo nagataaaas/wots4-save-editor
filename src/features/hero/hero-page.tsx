@@ -123,7 +123,7 @@ export function HeroPage() {
   );
 
   return (
-    <div className="flex max-w-2xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {!view && (
         <Alert>
           <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>

@@ -27,7 +27,7 @@ export default function App() {
                 {section.label}
               </h1>
             </header>
-            <div className="p-4">
+            <div className="mx-auto w-full max-w-3xl p-4">
               {Page ? <Page /> : <SectionPlaceholder section={section} />}
             </div>
           </SidebarInset>

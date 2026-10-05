@@ -60,7 +60,7 @@ export function ValuablesPage() {
   const k = save?.loadId ?? 0;
 
   return (
-    <div className="flex max-w-3xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {!view && (
         <Alert>
           <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
