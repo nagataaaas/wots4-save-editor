@@ -242,10 +242,7 @@ function RouteJudgeRows({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-        大寄せの判定
-        <CertaintyBadge mark="🔶" text="3回の差分から推定・書き込み未検証" />
-      </div>
+      <p className="text-sm font-medium">大寄せの判定</p>
       <div className="grid gap-4 sm:grid-cols-4">
         {FACTIONS.map((faction, c) => (
           <SelectRow
@@ -272,7 +269,8 @@ function RouteJudgeRows({
           currentLabel={view ? current(view.none) : undefined}
           options={noneOptions}
           problem={problem}
-          note="どの勢力にも入れないとき 01（根無し草）"
+          warning={view?.warning}
+          note="どの勢力にも入れないとき 01（根無し草）。勢力のどれかが 01 だと、ここが 01 でも根無し草にはならない"
           onChange={(v) => update((b) => writeRouteJudge(b, FACTIONS.length, Number(v), { advanced }))}
         />
       </div>

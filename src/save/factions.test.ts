@@ -98,14 +98,20 @@ const BAKUFU_ROUTE = [0x03, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x01, 0x01
 /** 04 copy 11・03 copy 9 の 0x3789〜0x378C（どの勢力にも入れない） */
 const NO_ROUTE = [0x02, 0x02, 0x02, 0x01]
 
-describe('大寄せの判定 🔶 §3.5（0x3789〜0x378C）', () => {
+describe('大寄せの判定 §3.5（0x3789〜0x378C）', () => {
   it('勢力ごとの判定と無所属を読む', () => {
-    expect(readRouteJudge(makeSave(BAKUFU_ROUTE))).toEqual({ judges: [1, 2, 2], none: 0, problem: null })
+    expect(readRouteJudge(makeSave(BAKUFU_ROUTE))).toEqual({ judges: [1, 2, 2], none: 0, problem: null, warning: null })
     const b = makeSave(BAKUFU_ROUTE)
     b.set(NO_ROUTE, ROUTE_JUDGE_OFFSET)
-    expect(readRouteJudge(b)).toEqual({ judges: [2, 2, 2], none: 1, problem: null })
+    expect(readRouteJudge(b)).toEqual({ judges: [2, 2, 2], none: 1, problem: null, warning: null })
     // 大寄せ前はすべて 00
-    expect(readRouteJudge(makeSave(AFTER_SNEAK))).toEqual({ judges: [0, 0, 0], none: 0, problem: null })
+    expect(readRouteJudge(makeSave(AFTER_SNEAK))).toEqual({ judges: [0, 0, 0], none: 0, problem: null, warning: null })
+  })
+
+  it('✅ [U] 無所属が 01 でも、勢力のどれかが 01 なら根無し草にならないので警告する', () => {
+    const b = makeSave(BAKUFU_ROUTE)
+    writeU8(b, ROUTE_NONE_OFFSET, 0x01)
+    expect(readRouteJudge(b).warning).toMatch(/根無し草/)
   })
 
   it('剣術大会の準備で攘夷と戦った回数は 2 として読む（行1）', () => {
@@ -122,7 +128,7 @@ describe('大寄せの判定 🔶 §3.5（0x3789〜0x378C）', () => {
     expect(readRouteJudge(b).problem).not.toBeNull()
   })
 
-  it('要ゲーム内確認：1バイトだけを書き、通常モードでは見た値だけ', () => {
+  it('✅ [U] 書き換えでルートが変わる。1バイトだけを書き、通常モードでは見た値だけ', () => {
     const before = makeSave(BAKUFU_ROUTE)
     const after = before.slice()
     writeRouteJudge(after, 2, 0x01, { advanced: false })

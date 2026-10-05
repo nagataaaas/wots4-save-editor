@@ -12,11 +12,14 @@
 //                   売国奴を斬れで門前払いされ、ほかのイベントでは「直前に敵対行為を取った」ときの選択肢が出た。
 //                   そこで謝罪してイベントを成功させると、行2 が 0 に戻り、行0 が +1 された。
 //                   敵対行為で 1 になることが多いが、剣術大会の準備（攘夷と戦った）では立たず、代官所潜入では行1 なしで立った。
+//                   友好度を下げるか（行1）と敵対状態にするか（行2）は、イベントごとに別々に決まっていると考えられる（[U] の推定）。
 //                   大寄せの判定には使われない（1・5 でも入れた）
 //
-// 大寄せの判定（0x3789〜0x378C）：大寄せ（添字41）のときに書かれる。🔶 3回の観察（03 copy 9・04 copy 11・04 copy 12）
+// 大寄せの判定（0x3789〜0x378C）：大寄せ（添字41）のときに書かれる。3回の観察（03 copy 9・04 copy 11・04 copy 12）
 //   0x3789〜0x378B 勢力ごと（幕府・外国・攘夷）。00 大寄せ前、01 ルートに入れる、02 入れない
 //   0x378C         00 どれかの勢力に入れる、01 無所属（根無し草）
+//   ✅ [U] 2026-10-05：大寄せのあとに判定を書き換えると、ルートが変わった。
+//   ただし 0x378C が 01 でも、どれかの勢力が 01 だと根無し草にはならない（勢力の 01 が優先）。
 //   04 copy 12：幕府の行0 が 3（剣術大会の準備に参加）で 01 02 02 00、チャートに公儀の剣が出た（[U] 2026-10-05）。
 //   04 copy 11：幕府の行0 が 2 で 02 02 02 01、公儀の剣は出なかった。
 //   ✅ [U] 2026-10-05：大寄せの直前に表を書き換えて試した結果（行0, 行1, 行2 → ルート）
@@ -108,6 +111,8 @@ export type RouteJudgeView = {
   judges: number[]
   none: number
   problem: string | null
+  /** 無所属が 01 でも効かない組み合わせのとき */
+  warning: string | null
 }
 
 export function readRouteJudge(bytes: Uint8Array): RouteJudgeView {
@@ -119,11 +124,14 @@ export function readRouteJudge(bytes: Uint8Array): RouteJudgeView {
   let problem: string | null = null
   if (!judges.every((v) => known(ROUTE_JUDGE_VALUES, v)) || !known(ROUTE_NONE_VALUES, none))
     problem = `大寄せの判定の値が想定外です（${[...judges, none].map((v) => v.toString(16).padStart(2, '0')).join(' ')}）`
-  return { judges, none, problem: layoutProblem ?? problem }
+  // ✅ [U] 勢力の 01 が無所属より優先される
+  const warning =
+    none === 0x01 && judges.includes(0x01) ? '勢力のどれかが「ルートに入れる」なので、無所属（根無し草）にはなりません' : null
+  return { judges, none, problem: layoutProblem ?? problem, warning }
 }
 
 /**
- * 大寄せの判定の1バイトを書く。col は 0〜2（勢力）、3 は無所属の 0x378C。🔶 書き込みは要ゲーム内確認。
+ * 大寄せの判定の1バイトを書く。col は 0〜2（勢力）、3 は無所属の 0x378C。✅ [U] 書き換えでルートが変わる。
  * 通常モードでは見た値（判定 00〜02、無所属 00・01）だけ。上級者モードでは任意の u8
  */
 export function writeRouteJudge(bytes: Uint8Array, col: number, value: number, opts: { advanced: boolean }): void {
