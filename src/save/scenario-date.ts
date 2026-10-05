@@ -29,10 +29,12 @@ export const DATE_OFFSETS = {
 export const TIME_SLOTS = ['昼（朝）', '夕', '夜'] as const
 
 /**
- * 日数の正規の範囲。🔶 1〜3日目は昼・夕・夜の3枠（§9.5）。
- * 4日目以降は値を見ていないので、上級者モードでだけ受け付ける（0x0010 に収まる 655 日目まで）
+ * 日数の正規の範囲。通常モードは 99 日目まで（[U] 2026-10-05 の要望）。上級者モードは 0x0010 に収まる 655 日目まで。
+ * 🔶 1〜3日目は昼・夕・夜の3枠（§9.5）。4日目以降は値を見ていないので、DAY_SEEN_MAX を超えると警告する
  */
-export const DAY_RANGE = { normal: { min: 1, max: 3 }, system: { min: 1, max: 655 } } as const
+export const DAY_RANGE = { normal: { min: 1, max: 99 }, system: { min: 1, max: 655 } } as const
+/** 実データで値を見た最後の日 */
+export const DAY_SEEN_MAX = 3
 
 /** 保留量の正規の値。🔶 差分で見たのは 0 と 10 だけ */
 export const PENDING_VALUES = [0, 10] as const
@@ -71,7 +73,7 @@ export function readDate(bytes: Uint8Array): DateView {
 
   const warnings: string[] = []
   if (pending !== 0) warnings.push('時間帯を進める保留量が入っています。エリア移動・ロードで時間帯が1つ進みます')
-  if (!problem && day > DAY_RANGE.normal.max) warnings.push(`${DAY_RANGE.normal.max}日目より後の値は確かめていません`)
+  if (!problem && day > DAY_SEEN_MAX) warnings.push(`${DAY_SEEN_MAX}日目より後の値は確かめていません`)
 
   return {
     layoutProblem,

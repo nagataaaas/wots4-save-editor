@@ -111,14 +111,19 @@ describe('書き込み', () => {
     }
   })
 
-  it('通常モードは1〜3日目まで。上級者モードでは4日目以降も受け付ける', () => {
+  it('通常モードは1〜99日目まで。上級者モードでは655日目まで。🔶 4日目以降は警告する', () => {
     const b = makeSave(SEEN.day1Evening)
-    expect(() => writeDayTime(b, 4, 0, { advanced: false })).toThrow(RangeError)
+    expect(() => writeDayTime(b, 100, 0, { advanced: false })).toThrow(RangeError)
+    expect(() => writeDayTime(b, 656, 0, { advanced: true })).toThrow(RangeError)
     expect(() => writeDayTime(b, 0, 0, { advanced: true })).toThrow(RangeError)
     expect(() => writeDayTime(b, 1, 3, { advanced: true })).toThrow(RangeError)
-    writeDayTime(b, 4, 0, { advanced: true })
+    writeDayTime(b, 4, 0, { advanced: false })
     expect(readDate(b)).toMatchObject({ day: 4, slot: 0, problem: null })
     expect(readDate(b).warning).toMatch(/確かめていません/)
+    writeDayTime(b, 99, 2, { advanced: false })
+    expect(readDate(b)).toMatchObject({ day: 99, slot: 2, problem: null })
+    writeDayTime(b, 100, 0, { advanced: true })
+    expect(readDate(b)).toMatchObject({ day: 100, problem: null })
   })
 
   it('✅ [U] 保留量は 0 と 10 だけ。0x0012 だけを変える', () => {
