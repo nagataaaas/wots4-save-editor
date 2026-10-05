@@ -51,11 +51,17 @@ const PLAUSIBLE_STATES = new Set([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0xff])
 export type EventName = {
   name: string
   day: string
-  /** 'diff'＝差分で確認（🔶）、'guess'＝ほかの添字との関係からの推測（🔶 根拠が弱い） */
-  basis: 'diff' | 'guess'
+  /**
+   * 'chart'＝ゲーム内のチャートで添字とイベントの対応を確認（✅ [U] 2026-10-05）、
+   * 'diff'＝差分で確認（🔶）、'guess'＝ほかの添字との関係からの推測（🔶 根拠が弱い）
+   */
+  basis: 'chart' | 'diff' | 'guess'
 }
 
-/** 名前の分かっている添字。§3.5「未確定のこと」 */
+/**
+ * 名前の分かっている添字。§3.5「未確定のこと」。day は docs/event.md（Wiki）の時間帯。
+ * 2〜46 の名前はユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）。47 以降はチャートにまだ出ていない（剣術大会開催より後のイベントか ❓）
+ */
 export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   0: { name: '船上の侍', day: '1日目昼', basis: 'guess' }, // どのセーブでも 04。名前は [U] 2026-10-05（Samurai on Board、オープニング）
   1: { name: '阿弥浜港争乱', day: '1日目昼', basis: 'guess' }, // スキップで 00、1周目で 04
@@ -65,6 +71,45 @@ export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   10: { name: '阿片密売を阻止せよ', day: '1日目夜', basis: 'diff' }, // 04 copy 2 → copy 3
   11: { name: '辻斬りを辻斬る', day: '1日目夜', basis: 'diff' }, // 04 copy 4 → copy 5
   12: { name: '代官所潜入', day: '1日目夜', basis: 'diff' }, // 04 copy 4 → 03 copy 6
+  2: { name: '簀巻き日和', day: '1日目昼', basis: 'chart' },
+  4: { name: '代官所の面々', day: '1日目昼', basis: 'chart' },
+  5: { name: '小公女謁見', day: '1日目昼', basis: 'chart' },
+  7: { name: '琴吹光探検隊', day: '1日目夕', basis: 'chart' },
+  8: { name: '電信あり', day: '1日目夕', basis: 'chart' },
+  13: { name: '西洋医学お断り', day: '2日目昼', basis: 'chart' },
+  14: { name: '病院廃業の企て', day: '2日目昼', basis: 'chart' },
+  15: { name: '病院占拠事件', day: '2日目昼', basis: 'chart' },
+  16: { name: '祝　病院開業', day: '2日目昼', basis: 'chart' },
+  17: { name: '欺きの代価', day: '2日目昼', basis: 'chart' },
+  18: { name: '講師ご到着', day: '2日目夕', basis: 'chart' },
+  19: { name: '語学所開設', day: '2日目夕', basis: 'chart' },
+  20: { name: 'お団子物語', day: '2日目夕', basis: 'chart' },
+  21: { name: '語学無用', day: '2日目夕', basis: 'chart' },
+  22: { name: '講師を亡き者に', day: '2日目夕', basis: 'chart' },
+  23: { name: 'ガイジンとゲイシャ', day: '2日目夜', basis: 'chart' },
+  24: { name: 'ライジングサン', day: '2日目夜', basis: 'chart' },
+  25: { name: 'カジノ再建を急げ', day: '2日目夜', basis: 'chart' },
+  26: { name: 'カジノを破壊せよ', day: '2日目夜', basis: 'chart' },
+  27: { name: 'カジノ再建断固阻止', day: '2日目夜', basis: 'chart' },
+  28: { name: '大老　鬼怒川怨仙', day: '3日目昼', basis: 'chart' },
+  29: { name: '魔鱗組の力', day: '3日目昼', basis: 'chart' },
+  30: { name: '小公女と大老', day: '3日目昼', basis: 'chart' },
+  31: { name: '血で血を洗う戦い', day: '3日目昼', basis: 'chart' },
+  32: { name: '白昼の激突', day: '3日目昼', basis: 'chart' },
+  33: { name: '大老と三姉妹', day: '3日目夕', basis: 'chart' },
+  34: { name: '小公女倒れる', day: '3日目夕', basis: 'chart' },
+  35: { name: '売国奴を斬れ', day: '3日目夕', basis: 'chart' },
+  36: { name: '剣術大会の準備', day: '3日目夜', basis: 'chart' },
+  37: { name: '危険な賭け', day: '3日目夜', basis: 'chart' },
+  38: { name: '真実', day: '3日目夜', basis: 'chart' },
+  39: { name: '仕組まれた襲撃', day: '3日目夜', basis: 'chart' },
+  40: { name: '罠を破れ', day: '3日目夜', basis: 'chart' },
+  41: { name: '大老の大寄せ', day: '4日目以降', basis: 'chart' },
+  42: { name: '公儀の剣', day: '4日目以降', basis: 'chart' }, // ユーザーの一覧では「広儀の剣」。docs/event.md の表記に合わせた
+  43: { name: '東国の騎士', day: '4日目以降', basis: 'chart' },
+  44: { name: '志士の刀', day: '4日目以降', basis: 'chart' },
+  45: { name: '根無し草', day: '4日目以降', basis: 'chart' },
+  46: { name: '剣術大会開催', day: '4日目以降', basis: 'chart' },
 }
 
 export type EventEntry = {

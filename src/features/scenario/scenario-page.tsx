@@ -464,12 +464,16 @@ function EventBox({
     <div className="flex flex-col gap-3 rounded-md border p-3">
       <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
         {name ? `${index}. ${name.name}` : `添字 ${index}`}
-        {name && (
-          <CertaintyBadge
-            mark="🔶"
-            text={`${name.day}・${name.basis === "diff" ? "差分で確認" : "推測"}`}
-          />
-        )}
+        {name &&
+          (name.basis === "chart" ? (
+            // ✅ チャートで確認した対応にはバッジを付けない
+            <span className="text-muted-foreground text-xs font-normal">{name.day}</span>
+          ) : (
+            <CertaintyBadge
+              mark="🔶"
+              text={`${name.day}・${name.basis === "diff" ? "差分で確認" : "推測"}`}
+            />
+          ))}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <SelectRow

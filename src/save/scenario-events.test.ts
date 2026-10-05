@@ -139,7 +139,9 @@ describe('一括設定（デバッグ用）', () => {
     const before = makeSave(A_START)
     const after = before.slice()
     writeEventStates(after, bulkIndices('named'), 0x05, { advanced: false })
-    expect(diffOffsets(before, after)).toEqual([0, 1, 3, 6, 9, 10, 11, 12].map((i) => EVENT_STATE_OFFSET + i))
+    // 名前の分かる添字は 0〜46（✅ [U] チャートで確認、2026-10-05）。もとが 05 の添字はないので、すべて変わる
+    expect(bulkIndices('named')).toEqual(Array.from({ length: 47 }, (_, i) => i))
+    expect(diffOffsets(before, after)).toEqual(bulkIndices('named').map((i) => EVENT_STATE_OFFSET + i))
   })
 
   it('🔶 使われている添字（0〜98）だけを書き、99 以降は変えない', () => {
