@@ -137,7 +137,7 @@ export function ScenarioPage() {
         <AlertTitle>検証用（要ゲーム内確認）</AlertTitle>
         <AlertDescription>
           この画面の項目は、どれもセーブの差分から推定したものです（解析ノート §3.5）。
-          日数・時間帯、イベントの失敗（05）・未到達（FF）、チャート表示、勢力の「協力・成功」「戦った」は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+          日数・時間帯、イベントの失敗（05）・未到達（FF）、チャート表示、勢力の友好度 +・− は書き換えの反映を確認済みです。そのほかの値は確かめていません。
           書き換える前のセーブを残してから試してください。
         </AlertDescription>
       </Alert>
@@ -254,10 +254,10 @@ function RouteJudgeRows({
             problem={problem}
             hint={
               factions && !factions.problem
-                ? `今の記録なら大寄せで${routeEligible(factions.values, c) ? "入れる" : "入れない"}（協力 ${factions.values[0][c]} − 戦い ${factions.values[1][c]}）`
+                ? `今の記録なら大寄せで${routeEligible(factions.values, c) ? "入れる" : "入れない"}（友好度 ${factions.values[0][c]} − ${factions.values[1][c]} ＝ ${factions.values[0][c] - factions.values[1][c]}）`
                 : undefined
             }
-            note={`大寄せのときに書かれる。協力・成功した回数 − 人物と戦った回数 が ${ROUTE_THRESHOLD} 以上で 01（入れる）、それ未満で 02（入れない）。敵対イベントの記録は関係しない`}
+            note={`大寄せのときに書かれる。友好度（友好度 + − 友好度 −）が ${ROUTE_THRESHOLD} 以上で 01（入れる）、それ未満で 02（入れない）。敵対の記録は関係しない`}
             onChange={(v) => update((b) => writeRouteJudge(b, c, Number(v), { advanced }))}
           />
         ))}
@@ -288,7 +288,8 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
         <CardTitle>勢力の記録</CardTitle>
         <CardDescription>
           0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。
-          列の並びと「協力・成功した回数」は差分で何度も合っています。大寄せの時点で「協力・成功した回数 − 人物と戦った回数」が 3 以上の勢力のルートに入れます（書き換えで確認済み）。
+          友好度は「友好度 +（協力・成功）− 友好度 −（不利益・敵対行為）」です（Wiki の説明と差分が合う）。
+          大寄せの時点で友好度が 3 以上の勢力のルートに入れます（書き換えで確認済み）。
           友好度そのもの（符号つきの値）は別の場所にある可能性があります。
         </CardDescription>
       </CardHeader>

@@ -145,6 +145,20 @@ describe('大寄せの判定 🔶 §3.5（0x3789〜0x378C）', () => {
     expect([0, 1, 2].map((c) => routeEligible(values, c))).toEqual([true, false, false])
   })
 
+  it('阿片密売の3通り（04 copy 13 から）：友好度 − は不利益を与えた勢力に付く', () => {
+    // 02：密売人を斬る（大成功）→ 幕府 +1、外国 −1
+    expect(readFactions(makeSave([0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x00])).values.map((r) => r.slice())).toEqual([
+      [2, 0, 0],
+      [0, 1, 0],
+      [0, 1, 0],
+    ])
+    // 02 copy：導入で幕府勢力を斬る（失敗）→ 幕府の + は増えず −1
+    const slashed = readFactions(makeSave([0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00])).values
+    expect(slashed[0][0] - slashed[1][0]).toBe(0)
+    // 02 copy 2：密売人を見逃す（成功）→ 幕府 +1 だけ
+    expect(readFactions(makeSave([0x02, 0, 0, 0, 0, 0, 0, 0, 0])).values[0][0]).toBe(2)
+  })
+
   it('読み出し→書き戻しでバイト列が一致する', () => {
     const before = makeSave(BAKUFU_ROUTE)
     const after = before.slice()
