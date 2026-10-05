@@ -227,7 +227,7 @@ const noneOptions: SelectOption[] = ROUTE_NONE_VALUES.map((v) => ({
   label: `${formatHex2(v.value)} ${v.label}`,
 }));
 
-/** 大寄せの判定（0x3789〜0x378C）。view が null ならセーブ未読み込み */
+/** 剣術大会以後のルート分岐（0x3789〜0x378C）。view が null ならセーブ未読み込み */
 function RouteJudgeRows({
   view,
   factions,
@@ -242,7 +242,7 @@ function RouteJudgeRows({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm font-medium">大寄せの判定</p>
+      <p className="text-sm font-medium">剣術大会以後のルート分岐</p>
       <div className="grid gap-4 sm:grid-cols-4">
         {FACTIONS.map((faction, c) => (
           <SelectRow

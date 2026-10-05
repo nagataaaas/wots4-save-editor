@@ -1,6 +1,6 @@
 // 勢力ごとの記録（3×3 表）。出典：解析ノート §3.5「勢力の 3×3 表の候補」、§9.4（[U] 2026-10-05 のシナリオ差分）。
 //
-// 差分からの推定。行0・行1 は、書き換えると大寄せの結果が変わることを確認した（✅ [U] 2026-10-05、下の「大寄せの判定」）。
+// 差分からの推定。行0・行1 は、書き換えると大寄せの結果が変わることを確認した（✅ [U] 2026-10-05、下の「剣術大会以後のルート分岐」）。
 // 行2 も書き換えでイベントの反応が変わることを確認した（✅ [U] 2026-10-05）。0x3780〜0x3788 の u8 × 9 を
 // 3列（勢力）× 3行 に並べる。列の並び（幕府・外国・攘夷）は、3勢力のイベントの成功で各列の行0 が立ったことによる。
 // Wiki の「イベントに参加・成功で友好度 +1、不利益を与えたり敵対行為を働いた勢力は −1」に合わせ、友好度＝行0 − 行1 と読む（[U] 2026-10-05）。
@@ -13,9 +13,9 @@
 //                   そこで謝罪してイベントを成功させると、行2 が 0 に戻り、行0 が +1 された。
 //                   敵対行為で 1 になることが多いが、剣術大会の準備（攘夷と戦った）では立たず、代官所潜入では行1 なしで立った。
 //                   友好度を下げるか（行1）と敵対状態にするか（行2）は、イベントごとに別々に決まっていると考えられる（[U] の推定）。
-//                   大寄せの判定には使われない（1・5 でも入れた）
+//                   剣術大会以後のルート分岐には使われない（1・5 でも入れた）
 //
-// 大寄せの判定（0x3789〜0x378C）：大寄せ（添字41）のときに書かれる。3回の観察（03 copy 9・04 copy 11・04 copy 12）
+// 剣術大会以後のルート分岐（0x3789〜0x378C）：大寄せ（添字41）のときに書かれる。3回の観察（03 copy 9・04 copy 11・04 copy 12）
 //   0x3789〜0x378B 勢力ごと（幕府・外国・攘夷）。00 大寄せ前、01 ルートに入れる、02 入れない
 //   0x378C         00 どれかの勢力に入れる、01 無所属（根無し草）
 //   ✅ [U] 2026-10-05：大寄せのあとに判定を書き換えると、ルートが変わった。
@@ -35,10 +35,10 @@ export const FACTION_TABLE_OFFSET = 0x3780 // 🔶 §3.5
 export const FACTIONS = ['幕府', '外国', '攘夷'] as const
 export const FACTION_ROWS = [
   { label: '友好度 +（協力・成功）', note: 'その勢力のイベントに参加・成功するたびに +1。友好度＝この値 − 下の「友好度 −」' },
-  { label: '友好度 −（不利益・敵対行為）', note: 'その勢力の人物と戦う・斬るなど、不利益を与えるたびに +1。大寄せの判定では上の値から引かれる' },
+  { label: '友好度 −（不利益・敵対行為）', note: 'その勢力の人物と戦う・斬るなど、不利益を与えるたびに +1。剣術大会以後のルート分岐では上の値から引かれる' },
   {
     label: '敵対状態',
-    note: '1 だと、その勢力のイベントで門前払いされたり、謝罪の選択肢が出たりする。謝罪して成功させると 0 に戻る。大寄せの判定には使われない',
+    note: '1 だと、その勢力のイベントで門前払いされたり、謝罪の選択肢が出たりする。謝罪して成功させると 0 に戻る。剣術大会以後のルート分岐には使われない',
   },
 ] as const
 
@@ -94,8 +94,8 @@ export function routeEligible(values: readonly (readonly number[])[], col: numbe
   return values[0][col] - values[1][col] >= ROUTE_THRESHOLD
 }
 
-export const ROUTE_JUDGE_OFFSET = 0x3789 // 🔶 §3.5 大寄せの判定（勢力ごと 3 B）
-export const ROUTE_NONE_OFFSET = 0x378c // 🔶 §3.5 無所属
+export const ROUTE_JUDGE_OFFSET = 0x3789 // ✅ [U] §3.5 剣術大会以後のルート分岐（勢力ごと 3 B）
+export const ROUTE_NONE_OFFSET = 0x378c // ✅ [U] §3.5 無所属
 export const ROUTE_JUDGE_VALUES = [
   { value: 0x00, label: '大寄せ前' },
   { value: 0x01, label: 'ルートに入れる' },
@@ -116,14 +116,14 @@ export type RouteJudgeView = {
 }
 
 export function readRouteJudge(bytes: Uint8Array): RouteJudgeView {
-  if (bytes.byteLength < ROUTE_NONE_OFFSET + 1) throw new RangeError('ファイルが小さすぎて大寄せの判定を読めません')
+  if (bytes.byteLength < ROUTE_NONE_OFFSET + 1) throw new RangeError('ファイルが小さすぎて剣術大会以後のルート分岐を読めません')
   const layoutProblem = checkLayout(bytes)
   const judges = FACTIONS.map((_, c) => readU8(bytes, ROUTE_JUDGE_OFFSET + c))
   const none = readU8(bytes, ROUTE_NONE_OFFSET)
   const known = (list: readonly { value: number }[], v: number) => list.some((x) => x.value === v)
   let problem: string | null = null
   if (!judges.every((v) => known(ROUTE_JUDGE_VALUES, v)) || !known(ROUTE_NONE_VALUES, none))
-    problem = `大寄せの判定の値が想定外です（${[...judges, none].map((v) => v.toString(16).padStart(2, '0')).join(' ')}）`
+    problem = `剣術大会以後のルート分岐の値が想定外です（${[...judges, none].map((v) => v.toString(16).padStart(2, '0')).join(' ')}）`
   // ✅ [U] 勢力の 01 が無所属より優先される
   const warning =
     none === 0x01 && judges.includes(0x01) ? '勢力のどれかが「ルートに入れる」なので、無所属（根無し草）にはなりません' : null
@@ -131,7 +131,7 @@ export function readRouteJudge(bytes: Uint8Array): RouteJudgeView {
 }
 
 /**
- * 大寄せの判定の1バイトを書く。col は 0〜2（勢力）、3 は無所属の 0x378C。✅ [U] 書き換えでルートが変わる。
+ * 剣術大会以後のルート分岐の1バイトを書く。col は 0〜2（勢力）、3 は無所属の 0x378C。✅ [U] 書き換えでルートが変わる。
  * 通常モードでは見た値（判定 00〜02、無所属 00・01）だけ。上級者モードでは任意の u8
  */
 export function writeRouteJudge(bytes: Uint8Array, col: number, value: number, opts: { advanced: boolean }): void {
