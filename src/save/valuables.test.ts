@@ -181,9 +181,16 @@ describe('❓ U-14：ID調査モード', () => {
     expect(readValuables(b).slots[4].label).toBe('茶器')
     writeValuable(b, 4, 0x99, 1, { investigate: true })
     expect(readValuables(b).slots[4].label).toBe('茶器')
-    writeValuable(b, 4, 0x00, 1, { investigate: true })
-    expect(readValuables(b).slots[4].label).toBe('がらくた')
     writeValuable(b, 4, 0x18, 1, { investigate: true })
+    expect(readValuables(b).slots[4].label).toBe('がらくた')
+    // 7回目の訂正（[U] 2026-10-05）：対応づけが1つずれていた
+    writeValuable(b, 4, 0x01, 1, { investigate: true })
+    expect(readValuables(b).slots[4].label).toBe('伯爵の寿司')
+    writeValuable(b, 4, 0x0f, 1, { investigate: true })
+    expect(readValuables(b).slots[4].label).toBe('部品箱（柄？）')
+    writeValuable(b, 4, 0x14, 1, { investigate: true })
+    expect(readValuables(b).slots[4].label).toBe('お金袋（小）')
+    writeValuable(b, 4, 0x17, 1, { investigate: true })
     expect(readValuables(b).slots[4].label).toBe('お金袋（特大）')
     writeValuable(b, 4, 0x21, 1, { investigate: true })
     expect(readValuables(b).slots[4].label).toBe('俺流目録')
@@ -229,12 +236,13 @@ describe('❓ U-14：ID調査モード', () => {
   })
 })
 
-describe('[U] 2026-10-05 U-14：会談の手紙（0x01）', () => {
+describe('[U] 2026-10-05 U-14：会談の手紙（0x00。7回目の訂正で 0x01 から変更）', () => {
   it('選択肢にあり、通常モードで書ける。セーブ可否が未確認なので警告を出す', () => {
     const b = makeSave()
-    writeValuable(b, 2, 0x01, 1)
+    writeValuable(b, 2, 0x00, 1)
+    expect(() => writeValuable(b, 3, 0x01, 1)).toThrow()
     const v = readValuables(b)
-    expect(v.slots[2]).toMatchObject({ id: 0x01, count: 1, label: '会談の手紙', problem: null, idWritable: true })
+    expect(v.slots[2]).toMatchObject({ id: 0x00, count: 1, label: '会談の手紙', problem: null, idWritable: true })
     expect(v.slots[2].warning).toContain('U-14')
   })
 })

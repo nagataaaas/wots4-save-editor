@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
+import { ItemSlotRow } from "@/components/item-slot-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -16,31 +16,21 @@ import { Switch } from "@/components/ui/switch";
 import { formatHex4, formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
-  EMPTY_ID,
   PROBE_CANDIDATES,
   VALUABLES,
   VALUABLE_COUNT_MAX,
   VALUABLE_SLOT_COUNT,
   VALUABLES_OFFSET,
-  TS_EDITED_SLOTS,
   fillEmptySlotsWithProbes,
   readValuables,
   slotOffset,
-  validateValuableCount,
   writeValuable,
-  type ValuableSlot,
   type ValuablesView,
 } from "@/save/valuables";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-/** ID を 16進4桁（0x なし）で表示する */
-const hexId = (id: number) => id.toString(16).toUpperCase().padStart(4, "0");
-
-function parseHexId(input: string): number | null {
-  const t = input.trim().replace(/^0x/i, "");
-  return /^[0-9a-f]{1,4}$/i.test(t) ? parseInt(t, 16) : null;
-}
+const VALUABLE_GROUPS = [{ items: VALUABLES }];
 
 export function ValuablesPage() {
   const { save, update } = useSave();
@@ -114,11 +104,14 @@ export function ValuablesPage() {
           {Array.from({ length: VALUABLE_SLOT_COUNT }, (_, i) => {
             const slot = view?.slots[i] ?? null;
             return (
-              <SlotRow
+              <ItemSlotRow
                 // 読み込み直しと ID の変更で、入力途中の値を捨てる
                 key={`${k}-${i}-${slot?.id ?? ""}`}
                 index={i}
+                offset={slotOffset(i)}
                 slot={slot}
+                groups={VALUABLE_GROUPS}
+                noun="重要品"
                 investigate={investigate}
                 onChange={(id, count) =>
                   update((b) => writeValuable(b, i, id, count, { investigate }))
@@ -134,174 +127,6 @@ export function ValuablesPage() {
         は用途不明（❓）のため変えません。 個数の上限 {VALUABLE_COUNT_MAX} は推測（🔶
         §4）で、ゲーム内の上限は未確認です。
       </p>
-    </div>
-  );
-}
-
-/** slot が null のときはセーブ未読み込み。入力欄を無効にして表示する */
-function SlotRow({
-  index,
-  slot,
-  investigate,
-  onChange,
-}: {
-  index: number;
-  slot: ValuableSlot | null;
-  investigate: boolean;
-  onChange: (id: number, count: number) => void;
-}) {
-  const [draft, setDraft] = useState(() =>
-    slot && slot.id !== EMPTY_ID ? String(slot.count) : "",
-  );
-  const [idDraft, setIdDraft] = useState(() => (slot ? hexId(slot.id) : ""));
-  const [error, setError] = useState<string | null>(null);
-
-  const offset = slotOffset(index);
-  const readOnly = slot === null || slot.problem !== null;
-  const isEmpty = slot?.id === EMPTY_ID;
-  // 現在の ID が不正（U-12・未知）なら、ID の変更だけを許し、個数は変えられない
-  const countLocked = slot === null || slot.problem !== null || isEmpty || !slot.idWritable;
-  const isKnown = slot !== null && (isEmpty || VALUABLES.some((v) => v.id === slot.id));
-
-  function run(action: () => void) {
-    setError(null);
-    try {
-      action();
-    } catch (e) {
-      setError(errorMessage(e));
-    }
-  }
-
-  function handleSelect(s: string) {
-    if (!slot) return;
-    const id = Number(s);
-    if (id === slot.id) return;
-    // なし → 個数 0。空きから入れたとき、または個数 0 のときは 1 にする
-    const count = id === EMPTY_ID ? 0 : slot.count >= 1 ? slot.count : 1;
-    run(() => onChange(id, count));
-  }
-
-  /** ID調査モード：16進で ID を直接入れる */
-  function handleId(input: string) {
-    if (!slot) return;
-    setIdDraft(input);
-    const id = parseHexId(input);
-    if (id === null) {
-      setError("ID は16進4桁まで（例：2F）で入力してください");
-      return;
-    }
-    if (id === slot.id) {
-      setError(null);
-      return;
-    }
-    run(() => onChange(id, id === EMPTY_ID ? 0 : slot.count >= 1 ? slot.count : 1));
-  }
-
-  function handleCount(input: string) {
-    if (!slot) return;
-    setDraft(input);
-    if (!/^\d+$/.test(input.trim())) {
-      setError("1以上の整数を入力してください");
-      return;
-    }
-    const count = Number(input.trim());
-    const problem = validateValuableCount(count);
-    if (problem) {
-      setError(problem);
-      return;
-    }
-    setError(null);
-    if (count !== slot.count) run(() => onChange(slot.id, count));
-  }
-
-  return (
-    <div className="flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-medium">{index + 1}件目</span>
-        <span className="text-muted-foreground font-mono text-xs">{formatOffset(offset)}</span>
-        {slot && (
-          <span
-            className="text-muted-foreground ml-auto font-mono text-xs"
-            title="+0x04〜+0x07（用途不明）"
-          >
-            ❓ {slot.unknown.toString(16).toUpperCase().padStart(8, "0")}
-          </span>
-        )}
-      </div>
-      <div
-        className={
-          investigate
-            ? "grid grid-cols-[1fr_5.5rem_5.5rem] gap-2"
-            : "grid grid-cols-[1fr_7rem] gap-2"
-        }
-      >
-        <Select
-          // '' は Radix Select でプレースホルダー表示になる（undefined だと非制御扱いになる）
-          value={slot === null ? "" : String(slot.id)}
-          disabled={readOnly}
-          onValueChange={handleSelect}
-        >
-          <SelectTrigger className="w-full" aria-label={`${index + 1}件目の重要品`}>
-            <SelectValue placeholder="未読み込み" />
-          </SelectTrigger>
-          <SelectContent>
-            {slot && !isKnown && (
-              <SelectItem value={String(slot.id)} disabled>
-                {formatHex4(slot.id)} {slot.label ?? "未知の ID"}（現在の値）
-              </SelectItem>
-            )}
-            <SelectItem value={String(EMPTY_ID)}>なし</SelectItem>
-            {VALUABLES.map((v) => (
-              <SelectItem key={v.id} value={String(v.id)}>
-                {v.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {investigate && (
-          <Input
-            value={slot === null ? "" : readOnly ? hexId(slot.id) : idDraft}
-            disabled={slot === null}
-            readOnly={readOnly}
-            placeholder="ID"
-            className="font-mono"
-            aria-label={`${index + 1}件目の ID（16進）`}
-            onChange={(e) => handleId(e.target.value)}
-            onBlur={() => {
-              if (error && slot) {
-                setIdDraft(hexId(slot.id));
-                setError(null);
-              }
-            }}
-          />
-        )}
-        <Input
-          value={slot === null || isEmpty ? "" : countLocked ? String(slot.count) : draft}
-          disabled={slot === null || isEmpty}
-          readOnly={countLocked}
-          placeholder={slot === null ? "未読み込み" : isEmpty ? "—" : undefined}
-          inputMode="numeric"
-          aria-label={`${index + 1}件目の個数`}
-          aria-invalid={error !== null}
-          onChange={(e) => handleCount(e.target.value)}
-          onBlur={() => {
-            // 不正な入力のまま離れたら、セーブ上の値に戻す
-            if (error && slot) {
-              setDraft(String(slot.count));
-              setError(null);
-            }
-          }}
-        />
-      </div>
-      {slot?.problem ? (
-        <p className="text-muted-foreground text-xs">読み取り専用：{slot.problem}</p>
-      ) : error ? (
-        <p className="text-destructive text-xs">{error}</p>
-      ) : (
-        slot?.warning && (
-          <p className="text-xs text-amber-600 dark:text-amber-400">⚠ {slot.warning}</p>
-        )
-      )}
     </div>
   );
 }

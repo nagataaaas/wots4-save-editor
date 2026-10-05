@@ -5,14 +5,22 @@
 //   1. ファイルサイズが [TS] の構造体サイズ 0x48BB0 と一致する（案A の条件）
 //   2. 各枠の ID が既知の一覧にあり、個数が妥当な範囲にある
 //
-// 1枠は 8 B：+0x00 ID（u16）、+0x02 個数（u16）、+0x04 用途不明（4 B ❓）。
-// 書き込むのは ID と個数の 4 B だけで、+0x04 の 4 B は変えない。
-import { readU16, readU32, writeU16 } from './binary'
+// 枠の構造（8 B）と書き込み方は手持ちの道具と共通（item-slot.ts）。
 import { checkLayout } from './hero'
+import {
+  EMPTY_ID,
+  ITEM_COUNT_MAX,
+  ITEM_SLOT_BYTES,
+  readItemSlotRaw,
+  validateItemCount,
+  writeItemSlotRaw,
+  type ItemOption,
+  type ItemSlot,
+} from './item-slot'
 import { formatHex4 } from '@/lib/format'
 
 export const VALUABLES_OFFSET = 0x5b90 // ✅ [TS][I-3]
-export const VALUABLE_SLOT_BYTES = 8
+export const VALUABLE_SLOT_BYTES = ITEM_SLOT_BYTES
 export const VALUABLE_SLOT_COUNT = 10
 
 /**
@@ -21,20 +29,17 @@ export const VALUABLE_SLOT_COUNT = 10
  */
 export const TS_EDITED_SLOTS = 4
 
-export const EMPTY_ID = 0xffff
+export { EMPTY_ID }
 
-export type Valuable = {
-  id: number
-  label: string
-  /** 確定していない点。あれば、この ID が入った枠に警告として出す */
-  caution?: string
-}
+export type Valuable = ItemOption
 
 /**
  * 選択肢に出す貴重品ID。
  * - くず鉄〜緋緋色金：§4.1 ✅ [TS][I-3]。0x2A／0x2B の順は D-12 で判定済み
- * - 会談の手紙（0x01）：U-14 の調査で、重要品の枠に書いてゲーム内の重要品一覧に出た（[U] 2026-10-05）。
- *   名前の表示は確認済み。ゲーム内でセーブできるか・イベントで使えるかは未確認（要ゲーム内確認）
+ * - 会談の手紙（0x00）：U-14 の調査で分かった（[U] 2026-10-05）。7回目の調査では 0x01 としていたが、
+ *   対応づけが1つずれていた（PROBED_LABELS の7回目の訂正を参照）。訂正後、重要品の枠に 0x00 を書いて
+ *   会談の手紙と表示されることを確認した（[U] 2026-10-05）。
+ *   ゲーム内でセーブできるか・イベントで使えるかは未確認（要ゲーム内確認）
  *
  * ❓ U-14 未解決（2026-10-05 時点で調査を中断）：謎の鍵・拷問部屋の鍵の ID は見つかっていない。
  *   - 調べた範囲：0x00〜0xA8、0xAC、0xAF、0xB5、0xB9、0xBC、0xBF、0xC0〜0xD6（結果は PROBED_LABELS）
@@ -45,7 +50,7 @@ export type Valuable = {
  */
 export const VALUABLES: readonly Valuable[] = [
   {
-    id: 0x0001,
+    id: 0x0000,
     label: '会談の手紙',
     caution: '表示は確認済み（U-14）。ゲーム内でセーブできるか・イベントで使えるかは未確認です',
   },
@@ -123,17 +128,20 @@ const PROBED_LABELS: Record<number, string> = {
   0x007b: '茶器',
   // 6回目（[U] 2026-10-05）。0x7C〜0x99 もすべて「茶器」
   ...Object.fromEntries(Array.from({ length: 0x99 - 0x7c + 1 }, (_, i) => [0x7c + i, '茶器'])),
-  // 7回目（[U] 2026-10-05）。空き枠に 0x00、0x01、0x0D〜0x0F、0x14〜0x18 を順に入れ、一覧の並び順で対応させた。
-  // 0x01 は会談の手紙で、VALUABLES に昇格した。部品箱の「刃？」などはユーザーの推測
-  0x0000: 'がらくた',
-  0x000d: '伯爵の寿司',
-  0x000e: '部品箱（刃？）',
-  0x000f: '部品箱（鍔？）',
-  0x0014: '部品箱（柄？）',
-  0x0015: 'お金袋（小）',
-  0x0016: 'お金袋（中）',
-  0x0017: 'お金袋（大）',
-  0x0018: 'お金袋（特大）',
+  // 7回目（[U] 2026-10-05）。空き枠に 0x00、0x01、0x0D〜0x0F、0x14〜0x18 を順に入れた。部品箱の「刃？」などはユーザーの推測。
+  // 訂正（[U] 2026-10-05）：一覧の並び順での対応づけが1つずれていた（先頭の名前が最後の ID のもので、残りは1つ前の ID のもの）。根拠：
+  //   - 道具の枠に 0x00、0x0D〜0x0F、0x14〜0x19 を順に入れると、一覧は 会談の手紙・部品箱×3・お金袋（小〜特大）・がらくた・お宝 の順だった
+  //   - 道具の枠に 0x01 を入れると伯爵の寿司だった
+  // 0x00 は会談の手紙で、VALUABLES に昇格した
+  0x0001: '伯爵の寿司',
+  0x000d: '部品箱（刃？）',
+  0x000e: '部品箱（鍔？）',
+  0x000f: '部品箱（柄？）',
+  0x0014: 'お金袋（小）',
+  0x0015: 'お金袋（中）',
+  0x0016: 'お金袋（大）',
+  0x0017: 'お金袋（特大）',
+  0x0018: 'がらくた',
   // 8回目（[U] 2026-10-05）。空き枠に 0x19、0x1B、0x1C、0x20、0x21、0x9A〜0x9E を順に入れ、一覧の並び順で対応させた
   0x0019: 'お宝',
   0x001b: '百両箱',
@@ -210,33 +218,16 @@ export const PROBE_CANDIDATES: readonly number[] = [
   ...Array.from({ length: 0xbf - 0x9f + 1 }, (_, i) => 0x9f + i),
 ].filter((id) => !(id in PROBED_LABELS))
 
-/**
- * 個数の上限。🔶 推測：解析ノート §4 のアンカー探索の目安（個数≤999）。ゲーム内の上限は未確認。
- * 入力の上限と、読み込み時の妥当性の上限を兼ねる。
- */
-export const VALUABLE_COUNT_MAX = 999
+/** 個数の上限。🔶 推測（item-slot.ts の ITEM_COUNT_MAX） */
+export const VALUABLE_COUNT_MAX = ITEM_COUNT_MAX
 
-export type ValuableSlot = {
-  index: number
-  offset: number
-  id: number
-  count: number
-  /** +0x04〜+0x07（❓ 用途不明）。表示のみ */
-  unknown: number
-  /** 既知の ID なら名前。U-12 の ID は「？」付き、U-14 で調べた ID は調査結果の名前、未知の ID は null */
-  label: string | null
+/**
+ * label は、U-12 の ID なら「？」付き、U-14 で調べた ID なら調査結果の名前。
+ * idWritable が false になるのは U-12 の ID と未知の ID
+ */
+export type ValuableSlot = ItemSlot & {
   /** [TS] が編集する枠か（✅）。false なら 🔶 */
   tsEdited: boolean
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null
-  /**
-   * 現在の ID をそのまま書き戻せるか。false（U-12 の ID や未知の ID）の枠も、
-   * 書ける ID に変えることはできる（不正な値から抜け出せるようにするため。ユーザー判断、2026-10-04）。
-   * ただし、個数だけの変更はできない
-   */
-  idWritable: boolean
-  /** 編集はできるが注意が必要な理由 */
-  warning: string | null
 }
 
 export type ValuablesView = {
@@ -275,11 +266,7 @@ export function validateValuableId(id: number, options: ValuableOptions = {}): s
   return `未知の ID です（${formatHex4(id)}）`
 }
 
-export function validateValuableCount(count: number): string | null {
-  if (!Number.isInteger(count)) return '整数を入力してください'
-  if (count < 1 || count > VALUABLE_COUNT_MAX) return `1〜${VALUABLE_COUNT_MAX} の範囲で入力してください`
-  return null
-}
+export const validateValuableCount = validateItemCount
 
 export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}): ValuablesView {
   const end = VALUABLES_OFFSET + VALUABLE_SLOT_BYTES * VALUABLE_SLOT_COUNT
@@ -289,10 +276,7 @@ export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}):
   const slots: ValuableSlot[] = []
   const seen = new Map<number, number>()
   for (let index = 0; index < VALUABLE_SLOT_COUNT; index++) {
-    const offset = slotOffset(index)
-    const id = readU16(bytes, offset)
-    const count = readU16(bytes, offset + 2)
-    const unknown = readU32(bytes, offset + 4)
+    const { offset, id, count, unknown } = readItemSlotRaw(bytes, slotOffset(index))
 
     const idProblem = validateValuableId(id, options)
     let problem: string | null = null
@@ -334,7 +318,7 @@ export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}):
 
 /**
  * 枠の ID と個数（+0x00〜+0x03）を書く。+0x04〜+0x07 は変えない。
- * 「なし」（0xFFFF）にするときは個数を 0 にする（🔶 推測：空き枠の個数は 0 と推定。実セーブで未確認）。
+ * 「なし」（0xFFFF）にするときは個数を 0 にする（🔶 推測。item-slot.ts の writeItemSlotRaw）。
  */
 export function writeValuable(
   bytes: Uint8Array,
@@ -346,14 +330,7 @@ export function writeValuable(
   const offset = slotOffset(index)
   const idProblem = validateValuableId(id, options)
   if (idProblem) throw new RangeError(idProblem)
-  if (id === EMPTY_ID) {
-    if (count !== 0) throw new RangeError('「なし」の個数は 0 です')
-  } else {
-    const countProblem = validateValuableCount(count)
-    if (countProblem) throw new RangeError(countProblem)
-  }
-  writeU16(bytes, offset, id)
-  writeU16(bytes, offset + 2, count)
+  writeItemSlotRaw(bytes, offset, id, count)
 }
 
 /**
