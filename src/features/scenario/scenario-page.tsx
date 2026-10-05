@@ -23,6 +23,8 @@ import {
   FACTIONS,
   FACTION_ROWS,
   FACTION_VALUE_MAX,
+  HOSTILE_ROW,
+  HOSTILE_VALUES,
   ROUTE_JUDGE_OFFSET,
   ROUTE_JUDGE_VALUES,
   ROUTE_NONE_OFFSET,
@@ -71,8 +73,6 @@ import {
 } from "@/save/scenario-events";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
-/** シナリオ差分（§3.5）で読みを推定した。書き込みはゲーム内で未確認 */
-const diffBadge = <CertaintyBadge mark="🔶" text="差分から推定・書き込み未検証" />;
 
 type Views = { date: DateView; events: EventsView; factions: FactionsView; route: RouteJudgeView };
 
@@ -137,7 +137,7 @@ export function ScenarioPage() {
         <AlertTitle>検証用（要ゲーム内確認）</AlertTitle>
         <AlertDescription>
           この画面の項目は、どれもセーブの差分から推定したものです（解析ノート §3.5）。
-          日数・時間帯、イベントの失敗（05）・未到達（FF）、チャート表示、勢力の友好度 +・− は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+          日数・時間帯、イベントの失敗（05）・未到達（FF）、チャート表示、勢力の友好度 +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
           書き換える前のセーブを残してから試してください。
         </AlertDescription>
       </Alert>
@@ -214,7 +214,11 @@ function DateCard({ view }: { view: DateView | null }) {
   );
 }
 
-const judgeOptions: SelectOption[] = ROUTE_JUDGE_VALUES.map((v) => ({
+const hostileOptions: SelectOption[] = HOSTILE_VALUES.map((v) => ({
+  value: String(v.value),
+  label: `${v.value} ${v.label}`,
+}));
+const judgeOptions: SelectOption[] =ROUTE_JUDGE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${formatHex2(v.value)} ${v.label}`,
 }));
@@ -257,7 +261,7 @@ function RouteJudgeRows({
                 ? `今の記録なら大寄せで${routeEligible(factions.values, c) ? "入れる" : "入れない"}（友好度 ${factions.values[0][c]} − ${factions.values[1][c]} ＝ ${factions.values[0][c] - factions.values[1][c]}）`
                 : undefined
             }
-            note={`大寄せのときに書かれる。友好度（友好度 + − 友好度 −）が ${ROUTE_THRESHOLD} 以上で 01（入れる）、それ未満で 02（入れない）。敵対の記録は関係しない`}
+            note={`大寄せのときに書かれる。友好度（友好度 + − 友好度 −）が ${ROUTE_THRESHOLD} 以上で 01（入れる）、それ未満で 02（入れない）。敵対状態は関係しない`}
             onChange={(v) => update((b) => writeRouteJudge(b, c, Number(v), { advanced }))}
           />
         ))}
@@ -299,24 +303,37 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
           <div key={row.label} className="flex flex-col gap-2">
             <p className="text-sm font-medium">{row.label}</p>
             <div className="grid gap-4 sm:grid-cols-3">
-              {FACTIONS.map((faction, c) => (
-                <FieldRow
-                  key={faction}
-                  label={faction}
-                  offset={factionOffset(r, c)}
-                  badges={r === 2 && c === 0 ? diffBadge : undefined}
-                  value={view?.values[r][c] ?? null}
-                  problem={view?.problem ?? null}
-                  format={String}
-                  parse={(input) =>
-                    parseInteger(input, (v) => validateFactionValue(v, { advanced }))
-                  }
-                  apply={(v) => update((b) => writeFactionValue(b, r, c, v, { advanced }))}
-                  inputMode="numeric"
-                  hint={`0〜${max}`}
-                  note={row.note}
-                />
-              ))}
+              {FACTIONS.map((faction, c) =>
+                r === HOSTILE_ROW ? (
+                  <SelectRow
+                    key={faction}
+                    label={faction}
+                    offset={factionOffset(r, c)}
+                    value={view ? String(view.values[r][c]) : null}
+                    currentLabel={view ? `${view.values[r][c]} 不明` : undefined}
+                    options={hostileOptions}
+                    problem={view?.problem ?? null}
+                    note={row.note}
+                    onChange={(v) => update((b) => writeFactionValue(b, r, c, Number(v), { advanced }))}
+                  />
+                ) : (
+                  <FieldRow
+                    key={faction}
+                    label={faction}
+                    offset={factionOffset(r, c)}
+                    value={view?.values[r][c] ?? null}
+                    problem={view?.problem ?? null}
+                    format={String}
+                    parse={(input) =>
+                      parseInteger(input, (v) => validateFactionValue(v, { advanced }, r))
+                    }
+                    apply={(v) => update((b) => writeFactionValue(b, r, c, v, { advanced }))}
+                    inputMode="numeric"
+                    hint={`0〜${max}`}
+                    note={row.note}
+                  />
+                ),
+              )}
             </div>
           </div>
         ))}

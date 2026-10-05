@@ -74,6 +74,15 @@ describe('書き込み 🔶 要ゲーム内確認', () => {
     expect(diffOffsets(before, after)).toEqual([])
   })
 
+  it('✅ [U] 敵対状態（行2）は通常モードでは 0・1 だけ。上級者モードでは 255 まで', () => {
+    const b = makeSave(AFTER_SNEAK)
+    writeFactionValue(b, 2, 2, 1, { advanced: false })
+    expect(readFactions(b).values[2][2]).toBe(1)
+    expect(() => writeFactionValue(b, 2, 2, 2, { advanced: false })).toThrow(RangeError)
+    writeFactionValue(b, 2, 2, 5, { advanced: true })
+    expect(readFactions(b).values[2][2]).toBe(5)
+  })
+
   it('通常モードは 9 まで。上級者モードでは 255 まで', () => {
     const b = makeSave(AFTER_SNEAK)
     expect(() => writeFactionValue(b, 0, 0, 10, { advanced: false })).toThrow(RangeError)
