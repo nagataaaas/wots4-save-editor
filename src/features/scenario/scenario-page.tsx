@@ -223,8 +223,10 @@ function DateCard({ view }: { view: DateView | null }) {
   );
 }
 
-const flagOptions = (max: number): SelectOption[] =>
-  Array.from({ length: max + 1 }, (_, v) => ({ value: String(v), label: String(v) }));
+const flagOptions: SelectOption[] = [
+  { value: "0", label: "0 開いている" },
+  { value: "1", label: "1 閉じている" },
+];
 
 /** 門・柵のフラグ。view が null ならセーブ未読み込み */
 function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
@@ -238,7 +240,6 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
         <CardDescription>
           ルート分岐を書き換えても、門が閉じたままだとそのルートに進めません。
           代官所（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、1 → 0 の書き換えで開くことを確認済みです。
-          「不明」の欄は、大寄せなどで一緒に変わるが門ではなかったバイトです。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
@@ -247,14 +248,9 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
             key={flag.offset}
             label={flag.label}
             offset={flag.offset}
-            badges={
-              flag.confirmed ? undefined : (
-                <CertaintyBadge mark="🔶" text="差分から推定・書き込み未検証" />
-              )
-            }
             value={view ? String(view.values[i]) : null}
-            currentLabel={view ? String(view.values[i]) : undefined}
-            options={flagOptions(flag.max)}
+            currentLabel={view ? `${view.values[i]} 不明` : undefined}
+            options={flagOptions}
             problem={view?.problem ?? null}
             note={flag.note}
             onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
@@ -265,7 +261,7 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
   );
 }
 
-const hostileOptions: SelectOption[] =HOSTILE_VALUES.map((v) => ({
+const hostileOptions: SelectOption[] = HOSTILE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${v.value} ${v.label}`,
 }));
