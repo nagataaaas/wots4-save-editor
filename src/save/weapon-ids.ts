@@ -16,7 +16,11 @@ export type PartOption = {
   source: 'ts' | 'ct'
   value: number
   label: string
-  /** 刃（source が 'ct'）だけ：🔶 規則で計算した X、または ✅ 実セーブで確かめた X（u16）。null は規則外で X 不明（ID だけ書く。U-3 案B） */
+  /**
+   * 刃だけ：X（鞘の ID、u16）。
+   * 'ct' は 🔶 規則で計算した X、または ✅ 実セーブで確かめた X。null は規則外で X 不明（ID だけ書く。U-3 案B）。
+   * 'ts' は鞘が 0x100 以上のときだけ持つ（3 B 値には X の下位バイトしかない）。ないときは X ＝ 3 B 値の3バイト目
+   */
   x?: number | null
   /** x が、規則を確かめた範囲（0x3F〜0x51、0x109〜0x134）の外に規則を延ばして計算した値（ユーザー判断 2026-10-05、ゲーム内で確認待ち） */
   xExtended?: boolean
@@ -112,7 +116,7 @@ export const BLADES: readonly PartOption[] = [
   { source: 'ts', value: 0xd80135, label: '立奈美' }, // U-13
   { source: 'ts', value: 0x260136, label: '見栄春' }, // U-13
   { source: 'ts', value: 0x270137, label: '大天狗' }, // U-13
-  { source: 'ts', value: 0x390138, label: 'クルセイダー' }, // D-14
+  { source: 'ts', value: 0x390138, label: 'クルセイダー', x: 0x139 }, // D-14
   { source: 'ts', value: 0x5b013a, label: 'イプスカリバ' }, // U-13
   { source: 'ts', value: 0x18013b, label: 'なまくら刀' }, // D-14
   { source: 'ts', value: 0x28013e, label: '残月' }, // U-3 [U] 分解→組み立て後の実セーブ（sample/S4-DATA_01）
@@ -121,9 +125,9 @@ export const BLADES: readonly PartOption[] = [
   { source: 'ts', value: 0x600143, label: '乃理州' },
   { source: 'ts', value: 0xcb0144, label: '蒼伯' },
   { source: 'ts', value: 0xd50145, label: '霧単穂' },
-  { source: 'ts', value: 0x460147, label: '珍比羅' },
-  { source: 'ts', value: 0x580157, label: '陸奥守吉行' },
-  { source: 'ts', value: 0x610164, label: '虎徹' },
+  { source: 'ts', value: 0x460147, label: '珍比羅', x: 0x146 },
+  { source: 'ts', value: 0x580157, label: '陸奥守吉行', x: 0x158 },
+  { source: 'ts', value: 0x610164, label: '虎徹', x: 0x161 },
   // X が 0x100 以上で 3 B 値に収まらないので、ID と実測の X を 2 B ずつ書く（U-3 [U] 分解→組み立て後の実セーブ sample/S4-DATA_01）
   { source: 'ct', value: 0x165, label: '和泉守兼定', x: 0x162 },
   { source: 'ct', value: 0x166, label: '活火山', x: 0x163 },

@@ -1,5 +1,5 @@
 // 武器レコード（0xA0 B 固定長）。帯刀・武器袋・武器箪笥で共通の構造。
-// 出典：解析ノート §5（[TS][I-2][I-3]）、§5.3 魅力・§5.4 銘（[U][TS][I-3]）、§5.5 パーツ（U-3：[TS] の値は案A、[CT] の ID は案C）、§3.4（[U] 2026-10-05 の差分）。
+// 出典：解析ノート §5（[TS][I-2][I-3]）、§5.3 魅力・§5.4 銘（[U][TS][I-3]）、§5.5 パーツ（U-3：読みは [TS] の 3 B 値で照合、書きは 2 B×4。刃は ID と X、鍔・柄は ID だけ。ユーザー指摘 2026-10-05）、§3.4（[U] 2026-10-05 の差分）。
 //
 // 書き込みは各フィールドのバイトだけを上書きする。次の領域は書き換えない：
 //   - +0x00〜+0x05：❓ 用途不明。武器袋[0] ではここが帯刀の状態（峰打など）と重なる（§3.4）
@@ -33,8 +33,8 @@ export const WEAPON_RECORD_BYTES = 0xa0;
 /** レコード内の位置（§5.2） */
 export const WEAPON_FIELDS = {
   weaponId: 0x06, // u16 ✅ 完成武器ID。0xFFFF は自作
-  blade: 0x08, // 3 B ✅（[TS] の値）
-  guard: 0x0b, // 3 B ✅（[TS] の値）
+  blade: 0x08, // 3 B ✅（[TS] の値）で読む。書くのは ID（u16）と X（+0x0A の u16）
+  guard: 0x0b, // 3 B ✅（[TS] の値）で読む。書くのは ID（+0x0C の u16）だけ
   /** u16 ✅ 鞘の ID（§5.5 の X。[U] 2026-10-05 鞘だけを書き換えてゲーム内で反映を確認）。下位バイトは刃の 3 B、上位バイトは鍔の 3 B にも含まれる */
   sheath: 0x0a,
   grip: 0x0e, // 2 B ✅
@@ -248,18 +248,18 @@ function partId(kind: PartKind, raw: number, source: PartOption["source"]): numb
 
 /**
  * 読んだ値に一致する選択肢を探す。[TS] の値と完全一致するものを優先し、なければ ID（u16）が一致するものを使う。
- * ID だけが一致した [TS] の選択肢は、X（§5.5）が [TS] の値と違うことを xDiffers で示す。
+ * X（鞘）が標準と違うかは、刃の bladeX と +0x0A〜+0x0B の 2 B を比べて別に判定する
  */
 function findPart(
   kind: PartKind,
   list: readonly PartOption[],
   raw: number,
-): { option: PartOption; xDiffers: boolean } | undefined {
+): { option: PartOption } | undefined {
   const exact = list.find((p) => p.source === "ts" && p.value === raw);
-  if (exact) return { option: exact, xDiffers: false };
+  if (exact) return { option: exact };
   const id = kind === "grip" ? raw : partId(kind, raw, "ts");
   const byId = list.find((p) => partId(kind, p.value, p.source) === id);
-  return byId && { option: byId, xDiffers: byId.source === "ts" && kind !== "grip" };
+  return byId && { option: byId };
 }
 
 export function isSpecialBlade(value: number): boolean {
@@ -434,14 +434,17 @@ export function readWeapon(
       key: hit ? partKey(hit.option) : null,
     };
     const noun = PART_NOUNS[kind];
+    // 刃は、X（+0x0A〜+0x0B の 2 B）がその刃の標準の鞘（bladeX）と違えば警告する
+    const standardX = hit && kind === "blade" ? bladeX(hit.option) : null;
+    const xDiffers = standardX !== null && standardX !== sheathValue;
     const warning = !hit
       ? special && kind !== "blade"
         ? null
         : `ID 表にない${noun}です（U-10）。既知の${noun}への変更だけができます`
       : hit.option.label.includes("？")
         ? `ゲーム内での名前が未確認の ID です（U-13）。ゲーム内の表示を教えてください`
-        : hit.xDiffers && kind === "blade"
-          ? `鞘（X）がこの刃の標準の鞘と違います（${raw.toString(16).padStart(6, "0")}）。刃を選び直すと標準の鞘に戻ります`
+        : xDiffers
+          ? `鞘（X ${formatHex4(sheathValue)}）がこの刃の標準の鞘（${formatHex4(standardX)}）と違います。刃を選び直すと標準の鞘に戻ります`
           : isXUnknown(kind, hit.option)
             ? `この刃の X（鞘、+0x0A〜）は不明で、元の値のままです（U-3 案B）。ゲーム内で分解→組み立てると正しい X になります`
             : hit.option.xExtended
@@ -559,12 +562,23 @@ export function isXUnknown(kind: PartKind, option: PartOption): boolean {
 }
 
 /**
- * パーツを書く。key は partKey の値。
- * - [TS] の値（source 'ts'）：❓ U-3 案A（✅ I-3 の範囲）。刃・鍔は 3 B、柄は 2 B をそのまま書く。
- *   刃・鍔の 3 B には 🔶 X（§5.5）の一部が含まれ、[TS] と同じく一緒に書き換わる
- * - [CT] の ID（source 'ct'、ユーザー判断で確定扱い 2026-10-05）：❓ U-3 案C（ユーザー判断 2026-10-05、要ゲーム内確認）。
- *   刃は ID（+0x08）と 🔶 規則で計算した X（+0x0A〜+0x0B の u16）、鍔は ID（+0x0C）、柄は ID（+0x0E）を書く。
+ * 刃の X（鞘の ID、§5.5）。null は X 不明（isXUnknown）。
+ * 特殊武器の刃は 0xFFFF（鞘なし。[U] 2026-10-05）、[TS] の刃は x があればそれ、なければ 3 B 値の3バイト目
+ */
+export function bladeX(option: PartOption): number | null {
+  if (option.source === "ct") return option.x ?? null;
+  if (isSpecialBlade(option.value)) return 0xffff;
+  return option.x ?? (option.value >>> 16) & 0xff;
+}
+
+/**
+ * パーツを書く。key は partKey の値。+0x08〜+0x0F を 2 B×4（刃の ID、X、鍔の ID、柄の ID）として書く（U-3）。
+ * ✅ X は鞘の ID で刃によって決まる（[U] 2026-10-05）ので、刃を選んだときだけ X を書き、鍔を選んだときは X を変えない。
+ * [TS] の 3 B 値のまま書くと、X の上位バイト（+0x0B、鍔の 3 B の先頭）が前の武器のまま残り、表にない鞘になった（[U] 2026-10-05、
+ * 和泉守兼定 X 0x162 の上に柾重を書くと X 0x1CD）。
+ * - 刃：ID（+0x08）と bladeX（+0x0A〜+0x0B）。[CT] の X は 🔶 規則で計算したものと ✅ 実測のものがある（U-3 案C）。
  *   規則外の刃（isXUnknown）は ID だけを書き、X は元の値のまま残す（❓ U-3 案B、ユーザー判断 2026-10-05）
+ * - 鍔：ID（+0x0C）だけ。柄：ID（+0x0E）
  */
 export function writeWeaponPart(
   bytes: Uint8Array,
@@ -577,12 +591,13 @@ export function writeWeaponPart(
   const option = partOptions(kind, view.special).find((p) => partKey(p) === key);
   if (!option) throw new RangeError(`書き込めないパーツです（${key}）`);
 
-  if (kind === "grip") return writeU16(bytes, offset + WEAPON_FIELDS.grip, option.value);
-  if (option.source === "ts") return writeU24(bytes, offset + WEAPON_FIELDS[kind], option.value);
-  if (kind === "guard") return writeU16(bytes, offset + WEAPON_FIELDS.guard + 1, option.value);
-  writeU16(bytes, offset + WEAPON_FIELDS.blade, option.value);
+  const id = partId(kind, option.value, option.source);
+  if (kind === "grip") return writeU16(bytes, offset + WEAPON_FIELDS.grip, id);
+  if (kind === "guard") return writeU16(bytes, offset + WEAPON_FIELDS.guard + 1, id);
+  writeU16(bytes, offset + WEAPON_FIELDS.blade, id);
   // X 不明の刃は X を変えない（U-3 案B。isXUnknown）
-  if (option.x != null) writeU16(bytes, offset + WEAPON_FIELDS.blade + 2, option.x);
+  const x = bladeX(option);
+  if (x !== null) writeU16(bytes, offset + WEAPON_FIELDS.blade + 2, x);
 }
 
 /**

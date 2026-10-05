@@ -145,18 +145,46 @@ describe('武器レコード（合成）', () => {
     expect(readWeapon(b, o).numbers.qualityMax.value).toBe(-1)
   })
 
-  it('✅ U-3 案A：パーツは [TS] の値のまま、刃・鍔は 3 B、柄は 2 B を書く', () => {
+  it('U-3：パーツは 2 B×4 で書く。刃は ID と X（鞘）、鍔・柄は ID だけ（[TS] の既知パーツは 3 B 値と同じバイト列になる）', () => {
     const before = makeSave()
     const o = beltOffset(0)
     const b = before.slice()
     writeWeaponPart(b, o, 'blade', ts(0x5c0045)) // 一文字の刃
-    expect(onlyChanged(before, b, o + 0x08, 3)).toBe(true)
+    expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0x45, 0x00, 0x5c, 0x00])
+    expect(onlyChanged(before, b, o + 0x08, 4)).toBe(true)
     const c = before.slice()
     writeWeaponPart(c, o, 'guard', ts(0x007f00)) // 一文字の鍔
-    expect(onlyChanged(before, c, o + 0x0b, 3)).toBe(true)
+    expect([...c.subarray(o + 0x0c, o + 0x0e)]).toEqual([0x7f, 0x00])
+    expect(onlyChanged(before, c, o + 0x0c, 2)).toBe(true)
     const d = before.slice()
     writeWeaponPart(d, o, 'grip', ts(0x007e)) // 一文字の柄
     expect(onlyChanged(before, d, o + 0x0e, 2)).toBe(true)
+  })
+
+  it('[U] 2026-10-05：X の上位バイトが 01 の武器（和泉守兼定 X 0x162）に柾重の刃を書いても、鞘は柾重（0xCD）になる', () => {
+    const b = makeSave()
+    const o = beltOffset(0)
+    writeWeaponPart(b, o, 'blade', ct(0x165))
+    expect(readWeapon(b, o).sheath.value).toBe(0x162)
+    writeWeaponPart(b, o, 'blade', ts(0xcd012a))
+    expect([...b.subarray(o + 0x08, o + 0x0c)]).toEqual([0x2a, 0x01, 0xcd, 0x00])
+    const w = readWeapon(b, o)
+    expect(w.sheath).toMatchObject({ value: 0xcd, label: '柾重', warning: null })
+    expect(w.blade.warning).toBeNull()
+  })
+
+  it('鞘が 0x100 以上の [TS] の刃は X の上位バイトまで書き、鍔を変えても X は変わらない', () => {
+    const b = makeSave()
+    const o = beltOffset(0)
+    writeWeaponPart(b, o, 'blade', ts(0x580157)) // 陸奥守吉行
+    expect(readWeapon(b, o).sheath).toMatchObject({ value: 0x158, label: '陸奥守吉行' })
+    writeWeaponPart(b, o, 'guard', ts(0x15a01)) // 陸奥守吉行の鍔
+    writeWeaponPart(b, o, 'guard', ts(0xd00)) // 中道刀の鍔
+    expect(readWeapon(b, o).sheath.value).toBe(0x158)
+    expect(readWeapon(b, o).guard.value.label).toBe('中道刀')
+    // 刃の標準の鞘と違えば警告する
+    b.set([0x39, 0x00], o + 0x0a)
+    expect(readWeapon(b, o).blade.warning).toContain('標準の鞘')
   })
 
   it('定義のないパーツは名前なしで表示し、警告を出す。既知のパーツへの変更はできる（U-3・U-10）', () => {
