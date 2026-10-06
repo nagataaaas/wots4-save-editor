@@ -1,20 +1,24 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は [U] 2026-10-06 の比較（解析ノート §9.5）で見たもの。
-// ✅ [U] 2026-10-06 0x378E＝隠しルートのフラグ（三姉妹見参の成功と合わせて隠しルートに入る）。
-// ❓ 0x378D・0x379F・0x37AA は隠しルート直後のセーブだけ違うが、書き換えても隠しルートに効かなかった。0x3793・0x3799・0x37A2 も意味不明。
+// 0x378E＝隠しルート（✅ [U] 2026-10-06 書き換えで確認。三姉妹見参＝添字70 が成功のときだけ効く）。
+// ❓ 0x378D・0x3793・0x3799・0x379F・0x37A2・0x37AA は意味不明（0x378D・0x3799・0x379F・0x37AA はルートの切り替えに効かなかった）。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import {
+  HIDDEN_ROUTE_EVENT_INDEX,
+  HIDDEN_ROUTE_OFFSET,
+  RAW_ROUTE_OFFSETS,
   ROUTE_CANDIDATE_END,
   ROUTE_CANDIDATE_LENGTH,
   ROUTE_CANDIDATE_START,
   readRouteCandidates,
   validateRouteCandidate,
+  writeHiddenRoute,
   writeRouteCandidate,
 } from './route-candidates'
 
-/** 🔶 sample/S4-DATA_00（隠しルートに入った直後）の 0x378D〜0x37AA */
+/** sample/S4-DATA_00（隠しルートに入った直後）の 0x378D〜0x37AA */
 const HIDDEN = [2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]
 
 function makeSave(values: number[], size = TS_SAVE_SIZE): Uint8Array {
@@ -32,11 +36,35 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 隠しルートの候補 0x378D〜0x37AA §9.5', () => {
-  it('0x378D〜0x37AA の30バイトを読む', () => {
+describe('隠しルート 0x378E と周りの生の値 0x378D〜0x37AA §9.5', () => {
+  it('0x378D〜0x37AA の30バイトと、隠しルートのフラグを読む', () => {
     expect(ROUTE_CANDIDATE_LENGTH).toBe(30)
     expect(HIDDEN).toHaveLength(30)
-    expect(readRouteCandidates(makeSave(HIDDEN))).toEqual({ values: HIDDEN, warning: null, problem: null })
+    expect(readRouteCandidates(makeSave(HIDDEN))).toEqual({
+      values: HIDDEN,
+      hidden: 1,
+      hiddenProblem: null,
+      warning: null,
+      problem: null,
+    })
+  })
+
+  it('✅ [U] 隠しルートは 0x378E。三姉妹見参（添字70）と組で効く。生の値の欄には出さない', () => {
+    expect(HIDDEN_ROUTE_OFFSET).toBe(0x378e)
+    expect(HIDDEN_ROUTE_EVENT_INDEX).toBe(70)
+    expect(RAW_ROUTE_OFFSETS).toHaveLength(29)
+    expect(RAW_ROUTE_OFFSETS).not.toContain(0x378e)
+  })
+
+  it('隠しルートのフラグは 1バイトだけ書く。通常モードは 0・1 だけ', () => {
+    const before = makeSave(HIDDEN)
+    const after = before.slice()
+    writeHiddenRoute(after, 0, { advanced: false })
+    expect(diffOffsets(before, after)).toEqual([0x378e])
+    expect(() => writeHiddenRoute(after, 2, { advanced: false })).toThrow(RangeError)
+    writeHiddenRoute(after, 2, { advanced: true })
+    expect(after[0x378e]).toBe(2)
+    expect(readRouteCandidates(after).hiddenProblem).not.toBeNull()
   })
 
   it('見たことのない値（3 以上）は警告だけ出す', () => {

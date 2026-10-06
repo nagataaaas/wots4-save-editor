@@ -29,12 +29,16 @@ import {
   type FacilityFlagsView,
 } from "@/save/facility-flags";
 import {
-  ROUTE_CANDIDATE_LENGTH,
+  HIDDEN_ROUTE_EVENT_INDEX,
+  HIDDEN_ROUTE_OFFSET,
+  HIDDEN_ROUTE_VALUES,
+  RAW_ROUTE_OFFSETS,
   ROUTE_CANDIDATE_NORMAL_MAX,
   ROUTE_CANDIDATE_NOTES,
   ROUTE_CANDIDATE_START,
   readRouteCandidates,
   validateRouteCandidate,
+  writeHiddenRoute,
   writeRouteCandidate,
   type RouteCandidatesView,
 } from "@/save/route-candidates";
@@ -190,7 +194,11 @@ export function ScenarioPage() {
       />
       <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
       <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
-      <RouteCandidatesCard key={`${k}-route-candidates`} view={views?.routeCandidates ?? null} />
+      <RouteCandidatesCard
+        key={`${k}-route-candidates`}
+        view={views?.routeCandidates ?? null}
+        sisters={views?.events.entries[HIDDEN_ROUTE_EVENT_INDEX]?.state ?? null}
+      />
       <HintCard key={`${k}-hint`} view={views?.hint ?? null} />
       <EventsCard key={`${k}-events`} view={views?.events ?? null} />
     </div>
@@ -387,43 +395,82 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
   );
 }
 
-/** 🔶 隠しルートの候補を含む 0x378D〜0x37AA の生の値。view が null ならセーブ未読み込み */
-function RouteCandidatesCard({ view }: { view: RouteCandidatesView | null }) {
+const hiddenRouteOptions: SelectOption[] = HIDDEN_ROUTE_VALUES.map((v) => ({
+  value: String(v.value),
+  label: `${v.value} ${v.label}`,
+}));
+
+/**
+ * 隠しルート（0x378E）と、その周り 0x378D〜0x37AA の生の値。view が null ならセーブ未読み込み。
+ * sisters は三姉妹見参（イベント添字70）の状態 A
+ */
+function RouteCandidatesCard({
+  view,
+  sisters,
+}: {
+  view: RouteCandidatesView | null;
+  sisters: number | null;
+}) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
-  const offsets = Array.from({ length: ROUTE_CANDIDATE_LENGTH }, (_, i) => ROUTE_CANDIDATE_START + i);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          隠しルートの候補（生の値）
-          <CertaintyBadge mark="🔶" text="意味は未確認" />
-        </CardTitle>
+        <CardTitle>隠しルート</CardTitle>
         <CardDescription>
-          0x378E は隠しルートのフラグです（1＝隠しルート。確認済み）。0 にすると通常ルートに戻ります。
-          隠しルートに入るには、三姉妹見参（イベント添字70）を成功（04）にしたうえで 1 にします。ただし、それだけではお早い到着より後のイベントが起きませんでした（足りない条件は未確認）。
-          0x378D（02）・0x379F（1）・0x37AA（02）も隠しルート直後のセーブだけ違いましたが、書き換えても効きませんでした。
-          0x378D〜0x37AA の30バイトを生の値で書き換えられます。0x378E 以外のゲームへの影響は未確認です。
-          {view?.warning && ` ${view.warning}`}
+          0x378E が 1 で隠しルートです（書き換えで確認済み）。ただし、三姉妹見参（イベント{HIDDEN_ROUTE_EVENT_INDEX}）が成功（04）でないと効きません。
+          病院（0x375D）が閉じていると赤城が死に、再起の望みより後ろのイベントが起きません。
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {offsets.map((offset, i) => (
-          <FieldRow
-            key={offset}
-            label={`0x${offset.toString(16).toUpperCase()}`}
-            offset={offset}
-            value={view?.values[i] ?? null}
-            problem={view?.problem ?? null}
-            format={String}
-            parse={(input) => parseInteger(input, (v) => validateRouteCandidate(v, { advanced }))}
-            apply={(v) => update((b) => writeRouteCandidate(b, offset, v, { advanced }))}
-            inputMode="numeric"
-            hint={advanced ? "0〜255" : `0〜${ROUTE_CANDIDATE_NORMAL_MAX}`}
-            note={ROUTE_CANDIDATE_NOTES[offset]}
+      <CardContent className="flex flex-col gap-4">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <SelectRow
+            label="ルート"
+            offset={HIDDEN_ROUTE_OFFSET}
+            value={view ? String(view.hidden) : null}
+            currentLabel={view ? `${view.hidden} 不明` : undefined}
+            options={hiddenRouteOptions}
+            problem={view?.hiddenProblem ?? null}
+            hint={
+              sisters === null
+                ? undefined
+                : `今の三姉妹見参の状態：${formatHex2(sisters)}${sisters === 0x04 ? "（成功。隠しルートが効く）" : "（成功ではないので、1 にしても通常ルートのまま）"}`
+            }
+            note="1 にしただけでは通常ルートのまま。三姉妹見参の状態も 04（成功）にすると隠しルート（お早い到着）に入る。0 にすると通常ルートに戻る"
+            onChange={(v) => update((b) => writeHiddenRoute(b, Number(v), { advanced }))}
           />
-        ))}
+        </div>
+
+        <div className="flex flex-col gap-3 border-t pt-4">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+            周りのバイト（生の値）
+            <CertaintyBadge mark="❓" text="意味は未確認" />
+          </div>
+          <p className="text-muted-foreground text-xs">
+            隠しルートに入った直後のセーブでは、0x378D（02）・0x379F（1）・0x37AA（02）もほかのセーブと違いましたが、書き換えてもルートは変わりませんでした。
+            {view?.warning && ` ${view.warning}`}
+          </p>
+          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {RAW_ROUTE_OFFSETS.map((offset) => (
+              <FieldRow
+                key={offset}
+                label={`0x${offset.toString(16).toUpperCase()}`}
+                offset={offset}
+                value={view?.values[offset - ROUTE_CANDIDATE_START] ?? null}
+                problem={view?.problem ?? null}
+                format={String}
+                parse={(input) =>
+                  parseInteger(input, (v) => validateRouteCandidate(v, { advanced }))
+                }
+                apply={(v) => update((b) => writeRouteCandidate(b, offset, v, { advanced }))}
+                inputMode="numeric"
+                hint={advanced ? "0〜255" : `0〜${ROUTE_CANDIDATE_NORMAL_MAX}`}
+                note={ROUTE_CANDIDATE_NOTES[offset]}
+              />
+            ))}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
