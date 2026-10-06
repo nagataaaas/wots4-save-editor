@@ -23,6 +23,12 @@ import {
   type WorldFlagsView,
 } from "@/save/world-flags";
 import {
+  FACILITY_FLAGS,
+  readFacilityFlags,
+  writeFacilityFlag,
+  type FacilityFlagsView,
+} from "@/save/facility-flags";
+import {
   HINT_NORMAL_MAX,
   HINT_OFFSET,
   readHint,
@@ -91,6 +97,7 @@ type Views = {
   factions: FactionsView;
   route: RouteJudgeView;
   flags: WorldFlagsView;
+  facilities: FacilityFlagsView;
   hint: HintView;
 };
 
@@ -115,6 +122,7 @@ export function ScenarioPage() {
           factions: readFactions(b),
           route: readRouteJudge(b),
           flags: readWorldFlags(b),
+          facilities: readFacilityFlags(b),
           hint: readHint(b),
         },
       };
@@ -169,6 +177,7 @@ export function ScenarioPage() {
         route={views?.route ?? null}
       />
       <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
+      <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
       <HintCard key={`${k}-hint`} view={views?.hint ?? null} />
       <EventsCard key={`${k}-events`} view={views?.events ?? null} />
     </div>
@@ -331,7 +340,50 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
   );
 }
 
-const hostileOptions: SelectOption[] = HOSTILE_VALUES.map((v) => ({
+// 🔶 1 の意味は ❓ なので、見たセーブの状態だけを添える
+const facilityOptions: SelectOption[] = [
+  { value: "0", label: "0（3つとも初期状態のセーブの値）" },
+  { value: "1", label: "1（病院＝開・語学所＝開・カジノ＝閉のセーブの値）" },
+];
+
+/** 🔶 施設の状態の候補（0x375D〜0x375F）。view が null ならセーブ未読み込み */
+function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          施設のフラグ（候補）
+          <CertaintyBadge mark="🔶" text="どのバイトがどの施設かは未確認" />
+        </CardTitle>
+        <CardDescription>
+          病院＝開・語学所＝開・カジノ＝閉のセーブでは 0x375D〜0x375F が 3つとも 1、3つとも初期状態（病院＝閉・語学所＝閉・カジノ＝開）のセーブでは 3つとも 0 でした。
+          3つが同時に変わったので、どれがどの施設かは分かっていません。並び（病院・語学所・カジノ）はイベントの順からの推測です。
+          1つずつ書き換えて、ゲーム内でどの施設が変わるか確かめてください（要ゲーム内確認）。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3">
+        {FACILITY_FLAGS.map((flag, i) => (
+          <SelectRow
+            key={flag.offset}
+            label={flag.label}
+            offset={flag.offset}
+            value={view ? String(view.values[i]) : null}
+            currentLabel={view ? `${view.values[i]} 不明` : undefined}
+            options={facilityOptions}
+            problem={view?.problem ?? null}
+            note={flag.note}
+            onChange={(v) => update((b) => writeFacilityFlag(b, i, Number(v), { advanced }))}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+const hostileOptions: SelectOption[] =HOSTILE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${v.value} ${v.label}`,
 }));
