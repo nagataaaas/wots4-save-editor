@@ -12,43 +12,44 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 
 ## 1. ファイル一覧
 
-| ファイル | 内容 | ID空間 | 保存形式 | 空き・なし | 参照元 |
-|---|---|---|---|---|---|
-| `weapon/blade.csv` | 刃（刀・槍） | 通常パーツ | u16 LE。直後に鞘 X（u16 LE） | `FFFF` | [weapon-record](../chunks/weapon-record/README.md) +0x08 |
-| `weapon/blade-special.csv` | 刃（特殊武器） | 特殊武器の刃 | ID u16 LE＋X `FF FF` | | [weapon-record](../chunks/weapon-record/README.md) +0x08 |
-| `weapon/guard.csv` | 鍔 | 通常パーツ | u16 LE | `FFFF` | [weapon-record](../chunks/weapon-record/README.md) +0x0C |
-| `weapon/grip.csv` | 柄 | 通常パーツ | u16 LE | | [weapon-record](../chunks/weapon-record/README.md) +0x0E |
-| `weapon/title.csv` | 銘 | 通常パーツ | 3 B。`<銘ID下位> 01 <番号>` | `FF FF FF` | [weapon-record](../chunks/weapon-record/README.md) +0x96 |
-| `weapon/charm.csv` | 魅力 | このリストのみ（0〜9） | u16 LE。個数 u16 と組で 4 B | `FFFF` | [weapon-record](../chunks/weapon-record/README.md) +0x24 |
-| `weapon/complete.csv` | 完成武器 | このリストのみ | u16 LE | `FFFF`＝自作 | [weapon-record](../chunks/weapon-record/README.md) +0x06 |
-| `item/item.csv` | 通常アイテム | アイテム | u16 LE | `FFFF` | [items](../chunks/items/README.md) |
-| `item/valuable.csv` | 貴重品 | アイテム | u16 LE | `FFFF` | [items](../chunks/items/README.md) |
-| `event/event.csv` | イベント | このリストのみ（添字） | 配列の添字（u8 × 件数） | | [event-chart](../chunks/event-chart/README.md) |
-| `place/start-location.csv` | 開始地点（現在地） | このリストのみ | u8 | | [date-location](../chunks/date-location/README.md) 0x0013 |
-| `place/night-visit-place.csv` | 夜の約束の場所 | このリストのみ | u16 LE | | [night-visit](../chunks/night-visit/README.md) +0x08 |
-| `occupation/occupation.csv` | なりわい | このリストのみ（0〜255） | 状態の表の添字 | | [occupation](../chunks/occupation/README.md) |
+| ファイル                      | 内容               | ID空間                   | 保存形式                     | 空き・なし   | 参照元                                                    |
+| ----------------------------- | ------------------ | ------------------------ | ---------------------------- | ------------ | --------------------------------------------------------- |
+| `weapon/blade.csv`            | 刃（刀・槍）       | 通常パーツ               | u16 LE。直後に鞘 X（u16 LE） | `FFFF`       | [weapon-record](../chunks/weapon-record/README.md) +0x08  |
+| `weapon/blade-special.csv`    | 刃（特殊武器）     | 特殊武器の刃             | ID u16 LE＋X `FF FF`         |              | [weapon-record](../chunks/weapon-record/README.md) +0x08  |
+| `weapon/guard.csv`            | 鍔                 | 通常パーツ               | u16 LE                       | `FFFF`       | [weapon-record](../chunks/weapon-record/README.md) +0x0C  |
+| `weapon/grip.csv`             | 柄                 | 通常パーツ               | u16 LE                       |              | [weapon-record](../chunks/weapon-record/README.md) +0x0E  |
+| `weapon/title.csv`            | 銘                 | 通常パーツ               | 3 B。`<銘ID下位> 01 <番号>`  | `FF FF FF`   | [weapon-record](../chunks/weapon-record/README.md) +0x96  |
+| `weapon/charm.csv`            | 魅力               | このリストのみ（0〜9）   | u16 LE。個数 u16 と組で 4 B  | `FFFF`       | [weapon-record](../chunks/weapon-record/README.md) +0x24  |
+| `weapon/complete.csv`         | 完成武器           | このリストのみ           | u16 LE                       | `FFFF`＝自作 | [weapon-record](../chunks/weapon-record/README.md) +0x06  |
+| `item/item.csv`               | 通常アイテム       | アイテム                 | u16 LE                       | `FFFF`       | [items](../chunks/items/README.md)                        |
+| `item/valuable.csv`           | 貴重品             | アイテム                 | u16 LE                       | `FFFF`       | [items](../chunks/items/README.md)                        |
+| `event/event.csv`             | イベント           | このリストのみ（添字）   | 配列の添字（u8 × 件数）      |              | [event-chart](../chunks/event-chart/README.md)            |
+| `place/start-location.csv`    | 開始地点（現在地） | このリストのみ           | u8                           |              | [date-location](../chunks/date-location/README.md) 0x0013 |
+| `place/night-visit-place.csv` | 夜の約束の場所     | このリストのみ           | u16 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x08      |
+| `occupation/occupation.csv`   | なりわい           | このリストのみ（0〜255） | 状態の表の添字               |              | [occupation](../chunks/occupation/README.md)              |
 
 リスト固有の列：
 
 - `weapon/blade.csv` の `sheath_x`：その刃を組み立てたときに書かれる鞘の ID（X、[weapon-record](../chunks/weapon-record/README.md) +0x0A）。空欄は不明。見た目の鞘が同じ武器どうしは同じ値になる
 - `place/night-visit-place.csv` の `layout`：その場所で正しく表示される「人と布団の配置」（約束の枠 +0x0A）。実データで見た組だけを書く。空欄は不明
+- `event/event.csv` の `name_en`：英語版のゲーム内の表記
 - `source`（パーツ・銘・魅力・完成武器・アイテム）：出典。`CT`＝Cheat Engine テーブル、`TS`＝[TS] の定義、`U`＝ユーザーのゲーム内確認、`SE-BBS`＝PS3版の掲示板。複数あるときは `;` で区切る
 
 ## 2. CSV の列
 
 `TEMPLATE.csv` の見出し行をそのまま使う。1行＝1つのID。ID の昇順に並べる。
 
-| 列 | 内容 |
-|---|---|
-| `id_dec` | ID（10進） |
-| `id_hex` | ID（`0x` 付きの16進） |
+| 列              | 内容                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------- |
+| `id_dec`        | ID（10進）                                                                            |
+| `id_hex`        | ID（`0x` 付きの16進）                                                                 |
 | `save_bytes_le` | セーブに書かれるバイト列（空白区切り、例：`6A 01 00`）。ID と1対1で自明なら空欄でよい |
-| `name_ja` | 日本語名 |
-| `name_en` | 英語名（パーツ・銘・魅力は [CT] の表記のまま） |
-| `備考` | 確定でない場合の確度と理由、U-n、同じIDに別の名前がある場合など |
+| `name_ja`       | 日本語名                                                                              |
+| `name_en`       | 英語名（パーツ・銘・魅力は [CT] の表記のまま）                                        |
+| `備考`          | 確定でない場合の確度と理由、U-n、同じIDに別の名前がある場合など                       |
 
-- 行は確定（✅）として扱う。確定でないものだけ、`備考` の先頭に確度の記号（🟡🔶❓、`../README.md` §1.1）を書き、続けて何が怪しいかを書く
-  - コードに取り込むときは、`備考` の先頭の記号で確定かどうかを判定する
+- 行は確定（✅）として扱う。確定でないものだけ、`備考` の先頭に確度の記号（🟢🟡🔶❓、`../README.md` §1.1）を書き、続けて何が怪しいかを書く
+  - コードに取り込むときは、`備考` の先頭の記号で確定かどうかを判定する。🟢 は確定と同じに扱う
 - `source` が `CT` だけのパーツは、ゲーム内では未確認。ユーザー判断で確定扱いにしている（2026-10-05）
 - `item/item.csv` の `source` に `U` を含む行は、重要品の空き枠に ID を順に入れ、ゲーム内の一覧の並び順で名前を対応づけたもの。
   対応づけが1つずれていた回があり（[items](../chunks/items/README.md) の調査記録）、ほかの回も同じようにずれている可能性がある 🔶
@@ -63,22 +64,22 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 
 刃・鍔・柄・銘は共通のID空間 ✅ [CT]。
 
-| 範囲 | リスト |
-|---|---|
+| 範囲                       | リスト                                                    |
+| -------------------------- | --------------------------------------------------------- |
 | 刃・鍔・柄が混在（0〜361） | `weapon/blade.csv`、`weapon/guard.csv`、`weapon/grip.csv` |
-| 362〜381（0x016A〜0x017D） | `weapon/title.csv` |
+| 362〜381（0x016A〜0x017D） | `weapon/title.csv`                                        |
 
 並びの規則（同じ武器セットの鍔と柄は隣り合うことが多い。刀は「柄, 鍔」の順で柄 = 鍔 − 1、槍は「鍔, 柄」の順で柄 = 鍔 + 1 [CT]）：
 
-| ブロック | 刃ID | 鍔・柄の規則 | 確度 |
-|---|---|---|---|
-| A: 基本セット | 6〜11 | 柄 = 2×刃、鍔 = 2×刃 + 1（12〜23） | ✅ |
-| B: 固有3点セット | 25〜37 | 刀：刃, 柄, 鍔 が連番（29/30/31 など）。槍：刃, ?, 鍔, 柄（25/27/28） | ✅ |
-| C | 43〜59 | 47/49/50（槍）、53/54（ハルユキの柄・鍔）、56/58/59 | 一部 |
-| D: 通常武器 | 55, 60〜82 | 柄 = 2×刃 − 12、鍔 = 柄 + 1（108〜153）。55のみ 106/107 | ✅ |
-| E | 154〜170 | 154→165/166、160/161（クルセイダーの柄・鍔）、163→217、169→231/338、170→246 | 一部 |
-| F: 色違い・後期 | 265〜310 | 柄 = 刃 − 47（265〜277）、刃 − 46（278〜291）、刃 − 45（292〜）。柄は217〜264に並ぶ。鍔は一部のみ330〜342 | ✅ |
-| G | 311〜362 | 318/319/320、327/328/329、343/345/346、347〜352、360/361 | 一部 |
+| ブロック         | 刃ID       | 鍔・柄の規則                                                                                              | 確度 |
+| ---------------- | ---------- | --------------------------------------------------------------------------------------------------------- | ---- |
+| A: 基本セット    | 6〜11      | 柄 = 2×刃、鍔 = 2×刃 + 1（12〜23）                                                                        | ✅    |
+| B: 固有3点セット | 25〜37     | 刀：刃, 柄, 鍔 が連番（29/30/31 など）。槍：刃, ?, 鍔, 柄（25/27/28）                                     | ✅    |
+| C                | 43〜59     | 47/49/50（槍）、53/54（ハルユキの柄・鍔）、56/58/59                                                       | 一部 |
+| D: 通常武器      | 55, 60〜82 | 柄 = 2×刃 − 12、鍔 = 柄 + 1（108〜153）。55のみ 106/107                                                   | ✅    |
+| E                | 154〜170   | 154→165/166、160/161（クルセイダーの柄・鍔）、163→217、169→231/338、170→246                               | 一部 |
+| F: 色違い・後期  | 265〜310   | 柄 = 刃 − 47（265〜277）、刃 − 46（278〜291）、刃 − 45（292〜）。柄は217〜264に並ぶ。鍔は一部のみ330〜342 | ✅    |
+| G                | 311〜362   | 318/319/320、327/328/329、343/345/346、347〜352、360/361                                                  | 一部 |
 
 - ID 265〜310 には「色違い版」の刃が、基本版（6〜11, 25〜35, 55〜82）と同じ順番で並ぶ 🔶（例：274 鮫肌九←60 鮫肌丸、298 柾重←79 村柾）
 - 完成武器は同名パーツ3種で構成されるとは限らない（例：正道刀は中道刀の鍔を使う [W]）。色違い武器の多くは既存の鍔を共有するので、柄 + 1 では鍔を推定できない

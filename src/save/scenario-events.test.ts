@@ -9,6 +9,7 @@ import {
   EVENT_RECORDS_SEEN,
   EVENT_STATE_OFFSET,
   EVENT_GAP_INDICES,
+  EVENT_GAP_NOTES,
   namedIndices,
   readEvents,
   recordLabel,
@@ -83,14 +84,16 @@ describe('書き込み 🔶 要ゲーム内確認', () => {
     expect(Array.from(b.slice(EVENT_STATE_OFFSET, EVENT_STATE_OFFSET + 16))).toEqual(A_DAY2)
   })
 
-  it('通常モードは差分で見た6つの値だけ（🔶 01＝導入を見た、04 copy 10）。上級者モードでは任意の u8', () => {
+  it('通常モードは 00〜05・FF（01〜04 の意味は 🟢）。上級者モードでは任意の u8', () => {
     writeEventState(makeSave(A_START), 36, 0x01, { advanced: false })
+    // 🟢 02＝参加を決めた（chunks/event-chart）。実データでは未確認
+    writeEventState(makeSave(A_START), 9, 0x02, { advanced: false })
     const b = makeSave(A_START)
-    expect(() => writeEventState(b, 9, 0x02, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventState(b, 9, 0x06, { advanced: false })).toThrow(RangeError)
     expect(() => writeEventState(b, 9, 0x100, { advanced: true })).toThrow(RangeError)
     expect(() => writeEventState(b, EVENT_COUNT, 0x04, { advanced: false })).toThrow(RangeError)
-    writeEventState(b, 9, 0x02, { advanced: true })
-    expect(readEvents(b).entries[9].state).toBe(0x02)
+    writeEventState(b, 9, 0x06, { advanced: true })
+    expect(readEvents(b).entries[9].state).toBe(0x06)
   })
 
   it('周回中の状態の書き込みは、記録（0x3838〜）を変えない', () => {
@@ -163,17 +166,22 @@ describe('一括設定（デバッグ用）', () => {
     const after = before.slice()
     writeEventStates(after, namedIndices(), 0x05, { advanced: false })
     // 名前の分かる添字は 0〜46（✅ [U] 2026-10-05）と、51〜99 のうち 67・84 を除いたもの、116（✅ [U] 2026-10-06、ゲーム内のチャートで確認）。
-    // 47〜50・67・84 は ❓（表示しない）。もとが 05 の添字はないので、すべて変わる
+    // 47〜50・67・84 はチャートに出ない・起きない（一覧に出さない）。もとが 05 の添字はないので、すべて変わる
     const unknown = [47, 48, 49, 50, 67, 84]
     const named = [...Array.from({ length: 100 }, (_, i) => i).filter((i) => !unknown.includes(i)), 116]
     expect(namedIndices()).toEqual(named)
     expect(diffOffsets(before, after)).toEqual(named.map((i) => EVENT_STATE_OFFSET + i))
   })
 
-  it('❓ 欠番（47〜50・67・84）は名前の付いた 0〜99 の残りで、一括設定の対象に入らない', () => {
+  it('欠番（47〜50・67・84）は名前の付いた 0〜99 の残りで、一括設定の対象に入らない', () => {
     const named = new Set(namedIndices())
     const gaps = Array.from({ length: 100 }, (_, i) => i).filter((i) => !named.has(i))
     expect(EVENT_GAP_INDICES).toEqual(gaps)
+    // 🟢 47〜50 は剣術大会（チャートに出ない）。67 は未実装（[U] 2026-10-06）。84 は ❓
+    expect(EVENT_GAP_NOTES[47].name).toBe('剣術大会（幕府）')
+    expect(EVENT_GAP_NOTES[50].name).toBe('剣術大会（無所属）')
+    expect(EVENT_GAP_NOTES[67].name).toBe('悲しみのローラ')
+    expect(EVENT_GAP_NOTES[84].name).toBeNull()
     expect(EVENT_GAP_INDICES.some((i) => named.has(i))).toBe(false)
     // フラグ確認用に、1件ずつは書ける
     const b = makeSave(A_START)
@@ -200,7 +208,7 @@ describe('一括設定（デバッグ用）', () => {
   it('値が通常モードで許されなければ、1バイトも書かない', () => {
     const before = makeSave(A_START)
     const after = before.slice()
-    expect(() => writeEventStates(after, namedIndices(), 0x02, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventStates(after, namedIndices(), 0x06, { advanced: false })).toThrow(RangeError)
     expect(() => writeEventRecords(after, namedIndices(), 0x00, { advanced: false })).toThrow(RangeError)
     expect(() => writeEventStates(after, [0, EVENT_COUNT], 0x04, { advanced: false })).toThrow(RangeError)
     expect(diffOffsets(before, after)).toEqual([])

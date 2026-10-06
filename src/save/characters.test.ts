@@ -3,7 +3,7 @@
 // 🔶 0x374E＝赤城（00 生存・01 死亡・03 病院）、0x374F＝小暮（01 死亡、差分1回）、0x3759＝メリンダ（01 死亡、差分1回）。
 // ✅ 0x3750＝朱美、0x3751＝琴吹、0x3752＝茂呂、0x3753＝マユ、0x3754＝チカ、0x3755＝ユリ、0x3756＝鬼怒川怨仙、
 // 0x3757＝ローラ、0x3758＝J.J.（[U] 2026-10-06、書き換えで確認）。🔶 鬼怒川の 2＝まだ阿弥浜に来ていない（[U] の推定）。
-// ❓ 0x375A〜0x375C は誰か不明。赤城・小暮・メリンダの書き換えの効果は要ゲーム内確認。
+// 🟢 0x375A＝堂島、0x375B＝先生、0x375C＝薬屋（値の意味は ❓）。赤城・小暮・メリンダの書き換えの効果は要ゲーム内確認。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -60,6 +60,10 @@ describe('🔶 重要人物の状態の候補 0x374E〜0x375C chunks/characters'
     ])
     expect(CHARACTER_NOTES[0x3757].name).toBe('ローラ')
     expect(CHARACTER_NOTES[0x3758].name).toBe('J.J.')
+  })
+
+  it('🟢 0x375A は堂島、0x375B は先生、0x375C は薬屋（値の意味は ❓）', () => {
+    expect([0x375a, 0x375b, 0x375c].map((o) => CHARACTER_NOTES[o].name)).toEqual(['堂島', '先生', '薬屋'])
   })
 
   it('見たことのない値（4 以上）は警告だけ出す', () => {

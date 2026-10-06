@@ -111,6 +111,7 @@ import {
   EVENT_STATES,
   EVENT_STATE_OFFSET,
   EVENT_GAP_INDICES,
+  EVENT_GAP_NOTES,
   namedIndices,
   readEvents,
   recordLabel,
@@ -439,7 +440,7 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
           0x3750（朱美）〜0x3758（J.J.）は、書き換えでどの人物か確認済みです。1 を書くとその人物がいなくなります。
           鬼怒川怨仙（0x3756）は 2 がまだ阿弥浜に来ていない状態と推定しています（到着前に 0 にしても出現しませんでした）。
           0x374E は赤城（00 生存・01 死亡・03 病院に送った）、0x374F は小暮（01 死亡）、0x3759 はメリンダ（01 死亡）と、差分から推定しています（書き換えの効果は未確認）。
-          0x375A〜0x375C は誰か分かっていません。
+          0x375A は堂島、0x375B は先生、0x375C は薬屋です（値の意味は未確認）。
           {view?.warning && ` ${view.warning}`}
         </CardDescription>
       </CardHeader>
@@ -652,30 +653,35 @@ function RouteCandidatesCard({
         <div className="flex flex-col gap-3 border-t pt-4">
           <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
             周りのバイト（生の値）
-            <CertaintyBadge mark="❓" text="意味は未確認" />
+            <CertaintyBadge mark="❓" text="値の意味・書き換えの効果は未確認" />
           </div>
           <p className="text-muted-foreground text-xs">
             隠しルートに入った直後のセーブでは、0x378D（02）・0x379F（1）・0x37AA（02）もほかのセーブと違いましたが、書き換えてもルートは変わりませんでした。
+            この範囲には、好感度や職など隠しルートに関係しないバイトも入っています。名前の付いたバイトも、値の意味は確かめていません。
             {view?.warning && ` ${view.warning}`}
           </p>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {RAW_ROUTE_OFFSETS.map((offset) => (
-              <FieldRow
-                key={offset}
-                label={`0x${offset.toString(16).toUpperCase()}`}
-                offset={offset}
-                value={view?.values[offset - ROUTE_CANDIDATE_START] ?? null}
-                problem={view?.problem ?? null}
-                format={String}
-                parse={(input) =>
-                  parseInteger(input, (v) => validateRouteCandidate(v, { advanced }))
-                }
-                apply={(v) => update((b) => writeRouteCandidate(b, offset, v, { advanced }))}
-                inputMode="numeric"
-                hint={advanced ? "0〜255" : `0〜${ROUTE_CANDIDATE_NORMAL_MAX}`}
-                note={ROUTE_CANDIDATE_NOTES[offset]}
-              />
-            ))}
+            {RAW_ROUTE_OFFSETS.map((offset) => {
+              const info = ROUTE_CANDIDATE_NOTES[offset];
+              const hex = `0x${offset.toString(16).toUpperCase()}`;
+              return (
+                <FieldRow
+                  key={offset}
+                  label={info?.name ? `${hex}（${info.name}）` : hex}
+                  offset={offset}
+                  value={view?.values[offset - ROUTE_CANDIDATE_START] ?? null}
+                  problem={view?.problem ?? null}
+                  format={String}
+                  parse={(input) =>
+                    parseInteger(input, (v) => validateRouteCandidate(v, { advanced }))
+                  }
+                  apply={(v) => update((b) => writeRouteCandidate(b, offset, v, { advanced }))}
+                  inputMode="numeric"
+                  hint={advanced ? "0〜255" : `0〜${ROUTE_CANDIDATE_NORMAL_MAX}`}
+                  note={info?.note}
+                />
+              );
+            })}
           </div>
         </div>
       </CardContent>
@@ -809,17 +815,11 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
   );
 }
 
-function stateOptions(advanced: boolean): SelectOption[] {
-  const options: SelectOption[] = EVENT_STATES.map((s) => ({
-    value: String(s.value),
-    label: `${formatHex2(s.value)} ${s.label}${s.confirmed ? "" : "（未確認）"}`,
-  }));
-  // 上級者モードでは、まだ見ていない値（大成功などの候補）も選べるようにする
-  if (advanced)
-    for (const v of [0x02])
-      options.push({ value: String(v), label: `${formatHex2(v)} 不明`, group: "未確認の値" });
-  return options;
-}
+/** 🟢 状態の値は 00〜05・FF で全部なので、上級者モードでも選択肢は同じ */
+const stateOptions: SelectOption[] = EVENT_STATES.map((s) => ({
+  value: String(s.value),
+  label: `${formatHex2(s.value)} ${s.label}${s.confirmed ? "" : "（未確認）"}`,
+}));
 
 function recordOptions(advanced: boolean): SelectOption[] {
   const options: SelectOption[] = EVENT_RECORDS.map((r) => ({
@@ -839,8 +839,7 @@ function recordOptions(advanced: boolean): SelectOption[] {
 
 /** イベントの状態。view が null ならセーブ未読み込み */
 function EventsCard({ view }: { view: EventsView | null }) {
-  const { advanced } = useAdvancedMode();
-  const options = useMemo(() => stateOptions(advanced), [advanced]);
+  const options = stateOptions;
   // イベントと対応のついた添字だけを添字順に並べる。対応のない添字は表示しない（ユーザー判断 2026-10-06）
   const indices = namedIndices();
 
@@ -870,14 +869,13 @@ function EventsCard({ view }: { view: EventsView | null }) {
           ))}
         </div>
 
-        {/* ❓ 名前の付いた添字の間の欠番。フラグ確認用（ユーザー判断 2026-10-06） */}
+        {/* 名前の付いた添字の間の欠番。チャートに出ない・起きない。フラグ確認用（ユーザー判断 2026-10-06） */}
         <div className="flex flex-col gap-3 border-t pt-4">
-          <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-            欠番の添字（フラグ確認用）
-            <CertaintyBadge mark="❓" text="イベントとの対応は未確認" />
-          </div>
+          <div className="text-sm font-medium">チャートに出ない添字（フラグ確認用）</div>
           <p className="text-muted-foreground text-xs">
-            名前の付いた添字の間で、どのイベントか分かっていない添字です。チャートに出ない内部用のフラグかもしれません。一括設定の対象にはしていません。
+            名前の付いた添字の間にある、チャートに出ない・ゲームで起きない添字です。
+            47〜50 は剣術大会（幕府・外国・攘夷・無所属）、67 は未実装とみられる悲しみのローラ、84 はどのイベントか分かっていません。
+            一括設定の対象にはしていません。
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {EVENT_GAP_INDICES.map((i) => (
@@ -1024,20 +1022,20 @@ function EventBox({
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const name = EVENT_NAMES[index];
+  const gap = EVENT_GAP_NOTES[index];
+  const title = name?.name ?? gap?.name;
 
   return (
     <div className="flex flex-col gap-3 rounded-md border p-3">
       <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-        {name ? `${index}. ${name.name}` : `添字 ${index}`}
-        {name &&
-          (name.basis === "chart" ? (
-            // ✅ チャートで確認した対応にはバッジを付けない
-            <span className="text-muted-foreground text-xs font-normal">{name.day}</span>
+        {title ? `${index}. ${title}` : `添字 ${index}`}
+        {/* ✅（チャートで確認）・🟢 の対応には確度のバッジを付けない */}
+        {name && <span className="text-muted-foreground text-xs font-normal">{name.day}</span>}
+        {gap &&
+          (gap.name ? (
+            <span className="text-muted-foreground text-xs font-normal">{gap.note}</span>
           ) : (
-            <CertaintyBadge
-              mark="🔶"
-              text={`${name.day}・${name.basis === "diff" ? "差分で確認" : "推測"}`}
-            />
+            <CertaintyBadge mark="❓" text={gap.note} />
           ))}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">

@@ -1,16 +1,19 @@
-// イベントチャートの状態。出典：docs/save_format/chunks/event-chart（[U] 2026-10-05 のシナリオ差分とゲーム内での書き込み確認）、イベント名は docs/event.md。
+// イベントチャートの状態。出典：docs/save_format/chunks/event-chart（[U] 2026-10-05 のシナリオ差分とゲーム内での書き込み確認）、
+// イベント名は docs/save_format/datatable/event/event.csv。
 //
-//   0x36A8〜 u8 × 166  周回中のイベント状態（A）。添字ごとに1イベント
+//   0x36A8〜 u8 × 166  周回中のイベント状態（A）。添字ごとに1イベント。
+//                      🟢 通し番号 0〜165（添字＝ゲーム内のイベントID）。166 からは重要人物の状態（characters.ts）
 //   0x3838〜 u8 × 166  周回をまたぐ記録（B、🔶 生きた証）。チャートに表示するかどうかを決めていると推定
 //
 // A の値：
 //   FF / 00 未到達。✅ [U] 記録が 04 の代官所潜入で A を FF にすると、チャートでは「未達成」と表示された（2026-10-05）。
 //           周回開始時、記録が FF の添字は FF、そうでない添字は 00 になっている（🔶 差分の観察）
-//   01 導入を見た  🔶 04 copy 9 → copy 10（剣術大会の準備の導入カットシーンを見たあと、添字36）
-//   03 進行中      🔶 03 copy 2 → copy 3（志士との出会いの途中）
-//   04 成功・完了  🔶 海兵隊の横暴（2回再現）、志士との出会い、阿片密売、辻斬り、代官所潜入
-//   05 失敗        ✅ [U] 書き込みでチャートに失敗のマークがついた（2026-10-05）。差分は 04 copy 2（海兵隊の横暴で赤城と戦闘）
-// 02 などほかの値（大成功など）は ❓。A の長さは B との間隔 0x190 から 166 B と置いた（❓ 200 B の可能性もある）。
+//   01 導入を見た    🟢 04 copy 9 → copy 10（剣術大会の準備の導入、添字36）
+//   02 参加を決めた  🟢 依頼を受けた。実データでは未確認
+//   03 進行中        🟢 03 copy 2 → copy 3（志士との出会いの途中）。会話・移動のあと、戦闘の前
+//   04 成功・完了    🟢 海兵隊の横暴（2回再現）ほかの差分
+//   05 失敗          ✅ [U] 書き込みでチャートに失敗のマークがついた（2026-10-05）。逃走・主要人物の死亡など
+// イベントが始まる条件は、ほとんどが「A ≤ 02」（🟢）。
 //
 // B の値：
 //   FF チャートの枠は出るが、イベント名などが隠れる（✅ [U] 2026-10-06 の説明）。
@@ -31,15 +34,19 @@
 import { readU8, writeU8 } from './binary'
 import { checkLayout } from './hero'
 
-export const EVENT_STATE_OFFSET = 0x36a8 // 🔶 chunks/event-chart
+export const EVENT_STATE_OFFSET = 0x36a8 // 🟢 chunks/event-chart（通し番号 0）
 export const EVENT_RECORD_OFFSET = 0x3838 // 🔶 chunks/event-chart
-export const EVENT_COUNT = 166 // ❓ chunks/event-chart
+export const EVENT_COUNT = 166 // 🟢 chunks/event-chart（通し番号 166 から重要人物の状態）
 
-/** 周回中の状態（A）。confirmed は書き込みでゲーム内の表示を確かめたもの */
+/**
+ * 周回中の状態（A）。confirmed は書き込みでゲーム内の表示を確かめたもの。
+ * 01〜04 の意味は 🟢（chunks/event-chart）
+ */
 export const EVENT_STATES = [
   { value: 0x00, label: '未到達', confirmed: false },
   { value: 0xff, label: '未到達（FF）', confirmed: true },
   { value: 0x01, label: '導入を見た', confirmed: false },
+  { value: 0x02, label: '参加を決めた', confirmed: false },
   { value: 0x03, label: '進行中', confirmed: false },
   { value: 0x04, label: '成功', confirmed: false },
   { value: 0x05, label: '失敗', confirmed: true },
@@ -54,7 +61,7 @@ export const EVENT_RECORDS = [
   { value: 0x04, label: '名前を出す' },
 ] as const
 
-/** 読み込み時に妥当とみなす値。🔶 EVENT_STATES に、まだ見ていない 02 を足したもの */
+/** 読み込み時に妥当とみなす値。EVENT_STATES と同じ */
 const PLAUSIBLE_STATES = new Set([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0xff])
 
 export type EventName = {
@@ -62,30 +69,30 @@ export type EventName = {
   day: string
   /**
    * 'chart'＝ゲーム内のチャートで添字とイベントの対応を確認（✅ [U] 2026-10-05）、
-   * 'diff'＝差分で確認（🔶）、'guess'＝ほかの添字との関係からの推測（🔶 根拠が弱い）
+   * 'game'＝差分の観察で添字とイベントの対応を確認（🟢）
    */
-  basis: 'chart' | 'diff' | 'guess'
+  basis: 'chart' | 'game'
 }
 
 /**
  * 名前の分かっている添字。docs/save_format/datatable/event/event.csv。day は docs/event.md（Wiki）の時間帯。
  * 2〜46 の名前はユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）。52〜98 も同じ（[U] 2026-10-06）。
  * 4日目以降のイベントの day は時間帯ではなく、docs/event.md の節（ルート・エンディング）を入れる。
- * 51・99・116 も [U] 2026-10-06。docs/event.md（Wiki）に載っているイベントは、これですべて対応がついた。
+ * 51・99・116 も [U] 2026-10-06。名前はゲーム内の表記に合わせる（🟢）。
  *
- * 画面のイベント一覧に出すのはここにある添字だけ（ユーザー判断 2026-10-06）。対応のない添字は、チャートに出ない内部用か未使用か分からない。覚え書き：
- *   47〜50・67・84  ❓ 名前の付いた添字に挟まれていて、何かに使われていそうな欠番。フラグ確認用に画面の下にまとめて出す（EVENT_GAP_INDICES）
- *   100〜165（116 以外）❓ sample の13件すべてで A・B とも FF（1周目の S4-DATA_04 を除く）。99・116 のようにイベントが見つかる可能性はある。表示しない
+ * 画面のイベント一覧に出すのはここにある添字だけ（ユーザー判断 2026-10-06）。覚え書き：
+ *   47〜50・67・84  チャートに出ない・起きない添字。フラグ確認用に画面の下にまとめて出す（EVENT_GAP_NOTES）
+ *   100〜165（116 以外）🟢 対応するイベントがない。表示しない
  */
 export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
-  0: { name: '船上の侍', day: '1日目昼', basis: 'guess' }, // どのセーブでも 04。名前は [U] 2026-10-05（Samurai on Board、オープニング）
-  1: { name: '阿弥浜港争乱', day: '1日目昼', basis: 'guess' }, // スキップで 00、1周目で 04
-  3: { name: '嵐の後', day: '1日目昼', basis: 'diff' }, // 03 copy → copy 2
-  6: { name: '志士との出会い', day: '1日目昼', basis: 'diff' }, // 03 copy 2 → copy 3 → copy 4
-  9: { name: '海兵隊の横暴', day: '1日目夕', basis: 'diff' }, // 03 copy 5 → 04 copy（成功）／04 copy 2（失敗）／04 copy 4（成功）
-  10: { name: '阿片密売を阻止せよ', day: '1日目夜', basis: 'diff' }, // 04 copy 2 → copy 3
-  11: { name: '辻斬りを辻斬る', day: '1日目夜', basis: 'diff' }, // 04 copy 4 → copy 5
-  12: { name: '代官所潜入', day: '1日目夜', basis: 'diff' }, // 04 copy 4 → 03 copy 6
+  0: { name: '船上の侍', day: '1日目昼', basis: 'game' }, // どのセーブでも 04（Samurai on Board、オープニング）
+  1: { name: '阿弥浜港争乱', day: '1日目昼', basis: 'game' }, // スキップで 00、1周目で 04
+  3: { name: '嵐のあと', day: '1日目昼', basis: 'game' }, // 差分 03 copy → copy 2。Wiki の表記は「嵐の後」
+  6: { name: '志士との出会い', day: '1日目昼', basis: 'game' }, // 差分 03 copy 2 → copy 3 → copy 4
+  9: { name: '海兵隊の横暴', day: '1日目夕', basis: 'game' }, // 差分 03 copy 5 → 04 copy（成功）／04 copy 2（失敗）／04 copy 4（成功）
+  10: { name: '阿片密売を阻止せよ', day: '1日目夜', basis: 'game' }, // 差分 04 copy 2 → copy 3
+  11: { name: '辻斬りを辻斬る', day: '1日目夜', basis: 'game' }, // 差分 04 copy 4 → copy 5
+  12: { name: '代官所潜入', day: '1日目夜', basis: 'game' }, // 差分 04 copy 4 → 03 copy 6
   2: { name: '簀巻き日和', day: '1日目昼', basis: 'chart' },
   4: { name: '代官所の面々', day: '1日目昼', basis: 'chart' },
   5: { name: '小公女謁見', day: '1日目昼', basis: 'chart' },
@@ -94,7 +101,7 @@ export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   13: { name: '西洋医学お断り', day: '2日目昼', basis: 'chart' },
   14: { name: '病院廃業の企て', day: '2日目昼', basis: 'chart' },
   15: { name: '病院占拠事件', day: '2日目昼', basis: 'chart' },
-  16: { name: '祝　病院開業', day: '2日目昼', basis: 'chart' },
+  16: { name: '祝 病院開業', day: '2日目昼', basis: 'chart' },
   17: { name: '欺きの代価', day: '2日目昼', basis: 'chart' },
   18: { name: '講師ご到着', day: '2日目夕', basis: 'chart' },
   19: { name: '語学所開設', day: '2日目夕', basis: 'chart' },
@@ -139,8 +146,8 @@ export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   62: { name: '領事館斬り込み', day: '攘夷ルート', basis: 'chart' },
   63: { name: '武士の魂', day: '攘夷ルート', basis: 'chart' },
   64: { name: '三匹で斬る', day: '幕府ルート', basis: 'chart' },
-  65: { name: '剣客　茂呂茂', day: '幕府ルート', basis: 'chart' },
-  66: { name: '武人　琴吹光', day: '幕府ルート', basis: 'chart' },
+  65: { name: '剣客 茂呂茂', day: '幕府ルート', basis: 'chart' },
+  66: { name: '武人 琴吹光', day: '幕府ルート', basis: 'chart' },
   68: { name: '夕暮れの船上', day: '外国ルート', basis: 'chart' },
   69: { name: '討ち入り', day: '外国ルート', basis: 'chart' },
   70: { name: '三姉妹見参', day: '隠しルート', basis: 'chart' },
@@ -200,6 +207,7 @@ export function stateLabel(value: number): string {
  *      ✅（否定）[U] 2026-10-06：01 copy 12（状態 05）で書いても、再起の望みはチャートに出なかった。04 を書くと失敗として出た
  *   03 ❓ 00 の志士との出会い（添字6）
  *   00 ❓ 名無し侍の添字 13・21・24・48
+ * 🔶 B は通し番号では 400＋添字に当たる（chunks/event-chart）
  */
 export const EVENT_RECORDS_SEEN = [
   { value: 0x05, label: '不明（05。書いてもチャートに出なかった）' },
@@ -271,13 +279,28 @@ export function writeEventRecord(bytes: Uint8Array, index: number, value: number
   writeU8(bytes, EVENT_RECORD_OFFSET + index, value)
 }
 
-/** イベントと対応のついた添字（EVENT_NAMES のキー）。昇順 */
 /**
- * ❓ 名前の付いた添字（0〜99）の間の欠番。イベントとの対応は分からない（2026-10-06 時点）。
+ * 名前の付いた添字（0〜99）の間の欠番。チャートに出ない・起きないので、イベント一覧には入れない。
  * フラグ確認用に、イベント一覧とは別に画面の下へまとめて出す（ユーザー判断 2026-10-06）。一括設定の対象にはしない
+ *   47〜50 🟢 剣術大会（幕府／外国／攘夷／無所属）。チャートには出ない
+ *   67     悲しみのローラ。未実装のイベントとみられる（[U] 2026-10-06）
+ *   84     ❓ どのイベントか不明（85 ローラの決意と対になるイベントとみられる）
  */
-export const EVENT_GAP_INDICES: readonly number[] = [47, 48, 49, 50, 67, 84]
+export const EVENT_GAP_NOTES: Readonly<Record<number, { name: string | null; note: string }>> = {
+  47: { name: '剣術大会（幕府）', note: 'チャートには出ない' },
+  48: { name: '剣術大会（外国）', note: 'チャートには出ない' },
+  49: { name: '剣術大会（攘夷）', note: 'チャートには出ない' },
+  50: { name: '剣術大会（無所属）', note: 'チャートには出ない' },
+  67: { name: '悲しみのローラ', note: '未実装のイベントとみられる（ゲームでは起きない）' },
+  84: { name: null, note: 'どのイベントか不明（隠しルートの4日目以降、ローラの決意の別の分岐か）' },
+}
 
+/** EVENT_GAP_NOTES の添字。昇順 */
+export const EVENT_GAP_INDICES: readonly number[] = Object.keys(EVENT_GAP_NOTES)
+  .map(Number)
+  .sort((a, b) => a - b)
+
+/** イベントと対応のついた添字（EVENT_NAMES のキー）。昇順 */
 export function namedIndices(): number[] {
   return Object.keys(EVENT_NAMES)
     .map(Number)
