@@ -31,7 +31,10 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 リスト固有の列：
 
 - `weapon/blade.csv` の `sheath_x`：その刃を組み立てたときに書かれる鞘の ID（X、[weapon-record](../chunks/weapon-record/README.md) +0x0A）🟢。見た目の鞘が同じ武器どうしは同じ値になる
-- `weapon/complete.csv` の `blade`・`sheath_x`・`guard`・`grip`：その完成武器の部品の ID 🟢。特殊武器は `blade` が特殊武器の刃の ID（`weapon/blade-special.csv`）で、ほかは空欄
+- `weapon/complete.csv` の `blade`・`sheath_x`・`guard`・`grip`：その完成武器の部品の ID 🟢。特殊武器は `blade` が特殊武器の刃の ID（`weapon/blade-special.csv`）で、ほかは空欄。
+  `weapon_type` はその完成武器の武器種（[weapon-record](../chunks/weapon-record/README.md) +0x1E。0＝刀 1＝槍 2＝爪 3＝拳銃 4＝ライフル）🟢
+- `weapon/complete.csv` の `unique_bytes`・`name_no`・`flag_22`：その完成武器のレコードに入る値 🟢。[weapon-record](../chunks/weapon-record/README.md) の
+  +0x10〜+0x15（固有武器の6バイト。空欄は `FF` × 6）、+0x72（名前の番号。特殊武器は +0x20 にも入る）、+0x22
 - `weapon/blade-special.csv`・`weapon/complete.csv` の `name_en`：英語版のゲーム内の表記 🟢
 - `place/night-visit-place.csv` の `layout`：その場所で正しく表示される「人と布団の配置」（約束の枠 +0x0A）。実データで見た組だけを書く。空欄は不明
 - `event/event.csv` の `name_en`：英語版のゲーム内の表記

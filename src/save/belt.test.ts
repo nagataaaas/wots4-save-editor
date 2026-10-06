@@ -14,8 +14,11 @@ import {
   type PartOption,
 } from './weapon-ids'
 import {
+  COMPLETE_WEAPONS,
   WEAPON_FIELDS,
   WEAPON_NAME_MAX_CHARS,
+  matchesCompleteWeapon,
+  writeCompleteWeapon,
   decodeTitle,
   encodeTitle,
   isXUnknown,
@@ -480,5 +483,98 @@ describe('武器の数値：ゲーム上の範囲とシステム上の範囲', (
     // 🔶 つま斬り数も uint16 と推測
     expect(validateWeaponNumber('tsumaKills', 65535, { advanced: true })).toBeNull()
     expect(validateWeaponNumber('tsumaKills', -1, { advanced: true })).not.toBeNull()
+  })
+})
+
+describe('指定武器に変更する（完成武器の構成で置き換える）', () => {
+  it('完成武器ごとに決まる値だけを書き、名前・攻撃力・魅力などは変えない', () => {
+    const b = makeSave()
+    const o = beltOffset(0)
+    const before = b.slice()
+    writeCompleteWeapon(b, o, 0x0074) // 夜葬
+    const changed = diffOffsets(before, b).map((i) => i - o)
+    const allowed = (i: number) => (i >= 0x06 && i < 0x16) || i === 0x1e || (i >= 0x20 && i < 0x24) || (i >= 0x72 && i < 0x76)
+    for (const i of changed) expect(allowed(i), `+0x${i.toString(16)}`).toBe(true)
+    expect([...b.subarray(o + 0x06, o + 0x10)]).toEqual([0x74, 0x00, 0x68, 0x01, 0x67, 0x01, 0x6a, 0x01, 0x69, 0x01])
+    const v = readWeapon(b, o)
+    expect(v.weaponId.label).toBe('夜葬')
+    expect([v.blade.value.label, v.guard.value.label, v.grip.value.label, v.sheath.label]).toEqual(['夜葬', '夜葬', '夜葬', '夜葬'])
+    expect(v.blade.warning).toBeNull()
+    expect(matchesCompleteWeapon(b, o, 0x0074)).toBe(true)
+    expect(v.matchesComplete).toBe(true)
+
+    writeCompleteWeapon(b, o, 0x005e) // 立奈美（槍）
+    expect(b[o + WEAPON_FIELDS.weaponType]).toBe(1)
+    expect(readWeapon(b, o).weaponType.label).toBe('槍')
+    expect(matchesCompleteWeapon(b, o, 0x0074)).toBe(false)
+    expect(b[o + WEAPON_FIELDS.attack]).toBe(10)
+    expect(readWeapon(b, o).name.value).toBe('A')
+  })
+
+  it('🟢 全完成武器の構成が部品の表と合う（刃の標準の鞘・鍔・柄が表にある）', () => {
+    for (const w of COMPLETE_WEAPONS) {
+      const b = makeSave()
+      const o = beltOffset(0)
+      if (w.build.kind === 'special') b.set([0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff], o + 0x08)
+      writeCompleteWeapon(b, o, w.id)
+      const v = readWeapon(b, o)
+      expect(v.blade.value.label, w.name ?? '').not.toBeNull()
+      expect(v.blade.warning, w.name ?? '').toBeNull()
+      expect(v.weaponType.label, w.name ?? '').not.toBeNull()
+      if (w.build.kind === 'normal') {
+        expect(v.guard.value.label, w.name ?? '').not.toBeNull()
+        expect(v.grip.value.label, w.name ?? '').not.toBeNull()
+        expect(v.sheath.label, w.name ?? '').not.toBeNull()
+      }
+      expect(matchesCompleteWeapon(b, o, w.id)).toBe(true)
+    }
+  })
+
+  // ✅ ゲームが書いたレコードのバイト列（reserch/2026-10-07_special-weapons.md。sample/S4-DATA_02・04 の武器から読んだ値）。
+  // [+0x06〜+0x23, +0x72〜+0x75]。+0x16〜+0x1D（攻撃力など）は武器ごとに違うので比べない
+  const REAL: Record<string, { at06: number[]; at1e: number[]; at72: number[] }> = {
+    竹富士: {
+      at06: [0x13, 0x00, 0x03, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x9e, 0x00, 0x02, 0x00, 0x2b, 0x00],
+      at1e: [0x00, 0x00, 0x4f, 0x00, 0x00, 0x00],
+      at72: [0x4f, 0x00, 0x00, 0x00],
+    },
+    鬼ヶ島: {
+      at06: [0x6a, 0x00, 0x06, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff],
+      at1e: [0x03, 0x00, 0xd2, 0x01, 0x00, 0x00],
+      at72: [0xd2, 0x01, 0x00, 0x00],
+    },
+    中道刀: {
+      at06: [0x02, 0x00, 0x06, 0x00, 0x18, 0x00, 0x0d, 0x00, 0x0c, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff],
+      at1e: [0x00, 0x00, 0xff, 0xff, 0x01, 0x00],
+      at72: [0x02, 0x00, 0x00, 0x00],
+    },
+  }
+  const expectReal = (b: Uint8Array, o: number, name: string) => {
+    expect([...b.subarray(o + 0x06, o + 0x16)], name).toEqual(REAL[name].at06)
+    expect([...b.subarray(o + 0x1e, o + 0x24)], name).toEqual(REAL[name].at1e)
+    expect([...b.subarray(o + 0x72, o + 0x76)], name).toEqual(REAL[name].at72)
+  }
+
+  it('✅ 通常の武器 → 特殊武器 → 通常の武器と変えると、ゲームが書くバイト列と同じになる（U-9：固有武器の6バイトは +0x10）', () => {
+    const b = makeSave()
+    const o = beltOffset(0)
+    writeCompleteWeapon(b, o, 0x0013) // 中道刀（自作）→ 竹富士
+    expectReal(b, o, '竹富士')
+    let v = readWeapon(b, o)
+    expect(v.special).toBe(true)
+    expect(v.blade.value.label).toBe('竹富士')
+    expect(v.matchesComplete).toBe(true)
+
+    writeCompleteWeapon(b, o, 0x006a) // 竹富士 → 鬼ヶ島（固有武器の6バイトは FF に戻る）
+    expectReal(b, o, '鬼ヶ島')
+
+    writeCompleteWeapon(b, o, 0x0002) // 鬼ヶ島 → 中道刀
+    expectReal(b, o, '中道刀')
+    v = readWeapon(b, o)
+    expect(v.special).toBe(false)
+    expect([v.blade.value.label, v.guard.value.label, v.grip.value.label]).toEqual(['中道刀', '中道刀', '中道刀'])
+    expect(b[o + WEAPON_FIELDS.attack]).toBe(10)
+    expect(v.charms.value).toEqual([9, 9, 4])
+    expect(() => writeCompleteWeapon(b, o, 0xffff)).toThrow() // 自作は構成がない
   })
 })

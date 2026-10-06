@@ -4,7 +4,8 @@
 //
 // 書き込みは各フィールドのバイトだけを上書きする。次の領域は書き換えない：
 //   - +0x00〜+0x05：❓ 用途不明。武器袋[0] ではここが帯刀の状態（峰打など）と重なる（chunks/belt-state）
-//   - +0x10〜+0x15、+0x1F〜+0x23、+0x70〜+0x8D、+0x94、+0x99〜+0x9B：❓ 用途不明
+//   - +0x1F、+0x70、+0x76〜+0x8D、+0x94、+0x99〜+0x9B：❓ 用途不明
+//   - +0x10〜+0x15（固有武器の6バイト）、+0x20、+0x22、+0x72、+0x74：完成武器ごとに決まる値。指定武器に変更する（writeCompleteWeapon）ときだけ書く
 //   - 耐久回復の累積（+0x8E ✅）：編集機能は持たない
 // 0x1A78C 付近などにある帯刀武器のコピー（🔶 chunks/belt-copy）は書き換えない（[TS] も 0xA4C2 側だけを書き換えて動く。I-3）。
 import {
@@ -29,6 +30,8 @@ import {
   sheathName,
   weaponIdName,
   type PartOption,
+  type WeaponBuild,
+  type WeaponIdOption,
 } from "./weapon-ids";
 import { formatHex4 } from "@/lib/format";
 
@@ -228,6 +231,8 @@ export type WeaponView = {
   sheath: Field<number> & { label: string | null };
   /** 武器種（U-8）。label は WEAPON_TYPES の名前、未知の値は null */
   weaponType: Field<number> & { label: string | null };
+  /** 完成武器ID・武器種・部品が、その完成武器の構成とすべて一致する（matchesCompleteWeapon） */
+  matchesComplete: boolean;
 };
 
 export function readU24(bytes: Uint8Array, offset: number): number {
@@ -510,6 +515,7 @@ export function readWeapon(
       ),
       label: typeLabel,
     },
+    matchesComplete: matchesCompleteWeapon(bytes, offset, weaponId),
   };
 }
 
@@ -547,6 +553,60 @@ export function writeWeaponId(bytes: Uint8Array, offset: number, id: number): vo
   if (!weaponIdLabel(id)) throw new RangeError(`未知の完成武器ID です（${formatHex4(id)}）`);
   assertEditable(bytes, offset);
   writeU16(bytes, offset + WEAPON_FIELDS.weaponId, id);
+}
+
+/** 指定武器に変更できる完成武器（部品の構成が分かっているもの） */
+export const COMPLETE_WEAPONS: readonly (WeaponIdOption & { build: WeaponBuild })[] =
+  WEAPON_IDS.filter((w): w is WeaponIdOption & { build: WeaponBuild } => w.build !== undefined);
+
+/**
+ * 完成武器のレコードで、その完成武器ごとに決まる値（✅ reserch/2026-10-07_special-weapons.md：サンプルの14種で全一致。値は 🟢 complete.csv）。
+ * 位置 → u16。+0x1E（武器種）だけは u8 で、+0x1F は書かない
+ */
+function completeWeaponWords(id: number, build: WeaponBuild): [number, number][] {
+  const special = build.kind === "special";
+  const unique = build.unique ?? [0xffff, 0xffff, 0xffff];
+  return [
+    [0x06, id],
+    [0x08, build.blade],
+    [0x0a, special ? 0xffff : build.sheath],
+    [0x0c, special ? 0xffff : build.guard],
+    [0x0e, special ? 0xffff : build.grip],
+    [0x10, unique[0]],
+    [0x12, unique[1]],
+    [0x14, unique[2]],
+    [0x20, special ? build.nameNo : 0xffff],
+    [0x22, build.flag22],
+    [0x72, build.nameNo],
+    [0x74, 0x0000],
+  ];
+}
+
+/**
+ * 指定武器に変更する：その完成武器のレコードに入る値（completeWeaponWords と +0x1E の武器種）をすべて書く。
+ * - 書く位置：+0x06 完成武器ID、+0x08〜+0x0F 部品（特殊武器は刃のあと FFFF × 3）、+0x10〜+0x15 固有武器の6バイト（U-9）、
+ *   +0x1E 武器種、+0x20（特殊武器は名前の番号、通常は FFFF）、+0x22、+0x72 名前の番号、+0x74（完成武器は 0）
+ * - 名前・攻撃力・耐久・質・魅力・銘・斬殺数などは変えない（ユーザー判断 2026-10-07）
+ * - 通常の武器と特殊武器の間でも変更できる。書いた値はゲームが書く値と同じ（✅ 読み）だが、ゲーム内で読めるかは要ゲーム内確認
+ */
+export function writeCompleteWeapon(bytes: Uint8Array, offset: number, id: number): void {
+  const option = COMPLETE_WEAPONS.find((w) => w.id === id);
+  if (!option) throw new RangeError(`構成が分からない完成武器です（${formatHex4(id)}）`);
+  const view = readWeapon(bytes, offset);
+  if (view.problem) throw new RangeError(view.problem);
+  if (view.weaponType.problem) throw new RangeError(view.weaponType.problem);
+  for (const [at, value] of completeWeaponWords(option.id, option.build)) writeU16(bytes, offset + at, value);
+  writeU8(bytes, offset + WEAPON_FIELDS.weaponType, option.build.type);
+}
+
+/** レコードの値が、その完成武器のレコードに入る値（writeCompleteWeapon で書く値）とすべて一致するか */
+export function matchesCompleteWeapon(bytes: Uint8Array, offset: number, id: number): boolean {
+  const option = COMPLETE_WEAPONS.find((w) => w.id === id);
+  if (!option) return false;
+  if (readU8(bytes, offset + WEAPON_FIELDS.weaponType) !== option.build.type) return false;
+  return completeWeaponWords(option.id, option.build).every(
+    ([at, value]) => readU16(bytes, offset + at) === value,
+  );
 }
 
 /**

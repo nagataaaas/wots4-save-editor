@@ -38,6 +38,7 @@ import {
 import {
   CHARMS,
   TITLES,
+  COMPLETE_WEAPONS,
   WEAPON_FIELDS,
   WEAPON_TYPES,
   WEAPON_NUMBER_RANGES,
@@ -49,6 +50,7 @@ import {
   partOptions,
   validateWeaponName,
   validateWeaponNumber,
+  writeCompleteWeapon,
   writeWeaponCharms,
   writeWeaponId,
   writeWeaponName,
@@ -578,6 +580,26 @@ function WeaponCard({
     );
   };
 
+  // 指定武器に変更する。刀・槍・特殊に分け、その中を部品と同じ順（サイドバーで選ぶ）に並べる
+  const completeOptions: SelectOption[] = [...COMPLETE_WEAPONS]
+    .sort((a, b) => {
+      const rank = (w: (typeof COMPLETE_WEAPONS)[number]) =>
+        w.build.kind === "special" ? 2 : w.build.type;
+      return (
+        rank(a) - rank(b) ||
+        (partOrder === "reading" && a.name && b.name ? compareWeaponNames(a.name, b.name) : a.id - b.id)
+      );
+    })
+    .map((w) => {
+      const isSpecial = w.build.kind === "special";
+      return {
+        value: String(w.id),
+        label: weaponIdName(w),
+        group: isSpecial ? WEAPON_KIND_LABELS.special.ja : w.build.type === 1 ? "槍" : "刀",
+        keywords: w.name ? weaponSearchTerms(w.name) : [],
+      };
+    });
+
   const charms = weapon?.charms ?? null;
   const effects = charms ? charmEffects(charms.value) : [];
   const title = titleEffect(weapon?.title.value ?? null);
@@ -687,6 +709,19 @@ function WeaponCard({
                 }
               />
             </div>
+
+            <SearchSelectRow
+              label="指定武器に変更"
+              offset={base + WEAPON_FIELDS.weaponId}
+              searchPlaceholder="読み・名前・英語名で検索"
+              value={weapon ? (weapon.matchesComplete ? String(weapon.weaponId.value) : "mismatch") : null}
+              currentLabel="どの完成武器の構成とも一致しない"
+              options={completeOptions}
+              problem={weapon?.problem ?? weapon?.weaponType.problem ?? null}
+              hint="完成武器・武器種・刃・鞘・鍔・柄（固有武器の秘伝を含む）をその武器のものに置き換えます。名前・攻撃力・耐久・質・魅力・銘は変わりません"
+              note="ゲームがその完成武器のレコードに書く値（+0x06〜+0x15、+0x1E、+0x20〜+0x23、+0x72〜+0x75）をそのまま書きます。特殊武器との間でも変更できます（ゲーム内での読み込みは要確認）"
+              onChange={(v) => update((b, o) => writeCompleteWeapon(b, o, Number(v)))}
+            />
 
             <div className="grid gap-4 sm:grid-cols-3">
               {/* 鞘は刃に合わせて決まるので、刃のすぐ下に置く */}
