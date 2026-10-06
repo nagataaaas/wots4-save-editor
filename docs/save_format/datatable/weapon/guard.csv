@@ -1,0 +1,62 @@
+id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
+13,0x000D,,中道刀,Guard - Basal Blade,CT;TS,初期装備
+15,0x000F,,数寄者,Guard - Snatcher,CT;TS,
+17,0x0011,,徳母里,Guard - Big Bertha,CT;TS,同心・灰色鞘
+19,0x0013,,与根助,Guard - Last Rites,CT;TS,般若党/隣の晩御飯
+21,0x0015,,絶天,Guard - Lost Prayer,CT;TS,先生・紫紐黒鞘
+23,0x0017,,一発丸,Guard - Finisher,CT;TS,嘉門
+27,0x001B,,黒獅子,Spear Guard - Black Lion,CT;TS,
+31,0x001F,,天井割,Guard - Ceiling Cut,CT;TS,
+34,0x0022,,寂蓮,Guard - Rose of Sharon,CT;TS,斉藤一二三
+37,0x0025,,曼珠沙華,Guard - Manjusaka,CT;TS,
+49,0x0031,,風花,Spear Guard - Snowdrift,CT;TS,
+54,0x0036,,ハルユキ,Guard - Haruyuki,CT,
+59,0x003B,,美帝骨,Guard - Tailbwnd,CT,尾てい骨
+107,0x006B,,貫誠,Guard - Boy Howdy,CT;TS,まんまる・白鞘
+109,0x006D,,鮫肌丸,Guard - Sharkfin Sluicer,CT,影武者
+111,0x006F,,大黒生,Guard - Aleshaft,CT,おっつぁん・鈍色
+113,0x0071,,微熱,Guard - Fever,CT;TS,女将
+115,0x0073,,竹刀,Guard - Bamboo Sword,CT;TS,
+117,0x0075,,龍魔治,Guard - Pain' the Town,CT,リウマチ
+119,0x0077,,精霊舞,Guard - Big Deal,CT;TS,万由・セレブ
+121,0x0079,,炎天過,Guard - Blazelet,CT;TS,千佳・赤
+123,0x007B,,氷天過,Guard - Icy Glare,CT;TS,千佳・青
+125,0x007D,,ジョゼフィーヌ,Guard - Josephine,CT;TS,
+127,0x007F,,一文字,Guard - Beeline,CT;TS,琴吹
+129,0x0081,,阿摩羅,Guard - Longshaft,CT;TS,小暮
+131,0x0083,,センチュリオン,Guard - Centurion,CT;TS,
+133,0x0085,,闇緊,Guard - Black Mark't,CT;TS,闇金融
+135,0x0087,,浅餓王,Guard - Morning Vainglory,CT;TS,朝顔
+137,0x0089,,斬鬼丸,Guard - Demonbane,CT;TS,賭場の胴元; TS は貪鬼丸の鍔として定義（D-16）
+139,0x008B,,馬通一,Guard - Strike One,CT;TS,凶衛門・赤柄
+141,0x008D,,阿修羅,Guard - Asura,CT;TS,
+143,0x008F,,凍雲小太刀,Guard - Raincloud,CT,
+145,0x0091,,赤マムシ,Guard - Red Viper,CT,
+147,0x0093,,村柾,Guard - Muramassa,CT;TS,大蛇
+149,0x0095,,黒蜻蛉,Guard - Dragonfly,CT;TS,
+151,0x0097,,羅刹,Spear Guard - Rakshasa,CT;TS,
+153,0x0099,,藤奈美,Spear Guard - Wisteriam,CT;TS,百合
+161,0x00A1,,クルセイダー,Guard - Crusader,CT;TS,
+166,0x00A6,,真心,Guard - Devotion,CT;TS,まだら
+317,0x013D,,なまくら刀,Guard - Blunt Sword,CT;TS,
+320,0x0140,,残月,Guard - Morning Moon,CT,大蛇・難しい
+328,0x0148,,珍比羅,Guard - Smackuza,CT;TS,チンピラ・白木鞘
+330,0x014A,,砕苦論,Guard - Cyclone,CT,琴吹・難しい
+331,0x014B,,真啓通,Guard - Nerveknive,CT,神経痛
+332,0x014C,,ジョアンナ,Guard - Joanna,CT,
+333,0x014D,,零魂磨,Guard - Soul Culler,CT,小暮・難しい
+334,0x014E,,絶海,Guard - New World,CT,先生・黄土色鞘
+335,0x014F,,奮発丸,Guard - Xerter,CT,exert=奮発
+336,0x0150,,大樽生,Guard - Alebarrow,CT,おっつぁん・金
+337,0x0151,,霜柱,Spear Guard - Ice Needle,CT;TS,needle ice
+338,0x0152,,虎吉竹刀,Guard - Lucky Bamboo,CT,弟子・黄竹刀
+339,0x0153,,断頭,Guard - Warhead,CT,弾頭
+340,0x0154,,霊禍,Guard - Critical Frame,CT;U,千佳・難しい; ゲーム内で霊禍と表示された（[U] 2026-10-05）
+341,0x0155,,粋逸,Guard - Cavitater,CT,万由・難しい
+342,0x0156,,立奈美,Spear Guard - Wisterianum,CT,百合・難しい
+346,0x015A,,陸奥守吉行,Guard - Mutsunokami,CT;TS,DLC
+348,0x015C,,虎徹,Guard - Kotetsu,CT;TS,DLC
+350,0x015E,,和泉守兼定,Guard - Izuminokami,CT,DLC
+352,0x0160,,活火山,Guard - Volcano,CT,DLC
+359,0x0167,,夜葬,Guard - Wildgrass,U,野草=やそう(DLC); ゲーム内で夜葬と表示された（[U] 2026-10-05）。CT の 362 は誤記
+65535,0xFFFF,,なし,None,CT,

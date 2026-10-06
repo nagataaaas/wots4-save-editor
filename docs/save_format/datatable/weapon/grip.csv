@@ -1,0 +1,97 @@
+id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
+12,0x000C,,中道刀,Grip - Basal Blade,CT;TS,初期装備
+14,0x000E,,数寄者,Grip - Snatcher,CT;TS,
+16,0x0010,,徳母里,Grip - Big Bertha,CT;TS,同心・灰色鞘
+18,0x0012,,与根助,Grip - Last Rites,CT;TS,般若党/隣の晩御飯
+20,0x0014,,絶天,Grip - Lost Prayer,CT;TS,先生・紫紐黒鞘
+22,0x0016,,一発丸,Grip - Finisher,CT;TS,嘉門
+28,0x001C,,黒獅子,Spear Grip - Black Lion,CT;TS,
+30,0x001E,,天井割,Grip - Ceiling Cut,CT;TS,
+33,0x0021,,寂蓮,Grip - Rose of Sharon,CT;TS,斉藤一二三
+36,0x0024,,曼珠沙華,Grip - Manjusaka,CT;TS,
+50,0x0032,,風花,Spear Grip - Snowdrift,CT;TS,
+53,0x0035,,ハルユキ,Grip - Haruyuki,CT,
+58,0x003A,,美帝骨,Grip - Tailbwnd,CT,尾てい骨
+106,0x006A,,貫誠,Grip - Boy Howdy,CT,まんまる・白鞘
+108,0x006C,,鮫肌丸,Grip - Sharkfin Sluicer,CT,影武者
+110,0x006E,,大黒生,Grip - Aleshaft,CT,おっつぁん・鈍色
+112,0x0070,,微熱,Grip - Fever,CT,女将
+114,0x0072,,竹刀,Grip - Bamboo Sword,CT;TS,
+116,0x0074,,龍魔治,Grip - Pain' the Town,CT,リウマチ
+118,0x0076,,精霊舞,Grip - Big Deal,CT;TS,万由・セレブ
+120,0x0078,,炎天過,Grip - Blazelet,CT;TS,千佳・赤
+122,0x007A,,氷天過,Grip - Icy Glare,CT;TS,千佳・青
+124,0x007C,,ジョゼフィーヌ,Grip - Josephine,CT;TS,
+126,0x007E,,一文字,Grip - Beeline,CT;TS,琴吹
+128,0x0080,,阿摩羅,Grip - Longshaft,CT;TS,小暮
+130,0x0082,,センチュリオン,Grip - Centurion,CT;TS,
+132,0x0084,,闇緊,Grip - Black Mark't,CT;TS,闇金融
+134,0x0086,,浅餓王,Grip - Morning Vainglory,CT;TS,朝顔
+136,0x0088,,斬鬼丸,Grip - Demonbane,CT,賭場の胴元
+138,0x008A,,馬通一,Grip - Strike One,CT,凶衛門・赤柄
+140,0x008C,,阿修羅,Grip - Asura,CT;TS,
+142,0x008E,,凍雲小太刀,Grip - Raincloud,CT,
+144,0x0090,,赤マムシ,Grip - Red Viper,CT,
+146,0x0092,,村柾,Grip - Muramassa,CT,大蛇
+148,0x0094,,黒蜻蛉,Grip - Dragonfly,CT;TS,
+150,0x0096,,羅刹,Spear Grip - Rakshasa,CT;TS,
+152,0x0098,,藤奈美,Spear Grip - Wisteriam,CT;TS,百合
+160,0x00A0,,クルセイダー,Grip - Crusader,CT;TS,
+165,0x00A5,,真心,Grip - Devotion,CT;TS,まだら
+217,0x00D9,,空道刀,Grip - Flesh Spelunker,CT,虎鉄
+218,0x00DA,,正道刀,Grip - Breakright,CT;TS,阿原・茶鞘
+219,0x00DB,,天道刀,Grip - New Religion,CT;TS,緑鞘
+220,0x00DC,,源平,Grip - Two-Face,CT;TS,魔鱗組・緑鞘
+221,0x00DD,,汎来巣,Grip - Rice Burner,CT;TS,半ライス
+222,0x00DE,,五郎縞,Grip - Goro Doe,CT;TS,
+223,0x00DF,,絶海,Grip - New World,CT,先生・黄土色鞘
+224,0x00E0,,奮発丸,Grip - Xerter,CT,exert=奮発
+225,0x00E1,,律儀,Grip - Integrity,CT;TS,巣鴨
+226,0x00E2,,賢皇骨,Grip - Scapulator,CT,肩甲骨
+227,0x00E3,,鮫肌九,Grip - Sharkfin Mk. 9,CT,霧鮫
+228,0x00E4,,大樽生,Grip - Alebarrow,CT,おっつぁん・金
+229,0x00E5,,余熱,Grip - Heatsink,CT;TS,新隊長
+230,0x00E6,,マサトシ,Grip - Masatoshi,CT,
+231,0x00E7,,虎吉竹刀,Grip - Lucky Bamboo,CT,弟子・黄竹刀
+232,0x00E8,,真啓通,Grip - Nerveknive,CT,神経痛
+233,0x00E9,,粋逸,Grip - Cavitater,CT,万由・難しい
+234,0x00EA,,断頭,Grip - Warhead,CT,弾頭
+235,0x00EB,,霊禍,Grip - Critical Frame,CT,千佳・難しい
+236,0x00EC,,ジョアンナ,Grip - Joanna,CT,
+237,0x00ED,,砕苦論,Grip - Cyclone,CT,琴吹・難しい
+238,0x00EE,,零魂磨,Grip - Soul Culler,CT,小暮・難しい
+239,0x00EF,,チーフテン,Grip - Chieftain,CT,
+240,0x00F0,,斗壱,Grip - Shady Deal,CT,堂島・難しい
+241,0x00F1,,物干竿,Grip - Laundry Pole,CT;TS,
+242,0x00F2,,日本橋,Grip - Nihonbashi,CT;TS,
+243,0x00F3,,手長,Grip - Longarm,CT;TS,
+244,0x00F4,,幽餓王,Grip - Full Moonflower,CT;TS,夕顔
+245,0x00F5,,貪鬼丸,Grip - Ogrenip,CT;TS,
+246,0x00F6,,馬通二,Grip - Strike Two,CT;TS,凶衛門・紫柄
+247,0x00F7,,迦楼羅,Grip - Garuda,CT,
+248,0x00F8,,猿丸,Grip - Monkeytail,CT;TS,
+249,0x00F9,,蝉丸,Grip - Cicadian Schism,CT;TS,
+250,0x00FA,,小式部,Grip - Accountability,CT;TS,難しい舎弟・緑
+251,0x00FB,,浮雲小太刀,Grip - Snowcloud,CT,とぐろ・灰色
+252,0x00FC,,毒マムシ,Grip - Poison Viper,CT,
+253,0x00FD,,柾重,Grip - Spindler,CT;TS,赤刀身・茶柄
+254,0x00FE,,蛇蜻蛉,Grip - Wyvernfly,CT;TS,
+255,0x00FF,,百代草,Grip - Hundred-Year Itch,CT;TS,
+256,0x0100,,不語仙,Grip - Silent Song,CT;TS,
+257,0x0101,,金盞花,Grip - Marigold,CT;TS,
+258,0x0102,,二心,Grip - Two Heart,CT,まだら・難しい
+259,0x0103,,富士ヶ根,Spear Grip - Borrower,CT;TS,
+260,0x0104,,大文字,Spear Grip - Fat Messenger,CT;TS,
+261,0x0105,,麒麟児,Spear Grip - Prodigy,CT;TS,CTでHellgirlと入れ替わりの指摘あり
+262,0x0106,,焔魔,Spear Grip - Hellgirl,CT,閻魔。CTでProdigyと入れ替わりの指摘あり
+263,0x0107,,霜柱,Spear Grip - Ice Needle,CT;TS,needle ice
+264,0x0108,,立奈美,Spear Grip - Wisterianum,CT,百合・難しい
+316,0x013C,,なまくら刀,Grip - Blunt Sword,CT;TS,
+319,0x013F,,残月,Grip - Morning Moon,CT,大蛇・難しい
+329,0x0149,,珍比羅,Grip - Smackuza,CT;TS,チンピラ・白木鞘
+345,0x0159,,陸奥守吉行,Grip - Mutsunokami,CT;TS,DLC
+347,0x015B,,虎徹,Grip - Kotetsu,CT;TS,DLC
+349,0x015D,,和泉守兼定,Grip - Izuminokami,CT,DLC
+351,0x015F,,活火山,Grip - Volcano,CT,DLC
+361,0x0169,,夜葬,Grip - Wildgrass,CT,野草=やそう(DLC)
+65535,0xFFFF,,なし,None,CT,

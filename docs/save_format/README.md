@@ -1,0 +1,261 @@
+# 侍道4（Steam版）セーブデータの形式
+
+セーブファイル `S4-DATA_00`〜`04` について、現時点でわかっていることをまとめる。
+ファイル内のどの範囲にどんな情報があるかをこのファイルに書き、範囲ごとの詳細は `chunks/{chunk_slug}/README.md` に書く。
+IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く。
+
+<!--
+書き方
+- このファイルには全体に関わることだけを書く。個別の範囲のフィールドや調査の記録は chunks/ に書く
+- まとまり（chunk）を追加・削除・統合・修正したら、§3 の表も直す
+- その時点で正しい情報だけを書く。覆された説や試行錯誤の経過は残さない（経過は chunks/{chunk_slug}/reserch/ に残す）
+-->
+
+## 1. 凡例
+
+### 1.1 確度
+
+| 記号 | 意味 |
+|---|---|
+| ✅ | 確定：PC版の実データ、PC版を対象にした資料、または [TS] の実装（I-3 の範囲）で確認済み |
+| 🟡 | 高確度：PS3版の改造コードなどから逆算したもの。PC版ではまだ検証していない |
+| 🔶 | 推測：データの並びや数値規則から推定したもの |
+| ❓ | 未確認：位置や意味がわかっていないもの |
+
+🟡🔶❓の情報、および判定待ち（U-n）の項目をコードに書くときは、コメントとテストの両方に確度・項目番号を残す（`AGENTS.md`）。
+
+### 1.2 出典の略号
+
+| 略号 | 内容 |
+|---|---|
+| [TS] | tarotshogun/WayOfTheSamurai4SaveEditor（V1.06 Take 2 対応、コミット `cad824d`） |
+| [I-1]〜[I-3] | `inspection.md` の調査結果（I-1 主人公名は31文字まで／I-2 武器レコード長は0xA0／I-3 実装されている範囲では [TS] は正しい）。I-3 の適用範囲は `../check-diff.md` §0.2 |
+| [W-PC] [W] | 侍道4攻略@wiki（PC版ページ／その他のページ） |
+| [SE-BBS] [SE-GG] | PS3版のセーブエディター掲示板／Game Genieコード |
+| [CT] | Cheat Engine テーブル（Steam V1006） |
+| [U] | ユーザー自身の解析データ |
+| D-n | 2つの解析ノートの相違のうち判定済みのもの（`../check-diff.md` §2） |
+| U-n | 判定待ちの相違（`../check-diff.md` §1）。判明したものも番号を残して §3 に置く |
+
+### 1.3 判定待ちの書き方
+
+判定できていない相違点は `../check-diff.md` に U-n として置き、chunk からは次の形でリンクする。
+
+> ❓ **判定待ち → [U-4](../check-diff.md#u-4)**　案A：… ／ 案B：…　**採用までの扱い**：…
+
+## 2. ファイル全体
+
+| 項目 | 内容 | 確度 |
+|---|---|---|
+| Steam AppID | 312780 | ✅ |
+| 保存場所 | `%USERPROFILE%\Documents\My Games\Ghostlight Ltd\Way of the Samurai 4\`。ドキュメントのリダイレクトや OneDrive で実際の場所が変わることがある。インストールフォルダとは別 | ✅ |
+| ファイル | `S4-DATA_00`〜`S4-DATA_04`（拡張子なし。00がスロット1、04がスロット5） | ✅ |
+| 設定ファイル | `<ゲームフォルダ>\S4-SETTINGS.ini` | ✅ |
+| Steam Cloud | 保存場所の全ファイル（pattern `*`）を同期する | ✅ |
+| エンディアン | リトルエンディアン。PS3版はビッグエンディアン | ✅ |
+| 文字列 | UTF-16LE、1文字2バイト、固定長フィールド。上書きのみ | ✅ |
+| 暗号化・圧縮・チェックサム | なし（[TS] はチェックサムを再計算せずに書き戻して動く [I-3]。差分にも検査値らしき変化はない） | ✅ |
+| ファイルサイズ | 0x48BB0（297,904）バイト（[TS] の構造体サイズ）。全セーブ共通のサイズとは限らない | ✅ |
+| 位置のずれ | 進行状況やDLCで位置・サイズがずれるという報告がある [W-PC] | 🔶 |
+| 対応バージョン | [TS] は V1.06 Take 2 のみ対応。2025年6月の日本語対応アップデート後に形式が変わったかは不明 | ❓ |
+
+> ❓ **判定待ち → [U-1](../check-diff.md#u-1)**　固定オフセットで扱えるか。
+> 案A：[TS] の固定オフセットをそのまま使い、ファイルサイズが 0x48BB0 のときだけ編集を許可／案B：アンカー探索で位置を求める。
+> **採用までの扱い**：§3 の位置で妥当性検証に通った領域だけを編集可能にする。
+
+### 2.1 参考：[TS] の構造体の配置
+
+宣言順と Pack = 1 から計算した位置。**`Padding` という名前でも空き領域とは限らない**（中に解析済みのフィールドがある）。
+
+| 開始 | 終了（含む） | フィールド |
+|---|---|---|
+| `0x000000` | `0x000007` | `Padding0000_0007` |
+| `0x000008` | `0x00000B` | `Money` |
+| `0x00000C` | `0x00000F` | `Cashbox` |
+| `0x000010` | `0x0000DB` | `Padding0010_00CF`、`Padding00D0_00DB` |
+| `0x0000DC` | `0x00011B` | `Name` |
+| `0x00011C` | `0x000B3B` | `Padding011C_011F`、`Padding0120_0B2F`、`Padding0B30_0B3B` |
+| `0x000B3C` | `0x000B3F` | `SamuraiPoint` |
+| `0x000B40` | `0x0035A3` | `Padding0B40_359F`、`Padding35A0_35A4` |
+| `0x0035A4` | `0x0035A7` | `Katsuryoku`（名前と実際の意味は合わない。[vitals](chunks/vitals/README.md)） |
+| `0x0035A8` | `0x0035AB` | `Hp` |
+| `0x0035AC` | `0x0058BF` | `Padding35AC_35AF`、`Padding35B0_58BF` |
+| `0x0058C0` | `0x005B3F` | `CabinetItems` |
+| `0x005B40` | `0x005B8F` | `CarriedItems` |
+| `0x005B90` | `0x005BDF` | `RareItems` |
+| `0x005BE0` | `0x00A4C1` | `Padding5BE0_A4BF`、`PaddingA4C0_A4C1` |
+| `0x00A4C2` | `0x00A6A1` | `CarriedWeapons` |
+| `0x00A6A2` | `0x00A6A9` | `PaddingA6A2_A6A9` |
+| `0x00A6AA` | `0x00ACE9` | `BaggedWeapons` |
+| `0x00ACEA` | `0x00ACED` | `PaddingACEA_ACED` |
+| `0x00ACEE` | `0x0129ED` | `CabinetWeapons` |
+| `0x0129EE` | `0x01920F` | `Padding129EE_129EF`、`Padding129F0_1920F` |
+| `0x019210` | `0x01A60F` | `MyRyuhaName`（作者が位置不正と注記。U-6） |
+| `0x01A610` | `0x048BAF` | `Padding1A610_` |
+
+## 3. まとまりの一覧
+
+開始・終了はユーザーのセーブ（サイズ 0x48BB0）での値。進行状況やDLCでずれる可能性があるので、
+エディタは「位置の求め方」に従って実行時に位置を求める。離れた複数の範囲を持つまとまりは、範囲ごとに1行にする。
+
+| 開始 | 終了（含む） | まとまり | 内容 | 確度 |
+|---|---|---|---|---|
+| `0x000008` | `0x00000F` | [money](chunks/money/README.md) | 所持金・金庫 | ✅ |
+| `0x000010` | `0x000018` | [date-location](chunks/date-location/README.md) | シナリオの段階・時間帯・現在地（開始地点） | ✅位置 ／ 一部 🔶❓ |
+| `0x0000DC` | `0x00011B` | [player-name](chunks/player-name/README.md) | 主人公名 | ✅ |
+| `0x000100` ❓ | `0x0005FF` ❓ | [townsfolk](chunks/townsfolk/README.md) | 町の人（店主など）の状態 | 🔶表 ／ 一部 ✅ |
+| `0x000B3C` | ❓ | [stats](chunks/stats/README.md) | 侍点・プレイ時間・斬殺数・経過日数などの記録 | 一部 ✅ |
+| `0x000C84` | ❓ | [kill-counts](chunks/kill-counts/README.md) | 敵の種類ごとの斬殺数（周回中） | 🔶 |
+| `0x001C24` | ❓ | [kill-counts](chunks/kill-counts/README.md) | 敵の種類ごとの斬殺数（累計） | 🔶 |
+| `0x0033A4` | `0x0035A3` | [occupation](chunks/occupation/README.md) | なりわいの状態の表 | ✅ |
+| `0x0035A4` | `0x0035B3` | [vitals](chunks/vitals/README.md) | HP・活力 | 一部 ✅（U-4） |
+| `0x00363C` | `0x0036A3` | [memory-garbage](chunks/memory-garbage/README.md) | ゲームの状態ではない値（未初期化・アドレス） | 🔶 |
+| `0x0036A8` | `0x00374D` | [event-chart](chunks/event-chart/README.md) | イベントの状態 A（周回中） | ✅ |
+| `0x00374E` | `0x003837` | [scenario-flags](chunks/scenario-flags/README.md) | シナリオのフラグ列（下の5つを含む） | 一部 ✅ |
+| `0x00374E` | `0x00375C` | [characters](chunks/characters/README.md) | 重要人物の状態 | 一部 ✅ |
+| `0x00375D` | `0x00375F` | [facilities](chunks/facilities/README.md) | 施設（病院・カジノ・語学所） | ✅ |
+| `0x003764` | `0x0037FB` | [gates](chunks/gates/README.md) | 門の開閉（飛び飛びの7バイト） | ✅ |
+| `0x003780` | `0x00378C` | [factions](chunks/factions/README.md) | 勢力の友好度・敵対状態・ルート分岐 | ✅ |
+| `0x00378D` | `0x0037AA` | [hidden-route](chunks/hidden-route/README.md) | 隠しルート | ✅ 0x378E ／ ほか ❓ |
+| `0x003838` | `0x0038FF` | [event-chart](chunks/event-chart/README.md) | イベントの記録 B（周回をまたぐ） | ✅ |
+| `0x003900` | `0x003901` | [hint](chunks/hint/README.md) | 次のイベントのヒント | ✅位置 ／ ❓値 |
+| `0x003902` | `0x00399F` ❓ | [accessories](chunks/accessories/README.md) | 装飾品の所持フラグ | 🔶 |
+| `0x0058C0` | `0x005BDF` | [items](chunks/items/README.md) | 箪笥・手持ち・貴重品のアイテム | ✅ |
+| `0x005C3C` | `0x006197` | [memory-garbage](chunks/memory-garbage/README.md) | アドレス風の値（0x7C 刻み12か所） | 🔶 |
+| `0x00A4C2` | `0x0129ED` | [weapon-record](chunks/weapon-record/README.md) | 帯刀中・武器袋・武器箪笥の武器（0xA0 × 213件） | ✅ |
+| `0x00A6A8` | `0x00A6AF` | [belt-state](chunks/belt-state/README.md) | 帯刀の状態（選択中・二刀流・峰打） | ✅読み ／ ❓書き込み |
+| `0x0137EC` | `0x013C2F` | [night-visit](chunks/night-visit/README.md) | 夜這いの記録 | 一部 ✅ |
+| `0x014038` | `0x014063` | [night-visit](chunks/night-visit/README.md) | 夜の約束の枠 | 一部 ✅ |
+| `0x018BC0` 付近 | ❓ | [styles](chunks/styles/README.md) | 通常流派 | 🔶 |
+| `0x019200` 付近 | ❓ | [custom-style](chunks/custom-style/README.md) | 俺流 | ✅位置 ／ ❓構造（U-6） |
+| `0x01A6B2` | `0x01AD7B` | [belt-copy](chunks/belt-copy/README.md) | 帯刀武器のコピー | 🔶 |
+| `0x03AB79` | ❓ | [appearance](chunks/appearance/README.md) | 容姿の解放ビット | ✅位置 ／ ❓範囲 |
+| `0x0433A6` | `0x0433A7` | [occupation](chunks/occupation/README.md) | クリアしたなりわいの数 | 🔶 |
+| `0x0440D0` | ❓ | [market-weapons](chunks/market-weapons/README.md) | 流通中の刀 | ✅位置 ／ ❓長さ（U-11） |
+| `0x045F40` | `0x045F55` | [occupation](chunks/occupation/README.md) | 受注中のなりわい | 🔶 |
+
+## 4. PS3版でだけ分かっている位置
+
+出典は [SE-BBS] と [SE-GG]。PC版では未検証（🟡）。PS3版の武器レコード（0xA4D8〜、0x9C刻み）と武器箪笥（0xACD0〜）は PC版と合わないので使わない（D-1, D-2）。
+
+| データ | PS3でのアドレス | 型・値の例 |
+|---|---|---|
+| 魂技ゲージ | 0x35B4 / 0x35B8 | float |
+| 弟子 | 0x13D0C〜 | 20人分、構造は不明 |
+| 腕前 | 0x186AA | u16 |
+| 流派書の経験値 | 0x186CC〜 | u16 の配列 |
+| 特典解除 | 0x43030〜 | 状態値（1=解除可能、2=解除済み表示だが反映されない） |
+
+## 5. 位置が分かっていないゲーム側の仕様
+
+位置を特定したら chunk を作り、根拠の差分を `reserch/` に置く。
+
+| 項目 | 仕様 |
+|---|---|
+| 治安 | 0〜99、初期値50。とても良い 90〜99／良い 70〜89／普通 30〜69／悪い 10〜29／とても悪い 0〜9。周回をまたいで引き継がれる |
+| 難易度 | 易しい・普通（最初から）、難しい・超難しい（特典で解放）。変更は周回開始時だけ。セーブスロット一覧に表示されるのでヘッダ付近にあると推定 🔶。値は0〜3の列挙値と推定 🔶 |
+| 外見 | パーツIDの集まりと推定 🔶。顔・体格・肌の色は周回開始時にしか変更できない |
+| 斬殺数（全体） | 流派ごとの斬殺数は存在する。[stats](chunks/stats/README.md) の 0x0BC8・0x0BCC が候補 |
+| エンディング記録・周回数 | ❓ |
+| 特典（PC版） | ❓（PS3版は §4） |
+| 座標 | ロード時は決まった地点から始まるので、保存されていない可能性が高い 🔶 |
+| デフォルト武器名 | 完成武器のデフォルト名を書き換えても、帯刀すると元に戻るという報告がある |
+
+エンディング（[W]）：
+
+| # | 名称 | 条件の要点 |
+|---|---|---|
+| 1 | 熱き魂 | 攘夷ルートで【真実】が起きない、または失敗する |
+| 2 | 攘夷の炎 | 攘夷ルートで【真実】でまだらを斬る |
+| 3 | 破滅への道 | 幕府ルートで鬼怒川に賛同する（茂呂の生存が必須） |
+| 4 | 変わり往く心 | 幕府ルートで鬼怒川に背く（茂呂の生存が必須） |
+| 5 | 海外雄飛 | 外国ルートでローラを守り、ローラに賛同する |
+| 6 | 侍一直線 | 外国ルートでローラが死亡する、または大義を選ぶ |
+| 7 | 魔鱗組として | 無所属で剣術大会に優勝する |
+| 8 | 釜茹で侍 | 勢力に所属した状態で優勝し、表彰台に上る |
+| 9 | 希望の光 | 隠しルート。語学所・病院が開設、カジノが閉鎖などの条件あり |
+| 10 | 大老は生きていた | 隠しルートで「希望の光」の条件を満たさない |
+
+エンディングは本来11種類あった模様。イベントの添字（[event.csv](datatable/event/event.csv)）にも同じ名前のイベントがある。
+
+## 6. 既知の不具合と注意点
+
+ゲーム側：
+
+- 前の周回と同じ勢力のルートが確定すると、ロード時にフリーズすることがある
+- 牢屋（開始地点 0x14）でセーブしたデータは、ラスボス戦の後に落ちる
+- 「タイトルに戻る」からロードすると夜這いのフラグが消える。テストのたびにゲームを完全に終了する
+- 名前が長すぎるとロードできなくなる。文字列は上書きのみで、挿入はしない
+- 攻撃力501以上や魅力4つ以上など、正規の範囲外の値は表示崩れや箪笥を開けなくなる原因になる
+- Steam Cloud で古いデータに戻されることがある。写真家の画面で削除すると、クラウド側のデータも消える
+
+既存エディタ：
+
+- [TS]：V1.06 Take 2 のみ対応。構造体サイズ分だけ読み、`FileMode.Create` で同じサイズを書き出す。名前の書き込みで文字数とバイト数を混同している。未知のIDを既定値に変換するので、読み込んで保存すると未知の値が変わることがある。3バイト単位のパーツ編集は鞘 X の一部も書き換える
+- Web版（https://wots4saveeditor.neocities.org/ 、2026-10-04時点）：所持金・金庫・魅力の位置は本書と一致。魅力3の個数に魅力IDを書く不具合と、疾風（Squall）の値を 6 にする誤り（正しくは 5）がある
+
+## 7. 調べ方
+
+### 7.1 位置の求め方
+
+1. 条件の違うセーブを集める（DLCあり／なし、序盤／終盤、周回数）。ゲームのバージョン、DLC、ファイルサイズを記録し、元ファイルは別に保管する
+2. 既知の位置（主人公名、所持金など）で §3 と同じレイアウトか確認する
+3. ずれている場合は、既知のアンカーで位置を揃え、どこからずれ始めるかを特定する
+4. ずれ始めの直前に件数や長さのフィールドがあれば、先頭から順に読む逐次パースで確定させる
+5. 件数フィールドがなければ、領域ごとにアンカー探索する（武器：0xA0 周期、アイテム：8 B単位、名前：UTF-16 文字列）
+6. 読み出した値が妥当な範囲にあり、領域どうしの位置関係も矛盾しないことを確認できた領域だけ編集可能にする。それ以外は読み取り専用
+7. 書き込みのたびに自動でバックアップを取る。ファイルサイズは変えない
+8. 行き詰まったら、実行ファイルのセーブ書き出し関数を Ghidra などで解析する
+
+DLC の影響を調べるときは、DLC を無効化するより「DLC アイテムを受け取る前と後のセーブを比べる」ほうが安全。
+
+### 7.2 差分解析の共通ルール
+
+- Steam Cloud をオフにする
+- 同じスロットで、操作の直前と直後にセーブする
+- テストのたびにゲームを完全に終了する
+- 同じ操作を2回行い、両方で再現した差分だけを採用する
+- 時間で進む値（[stats](chunks/stats/README.md) のプレイ時間・0x0BC0、[vitals](chunks/vitals/README.md) の活力、武器レコードの +0x86/+0x8A）、[memory-garbage](chunks/memory-garbage/README.md)、[belt-copy](chunks/belt-copy/README.md) は差分から除いて読む
+
+2案以上ある項目で「正しく編集できた」と判定する基準は `../check-diff.md` §0.3。
+
+### 7.3 未解決のタスク
+
+| タスク | 差分を取るゲーム内操作 | 関連 |
+|---|---|---|
+| 武器レコード内の未解析領域、固有武器の6バイトの位置 | 帯刀中の武器のダンプとゲーム内の表示値を照合する | U-9 |
+| 流通中の刀の1件あたりのバイト数と件数 | 0x440D0 以降で繰り返しの周期を探す | U-11 |
+| 治安 | 旅籠で寝る前後 | |
+| エンディング記録と周回数 | エンディングの前後 | |
+| 難易度 | 易しいと普通で始めた周回の初回セーブを比べる | |
+| なりわいの失敗の値、装飾品の表の範囲 | なりわいに失敗する前後 | |
+| 特典解除（PC版） | 特典を1つ解除する前後 | |
+| 外見 | 理髪屋で髪型だけ変える前後 | |
+| DLC によるずれ | DLC アイテムを受け取る前後 | U-1 |
+| 爪・拳銃・ライフルのパーツID | 該当武器を帯刀したセーブの +0x08〜+0x0F を読む | |
+
+## 8. 参考資料
+
+- [TS] tarotshogun/WayOfTheSamurai4SaveEditor（コミット `cad824d1321fb615b724174ea81544f0b0e8675b`、2024-04-20）https://github.com/tarotshogun/WayOfTheSamurai4SaveEditor
+  - 主に参照したファイル：`Models/RawData/RawSaveData.cs`（構造体）、`Models/SaveDataFileIO/SaveDataAccessor.cs`（入出力）、
+    `Models/SaveData/WeaponMaterial.cs`（パーツID）、`WeaponId.cs`（完成武器ID）、`WeaponAttribute.cs`（魅力・銘）、`Item.cs`・`RareItem.cs`（アイテム）、
+    `Models/SaveDataConversion/` 配下の各 Converter
+- [W-PC] 侍道4攻略@wiki「PC版 侍道4」 https://w.atwiki.jp/samuraidou4/pages/55.html
+- [W] 侍道4攻略@wiki（パーツ一覧 p14、武器一覧 p13、エンディング p37、FAQ p4、イベント p44、鍛冶屋 p20、施設 p52、固有キャラ p41、バグ関連 p46、特典解除 p32） https://w.atwiki.jp/samuraidou4/
+- [SE-BBS] PS3セーブエディター掲示板「侍道4」 https://web.save-editor.com/cache/bbs_savedata_ps3/1139.html
+- [SE-GG] SAVE-EDITOR.com NPUB30755 Game Genieコード https://www.save-editor.com/tools_original/wse_ps3_save_editor_code_title.html?id=NPUB30755
+- [CT] Cheat Engine テーブル：FearLess t=977（Steam V1006）、t=6746（GOG）。ユーザー提供の `WayOfTheSamurai4.txt`（"Char Info" テーブル）
+- Web版エディタ https://wots4saveeditor.neocities.org/
+- Steam コミュニティ：保存先 https://steamcommunity.com/app/312780/discussions/0/541906989397971655/ 、
+  ドキュメント移動と保存不具合 https://steamcommunity.com/app/312780/discussions/0/591775577045733234/ 、
+  Web エディタ使用報告 https://steamcommunity.com/app/312780/discussions/0/541906989409558559/?ctp=2&l=japanese
+- SteamDB 312780 / PCGamingWiki「Way of the Samurai 4」
+- GameFAQs 攻略（EVERYTHING69）：パーツの英語名と日本語名の照合に使用
+- PS3 のセーブ書き換えブログ（Steam版の根拠には使わない）https://ameblo.jp/axl-low22/entry-11149209268.html 、https://ameblo.jp/kenbousanjou/entry-10826898858.html
+
+## 9. 関連ドキュメント
+
+- `chunks/README.md` — まとまりの追加のしかた
+- `datatable/README.md` — IDの一覧の置き場所
+- `../check-diff.md` — 判定待ち（U-n）と判定済みの相違（D-n）
+- `../event.md` — イベントの分岐・内容・条件
