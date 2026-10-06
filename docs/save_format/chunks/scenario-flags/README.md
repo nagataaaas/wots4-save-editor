@@ -26,7 +26,7 @@
 | `0x3764`、`0x377D`〜`0x377F`、`0x37C3`、`0x37FA`、`0x37FB` | 門 | [gates](../gates/README.md) |
 | `0x3780`〜`0x378C` | 勢力の 3×3 表とルート分岐 | [factions](../factions/README.md) |
 | `0x378D`〜`0x37AA` | 隠しルートのフラグとその周り（好感度・職なども含む） | [hidden-route](../hidden-route/README.md) |
-| `0x37C8` | 🔶 夜這いの回数のカウンタの1つ | [night-visit](../night-visit/README.md) |
+| `0x37C8` | ❓ 夜這いのたびに増えることが多いが、夜這いの回数と合わないセーブがある | [night-visit](../night-visit/README.md) |
 
 ### 意味の分かったフラグ
 

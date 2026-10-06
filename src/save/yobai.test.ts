@@ -51,7 +51,7 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
     expect(promiseProblem).toBeNull()
     expect(promise).toEqual({
       active: true,
-      day: 1, // 🔶 2日目
+      group: 1, // ✅ [U] 2026-10-07 日付ではない。❓ 町の人は 1〜3
       type: 0x25,
       place: 0x0c,
       layout: 0x06,
@@ -107,8 +107,10 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
     expect(validatePersonField('age', 255, 24, { advanced: false })).toBeNull() // ？
     expect(validatePersonField('blood', 0, 3, { advanced: false })).not.toBeNull()
     expect(validatePersonField('blood', 5, 3, { advanced: false })).toBeNull() // ？
-    expect(validatePersonField('day', 98, 1, { advanced: false })).toBeNull()
-    expect(validatePersonField('day', 99, 1, { advanced: false })).not.toBeNull()
+    // ❓ +0x02／+0x0C（group）は通常モードでは今の値の書き戻しだけ
+    expect(validatePersonField('group', 1, 1, { advanced: false })).toBeNull()
+    expect(validatePersonField('group', 2, 1, { advanced: false })).not.toBeNull()
+    expect(validatePersonField('group', 2, 1, { advanced: true })).toBeNull()
     expect(validatePersonField('type', 0xffffffff, 0x25, { advanced: true })).not.toBeNull()
     expect(validatePersonField('age', 256, 24, { advanced: true })).not.toBeNull()
   })
@@ -139,8 +141,11 @@ describe('🔶 夜這いの記録 0x137F0〜（16 B × 100件、件数 0x137EC�
     const view = readYobai(makeSave())
     expect(view.recordsProblem).toBeNull()
     expect(view.count).toBe(2)
-    expect(view.records[0]).toEqual({ index: 0, type: 0x031b, name: 0xd7, unknown: 0x218, day: 0, age: 0xff, blood: 5 })
-    expect(view.records[1]).toEqual({ index: 1, type: 0x25, name: 0x1ba5, unknown: 0x217, day: 1, age: 24, blood: 3 })
+    // 🟢 +0x08 は建物の番号（さよ＝お屋敷 0x218、かえで＝稲荷前 0x217）
+    expect(view.records[0]).toEqual({ index: 0, type: 0x031b, name: 0xd7, building: 0x218, group: 0, age: 0xff, blood: 5 })
+    expect(view.records[1]).toEqual({ index: 1, type: 0x25, name: 0x1ba5, building: 0x217, group: 1, age: 24, blood: 3 })
+    // ✅ [U] 2026-10-07 約束の画面の夜這い回数は先頭の 0x137EC
+    expect(view.counters.map((c) => c.offset)).toEqual([0x137ec, 0x13e34, 0x37c8])
     expect(view.counters.map((c) => c.value)).toEqual([2, 2, 2])
   })
 
@@ -163,11 +168,11 @@ describe('🔶 夜這いの記録 0x137F0〜（16 B × 100件、件数 0x137EC�
     const before = makeSave()
     const after = before.slice()
     const view = readYobai(after)
-    for (const f of ['day', 'type', 'name', 'look', 'age', 'blood'] as const)
+    for (const f of ['group', 'type', 'name', 'look', 'age', 'blood'] as const)
       writePromiseField(after, f, view.promise[f], { advanced: false })
     writePromisePlace(after, view.promise.place, view.promise.layout, { advanced: false })
     for (const r of view.records)
-      for (const f of ['day', 'type', 'name', 'age', 'blood'] as const) writeRecordField(after, r.index, f, r[f], { advanced: false })
+      for (const f of ['group', 'type', 'name', 'age', 'blood'] as const) writeRecordField(after, r.index, f, r[f], { advanced: false })
     expect(diffOffsets(before, after)).toEqual([])
   })
 })

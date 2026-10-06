@@ -1,7 +1,9 @@
-// 夜の約束と夜這いの記録。出典：docs/save_format/chunks/night-visit（[U] 2026-10-06、sample/S4-DATA_03 copy 5〜10）。
+// 夜の約束と夜這いの記録。出典：docs/save_format/chunks/night-visit（[U] 2026-10-06、sample/S4-DATA_03 copy 5〜10、[U] 2026-10-07 sample/S4-DATA_02）。
 //
 // 約束の枠 0x14038〜（0x2C B）。約束すると値が入り、夜這いが終わると +0x00〜+0x23 が FF に戻る（年齢・血液型・+0x2A は前の値が残る）。
-//   +0x02 u16  🔶 約束した日（経過日数、1日目＝0）。3人とも約束したセーブの 0x0BD8 と一致。書き換えても表示は変わらなかった
+// 🟢 +0x00〜+0x1B は、約束の相手ごとに決まった値の組（+0x04 だけ相手ごとに変わる）。
+//   +0x02 u16  ✅ [U] 2026-10-07 日付ではない（1日目に町の人と約束して 1、5日目に先生と約束して 0）。
+//              🟢 特別な相手（さよ・先生）は 0、町の人は 1〜3。意味は ❓ なので書き換えない（group）
 //   +0x04 u32  ✅ [U] しゃべり方と戦闘力の型（はるなを 0x031B にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった）。
 //              FFFFFFFF なら約束なし（空の枠）
 //   +0x08 u16  ✅ [U] 約束の場所（夜這いに入る扉と、その先のマップ）。0x00〜0x22 の名前を書き換えで確認。0x23 以降は名前が空
@@ -10,10 +12,14 @@
 //   +0x20 u32  ✅ [U] 見た目（モデル）と声。はるなを 0xF5 にすると、見た目と声がさよになった
 //   +0x24 u8   ✅ [U] 年齢（0x30 で48歳）。FF は「？」（さよ）
 //   +0x25 u8   ✅ [U] 血液型。1＝A、2＝B、3＝O、4＝AB（書き換えで確認）、5＝「？」（さよ）
-//   +0x00・+0x0C〜+0x1B・+0x26〜+0x2B は ❓（書き換えない）
+//   +0x00 は特別な相手で FFFF、町の人で 0〜3（🟢）。+0x0C〜+0x1B はいつも 0A 0B 0E 0F 0C 0D 1D 01（🟢）。
+//   +0x00・+0x0C〜+0x1B・+0x26〜+0x2B の意味は ❓（書き換えない）
 //
 // 夜這いの記録 0x137F0〜（16 B × 100件。直前の 0x137EC u32 が件数 🔶）。夜這いのたびに1件足される。
-//   +0x00 u32 型、+0x04 u32 名前、+0x08 u32 ❓、+0x0C u16 日付（🔶 画面に「1日目」などと出る [U]）、+0x0E u8 年齢、+0x0F u8 血液型。
+//   +0x00 u32 型、+0x04 u32 名前、+0x08 u32 🟢 入った建物の番号（0x20C〜0x228。同じ建物の扉は同じ番号）、
+//   +0x0C u16 ❓ 約束の枠の +0x02 と同じ値（さよ 0、かえで 1）。約束の +0x02 が日付でなかったので、日付とは言えない（group）、
+//   +0x0E u8 年齢、+0x0F u8 血液型。
+// ✅ [U] 2026-10-07：0x137EC を 16、0x13E34 を 48 にすると、約束の画面の夜這い回数は 16 になった → 表示は 0x137EC。
 //   空の件は FFFFFFFF FFFFFFFF 00000000 FFFF0000。記録の書き換えがゲームに反映されるかは未確認（要ゲーム内確認）。
 //
 // 新しい約束や記録を作る・消す機能は持たない（❓ の領域を書かずに済ませるため）。
@@ -35,9 +41,13 @@ export const RECORD_EMPTY_BYTES: readonly number[] = [
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
 ];
 
-/** 🔶 夜這いの回数と考えているカウンタ（どれも 1 → 2）。どれが表示に使われているかは ❓ なので表示だけ */
+/**
+ * 夜這いのたびに増えたカウンタ（どれも 1 → 2）。表示だけ。
+ * ✅ [U] 2026-10-07 約束の画面の夜這い回数は 0x137EC。
+ * 0x37C8 は sample/S4-DATA_03 copy 10 で件数 1 なのに 2 だったので、夜這いの回数ではない（意味は ❓）
+ */
 export const YOBAI_COUNTERS: readonly { offset: number; size: 1 | 4; note: string }[] = [
-  { offset: 0x137ec, size: 4, note: "記録の件数と同じ値" },
+  { offset: 0x137ec, size: 4, note: "記録の件数。約束の画面の「夜這い回数」はこの値（確認済み）" },
   { offset: 0x13e34, size: 4, note: "記録の直後" },
   { offset: 0x37c8, size: 1, note: "フラグ列の中" },
 ];
@@ -93,27 +103,31 @@ export const PLACE_LAYOUTS: readonly { place: number; layout: number; note?: str
   { place: 0x0c, layout: 0x06 },
   { place: 0x0e, layout: 0x23 },
   { place: 0x10, layout: 0x3d, note: "さよ（DLC）の実データ。ほかの人物での確認はしていない" },
+  { place: 0x11, layout: 0x20, note: "先生の実データ（[U] 2026-10-07 sample/S4-DATA_02）。ほかの人物での確認はしていない" },
   { place: 0x18, layout: 0x25 },
   { place: 0x1d, layout: 0x01 },
 ];
 
 export type KnownValue = { value: number; label: string };
 
-/** 実セーブで見た人物の値（さよ・かえで・はるな）。通常モードではこれだけを書ける */
+/** 実セーブで見た人物の値（さよ・かえで・はるな・先生）。通常モードではこれだけを書ける */
 export const KNOWN_TYPES: readonly KnownValue[] = [
   { value: 0x031b, label: "さよ（台詞は「・・・」。体力・攻撃力が高い）" },
   { value: 0x25, label: "かえで" },
   { value: 0x49, label: "はるな" },
+  { value: 0x0250, label: "先生" },
 ];
 export const KNOWN_NAMES: readonly KnownValue[] = [
   { value: 0xd7, label: "さよ" },
   { value: 0x1ba5, label: "かえで" },
   { value: 0x1b69, label: "はるな" },
+  { value: 0x0f, label: "先生" },
 ];
 export const KNOWN_LOOKS: readonly KnownValue[] = [
   { value: 0xf5, label: "さよ" },
   { value: 0x1c, label: "かえで" },
   { value: 0x5d, label: "はるな" },
+  { value: 0x57, label: "先生" },
 ];
 
 /** ✅ [U] 血液型（1〜4 は書き換えで確認。5 はさよの「？」） */
@@ -129,16 +143,17 @@ export const BLOOD_TYPES: readonly KnownValue[] = [
 export const AGE_UNKNOWN = 0xff;
 /** 通常モードの年齢の上限（と AGE_UNKNOWN） */
 export const AGE_NORMAL_MAX = 99;
-/** 通常モードの日付（経過日数）の上限。scenario-date の DAY_RANGE.normal（99日目）に合わせる */
-export const DAY_NORMAL_MAX = 98;
-
-export type PersonField = "day" | "type" | "name" | "look" | "age" | "blood";
+/**
+ * group は約束の +0x02・記録の +0x0C（❓ 日付ではない。特別な相手 0、町の人 1〜3）。
+ * 意味が分からないので、上級者モードでだけ書ける（通常モードは今の値の書き戻しだけ）
+ */
+export type PersonField = "group" | "type" | "name" | "look" | "age" | "blood";
 export type RecordField = Exclude<PersonField, "look">;
 
 type FieldSpec = { rel: number; size: 1 | 2 | 4 };
 
 const PROMISE_FIELDS: Record<PersonField, FieldSpec> = {
-  day: { rel: 0x02, size: 2 },
+  group: { rel: 0x02, size: 2 },
   type: { rel: 0x04, size: 4 },
   name: { rel: 0x1c, size: 4 },
   look: { rel: 0x20, size: 4 },
@@ -151,11 +166,12 @@ export const PROMISE_LAYOUT_REL = 0x0a;
 const RECORD_FIELDS: Record<RecordField, FieldSpec> = {
   type: { rel: 0x00, size: 4 },
   name: { rel: 0x04, size: 4 },
-  day: { rel: 0x0c, size: 2 },
+  group: { rel: 0x0c, size: 2 },
   age: { rel: 0x0e, size: 1 },
   blood: { rel: 0x0f, size: 1 },
 };
-export const RECORD_UNKNOWN_REL = 0x08;
+/** 🟢 記録の +0x08：入った建物の番号（0x20C〜0x228。同じ建物の扉は同じ番号）。表示だけ */
+export const RECORD_BUILDING_REL = 0x08;
 
 export function promiseFieldOffset(field: PersonField): number {
   return PROMISE_OFFSET + PROMISE_FIELDS[field].rel;
@@ -185,7 +201,7 @@ export type PromiseView = {
   layout: number;
 } & Record<PersonField, number>;
 
-export type RecordView = { index: number; unknown: number } & Record<RecordField, number>;
+export type RecordView = { index: number; building: number } & Record<RecordField, number>;
 
 export type YobaiView = {
   promise: PromiseView;
@@ -235,7 +251,7 @@ export function readYobai(bytes: Uint8Array): YobaiView {
     const r = Object.fromEntries(
       (Object.keys(RECORD_FIELDS) as RecordField[]).map((f) => [f, readSized(bytes, recordFieldOffset(index, f), RECORD_FIELDS[f].size)]),
     ) as Record<RecordField, number>;
-    return { ...r, index, unknown: readU32(bytes, recordOffset(index) + RECORD_UNKNOWN_REL) };
+    return { ...r, index, building: readU32(bytes, recordOffset(index) + RECORD_BUILDING_REL) };
   });
 
   const counters = YOBAI_COUNTERS.map((c) => ({ offset: c.offset, note: c.note, value: readSized(bytes, c.offset, c.size) }));
@@ -253,7 +269,7 @@ function knownList(field: PersonField): readonly KnownValue[] | null {
 
 /**
  * 人物の項目（約束・記録で共通）の検証。今の値と同じ値の書き戻しは許す。問題がなければ null。
- * 通常モード：型・名前・見た目・血液型は確認済みの値だけ、年齢は 0〜99 か 255（？）、日付は 0〜98（1〜99日目）。
+ * 通常モード：型・名前・見た目・血液型は確認済みの値だけ、年齢は 0〜99 か 255（？）、group（❓）は書けない。
  * 上級者モード：型の大きさの範囲で任意（型の 0xFFFFFFFF は空きの印なので書かない）
  */
 export function validatePersonField(
@@ -271,7 +287,7 @@ export function validatePersonField(
   if (known) return known.some((k) => k.value === value) ? null : `確認済みの値ではありません（上級者モードで書けます）: ${value}`;
   if (field === "age")
     return value <= AGE_NORMAL_MAX || value === AGE_UNKNOWN ? null : `通常モードでは 0〜${AGE_NORMAL_MAX} か 255（？）を指定してください: ${value}`;
-  if (field === "day") return value <= DAY_NORMAL_MAX ? null : `通常モードでは 1〜${DAY_NORMAL_MAX + 1}日目を指定してください`;
+  if (field === "group") return "意味が分かっていない値なので、上級者モードでだけ書けます";
   return null;
 }
 
