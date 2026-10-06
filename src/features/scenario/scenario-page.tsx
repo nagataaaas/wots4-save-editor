@@ -204,7 +204,7 @@ export function ScenarioPage() {
       <Alert>
         <AlertTitle>検証用（要ゲーム内確認）</AlertTitle>
         <AlertDescription>
-          この画面の項目は、どれもセーブの差分から推定したものです（解析ノート §3.5）。
+          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの event-chart・factions・date-location）。
           日数・時間帯、イベントの失敗（05）・未到達（FF）、チャート表示、勢力の友好度 +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
           書き換える前のセーブを残してから試してください。
         </AlertDescription>

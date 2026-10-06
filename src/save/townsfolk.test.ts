@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は解析ノート §9.6（[U] 2026-10-06）で見たもの。
+// 値は docs/save_format/chunks/townsfolk（[U] 2026-10-06）で見たもの。
 // ✅ [U] 2026-10-06：0x02C4＝寿司屋の店主、0x0444＝鍛冶屋のおやじ（どちらも 1＝死亡。0 に戻すと生き返った）。
 // ✅ [U] 2026-10-06：0x0127＝鍛冶屋の後継者イベント・鍛冶屋の状態（値の表は書き換えで確認）、0x0264＝堂島の死亡。
 import { describe, expect, it } from 'vitest'
@@ -35,7 +35,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 町の人の状態の候補 0x0100〜0x05FF §9.6', () => {
+describe('🔶 町の人の状態の候補 0x0100〜0x05FF chunks/townsfolk', () => {
   it('🔶 0x0100〜0x05FF の1,280バイトを読む（終わりの位置は未確定）', () => {
     expect(TOWNSFOLK_LENGTH).toBe(1280)
     const view = readTownsfolk(makeSave())

@@ -1,7 +1,7 @@
 import { Binary, Flag, Moon, Package, ScrollText, Store, Sword, Swords, User, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
-// 各領域の確度は docs/wos4_save_format.md を参照（節番号を note に残す）。
+// 各領域の確度は docs/save_format/README.md §3 と各 chunk を参照（chunk 名を note に残す）。
 
 export type SectionId =
   | 'hero'
@@ -21,7 +21,7 @@ export type SectionId =
 export type Section = {
   id: SectionId
   label: string
-  /** 対応する解析ノートの節 */
+  /** 対応する解析ドキュメントの chunk（docs/save_format/chunks/{slug}） */
   note: string
 }
 
@@ -50,30 +50,30 @@ export const sectionGroups: SectionGroup[] = [
   {
     label: '編集',
     items: [
-      { id: 'hero', label: '主人公', icon: User, note: '§3.1（所持金・侍点・名前・活力・HP）' },
+      { id: 'hero', label: '主人公', icon: User, note: 'money・player-name・stats・vitals（所持金・侍点・名前・活力・HP）' },
       {
         label: '武器',
         icon: Sword,
         sections: [
-          { id: 'belt', label: '帯刀', note: '§5（帯刀 3本）、§3.4（帯刀の状態）' },
-          { id: 'weapon-bag', label: '武器袋', note: '§5（武器袋 10本）' },
-          { id: 'weapon-chest', label: '刀箪笥', note: '§5（武器箪笥 200本）' },
+          { id: 'belt', label: '帯刀', note: 'weapon-record（帯刀 3本）、belt-state（帯刀の状態）' },
+          { id: 'weapon-bag', label: '武器袋', note: 'weapon-record（武器袋 10本）' },
+          { id: 'weapon-chest', label: '刀箪笥', note: 'weapon-record（武器箪笥 200本）' },
         ],
       },
       {
         label: '道具',
         icon: Package,
         sections: [
-          { id: 'tools', label: '所持', note: '§4（手持ち 8 B × 10件）' },
-          { id: 'chest', label: '箪笥', note: '§4（箪笥の通常アイテム）' },
-          { id: 'valuables', label: '重要品', note: '§4（貴重品 8 B × 10件。[TS] は先頭4件＝製錬用の鉄のみ編集）' },
+          { id: 'tools', label: '所持', note: 'items（手持ち 8 B × 10件）' },
+          { id: 'chest', label: '箪笥', note: 'items（箪笥の通常アイテム）' },
+          { id: 'valuables', label: '重要品', note: 'items（貴重品 8 B × 10件。[TS] は先頭4件＝製錬用の鉄のみ編集）' },
         ],
       },
-      { id: 'scenario', label: 'シナリオ', icon: Flag, note: '§3.5 🔶 日数・時間帯、イベントの状態、勢力の記録' },
-      { id: 'yobai', label: '夜這い', icon: Moon, note: '§9.11 夜の約束（場所・人物）と夜這いの記録 🔶' },
-      { id: 'styles', label: '流派', icon: ScrollText, note: '§3.1 🔶 0x018BC0 付近' },
-      { id: 'ore-ryu', label: '俺流', icon: Swords, note: '§8.2 ❓ U-6' },
-      { id: 'circulating', label: '流通中の刀', icon: Store, note: '§8.1 ❓ U-11' },
+      { id: 'scenario', label: 'シナリオ', icon: Flag, note: 'date-location・event-chart・factions 🔶 日数・時間帯、イベントの状態、勢力の記録' },
+      { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit 夜の約束（場所・人物）と夜這いの記録 🔶' },
+      { id: 'styles', label: '流派', icon: ScrollText, note: 'styles 🔶 0x018BC0 付近' },
+      { id: 'ore-ryu', label: '俺流', icon: Swords, note: 'custom-style ❓ U-6' },
+      { id: 'circulating', label: '流通中の刀', icon: Store, note: 'market-weapons ❓ U-11' },
     ],
   },
   {

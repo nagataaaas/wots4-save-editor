@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// バイト列は解析ノート §9.11（[U] 2026-10-06）で見たもの。
+// バイト列は docs/save_format/chunks/night-visit（[U] 2026-10-06）で見たもの。
 // ✅ [U] 書き換えで確認：約束の +0x04（型）・+0x08（場所）・+0x1C（名前）・+0x20（見た目と声）・+0x24（年齢）・+0x25（血液型）。
 // 🔶 +0x0A（配置）は位置だけ確認、+0x02（日付）・記録の各項目・件数 0x137EC は差分からの推定（要ゲーム内確認）。
 import { describe, expect, it } from 'vitest'
@@ -45,7 +45,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('夜の約束 0x14038〜 §9.11', () => {
+describe('夜の約束 0x14038〜 chunks/night-visit', () => {
   it('かえでの約束を読む', () => {
     const { promise, promiseProblem } = readYobai(makeSave())
     expect(promiseProblem).toBeNull()
@@ -134,7 +134,7 @@ describe('夜の約束 0x14038〜 §9.11', () => {
   })
 })
 
-describe('🔶 夜這いの記録 0x137F0〜（16 B × 100件、件数 0x137EC）§9.11', () => {
+describe('🔶 夜這いの記録 0x137F0〜（16 B × 100件、件数 0x137EC）chunks/night-visit', () => {
   it('件数ぶんの記録を読む', () => {
     const view = readYobai(makeSave())
     expect(view.recordsProblem).toBeNull()
