@@ -105,28 +105,80 @@ export const PLACES: readonly string[] = [
 ];
 
 /**
- * 正しいと分かっている（場所、配置）の組。[U] 2026-10-06 に約束の実データから集めた。
- * 通常モードではこの組だけを書ける（配置が合わないと布団が宙に浮いたり壁にめり込んだりする）
+ * 🟢 約束で使われる（場所、配置）の組（候補75行の重なりを除いて72組。datatable/place/night-visit-place.csv の layout 列）。
+ * 町の人の約束と特別な相手（さよ・先生・ローラ・メリンダ・三姉妹など）の約束の組
  */
-export const PLACE_LAYOUTS: readonly { place: number; layout: number; note?: string }[] = [
+const GREEN_PLACE_LAYOUTS: readonly (readonly [number, readonly number[]])[] = [
+  [0x00, [0x03]],
+  [0x01, [0x07, 0x09, 0x26]],
+  [0x02, [0x0a, 0x29, 0x38]],
+  [0x03, [0x11, 0x13, 0x30]],
+  [0x04, [0x0c, 0x0d]],
+  [0x05, [0x0d, 0x36]],
+  [0x06, [0x0e, 0x10, 0x2d]],
+  [0x07, [0x12, 0x31]],
+  [0x08, [0x33, 0x3c]],
+  [0x09, [0x21]],
+  [0x0a, [0x05, 0x24, 0x32]],
+  [0x0b, [0x04, 0x22]],
+  [0x0c, [0x06]],
+  [0x0d, [0x03]],
+  [0x0e, [0x06, 0x23, 0x3b]],
+  [0x0f, [0x04]],
+  [0x10, [0x11, 0x13, 0x3d]],
+  [0x11, [0x0a, 0x0b, 0x20, 0x35]],
+  [0x12, [0x2a]],
+  [0x13, [0x0f, 0x2e]],
+  [0x14, [0x0e, 0x10]],
+  [0x15, [0x0b, 0x28, 0x37]],
+  [0x16, [0x2b, 0x39]],
+  [0x17, [0x12, 0x2f]],
+  [0x18, [0x08, 0x25, 0x27]],
+  [0x19, [0x0f, 0x2c]],
+  [0x1a, [0x0c]],
+  [0x1b, [0x1f]],
+  [0x1c, [0x3a]],
+  [0x1d, [0x19, 0x1a, 0x1b, 0x1c]],
+  [0x1e, [0x17, 0x18]],
+  [0x1f, [0x14, 0x15, 0x16]],
+  [0x20, [0x1e]],
+  [0x21, [0x34]],
+  [0x22, [0x1d]],
+];
+
+/** ✅ [U] 約束の実データで見た組の注記。1D＋01 だけは 🟢 の組にない */
+const SEEN_PLACE_LAYOUTS: readonly { place: number; layout: number; note?: string }[] = [
   { place: 0x00, layout: 0x03 },
   { place: 0x09, layout: 0x21 },
   { place: 0x0a, layout: 0x05 },
   { place: 0x0b, layout: 0x22 },
-  { place: 0x0c, layout: 0x06 },
+  { place: 0x0c, layout: 0x06, note: "かえで・はるな" },
   { place: 0x0e, layout: 0x23 },
-  { place: 0x10, layout: 0x3d, note: "さよ（DLC）の実データ。ほかの人物での確認はしていない" },
-  { place: 0x11, layout: 0x20, note: "先生の実データ（[U] 2026-10-07 sample/S4-DATA_02）。ほかの人物での確認はしていない" },
+  { place: 0x10, layout: 0x3d, note: "さよ" },
+  { place: 0x11, layout: 0x20, note: "先生" },
   { place: 0x18, layout: 0x25 },
+  { place: 0x1c, layout: 0x3a, note: "ローラ" },
   { place: 0x1d, layout: 0x01 },
-  // [U] 2026-10-07 sample/S4-DATA_01（メリンダ）・01 copy（百合）・01 copy 2（万由）・01 copy 3（千佳）の実データ
-  { place: 0x1d, layout: 0x19, note: "万由の実データ" },
-  { place: 0x1d, layout: 0x1a, note: "千佳の実データ" },
-  { place: 0x1d, layout: 0x1b, note: "百合の実データ" },
-  { place: 0x20, layout: 0x1e, note: "メリンダの実データ" },
-  // [U] 2026-10-07 sample/S4-DATA_02 copy（ローラと約束）
-  { place: 0x1c, layout: 0x3a, note: "ローラの実データ" },
+  { place: 0x1d, layout: 0x19, note: "万由" },
+  { place: 0x1d, layout: 0x1a, note: "千佳" },
+  { place: 0x1d, layout: 0x1b, note: "百合" },
+  { place: 0x20, layout: 0x1e, note: "メリンダ" },
 ];
+
+/**
+ * 正しい（場所、配置）の組。🟢 の72組と、実データで見た 1D＋01。場所・配置の順。
+ * 通常モードではこの組だけを書ける（配置が合わないと布団が宙に浮いたり壁にめり込んだりする）。
+ * seen は実データで見た組、note はそのときの相手
+ */
+export const PLACE_LAYOUTS: readonly { place: number; layout: number; seen: boolean; note?: string }[] = [
+  ...GREEN_PLACE_LAYOUTS.flatMap(([place, layouts]) => layouts.map((layout) => ({ place, layout }))),
+  ...SEEN_PLACE_LAYOUTS.filter((s) => !GREEN_PLACE_LAYOUTS.some(([p, ls]) => p === s.place && ls.includes(s.layout))),
+]
+  .map(({ place, layout }) => {
+    const seen = SEEN_PLACE_LAYOUTS.find((s) => s.place === place && s.layout === layout);
+    return { place, layout, seen: seen !== undefined, note: seen?.note };
+  })
+  .sort((a, b) => a.place - b.place || a.layout - b.layout);
 
 export type KnownValue = { value: number; label: string };
 

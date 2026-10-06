@@ -146,6 +146,16 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
     expect(pairs).toContainEqual([0x11, 0x20]) // 先生・提灯の掛かった家
   })
 
+  it('🟢 場所と配置の組は72組（候補75行の重なりを除く）＋実データの 1D＋01。実データで見た組は seen', () => {
+    expect(PLACE_LAYOUTS).toHaveLength(73)
+    expect(new Set(PLACE_LAYOUTS.map((p) => `${p.place}:${p.layout}`)).size).toBe(73)
+    expect(PLACE_LAYOUTS.filter((p) => p.seen)).toHaveLength(15)
+    expect(PLACE_LAYOUTS.find((p) => p.place === 0x1d && p.layout === 0x01)?.seen).toBe(true)
+    expect(PLACE_LAYOUTS.find((p) => p.place === 0x1b)).toMatchObject({ layout: 0x1f, seen: false }) // 鍛冶屋
+    expect(PLACE_LAYOUTS.some((p) => p.place === 0x0c && p.layout === 0x07)).toBe(false) // ✅ [U] 布団がおかしくなった組
+    expect(PLACE_LAYOUTS.every((p) => p.place <= 0x22)).toBe(true)
+  })
+
   it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeSave({ size: TS_SAVE_SIZE + 4 })
     const view = readYobai(b)

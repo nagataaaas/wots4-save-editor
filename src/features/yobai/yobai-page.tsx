@@ -68,9 +68,12 @@ function parseNumber(input: string, validate: (v: number) => string | null): Par
 
 const placeLabel = (place: number) => PLACES[place] ?? "名前なし";
 
+/** 地区（「港」「町」など、場所の名前の最初の語）ごとにまとめる。実データで見た組は相手の名前を添える */
 const placeLayoutOptions: SelectOption[] = PLACE_LAYOUTS.map((p) => ({
   value: `${p.place}:${p.layout}`,
-  label: `${formatHex2(p.place)} ${placeLabel(p.place)}（配置 ${formatHex2(p.layout)}）`,
+  label: `${formatHex2(p.place)} ${placeLabel(p.place)}（配置 ${formatHex2(p.layout)}${p.note ? `・${p.note}` : ""}）`,
+  group: placeLabel(p.place).split("　")[0],
+  keywords: [placeLabel(p.place), formatHex2(p.place), formatHex2(p.layout), ...(p.note ? [p.note] : [])],
 }));
 
 const placeOptions: SelectOption[] = PLACES.map((name, i) => ({ value: String(i), label: `${formatHex2(i)} ${name}` }));
@@ -273,7 +276,7 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
 
   return (
     <div className="flex flex-col gap-2 sm:col-span-2">
-      <SelectRow
+      <SearchSelectRow
         label="場所と配置"
         offset={offset}
         value={pairValue}
@@ -281,8 +284,9 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
         options={placeLayoutOptions}
         problem={problem}
         warning={known ? null : "確認済みの組ではありません。布団の位置がおかしくなることがあります"}
-        hint="確認済みの組だけを選べます"
-        note="+0x08 は夜這いに入る扉と、その先のマップ。+0x0A はその先での人と布団の配置。場所だけを変えると、布団が宙に浮いたり壁にめり込んだりした（確認済み）。組は約束の実データから集めたもの"
+        hint="正しい組だけを選べます"
+        searchPlaceholder="場所・配置・相手の名前で検索"
+        note="+0x08 は夜這いに入る扉と、その先のマップ。+0x0A はその先での人と布団の配置。場所だけを変えると、布団が宙に浮いたり壁にめり込んだりした（確認済み）。組は約束で使われる73組（相手の名前があるものは実データで見た組）"
         onChange={(v) => {
           const [place, layout] = v.split(":").map(Number);
           update((b) => writePromisePlace(b, place, layout, { advanced }));
