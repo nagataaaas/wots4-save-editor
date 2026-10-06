@@ -39,6 +39,8 @@ import {
   type CharactersView,
 } from "@/save/characters";
 import {
+  SMITH_STATES,
+  SMITH_STATE_OFFSET,
   TOWNSFOLK_LENGTH,
   TOWNSFOLK_NOTES,
   TOWNSFOLK_START,
@@ -470,27 +472,59 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
 
 const TOWNSFOLK_ROW = 16;
 
-/** 1バイト分の入力欄。町の人の状態（0x0100〜0x04BF）用 */
-function TownsfolkField({ offset, view }: { offset: number; view: TownsfolkView | null }) {
+const smithOptions: SelectOption[] = SMITH_STATES.map((s) => ({
+  value: String(s.value),
+  label: `${s.value} ${s.label}`,
+  group: s.group,
+}));
+
+/**
+ * 1バイト分の入力欄。町の人の状態（0x0100〜0x04BF）用。
+ * 鍛冶屋の状態（0x0127）は値の表から選ぶ。raw なら 0x0127 も数値で入力する（表にない値を上級者モードで書くため）
+ */
+function TownsfolkField({
+  offset,
+  view,
+  raw = false,
+}: {
+  offset: number;
+  view: TownsfolkView | null;
+  raw?: boolean;
+}) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const info = TOWNSFOLK_NOTES[offset];
   const hex = formatOffset(offset);
   const current = view?.values[offset - TOWNSFOLK_START] ?? null;
+  const label = info?.name ? `${hex}（${info.name}）` : hex;
+
+  if (offset === SMITH_STATE_OFFSET && !raw)
+    return (
+      <SelectRow
+        label={label}
+        offset={offset}
+        value={current === null ? null : String(current)}
+        currentLabel={current === null ? undefined : `${current} 不明`}
+        options={smithOptions}
+        problem={view?.problem ?? null}
+        note={info?.note}
+        onChange={(v) => update((b) => writeTownsfolk(b, offset, Number(v), { advanced }))}
+      />
+    );
 
   return (
     <FieldRow
-      label={info?.name ? `${hex}（${info.name}）` : hex}
+      label={label}
       offset={offset}
       value={current}
       problem={view?.problem ?? null}
       format={String}
       parse={(input) =>
-        parseInteger(input, (v) => validateTownsfolk(v, current ?? 0, { advanced }))
+        parseInteger(input, (v) => validateTownsfolk(offset, v, current ?? 0, { advanced }))
       }
       apply={(v) => update((b) => writeTownsfolk(b, offset, v, { advanced }))}
       inputMode="numeric"
-      hint={advanced ? "0〜255" : "0・1"}
+      hint={advanced ? "0〜255" : offset === SMITH_STATE_OFFSET ? "表の値" : "0・1"}
       note={info?.note}
     />
   );
@@ -515,9 +549,9 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
           <CertaintyBadge mark="🔶" text="並び方と書き換えの効果は未確認" />
         </CardTitle>
         <CardDescription>
-          0x0100〜0x04BF の960バイトです。ほとんど 0 で、町の人（店主など）ごとの状態の表と推定しています。
-          寿司屋の店主（0x02C4）と鍛冶屋のおやじ（0x0444）は、殺すと 0 → 1 になりました。鍛冶屋で踏み倒すと 0x0127 が 0 → 110 になりました。
-          書き換えがゲームに効くかは確かめていません（要ゲーム内確認）。
+          0x0100〜0x04BF の960バイトです。ほとんど 0 で、町の人（店主など）ごとの状態やイベントの進み具合の表と推定しています。
+          鍛冶屋の後継者イベント・鍛冶屋の状態（0x0127）と堂島の死亡（0x0264）は、書き換えで確認済みです。
+          寿司屋の店主（0x02C4）と鍛冶屋のおやじ（0x0444）は、殺すと 0 → 1 になりました（書き換えの効果は未確認）。
           下の表のマスを押すと、そのバイトを書き換えられます。0 以外のマスは色を付け、説明のあるマスには下線を引いています。
         </CardDescription>
       </CardHeader>
@@ -526,8 +560,8 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
           {named.map((offset) => (
             <TownsfolkField key={offset} offset={offset} view={view} />
           ))}
-          {selected !== null && !named.includes(selected) && (
-            <TownsfolkField key={selected} offset={selected} view={view} />
+          {selected !== null && (!named.includes(selected) || selected === SMITH_STATE_OFFSET) && (
+            <TownsfolkField key={`raw-${selected}`} offset={selected} view={view} raw />
           )}
         </div>
         <div className="overflow-x-auto">

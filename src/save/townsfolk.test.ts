@@ -1,10 +1,13 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は解析ノート §9.6（[U] 2026-10-06）で見たもの。
-// 🔶 0x02C4＝寿司屋の店主、0x0444＝鍛冶屋のおやじ（どちらも 1＝死亡、差分1回）。❓ 0x0127 は踏み倒しで 0x6E。要ゲーム内確認。
+// 🔶 0x02C4＝寿司屋の店主、0x0444＝鍛冶屋のおやじ（どちらも 1＝死亡、差分1回）。要ゲーム内確認。
+// ✅ [U] 2026-10-06：0x0127＝鍛冶屋の後継者イベント・鍛冶屋の状態（値の表は書き換えで確認）、0x0264＝堂島の死亡。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import {
+  SMITH_STATES,
+  SMITH_STATE_OFFSET,
   TOWNSFOLK_END,
   TOWNSFOLK_LENGTH,
   TOWNSFOLK_NOTES,
@@ -45,8 +48,24 @@ describe('🔶 町の人の状態の候補 0x0100〜0x04BF §9.6', () => {
   it('🔶 0x02C4 は寿司屋の店主、0x0444 は鍛冶屋のおやじと推定している', () => {
     expect(TOWNSFOLK_NOTES[0x02c4].name).toBe('寿司屋の店主？')
     expect(TOWNSFOLK_NOTES[0x0444].name).toBe('鍛冶屋のおやじ？')
-    // ❓ 踏み倒しで 0 → 0x6E。意味は不明だが、入力欄を最初から出す
-    expect(TOWNSFOLK_NOTES[0x0127].name).toBe('鍛冶屋の踏み倒し？')
+    expect(TOWNSFOLK_NOTES[0x0264].name).toBe('堂島')
+  })
+
+  it('✅ [U] 0x0127 は鍛冶屋の後継者イベント・鍛冶屋の状態。踏み倒しの差分で見た 110 も表にある', () => {
+    expect(SMITH_STATE_OFFSET).toBe(0x0127)
+    expect(SMITH_STATES.map((s) => s.value)).toEqual([0, 10, 20, 30, 40, 50, 60, 61, 69, 70, 81, 110, 119, 120])
+    expect(SMITH_STATES.find((s) => s.value === 0x6e)?.label).toBe('鍛冶屋のおやじから踏み倒した')
+  })
+
+  it('通常モードでは、0x0127 に表の値を書ける。表にない値は上級者モードだけ', () => {
+    const b = makeSave()
+    writeTownsfolk(b, 0x0127, 81, { advanced: false })
+    expect(b[0x0127]).toBe(81)
+    expect(() => writeTownsfolk(b, 0x0127, 1, { advanced: false })).toThrow(RangeError)
+    // 0x0127 以外では表の値は使えない
+    expect(() => writeTownsfolk(b, 0x0264, 81, { advanced: false })).toThrow(RangeError)
+    writeTownsfolk(b, 0x0127, 1, { advanced: true })
+    expect(b[0x0127]).toBe(1)
   })
 
   it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
@@ -71,11 +90,11 @@ describe('🔶 町の人の状態の候補 0x0100〜0x04BF §9.6', () => {
   })
 
   it('通常モードは 0・1 と今の値の書き戻しだけ。上級者モードでは任意の u8', () => {
-    expect(validateTownsfolk(1, 0, { advanced: false })).toBeNull()
-    expect(validateTownsfolk(2, 0, { advanced: false })).not.toBeNull()
-    expect(validateTownsfolk(0x6e, 0x6e, { advanced: false })).toBeNull()
-    expect(validateTownsfolk(255, 0, { advanced: true })).toBeNull()
-    expect(validateTownsfolk(256, 0, { advanced: true })).not.toBeNull()
+    expect(validateTownsfolk(0x02c4, 1, 0, { advanced: false })).toBeNull()
+    expect(validateTownsfolk(0x02c4, 2, 0, { advanced: false })).not.toBeNull()
+    expect(validateTownsfolk(0x02c4, 0x6e, 0x6e, { advanced: false })).toBeNull()
+    expect(validateTownsfolk(0x02c4, 255, 0, { advanced: true })).toBeNull()
+    expect(validateTownsfolk(0x02c4, 256, 0, { advanced: true })).not.toBeNull()
   })
 
   it('読み出し→書き戻しでバイト列が一致する', () => {
