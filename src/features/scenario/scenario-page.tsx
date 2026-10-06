@@ -15,7 +15,13 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { WORLD_FLAGS, readWorldFlags, writeWorldFlag, type WorldFlagsView } from "@/save/world-flags";
+import {
+  WORLD_FLAGS,
+  readWorldFlags,
+  writeWorldFlag,
+  type WorldFlagMeaning,
+  type WorldFlagsView,
+} from "@/save/world-flags";
 import { formatHex2 } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
@@ -219,10 +225,20 @@ function DateCard({ view }: { view: DateView | null }) {
   );
 }
 
-const flagOptions: SelectOption[] = [
-  { value: "0", label: "0 開いている" },
-  { value: "1", label: "1 閉じている" },
-];
+const flagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
+  close: [
+    { value: "0", label: "0 開いている" },
+    { value: "1", label: "1 閉じている" },
+  ],
+  open: [
+    { value: "0", label: "0 閉じている（🔶）" },
+    { value: "1", label: "1 開いている（🔶）" },
+  ],
+  unknown: [
+    { value: "0", label: "0（❓）" },
+    { value: "1", label: "1（❓）" },
+  ],
+};
 
 /** 門・柵のフラグ。view が null ならセーブ未読み込み */
 function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
@@ -236,6 +252,8 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
         <CardDescription>
           ルート分岐を書き換えても、門が閉じたままだとそのルートに進めません。
           代官所（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、1 → 0 の書き換えで開くことを確認済みです。
+          この3つは大寄せのときに書かれ、それより前の門には関係しません。
+          大寄せ前の門（0x377D・0x377E）と神社の候補（0x377C・0x377F）は差分からの推定で、要ゲーム内確認です。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
@@ -246,7 +264,7 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
             offset={flag.offset}
             value={view ? String(view.values[i]) : null}
             currentLabel={view ? `${view.values[i]} 不明` : undefined}
-            options={flagOptions}
+            options={flagOptions[flag.meaning]}
             problem={view?.problem ?? null}
             note={flag.note}
             onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
