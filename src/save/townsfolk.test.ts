@@ -45,6 +45,8 @@ describe('🔶 町の人の状態の候補 0x0100〜0x04BF §9.6', () => {
   it('🔶 0x02C4 は寿司屋の店主、0x0444 は鍛冶屋のおやじと推定している', () => {
     expect(TOWNSFOLK_NOTES[0x02c4].name).toBe('寿司屋の店主？')
     expect(TOWNSFOLK_NOTES[0x0444].name).toBe('鍛冶屋のおやじ？')
+    // ❓ 踏み倒しで 0 → 0x6E。意味は不明だが、入力欄を最初から出す
+    expect(TOWNSFOLK_NOTES[0x0127].name).toBe('鍛冶屋の踏み倒し？')
   })
 
   it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {

@@ -23,7 +23,10 @@ export const TOWNSFOLK_NORMAL_MAX = 1;
 
 /** 差分で何か分かっているバイトの説明 */
 export const TOWNSFOLK_NOTES: Readonly<Record<number, { name?: string; note: string }>> = {
-  0x0127: { note: "❓ 鍛冶屋のおやじから踏み倒すと 0 → 110（0x6E）。別の周回では 1" },
+  0x0127: {
+    name: "鍛冶屋の踏み倒し？",
+    note: "❓ 鍛冶屋のおやじから踏み倒すと 0 → 110（0x6E）。別の周回では 1。踏み倒しの回数は 0x0B58（u32、この範囲の外）も +1 になった",
+  },
   0x012c: { note: "❓ 多くのセーブで 1" },
   0x0133: { note: "❓ 海兵隊の横暴（居酒屋）で成否によらず 0 → 1" },
   0x02c4: { name: "寿司屋の店主？", note: "🔶 殺すと 0 → 1（1回だけ確認）。書き換えの効果は未確認" },
