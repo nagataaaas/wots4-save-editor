@@ -29,6 +29,16 @@ import {
   type FacilityFlagsView,
 } from "@/save/facility-flags";
 import {
+  ROUTE_CANDIDATE_LENGTH,
+  ROUTE_CANDIDATE_NORMAL_MAX,
+  ROUTE_CANDIDATE_NOTES,
+  ROUTE_CANDIDATE_START,
+  readRouteCandidates,
+  validateRouteCandidate,
+  writeRouteCandidate,
+  type RouteCandidatesView,
+} from "@/save/route-candidates";
+import {
   HINT_NORMAL_MAX,
   HINT_OFFSET,
   readHint,
@@ -98,6 +108,7 @@ type Views = {
   route: RouteJudgeView;
   flags: WorldFlagsView;
   facilities: FacilityFlagsView;
+  routeCandidates: RouteCandidatesView;
   hint: HintView;
 };
 
@@ -123,6 +134,7 @@ export function ScenarioPage() {
           route: readRouteJudge(b),
           flags: readWorldFlags(b),
           facilities: readFacilityFlags(b),
+          routeCandidates: readRouteCandidates(b),
           hint: readHint(b),
         },
       };
@@ -178,6 +190,7 @@ export function ScenarioPage() {
       />
       <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
       <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
+      <RouteCandidatesCard key={`${k}-route-candidates`} view={views?.routeCandidates ?? null} />
       <HintCard key={`${k}-hint`} view={views?.hint ?? null} />
       <EventsCard key={`${k}-events`} view={views?.events ?? null} />
     </div>
@@ -374,7 +387,48 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
   );
 }
 
-const hostileOptions: SelectOption[] =HOSTILE_VALUES.map((v) => ({
+/** 🔶 隠しルートの候補を含む 0x378D〜0x37AA の生の値。view が null ならセーブ未読み込み */
+function RouteCandidatesCard({ view }: { view: RouteCandidatesView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const offsets = Array.from({ length: ROUTE_CANDIDATE_LENGTH }, (_, i) => ROUTE_CANDIDATE_START + i);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          隠しルートの候補（生の値）
+          <CertaintyBadge mark="🔶" text="意味は未確認" />
+        </CardTitle>
+        <CardDescription>
+          隠しルートに入った直後のセーブだけが、0x378D（02。ほかはすべて 01）・0x378E（1）・0x379F（1）・0x37AA（02）でほかと違いました。
+          0x378D は剣術大会以後のルート分岐（0x3789〜0x378C）のすぐ後ろにあり、ルートの種類かもしれません。
+          0x378D〜0x37AA の30バイトを生の値で書き換えられます。どれもゲームへの影響は未確認です（要ゲーム内確認）。
+          {view?.warning && ` ${view.warning}`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        {offsets.map((offset, i) => (
+          <FieldRow
+            key={offset}
+            label={`0x${offset.toString(16).toUpperCase()}`}
+            offset={offset}
+            value={view?.values[i] ?? null}
+            problem={view?.problem ?? null}
+            format={String}
+            parse={(input) => parseInteger(input, (v) => validateRouteCandidate(v, { advanced }))}
+            apply={(v) => update((b) => writeRouteCandidate(b, offset, v, { advanced }))}
+            inputMode="numeric"
+            hint={advanced ? "0〜255" : `0〜${ROUTE_CANDIDATE_NORMAL_MAX}`}
+            note={ROUTE_CANDIDATE_NOTES[offset]}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+const hostileOptions: SelectOption[] = HOSTILE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${v.value} ${v.label}`,
 }));
