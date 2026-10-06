@@ -87,6 +87,7 @@ import {
 import {
   EVENT_NAMES,
   EVENT_RECORDS,
+  EVENT_RECORDS_SEEN,
   EVENT_RECORD_OFFSET,
   EVENT_STATES,
   EVENT_STATE_OFFSET,
@@ -614,10 +615,21 @@ function stateOptions(advanced: boolean): SelectOption[] {
   return options;
 }
 
-const recordOptions: SelectOption[] = EVENT_RECORDS.map((r) => ({
-  value: String(r.value),
-  label: `${formatHex2(r.value)} ${r.label}`,
-}));
+function recordOptions(advanced: boolean): SelectOption[] {
+  const options: SelectOption[] = EVENT_RECORDS.map((r) => ({
+    value: String(r.value),
+    label: `${formatHex2(r.value)} ${r.label}`,
+  }));
+  // 上級者モードでは、記録で見たがチャート表示への効き方を確かめていない値（05 など）も選べるようにする
+  if (advanced)
+    for (const r of EVENT_RECORDS_SEEN)
+      options.push({
+        value: String(r.value),
+        label: `${formatHex2(r.value)} ${r.label}`,
+        group: "未確認の値",
+      });
+  return options;
+}
 
 /** イベントの状態。view が null ならセーブ未読み込み */
 function EventsCard({ view }: { view: EventsView | null }) {
@@ -736,7 +748,7 @@ function BulkEventsPanel({
           <BulkSelect
             label="チャート表示"
             value={record}
-            options={recordOptions}
+            options={recordOptions(advanced)}
             disabled={locked}
             onChange={setRecord}
           />
@@ -836,7 +848,7 @@ function EventBox({
           offset={EVENT_RECORD_OFFSET + index}
           value={entry ? String(entry.record) : null}
           currentLabel={entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined}
-          options={recordOptions}
+          options={recordOptions(advanced)}
           problem={problem}
           note="周回をまたぐ記録（生きた証）。FF で名前が隠れ、04 で名前が出る。FF でも状態が成功（04）なら出ます。枠が出るかどうかはこの値では決まりません。ほかの周回にも引き継がれる可能性があります"
           onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}

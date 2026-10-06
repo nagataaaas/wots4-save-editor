@@ -189,9 +189,24 @@ export function stateLabel(value: number): string {
   return EVENT_STATES.find((s) => s.value === value)?.label ?? '不明'
 }
 
+/**
+ * 記録（B）で見たが、チャート表示への効き方を確かめていない値。上級者モードでだけ選べる。
+ *   05 🔶 02 copy（過去の周回で隠しルートを記録した主人公）の再起の望み（添字72）。チャートに失敗が出ていた（[U] 2026-10-06）
+ *   03 ❓ 00 の志士との出会い（添字6）
+ *   00 ❓ 名無し侍の添字 13・21・24・48
+ */
+export const EVENT_RECORDS_SEEN = [
+  { value: 0x05, label: '失敗？（未確認）' },
+  { value: 0x03, label: '不明（03）' },
+  { value: 0x00, label: '不明（名無し侍の一部で見た値）' },
+] as const
+
 export function recordLabel(value: number): string {
-  if (value === 0x00) return '不明（名無し侍の一部で見た値）'
-  return EVENT_RECORDS.find((s) => s.value === value)?.label ?? '不明'
+  return (
+    EVENT_RECORDS.find((s) => s.value === value)?.label ??
+    EVENT_RECORDS_SEEN.find((s) => s.value === value)?.label ??
+    '不明'
+  )
 }
 
 export function readEvents(bytes: Uint8Array): EventsView {
