@@ -22,6 +22,14 @@ import {
   type WorldFlagMeaning,
   type WorldFlagsView,
 } from "@/save/world-flags";
+import {
+  HINT_NORMAL_MAX,
+  HINT_OFFSET,
+  readHint,
+  validateHint,
+  writeHint,
+  type HintView,
+} from "@/save/hint";
 import { formatHex2 } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
@@ -83,6 +91,7 @@ type Views = {
   factions: FactionsView;
   route: RouteJudgeView;
   flags: WorldFlagsView;
+  hint: HintView;
 };
 
 function parseInteger(input: string, validate: (v: number) => string | null): ParseResult<number> {
@@ -106,6 +115,7 @@ export function ScenarioPage() {
           factions: readFactions(b),
           route: readRouteJudge(b),
           flags: readWorldFlags(b),
+          hint: readHint(b),
         },
       };
     } catch (e) {
@@ -159,6 +169,7 @@ export function ScenarioPage() {
         route={views?.route ?? null}
       />
       <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
+      <HintCard key={`${k}-hint`} view={views?.hint ?? null} />
       <EventsCard key={`${k}-events`} view={views?.events ?? null} />
     </div>
   );
@@ -219,6 +230,55 @@ function DateCard({ view }: { view: DateView | null }) {
           problem={problem}
           note="イベントを完了すると 10 が入り、エリア移動やロードのときに 0x0010 に足されて 0 に戻ると推定しています"
           onChange={(v) => update((b) => writePending(b, Number(v)))}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+/** 10進数か 0x 付きの16進数 */
+function parseHint(input: string, advanced: boolean): ParseResult<number> {
+  const s = input.trim();
+  let value: number;
+  if (/^0x[0-9a-f]+$/i.test(s)) value = Number.parseInt(s.slice(2), 16);
+  else if (/^\d+$/.test(s)) value = Number(s);
+  else return { ok: false, error: "整数（10進数、または 0x 付きの16進数）を入力してください" };
+  const error = validateHint(value, { advanced });
+  return error ? { ok: false, error } : { ok: true, value };
+}
+
+/** 次のイベントのヒント（0x3900）。view が null ならセーブ未読み込み */
+function HintCard({ view }: { view: HintView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          次のイベントのヒント
+          <CertaintyBadge mark="🔶" text="差分からの推定。要ゲーム内確認" />
+        </CardTitle>
+        <CardDescription>
+          0x3900（u16）がヒントの番号と推定しています。書き換えでヒントが変わるかは要ゲーム内確認です。
+          ヒントが琴吹光探検隊のとき 3、阿片密売を阻止せよのとき 6、西洋医学お断りのとき 9 でした（値＋4＝イベントの添字）。
+          ただし前の差分では、阿弥浜港争乱の直後が 83、嵐の後のあとが 89 など、この関係に合わない値も見ています。
+          {view && ` 生の値：${view.value}（0x${view.value.toString(16).toUpperCase().padStart(4, "0")}）`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3">
+        <FieldRow
+          label="ヒントの番号"
+          offset={HINT_OFFSET}
+          value={view?.value ?? null}
+          problem={view?.problem ?? null}
+          warning={view?.warning}
+          format={String}
+          parse={(input) => parseHint(input, advanced)}
+          apply={(v) => update((b) => writeHint(b, v, { advanced }))}
+          inputMode="text"
+          hint={advanced ? "0〜65535（0x 付きの16進数も可）" : `0〜${HINT_NORMAL_MAX} か 65535（0xFFFF）`}
+          note="🔶 実セーブで見た値：2・3・5・6・8・9・10・78・83・86・88・89、65535（0xFFFF。寝て5日目にしたセーブ。ヒントなしか）"
         />
       </CardContent>
     </Card>
