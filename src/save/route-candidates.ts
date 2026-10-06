@@ -18,7 +18,11 @@
 //   00 は A 添字70＝04 なのに B 添字70＝FF。記録 B は周回中には書かれない（🔶 周回の終わりか生きた証の保存で書かれる）。
 //
 //   書き換えた周回では、チャートに隠しルートの枠そのものが出なかった（[U] 2026-10-06。B の FF は「枠は出るが名前が隠れる」で別物）。
-//   0x379F＝1、さらに 0x378D＝02 を足しても枠は出なかった（[U] 2026-10-06）。枠を決めるものは ❓
+//   0x379F＝1、さらに 0x378D＝02 を足しても枠は出なかった（[U] 2026-10-06）。
+//   ただし、新しい主人公の2周目に正規で隠しルートへ入った 01 copy 10〜12 でも、失敗した再起の望みやその先の枠は出なかった。
+//   同じ周回の 01 copy 10（隠しルートに入った直後）と 01 copy 13（入らずに阿弥浜港争乱を終えた）の差は、
+//   0x377F・0x378D・0x378E・0x379F・A 添字70・戦闘の記録・時間だけで、ほかに隠しルートで書かれるものはなかった。
+//   🔶 枠が出ないのは書き換えのせいではなく、過去の周回で隠しルートを記録していない（B が FF）ときのゲームの振る舞いと考えられる
 //   0x378D  ❓ 正規の隠しルートの4件（00・02・02 copy・01 copy 8）＝02、ほかはすべて 01。ルートの切り替えにも枠にも効かなかった
 //   0x3793  ❓ 海兵隊の横暴に成功したときだけ 0 → 1（2回再現。§3.5）
 //   0x3799  ❓ 03 だけ 1。ルートの切り替えには効かなかった
@@ -40,10 +44,17 @@ export const HIDDEN_ROUTE_OFFSET = 0x378e;
 /** 三姉妹見参のイベント添字 */
 export const HIDDEN_ROUTE_EVENT_INDEX = 70;
 
+/**
+ * 0・1 は書き換えで確認（✅ [U] 2026-10-06）。
+ * 2 は 01 copy 12（正規の1周目の隠しルートで、赤城が死んだあと怒りの矛先を終えた）で 1 → 2 になった値（🔶 差分1回、意味は ❓。
+ * 怒りの矛先のあとは大老暗殺計画へ飛ぶ（docs/event.md）ので、希望の光に進めない隠しルートか）
+ */
 export const HIDDEN_ROUTE_VALUES: readonly { value: number; label: string }[] = [
   { value: 0, label: "通常ルート" },
   { value: 1, label: "隠しルート" },
+  { value: 2, label: "隠しルート・怒りの矛先のあと（未確認）" },
 ];
+const HIDDEN_ROUTE_MAX = 2;
 
 /** 通常モードで書ける上限。実セーブで見た値は 0〜2 */
 export const ROUTE_CANDIDATE_NORMAL_MAX = 2;
@@ -87,7 +98,8 @@ export function readRouteCandidates(bytes: Uint8Array): RouteCandidatesView {
   const hidden = readU8(bytes, HIDDEN_ROUTE_OFFSET);
   const layoutProblem = checkLayout(bytes);
   const hiddenProblem =
-    layoutProblem ?? (hidden > 1 ? `隠しルートのフラグが 0・1 以外です（${hidden}）` : null);
+    layoutProblem ??
+    (hidden > HIDDEN_ROUTE_MAX ? `隠しルートのフラグが 0〜${HIDDEN_ROUTE_MAX} 以外です（${hidden}）` : null);
   return { values, hidden, hiddenProblem, warning, problem: layoutProblem };
 }
 
@@ -115,11 +127,12 @@ export function writeRouteCandidate(
   writeU8(bytes, offset, value);
 }
 
-/** 0x378E の1バイトだけを書く。通常モードでは 0・1 だけ、上級者モードでは任意の u8 */
+/** 0x378E の1バイトだけを書く。通常モードでは 0〜2 だけ、上級者モードでは任意の u8 */
 export function writeHiddenRoute(bytes: Uint8Array, value: number, opts: { advanced: boolean }): void {
   const view = readRouteCandidates(bytes);
   if (view.hiddenProblem) throw new RangeError(view.hiddenProblem);
   if (!Number.isInteger(value) || value < 0 || value > 0xff) throw new RangeError(`u8 の範囲外です: ${value}`);
-  if (!opts.advanced && value > 1) throw new RangeError(`0 か 1 を指定してください: ${value}`);
+  if (!opts.advanced && value > HIDDEN_ROUTE_MAX)
+    throw new RangeError(`0〜${HIDDEN_ROUTE_MAX} を指定してください: ${value}`);
   writeU8(bytes, HIDDEN_ROUTE_OFFSET, value);
 }

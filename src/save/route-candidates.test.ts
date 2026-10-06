@@ -56,15 +56,23 @@ describe('隠しルート 0x378E と周りの生の値 0x378D〜0x37AA §9.5', (
     expect(RAW_ROUTE_OFFSETS).not.toContain(0x378e)
   })
 
-  it('隠しルートのフラグは 1バイトだけ書く。通常モードは 0・1 だけ', () => {
+  it('隠しルートのフラグは 1バイトだけ書く。通常モードは 0〜2 だけ', () => {
     const before = makeSave(HIDDEN)
     const after = before.slice()
     writeHiddenRoute(after, 0, { advanced: false })
     expect(diffOffsets(before, after)).toEqual([0x378e])
-    expect(() => writeHiddenRoute(after, 2, { advanced: false })).toThrow(RangeError)
-    writeHiddenRoute(after, 2, { advanced: true })
-    expect(after[0x378e]).toBe(2)
+    expect(() => writeHiddenRoute(after, 3, { advanced: false })).toThrow(RangeError)
+    writeHiddenRoute(after, 3, { advanced: true })
+    expect(after[0x378e]).toBe(3)
     expect(readRouteCandidates(after).hiddenProblem).not.toBeNull()
+  })
+
+  it('🔶 0x378E＝2（01 copy 12：怒りの矛先のあと。差分1回）も読み取り専用にしない', () => {
+    const values = HIDDEN.slice()
+    values[1] = 2
+    const view = readRouteCandidates(makeSave(values))
+    expect(view.hidden).toBe(2)
+    expect(view.hiddenProblem).toBeNull()
   })
 
   it('見たことのない値（3 以上）は警告だけ出す', () => {
