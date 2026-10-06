@@ -23,9 +23,9 @@ const COPY5: Record<number, number> = { 0x0127: 0x6e, 0x012c: 1, 0x0258: 1, 0x02
 function makeSave(size = TS_SAVE_SIZE): Uint8Array {
   const b = new Uint8Array(size)
   for (const [offset, value] of Object.entries(COPY5)) writeU8(b, Number(offset), value)
-  // 前後のバイト（0x00FF・0x04C0）も置き、書き込みで変わらないことを見る
+  // 前後のバイト（0x00FF・0x0600）も置き、書き込みで変わらないことを見る
   writeU8(b, 0x00ff, 7)
-  writeU8(b, 0x04c0, 7)
+  writeU8(b, 0x0600, 7)
   return b
 }
 
@@ -35,12 +35,12 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 町の人の状態の候補 0x0100〜0x04BF §9.6', () => {
-  it('0x0100〜0x04BF の960バイトを読む', () => {
-    expect(TOWNSFOLK_LENGTH).toBe(960)
+describe('🔶 町の人の状態の候補 0x0100〜0x05FF §9.6', () => {
+  it('🔶 0x0100〜0x05FF の1,280バイトを読む（終わりの位置は未確定）', () => {
+    expect(TOWNSFOLK_LENGTH).toBe(1280)
     const view = readTownsfolk(makeSave())
     expect(view.problem).toBeNull()
-    expect(view.values).toHaveLength(960)
+    expect(view.values).toHaveLength(1280)
     expect(view.values[0x02c4 - TOWNSFOLK_START]).toBe(1)
     expect(view.values[0x0127 - TOWNSFOLK_START]).toBe(0x6e)
   })
@@ -49,6 +49,14 @@ describe('🔶 町の人の状態の候補 0x0100〜0x04BF §9.6', () => {
     expect(TOWNSFOLK_NOTES[0x02c4].name).toBe('寿司屋の店主')
     expect(TOWNSFOLK_NOTES[0x0444].name).toBe('鍛冶屋のおやじ')
     expect(TOWNSFOLK_NOTES[0x0264].name).toBe('堂島')
+  })
+
+  it('🔶 0x0528 はさよ（DLC）の死亡フラグ（[U] 2026-10-06 の判断。差分1回、生き返りは未確認）。0／1 を書ける', () => {
+    expect(TOWNSFOLK_NOTES[0x0528].name).toBe('さよ（DLC）')
+    const b = makeSave()
+    writeTownsfolk(b, 0x0528, 1, { advanced: false })
+    expect(b[0x0528]).toBe(1)
+    expect(() => writeTownsfolk(b, 0x0528, 2, { advanced: false })).toThrow(RangeError)
   })
 
   it('✅ [U] 0x0132 は堂島が鍛冶屋を継いだフラグ（0／1 を表から選ぶ）', () => {
