@@ -62,9 +62,9 @@ export type EventName = {
  * 4日目以降のイベントの day は時間帯ではなく、docs/event.md の節（ルート・エンディング）を入れる。
  * 51・99・116 も [U] 2026-10-06。docs/event.md（Wiki）に載っているイベントは、これですべて対応がついた。
  *
- * 画面に出すのはここにある添字だけ（ユーザー判断 2026-10-06）。対応のない添字は、チャートに出ない内部用か未使用か分からないので表示しない。覚え書き：
- *   47〜50・67・84  ❓ 名前の付いた添字に挟まれていて、何かに使われていそうな欠番
- *   100〜165（116 以外）❓ sample の13件すべてで A・B とも FF（1周目の S4-DATA_04 を除く）。99・116 のようにイベントが見つかる可能性はある
+ * 画面のイベント一覧に出すのはここにある添字だけ（ユーザー判断 2026-10-06）。対応のない添字は、チャートに出ない内部用か未使用か分からない。覚え書き：
+ *   47〜50・67・84  ❓ 名前の付いた添字に挟まれていて、何かに使われていそうな欠番。フラグ確認用に画面の下にまとめて出す（EVENT_GAP_INDICES）
+ *   100〜165（116 以外）❓ sample の13件すべてで A・B とも FF（1周目の S4-DATA_04 を除く）。99・116 のようにイベントが見つかる可能性はある。表示しない
  */
 export const EVENT_NAMES: Readonly<Record<number, EventName>> = {
   0: { name: '船上の侍', day: '1日目昼', basis: 'guess' }, // どのセーブでも 04。名前は [U] 2026-10-05（Samurai on Board、オープニング）
@@ -245,6 +245,12 @@ export function writeEventRecord(bytes: Uint8Array, index: number, value: number
 }
 
 /** イベントと対応のついた添字（EVENT_NAMES のキー）。昇順 */
+/**
+ * ❓ 名前の付いた添字（0〜99）の間の欠番。イベントとの対応は分からない（2026-10-06 時点）。
+ * フラグ確認用に、イベント一覧とは別に画面の下へまとめて出す（ユーザー判断 2026-10-06）。一括設定の対象にはしない
+ */
+export const EVENT_GAP_INDICES: readonly number[] = [47, 48, 49, 50, 67, 84]
+
 export function namedIndices(): number[] {
   return Object.keys(EVENT_NAMES)
     .map(Number)

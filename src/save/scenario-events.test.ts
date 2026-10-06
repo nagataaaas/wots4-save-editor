@@ -7,6 +7,7 @@ import {
   EVENT_COUNT,
   EVENT_RECORD_OFFSET,
   EVENT_STATE_OFFSET,
+  EVENT_GAP_INDICES,
   namedIndices,
   readEvents,
   writeEventRecord,
@@ -153,6 +154,17 @@ describe('一括設定（デバッグ用）', () => {
     const named = [...Array.from({ length: 100 }, (_, i) => i).filter((i) => !unknown.includes(i)), 116]
     expect(namedIndices()).toEqual(named)
     expect(diffOffsets(before, after)).toEqual(named.map((i) => EVENT_STATE_OFFSET + i))
+  })
+
+  it('❓ 欠番（47〜50・67・84）は名前の付いた 0〜99 の残りで、一括設定の対象に入らない', () => {
+    const named = new Set(namedIndices())
+    const gaps = Array.from({ length: 100 }, (_, i) => i).filter((i) => !named.has(i))
+    expect(EVENT_GAP_INDICES).toEqual(gaps)
+    expect(EVENT_GAP_INDICES.some((i) => named.has(i))).toBe(false)
+    // フラグ確認用に、1件ずつは書ける
+    const b = makeSave(A_START)
+    writeEventRecord(b, 47, 0x04, { advanced: false })
+    expect(readEvents(b).entries[47].record).toBe(0x04)
   })
 
   it('記録の一括書き込みは、名前の分かる添字の記録だけを変える', () => {

@@ -56,6 +56,7 @@ import {
   EVENT_RECORD_OFFSET,
   EVENT_STATES,
   EVENT_STATE_OFFSET,
+  EVENT_GAP_INDICES,
   namedIndices,
   readEvents,
   recordLabel,
@@ -428,6 +429,28 @@ function EventsCard({ view }: { view: EventsView | null }) {
               options={options}
             />
           ))}
+        </div>
+
+        {/* ❓ 名前の付いた添字の間の欠番。フラグ確認用（ユーザー判断 2026-10-06） */}
+        <div className="flex flex-col gap-3 border-t pt-4">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+            欠番の添字（フラグ確認用）
+            <CertaintyBadge mark="❓" text="イベントとの対応は未確認" />
+          </div>
+          <p className="text-muted-foreground text-xs">
+            名前の付いた添字の間で、どのイベントか分かっていない添字です。チャートに出ない内部用のフラグかもしれません。一括設定の対象にはしていません。
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {EVENT_GAP_INDICES.map((i) => (
+              <EventBox
+                key={i}
+                index={i}
+                entry={view?.entries[i] ?? null}
+                problem={view?.problem ?? null}
+                options={options}
+              />
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
