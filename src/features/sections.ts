@@ -1,4 +1,4 @@
-import { Binary, Flag, Package, ScrollText, Store, Sword, Swords, User, type LucideIcon } from 'lucide-react'
+import { Binary, Flag, Moon, Package, ScrollText, Store, Sword, Swords, User, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
 // 各領域の確度は docs/wos4_save_format.md を参照（節番号を note に残す）。
@@ -12,6 +12,7 @@ export type SectionId =
   | 'chest'
   | 'valuables'
   | 'scenario'
+  | 'yobai'
   | 'styles'
   | 'ore-ryu'
   | 'circulating'
@@ -69,6 +70,7 @@ export const sectionGroups: SectionGroup[] = [
         ],
       },
       { id: 'scenario', label: 'シナリオ', icon: Flag, note: '§3.5 🔶 日数・時間帯、イベントの状態、勢力の記録' },
+      { id: 'yobai', label: '夜這い', icon: Moon, note: '§9.11 夜の約束（場所・人物）と夜這いの記録 🔶' },
       { id: 'styles', label: '流派', icon: ScrollText, note: '§3.1 🔶 0x018BC0 付近' },
       { id: 'ore-ryu', label: '俺流', icon: Swords, note: '§8.2 ❓ U-6' },
       { id: 'circulating', label: '流通中の刀', icon: Store, note: '§8.1 ❓ U-11' },
