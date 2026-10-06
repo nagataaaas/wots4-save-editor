@@ -29,6 +29,16 @@ import {
   type FacilityFlagsView,
 } from "@/save/facility-flags";
 import {
+  CHARACTER_LENGTH,
+  CHARACTER_NORMAL_MAX,
+  CHARACTER_NOTES,
+  CHARACTER_START,
+  readCharacters,
+  validateCharacter,
+  writeCharacter,
+  type CharactersView,
+} from "@/save/characters";
+import {
   HIDDEN_ROUTE_EVENT_INDEX,
   HIDDEN_ROUTE_OFFSET,
   HIDDEN_ROUTE_VALUES,
@@ -113,6 +123,7 @@ type Views = {
   route: RouteJudgeView;
   flags: WorldFlagsView;
   facilities: FacilityFlagsView;
+  characters: CharactersView;
   routeCandidates: RouteCandidatesView;
   hint: HintView;
 };
@@ -139,6 +150,7 @@ export function ScenarioPage() {
           route: readRouteJudge(b),
           flags: readWorldFlags(b),
           facilities: readFacilityFlags(b),
+          characters: readCharacters(b),
           routeCandidates: readRouteCandidates(b),
           hint: readHint(b),
         },
@@ -195,6 +207,7 @@ export function ScenarioPage() {
       />
       <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
       <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
+      <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
       <RouteCandidatesCard
         key={`${k}-route-candidates`}
         view={views?.routeCandidates ?? null}
@@ -396,7 +409,52 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
   );
 }
 
-const hiddenRouteOptions: SelectOption[] = HIDDEN_ROUTE_VALUES.map((v) => ({
+/** 🔶 重要人物の状態の候補（0x374E〜0x375C）の生の値。view が null ならセーブ未読み込み */
+function CharactersCard({ view }: { view: CharactersView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const offsets = Array.from({ length: CHARACTER_LENGTH }, (_, i) => CHARACTER_START + i);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          人物の状態（候補・生の値）
+          <CertaintyBadge mark="🔶" text="人物との対応と書き換えの効果は未確認" />
+        </CardTitle>
+        <CardDescription>
+          イベントの状態のすぐ後ろにある15バイトで、重要人物ごとの状態（生死など）と推定しています。周回の始めはすべて 0 です。
+          0x374E は赤城（00 生存・01 死亡・03 病院に送った）、0x374F は小暮（01 死亡）と、差分から推定しています。
+          書き換えがゲームに効くかは確かめていません（要ゲーム内確認）。
+          {view?.warning && ` ${view.warning}`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        {offsets.map((offset, i) => {
+          const info = CHARACTER_NOTES[offset];
+          const hex = `0x${offset.toString(16).toUpperCase()}`;
+          return (
+            <FieldRow
+              key={offset}
+              label={info?.name ? `${hex}（${info.name}）` : hex}
+              offset={offset}
+              value={view?.values[i] ?? null}
+              problem={view?.problem ?? null}
+              format={String}
+              parse={(input) => parseInteger(input, (v) => validateCharacter(v, { advanced }))}
+              apply={(v) => update((b) => writeCharacter(b, offset, v, { advanced }))}
+              inputMode="numeric"
+              hint={advanced ? "0〜255" : `0〜${CHARACTER_NORMAL_MAX}`}
+              note={info?.note}
+            />
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
+const hiddenRouteOptions: SelectOption[] =HIDDEN_ROUTE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${v.value} ${v.label}`,
 }));
