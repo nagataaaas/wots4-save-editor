@@ -12,8 +12,13 @@
 //   +0x20 u32  ✅ [U] 見た目（モデル）と声。はるなを 0xF5 にすると、見た目と声がさよになった
 //   +0x24 u8   ✅ [U] 年齢（0x30 で48歳）。FF は「？」（さよ）
 //   +0x25 u8   ✅ [U] 血液型。1＝A、2＝B、3＝O、4＝AB（書き換えで確認）、5＝「？」（さよ）
+//   +0x28 u16  🔶 約束した日（経過日数、1日目＝0）。8人（さよ・かえで・はるな・先生・メリンダ・三姉妹）で約束したセーブの 0x0BD8 と一致。
+//              空の枠では FFFF。書き換えの効果は未確認（要ゲーム内確認）
+//   +0x2A u16  ❓ 夜這い・約束のあとで増えていくビット（町の人の夜這いのあと 7、百合 0x20 → 万由 0x28 → 千佳 0x38）。空の枠でも残る
 //   +0x00 は特別な相手で FFFF、町の人で 0〜3（🟢）。+0x0C〜+0x1B はいつも 0A 0B 0E 0F 0C 0D 1D 01（🟢）。
-//   +0x00・+0x0C〜+0x1B・+0x26〜+0x2B の意味は ❓（書き換えない）
+//   +0x00・+0x0C〜+0x1B・+0x26・+0x2A の意味は ❓（書き換えない）
+// 名前 +0x1C の ID は master/npc-names.ts（datatable/npc/npc-name.csv、🟢）。
+// [U] 2026-10-07：朱美と約束したあとはセーブできない（マップを移るとすっぽかしになる）ので、朱美の約束の実データはない。
 //
 // 夜這いの記録 0x137F0〜（16 B × 100件。直前の 0x137EC u32 が件数 🔶）。夜這いのたびに1件足される。
 //   +0x00 u32 型、+0x04 u32 名前、+0x08 u32 🟢 入った建物の番号（0x20C〜0x228。同じ建物の扉は同じ番号）、
@@ -26,6 +31,7 @@
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
+import { npcName } from "./master/npc-names";
 
 export const PROMISE_OFFSET = 0x14038;
 export const PROMISE_LENGTH = 0x2c;
@@ -106,29 +112,46 @@ export const PLACE_LAYOUTS: readonly { place: number; layout: number; note?: str
   { place: 0x11, layout: 0x20, note: "先生の実データ（[U] 2026-10-07 sample/S4-DATA_02）。ほかの人物での確認はしていない" },
   { place: 0x18, layout: 0x25 },
   { place: 0x1d, layout: 0x01 },
+  // [U] 2026-10-07 sample/S4-DATA_01（メリンダ）・01 copy（百合）・01 copy 2（万由）・01 copy 3（千佳）の実データ
+  { place: 0x1d, layout: 0x19, note: "万由の実データ" },
+  { place: 0x1d, layout: 0x1a, note: "千佳の実データ" },
+  { place: 0x1d, layout: 0x1b, note: "百合の実データ" },
+  { place: 0x20, layout: 0x1e, note: "メリンダの実データ" },
 ];
 
 export type KnownValue = { value: number; label: string };
 
-/** 実セーブで見た人物の値（さよ・かえで・はるな・先生）。通常モードではこれだけを書ける */
+/**
+ * 実セーブで見た人物の値（さよ・かえで・はるな・先生・メリンダ・三姉妹）。通常モードではこれだけを書ける。
+ * 朱美 442・ローラ 454 は 🟢（約束の実データはない。朱美は約束のあとセーブできない [U]）
+ */
 export const KNOWN_TYPES: readonly KnownValue[] = [
   { value: 0x031b, label: "さよ（台詞は「・・・」。体力・攻撃力が高い）" },
   { value: 0x25, label: "かえで" },
   { value: 0x49, label: "はるな" },
   { value: 0x0250, label: "先生" },
-];
-export const KNOWN_NAMES: readonly KnownValue[] = [
-  { value: 0xd7, label: "さよ" },
-  { value: 0x1ba5, label: "かえで" },
-  { value: 0x1b69, label: "はるな" },
-  { value: 0x0f, label: "先生" },
+  { value: 0x0314, label: "メリンダ" },
+  { value: 0x01c0, label: "万由" },
+  { value: 0x01c1, label: "千佳" },
+  { value: 0x01c2, label: "百合" },
+  { value: 0x01ba, label: "朱美" },
+  { value: 0x01c6, label: "ローラ" },
 ];
 export const KNOWN_LOOKS: readonly KnownValue[] = [
   { value: 0xf5, label: "さよ" },
   { value: 0x1c, label: "かえで" },
   { value: 0x5d, label: "はるな" },
   { value: 0x57, label: "先生" },
+  { value: 0x42, label: "メリンダ" },
+  { value: 0x58, label: "万由" },
+  { value: 0x04, label: "千佳" },
+  { value: 0x06, label: "百合" },
 ];
+
+/** 名前の表示。🟢 名前の表（npc-names）にない ID は 16進数 */
+export function nameLabel(id: number): string {
+  return npcName(id)?.ja ?? `0x${id.toString(16).toUpperCase()}`;
+}
 
 /** ✅ [U] 血液型（1〜4 は書き換えで確認。5 はさよの「？」） */
 export const BLOOD_TYPES: readonly KnownValue[] = [
@@ -143,17 +166,22 @@ export const BLOOD_TYPES: readonly KnownValue[] = [
 export const AGE_UNKNOWN = 0xff;
 /** 通常モードの年齢の上限（と AGE_UNKNOWN） */
 export const AGE_NORMAL_MAX = 99;
+/** 通常モードの約束した日（経過日数）の上限。scenario-date の DAY_RANGE.normal（99日目）に合わせる */
+export const DAY_NORMAL_MAX = 98;
+
 /**
  * group は約束の +0x02・記録の +0x0C（❓ 日付ではない。特別な相手 0、町の人 1〜3）。
- * 意味が分からないので、上級者モードでだけ書ける（通常モードは今の値の書き戻しだけ）
+ * 意味が分からないので、上級者モードでだけ書ける（通常モードは今の値の書き戻しだけ）。
+ * day は約束の +0x28（🔶 約束した日）。記録にはない
  */
-export type PersonField = "group" | "type" | "name" | "look" | "age" | "blood";
-export type RecordField = Exclude<PersonField, "look">;
+export type PersonField = "group" | "day" | "type" | "name" | "look" | "age" | "blood";
+export type RecordField = Exclude<PersonField, "look" | "day">;
 
 type FieldSpec = { rel: number; size: 1 | 2 | 4 };
 
 const PROMISE_FIELDS: Record<PersonField, FieldSpec> = {
   group: { rel: 0x02, size: 2 },
+  day: { rel: 0x28, size: 2 },
   type: { rel: 0x04, size: 4 },
   name: { rel: 0x1c, size: 4 },
   look: { rel: 0x20, size: 4 },
@@ -261,7 +289,6 @@ export function readYobai(bytes: Uint8Array): YobaiView {
 
 function knownList(field: PersonField): readonly KnownValue[] | null {
   if (field === "type") return KNOWN_TYPES;
-  if (field === "name") return KNOWN_NAMES;
   if (field === "look") return KNOWN_LOOKS;
   if (field === "blood") return BLOOD_TYPES;
   return null;
@@ -269,7 +296,8 @@ function knownList(field: PersonField): readonly KnownValue[] | null {
 
 /**
  * 人物の項目（約束・記録で共通）の検証。今の値と同じ値の書き戻しは許す。問題がなければ null。
- * 通常モード：型・名前・見た目・血液型は確認済みの値だけ、年齢は 0〜99 か 255（？）、group（❓）は書けない。
+ * 通常モード：型・見た目・血液型は確認済みの値だけ、名前は名前の表（🟢）にある ID だけ、年齢は 0〜99 か 255（？）、
+ * 約束した日は 0〜98（1〜99日目）、group（❓）は書けない。
  * 上級者モード：型の大きさの範囲で任意（型の 0xFFFFFFFF は空きの印なので書かない）
  */
 export function validatePersonField(
@@ -287,6 +315,8 @@ export function validatePersonField(
   if (known) return known.some((k) => k.value === value) ? null : `確認済みの値ではありません（上級者モードで書けます）: ${value}`;
   if (field === "age")
     return value <= AGE_NORMAL_MAX || value === AGE_UNKNOWN ? null : `通常モードでは 0〜${AGE_NORMAL_MAX} か 255（？）を指定してください: ${value}`;
+  if (field === "name") return npcName(value) ? null : `名前の表にない ID です（上級者モードで書けます）: ${value}`;
+  if (field === "day") return value <= DAY_NORMAL_MAX ? null : `通常モードでは 1〜${DAY_NORMAL_MAX + 1}日目を指定してください`;
   if (field === "group") return "意味が分かっていない値なので、上級者モードでだけ書けます";
   return null;
 }

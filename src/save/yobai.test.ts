@@ -1,7 +1,9 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // バイト列は docs/save_format/chunks/night-visit（[U] 2026-10-06）で見たもの。
 // ✅ [U] 書き換えで確認：約束の +0x04（型）・+0x08（場所）・+0x1C（名前）・+0x20（見た目と声）・+0x24（年齢）・+0x25（血液型）。
-// 🔶 +0x0A（配置）は位置だけ確認、+0x02（日付）・記録の各項目・件数 0x137EC は差分からの推定（要ゲーム内確認）。
+// 🔶 +0x0A（配置）は位置だけ確認、+0x28（約束した日、8人の約束で一致）・記録の各項目は差分からの推定（要ゲーム内確認）。
+// ❓ +0x02（group）は日付ではない（✅ [U] 2026-10-07）。意味は不明。
+// 🟢 名前の ID は master/npc-names.ts の表にあるものだけを通常モードで書ける。
 import { describe, expect, it } from 'vitest'
 import { TS_SAVE_SIZE } from './hero'
 import {
@@ -52,6 +54,7 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
     expect(promise).toEqual({
       active: true,
       group: 1, // ✅ [U] 2026-10-07 日付ではない。❓ 町の人は 1〜3
+      day: 1, // 🔶 +0x28 約束した日（2日目）
       type: 0x25,
       place: 0x0c,
       layout: 0x06,
@@ -107,6 +110,12 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
     expect(validatePersonField('age', 255, 24, { advanced: false })).toBeNull() // ？
     expect(validatePersonField('blood', 0, 3, { advanced: false })).not.toBeNull()
     expect(validatePersonField('blood', 5, 3, { advanced: false })).toBeNull() // ？
+    // 🟢 名前は表にある ID なら通常モードで書ける（7041＝みき）。表にない ID は上級者モードだけ
+    expect(validatePersonField('name', 7041, 0x1ba5, { advanced: false })).toBeNull()
+    expect(validatePersonField('name', 9999, 0x1ba5, { advanced: false })).not.toBeNull()
+    // 🔶 約束した日（+0x28）は通常モードで 0〜98（1〜99日目）
+    expect(validatePersonField('day', 98, 1, { advanced: false })).toBeNull()
+    expect(validatePersonField('day', 99, 1, { advanced: false })).not.toBeNull()
     // ❓ +0x02／+0x0C（group）は通常モードでは今の値の書き戻しだけ
     expect(validatePersonField('group', 1, 1, { advanced: false })).toBeNull()
     expect(validatePersonField('group', 2, 1, { advanced: false })).not.toBeNull()
@@ -124,6 +133,15 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
     writePromisePlace(after, 0x0c, 0x07, { advanced: true })
     expect(readYobai(after).promise.layout).toBe(0x07)
     expect(PLACE_LAYOUTS.find((p) => p.place === 0x0c)?.layout).toBe(0x06)
+  })
+
+  it('✅ [U] 2026-10-07 メリンダ・三姉妹の約束で見た場所と配置の組', () => {
+    const pairs = PLACE_LAYOUTS.map((p) => [p.place, p.layout])
+    expect(pairs).toContainEqual([0x20, 0x1e]) // メリンダ・黒船
+    expect(pairs).toContainEqual([0x1d, 0x19]) // 万由・代官所の離れ
+    expect(pairs).toContainEqual([0x1d, 0x1a]) // 千佳
+    expect(pairs).toContainEqual([0x1d, 0x1b]) // 百合
+    expect(pairs).toContainEqual([0x11, 0x20]) // 先生・提灯の掛かった家
   })
 
   it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
@@ -168,7 +186,7 @@ describe('🔶 夜這いの記録 0x137F0〜（16 B × 100件、件数 0x137EC�
     const before = makeSave()
     const after = before.slice()
     const view = readYobai(after)
-    for (const f of ['group', 'type', 'name', 'look', 'age', 'blood'] as const)
+    for (const f of ['group', 'day', 'type', 'name', 'look', 'age', 'blood'] as const)
       writePromiseField(after, f, view.promise[f], { advanced: false })
     writePromisePlace(after, view.promise.place, view.promise.layout, { advanced: false })
     for (const r of view.records)

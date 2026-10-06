@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
+import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +13,11 @@ import {
   AGE_NORMAL_MAX,
   AGE_UNKNOWN,
   BLOOD_TYPES,
+  DAY_NORMAL_MAX,
   KNOWN_LOOKS,
-  KNOWN_NAMES,
   KNOWN_TYPES,
   PLACES,
+  nameLabel,
   PLACE_LAYOUTS,
   PROMISE_LAYOUT_REL,
   PROMISE_OFFSET,
@@ -39,6 +41,7 @@ import {
   type RecordView,
   type YobaiView,
 } from "@/save/yobai";
+import { NPC_NAMES, npcNameGroup } from "@/save/master/npc-names";
 import {
   POINT_NORMAL_MAX,
   YOBAI_POINTS,
@@ -72,39 +75,57 @@ const placeLayoutOptions: SelectOption[] = PLACE_LAYOUTS.map((p) => ({
 
 const placeOptions: SelectOption[] = PLACES.map((name, i) => ({ value: String(i), label: `${formatHex2(i)} ${name}` }));
 
+const knownOptions = (known: readonly KnownValue[]): SelectOption[] =>
+  known.map((k) => ({ value: String(k.value), label: `${k.label}（${hex(k.value)}）` }));
+
+/** 🟢 名前の表の全件。区分ごとにまとめ、英語名でも検索できるようにする */
+const nameOptions: SelectOption[] = NPC_NAMES.map((n) => ({
+  value: String(n.id),
+  label: `${n.ja}（${hex(n.id)}）`,
+  group: npcNameGroup(n.id),
+  keywords: [n.ja, n.en, String(n.id), hex(n.id)],
+}));
+
 const PERSON_FIELDS: Record<
   PersonField,
-  { label: string; known: readonly KnownValue[] | null; note: string; badge?: string }
+  { label: string; options: readonly SelectOption[] | null; search?: boolean; note: string; badge?: { mark: "🔶" | "❓"; text: string } }
 > = {
   name: {
     label: "名前",
-    known: KNOWN_NAMES,
-    note: "名前（または NPC の ID）。はるなをさよの値にすると、名前がさよになった（確認済み）。約束の画面に職業は出ない",
+    options: nameOptions,
+    search: true,
+    note: "名前の ID。はるなをさよの値にすると、名前がさよになった（確認済み）。約束の画面に職業は出ない。町の人の名前は「町の女性の名前」から選ばれる",
   },
   look: {
     label: "見た目と声",
-    known: KNOWN_LOOKS,
+    options: knownOptions(KNOWN_LOOKS),
     note: "見た目（モデル）と声。はるなをさよの値にすると、見た目と声がさよになった。台詞・強さ・名前は変わらない（確認済み）",
   },
   type: {
     label: "しゃべり方と戦闘力",
-    known: KNOWN_TYPES,
+    options: knownOptions(KNOWN_TYPES),
     note: "はるなをさよの値にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった。見た目・声・名前は変わらない（確認済み）",
   },
   age: {
     label: "年齢",
-    known: null,
+    options: null,
     note: "0x30（48）にすると48歳と表示された（確認済み）。255 は「？」（さよ）",
   },
   blood: {
     label: "血液型",
-    known: BLOOD_TYPES,
+    options: knownOptions(BLOOD_TYPES),
     note: "1＝A、2＝B、3＝O、4＝AB（確認済み）。5 は「？」（さよ）",
+  },
+  day: {
+    label: "約束した日",
+    options: null,
+    badge: { mark: "🔶", text: "推定。書き換えの効果は未確認" },
+    note: "+0x28。経過日数（1日目＝0）。8人とも約束したセーブの日付と一致した。画面では「N日目」で表示する",
   },
   group: {
     label: "相手の種類（生の値）",
-    known: null,
-    badge: "意味は未確認",
+    options: null,
+    badge: { mark: "❓", text: "意味は未確認" },
     note: "日付ではない（1日目に町の人と約束して 1 だった。確認済み）。さよ・先生は 0、町の人は 1〜3。約束の +0x02 と記録の +0x0C は同じ値",
   },
 };
@@ -112,6 +133,7 @@ const PERSON_FIELDS: Record<
 function hintFor(field: PersonField, advanced: boolean): string {
   if (field === "age") return advanced ? "0〜255（255＝？）" : `0〜${AGE_NORMAL_MAX}、または 255（？）`;
   if (field === "group") return "0〜0xFFFF";
+  if (field === "day") return advanced ? "1〜65536日目" : `1〜${DAY_NORMAL_MAX + 1}日目`;
   return advanced ? "10進数か 0x 付きの16進数" : "確認済みの値";
 }
 
@@ -135,9 +157,29 @@ function PersonFieldEditor({
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const spec = PERSON_FIELDS[field];
-  const badges = spec.badge ? <CertaintyBadge mark="❓" text={spec.badge} /> : undefined;
+  const badges = spec.badge ? <CertaintyBadge mark={spec.badge.mark} text={spec.badge.text} /> : undefined;
   const apply = (v: number) => update((b) => write(b, v, { advanced }));
   const validate = (v: number) => validatePersonField(field, v, current ?? 0, { advanced });
+
+  if (field === "day")
+    return (
+      <FieldRow
+        label={spec.label}
+        offset={offset}
+        badges={badges}
+        value={current}
+        problem={problem}
+        format={(v) => `${v + 1}`}
+        parse={(input) => {
+          const r = parseNumber(input, (v) => (v < 1 ? "1日目以上を指定してください" : validate(v - 1)));
+          return r.ok ? { ok: true, value: r.value - 1 } : r;
+        }}
+        apply={apply}
+        inputMode="numeric"
+        hint={hintFor(field, advanced)}
+        note={spec.note}
+      />
+    );
 
   if (field === "group")
     return (
@@ -157,7 +199,7 @@ function PersonFieldEditor({
       />
     );
 
-  if (!spec.known)
+  if (!spec.options)
     return (
       <FieldRow
         label={spec.label}
@@ -177,17 +219,32 @@ function PersonFieldEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      <SelectRow
-        label={spec.label}
-        offset={offset}
-        badges={badges}
-        value={current === null ? null : String(current)}
-        currentLabel={current === null ? undefined : `${hex(current)} 不明`}
-        options={spec.known.map((k) => ({ value: String(k.value), label: `${k.label}（${hex(k.value)}）` }))}
-        problem={problem}
-        note={spec.note}
-        onChange={(v) => apply(Number(v))}
-      />
+      {spec.search ? (
+        <SearchSelectRow
+          label={spec.label}
+          offset={offset}
+          badges={badges}
+          value={current === null ? null : String(current)}
+          currentLabel={current === null ? undefined : `${hex(current)} 不明`}
+          options={spec.options}
+          problem={problem}
+          note={spec.note}
+          searchPlaceholder="名前・英語名・ID で検索"
+          onChange={(v) => apply(Number(v))}
+        />
+      ) : (
+        <SelectRow
+          label={spec.label}
+          offset={offset}
+          badges={badges}
+          value={current === null ? null : String(current)}
+          currentLabel={current === null ? undefined : `${hex(current)} 不明`}
+          options={spec.options}
+          problem={problem}
+          note={spec.note}
+          onChange={(v) => apply(Number(v))}
+        />
+      )}
       {advanced && !problem && (
         <FieldRow
           // 選択肢で値を変えたときに入力欄を作り直す
@@ -260,7 +317,7 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
   );
 }
 
-const PROMISE_ORDER: PersonField[] = ["name", "look", "type", "age", "blood", "group"];
+const PROMISE_ORDER: PersonField[] = ["name", "look", "type", "age", "blood", "day", "group"];
 const RECORD_ORDER = ["name", "type", "age", "blood", "group"] as const;
 
 function PromiseCard({ view }: { view: YobaiView | null }) {
@@ -304,7 +361,7 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
 }
 
 function RecordRow({ record, problem }: { record: RecordView; problem: string | null }) {
-  const name = KNOWN_NAMES.find((n) => n.value === record.name)?.label ?? hex(record.name);
+  const name = nameLabel(record.name);
   return (
     <div className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0">
       <p className="text-sm font-medium">
