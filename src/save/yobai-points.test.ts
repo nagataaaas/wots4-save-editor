@@ -41,9 +41,16 @@ describe("夜這いに関わる好感度・ポイント chunks/hidden-route", ()
     });
   });
 
-  it("🟢 朱美・三姉妹のしきい値は 10。ローラ・メリンダ（❓）は持たない", () => {
+  it("🟢 ローラ・朱美・三姉妹のしきい値は 10。メリンダ（❓）は持たない", () => {
     const t = Object.fromEntries(YOBAI_POINTS.map((p) => [p.offset, p.threshold]));
-    expect(t).toEqual({ 0x3792: null, 0x3793: 10, 0x3794: 10, 0x3795: 10, 0x3796: 10, 0x3797: null });
+    expect(t).toEqual({ 0x3792: 10, 0x3793: 10, 0x3794: 10, 0x3795: 10, 0x3796: 10, 0x3797: null });
+  });
+
+  it("🟢 ローラの好感度は推定のバッジを出さず、謎の鍵と千両箱のことを説明に書く", () => {
+    const laura = YOBAI_POINTS.find((p) => p.offset === 0x3792)!;
+    expect(laura.pending).toBeUndefined();
+    expect(laura.note).toContain("謎の鍵");
+    expect(laura.note).toContain("千両箱");
   });
 
   it("読み出し→書き戻し→バイト一致", () => {
