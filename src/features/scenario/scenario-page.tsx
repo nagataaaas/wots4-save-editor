@@ -39,6 +39,15 @@ import {
   type CharactersView,
 } from "@/save/characters";
 import {
+  TOWNSFOLK_LENGTH,
+  TOWNSFOLK_NOTES,
+  TOWNSFOLK_START,
+  readTownsfolk,
+  validateTownsfolk,
+  writeTownsfolk,
+  type TownsfolkView,
+} from "@/save/townsfolk";
+import {
   HIDDEN_ROUTE_EVENT_INDEX,
   HIDDEN_ROUTE_OFFSET,
   HIDDEN_ROUTE_VALUES,
@@ -60,7 +69,7 @@ import {
   writeHint,
   type HintView,
 } from "@/save/hint";
-import { formatHex2 } from "@/lib/format";
+import { formatHex2, formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
   FACTIONS,
@@ -124,6 +133,7 @@ type Views = {
   flags: WorldFlagsView;
   facilities: FacilityFlagsView;
   characters: CharactersView;
+  townsfolk: TownsfolkView;
   routeCandidates: RouteCandidatesView;
   hint: HintView;
 };
@@ -151,6 +161,7 @@ export function ScenarioPage() {
           flags: readWorldFlags(b),
           facilities: readFacilityFlags(b),
           characters: readCharacters(b),
+          townsfolk: readTownsfolk(b),
           routeCandidates: readRouteCandidates(b),
           hint: readHint(b),
         },
@@ -208,6 +219,7 @@ export function ScenarioPage() {
       <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
       <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
       <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
+      <TownsfolkCard key={`${k}-townsfolk`} view={views?.townsfolk ?? null} />
       <RouteCandidatesCard
         key={`${k}-route-candidates`}
         view={views?.routeCandidates ?? null}
@@ -456,7 +468,109 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
   );
 }
 
-const hiddenRouteOptions: SelectOption[] =HIDDEN_ROUTE_VALUES.map((v) => ({
+const TOWNSFOLK_ROW = 16;
+
+/** 1バイト分の入力欄。町の人の状態（0x0100〜0x04BF）用 */
+function TownsfolkField({ offset, view }: { offset: number; view: TownsfolkView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const info = TOWNSFOLK_NOTES[offset];
+  const hex = formatOffset(offset);
+  const current = view?.values[offset - TOWNSFOLK_START] ?? null;
+
+  return (
+    <FieldRow
+      label={info?.name ? `${hex}（${info.name}）` : hex}
+      offset={offset}
+      value={current}
+      problem={view?.problem ?? null}
+      format={String}
+      parse={(input) =>
+        parseInteger(input, (v) => validateTownsfolk(v, current ?? 0, { advanced }))
+      }
+      apply={(v) => update((b) => writeTownsfolk(b, offset, v, { advanced }))}
+      inputMode="numeric"
+      hint={advanced ? "0〜255" : "0・1"}
+      note={info?.note}
+    />
+  );
+}
+
+/** 🔶 町の人（店主など）の状態の候補（0x0100〜0x04BF）の生の値。view が null ならセーブ未読み込み */
+function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
+  const [selected, setSelected] = useState<number | null>(null);
+  const named = Object.keys(TOWNSFOLK_NOTES)
+    .map(Number)
+    .filter((o) => TOWNSFOLK_NOTES[o].name);
+  const rows = Array.from(
+    { length: TOWNSFOLK_LENGTH / TOWNSFOLK_ROW },
+    (_, r) => TOWNSFOLK_START + r * TOWNSFOLK_ROW,
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          町の人の状態（候補・生の値）
+          <CertaintyBadge mark="🔶" text="並び方と書き換えの効果は未確認" />
+        </CardTitle>
+        <CardDescription>
+          0x0100〜0x04BF の960バイトです。ほとんど 0 で、町の人（店主など）ごとの状態の表と推定しています。
+          寿司屋の店主（0x02C4）と鍛冶屋のおやじ（0x0444）は、殺すと 0 → 1 になりました。書き換えがゲームに効くかは確かめていません（要ゲーム内確認）。
+          下の表のマスを押すと、そのバイトを書き換えられます。0 以外のマスは色を付け、説明のあるマスには下線を引いています。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {named.map((offset) => (
+            <TownsfolkField key={offset} offset={offset} view={view} />
+          ))}
+          {selected !== null && !named.includes(selected) && (
+            <TownsfolkField key={selected} offset={selected} view={view} />
+          )}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="font-mono text-[11px] leading-none">
+            <tbody>
+              {rows.map((rowStart) => (
+                <tr key={rowStart}>
+                  <th className="text-muted-foreground pr-2 text-right font-normal">
+                    {rowStart.toString(16).toUpperCase().padStart(4, "0")}
+                  </th>
+                  {Array.from({ length: TOWNSFOLK_ROW }, (_, c) => {
+                    const offset = rowStart + c;
+                    const v = view?.values[offset - TOWNSFOLK_START] ?? null;
+                    const info = TOWNSFOLK_NOTES[offset];
+                    return (
+                      <td key={c} className="p-0">
+                        <button
+                          type="button"
+                          disabled={view === null}
+                          title={`${formatOffset(offset)}${info ? `：${info.note}` : ""}`}
+                          onClick={() => setSelected(offset)}
+                          className={[
+                            "h-5 w-6 rounded-sm",
+                            v ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+                            info ? "underline" : "",
+                            offset === selected ? "ring-ring ring-2" : "",
+                          ].join(" ")}
+                        >
+                          {v === null ? "··" : v.toString(16).toUpperCase().padStart(2, "0")}
+                        </button>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+const hiddenRouteOptions: SelectOption[] = HIDDEN_ROUTE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${v.value} ${v.label}`,
 }));
