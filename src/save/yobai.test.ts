@@ -28,6 +28,8 @@ const PROMISE_KAEDE = hex('00000100250000000c0006000a000b000e000f000c000d001d000
 const PROMISE_EMPTY = hex('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1803ffffffff070000000000')
 /** sample/S4-DATA_03 copy 9：夜這いの記録の1件目（さよ）・2件目（かえで） */
 const RECORD_SAYO = hex('1b030000d7000000180200000000ff05')
+/** sample/S4-DATA_01 copy 4：ローラとの夜這いのあとの1件目（[U] 2026-10-07） */
+const RECORD_LAURA = hex('c60100000b000000210200000200ff01')
 const RECORD_KAEDE = hex('25000000a51b00001702000001001803')
 
 function makeSave(opts: { promise?: Uint8Array; records?: Uint8Array[]; count?: number; size?: number } = {}): Uint8Array {
@@ -35,8 +37,8 @@ function makeSave(opts: { promise?: Uint8Array; records?: Uint8Array[]; count?: 
   b.set(opts.promise ?? PROMISE_KAEDE, PROMISE_OFFSET)
   const records = opts.records ?? [RECORD_SAYO, RECORD_KAEDE]
   for (let i = 0; i < 100; i++) b.set(records[i] ?? RECORD_EMPTY_BYTES, RECORDS_OFFSET + i * 16)
+  new DataView(b.buffer).setUint32(0x137ec, records.length, true)
   new DataView(b.buffer).setUint32(RECORD_COUNT_OFFSET, opts.count ?? records.length, true)
-  new DataView(b.buffer).setUint32(0x13e34, records.length, true)
   b[0x37c8] = records.length
   return b
 }
@@ -154,17 +156,18 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
   })
 })
 
-describe('🔶 夜這いの記録 0x137F0〜（16 B × 100件、件数 0x137EC）chunks/night-visit', () => {
+describe('🔶 夜這いの記録 0x137F0〜（16 B × 100件、件数 0x13E34）chunks/night-visit', () => {
   it('件数ぶんの記録を読む', () => {
     const view = readYobai(makeSave())
     expect(view.recordsProblem).toBeNull()
     expect(view.count).toBe(2)
     // 🟢 +0x08 は建物の番号（さよ＝お屋敷 0x218、かえで＝稲荷前 0x217）
-    expect(view.records[0]).toEqual({ index: 0, type: 0x031b, name: 0xd7, building: 0x218, group: 0, age: 0xff, blood: 5 })
-    expect(view.records[1]).toEqual({ index: 1, type: 0x25, name: 0x1ba5, building: 0x217, group: 1, age: 24, blood: 3 })
-    // ✅ [U] 2026-10-07 約束の画面の夜這い回数は先頭の 0x137EC
-    expect(view.counters.map((c) => c.offset)).toEqual([0x137ec, 0x13e34, 0x37c8])
-    expect(view.counters.map((c) => c.value)).toEqual([2, 2, 2])
+    expect(view.records[0]).toEqual({ index: 0, type: 0x031b, name: 0xd7, building: 0x218, day: 0, age: 0xff, blood: 5 })
+    expect(view.records[1]).toEqual({ index: 1, type: 0x25, name: 0x1ba5, building: 0x217, day: 1, age: 24, blood: 3 })
+    // ✅ [U] 2026-10-07 約束の画面の夜這い回数は先頭の 0x137EC。🔶 記録の件数は 0x13E34
+    expect(RECORD_COUNT_OFFSET).toBe(0x13e34)
+    expect(view.counters.map((c) => c.offset)).toEqual([0x137ec, 0x13e34, 0x13e4c, 0x37c8])
+    expect(view.counters.map((c) => c.value)).toEqual([2, 2, 0, 2])
   })
 
   it('記録の項目を書く（その項目のバイトだけが変わる）。使用中でない件には書かない', () => {
@@ -173,6 +176,15 @@ describe('🔶 夜這いの記録 0x137F0〜（16 B × 100件、件数 0x137EC�
     writeRecordField(after, 1, 'age', 30, { advanced: false })
     expect(diffOffsets(before, after)).toEqual([RECORDS_OFFSET + 16 + 0x0e])
     expect(() => writeRecordField(after, 2, 'age', 30, { advanced: true })).toThrow(RangeError)
+  })
+
+  it('🔶 [U] 2026-10-07 夜這い回数 0x137EC が記録の件数とずれていても、0x13E34 の件数どおりなら編集できる（ローラとの夜這いのあと）', () => {
+    const b = makeSave({ records: [RECORD_LAURA] })
+    new DataView(b.buffer).setUint32(0x137ec, 2, true)
+    const view = readYobai(b)
+    expect(view.recordsProblem).toBeNull()
+    expect(view.records[0]).toEqual({ index: 0, type: 0x01c6, name: 0x0b, building: 0x221, day: 2, age: 0xff, blood: 1 })
+    expect(view.counters[0].value).toBe(2)
   })
 
   it('件数と使用中の件が合わなければ読み取り専用', () => {
@@ -190,7 +202,7 @@ describe('🔶 夜這いの記録 0x137F0〜（16 B × 100件、件数 0x137EC�
       writePromiseField(after, f, view.promise[f], { advanced: false })
     writePromisePlace(after, view.promise.place, view.promise.layout, { advanced: false })
     for (const r of view.records)
-      for (const f of ['group', 'type', 'name', 'age', 'blood'] as const) writeRecordField(after, r.index, f, r[f], { advanced: false })
+      for (const f of ['day', 'type', 'name', 'age', 'blood'] as const) writeRecordField(after, r.index, f, r[f], { advanced: false })
     expect(diffOffsets(before, after)).toEqual([])
   })
 })

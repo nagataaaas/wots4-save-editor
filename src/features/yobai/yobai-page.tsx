@@ -120,13 +120,13 @@ const PERSON_FIELDS: Record<
     label: "約束した日",
     options: null,
     badge: { mark: "🔶", text: "推定。書き換えの効果は未確認" },
-    note: "+0x28。経過日数（1日目＝0）。8人とも約束したセーブの日付と一致した。画面では「N日目」で表示する",
+    note: "約束の +0x28・記録の +0x0C。経過日数（1日目＝0）。約束は9人とも約束したセーブの日付と一致し、記録の +0x0C も約束の +0x28 と同じ値だった。画面では「N日目」で表示する",
   },
   group: {
     label: "相手の種類（生の値）",
     options: null,
     badge: { mark: "❓", text: "意味は未確認" },
-    note: "日付ではない（1日目に町の人と約束して 1 だった。確認済み）。さよ・先生は 0、町の人は 1〜3。約束の +0x02 と記録の +0x0C は同じ値",
+    note: "日付ではない（1日目に町の人と約束して 1 だった。確認済み）。さよ・先生は 0、町の人は 1〜3",
   },
 };
 
@@ -318,7 +318,7 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
 }
 
 const PROMISE_ORDER: PersonField[] = ["name", "look", "type", "age", "blood", "day", "group"];
-const RECORD_ORDER = ["name", "type", "age", "blood", "group"] as const;
+const RECORD_ORDER = ["name", "type", "day", "age", "blood"] as const;
 
 function PromiseCard({ view }: { view: YobaiView | null }) {
   const promise = view?.promise ?? null;
@@ -465,7 +465,7 @@ function CountersCard({ view }: { view: YobaiView | null }) {
           
         </CardTitle>
         <CardDescription>
-          夜這いのたびに 1 増えた3か所です。約束の画面の「夜這い回数」は記録の件数（0x137EC）でした（確認済み）。0x37C8 は夜這いの回数と合わないセーブがあり、意味は分かっていません。
+          夜這いのたびに増えたカウンタです。約束の画面の「夜這い回数」は 0x137EC でした（確認済み）。記録の件数は 0x13E34 とみられ、0x137EC とずれることがあります。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-2 text-sm sm:grid-cols-3">

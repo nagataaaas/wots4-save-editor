@@ -20,9 +20,11 @@
 // 名前 +0x1C の ID は master/npc-names.ts（datatable/npc/npc-name.csv、🟢）。
 // [U] 2026-10-07：朱美と約束したあとはセーブできない（マップを移るとすっぽかしになる）ので、朱美の約束の実データはない。
 //
-// 夜這いの記録 0x137F0〜（16 B × 100件。直前の 0x137EC u32 が件数 🔶）。夜這いのたびに1件足される。
+// 夜這いの記録 0x137F0〜（16 B × 100件）。夜這いのたびに1件足される。
+// 🔶 件数は 0x13E34。[U] 2026-10-07 sample/S4-DATA_02 copy → 01 copy 4（ローラとの夜這い）で、0x13E34 0 → 1・0x137EC 1 → 2 となり、
+//    記録は1件目（0x137F0）に書かれた → 次に書く位置は 0x13E34。0x137EC は夜這い回数の表示（✅）で、記録の件数とずれることがある
 //   +0x00 u32 型、+0x04 u32 名前、+0x08 u32 🟢 入った建物の番号（0x20C〜0x228。同じ建物の扉は同じ番号）、
-//   +0x0C u16 ❓ 約束の枠の +0x02 と同じ値（さよ 0、かえで 1）。約束の +0x02 が日付でなかったので、日付とは言えない（group）、
+//   +0x0C u16 🔶 約束した日（約束の枠の +0x28 と同じ値。さよ 0、かえで 1、ローラ 2 の3件で一致）、
 //   +0x0E u8 年齢、+0x0F u8 血液型。
 // ✅ [U] 2026-10-07：0x137EC を 16、0x13E34 を 48 にすると、約束の画面の夜這い回数は 16 になった → 表示は 0x137EC。
 //   空の件は FFFFFFFF FFFFFFFF 00000000 FFFF0000。記録の書き換えがゲームに反映されるかは未確認（要ゲーム内確認）。
@@ -37,7 +39,10 @@ export const PROMISE_OFFSET = 0x14038;
 export const PROMISE_LENGTH = 0x2c;
 export const PROMISE_EMPTY = 0xffffffff;
 
-export const RECORD_COUNT_OFFSET = 0x137ec;
+/** 🔶 記録の件数（次に書く位置） */
+export const RECORD_COUNT_OFFSET = 0x13e34;
+/** ✅ [U] 約束の画面の夜這い回数 */
+export const YOBAI_TOTAL_OFFSET = 0x137ec;
 export const RECORDS_OFFSET = 0x137f0;
 export const RECORD_SIZE = 0x10;
 export const RECORD_CAPACITY = 100;
@@ -49,13 +54,15 @@ export const RECORD_EMPTY_BYTES: readonly number[] = [
 
 /**
  * 夜這いのたびに増えたカウンタ（どれも 1 → 2）。表示だけ。
- * ✅ [U] 2026-10-07 約束の画面の夜這い回数は 0x137EC。
+ * ✅ [U] 2026-10-07 約束の画面の夜這い回数は 0x137EC。🔶 記録の件数は 0x13E34。
+ * 0x13E4C はローラとの夜這いで 0 → 1（❓ 1回だけ）。
  * 0x37C8 は sample/S4-DATA_03 copy 10 で件数 1 なのに 2 だったので、夜這いの回数ではない（意味は ❓）
  */
 export const YOBAI_COUNTERS: readonly { offset: number; size: 1 | 4; note: string }[] = [
-  { offset: 0x137ec, size: 4, note: "記録の件数。約束の画面の「夜這い回数」はこの値（確認済み）" },
-  { offset: 0x13e34, size: 4, note: "記録の直後" },
-  { offset: 0x37c8, size: 1, note: "フラグ列の中" },
+  { offset: 0x137ec, size: 4, note: "約束の画面の「夜這い回数」はこの値（確認済み）。記録の件数とずれることがある" },
+  { offset: 0x13e34, size: 4, note: "記録の件数（推定）。次の記録はこの位置に書かれる" },
+  { offset: 0x13e4c, size: 4, note: "ローラとの夜這いで 0 → 1。意味は不明" },
+  { offset: 0x37c8, size: 1, note: "フラグ列の中。夜這いの回数と合わないセーブがある" },
 ];
 
 /** ✅ [U] 2026-10-06：約束の場所 +0x08（書き換えて、約束の画面に出る名前を見た） */
@@ -117,13 +124,15 @@ export const PLACE_LAYOUTS: readonly { place: number; layout: number; note?: str
   { place: 0x1d, layout: 0x1a, note: "千佳の実データ" },
   { place: 0x1d, layout: 0x1b, note: "百合の実データ" },
   { place: 0x20, layout: 0x1e, note: "メリンダの実データ" },
+  // [U] 2026-10-07 sample/S4-DATA_02 copy（ローラと約束）
+  { place: 0x1c, layout: 0x3a, note: "ローラの実データ" },
 ];
 
 export type KnownValue = { value: number; label: string };
 
 /**
  * 実セーブで見た人物の値（さよ・かえで・はるな・先生・メリンダ・三姉妹）。通常モードではこれだけを書ける。
- * 朱美 442・ローラ 454 は 🟢（約束の実データはない。朱美は約束のあとセーブできない [U]）
+ * 朱美 442 は 🟢（約束の実データはない。朱美は約束のあとセーブできない [U]）。ローラ 454 は 🟢 の値を [U] 2026-10-07 の実データで確認
  */
 export const KNOWN_TYPES: readonly KnownValue[] = [
   { value: 0x031b, label: "さよ（台詞は「・・・」。体力・攻撃力が高い）" },
@@ -146,6 +155,7 @@ export const KNOWN_LOOKS: readonly KnownValue[] = [
   { value: 0x58, label: "万由" },
   { value: 0x04, label: "千佳" },
   { value: 0x06, label: "百合" },
+  { value: 0x1d, label: "ローラ" },
 ];
 
 /** 名前の表示。🟢 名前の表（npc-names）にない ID は 16進数 */
@@ -170,12 +180,12 @@ export const AGE_NORMAL_MAX = 99;
 export const DAY_NORMAL_MAX = 98;
 
 /**
- * group は約束の +0x02・記録の +0x0C（❓ 日付ではない。特別な相手 0、町の人 1〜3）。
+ * group は約束の +0x02（❓ 日付ではない。特別な相手 0、町の人 1〜3）。
  * 意味が分からないので、上級者モードでだけ書ける（通常モードは今の値の書き戻しだけ）。
- * day は約束の +0x28（🔶 約束した日）。記録にはない
+ * day は約束の +0x28・記録の +0x0C（🔶 約束した日）
  */
 export type PersonField = "group" | "day" | "type" | "name" | "look" | "age" | "blood";
-export type RecordField = Exclude<PersonField, "look" | "day">;
+export type RecordField = Exclude<PersonField, "look" | "group">;
 
 type FieldSpec = { rel: number; size: 1 | 2 | 4 };
 
@@ -194,7 +204,7 @@ export const PROMISE_LAYOUT_REL = 0x0a;
 const RECORD_FIELDS: Record<RecordField, FieldSpec> = {
   type: { rel: 0x00, size: 4 },
   name: { rel: 0x04, size: 4 },
-  group: { rel: 0x0c, size: 2 },
+  day: { rel: 0x0c, size: 2 },
   age: { rel: 0x0e, size: 1 },
   blood: { rel: 0x0f, size: 1 },
 };
@@ -233,7 +243,7 @@ export type RecordView = { index: number; building: number } & Record<RecordFiel
 
 export type YobaiView = {
   promise: PromiseView;
-  /** 0x137EC の件数 */
+  /** 0x13E34 の記録の件数 */
   count: number;
   records: RecordView[];
   counters: { offset: number; value: number; note: string }[];
@@ -264,14 +274,14 @@ export function readYobai(bytes: Uint8Array): YobaiView {
 
   const count = readU32(bytes, RECORD_COUNT_OFFSET);
   let recordsProblem = layoutProblem;
-  if (!recordsProblem && count > RECORD_CAPACITY) recordsProblem = `記録の件数（0x137EC）が ${count} で、枠の数 ${RECORD_CAPACITY} を超えています`;
+  if (!recordsProblem && count > RECORD_CAPACITY) recordsProblem = `記録の件数（0x13E34）が ${count} で、枠の数 ${RECORD_CAPACITY} を超えています`;
   const shown = Math.min(count, RECORD_CAPACITY);
   if (!recordsProblem) {
     // 件数までの枠は使用中、その先は空、という並びのときだけ編集を許す
     for (let i = 0; i < RECORD_CAPACITY; i++) {
       const empty = isEmptyRecord(bytes, i);
-      if (i < shown && empty) recordsProblem = `${i + 1}件目が空なのに、件数（0x137EC）は ${count} です`;
-      else if (i >= shown && !empty) recordsProblem = `件数（0x137EC）は ${count} なのに、${i + 1}件目に値があります`;
+      if (i < shown && empty) recordsProblem = `${i + 1}件目が空なのに、件数（0x13E34）は ${count} です`;
+      else if (i >= shown && !empty) recordsProblem = `件数（0x13E34）は ${count} なのに、${i + 1}件目に値があります`;
       if (recordsProblem) break;
     }
   }
