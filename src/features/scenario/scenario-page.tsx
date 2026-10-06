@@ -39,8 +39,6 @@ import {
   type CharactersView,
 } from "@/save/characters";
 import {
-  SMITH_STATES,
-  SMITH_STATE_OFFSET,
   TOWNSFOLK_LENGTH,
   TOWNSFOLK_NOTES,
   TOWNSFOLK_START,
@@ -472,15 +470,9 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
 
 const TOWNSFOLK_ROW = 16;
 
-const smithOptions: SelectOption[] = SMITH_STATES.map((s) => ({
-  value: String(s.value),
-  label: `${s.value} ${s.label}`,
-  group: s.group,
-}));
-
 /**
  * 1バイト分の入力欄。町の人の状態（0x0100〜0x04BF）用。
- * 鍛冶屋の状態（0x0127）は値の表から選ぶ。raw なら 0x0127 も数値で入力する（表にない値を上級者モードで書くため）
+ * 値の表があるバイト（0x0127・0x0132）は表から選ぶ。raw なら数値で入力する（表にない値を上級者モードで書くため）
  */
 function TownsfolkField({
   offset,
@@ -498,14 +490,18 @@ function TownsfolkField({
   const current = view?.values[offset - TOWNSFOLK_START] ?? null;
   const label = info?.name ? `${hex}（${info.name}）` : hex;
 
-  if (offset === SMITH_STATE_OFFSET && !raw)
+  if (info?.values && !raw)
     return (
       <SelectRow
         label={label}
         offset={offset}
         value={current === null ? null : String(current)}
         currentLabel={current === null ? undefined : `${current} 不明`}
-        options={smithOptions}
+        options={info.values.map((s) => ({
+          value: String(s.value),
+          label: `${s.value} ${s.label}`,
+          group: s.group,
+        }))}
         problem={view?.problem ?? null}
         note={info?.note}
         onChange={(v) => update((b) => writeTownsfolk(b, offset, Number(v), { advanced }))}
@@ -524,7 +520,7 @@ function TownsfolkField({
       }
       apply={(v) => update((b) => writeTownsfolk(b, offset, v, { advanced }))}
       inputMode="numeric"
-      hint={advanced ? "0〜255" : offset === SMITH_STATE_OFFSET ? "表の値" : "0・1"}
+      hint={advanced ? "0〜255" : info?.values ? "表の値" : "0・1"}
       note={info?.note}
     />
   );
@@ -550,7 +546,7 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
         </CardTitle>
         <CardDescription>
           0x0100〜0x04BF の960バイトです。ほとんど 0 で、町の人（店主など）ごとの状態やイベントの進み具合の表と推定しています。
-          鍛冶屋の後継者イベント・鍛冶屋の状態（0x0127）と堂島の死亡（0x0264）は、書き換えで確認済みです。
+          鍛冶屋の後継者イベント・鍛冶屋の状態（0x0127）、堂島が鍛冶屋を継いだか（0x0132。周回後に誰が鍛冶屋になるかを決める）、堂島の死亡（0x0264）は、書き換えで確認済みです。
           寿司屋の店主（0x02C4）と鍛冶屋のおやじ（0x0444）は 1 で死亡です。0 に戻すと生き返ることを確認済みです。
           下の表のマスを押すと、そのバイトを書き換えられます。0 以外のマスは色を付け、説明のあるマスには下線を引いています。
         </CardDescription>
@@ -560,7 +556,7 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
           {named.map((offset) => (
             <TownsfolkField key={offset} offset={offset} view={view} />
           ))}
-          {selected !== null && (!named.includes(selected) || selected === SMITH_STATE_OFFSET) && (
+          {selected !== null && (!named.includes(selected) || TOWNSFOLK_NOTES[selected].values) && (
             <TownsfolkField key={`raw-${selected}`} offset={selected} view={view} raw />
           )}
         </div>

@@ -51,6 +51,15 @@ describe('🔶 町の人の状態の候補 0x0100〜0x04BF §9.6', () => {
     expect(TOWNSFOLK_NOTES[0x0264].name).toBe('堂島')
   })
 
+  it('✅ [U] 0x0132 は堂島が鍛冶屋を継いだフラグ（0／1 を表から選ぶ）', () => {
+    expect(TOWNSFOLK_NOTES[0x0132].name).toBe('堂島が鍛冶屋を継いだ')
+    expect(TOWNSFOLK_NOTES[0x0132].values?.map((v) => v.value)).toEqual([0, 1])
+    const b = makeSave()
+    writeTownsfolk(b, 0x0132, 1, { advanced: false })
+    expect(b[0x0132]).toBe(1)
+    expect(() => writeTownsfolk(b, 0x0132, 2, { advanced: false })).toThrow(RangeError)
+  })
+
   it('✅ [U] 0x0127 は鍛冶屋の後継者イベント・鍛冶屋の状態。踏み倒しの差分で見た 110 も表にある', () => {
     expect(SMITH_STATE_OFFSET).toBe(0x0127)
     expect(SMITH_STATES.map((s) => s.value)).toEqual([0, 10, 20, 30, 40, 50, 60, 61, 69, 70, 81, 110, 119, 120])
