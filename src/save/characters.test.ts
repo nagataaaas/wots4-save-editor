@@ -1,7 +1,8 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は解析ノート §9.6（[U] 2026-10-06）で見たもの。
 // 🔶 0x374E＝赤城（00 生存・01 死亡・03 病院）、0x374F＝小暮（01 死亡、差分1回）、0x3759＝メリンダ（01 死亡、差分1回）。
-// ❓ 0x3756 は誰か不明。書き換えの効果は要ゲーム内確認。
+// ✅ 0x3757＝ローラ、0x3758＝J.J.（[U] 2026-10-06、1 を書くといなくなった）。
+// ❓ 0x3756 は誰か不明。赤城・小暮・メリンダの書き換えの効果は要ゲーム内確認。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -44,6 +45,11 @@ describe('🔶 重要人物の状態の候補 0x374E〜0x375C §9.6', () => {
     expect(CHARACTER_NOTES[0x374e].name).toBe('赤城？')
     expect(CHARACTER_NOTES[0x374f].name).toBe('小暮？')
     expect(CHARACTER_NOTES[0x3759].name).toBe('メリンダ？')
+  })
+
+  it('✅ [U] 0x3757 はローラ、0x3758 は J.J.（1 を書くといなくなった）', () => {
+    expect(CHARACTER_NOTES[0x3757].name).toBe('ローラ')
+    expect(CHARACTER_NOTES[0x3758].name).toBe('J.J.')
   })
 
   it('見たことのない値（4 以上）は警告だけ出す', () => {
