@@ -146,7 +146,10 @@ const GREEN_PLACE_LAYOUTS: readonly (readonly [number, readonly number[]])[] = [
   [0x22, [0x1d]],
 ];
 
-/** ✅ [U] 約束の実データで見た組の注記。1D＋01 だけは 🟢 の組にない */
+/**
+ * ✅ [U] 約束の実データで見た組の注記。すべて 🟢 の組の中にある。
+ * 2026-10-06 の 1D＋01 は操作ミスとみられる（[U] 2026-10-07。配置 00〜02 は同心・岡っ引きがいる配置で、🟢 の組に出てこない）ので外した
+ */
 const SEEN_PLACE_LAYOUTS: readonly { place: number; layout: number; note?: string }[] = [
   { place: 0x00, layout: 0x03 },
   { place: 0x09, layout: 0x21 },
@@ -158,7 +161,6 @@ const SEEN_PLACE_LAYOUTS: readonly { place: number; layout: number; note?: strin
   { place: 0x11, layout: 0x20, note: "先生" },
   { place: 0x18, layout: 0x25 },
   { place: 0x1c, layout: 0x3a, note: "ローラ" },
-  { place: 0x1d, layout: 0x01 },
   { place: 0x1d, layout: 0x19, note: "万由" },
   { place: 0x1d, layout: 0x1a, note: "千佳" },
   { place: 0x1d, layout: 0x1b, note: "百合" },
@@ -166,14 +168,13 @@ const SEEN_PLACE_LAYOUTS: readonly { place: number; layout: number; note?: strin
 ];
 
 /**
- * 正しい（場所、配置）の組。🟢 の72組と、実データで見た 1D＋01。場所・配置の順。
+ * 正しい（場所、配置）の組。🟢 の72組。場所・配置の順。
  * 通常モードではこの組だけを書ける（配置が合わないと布団が宙に浮いたり壁にめり込んだりする）。
  * seen は実データで見た組、note はそのときの相手
  */
-export const PLACE_LAYOUTS: readonly { place: number; layout: number; seen: boolean; note?: string }[] = [
-  ...GREEN_PLACE_LAYOUTS.flatMap(([place, layouts]) => layouts.map((layout) => ({ place, layout }))),
-  ...SEEN_PLACE_LAYOUTS.filter((s) => !GREEN_PLACE_LAYOUTS.some(([p, ls]) => p === s.place && ls.includes(s.layout))),
-]
+export const PLACE_LAYOUTS: readonly { place: number; layout: number; seen: boolean; note?: string }[] = GREEN_PLACE_LAYOUTS.flatMap(
+  ([place, layouts]) => layouts.map((layout) => ({ place, layout })),
+)
   .map(({ place, layout }) => {
     const seen = SEEN_PLACE_LAYOUTS.find((s) => s.place === place && s.layout === layout);
     return { place, layout, seen: seen !== undefined, note: seen?.note };

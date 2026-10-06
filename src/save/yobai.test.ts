@@ -146,11 +146,12 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
     expect(pairs).toContainEqual([0x11, 0x20]) // 先生・提灯の掛かった家
   })
 
-  it('🟢 場所と配置の組は72組（候補75行の重なりを除く）＋実データの 1D＋01。実データで見た組は seen', () => {
-    expect(PLACE_LAYOUTS).toHaveLength(73)
-    expect(new Set(PLACE_LAYOUTS.map((p) => `${p.place}:${p.layout}`)).size).toBe(73)
-    expect(PLACE_LAYOUTS.filter((p) => p.seen)).toHaveLength(15)
-    expect(PLACE_LAYOUTS.find((p) => p.place === 0x1d && p.layout === 0x01)?.seen).toBe(true)
+  it('🟢 場所と配置の組は72組（候補75行の重なりを除く）。実データで見た14組は seen', () => {
+    expect(PLACE_LAYOUTS).toHaveLength(72)
+    expect(new Set(PLACE_LAYOUTS.map((p) => `${p.place}:${p.layout}`)).size).toBe(72)
+    expect(PLACE_LAYOUTS.filter((p) => p.seen)).toHaveLength(14)
+    // [U] 2026-10-07 1D＋01 は操作ミスとみられる。配置 00〜02 は組に出てこない
+    expect(PLACE_LAYOUTS.some((p) => p.layout <= 0x02)).toBe(false)
     expect(PLACE_LAYOUTS.find((p) => p.place === 0x1b)).toMatchObject({ layout: 0x1f, seen: false }) // 鍛冶屋
     expect(PLACE_LAYOUTS.some((p) => p.place === 0x0c && p.layout === 0x07)).toBe(false) // ✅ [U] 布団がおかしくなった組
     expect(PLACE_LAYOUTS.every((p) => p.place <= 0x22)).toBe(true)

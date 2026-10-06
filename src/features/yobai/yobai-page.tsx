@@ -286,7 +286,7 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
         warning={known ? null : "確認済みの組ではありません。布団の位置がおかしくなることがあります"}
         hint="正しい組だけを選べます"
         searchPlaceholder="場所・配置・相手の名前で検索"
-        note="+0x08 は夜這いに入る扉と、その先のマップ。+0x0A はその先での人と布団の配置。場所だけを変えると、布団が宙に浮いたり壁にめり込んだりした（確認済み）。組は約束で使われる73組（相手の名前があるものは実データで見た組）"
+        note="+0x08 は夜這いに入る扉と、その先のマップ。+0x0A はその先での人と布団の配置。場所だけを変えると、布団が宙に浮いたり壁にめり込んだりした（確認済み）。組は約束で使われる72組（相手の名前があるものは実データで見た組）"
         onChange={(v) => {
           const [place, layout] = v.split(":").map(Number);
           update((b) => writePromisePlace(b, place, layout, { advanced }));
