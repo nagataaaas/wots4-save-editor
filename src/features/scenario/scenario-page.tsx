@@ -69,6 +69,15 @@ import {
   writeHint,
   type HintView,
 } from "@/save/hint";
+import {
+  PUBLIC_ORDER_LEVELS,
+  PUBLIC_ORDER_MAX,
+  PUBLIC_ORDER_OFFSET,
+  readPublicOrder,
+  validatePublicOrder,
+  writePublicOrder,
+  type PublicOrderView,
+} from "@/save/public-order";
 import { formatHex2, formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
@@ -137,6 +146,7 @@ type Views = {
   townsfolk: TownsfolkView;
   routeCandidates: RouteCandidatesView;
   hint: HintView;
+  publicOrder: PublicOrderView;
 };
 
 function parseInteger(input: string, validate: (v: number) => string | null): ParseResult<number> {
@@ -165,6 +175,7 @@ export function ScenarioPage() {
           townsfolk: readTownsfolk(b),
           routeCandidates: readRouteCandidates(b),
           hint: readHint(b),
+          publicOrder: readPublicOrder(b),
         },
       };
     } catch (e) {
@@ -212,6 +223,7 @@ export function ScenarioPage() {
       </Alert>
 
       <DateCard key={`${k}-date`} view={views?.date ?? null} />
+      <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />
       <FactionCard
         key={`${k}-factions`}
         view={views?.factions ?? null}
@@ -287,6 +299,48 @@ function DateCard({ view }: { view: DateView | null }) {
           problem={problem}
           note="イベントを完了すると 10 が入り、エリア移動やロードのときに 0x0010 に足されて 0 に戻ると推定しています"
           onChange={(v) => update((b) => writePending(b, Number(v)))}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+const publicOrderLevelsText = PUBLIC_ORDER_LEVELS.map(
+  (l, i) => `${l.label} ${l.min}〜${i === 0 ? PUBLIC_ORDER_MAX : PUBLIC_ORDER_LEVELS[i - 1].min - 1}`,
+).join("／");
+
+/** 治安の候補（0x0015）。view が null ならセーブ未読み込み */
+function PublicOrderCard({ view }: { view: PublicOrderView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          治安
+          <CertaintyBadge mark="🔶" text="位置は差分からの推定。要ゲーム内確認" />
+        </CardTitle>
+        <CardDescription>
+          0x0015（u8）を治安の候補として出しています。鍛冶屋で踏み倒すと 10 下がり、手元のセーブでは 0〜99 に収まっていました。
+          書き換えがゲーム内の「今の治安」に反映されるかは確かめていません。
+          段階（候補）：{publicOrderLevelsText}。
+          {view && ` 生の値：${view.value}（${formatHex2(view.value)}）${view.level ? `＝${view.level}` : ""}`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3">
+        <FieldRow
+          label="治安（候補）"
+          offset={PUBLIC_ORDER_OFFSET}
+          value={view?.value ?? null}
+          problem={view?.problem ?? null}
+          warning={view?.warning}
+          format={String}
+          parse={(input) => parseInteger(input, (v) => validatePublicOrder(v, { advanced }))}
+          apply={(v) => update((b) => writePublicOrder(b, v, { advanced }))}
+          inputMode="numeric"
+          hint={advanced ? "0〜255" : `0〜${PUBLIC_ORDER_MAX}`}
+          note="🔶 0x0015 の1バイトだけを書きます。1日目のセーブで 0 の例があり、初期値 50 とは合いません（❓）"
         />
       </CardContent>
     </Card>
