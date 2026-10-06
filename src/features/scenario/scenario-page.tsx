@@ -419,13 +419,15 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          人物の状態（候補・生の値）
-          <CertaintyBadge mark="🔶" text="人物との対応と書き換えの効果は未確認" />
+          人物の状態（生の値）
+          <CertaintyBadge mark="🔶" text="値の意味は一部だけ確認" />
         </CardTitle>
         <CardDescription>
-          イベントの状態のすぐ後ろにある15バイトで、重要人物ごとの状態（生死など）と推定しています。周回の始めはすべて 0 です。
+          イベントの状態のすぐ後ろにある15バイトで、重要人物ごとの状態（生死など）です。周回の始めはすべて 0 です。
+          0x3750（朱美）〜0x3758（J.J.）は、書き換えでどの人物か確認済みです。1 を書くとその人物がいなくなります。
+          鬼怒川怨仙（0x3756）は 2 がまだ阿弥浜に来ていない状態と推定しています（到着前に 0 にしても出現しませんでした）。
           0x374E は赤城（00 生存・01 死亡・03 病院に送った）、0x374F は小暮（01 死亡）、0x3759 はメリンダ（01 死亡）と、差分から推定しています（書き換えの効果は未確認）。
-          0x3750（朱美）・0x3757（ローラ）・0x3758（J.J.）は、1 を書くとその人物がいなくなることを確認済みです。
+          0x375A〜0x375C は誰か分かっていません。
           {view?.warning && ` ${view.warning}`}
         </CardDescription>
       </CardHeader>
