@@ -27,6 +27,7 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 | `place/start-location.csv`    | 開始地点（現在地） | このリストのみ           | u8                           |              | [date-location](../chunks/date-location/README.md) 0x0013 |
 | `place/night-visit-place.csv` | 夜の約束の場所     | このリストのみ           | u16 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x08      |
 | `occupation/occupation.csv`   | なりわい           | このリストのみ（0〜255） | 状態の表の添字               |              | [occupation](../chunks/occupation/README.md)              |
+| `npc/npc-name.csv`            | 人物の名前         | このリストのみ（1〜8200）| u32 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x1C・記録 +0x04 |
 
 リスト固有の列：
 
@@ -36,8 +37,10 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 - `weapon/complete.csv` の `unique_bytes`・`name_no`・`flag_22`：その完成武器のレコードに入る値 🟢。[weapon-record](../chunks/weapon-record/README.md) の
   +0x10〜+0x15（固有武器の6バイト。空欄は `FF` × 6）、+0x72（名前の番号。特殊武器は +0x20 にも入る）、+0x22
 - `weapon/blade-special.csv`・`weapon/complete.csv` の `name_en`：英語版のゲーム内の表記 🟢
-- `place/night-visit-place.csv` の `layout`：その場所で正しく表示される「人と布団の配置」（約束の枠 +0x0A）。実データで見た組だけを書く。空欄は不明
+- `place/night-visit-place.csv` の `layout`：その場所で正しく表示される「人と布団の配置」（約束の枠 +0x0A）。実データで見た組だけを書く。複数あるときは `;` で区切る。空欄は不明
 - `event/event.csv` の `name_en`：英語版のゲーム内の表記
+- `npc/npc-name.csv`：全行 🟢。`sex` は m＝男、f＝女。`group` は unique＝固有の名前（1〜215）、placeholder＝勢力ごとの仮の名前（1001〜6002）、
+  female＝町の女性の名前の候補（7001〜7150・8001〜8200）。約束の相手の町の人の名前は female から選ばれる 🔶。コードは `src/save/master/npc-names.ts` に同じ内容を持つ
 - `source`（パーツ・銘・魅力・完成武器・アイテム）：出典。`CT`＝Cheat Engine テーブル、`TS`＝[TS] の定義、`U`＝ユーザーのゲーム内確認、`SE-BBS`＝PS3版の掲示板。複数あるときは `;` で区切る
 
 ## 2. CSV の列
