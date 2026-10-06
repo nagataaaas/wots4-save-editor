@@ -40,6 +40,14 @@ import {
   type RecordView,
   type YobaiView,
 } from "@/save/yobai";
+import {
+  POINT_NORMAL_MAX,
+  YOBAI_POINTS,
+  readYobaiPoints,
+  validateYobaiPoint,
+  writeYobaiPoint,
+  type YobaiPointsView,
+} from "@/save/yobai-points";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -350,6 +358,50 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
   );
 }
 
+function PointsCard({ view }: { view: YobaiPointsView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const problem = view?.problem ?? null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          夜這いの約束の条件
+          <CertaintyBadge mark="🔶" text="書き換えの反映は未確認" />
+        </CardTitle>
+        <CardDescription>
+          朱美・ローラ・三姉妹・メリンダと夜這いの約束をするための好感度とポイントです（{formatOffset(0x3792)}〜{formatOffset(0x3797)}）。
+          約束そのものはゲームの中で、条件を満たした場面を通って作ります。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3">
+        {YOBAI_POINTS.map((p) => {
+          const current = view?.values.find((v) => v.offset === p.offset)?.value ?? null;
+          const range = advanced ? "0〜255" : `0〜${POINT_NORMAL_MAX}`;
+          return (
+            <FieldRow
+              key={p.offset}
+              label={p.label}
+              offset={p.offset}
+              badges={p.pending ? <CertaintyBadge mark={p.threshold === null ? "❓" : "🔶"} text={p.pending} /> : undefined}
+              value={current}
+              problem={problem}
+              format={String}
+              parse={(input) => parseNumber(input, (v) => validateYobaiPoint(v, { advanced }))}
+              apply={(v) => update((b) => writeYobaiPoint(b, p.offset, v, { advanced }))}
+              inputMode="numeric"
+              hint={p.threshold === null ? range : `${range}。${p.threshold} 以上で約束`}
+              note={p.note}
+              warning={current !== null && current > POINT_NORMAL_MAX ? `通常の進行では見ない値です（${current}）` : null}
+            />
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
 function CountersCard({ view }: { view: YobaiView | null }) {
   return (
     <Card>
@@ -377,10 +429,10 @@ function CountersCard({ view }: { view: YobaiView | null }) {
 export function YobaiPage() {
   const { save } = useSave();
 
-  const result = useMemo((): { view: YobaiView } | { error: string } | null => {
+  const result = useMemo((): { view: YobaiView; points: YobaiPointsView } | { error: string } | null => {
     if (!save) return null;
     try {
-      return { view: readYobai(save.working) };
+      return { view: readYobai(save.working), points: readYobaiPoints(save.working) };
     } catch (e) {
       return { error: errorMessage(e) };
     }
@@ -423,6 +475,7 @@ export function YobaiPage() {
         </AlertDescription>
       </Alert>
 
+      <PointsCard key={`${k}-points`} view={result?.points ?? null} />
       <PromiseCard key={`${k}-promise`} view={view} />
       <RecordsCard key={`${k}-records`} view={view} />
       <CountersCard view={view} />
