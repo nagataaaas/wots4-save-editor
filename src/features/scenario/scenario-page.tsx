@@ -257,12 +257,12 @@ function HintCard({ view }: { view: HintView | null }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           次のイベントのヒント
-          <CertaintyBadge mark="🔶" text="差分からの推定。要ゲーム内確認" />
+          <CertaintyBadge mark="❓" text="値とヒントの文の対応は未確認" />
         </CardTitle>
         <CardDescription>
-          0x3900（u16）がヒントの番号と推定しています。書き換えでヒントが変わるかは要ゲーム内確認です。
-          ヒントが琴吹光探検隊のとき 3、阿片密売を阻止せよのとき 6、西洋医学お断りのとき 9 でした（値＋4＝イベントの添字）。
-          ただし前の差分では、阿弥浜港争乱の直後が 83、嵐の後のあとが 89 など、この関係に合わない値も見ています。
+          0x3900（u16）を書き換えると、ヒントの文が変わることを確認済みです（6＝「港の様子でも見てみるか」）。
+          ヒントが琴吹光探検隊のとき 3、阿片密売を阻止せよのとき 6、西洋医学お断りのとき 9 でした。
+          ただし 7・13・18 は「さて　どうしたものか」（ヒントなし）になり、値と文の対応は分かっていません。
           {view && ` 生の値：${view.value}（0x${view.value.toString(16).toUpperCase().padStart(4, "0")}）`}
         </CardDescription>
       </CardHeader>

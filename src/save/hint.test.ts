@@ -1,6 +1,6 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は解析ノート「次のイベントのヒント」（sample/S4-DATA_01 copy 3〜6、[U] 2026-10-06）で見たもの。
-// 🔶 0x3900 がヒントの番号というのは差分からの推定。書き換えでヒントが変わるかは要ゲーム内確認。
+// ✅ [U] 0x3900 の書き換えでヒントの文が変わる（2026-10-06）。値と文の対応は ❓。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -24,7 +24,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 次のイベントのヒント 0x3900', () => {
+describe('次のイベントのヒント 0x3900（値と文の対応は ❓）', () => {
   it('u16 で読む', () => {
     expect(readHint(makeSave(COPY6_HINT))).toEqual({ value: 9, warning: null, problem: null })
     expect(readHint(makeSave(HINT_NONE)).value).toBe(0xffff)
