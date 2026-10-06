@@ -340,13 +340,7 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
   );
 }
 
-// 🔶 1 の意味は ❓ なので、見たセーブの状態だけを添える
-const facilityOptions: SelectOption[] = [
-  { value: "0", label: "0（3つとも初期状態のセーブの値）" },
-  { value: "1", label: "1（病院＝開・語学所＝開・カジノ＝閉のセーブの値）" },
-];
-
-/** 🔶 施設の状態の候補（0x375D〜0x375F）。view が null ならセーブ未読み込み */
+/** 施設の状態（0x375D〜0x375F）。view が null ならセーブ未読み込み */
 function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -354,14 +348,11 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          施設のフラグ（候補）
-          <CertaintyBadge mark="🔶" text="どのバイトがどの施設かは未確認" />
-        </CardTitle>
+        <CardTitle>施設</CardTitle>
         <CardDescription>
-          病院＝開・語学所＝開・カジノ＝閉のセーブでは 0x375D〜0x375F が 3つとも 1、3つとも初期状態（病院＝閉・語学所＝閉・カジノ＝開）のセーブでは 3つとも 0 でした。
-          3つが同時に変わったので、どれがどの施設かは分かっていません。並び（病院・語学所・カジノ）はイベントの順からの推測です。
-          1つずつ書き換えて、ゲーム内でどの施設が変わるか確かめてください（要ゲーム内確認）。
+          病院（0x375D）・カジノ（0x375E）・語学所（0x375F）の開閉です。書き換えで反映を確認済みです。
+          カジノだけ値が逆で、1 が閉じている状態です。3つとも 0 が初期状態（病院・語学所は閉、カジノは開）です。
+          周回をまたいで引き継がれると考えられます。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
@@ -372,7 +363,7 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
             offset={flag.offset}
             value={view ? String(view.values[i]) : null}
             currentLabel={view ? `${view.values[i]} 不明` : undefined}
-            options={facilityOptions}
+            options={flagOptions[flag.meaning]}
             problem={view?.problem ?? null}
             note={flag.note}
             onChange={(v) => update((b) => writeFacilityFlag(b, i, Number(v), { advanced }))}

@@ -1,14 +1,14 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は [U] 2026-10-06 の比較（解析ノート §9.8）で見たもの。
-// 🔶 0x375D〜0x375F が施設の状態の候補。どのバイトがどの施設か、1 の意味は ❓（要ゲーム内確認）。
+// 0x375D＝病院（1＝開）、0x375E＝カジノ（1＝閉）、0x375F＝語学所（1＝開）。書き換えで反映を確認（✅ [U] 2026-10-06）。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import { FACILITY_FLAGS, readFacilityFlags, writeFacilityFlag } from './facility-flags'
 
-/** 🔶 sample/S4-DATA_03（病院＝開・語学所＝開・カジノ＝閉）の値 */
+/** sample/S4-DATA_03（病院＝開・語学所＝開・カジノ＝閉）の値 */
 const CHANGED = [1, 1, 1]
-/** 🔶 sample/S4-DATA_01 copy 6（3つとも初期状態）の値 */
+/** sample/S4-DATA_01 copy 6（3つとも初期状態）の値 */
 const INITIAL = [0, 0, 0]
 
 function makeSave(values: number[], size = TS_SAVE_SIZE): Uint8Array {
@@ -27,9 +27,16 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 施設のフラグの候補 §9.8', () => {
+describe('施設のフラグ §9.8', () => {
+  it('✅ [U] 0x375D 病院・0x375E カジノ・0x375F 語学所。カジノだけ 1 で閉じる', () => {
+    expect(FACILITY_FLAGS.map((f) => [f.offset, f.label, f.meaning])).toEqual([
+      [0x375d, '病院', 'open'],
+      [0x375e, 'カジノ', 'close'],
+      [0x375f, '語学所', 'open'],
+    ])
+  })
+
   it('0x375D〜0x375F の3バイトを読む', () => {
-    expect(FACILITY_FLAGS.map((f) => f.offset)).toEqual([0x375d, 0x375e, 0x375f])
     expect(readFacilityFlags(makeSave(CHANGED))).toEqual({ values: CHANGED, problem: null })
     expect(readFacilityFlags(makeSave(INITIAL))).toEqual({ values: INITIAL, problem: null })
   })
