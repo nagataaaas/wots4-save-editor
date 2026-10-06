@@ -231,12 +231,8 @@ const flagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
     { value: "1", label: "1 閉じている" },
   ],
   open: [
-    { value: "0", label: "0 閉じている（🔶）" },
-    { value: "1", label: "1 開いている（🔶）" },
-  ],
-  unknown: [
-    { value: "0", label: "0（❓）" },
-    { value: "1", label: "1（❓）" },
+    { value: "0", label: "0 閉じている" },
+    { value: "1", label: "1 開いている" },
   ],
 };
 
@@ -253,7 +249,7 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
           ルート分岐を書き換えても、門が閉じたままだとそのルートに進めません。
           代官所（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、1 → 0 の書き換えで開くことを確認済みです。
           この3つは大寄せのときに書かれ、それより前の門には関係しません。
-          大寄せ前の門（0x377D・0x377E）と神社の候補（0x377C・0x377F）は差分からの推定で、要ゲーム内確認です。
+          大寄せ前の代官所（0x377D）・居留地（0x377E）・神社（0x377F）の門は、値が逆で 1 が開いている状態です（書き換えで反映を確認済み）。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">

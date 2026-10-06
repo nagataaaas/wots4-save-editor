@@ -1,7 +1,7 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。
 // 代官所（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、書き換えで開くことを確認（✅ [U] 2026-10-06）。
-// 大寄せ前の門 0x377D（代官所）・0x377E（居留地）は 🔶、神社の候補 0x377C・0x377F は ❓（どちらも要ゲーム内確認）。
+// 大寄せ前の門 0x377D（代官所）・0x377E（居留地）・0x377F（神社）は 1 で開き、書き換えで反映された（✅ [U] 2026-10-06）。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -9,16 +9,17 @@ import { WORLD_FLAGS, readWorldFlags, writeWorldFlag } from './world-flags'
 
 /**
  * WORLD_FLAGS の順。大寄せ以降の3つは 04 copy 11（根無し草、大寄せのあと。3つの門がすべて閉じている）、
- * 0x377D〜0x377F の4つは S4-DATA_01（阿弥浜港争乱の直後、神社・居留地だけが開いている）の値
+ * 大寄せ前の3つは S4-DATA_01（阿弥浜港争乱の直後、居留地だけが開いている）の値
  */
-const NO_ROUTE = [1, 1, 1, 0, 1, 0, 0]
+const NO_ROUTE = [1, 1, 1, 0, 1, 0]
 
 function makeSave(values: number[], size = TS_SAVE_SIZE): Uint8Array {
   const b = new Uint8Array(size)
   WORLD_FLAGS.forEach((f, i) => writeU8(b, f.offset, values[i]))
-  // 意味の分からないバイト（UI に出さない）も実データどおりに置き、書き込みで変わらないことを見る
+  // 意味の分からないバイト（UI に出さない）も置き、書き込みで変わらないことを見る
   writeU8(b, 0x37fb, 1)
   writeU8(b, 0x37a2, 2)
+  writeU8(b, 0x377c, 1)
   return b
 }
 
@@ -29,22 +30,18 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 }
 
 describe('門・柵のフラグ §3.5', () => {
-  it('代官所・居留地の門と神社入口の柵、大寄せ前の門と神社の候補を読む', () => {
-    expect(WORLD_FLAGS.map((f) => f.offset)).toEqual([
-      0x37fa, 0x3764, 0x37c3, 0x377d, 0x377e, 0x377c, 0x377f,
-    ])
+  it('大寄せ以降と大寄せ前の、代官所・居留地・神社の門を読む', () => {
+    expect(WORLD_FLAGS.map((f) => f.offset)).toEqual([0x37fa, 0x3764, 0x37c3, 0x377d, 0x377e, 0x377f])
     expect(readWorldFlags(makeSave(NO_ROUTE))).toEqual({ values: NO_ROUTE, problem: null })
   })
 
-  it('🔶 大寄せ前の門は 1 で開く、❓ 神社の候補は意味が分からない', () => {
-    expect(WORLD_FLAGS.map((f) => f.meaning)).toEqual([
-      'close', 'close', 'close', 'open', 'open', 'unknown', 'unknown',
-    ])
+  it('✅ [U] 大寄せ以降の門は 1 で閉じ、大寄せ前の門は 1 で開く', () => {
+    expect(WORLD_FLAGS.map((f) => f.meaning)).toEqual(['close', 'close', 'close', 'open', 'open', 'open'])
   })
 
   it('0・1 以外なら読み取り専用にする', () => {
-    expect(readWorldFlags(makeSave([2, 1, 1, 0, 1, 0, 0])).problem).not.toBeNull()
-    expect(readWorldFlags(makeSave([1, 1, 1, 0, 1, 0, 2])).problem).not.toBeNull()
+    expect(readWorldFlags(makeSave([2, 1, 1, 0, 1, 0])).problem).not.toBeNull()
+    expect(readWorldFlags(makeSave([1, 1, 1, 0, 1, 2])).problem).not.toBeNull()
   })
 
   it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
