@@ -646,7 +646,7 @@ function EventsCard({ view }: { view: EventsView | null }) {
           「状態」は周回中の状態（0x36A8＋添字）です。失敗（05）と未到達（FF）は、書き換えでチャートの表示が変わることを確認済みです。
           「チャート表示」は周回をまたぐ記録（0x3838＋添字、🔶
           生きた証）で、FF なら枠だけ出て名前が隠れ、04 なら名前が出ます（確認済み）。ただし FF でも、状態が成功（04）のイベントは名前が出ます（確認済み）。
-          枠そのものが出るかどうか（まだ到達したことのない日や、隠しルートに入ったことがない周回では出ない）は、この値では決まりません。
+          隠しルートを過去の周回で記録していないと、失敗したイベントはチャートに出ません。チャート表示を 04 にすると失敗として出ます（確認済み）。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -850,7 +850,7 @@ function EventBox({
           currentLabel={entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined}
           options={recordOptions(advanced)}
           problem={problem}
-          note="周回をまたぐ記録（生きた証）。FF で名前が隠れ、04 で名前が出る。FF でも状態が成功（04）なら出ます。枠が出るかどうかはこの値では決まりません。ほかの周回にも引き継がれる可能性があります"
+          note="周回をまたぐ記録（生きた証）。FF で名前が隠れ、04 で名前が出る。FF でも状態が成功（04）なら出ます。失敗（状態 05）のイベントがチャートに出ないときは、ここを 04 にすると失敗として出ます（確認済み）。ほかの周回にも引き継がれる可能性があります"
           onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
         />
       </div>

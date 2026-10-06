@@ -146,7 +146,7 @@ describe('記録の書き込み（✅ [U] FF・04 がチャート表示に効く
 
   it('🔶 記録で見た未確認の値（05：02 copy の再起の望み、03：00 の志士との出会い、00）は、上級者モードの選択肢に出す', () => {
     expect(EVENT_RECORDS_SEEN.map((r) => r.value)).toEqual([0x05, 0x03, 0x00])
-    expect(recordLabel(0x05)).toBe('失敗？（未確認）')
+    expect(recordLabel(0x05)).toBe('不明（05。書いてもチャートに出なかった）')
     // 選択肢を出す値は、上級者モードで書けて、読み込みで想定外にならない
     for (const { value } of EVENT_RECORDS_SEEN) {
       const b = makeSave(A_START)
