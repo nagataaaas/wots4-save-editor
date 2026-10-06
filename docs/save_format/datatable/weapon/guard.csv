@@ -30,7 +30,7 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
 137,0x0089,,斬鬼丸,Guard - Demonbane,CT;TS,賭場の胴元; TS は貪鬼丸の鍔として定義（D-16）
 139,0x008B,,馬通一,Guard - Strike One,CT;TS,凶衛門・赤柄
 141,0x008D,,阿修羅,Guard - Asura,CT;TS,
-143,0x008F,,凍雲小太刀,Guard - Raincloud,CT,
+143,0x008F,,浮雲小太刀,Guard - Raincloud,CT,🟢 CT の名前（凍雲小太刀）は誤り。凍雲小太刀（完成武器）もこの鍔を使う（U-10）
 145,0x0091,,赤マムシ,Guard - Red Viper,CT,
 147,0x0093,,村柾,Guard - Muramassa,CT;TS,大蛇
 149,0x0095,,黒蜻蛉,Guard - Dragonfly,CT;TS,
@@ -58,5 +58,5 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
 348,0x015C,,虎徹,Guard - Kotetsu,CT;TS,DLC
 350,0x015E,,和泉守兼定,Guard - Izuminokami,CT,DLC
 352,0x0160,,活火山,Guard - Volcano,CT,DLC
-359,0x0167,,夜葬,Guard - Wildgrass,U,野草=やそう(DLC); ゲーム内で夜葬と表示された（[U] 2026-10-05）。CT の 362 は誤記
+362,0x016A,,夜葬,Guard - Wildgrass,CT;U,野草=やそう(DLC); ゲーム内で組み立てた夜葬の +0x0B〜+0x0D が 01 6A 01（[U] 2026-10-07、U-15）; 鞘 359 を鍔に書いても夜葬と表示される; ID 362 は銘「人斬り」と同じ数だが、銘は別のフィールドなので重ならない
 65535,0xFFFF,,なし,None,CT,

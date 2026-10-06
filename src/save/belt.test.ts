@@ -340,7 +340,7 @@ describe('武器レコード（合成）', () => {
     }
   })
 
-  it('[U] 2026-10-05 ゲーム内確認：焔魔の刃は 0x133（X 0xD6）、霜柱は 0x134、クルセイダーは 0x138、なまくら刀は 0x13B、夜葬の鍔は 0x167', () => {
+  it('[U] ゲーム内確認：焔魔の刃は 0x133（X 0xD6）、霜柱は 0x134、クルセイダーは 0x138、なまくら刀は 0x13B（2026-10-05）、夜葬の鍔は 0x16A（U-15、2026-10-07）', () => {
     const b = makeSave()
     const o = beltOffset(0)
     b.set([0x33, 0x01, 0xd6], o + 0x08)
@@ -351,10 +351,13 @@ describe('武器レコード（合成）', () => {
     expect(readWeapon(b, o).blade.value.label).toBe('クルセイダー')
     writeWeaponPart(b, o, 'blade', ts(0x18013b))
     expect(readWeapon(b, o).blade).toMatchObject({ value: { label: 'なまくら刀' }, warning: null })
-    writeWeaponPart(b, o, 'guard', ct(0x167))
-    expect(readWeapon(b, o).guard.value.label).toBe('夜葬')
-    // CT の 362（銘「人斬り」と同じ ID）は誤記だったので選択肢にない
-    expect(() => writeWeaponPart(b, o, 'guard', ct(0x16a))).toThrow()
+    // U-15：組み立てた夜葬のバイト列 01 6A 01 を読むと夜葬の鍔。0x167 は夜葬の鞘なので選択肢にない
+    b.set([0x68, 0x01, 0x67, 0x01, 0x6a, 0x01], o + 0x08)
+    expect(readWeapon(b, o).guard).toMatchObject({ value: { label: '夜葬' }, warning: null })
+    writeWeaponPart(b, o, 'guard', ts(0x15a01))
+    writeWeaponPart(b, o, 'guard', ts(0x16a01))
+    expect([...b.subarray(o + 0x0c, o + 0x0e)]).toEqual([0x6a, 0x01])
+    expect(() => writeWeaponPart(b, o, 'guard', ct(0x167))).toThrow()
   })
 
   it('U-8 武器種（+0x1E）・🔶 鞘（X、+0x0A〜+0x0B）は上級者モードでだけ書け、そのバイトだけを変える', () => {

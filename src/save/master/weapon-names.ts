@@ -2,11 +2,11 @@
 // ほかのモジュールに依存しない（依存の順：weapon-names → weapon-ids → weapon → 画面）。
 //
 // - キー：日本語名（補足なし）。表示には ja／en を使う
-// - ja：日本語の表示名（[TS]・[CT]・ゲーム内の表示。特殊武器は補足つき）
+// - ja：日本語の表示名（[TS]・[CT]・ゲーム内の表示。特殊武器は補足つき）。刃・鍔・柄・完成武器の名前は 🟢 で裏付けた（2026-10-07。U-10）
 // - en：英語の表示名。[CT] の英語名（docs/save_format/datatable/weapon/*.csv の name_en から「Blade - 」などを除いたもの）。
-//   資料にないもの（特殊武器）は null で、表示は ja で代用する
-// - reading：ja の読み（五十音順に並べるため。ユーザー判断 2026-10-05）。駄洒落の元（CSV の備考：半ライス→汎来巣、神経痛→真啓通、
-//   弾頭→断頭など）があるものはそれに合わせ、残りはユーザーが見直した（2026-10-05）。特殊武器は ID 順に並べるので持たない
+//   特殊武器は英語版のゲーム内の表記（🟢）。null のときは表示を ja で代用する
+// - reading：ja の読み（五十音順に並べるため。ユーザー判断 2026-10-05）。刃の読みは全件 🟢 に合わせた（ユーザー判断 2026-10-07。
+//   すきもの・りゅうまち・かつかざん など。小書きの仮名を使わない読みもそのまま）。特殊武器は ID 順に並べるので持たない
 // - kind：sword（刀）／spear（槍）／special（特殊武器）。槍は [CT] の英語名が「Spear Blade／Guard／Grip」のもの
 //   （ユーザー判断で [CT] を確定扱い 2026-10-05）。焔魔・霜柱・立奈美の刃と藤奈美（武器種 1）はゲーム内でも槍と確認した（[U] 2026-10-05）
 
@@ -23,7 +23,7 @@ export type WeaponNameEntry = {
 
 export const WEAPON_NAMES = {
   中道刀: { ja: "中道刀", en: "Basal Blade", reading: "ちゅうどうとう", kind: "sword" },
-  数寄者: { ja: "数寄者", en: "Snatcher", reading: "すきしゃ", kind: "sword" }, // D-13
+  数寄者: { ja: "数寄者", en: "Snatcher", reading: "すきもの", kind: "sword" }, // D-13
   徳母里: { ja: "徳母里", en: "Big Bertha", reading: "とくもり", kind: "sword" },
   与根助: { ja: "与根助", en: "Last Rites", reading: "よねすけ", kind: "sword" }, // D-13
   絶天: { ja: "絶天", en: "Lost Prayer", reading: "ぜってん", kind: "sword" },
@@ -39,7 +39,7 @@ export const WEAPON_NAMES = {
   大黒生: { ja: "大黒生", en: "Aleshaft", reading: "おおくろなま", kind: "sword" },
   微熱: { ja: "微熱", en: "Fever", reading: "びねつ", kind: "sword" },
   竹刀: { ja: "竹刀", en: "Bamboo Sword", reading: "しない", kind: "sword" },
-  龍魔治: { ja: "龍魔治", en: "Pain' the Town", reading: "りうまち", kind: "sword" },
+  龍魔治: { ja: "龍魔治", en: "Pain' the Town", reading: "りゅうまち", kind: "sword" },
   精霊舞: { ja: "精霊舞", en: "Big Deal", reading: "せれぶ", kind: "sword" },
   炎天過: { ja: "炎天過", en: "Blazelet", reading: "えんてんか", kind: "sword" },
   氷天過: { ja: "氷天過", en: "Icy Glare", reading: "ひょうてんか", kind: "sword" },
@@ -52,7 +52,7 @@ export const WEAPON_NAMES = {
   斬鬼丸: { ja: "斬鬼丸", en: "Demonbane", reading: "ざんきまる", kind: "sword" },
   馬通一: { ja: "馬通一", en: "Strike One", reading: "ばついち", kind: "sword" },
   阿修羅: { ja: "阿修羅", en: "Asura", reading: "あしゅら", kind: "sword" },
-  凍雲小太刀: { ja: "凍雲小太刀", en: "Raincloud", reading: "いてぐもこだち", kind: "sword" },
+  浮雲小太刀: { ja: "浮雲小太刀", en: "Raincloud", reading: "うきぐものこだち", kind: "sword" }, // 🟢 U-10
   赤マムシ: { ja: "赤マムシ", en: "Red Viper", reading: "あかまむし", kind: "sword" },
   村柾: { ja: "村柾", en: "Muramassa", reading: "むらまさ", kind: "sword" },
   黒蜻蛉: { ja: "黒蜻蛉", en: "Dragonfly", reading: "くろとんぼ", kind: "sword" },
@@ -70,7 +70,7 @@ export const WEAPON_NAMES = {
   五郎縞: { ja: "五郎縞", en: "Goro Doe", reading: "ごろうじま", kind: "sword" },
   絶海: { ja: "絶海", en: "New World", reading: "ぜっかい", kind: "sword" },
   奮発丸: { ja: "奮発丸", en: "Xerter", reading: "ふんぱつまる", kind: "sword" },
-  律儀: { ja: "律儀", en: "Integrity", reading: "りちぎ", kind: "sword" },
+  律義: { ja: "律義", en: "Integrity", reading: "りちぎ", kind: "sword" },
   賢皇骨: { ja: "賢皇骨", en: "Scapulator", reading: "けんこうこつ", kind: "sword" },
   鮫肌九: { ja: "鮫肌九", en: "Sharkfin Mk. 9", reading: "さめはだきゅう", kind: "sword" },
   大樽生: { ja: "大樽生", en: "Alebarrow", reading: "おおたるなま", kind: "sword" },
@@ -94,11 +94,11 @@ export const WEAPON_NAMES = {
   猿丸: { ja: "猿丸", en: "Monkeytail", reading: "さるまる", kind: "sword" },
   蝉丸: { ja: "蝉丸", en: "Cicadian Schism", reading: "せみまる", kind: "sword" },
   小式部: { ja: "小式部", en: "Accountability", reading: "こしきぶ", kind: "sword" },
-  浮雲小太刀: { ja: "浮雲小太刀", en: "Snowcloud", reading: "うきぐもこだち", kind: "sword" },
+  凍雲小太刀: { ja: "凍雲小太刀", en: "Snowcloud", reading: "いてぐものこだち", kind: "sword" }, // 🟢 U-10
   毒マムシ: { ja: "毒マムシ", en: "Poison Viper", reading: "どくまむし", kind: "sword" },
   柾重: { ja: "柾重", en: "Spindler", reading: "まさしげ", kind: "sword" },
   蛇蜻蛉: { ja: "蛇蜻蛉", en: "Wyvernfly", reading: "へびとんぼ", kind: "sword" },
-  百代草: { ja: "百代草", en: "Hundred-Year Itch", reading: "ももよぐさ", kind: "sword" },
+  百代草: { ja: "百代草", en: "Hundred-Year Itch", reading: "ももよくさ", kind: "sword" },
   不語仙: { ja: "不語仙", en: "Silent Song", reading: "ふごせん", kind: "sword" },
   金盞花: { ja: "金盞花", en: "Marigold", reading: "きんせんか", kind: "sword" },
   二心: { ja: "二心", en: "Two Heart", reading: "ふたごころ", kind: "sword" },
@@ -107,12 +107,12 @@ export const WEAPON_NAMES = {
   麒麟児: { ja: "麒麟児", en: "Prodigy", reading: "きりんじ", kind: "spear" },
   焔魔: { ja: "焔魔", en: "Hellgirl", reading: "えんま", kind: "spear" },
   霜柱: { ja: "霜柱", en: "Ice Needle", reading: "しもばしら", kind: "spear" },
-  立奈美: { ja: "立奈美", en: "Wisterianum", reading: "たちなみ", kind: "spear" },
+  立奈美: { ja: "立奈美", en: "Wisterianum", reading: "たつなみ", kind: "spear" },
   見栄春: { ja: "見栄春", en: "Bloomer", reading: "みえはる", kind: "sword" },
   大天狗: { ja: "大天狗", en: "Great Tengu", reading: "おおてんぐ", kind: "sword" },
   クルセイダー: { ja: "クルセイダー", en: "Crusader", reading: "くるせいだー", kind: "sword" },
   イプスカリバ: { ja: "イプスカリバ", en: "Ipscalibur", reading: "いぷすかりば", kind: "sword" },
-  なまくら刀: { ja: "なまくら刀", en: "Blunt Sword", reading: "なまくらがたな", kind: "sword" },
+  なまくら刀: { ja: "なまくら刀", en: "Blunt Sword", reading: "なまくらとう", kind: "sword" },
   残月: { ja: "残月", en: "Morning Moon", reading: "ざんげつ", kind: "sword" },
   高楊枝: { ja: "高楊枝", en: "AruKinza Toothpick", reading: "たかようじ", kind: "sword" },
   無天下: { ja: "無天下", en: "Diet Slice", reading: "むてんか", kind: "sword" },
@@ -123,21 +123,21 @@ export const WEAPON_NAMES = {
   陸奥守吉行: { ja: "陸奥守吉行", en: "Mutsunokami", reading: "むつのかみよしゆき", kind: "sword" },
   虎徹: { ja: "虎徹", en: "Kotetsu", reading: "こてつ", kind: "sword" },
   和泉守兼定: { ja: "和泉守兼定", en: "Izuminokami", reading: "いずみのかみかねさだ", kind: "sword" },
-  活火山: { ja: "活火山", en: "Volcano", reading: "かっかざん", kind: "sword" },
+  活火山: { ja: "活火山", en: "Volcano", reading: "かつかざん", kind: "sword" },
   夜葬: { ja: "夜葬", en: "Wildgrass", reading: "やそう", kind: "sword" },
-  // 特殊武器（D-15）。英語名は資料にない
-  ジャクリーン: { ja: "ジャクリーン", en: null, kind: "special" },
-  虎爪: { ja: "虎爪（無手）", en: null, kind: "special" },
-  "53年式ライフル": { ja: "53年式ライフル", en: null, kind: "special" },
-  竹富士: { ja: "竹富士", en: null, kind: "special" },
-  十手: { ja: "十手", en: null, kind: "special" },
-  冥澱: { ja: "冥澱", en: null, kind: "special" },
-  鬼ヶ島: { ja: "鬼ヶ島", en: null, kind: "special" },
-  クズリ爪: { ja: "クズリ爪", en: null, kind: "special" },
-  出刃包丁: { ja: "出刃包丁", en: null, kind: "special" },
-  エンジェル: { ja: "エンジェル（ライフル）", en: null, kind: "special" },
-  カツオ: { ja: "カツオ", en: null, kind: "special" },
-  M2リボルバー: { ja: "M2リボルバー", en: null, kind: "special" },
+  // 特殊武器（D-15）。英語名は英語版のゲーム内の表記（🟢）
+  ジャクリーン: { ja: "ジャクリーン", en: "Jacqueline", kind: "special" },
+  虎爪: { ja: "虎爪（無手）", en: "Tiger Claw", kind: "special" },
+  "53年式ライフル": { ja: "53年式ライフル", en: "53 Rifle", kind: "special" },
+  竹富士: { ja: "竹富士", en: "Bamboozler", kind: "special" },
+  十手: { ja: "十手", en: "Hooked Truncheon", kind: "special" },
+  冥澱: { ja: "冥澱", en: "Maidenmaker", kind: "special" },
+  鬼ヶ島: { ja: "鬼ヶ島", en: "Ogre Isle", kind: "special" },
+  クズリ爪: { ja: "クズリ爪", en: "Dragon Claw", kind: "special" },
+  出刃包丁: { ja: "出刃包丁", en: "Sharp Knife", kind: "special" },
+  エンジェル: { ja: "エンジェル（ライフル）", en: "Angel", kind: "special" },
+  カツオ: { ja: "カツオ", en: "Cutlette", kind: "special" },
+  M2リボルバー: { ja: "M2リボルバー", en: "M2 Revolver", kind: "special" },
 } as const satisfies Record<string, WeaponNameEntry>;
 
 export type WeaponKey = keyof typeof WEAPON_NAMES;

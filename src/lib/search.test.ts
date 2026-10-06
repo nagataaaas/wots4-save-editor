@@ -20,8 +20,9 @@ describe('パーツの検索（読み・ja・en の部分一致）', () => {
     expect(matchesSearch('じょあ', weaponSearchTerms('ジョアンナ'))).toBe(true)
   })
 
-  it('英語名がない特殊武器は ja だけで当たる', () => {
-    expect(weaponSearchTerms('虎爪')).toEqual(['虎爪（無手）'])
+  it('特殊武器（読みなし）は ja と en で当たる', () => {
+    expect(weaponSearchTerms('虎爪')).toEqual(['虎爪（無手）', 'Tiger Claw'])
     expect(matchesSearch('無手', weaponSearchTerms('虎爪'))).toBe(true)
+    expect(matchesSearch('tiger', weaponSearchTerms('虎爪'))).toBe(true)
   })
 })

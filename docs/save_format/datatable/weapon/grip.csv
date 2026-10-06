@@ -30,7 +30,7 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
 136,0x0088,,斬鬼丸,Grip - Demonbane,CT,賭場の胴元
 138,0x008A,,馬通一,Grip - Strike One,CT,凶衛門・赤柄
 140,0x008C,,阿修羅,Grip - Asura,CT;TS,
-142,0x008E,,凍雲小太刀,Grip - Raincloud,CT,
+142,0x008E,,浮雲小太刀,Grip - Raincloud,CT,🟢 CT の名前（凍雲小太刀）は ID 251 と入れ替わっている（U-10）
 144,0x0090,,赤マムシ,Grip - Red Viper,CT,
 146,0x0092,,村柾,Grip - Muramassa,CT,大蛇
 148,0x0094,,黒蜻蛉,Grip - Dragonfly,CT;TS,
@@ -46,7 +46,7 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
 222,0x00DE,,五郎縞,Grip - Goro Doe,CT;TS,
 223,0x00DF,,絶海,Grip - New World,CT,先生・黄土色鞘
 224,0x00E0,,奮発丸,Grip - Xerter,CT,exert=奮発
-225,0x00E1,,律儀,Grip - Integrity,CT;TS,巣鴨
+225,0x00E1,,律義,Grip - Integrity,CT;TS,表記は TS と同じ「律義」（CT は律儀）; 巣鴨
 226,0x00E2,,賢皇骨,Grip - Scapulator,CT,肩甲骨
 227,0x00E3,,鮫肌九,Grip - Sharkfin Mk. 9,CT,霧鮫
 228,0x00E4,,大樽生,Grip - Alebarrow,CT,おっつぁん・金
@@ -72,7 +72,7 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
 248,0x00F8,,猿丸,Grip - Monkeytail,CT;TS,
 249,0x00F9,,蝉丸,Grip - Cicadian Schism,CT;TS,
 250,0x00FA,,小式部,Grip - Accountability,CT;TS,難しい舎弟・緑
-251,0x00FB,,浮雲小太刀,Grip - Snowcloud,CT,とぐろ・灰色
+251,0x00FB,,凍雲小太刀,Grip - Snowcloud,CT,🟢 CT の名前（浮雲小太刀）は ID 142 と入れ替わっている（U-10）; とぐろ・灰色
 252,0x00FC,,毒マムシ,Grip - Poison Viper,CT,
 253,0x00FD,,柾重,Grip - Spindler,CT;TS,赤刀身・茶柄
 254,0x00FE,,蛇蜻蛉,Grip - Wyvernfly,CT;TS,
@@ -82,8 +82,8 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
 258,0x0102,,二心,Grip - Two Heart,CT,まだら・難しい
 259,0x0103,,富士ヶ根,Spear Grip - Borrower,CT;TS,
 260,0x0104,,大文字,Spear Grip - Fat Messenger,CT;TS,
-261,0x0105,,麒麟児,Spear Grip - Prodigy,CT;TS,CTでHellgirlと入れ替わりの指摘あり
-262,0x0106,,焔魔,Spear Grip - Hellgirl,CT,閻魔。CTでProdigyと入れ替わりの指摘あり
+261,0x0105,,麒麟児,Spear Grip - Prodigy,CT;TS,
+262,0x0106,,焔魔,Spear Grip - Hellgirl,CT,閻魔
 263,0x0107,,霜柱,Spear Grip - Ice Needle,CT;TS,needle ice
 264,0x0108,,立奈美,Spear Grip - Wisterianum,CT,百合・難しい
 316,0x013C,,なまくら刀,Grip - Blunt Sword,CT;TS,
