@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は [U] 2026-10-06 の比較（解析ノート §9.5）で見たもの。
+// 値は [U] 2026-10-06 の比較（docs/save_format/chunks/hidden-route）で見たもの。
 // 0x378E＝隠しルート（✅ [U] 2026-10-06 書き換えで確認。三姉妹見参＝添字70 が成功のときだけ効く）。
 // ❓ 0x378D・0x3793・0x3799・0x379F・0x37A2・0x37AA は意味不明（0x378D・0x3799・0x379F・0x37AA はルートの切り替えに効かなかった）。
 import { describe, expect, it } from 'vitest'
@@ -36,7 +36,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('隠しルート 0x378E と周りの生の値 0x378D〜0x37AA §9.5', () => {
+describe('隠しルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/hidden-route', () => {
   it('0x378D〜0x37AA の30バイトと、隠しルートのフラグを読む', () => {
     expect(ROUTE_CANDIDATE_LENGTH).toBe(30)
     expect(HIDDEN).toHaveLength(30)

@@ -1,11 +1,12 @@
 // 武器レコード（0xA0 B 固定長）。帯刀・武器袋・武器箪笥で共通の構造。
-// 出典：解析ノート §5（[TS][I-2][I-3]）、§5.3 魅力・§5.4 銘（[U][TS][I-3]）、§5.5 パーツ（U-3：読みは [TS] の 3 B 値で照合、書きは 2 B×4。刃は ID と X、鍔・柄は ID だけ。ユーザー指摘 2026-10-05）、§3.4（[U] 2026-10-05 の差分）。
+// 出典：docs/save_format/chunks/weapon-record（[TS][I-2][I-3]）の魅力・銘（[U][TS][I-3]）、パーツ（U-3：読みは [TS] の 3 B 値で照合、書きは 2 B×4。刃は ID と X、鍔・柄は ID だけ。ユーザー指摘 2026-10-05）、
+// docs/save_format/chunks/belt-state（[U] 2026-10-05 の差分）。
 //
 // 書き込みは各フィールドのバイトだけを上書きする。次の領域は書き換えない：
-//   - +0x00〜+0x05：❓ 用途不明。武器袋[0] ではここが帯刀の状態（峰打など）と重なる（§3.4）
+//   - +0x00〜+0x05：❓ 用途不明。武器袋[0] ではここが帯刀の状態（峰打など）と重なる（chunks/belt-state）
 //   - +0x10〜+0x15、+0x1F〜+0x23、+0x70〜+0x8D、+0x94、+0x99〜+0x9B：❓ 用途不明
 //   - 耐久回復の累積（+0x8E ✅）：編集機能は持たない
-// 0x1A78C 付近などにある帯刀武器のコピー（🔶 §3.4）は書き換えない（[TS] も 0xA4C2 側だけを書き換えて動く。I-3）。
+// 0x1A78C 付近などにある帯刀武器のコピー（🔶 chunks/belt-copy）は書き換えない（[TS] も 0xA4C2 側だけを書き換えて動く。I-3）。
 import {
   readI16,
   readU16,
@@ -33,12 +34,12 @@ import { formatHex4 } from "@/lib/format";
 
 export const WEAPON_RECORD_BYTES = 0xa0;
 
-/** レコード内の位置（§5.2） */
+/** レコード内の位置（chunks/weapon-record の構造） */
 export const WEAPON_FIELDS = {
   weaponId: 0x06, // u16 ✅ 完成武器ID。0xFFFF は自作
   blade: 0x08, // 3 B ✅（[TS] の値）で読む。書くのは ID（u16）と X（+0x0A の u16）
   guard: 0x0b, // 3 B ✅（[TS] の値）で読む。書くのは ID（+0x0C の u16）だけ
-  /** u16 ✅ 鞘の ID（§5.5 の X。[U] 2026-10-05 鞘だけを書き換えてゲーム内で反映を確認）。下位バイトは刃の 3 B、上位バイトは鍔の 3 B にも含まれる */
+  /** u16 ✅ 鞘の ID（chunks/weapon-record のパーツの X。[U] 2026-10-05 鞘だけを書き換えてゲーム内で反映を確認）。下位バイトは刃の 3 B、上位バイトは鍔の 3 B にも含まれる */
   sheath: 0x0a,
   grip: 0x0e, // 2 B ✅
   attack: 0x16, // i16 ✅（符号付き。ユーザー確認 2026-10-05）
@@ -52,7 +53,7 @@ export const WEAPON_FIELDS = {
   qualityMax: 0x1c, // i16 ✅（符号付き。ユーザー確認 2026-10-05）
   charms: 0x24, // 4 B × 3組 ✅
   name: 0x30, // UTF-16LE 64 B ✅位置 ／ ✅最大17文字（U-5）
-  /** u32 🔶 手に持っていた時間（秒。メニュー画面は数えない）。+0x8A と常に同じ値（§3.4、[U] 2026-10-05）。表示だけ */
+  /** u32 🔶 手に持っていた時間（秒。メニュー画面は数えない）。+0x8A と常に同じ値（chunks/weapon-record、[U] 2026-10-05）。表示だけ */
   heldTime: 0x86,
   durability: 0x92, // i16 ✅ 現在の耐久（符号付き。ユーザー確認 2026-10-05）
   title: 0x96, // 3 B ✅
@@ -85,12 +86,12 @@ export type NumberKey =
 export type NumberRange = { min: number; max: number };
 
 /**
- * 数値の範囲。game はゲーム上の正規の範囲（§5.7）、system はセーブの型で書ける範囲。
+ * 数値の範囲。game はゲーム上の正規の範囲（chunks/weapon-record の値の範囲）、system はセーブの型で書ける範囲。
  * AGENTS.md：game を超える値は通常モードでは拒否し、上級者モードを明示したときだけ system まで許可する。
- * - 攻撃力・耐久（現在・最大）・質（現在・最大）は ✅ int16（ユーザー確認 2026-10-05。§5.2 の表では u16 としていた）
+ * - 攻撃力・耐久（現在・最大）・質（現在・最大）は ✅ int16（ユーザー確認 2026-10-05）
  * - 斬殺数は ✅ uint16（65535 から1人斬ると 0 に戻った。ユーザー確認 2026-10-05）
  * - つま斬り数は 🔶 uint16（斬殺数と同じ型と推測。未確認）
- * - 斬殺数・つま斬り数は 4万を超えると表示が崩れるという報告がある（🔶 §5.7）ので、ゲーム上の上限を 40,000 にする
+ * - 斬殺数・つま斬り数は 4万を超えると表示が崩れるという報告がある（🔶 chunks/weapon-record の値の範囲）ので、ゲーム上の上限を 40,000 にする
  */
 export const WEAPON_NUMBER_RANGES: Record<NumberKey, { game: NumberRange; system: NumberRange }> = {
   attack: { game: { min: 0, max: 500 }, system: { min: -0x8000, max: 0x7fff } },
@@ -140,10 +141,10 @@ export const WEAPON_TYPES: readonly { id: number; label: string }[] = [
  */
 export type AdvancedOptions = { advanced?: boolean };
 
-// ---- 魅力（§5.3 ✅） ----
+// ---- 魅力（chunks/weapon-record ✅） ----
 
 export const CHARM_SLOTS = 3;
-/** 個数の合計の上限（4以上で箪笥を開けなくなった報告あり。§5.3） */
+/** 個数の合計の上限（4以上で箪笥を開けなくなった報告あり。chunks/weapon-record） */
 export const CHARM_TOTAL_MAX = 3;
 export const NO_CHARM = 0xffff;
 
@@ -160,7 +161,7 @@ export const CHARMS: readonly { id: number; label: string }[] = [
   { id: 9, label: "重撃" },
 ];
 
-// ---- 銘（§5.4 ✅） ----
+// ---- 銘（chunks/weapon-record ✅） ----
 
 /** 銘の番号 → 名前。バイト列は `<0x6A + 番号> 01 <番号>` */
 export const TITLES: readonly { no: number; label: string }[] = [
@@ -243,7 +244,7 @@ function writeU24(bytes: Uint8Array, offset: number, value: number): void {
 /** 選択肢の識別子 */
 export const partKey = (p: PartOption) => `${p.source}:${p.value}`;
 
-/** 3 B／2 B の値から部品の ID（u16）を取り出す（§5.5：刃は下位 2 B、鍔は上位 2 B） */
+/** 3 B／2 B の値から部品の ID（u16）を取り出す（chunks/weapon-record のパーツ：刃は下位 2 B、鍔は上位 2 B） */
 export function partId(kind: PartKind, raw: number, source: PartOption["source"]): number {
   if (kind === "grip" || source === "ct") return raw;
   return kind === "blade" ? raw & 0xffff : (raw >>> 8) & 0xffff;
@@ -559,7 +560,7 @@ export function partOptions(kind: PartKind, special: boolean): readonly PartOpti
 }
 
 /**
- * ❓ X（§5.5）を規則で計算できない [CT] の刃。ID だけを書き、X は元の値のまま残す（U-3 案B）。
+ * ❓ X（chunks/weapon-record のパーツ）を規則で計算できない [CT] の刃。ID だけを書き、X は元の値のまま残す（U-3 案B）。
  * ゲーム内で分解→組み立てると正しい X になるので、それで X を調べる（ユーザー判断 2026-10-05、要ゲーム内確認）
  */
 export function isXUnknown(kind: PartKind, option: PartOption): boolean {
@@ -567,7 +568,7 @@ export function isXUnknown(kind: PartKind, option: PartOption): boolean {
 }
 
 /**
- * 刃の X（鞘の ID、§5.5）。null は X 不明（isXUnknown）。
+ * 刃の X（鞘の ID、chunks/weapon-record のパーツ）。null は X 不明（isXUnknown）。
  * 特殊武器の刃は 0xFFFF（鞘なし。[U] 2026-10-05）、[TS] の刃は x があればそれ、なければ 3 B 値の3バイト目
  */
 export function bladeX(option: PartOption): number | null {

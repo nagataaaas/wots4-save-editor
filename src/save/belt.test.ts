@@ -90,7 +90,7 @@ describe('武器レコード（合成）', () => {
     expect(() => writeWeaponCharms(b, o, [10, null, null])).toThrow()
   })
 
-  it('✅ §5.3：同じ ID が2組に分かれた形も読む（天運×2・背水）', () => {
+  it('✅ chunks/weapon-record 魅力：同じ ID が2組に分かれた形も読む（天運×2・背水）', () => {
     const b = makeSave()
     const o = beltOffset(0)
     b.set([0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x06, 0x00, 0x01, 0x00], o + 0x24)
@@ -105,7 +105,7 @@ describe('武器レコード（合成）', () => {
     expect(() => writeWeaponNumber(b, o, 'attack', 1)).toThrow()
   })
 
-  it('✅ §5.4 銘：<0x6A+番号> 01 <番号>。なしは FF FF FF。✅ U-2 人斬りは案A（6A 01 00）', () => {
+  it('✅ chunks/weapon-record 銘：<0x6A+番号> 01 <番号>。なしは FF FF FF。✅ U-2 人斬りは案A（6A 01 00）', () => {
     expect(encodeTitle(0x01)).toBe(0x01016b)
     expect(encodeTitle(0x13)).toBe(0x13017d)
     expect(encodeTitle(null)).toBe(0xffffff)
@@ -455,7 +455,7 @@ describe('武器レコード（合成）', () => {
 })
 
 describe('武器の数値：ゲーム上の範囲とシステム上の範囲', () => {
-  it('通常はゲーム上の範囲（§5.7）で、上級者モードではシステム上の範囲で検証する', () => {
+  it('通常はゲーム上の範囲（chunks/weapon-record の値の範囲）で、上級者モードではシステム上の範囲で検証する', () => {
     expect(validateWeaponNumber('attack', 500)).toBeNull()
     expect(validateWeaponNumber('attack', 501)).not.toBeNull()
     expect(validateWeaponNumber('attack', -1)).not.toBeNull()

@@ -14,7 +14,7 @@ import { formatHex4 } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { EMPTY_ID, validateItemCount, type ItemOptionGroup, type ItemSlot } from '@/save/item-slot'
 
-// アイテムの枠（ID＋個数、8 B）を1件編集する行。道具・重要品で共通（§4）。
+// アイテムの枠（ID＋個数、8 B）を1件編集する行。道具・重要品で共通（chunks/items）。
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e))
 

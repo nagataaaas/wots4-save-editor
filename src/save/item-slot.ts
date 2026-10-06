@@ -1,4 +1,4 @@
-// アイテムの枠（箪笥・手持ち・貴重品で共通）。出典：解析ノート §4（[TS] の `RawRareItem`、✅ [TS][I-3]）。
+// アイテムの枠（箪笥・手持ち・貴重品で共通）。出典：docs/save_format/chunks/items（[TS] の `RawRareItem`、✅ [TS][I-3]）。
 //
 // 1枠は 8 B：+0x00 ID（u16）、+0x02 個数（u16）、+0x04 用途不明（4 B ❓）。
 // 書き込むのは ID と個数の 4 B だけで、+0x04 の 4 B は変えない。
@@ -6,11 +6,11 @@ import { readU16, readU32, writeU16 } from './binary'
 
 export const ITEM_SLOT_BYTES = 8
 
-/** 空き枠の ID（§4 ✅） */
+/** 空き枠の ID（chunks/items ✅） */
 export const EMPTY_ID = 0xffff
 
 /**
- * 個数の上限。🔶 推測：解析ノート §4 のアンカー探索の目安（個数≤999）。ゲーム内の上限は未確認。
+ * 個数の上限。🔶 推測：chunks/items のアンカー探索の目安（個数≤999）。ゲーム内の上限は未確認。
  * 入力の上限と、読み込み時の妥当性の上限を兼ねる。
  */
 export const ITEM_COUNT_MAX = 999

@@ -126,7 +126,7 @@ export function ValuablesPage() {
       <p className="text-muted-foreground text-xs">
         各枠の +0x00〜+0x03（ID・個数）だけを書き換えます。+0x04〜+0x07
         は用途不明（❓）のため変えません。 個数の上限 {VALUABLE_COUNT_MAX} は推測（🔶
-        §4）で、ゲーム内の上限は未確認です。
+        chunks/items）で、ゲーム内の上限は未確認です。
       </p>
     </div>
   );

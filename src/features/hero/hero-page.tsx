@@ -155,7 +155,8 @@ export function HeroPage() {
             parse={parseName}
             apply={(v) => update((b) => writeName(b, v))}
             hint={`最大${NAME_MAX_CHARS}文字`}
-            note="長すぎる名前はロードできなくなる原因になります（§10.1）"
+            // 出典：docs/save_format/README.md §6
+            note="長すぎる名前はロードできなくなる原因になります"
           />
         </CardContent>
       </Card>

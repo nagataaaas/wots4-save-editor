@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readF32, readI16, readU32, readUtf16Fixed, writeF32, writeI16, writeU32, writeU8, writeUtf16Fixed } from './binary'
 
-describe('i16（リトルエンディアン ✅ §2）', () => {
+describe('i16（リトルエンディアン ✅ save_format/README.md §2）', () => {
   it('負の値を 2 の補数の LE で読み書きする', () => {
     const b = new Uint8Array(2)
     writeI16(b, 0, -2)
@@ -19,7 +19,7 @@ describe('i16（リトルエンディアン ✅ §2）', () => {
   })
 })
 
-describe('u32 / f32（リトルエンディアン ✅ §2）', () => {
+describe('u32 / f32（リトルエンディアン ✅ save_format/README.md §2）', () => {
   it('u32 を LE で読み書きする', () => {
     const b = new Uint8Array(8)
     writeU32(b, 2, 0x12345678)

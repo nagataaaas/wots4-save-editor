@@ -1,4 +1,4 @@
-// 開始地点（現在地）の値。出典：解析ノート §9.10（[W-PC] ✅）。
+// 開始地点（現在地）の値。出典：docs/save_format/datatable/place/start-location.csv、chunks/date-location（[W-PC] ✅）。
 // 位置 0x13 の u8（✅ U-7 解決済み）。
 
 export type Location = {
@@ -31,7 +31,8 @@ const named: Location[] = [
   { value: 0x11, label: '大通り・釜茹で会場' },
   { value: 0x12, label: '代官所・門の外' },
   { value: 0x13, label: 'クラッシュ', crash: true },
-  { value: 0x14, label: '代官所・牢屋', warning: 'ここでセーブしたデータはラスボス戦の後に落ちる（§10.1）' },
+  // 警告の出典：docs/save_format/README.md §6
+  { value: 0x14, label: '代官所・牢屋', warning: 'ここでセーブしたデータはラスボス戦の後に落ちる' },
   { value: 0x15, label: '墓場' },
   { value: 0x16, label: '港・寿司屋' },
   { value: 0x17, label: '港・カジノ' },

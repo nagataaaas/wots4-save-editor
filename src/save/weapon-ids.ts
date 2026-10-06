@@ -1,11 +1,11 @@
-// 武器の ID 表。docs/wos4_id_table.csv から生成した（2026-10-05）。表を直したら作り直す。
+// 武器の ID 表。docs/save_format/datatable/weapon/*.csv（blade・blade-special・guard・grip・title・charm・complete）と同じ内容（2026-10-05 生成）。表を直したら作り直す。
 // 名前は武器名のマスター（master/weapon-names.ts）のキーで参照する（依存の順：weapon-names → weapon-ids → weapon → 画面）。
 //
 // source の意味：
 //   'ts'：[TS] の定義値（✅ [TS][I-3]。U-3 案A：この値のまま書けば正しく動く）、または実セーブのバイト列をゲーム内の表示で確認した値（✅ [U]）。
 //         value は刃・鍔が 3 B、柄が 2 B を LE で読んだ値
 //   'ct'：Cheat Engine テーブル [CT] の ID（u16）だけが分かっているもの。ユーザー判断で確定扱い（2026-10-05。ゲーム内では未確認）。
-//         value は ID。刃は X（§5.5）を 🔶 規則で計算して書く（U-3 案C、ユーザー判断 2026-10-05）。規則外の刃は x が null で、
+//         value は ID。刃は X（chunks/weapon-record のパーツ）を 🔶 規則で計算して書く（U-3 案C、ユーザー判断 2026-10-05）。規則外の刃は x が null で、
 //         ID だけを書き X は元の値のまま残す（U-3 案B。ゲーム内で分解→組み立てると正しい X になるので、それで X を調べる。ユーザー判断 2026-10-05）
 // U-13 は案A（CT の刃 305〜316 は +1 ずれている）で決着した（ユーザー判断 2026-10-05）。CSV の ID は −1 した値
 // 正道刀の鍔（[TS] の定義値 0xAC0109）は作者が異常値と注記しており I-3 の対象外なので載せない。
@@ -329,7 +329,7 @@ export function partName(option: PartOption, lang: Lang = "ja"): string {
 }
 
 /**
- * 鞘（X、+0x0A〜+0x0B の u16。§5.5）。✅ X は鞘の ID（[U] 2026-10-05）。names は同じ X を使う刃。0xFFFF は鞘なし（[U] 2026-10-05）。
+ * 鞘（X、+0x0A〜+0x0B の u16。chunks/weapon-record のパーツ、datatable/weapon/blade.csv の sheath_x）。✅ X は鞘の ID（[U] 2026-10-05）。names は同じ X を使う刃。0xFFFF は鞘なし（[U] 2026-10-05）。
  * 🔶 U-3 案C の行は、[CT] の刃の X を規則（ID＋0x17／ID−0x5D）で計算した値から逆算して足した鞘（ユーザー判断 2026-10-05）。ゲーム内では未確認
  */
 export type SheathOption = { id: number; names: readonly WeaponKey[] };
@@ -443,7 +443,7 @@ export function sheathName(sheath: SheathOption, lang: Lang = "ja"): string {
 }
 
 /**
- * 完成武器ID（+0x06 の u16。§5.8 ✅ [TS][I-3]）。name が null は自作武器（0xFFFF）。
+ * 完成武器ID（+0x06 の u16。datatable/weapon/complete.csv ✅ [TS][I-3]）。name が null は自作武器（0xFFFF）。
  * [TS] のコード表記の異字（数奇者・ジョセフィーヌ・律義・青伯）は、パーツと同じ名前（数寄者・ジョゼフィーヌ・律儀・蒼伯）にまとめた（2026-10-05）
  */
 export type WeaponIdOption = { id: number; name: WeaponKey | null };

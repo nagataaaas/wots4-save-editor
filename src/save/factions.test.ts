@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。どれも 🔶（意味も書き込みも要ゲーム内確認）
+// 値は docs/save_format/chunks/factions の調査記録のシナリオ差分（[U] 2026-10-05）で見たもの。どれも 🔶（意味も書き込みも要ゲーム内確認）
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import {
@@ -31,7 +31,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('readFactions 🔶 §3.5', () => {
+describe('readFactions 🔶 chunks/factions', () => {
   it('3行 × 3列（幕府・外国・攘夷）に並べて読む', () => {
     expect(readFactions(makeSave(AFTER_SNEAK))).toMatchObject({
       values: [
@@ -98,7 +98,7 @@ const BAKUFU_ROUTE = [0x03, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x01, 0x01
 /** 04 copy 11・03 copy 9 の 0x3789〜0x378C（どの勢力にも入れない） */
 const NO_ROUTE = [0x02, 0x02, 0x02, 0x01]
 
-describe('剣術大会以後のルート分岐 §3.5（0x3789〜0x378C）', () => {
+describe('剣術大会以後のルート分岐 chunks/factions（0x3789〜0x378C）', () => {
   it('勢力ごとの判定と無所属を読む', () => {
     expect(readRouteJudge(makeSave(BAKUFU_ROUTE))).toEqual({ judges: [1, 2, 2], none: 0, problem: null, warning: null })
     const b = makeSave(BAKUFU_ROUTE)

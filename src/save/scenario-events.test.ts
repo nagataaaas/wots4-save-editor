@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。周回中の状態の FF・05 はゲーム内で表示を確認（✅ [U]）、ほかは 🔶（要ゲーム内確認）
+// 値は docs/save_format/chunks/event-chart の調査記録のシナリオ差分（[U] 2026-10-05）で見たもの。周回中の状態の FF・05 はゲーム内で表示を確認（✅ [U]）、ほかは 🔶（要ゲーム内確認）
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -41,7 +41,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('readEvents 🔶 §3.5', () => {
+describe('readEvents 🔶 chunks/event-chart', () => {
   it('周回中の状態と周回をまたぐ記録を添字ごとに読む', () => {
     const v = readEvents(makeSave(A_DAY2))
     expect(v.problem).toBeNull()

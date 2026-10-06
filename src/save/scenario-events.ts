@@ -1,4 +1,4 @@
-// イベントチャートの状態。出典：解析ノート §3.5（[U] 2026-10-05 のシナリオ差分とゲーム内での書き込み確認）、イベント名は docs/event.md。
+// イベントチャートの状態。出典：docs/save_format/chunks/event-chart（[U] 2026-10-05 のシナリオ差分とゲーム内での書き込み確認）、イベント名は docs/event.md。
 //
 //   0x36A8〜 u8 × 166  周回中のイベント状態（A）。添字ごとに1イベント
 //   0x3838〜 u8 × 166  周回をまたぐ記録（B、🔶 生きた証）。チャートに表示するかどうかを決めていると推定
@@ -17,7 +17,7 @@
 //      ✅ [U] 記録が FF の阿片密売で A を 05 にしても、名前は隠れたまま失敗扱いになった。
 //      ただし A が 04（成功）なら FF でも名前が出る（✅ [U] 2026-10-06）。A が 01・03 のときは ❓
 //      枠そのものが出るかどうかは B ではなく別のところで決まる（[U] 2026-10-06：まだ到達したことのない日や、
-//      隠しルートに入ったことがない周回では枠が出ない）。位置は ❓（解析ノート §9.5）
+//      隠しルートに入ったことがない周回では枠が出ない）。位置は ❓（chunks/event-chart）
 //   04 イベント名が出る。✅ [U] チャート表示に効くのは FF と 04 だけ（ユーザー確認 2026-10-05）。
 //      ✅ [U] 2026-10-06：隠しルートを記録していない周回（01 copy 12）で、状態が 05 の再起の望み（添字72）はチャートに出なかったが、
 //      記録を 04 にすると失敗として出た。状態が成功・失敗のどちらでも、記録 04 なら結果どおりに出る。
@@ -31,9 +31,9 @@
 import { readU8, writeU8 } from './binary'
 import { checkLayout } from './hero'
 
-export const EVENT_STATE_OFFSET = 0x36a8 // 🔶 §3.5
-export const EVENT_RECORD_OFFSET = 0x3838 // 🔶 §3.5
-export const EVENT_COUNT = 166 // ❓ §3.5
+export const EVENT_STATE_OFFSET = 0x36a8 // 🔶 chunks/event-chart
+export const EVENT_RECORD_OFFSET = 0x3838 // 🔶 chunks/event-chart
+export const EVENT_COUNT = 166 // ❓ chunks/event-chart
 
 /** 周回中の状態（A）。confirmed は書き込みでゲーム内の表示を確かめたもの */
 export const EVENT_STATES = [
@@ -68,7 +68,7 @@ export type EventName = {
 }
 
 /**
- * 名前の分かっている添字。§3.5「未確定のこと」。day は docs/event.md（Wiki）の時間帯。
+ * 名前の分かっている添字。docs/save_format/datatable/event/event.csv。day は docs/event.md（Wiki）の時間帯。
  * 2〜46 の名前はユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）。52〜98 も同じ（[U] 2026-10-06）。
  * 4日目以降のイベントの day は時間帯ではなく、docs/event.md の節（ルート・エンディング）を入れる。
  * 51・99・116 も [U] 2026-10-06。docs/event.md（Wiki）に載っているイベントは、これですべて対応がついた。

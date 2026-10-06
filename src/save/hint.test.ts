@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は解析ノート「次のイベントのヒント」（sample/S4-DATA_01 copy 3〜6、[U] 2026-10-06）で見たもの。
+// 値は docs/save_format/chunks/hint（sample/S4-DATA_01 copy 3〜6、[U] 2026-10-06）で見たもの。
 // ✅ [U] 0x3900 の書き換えでヒントの文が変わる（2026-10-06）。値と文の対応は ❓。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU8 } from './binary'

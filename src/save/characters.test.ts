@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は解析ノート §9.6（[U] 2026-10-06）で見たもの。
+// 値は docs/save_format/chunks/characters（[U] 2026-10-06）で見たもの。
 // 🔶 0x374E＝赤城（00 生存・01 死亡・03 病院）、0x374F＝小暮（01 死亡、差分1回）、0x3759＝メリンダ（01 死亡、差分1回）。
 // ✅ 0x3750＝朱美、0x3751＝琴吹、0x3752＝茂呂、0x3753＝マユ、0x3754＝チカ、0x3755＝ユリ、0x3756＝鬼怒川怨仙、
 // 0x3757＝ローラ、0x3758＝J.J.（[U] 2026-10-06、書き換えで確認）。🔶 鬼怒川の 2＝まだ阿弥浜に来ていない（[U] の推定）。
@@ -35,7 +35,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 重要人物の状態の候補 0x374E〜0x375C §9.6', () => {
+describe('🔶 重要人物の状態の候補 0x374E〜0x375C chunks/characters', () => {
   it('0x374E〜0x375C の15バイトを読む', () => {
     expect(CHARACTER_LENGTH).toBe(15)
     expect(BOTH_DEAD).toHaveLength(15)

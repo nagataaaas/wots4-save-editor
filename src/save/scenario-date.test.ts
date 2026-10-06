@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。
+// 値は docs/save_format/chunks/date-location の調査記録のシナリオ差分（[U] 2026-10-05）で見たもの。
 // 時間帯（0x0010・0x0014）と保留量（0x0012）はゲーム内で書き込みの反映を確認済み（✅ [U]）。
 // 0x0010 の日の部分だけを書き換えても日数は変わらず、0x0BD8（経過日数）も一緒に書くと変わった（✅ [U] 2026-10-05）。
 // 4日目以降は 0x0010＝400 で止まる（03 copy 7・8・9 の差分）。5日目への書き換えで大老 鬼怒川怨仙が発生した（✅ [U] 2026-10-05）
@@ -39,7 +39,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('readDate §3.5', () => {
+describe('readDate chunks/date-location', () => {
   it('差分で見た値を日数・時間帯として読む', () => {
     expect(readDate(makeSave(SEEN.day1Evening))).toMatchObject({ day: 1, slot: 1, pending: 0, problem: null, warning: null })
     expect(readDate(makeSave(SEEN.day1Night))).toMatchObject({ day: 1, slot: 2, problem: null })

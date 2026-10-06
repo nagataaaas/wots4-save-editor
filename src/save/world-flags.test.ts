@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は解析ノート §3.5 のシナリオ差分（[U] 2026-10-05）で見たもの。
+// 値は docs/save_format/chunks/gates の調査記録のシナリオ差分（[U] 2026-10-05）で見たもの。
 // 代官所（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、書き換えで開くことを確認（✅ [U] 2026-10-06）。
 // 大寄せ前の門 0x377D（代官所）・0x377E（居留地）・0x377F（神社）は 1 で開き、書き換えで反映された（✅ [U] 2026-10-06）。
 import { describe, expect, it } from 'vitest'
@@ -29,7 +29,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('門・柵のフラグ §3.5', () => {
+describe('門・柵のフラグ chunks/gates', () => {
   it('大寄せ以降と大寄せ前の、代官所・居留地・神社の門を読む', () => {
     expect(WORLD_FLAGS.map((f) => f.offset)).toEqual([0x37fa, 0x3764, 0x37c3, 0x377d, 0x377e, 0x377f])
     expect(readWorldFlags(makeSave(NO_ROUTE))).toEqual({ values: NO_ROUTE, problem: null })

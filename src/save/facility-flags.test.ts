@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は [U] 2026-10-06 の比較（解析ノート §9.8）で見たもの。
+// 値は [U] 2026-10-06 の比較（docs/save_format/chunks/facilities）で見たもの。
 // 0x375D＝病院（1＝開）、0x375E＝カジノ（1＝閉）、0x375F＝語学所（1＝開）。書き換えで反映を確認（✅ [U] 2026-10-06）。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
@@ -27,7 +27,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('施設のフラグ §9.8', () => {
+describe('施設のフラグ chunks/facilities', () => {
   it('✅ [U] 0x375D 病院・0x375E カジノ・0x375F 語学所。カジノだけ 1 で閉じる', () => {
     expect(FACILITY_FLAGS.map((f) => [f.offset, f.label, f.meaning])).toEqual([
       [0x375d, '病院', 'open'],

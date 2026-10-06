@@ -1,4 +1,4 @@
-// 主人公の基本情報。出典：解析ノート §3.1（[TS][I-1][I-3]）、§9.10（[W-PC]）。
+// 主人公の基本情報。出典：docs/save_format/chunks/money・player-name・stats・vitals（[TS][I-1][I-3]）、chunks/date-location と datatable/place/start-location.csv（[W-PC]）。
 //
 // ❓ U-1（固定オフセットで扱えるか）が判定待ちのため、[TS] の固定オフセット（案A）を使い、
 // 次の2段階の妥当性検証を通ったフィールドだけを編集可能にする（check-diff.md U-1「採用までの扱い」）。
@@ -8,7 +8,7 @@ import { readF32, readU32, readU8, readUtf16Fixed, writeF32, writeU32, writeU8, 
 import { formatHex2 } from '@/lib/format'
 import { findLocation } from './locations'
 
-/** [TS] が扱うファイルサイズ（§2）。❓ U-1：全セーブ共通とは限らない */
+/** [TS] が扱うファイルサイズ（docs/save_format/README.md §2）。❓ U-1：全セーブ共通とは限らない */
 export const TS_SAVE_SIZE = 0x48bb0
 
 export const HERO_OFFSETS = {
@@ -19,7 +19,7 @@ export const HERO_OFFSETS = {
   name: 0xdc, // UTF-16LE 64 B、最大31文字 ✅ [I-1]
   samuraiPoint: 0xb3c, // u32 ✅
   // 0x35A4（❓ [TS] では活力、PS3版の並びでは現在HP）と 0x35AC（❓ 活力の現在値の関連値）は
-  // 意味が確定しないため扱わない（ユーザー判断、2026-10-04）。解析ノート §3.1・U-4 を参照
+  // 意味が確定しないため扱わない（ユーザー判断、2026-10-04）。chunks/vitals・U-4 を参照
   /** float32。最大HP ✅ [U]（2026-10-04 ユーザー確認） */
   hp: 0x35a8,
   /** float32。活力の最大値 ✅ [U]（2026-10-04 ユーザー確認） */

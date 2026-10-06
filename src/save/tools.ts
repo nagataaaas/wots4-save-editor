@@ -1,5 +1,6 @@
-// 道具（手持ちの通常アイテム）。出典：解析ノート §3.2（[TS] の `CarriedItems`）、§4・§4.2（✅ [TS][I-3]）、
-// 付録A D-11（手持ち 0x5B40、8 B × 10件。PS3 の値とも一致）。
+// 道具（手持ちの通常アイテム）。出典：docs/save_format/README.md §2.1（[TS] の `CarriedItems`）、
+// docs/save_format/chunks/items・docs/save_format/datatable/item/item.csv（✅ [TS][I-3]）、
+// check-diff.md D-11（手持ち 0x5B40、8 B × 10件。PS3 の値とも一致）。
 //
 // ❓ U-1（固定オフセットで扱えるか）が判定待ちのため、[TS] の固定オフセット（案A）を使い、
 // 次の2段階の妥当性検証を通った枠だけを編集可能にする（check-diff.md U-1「採用までの扱い」）。
@@ -44,7 +45,7 @@ export const TOOL_MARK = 0x06;
 const TOOL_MARK_OFFSET = 4;
 
 /**
- * ✅ [TS] に名前付きで定義されている通常アイテム（§4.2、wos4_id_table.csv の出典が TS のもの）。
+ * ✅ [TS] に名前付きで定義されている通常アイテム（datatable/item/item.csv の source に TS を含むもの）。
  * PS3版の一覧（0x08 阿修羅きのこ、0x09 秘薬、0x0C 秘奥義ノ書、0x22 白紙目録、0x74 コイン）とも一致する。
  */
 export const TS_TOOLS: readonly ItemOption[] = [

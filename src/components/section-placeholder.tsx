@@ -16,7 +16,7 @@ export function SectionPlaceholder({ section }: { section: Section }) {
       )}
       <Alert>
         <AlertTitle>「{section.label}」は未実装です</AlertTitle>
-        <AlertDescription>解析ノート：{section.note}</AlertDescription>
+        <AlertDescription>解析ドキュメント：{section.note}</AlertDescription>
       </Alert>
     </div>
   )

@@ -1,4 +1,4 @@
-// 勢力ごとの記録（3×3 表）。出典：解析ノート §3.5「勢力の 3×3 表の候補」、§9.4（[U] 2026-10-05 のシナリオ差分）。
+// 勢力ごとの記録（3×3 表）。出典：docs/save_format/chunks/factions（README、reserch/2026-10-05_faction-table.md・2026-10-05_faction-run.md。[U] 2026-10-05 のシナリオ差分）。
 //
 // 差分からの推定。行0・行1 は、書き換えると大寄せの結果が変わることを確認した（✅ [U] 2026-10-05、下の「剣術大会以後のルート分岐」）。
 // 行2 も書き換えでイベントの反応が変わることを確認した（✅ [U] 2026-10-05）。0x3780〜0x3788 の u8 × 9 を
@@ -30,7 +30,7 @@
 import { readU8, writeU8 } from './binary'
 import { checkLayout } from './hero'
 
-export const FACTION_TABLE_OFFSET = 0x3780 // 🔶 §3.5
+export const FACTION_TABLE_OFFSET = 0x3780 // 🔶 chunks/factions
 
 export const FACTIONS = ['幕府', '外国', '攘夷'] as const
 export const FACTION_ROWS = [
@@ -94,8 +94,8 @@ export function routeEligible(values: readonly (readonly number[])[], col: numbe
   return values[0][col] - values[1][col] >= ROUTE_THRESHOLD
 }
 
-export const ROUTE_JUDGE_OFFSET = 0x3789 // ✅ [U] §3.5 剣術大会以後のルート分岐（勢力ごと 3 B）
-export const ROUTE_NONE_OFFSET = 0x378c // ✅ [U] §3.5 無所属
+export const ROUTE_JUDGE_OFFSET = 0x3789 // ✅ [U] chunks/factions 剣術大会以後のルート分岐（勢力ごと 3 B）
+export const ROUTE_NONE_OFFSET = 0x378c // ✅ [U] chunks/factions 無所属
 export const ROUTE_JUDGE_VALUES = [
   { value: 0x00, label: '大寄せ前' },
   { value: 0x01, label: 'ルートに入れる' },
