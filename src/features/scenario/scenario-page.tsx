@@ -424,7 +424,7 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
         </CardTitle>
         <CardDescription>
           イベントの状態のすぐ後ろにある15バイトで、重要人物ごとの状態（生死など）と推定しています。周回の始めはすべて 0 です。
-          0x374E は赤城（00 生存・01 死亡・03 病院に送った）、0x374F は小暮（01 死亡）と、差分から推定しています。
+          0x374E は赤城（00 生存・01 死亡・03 病院に送った）、0x374F は小暮（01 死亡）、0x3759 はメリンダ（01 死亡）と、差分から推定しています。
           書き換えがゲームに効くかは確かめていません（要ゲーム内確認）。
           {view?.warning && ` ${view.warning}`}
         </CardDescription>
