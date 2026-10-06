@@ -1,6 +1,6 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は解析ノート §9.6（[U] 2026-10-06）で見たもの。
-// 🔶 0x02C4＝寿司屋の店主、0x0444＝鍛冶屋のおやじ（どちらも 1＝死亡、差分1回）。要ゲーム内確認。
+// ✅ [U] 2026-10-06：0x02C4＝寿司屋の店主、0x0444＝鍛冶屋のおやじ（どちらも 1＝死亡。0 に戻すと生き返った）。
 // ✅ [U] 2026-10-06：0x0127＝鍛冶屋の後継者イベント・鍛冶屋の状態（値の表は書き換えで確認）、0x0264＝堂島の死亡。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
@@ -45,9 +45,9 @@ describe('🔶 町の人の状態の候補 0x0100〜0x04BF §9.6', () => {
     expect(view.values[0x0127 - TOWNSFOLK_START]).toBe(0x6e)
   })
 
-  it('🔶 0x02C4 は寿司屋の店主、0x0444 は鍛冶屋のおやじと推定している', () => {
-    expect(TOWNSFOLK_NOTES[0x02c4].name).toBe('寿司屋の店主？')
-    expect(TOWNSFOLK_NOTES[0x0444].name).toBe('鍛冶屋のおやじ？')
+  it('✅ [U] 0x02C4 は寿司屋の店主、0x0444 は鍛冶屋のおやじ、0x0264 は堂島（1＝死亡）', () => {
+    expect(TOWNSFOLK_NOTES[0x02c4].name).toBe('寿司屋の店主')
+    expect(TOWNSFOLK_NOTES[0x0444].name).toBe('鍛冶屋のおやじ')
     expect(TOWNSFOLK_NOTES[0x0264].name).toBe('堂島')
   })
 
