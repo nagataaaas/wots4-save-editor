@@ -35,7 +35,7 @@ const VALUABLE_GROUPS = [{ items: VALUABLES }];
 
 export function ValuablesPage() {
   const { save, update } = useSave();
-  // ❓ U-14：一覧にない ID を書ける上級者モード。明示的に有効にしたときだけ使える
+  // 一覧にない ID を書ける上級者モード（U-14 の調査用に作った）。明示的に有効にしたときだけ使える
   const [investigate, setInvestigate] = useState(false);
 
   const result = useMemo((): { view: ValuablesView } | { error: string } | null => {
@@ -99,7 +99,10 @@ export function ValuablesPage() {
               チップ・木札は、Steam版で書き込むとゲーム内でセーブできなくなったため選択肢に出しません（❓ U-12）
             </InfoTip>
           </CardTitle>
-          <CardDescription>各枠の地金と個数を設定できます。</CardDescription>
+          <CardDescription>
+            各枠の重要品（地金・会談の手紙・鍵）と個数を設定できます。拷問部屋の鍵・謎の鍵の ID は 🟢
+            で、ゲーム内での表示と使用は未確認です（U-14）。
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col divide-y">
           {Array.from({ length: VALUABLE_SLOT_COUNT }, (_, i) => {
@@ -132,7 +135,7 @@ export function ValuablesPage() {
   );
 }
 
-/** ❓ U-14：ID調査モードの切り替えと、空き枠への候補 ID の一括入力 */
+/** ID調査モードの切り替えと、空き枠への候補 ID の一括入力（U-14 の調査用に作った） */
 function ProbeCard({
   enabled,
   onToggle,
@@ -169,13 +172,12 @@ function ProbeCard({
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex flex-wrap items-center gap-2">
             ID調査モード
-            <CertaintyBadge mark="❓" text="U-14" />
+            <CertaintyBadge mark="❓" text="上級者向け" />
           </CardTitle>
           <Switch checked={enabled} onCheckedChange={onToggle} aria-label="ID調査モード" />
         </div>
         <CardDescription>
-          謎の鍵・拷問部屋の鍵・会談の手紙の ID を探すための上級者モードです。一覧にない ID
-          を16進で直接書けます。 ID
+          一覧にない ID を16進で直接書いて、ゲーム内の表示を調べるための上級者モードです。 ID
           が不正だとゲーム内でセーブできなくなることがあるので（U-12）、必ず samples/
           のコピーで試してください。
         </CardDescription>

@@ -41,10 +41,9 @@ export type Valuable = ItemOption
  *   会談の手紙と表示されることを確認した（[U] 2026-10-05）。
  *   ゲーム内でセーブできるか・イベントで使えるかは未確認（要ゲーム内確認）
  *
- * ❓ U-14 未解決（2026-10-05 時点で調査を中断）：謎の鍵・拷問部屋の鍵の ID は見つかっていない。
- *   - 調べた範囲：0x00〜0xA8、0xAC、0xAF、0xB5、0xB9、0xBC、0xBF、0xC0〜0xD6（結果は PROBED_LABELS）
- *   - 未調査：0xA9〜0xBE の残り（茶器が続くと推測）、0xD7〜0xFF、0x100 以上
- *   - 再開するなら：ID調査モードで 0xD7 から続けるか、鍵を手に入れる前後のセーブを比べて重要品の枠に入る ID を直接読む（確実）
+ * - 拷問部屋の鍵（0xED）・謎の鍵（0xEE）：🟢（U-14 判明、2026-10-07）。重要品の枠で 0x00〜0xD6 を調べた調査
+ *   （PROBED_LABELS）の範囲の外にあった。ゲーム内での表示・イベントでの使用は未確認（要ゲーム内確認）。
+ *   謎の鍵は3日目夜に領事館のローラの部屋の扉で1本使う（docs/save_format/chunks/night-visit）
  * チップ（0x2D）・木札（0x2E）は ❓ U-12 判定待ち。Steam版で書き込むと、フリーズはしないが
  * ゲーム内でセーブできなくなった（[U] 2026-10-04）ため、選択肢に出さない。
  */
@@ -58,6 +57,16 @@ export const VALUABLES: readonly Valuable[] = [
   { id: 0x002a, label: '卸し鉄' },
   { id: 0x002b, label: '堂島鋼' },
   { id: 0x002c, label: '緋緋色金' },
+  {
+    id: 0x00ed,
+    label: '拷問部屋の鍵',
+    caution: 'ID は 🟢（U-14）。ゲーム内での表示・イベントで使えるかは未確認です',
+  },
+  {
+    id: 0x00ee,
+    label: '謎の鍵',
+    caution: 'ID は 🟢（U-14）。ゲーム内での表示・ローラの部屋の扉で使えるかは未確認です',
+  },
 ]
 
 /** ❓ U-12：PS3版での意味 [SE-BBS]。PC版では未確認のため、表示だけに使い書き込まない */
@@ -198,8 +207,9 @@ const PROBED_LABELS: Record<number, string> = {
 }
 
 /**
- * ID調査モード（上級者モード）。❓ U-14：謎の鍵・拷問部屋の鍵・会談の手紙の ID を探すため、
- * 一覧にない ID を書けるようにする。ゲーム内で名前を見て ID を特定したら VALUABLES に昇格させる。
+ * ID調査モード（上級者モード）。U-14 で謎の鍵・拷問部屋の鍵・会談の手紙の ID を探すために作った。
+ * 3つとも判明したあとも、一覧にない ID をゲーム内で調べるために残している。
+ * ゲーム内で名前を見て ID を特定したら VALUABLES に昇格させる。
  * U-12 の ID（0x2D／0x2E）はセーブできなくなることが分かっているので、このモードでも拒否する。
  */
 export type ValuableOptions = { investigate?: boolean }
@@ -211,12 +221,12 @@ export type ValuableOptions = { investigate?: boolean }
  * 0x29 以降で [TS] に番号だけ定義のある ID もすべて調査済み（0xC0〜0xC3 は茶器）。
  * 1. 0xCD〜0xFF（[TS] の定義の外。釣り餌 0xC4〜0xCC の後ろ）。0xCD〜0xD6 は調査済み（開発用？）
  * 2. 0x9F〜0xBF の残り。調べた 18件がすべて「茶器」だったので、茶器が続くと推測
- * 調査済みの ID（PROBED_LABELS）は除く。
+ * 調査済みの ID（PROBED_LABELS）と、選択肢にある ID（VALUABLES。0xED・0xEE の鍵）は除く。
  */
 export const PROBE_CANDIDATES: readonly number[] = [
   ...Array.from({ length: 0xff - 0xcd + 1 }, (_, i) => 0xcd + i),
   ...Array.from({ length: 0xbf - 0x9f + 1 }, (_, i) => 0x9f + i),
-].filter((id) => !(id in PROBED_LABELS))
+].filter((id) => !(id in PROBED_LABELS) && !VALUABLES.some((v) => v.id === id))
 
 /** 個数の上限。🔶 推測（item-slot.ts の ITEM_COUNT_MAX） */
 export const VALUABLE_COUNT_MAX = ITEM_COUNT_MAX

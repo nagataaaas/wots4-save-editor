@@ -152,10 +152,12 @@ describe('❓ U-14：ID調査モード', () => {
     expect(() => writeValuable(b, 2, 0x2e, 1, { investigate: true })).toThrow()
   })
 
-  it('🔶 候補は 0xD7〜0xFF、続いて未調査の 0x9F〜0xBF', () => {
+  it('🔶 候補は 0xD7〜0xFF（🟢 の鍵 0xED・0xEE を除く）、続いて未調査の 0x9F〜0xBF', () => {
     expect(PROBE_CANDIDATES.slice(0, 2)).toEqual([0xd7, 0xd8])
     expect(PROBE_CANDIDATES).toContain(0xff)
-    expect(PROBE_CANDIDATES[0xff - 0xd7 + 1]).toBe(0xa9)
+    expect(PROBE_CANDIDATES).not.toContain(0xed)
+    expect(PROBE_CANDIDATES).not.toContain(0xee)
+    expect(PROBE_CANDIDATES[0xff - 0xd7 + 1 - 2]).toBe(0xa9)
     expect(PROBE_CANDIDATES.at(-1)).toBe(0xbe)
     for (const id of [0x51, 0x6f, 0x9f, 0xa7, 0xc0, 0xc3, 0xc4, 0xcc, 0xcd, 0xd6]) expect(PROBE_CANDIDATES).not.toContain(id)
     for (const id of [0x00, 0x01, 0x19, 0x21, 0x22, 0x28, 0x2d, 0x2e, 0x2f, 0x40, 0x50, 0x74, 0x7c, 0x9e, 0xa0, 0xbf, 0xc4]) {
@@ -232,6 +234,34 @@ describe('❓ U-14：ID調査モード', () => {
   it('U-1：サイズが違うファイルには書かない', () => {
     const b = makeSave(TS_SAVE_SIZE + 8)
     expect(() => fillEmptySlotsWithProbes(b, 0xd7)).toThrow()
+  })
+})
+
+describe('🟢 U-14：拷問部屋の鍵（0xED）・謎の鍵（0xEE）', () => {
+  it('選択肢にあり、通常モードで書ける。ゲーム内で未確認なので警告を出す', () => {
+    const b = makeSave()
+    writeValuable(b, 2, 0xed, 1)
+    writeValuable(b, 3, 0xee, 1)
+    const v = readValuables(b)
+    expect(v.slots[2]).toMatchObject({ id: 0xed, count: 1, label: '拷問部屋の鍵', problem: null, idWritable: true })
+    expect(v.slots[3]).toMatchObject({ id: 0xee, count: 1, label: '謎の鍵', problem: null, idWritable: true })
+    expect(v.slots[2].warning).toContain('U-14')
+    expect(v.slots[3].warning).toContain('U-14')
+  })
+
+  it('読み出し→書き戻しでバイト一致する', () => {
+    const before = makeSave()
+    writeValuable(before, 2, 0xee, 1)
+    const after = before.slice()
+    for (const s of readValuables(before).slots) writeValuable(after, s.index, s.id, s.count)
+    expect(diffOffsets(before, after)).toEqual([])
+    expect(Array.from(before.subarray(slotOffset(2), slotOffset(2) + 4))).toEqual([0xee, 0x00, 0x01, 0x00])
+  })
+
+  it('両隣の 0xEC・0xEF は選択肢にない', () => {
+    const b = makeSave()
+    expect(() => writeValuable(b, 2, 0xec, 1)).toThrow()
+    expect(() => writeValuable(b, 2, 0xef, 1)).toThrow()
   })
 })
 
