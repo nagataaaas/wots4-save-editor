@@ -54,9 +54,9 @@ export const CHARACTER_NOTES: Readonly<Record<number, { name?: string; note: str
     name: "茂呂",
     note: "🟢 0＝生存、1＝死亡。1 だと剣術大会の準備で建築現場にいない。大寄せで幕府ルートに入るには 1 でないことが要る",
   },
-  0x3753: { name: "万由", note: "鬼怒川の娘。書き換えで人物を確認済み。値の意味は未確認" },
-  0x3754: { name: "千佳", note: "鬼怒川の娘。書き換えで人物を確認済み。値の意味は未確認" },
-  0x3755: { name: "百合", note: "鬼怒川の娘。書き換えで人物を確認済み。値の意味は未確認" },
+  0x3753: { name: "万由", note: "0＝生存、1＝死亡" },
+  0x3754: { name: "千佳", note: "0＝生存、1＝死亡" },
+  0x3755: { name: "百合", note: "0＝生存、1＝死亡" },
   0x3756: {
     name: "鬼怒川怨仙",
     note: "🟢 船上の侍（周回の始め）で 2、大老暗殺計画で倒すと 0。1 になる場面はない",
@@ -78,7 +78,10 @@ export const CHARACTER_NOTES: Readonly<Record<number, { name?: string; note: str
     note: "🟢 表彰式でほかの優勝者として並ぶと 1（🔶 釜茹で）。町の人の状態の「堂島の死亡」とは別のバイト",
   },
   0x375b: { name: "先生", note: "🟢 通常のプレイで変わる場面はない" },
-  0x375c: { name: "薬屋", note: "🟢 変わる場面はない。小公女倒れるで 0 でないと町に入った時点で失敗" },
+  0x375c: {
+    name: "薬屋",
+    note: "🟢 変わる場面はない。小公女倒れるで 0 でないと町に入った時点で失敗",
+  },
 };
 
 export type CharactersView = {
@@ -89,8 +92,11 @@ export type CharactersView = {
 };
 
 export function readCharacters(bytes: Uint8Array): CharactersView {
-  if (bytes.byteLength <= CHARACTER_END) throw new RangeError("ファイルが小さすぎて人物の状態を読めません");
-  const values = Array.from({ length: CHARACTER_LENGTH }, (_, i) => readU8(bytes, CHARACTER_START + i));
+  if (bytes.byteLength <= CHARACTER_END)
+    throw new RangeError("ファイルが小さすぎて人物の状態を読めません");
+  const values = Array.from({ length: CHARACTER_LENGTH }, (_, i) =>
+    readU8(bytes, CHARACTER_START + i),
+  );
   const bad = values.findIndex((v) => v > CHARACTER_NORMAL_MAX);
   const warning =
     bad >= 0

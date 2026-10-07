@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { memo, useMemo, useState, type ReactNode } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
@@ -172,7 +172,8 @@ export function ScenarioPage() {
     <ViewsPage
       note={
         <>
-          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの event-chart・scenario-flags・characters・townsfolk・hidden-route・hint）。
+          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
+          event-chart・scenario-flags・characters・townsfolk・hidden-route・hint）。
           イベントの失敗（05）・未到達（FF）、チャート表示は書き換えの反映を確認済みです。そのほかの値は確かめていません。
         </>
       }
@@ -201,8 +202,9 @@ export function WorldPage() {
     <ViewsPage
       note={
         <>
-          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの date-location・factions・gates・facilities）。
-          日数・時間帯、勢力の友好度 +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
+          date-location・factions・gates・facilities）。 日数・時間帯、勢力の友好度
+          +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
         </>
       }
     >
@@ -210,7 +212,11 @@ export function WorldPage() {
         <>
           <DateCard key={`${k}-date`} view={views?.date ?? null} />
           <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />
-          <FactionCard key={`${k}-factions`} view={views?.factions ?? null} route={views?.route ?? null} />
+          <FactionCard
+            key={`${k}-factions`}
+            view={views?.factions ?? null}
+            route={views?.route ?? null}
+          />
           <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
           <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
         </>
@@ -358,7 +364,8 @@ function DateCard({ view }: { view: DateView | null }) {
 }
 
 const publicOrderLevelsText = PUBLIC_ORDER_LEVELS.map(
-  (l, i) => `${l.label} ${l.min}〜${i === 0 ? PUBLIC_ORDER_MAX : PUBLIC_ORDER_LEVELS[i - 1].min - 1}`,
+  (l, i) =>
+    `${l.label} ${l.min}〜${i === 0 ? PUBLIC_ORDER_MAX : PUBLIC_ORDER_LEVELS[i - 1].min - 1}`,
 ).join("／");
 
 /** 治安の候補（0x0015）。view が null ならセーブ未読み込み */
@@ -374,10 +381,12 @@ function PublicOrderCard({ view }: { view: PublicOrderView | null }) {
           <CertaintyBadge mark="🔶" text="位置は差分からの推定。要ゲーム内確認" />
         </CardTitle>
         <CardDescription>
-          0x0015（u8）を治安の候補として出しています。鍛冶屋で踏み倒すと 10 下がり、手元のセーブでは 0〜99 に収まっていました。
-          書き換えがゲーム内の「今の治安」に反映されるかは確かめていません。
-          段階（候補）：{publicOrderLevelsText}。
-          {view && ` 生の値：${view.value}（${formatHex2(view.value)}）${view.level ? `＝${view.level}` : ""}`}
+          0x0015（u8）を治安の候補として出しています。鍛冶屋で踏み倒すと 10 下がり、手元のセーブでは
+          0〜99 に収まっていました。
+          書き換えがゲーム内の「今の治安」に反映されるかは確かめていません。 段階（候補）：
+          {publicOrderLevelsText}。
+          {view &&
+            ` 生の値：${view.value}（${formatHex2(view.value)}）${view.level ? `＝${view.level}` : ""}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
@@ -423,9 +432,11 @@ function HintCard({ view }: { view: HintView | null }) {
           <CertaintyBadge mark="❓" text="2日目以降のノードのヒントの文は未確認" />
         </CardTitle>
         <CardDescription>
-          0x3900（u16）には、最後に状態を進めたイベントの、チャート上のノード番号（0〜{HINT_NORMAL_MAX}）が入ります。
+          0x3900（u16）には、最後に状態を進めたイベントの、チャート上のノード番号（0〜
+          {HINT_NORMAL_MAX}）が入ります。
           ゲームはこの番号からヒントの文を決めます。ノード番号はイベントの通し番号とは別です。
-          ヒントの文が分かっているのは1日目のノード 2〜10 だけです（🔶。6＝「港の様子でも見てみるか」は確認済み）。ほかのノードの文は未確認（❓）です。
+          ヒントの文が分かっているのは1日目のノード 2〜10
+          だけです（🔶。6＝「港の様子でも見てみるか」は確認済み）。ほかのノードの文は未確認（❓）です。
           {view &&
             ` 現在の値：${hintLabel(view.value)}（0x${view.value.toString(16).toUpperCase().padStart(4, "0")}）。ヒントの文：${
               view.text ? `「${view.text}」🔶` : "未確認 ❓"
@@ -436,8 +447,10 @@ function HintCard({ view }: { view: HintView | null }) {
         <Alert>
           <AlertTitle>🔶 時間帯が合わないと既定の文になります</AlertTitle>
           <AlertDescription>
-            ノードの時間帯と現在の時間帯が合わないと、ヒントは既定の「{HINT_DEFAULT_TEXT}」になります。
-            ヒントを変えたいときは、現在の時間帯の直前に当たるノードを選んでください（例：2日目昼のセーブに 7・13・18・83・89 を書くと既定の文でした）。
+            ノードの時間帯と現在の時間帯が合わないと、ヒントは既定の「{HINT_DEFAULT_TEXT}
+            」になります。
+            ヒントを変えたいときは、現在の時間帯の直前に当たるノードを選んでください（例：2日目昼のセーブに
+            7・13・18・83・89 を書くと既定の文でした）。
           </AlertDescription>
         </Alert>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -464,7 +477,11 @@ function HintCard({ view }: { view: HintView | null }) {
             parse={(input) => parseHint(input, advanced)}
             apply={(v) => update((b) => writeHint(b, v, { advanced }))}
             inputMode="text"
-            hint={advanced ? "0〜65535（0x 付きの16進数も可）" : `0〜${HINT_NORMAL_MAX} か 65535（0xFFFF）`}
+            hint={
+              advanced
+                ? "0〜65535（0x 付きの16進数も可）"
+                : `0〜${HINT_NORMAL_MAX} か 65535（0xFFFF）`
+            }
             note="0x3900〜0x3901 の2バイトだけを書きます。上級者モードでは任意の u16 を書けます"
           />
         </div>
@@ -481,7 +498,12 @@ const hintOptions: SelectOption[] = [
     group: n.eventId === null ? "イベントに当たらないノード" : "イベントのノード",
     keywords: [String(n.id), n.ja ?? "", n.en ?? ""],
   })),
-  { value: String(HINT_NONE), label: hintLabel(HINT_NONE), group: "なし", keywords: ["65535", "0xFFFF", "なし"] },
+  {
+    value: String(HINT_NONE),
+    label: hintLabel(HINT_NONE),
+    group: "なし",
+    keywords: ["65535", "0xFFFF", "なし"],
+  },
 ];
 
 const flagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
@@ -506,11 +528,13 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
         <CardTitle>門・柵のフラグ</CardTitle>
         <CardDescription>
           ルート分岐を書き換えても、門が閉じたままだとそのルートに進めません。
-          代官所の表門（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、1 → 0 の書き換えで開くことを確認済みです。
+          代官所の表門（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、1 → 0
+          の書き換えで開くことを確認済みです。
           代官所の裏門（0x37FB）は表門と同じ場面で同じ値になるので、表門とそろえてください（裏門が開くかは要ゲーム内確認）。
           この4つは大寄せで、ルートに入れなかった勢力の門が閉じます（それより前の門には関係しません）。
           居留地の門と神社入口の柵は、大寄せのあとのイベントでも閉じることがあります。
-          大寄せ前の代官所（0x377D）・居留地（0x377E）・神社（0x377F）の門は、値が逆で 1 が開いている状態です（書き換えで反映を確認済み）。
+          大寄せ前の代官所（0x377D）・居留地（0x377E）・神社（0x377F）の門は、値が逆で 1
+          が開いている状態です（書き換えで反映を確認済み）。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
@@ -563,7 +587,9 @@ function ScenarioFlagsCard() {
             key={flag.offset}
             label={flag.label}
             offset={flag.offset}
-            badges={flag.certainty === "🔶" ? <CertaintyBadge mark="🔶" text="意味は推測" /> : undefined}
+            badges={
+              flag.certainty === "🔶" ? <CertaintyBadge mark="🔶" text="意味は推測" /> : undefined
+            }
             value={view ? String(view.values[i]) : null}
             currentLabel={view ? `${view.values[i]} 不明` : undefined}
             options={flag.values.map((v) => ({ value: String(v.value), label: v.label }))}
@@ -588,7 +614,8 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
         <CardTitle>施設</CardTitle>
         <CardDescription>
           病院（0x375D）・カジノ（0x375E）・語学所（0x375F）の開閉です。書き換えで反映を確認済みです。
-          カジノだけ値が逆で、1 が閉じている状態です。3つとも 0 が初期状態（病院・語学所は閉、カジノは開）です。
+          カジノだけ値が逆で、1 が閉じている状態です。3つとも 0
+          が初期状態（病院・語学所は閉、カジノは開）です。
           周回をまたいで引き継がれると考えられます。
           2日目の各枠では、施設の値によって起きるイベントが入れ替わります。
           隠しルートで希望の光に進むには、病院・語学所が開き、カジノが閉じている必要があります。
@@ -639,15 +666,14 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          人物の状態（生の値）
-          <CertaintyBadge mark="🔶" text="書き換えの効果は要ゲーム内確認。万由・千佳・百合の値は未確認" />
-        </CardTitle>
+        <CardTitle className="flex items-center gap-2">人物の状態（生の値）</CardTitle>
         <CardDescription>
-          イベントの状態のすぐ後ろにある15バイトで、重要人物ごとの状態（生死など）です。周回の始めはすべて 0 です。
-          多くの人物は 0 が生存、1 が死亡です。赤城の 3 は病院に運ばれて助かった状態、J.J. の 3・4・5 は伯爵救出の成功・打ち解けた・逮捕された状態です。
+          イベントの状態のすぐ後ろにある15バイトで、重要人物ごとの状態（生死など）です。周回の始めはすべて
+          0 です。 多くの人物は 0 が生存、1 が死亡です。赤城の 3 は病院に運ばれて助かった状態、J.J.
+          の 3・4・5 は伯爵救出の成功・打ち解けた・逮捕された状態です。
           鬼怒川怨仙（0x3756）は船上の侍で 2 になり、大老暗殺計画で倒すと 0 になります。
-          朱美・ローラ・J.J. は 1 を書くといなくなることを確認済みです。ほかの人物の書き換えの効果は要ゲーム内確認です。
+          朱美・ローラ・J.J. は 1
+          を書くといなくなることを確認済みです。ほかの人物の書き換えの効果は要ゲーム内確認です。
           各欄の説明に、値が変わる場面と、値を条件にするイベントを書いています。
           {view?.warning && ` ${view.warning}`}
         </CardDescription>
@@ -743,10 +769,6 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
   const named = Object.keys(TOWNSFOLK_NOTES)
     .map(Number)
     .filter((o) => TOWNSFOLK_NOTES[o].name);
-  const rows = Array.from(
-    { length: Math.ceil((TOWNSFOLK_START + TOWNSFOLK_LENGTH - TOWNSFOLK_FIRST_ROW) / TOWNSFOLK_ROW) },
-    (_, r) => TOWNSFOLK_FIRST_ROW + r * TOWNSFOLK_ROW,
-  );
 
   return (
     <Card>
@@ -756,11 +778,15 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
           <CertaintyBadge mark="🔶" text="並び方と書き換えの効果は未確認" />
         </CardTitle>
         <CardDescription>
-          0x011C〜0x05FF の1,252バイトです（終わりの位置は未確定。直前の 0x00DC〜0x011B は主人公名）。ほとんど 0 で、町の人（店主など）ごとの状態やイベントの進み具合の表と推定しています。
+          0x011C〜0x05FF の1,252バイトです（終わりの位置は未確定。直前の 0x00DC〜0x011B
+          は主人公名）。ほとんど 0
+          で、町の人（店主など）ごとの状態やイベントの進み具合の表と推定しています。
           鍛冶屋の後継者イベント・鍛冶屋の状態（0x0127）、堂島が鍛冶屋を継いだか（0x0132。周回後に誰が鍛冶屋になるかを決める）、堂島の死亡（0x0264）は、書き換えで確認済みです。
-          寿司屋の店主（0x02C4）と鍛冶屋のおやじ（0x0444）は 1 で死亡です。0 に戻すと生き返ることを確認済みです。
-          さよ（DLC、0x0528）も 1 で死亡と見ていますが、差分1回だけで、0 に戻して生き返るかは未確認です。
-          下の表のマスを押すと、そのバイトを書き換えられます。0 以外のマスは色を付け、説明のあるマスには下線を引いています。
+          寿司屋の店主（0x02C4）と鍛冶屋のおやじ（0x0444）は 1 で死亡です。0
+          に戻すと生き返ることを確認済みです。 さよ（DLC、0x0528）も 1
+          で死亡と見ていますが、差分1回だけで、0 に戻して生き返るかは未確認です。
+          下の表のマスを押すと、そのバイトを書き換えられます。0
+          以外のマスは色を付け、説明のあるマスには下線を引いています。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -772,47 +798,76 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
             <TownsfolkField key={`raw-${selected}`} offset={selected} view={view} raw />
           )}
         </div>
-        <div className="overflow-x-auto">
-          <table className="font-mono text-[11px] leading-none">
-            <tbody>
-              {rows.map((rowStart) => (
-                <tr key={rowStart}>
-                  <th className="text-muted-foreground pr-2 text-right font-normal">
-                    {rowStart.toString(16).toUpperCase().padStart(4, "0")}
-                  </th>
-                  {Array.from({ length: TOWNSFOLK_ROW }, (_, c) => {
-                    const offset = rowStart + c;
-                    if (offset < TOWNSFOLK_START) return <td key={c} className="p-0" />;
-                    const v = view?.values[offset - TOWNSFOLK_START] ?? null;
-                    const info = TOWNSFOLK_NOTES[offset];
-                    return (
-                      <td key={c} className="p-0">
-                        <button
-                          type="button"
-                          disabled={view === null}
-                          title={`${formatOffset(offset)}${info ? `：${info.note}` : ""}`}
-                          onClick={() => setSelected(offset)}
-                          className={[
-                            "h-5 w-6 rounded-sm",
-                            v ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                            info ? "underline" : "",
-                            offset === selected ? "ring-ring ring-2" : "",
-                          ].join(" ")}
-                        >
-                          {v === null ? "··" : v.toString(16).toUpperCase().padStart(2, "0")}
-                        </button>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TownsfolkTable values={view?.values ?? null} selected={selected} onSelect={setSelected} />
       </CardContent>
     </Card>
   );
 }
+
+const TOWNSFOLK_ROWS = Array.from(
+  { length: Math.ceil((TOWNSFOLK_START + TOWNSFOLK_LENGTH - TOWNSFOLK_FIRST_ROW) / TOWNSFOLK_ROW) },
+  (_, r) => TOWNSFOLK_FIRST_ROW + r * TOWNSFOLK_ROW,
+);
+
+/**
+ * 町の人の状態の16進表（1,252マス）。マスが多いので、クリックは表で1つだけ受けて data-offset から位置を引き、
+ * 値と選択が変わらなければ描き直さない。values が null ならセーブ未読み込み
+ */
+const TownsfolkTable = memo(function TownsfolkTable({
+  values,
+  selected,
+  onSelect,
+}: {
+  values: ArrayLike<number> | null;
+  selected: number | null;
+  onSelect: (offset: number) => void;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table
+        className="font-mono text-[11px] leading-none"
+        onClick={(e) => {
+          const cell = (e.target as Element).closest<HTMLElement>("button[data-offset]");
+          if (cell) onSelect(Number(cell.dataset.offset));
+        }}
+      >
+        <tbody>
+          {TOWNSFOLK_ROWS.map((rowStart) => (
+            <tr key={rowStart}>
+              <th className="text-muted-foreground pr-2 text-right font-normal">
+                {rowStart.toString(16).toUpperCase().padStart(4, "0")}
+              </th>
+              {Array.from({ length: TOWNSFOLK_ROW }, (_, c) => {
+                const offset = rowStart + c;
+                if (offset < TOWNSFOLK_START) return <td key={c} className="p-0" />;
+                const v = values?.[offset - TOWNSFOLK_START] ?? null;
+                const info = TOWNSFOLK_NOTES[offset];
+                return (
+                  <td key={c} className="p-0">
+                    <button
+                      type="button"
+                      data-offset={offset}
+                      disabled={values === null}
+                      title={`${formatOffset(offset)}${info ? `：${info.note}` : ""}`}
+                      className={[
+                        "h-5 w-6 rounded-sm",
+                        v ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+                        info ? "underline" : "",
+                        offset === selected ? "ring-ring ring-2" : "",
+                      ].join(" ")}
+                    >
+                      {v === null ? "··" : v.toString(16).toUpperCase().padStart(2, "0")}
+                    </button>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+});
 
 const hiddenRouteOptions: SelectOption[] = HIDDEN_ROUTE_VALUES.map((v) => ({
   value: String(v.value),
@@ -838,7 +893,8 @@ function RouteCandidatesCard({
       <CardHeader>
         <CardTitle>隠しルート</CardTitle>
         <CardDescription>
-          0x378E が 1 で隠しルートです（書き換えで確認済み）。ただし、三姉妹見参（イベント{HIDDEN_ROUTE_EVENT_INDEX}）が成功（04）でないと効きません。
+          0x378E が 1 で隠しルートです（書き換えで確認済み）。ただし、三姉妹見参（イベント
+          {HIDDEN_ROUTE_EVENT_INDEX}）が成功（04）でないと効きません。
           病院（0x375D）が閉じていると赤城が死に、再起の望みより後ろのイベントが起きません。
         </CardDescription>
       </CardHeader>
@@ -867,7 +923,8 @@ function RouteCandidatesCard({
             <CertaintyBadge mark="🔶" text="書き換えたときのゲーム内の反映は未確認" />
           </div>
           <p className="text-muted-foreground text-xs">
-            0x378D は序章のあとの道筋（1＝通常の1〜3日目、2＝隠しルートに入った）、0x379F は序章の大砲です。0x378D・0x379F・0x37AA を書き換えても、ルートは変わりませんでした。
+            0x378D は序章のあとの道筋（1＝通常の1〜3日目、2＝隠しルートに入った）、0x379F
+            は序章の大砲です。0x378D・0x379F・0x37AA を書き換えても、ルートは変わりませんでした。
             この範囲には、好感度や職など隠しルートに関係しないバイトも入っています。説明は、そのバイトが変わる場面です。書き換えたときのゲーム内の反映は確かめていません。
             {view?.warning && ` ${view.warning}`}
           </p>
@@ -904,7 +961,7 @@ const hostileOptions: SelectOption[] = HOSTILE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${v.value} ${v.label}`,
 }));
-const judgeOptions: SelectOption[] =ROUTE_JUDGE_VALUES.map((v) => ({
+const judgeOptions: SelectOption[] = ROUTE_JUDGE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${formatHex2(v.value)} ${v.label}`,
 }));
@@ -957,7 +1014,9 @@ function RouteJudgeRows({
           problem={problem}
           warning={view?.warning}
           note="大寄せで3勢力とも 02 のとき 01（根無し草）。勢力のどれかが 01 だと、ここが 01 でも根無し草にはならない"
-          onChange={(v) => update((b) => writeRouteJudge(b, FACTIONS.length, Number(v), { advanced }))}
+          onChange={(v) =>
+            update((b) => writeRouteJudge(b, FACTIONS.length, Number(v), { advanced }))
+          }
         />
       </div>
     </div>
@@ -975,9 +1034,10 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
       <CardHeader>
         <CardTitle>勢力の記録</CardTitle>
         <CardDescription>
-          0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。
-          友好度は「友好度 +（協力・成功）− 友好度 −（不利益・敵対行為）」です（Wiki の説明と差分が合う）。
-          大寄せの時点で友好度が 3 以上の勢力のルートに入れます（書き換えで確認済み）。幕府は茂呂が生きていることも条件です。
+          0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。 友好度は「友好度
+          +（協力・成功）− 友好度 −（不利益・敵対行為）」です（Wiki の説明と差分が合う）。
+          大寄せの時点で友好度が 3
+          以上の勢力のルートに入れます（書き換えで確認済み）。幕府は茂呂が生きていることも条件です。
           友好度そのもの（符号つきの値）は別の場所にある可能性があります。
         </CardDescription>
       </CardHeader>
@@ -998,7 +1058,9 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
                     options={hostileOptions}
                     problem={view?.problem ?? null}
                     note={row.note}
-                    onChange={(v) => update((b) => writeFactionValue(b, r, c, Number(v), { advanced }))}
+                    onChange={(v) =>
+                      update((b) => writeFactionValue(b, r, c, Number(v), { advanced }))
+                    }
                   />
                 ) : (
                   <FieldRow
@@ -1038,10 +1100,13 @@ function EventsCard({ view }: { view: EventsView | null }) {
         <CardTitle>イベントの状態</CardTitle>
         <CardDescription>
           「状態」は周回中の状態（0x36A8＋添字）です。失敗（05）と未到達（FF）は、書き換えでチャートの表示が変わることを確認済みです。
-          「チャート表示」は周回をまたぐ記録（0x3838＋添字、🔶
-          生きた証）で、FF なら枠だけ出て名前が隠れ、04 なら名前が出ます（確認済み）。ただし FF でも、状態が成功（04）のイベントは名前が出ます（確認済み）。
-          隠しルートのイベントだけは、チャート表示が FF だと、成功したもの以外は枠ごと出ません（正規のプレイでも同じ。隠しルート以外は FF でも失敗が出ます）。
-          チャート表示を 04 にすると、失敗したイベントも、まだ起きていない先のイベント（大老暗殺計画など）も出ます（確認済み）。
+          「チャート表示」は周回をまたぐ記録（0x3838＋添字、🔶 生きた証）で、FF
+          なら枠だけ出て名前が隠れ、04 なら名前が出ます（確認済み）。ただし FF
+          でも、状態が成功（04）のイベントは名前が出ます（確認済み）。
+          隠しルートのイベントだけは、チャート表示が FF
+          だと、成功したもの以外は枠ごと出ません（正規のプレイでも同じ。隠しルート以外は FF
+          でも失敗が出ます）。 チャート表示を 04
+          にすると、失敗したイベントも、まだ起きていない先のイベント（大老暗殺計画など）も出ます（確認済み）。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -1062,9 +1127,9 @@ function EventsCard({ view }: { view: EventsView | null }) {
         <div className="flex flex-col gap-3 border-t pt-4">
           <div className="text-sm font-medium">チャートに出ない添字（フラグ確認用）</div>
           <p className="text-muted-foreground text-xs">
-            名前の付いた添字の間にある、チャートに出ない・ゲームで起きない添字です。
-            47〜50 は剣術大会（幕府・外国・攘夷・無所属）、67 は未実装とみられる悲しみのローラ、84 は名前の分からないローラの決意の導入です。
-            一括設定の対象にはしていません。
+            名前の付いた添字の間にある、チャートに出ない・ゲームで起きない添字です。 47〜50
+            は剣術大会（幕府・外国・攘夷・無所属）、67 は未実装とみられる悲しみのローラ、84
+            は名前の分からないローラの決意の導入です。 一括設定の対象にはしていません。
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {EVENT_GAP_INDICES.map((i) => (
@@ -1246,7 +1311,9 @@ function EventBox({
           label="チャート表示"
           offset={EVENT_RECORD_OFFSET + index}
           value={entry ? String(entry.record) : null}
-          currentLabel={entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined}
+          currentLabel={
+            entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined
+          }
           options={recordOptions(advanced)}
           problem={problem}
           note="周回をまたぐ記録（生きた証）。FF で名前が隠れ、04 で名前が出る。FF でも状態が成功（04）なら出ます。隠しルートのイベントは FF だと成功以外は枠ごと出ないので、ここを 04 にすると出ます（確認済み）。ほかの周回にも引き継がれる可能性があります"
