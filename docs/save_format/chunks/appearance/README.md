@@ -103,6 +103,8 @@
 
 - 人物を選んだままの見た目では、部品の番号は [person.csv](../../datatable/appearance/person.csv) のその人物の部品と同じ 🟢
 - `0x3AAD4` が人物を指していると、ロード時に部品はその人物から作り直され、部品の番号の書き換えは使われない ✅ [U]。`0x3AAD4` を `FFFF` にすると顔・髪型の書き換えが反映された ✅ [U]
+- 人物を選ぶには、`0x3AAD4` に人物の番号、`0x3AAD6` に `second_id`、`0x3AADC` に性別、`0x3AAE0` に身長を書く。青年主人公（男→男）・さよ（男→女）で確認 ✅ [U]。
+  このときゲームは表示だけを人物から作り、保存ではレコードの部品とモデルの値を書き換えない ✅ [U]。ゲームで人物を選んだセーブと同じ並びにするため、部品とモデルの値もその人物の値で書く 🔶
 - 部品を書くときは、`0x3AAD4` を `FFFF` にし、部品の番号とそのモデルの値（`save_models`）を組で書く。こうして書いた顔・髪型と、色違いの手甲・合羽・脚絆・前掛けはゲーム内に正しい色で反映された ✅ [U]。
   モデルの値が別の部品の値だと、見た目が崩れたり（髪型）、色が違ったり（手甲・合羽）する ✅ [U]。保存してもモデルの値は作り直されない ✅ [U]
 - 髪型にも服の番号があり（坊主・髷など。[hair.csv](../../datatable/appearance/hair.csv) の `cloth_id`）、服のビット列で解放する。112〜119 はゲーム内で確認 ✅ [U]、ほかは 🟢
@@ -117,7 +119,7 @@
   - 未使用：名前のない部品の残り
 - 部品の性別は各 CSV の `gender`（空欄はどちらでもない）🟢。`extra.csv` の `kind` も同じ値から決まる 🟢
 
-根拠は[主人公の見た目のレコードと部品の番号](reserch/2026-10-07_parts-record.md)、[顔・髪型の書き込み（1回目）](reserch/2026-10-07_parts-write-face-hair.md)、[人物の番号を FFFF にした書き込みとモデルの値](reserch/2026-10-07_parts-write-person-models.md)、[モデルの値ごとの書き込みと髪の色](reserch/2026-10-08_parts-write-models-hair-color.md)、[小物の色違いと脚絆・前掛け、髪の色の値](reserch/2026-10-08_extra-colors-hair-color-values.md)。
+根拠は[主人公の見た目のレコードと部品の番号](reserch/2026-10-07_parts-record.md)、[顔・髪型の書き込み（1回目）](reserch/2026-10-07_parts-write-face-hair.md)、[人物の番号を FFFF にした書き込みとモデルの値](reserch/2026-10-07_parts-write-person-models.md)、[モデルの値ごとの書き込みと髪の色](reserch/2026-10-08_parts-write-models-hair-color.md)、[小物の色違いと脚絆・前掛け、髪の色の値](reserch/2026-10-08_extra-colors-hair-color-values.md)、[人物選択](reserch/2026-10-08_person-select.md)。
 
 ## 未確認・判定待ち
 
