@@ -518,7 +518,7 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
   );
 }
 
-/** 🔶 重要人物の状態の候補（0x374E〜0x375C）の生の値。view が null ならセーブ未読み込み */
+/** 🟢 重要人物の状態（0x374E〜0x375C）の生の値。view が null ならセーブ未読み込み */
 function CharactersCard({ view }: { view: CharactersView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -529,14 +529,14 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           人物の状態（生の値）
-          <CertaintyBadge mark="🔶" text="値の意味は一部だけ確認" />
+          <CertaintyBadge mark="🔶" text="書き換えの効果は要ゲーム内確認。マユ・チカ・ユリの値は未確認" />
         </CardTitle>
         <CardDescription>
           イベントの状態のすぐ後ろにある15バイトで、重要人物ごとの状態（生死など）です。周回の始めはすべて 0 です。
-          0x3750（朱美）〜0x3758（J.J.）は、書き換えでどの人物か確認済みです。1 を書くとその人物がいなくなります。
-          鬼怒川怨仙（0x3756）は 2 がまだ阿弥浜に来ていない状態と推定しています（到着前に 0 にしても出現しませんでした）。
-          0x374E は赤城（00 生存・01 死亡・03 病院に送った）、0x374F は小暮（01 死亡）、0x3759 はメリンダ（01 死亡）と、差分から推定しています（書き換えの効果は未確認）。
-          0x375A は堂島、0x375B は先生、0x375C は薬屋です（値の意味は未確認）。
+          多くの人物は 0 が生存、1 が死亡です。赤城の 3 は病院に運ばれて助かった状態、J.J. の 3・4・5 は伯爵救出の成功・打ち解けた・逮捕された状態です。
+          鬼怒川怨仙（0x3756）は船上の侍で 2 になり、大老暗殺計画で倒すと 0 になります。
+          朱美・ローラ・J.J. は 1 を書くといなくなることを確認済みです。ほかの人物の書き換えの効果は要ゲーム内確認です。
+          各欄の説明に、値が変わる場面と、値を条件にするイベントを書いています。
           {view?.warning && ` ${view.warning}`}
         </CardDescription>
       </CardHeader>

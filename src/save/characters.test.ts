@@ -1,9 +1,10 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 値は docs/save_format/chunks/characters（[U] 2026-10-06）で見たもの。
-// 🔶 0x374E＝赤城（00 生存・01 死亡・03 病院）、0x374F＝小暮（01 死亡、差分1回）、0x3759＝メリンダ（01 死亡、差分1回）。
+// 値は docs/save_format/chunks/characters のもの。
+// 🟢 0x374E＝赤城（0 生存・1 死亡・3 病院に運ばれて助かった）、0x374F＝小暮（1 死亡）、0x3759＝メリンダ（1 死亡）。
 // ✅ 0x3750＝朱美、0x3751＝琴吹、0x3752＝茂呂、0x3753＝マユ、0x3754＝チカ、0x3755＝ユリ、0x3756＝鬼怒川怨仙、
-// 0x3757＝ローラ、0x3758＝J.J.（[U] 2026-10-06、書き換えで確認）。🔶 鬼怒川の 2＝まだ阿弥浜に来ていない（[U] の推定）。
-// 🟢 0x375A＝堂島、0x375B＝先生、0x375C＝薬屋（値の意味は ❓）。赤城・小暮・メリンダの書き換えの効果は要ゲーム内確認。
+// 0x3757＝ローラ、0x3758＝J.J.（[U] 2026-10-06、書き換えで確認）。🟢 鬼怒川は船上の侍で 2・大老暗殺計画で倒すと 0。
+// 🟢 J.J. は 0・1・3・4・5 を取る（🔶 3＝療養中）。🔶 ローラの 2、堂島の 1（釜茹で）の意味。
+// 🟢 0x375A＝堂島、0x375B＝先生、0x375C＝薬屋。❓ マユ・チカ・ユリの値の意味。書き換えの効果は要ゲーム内確認。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -35,17 +36,32 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 重要人物の状態の候補 0x374E〜0x375C chunks/characters', () => {
+describe('重要人物の状態 0x374E〜0x375C chunks/characters', () => {
   it('0x374E〜0x375C の15バイトを読む', () => {
     expect(CHARACTER_LENGTH).toBe(15)
     expect(BOTH_DEAD).toHaveLength(15)
     expect(readCharacters(makeSave(BOTH_DEAD))).toEqual({ values: BOTH_DEAD, warning: null, problem: null })
   })
 
-  it('🔶 0x374E は赤城、0x374F は小暮、0x3759 はメリンダと推定している', () => {
-    expect(CHARACTER_NOTES[0x374e].name).toBe('赤城？')
-    expect(CHARACTER_NOTES[0x374f].name).toBe('小暮？')
-    expect(CHARACTER_NOTES[0x3759].name).toBe('メリンダ？')
+  it('🟢 0x374E は赤城、0x374F は小暮、0x3759 はメリンダ', () => {
+    expect(CHARACTER_NOTES[0x374e].name).toBe('赤城')
+    expect(CHARACTER_NOTES[0x374f].name).toBe('小暮')
+    expect(CHARACTER_NOTES[0x3759].name).toBe('メリンダ')
+  })
+
+  it('🟢 J.J. の 4（打ち解けた）・5（逮捕）は通常モードで読み書きできる。🔶 3＝療養中', () => {
+    const values = BOTH_DEAD.slice()
+    values[0x3758 - CHARACTER_START] = 5
+    const b = makeSave(values)
+    expect(readCharacters(b).warning).toBeNull()
+    writeCharacter(b, 0x3758, 4, { advanced: false })
+    expect(readCharacters(b).values[0x3758 - CHARACTER_START]).toBe(4)
+    expect(CHARACTER_NOTES[0x3758].note).toContain('🔶 療養中')
+  })
+
+  it('🔶 ローラの 2・堂島の 1 の意味は 🔶 のまま', () => {
+    expect(CHARACTER_NOTES[0x3757].note).toContain('🔶')
+    expect(CHARACTER_NOTES[0x375a].note).toContain('🔶')
   })
 
   it('✅ [U] 0x3750〜0x3758 は書き換えで人物を確認した', () => {
@@ -62,13 +78,13 @@ describe('🔶 重要人物の状態の候補 0x374E〜0x375C chunks/characters'
     expect(CHARACTER_NOTES[0x3758].name).toBe('J.J.')
   })
 
-  it('🟢 0x375A は堂島、0x375B は先生、0x375C は薬屋（値の意味は ❓）', () => {
+  it('🟢 0x375A は堂島、0x375B は先生、0x375C は薬屋', () => {
     expect([0x375a, 0x375b, 0x375c].map((o) => CHARACTER_NOTES[o].name)).toEqual(['堂島', '先生', '薬屋'])
   })
 
-  it('見たことのない値（4 以上）は警告だけ出す', () => {
+  it('通常のプレイで取らない値（6 以上）は警告だけ出す', () => {
     const values = BOTH_DEAD.slice()
-    values[3] = 4
+    values[3] = 6
     const view = readCharacters(makeSave(values))
     expect(view.warning).not.toBeNull()
     expect(view.problem).toBeNull()
@@ -93,9 +109,9 @@ describe('🔶 重要人物の状態の候補 0x374E〜0x375C chunks/characters'
     expect(() => writeCharacter(b, CHARACTER_END + 1, 0, { advanced: true })).toThrow(RangeError)
   })
 
-  it('通常モードは 0〜3 だけ。上級者モードでは任意の u8', () => {
-    expect(validateCharacter(3, { advanced: false })).toBeNull()
-    expect(validateCharacter(4, { advanced: false })).not.toBeNull()
+  it('通常モードは 0〜5 だけ。上級者モードでは任意の u8', () => {
+    expect(validateCharacter(5, { advanced: false })).toBeNull()
+    expect(validateCharacter(6, { advanced: false })).not.toBeNull()
     expect(validateCharacter(255, { advanced: true })).toBeNull()
     expect(validateCharacter(256, { advanced: true })).not.toBeNull()
   })
