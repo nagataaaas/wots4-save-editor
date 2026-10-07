@@ -5,6 +5,7 @@
 // - gender：使える性別（'男'・'女'。null はどちらでもない）
 // - models：モデルの値 u16 × 4（−1＝なし）。部品の番号と組でセーブに書く 🟢（色違いまで ✅ [U] 2026-10-08、U-19）
 // - unlockId：解除に必要な特典（unlock.csv の番号）、clothId：服の番号（容姿のビット）、dlc：DLC の番号
+// - alias：名前のない部品の見た目（確度は CSV の備考）、crash：ロードでクラッシュする部品（✅ [U] 2026-10-08）
 //
 // 人物（person.csv、全行 🟢。主人公設定の一覧に全部出るかは 🔶）：
 // - id：人物の番号（セーブの 0x3AAD4）。連番ではない
@@ -52,6 +53,10 @@ export type PartEntry = {
   unlockId: number | null;
   clothId: number | null;
   dlc: number | null;
+  /** 名前のない部品の見た目（ゲーム内で確認 ✅ [U]、選べる人物の部品 🟢、推定 🔶。確度は CSV の備考）。空文字はなし */
+  alias: string;
+  /** ✅ [U] ロードでクラッシュする。選択肢に出さない */
+  crash: boolean;
 };
 
 export type PersonEntry = {
@@ -112,6 +117,8 @@ function loadParts(text: string, file: string, kind?: string): PartEntry[] {
     cloth: has("cloth_id"),
     dlc: has("dlc"),
     kind: has("kind"),
+    alias: has("alias_ja"),
+    crash: has("crash"),
   };
   return rows
     .filter((r) => kind === undefined || r[c.kind] === kind)
@@ -127,6 +134,8 @@ function loadParts(text: string, file: string, kind?: string): PartEntry[] {
         unlockId: c.unlock < 0 ? null : optNum(r[c.unlock]),
         clothId: c.cloth < 0 ? null : optNum(r[c.cloth]),
         dlc: c.dlc < 0 ? null : optNum(r[c.dlc]),
+        alias: c.alias < 0 ? "" : r[c.alias],
+        crash: c.crash >= 0 && r[c.crash] === "1",
       };
     });
 }

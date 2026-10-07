@@ -8,10 +8,12 @@ import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { useSave } from '@/lib/save-context'
 import {
   APPEARANCE_PARTS_OFFSETS,
+  BODY_KIND_NAMES,
   GENDER_NAMES,
+  HAIR_COLOR_CONFIRMED,
   HAIR_COLOR_MAX,
+  HAIR_COLOR_MIN,
   HAIR_COLOR_NAMES,
-  NONE_ALLOWED,
   PART_WRITE_CONFIRMED,
   PERSON_CUSTOM,
   genderName,
@@ -39,16 +41,21 @@ const GROUP_ORDER: readonly PartGroup[] = ['男', '女', '共通', 'セット用
 
 function partLabel(p: PartEntry): string {
   const tags = [p.dlc !== null ? 'DLC' : null, p.unlockId !== null ? '特典' : null].filter(Boolean)
-  return `${p.ja || '名前なし'}（${p.id}）${tags.length ? ` [${tags.join('・')}]` : ''}`
+  const name = p.ja || (p.alias ? `名前なし：${p.alias}` : '名前なし')
+  return `${name}（${p.id}）${tags.length ? ` [${tags.join('・')}]` : ''}`
 }
 
-/** 通常モード：主人公と同じ性別の名前のある部品。上級者モード：全部を「男・女・共通・セット用・未使用」の順に（ユーザー判断 2026-10-08） */
+/**
+ * 通常モード：主人公と同じ性別の名前のある部品。上級者モード：全部を「男・女・共通・セット用・未使用」の順に（ユーザー判断 2026-10-08）。
+ * クラッシュする部品と、上半身・下半身の「なし」はどのモードでも出さない（✅ [U] 2026-10-08）
+ */
 function partOptions(kind: PartKind, heroGender: number, advanced: boolean): SelectOption[] {
-  const none: SelectOption[] = advanced || NONE_ALLOWED[kind] ? [{ value: '-1', label: 'なし（FFFF）', group: advanced ? 'なし' : undefined }] : []
+  const none: SelectOption[] =
+    validatePart(kind, -1, heroGender, advanced) === null ? [{ value: '-1', label: 'なし（FFFF）', group: advanced ? 'なし' : undefined }] : []
   const parts = PARTS[kind].filter(p => validatePart(kind, p.id, heroGender, advanced) === null)
   if (!advanced) return [...none, ...parts.map(p => ({ value: String(p.id), label: partLabel(p), keywords: [String(p.id)] }))]
   const opts = GROUP_ORDER.flatMap(g =>
-    parts.filter(p => partGroup(kind, p) === g).map(p => ({ value: String(p.id), label: partLabel(p), group: g, keywords: [String(p.id), g] })),
+    parts.filter(p => partGroup(kind, p) === g).map(p => ({ value: String(p.id), label: partLabel(p), group: g, keywords: [String(p.id), g, p.alias] })),
   )
   return [...none, ...opts]
 }
@@ -83,10 +90,13 @@ export function AppearancePartsCard() {
   })).sort((a, b) => (a.group === b.group ? 0 : a.group === '男' ? -1 : 1))
   const person = view ? findPerson(view.person) : undefined
 
+  const hairMin = advanced ? 0 : HAIR_COLOR_MIN
   const hairMax = advanced ? 15 : HAIR_COLOR_MAX
-  const hairOptions: SelectOption[] = Array.from({ length: hairMax + 1 }, (_, i) => ({
-    value: String(i),
-    label: `${HAIR_COLOR_NAMES[i] ?? '未確認'}（${i}）${i === 3 ? '' : HAIR_COLOR_NAMES[i] ? ' 🔶' : ''}`,
+  const hairLabel = (i: number) =>
+    `${HAIR_COLOR_NAMES[i] ?? '色なし'}（${i}）${HAIR_COLOR_CONFIRMED.has(i) || i > HAIR_COLOR_MAX ? '' : ' 🔶'}`
+  const hairOptions: SelectOption[] = Array.from({ length: hairMax - hairMin + 1 }, (_, i) => ({
+    value: String(hairMin + i),
+    label: hairLabel(hairMin + i),
   }))
 
   const kinds = PART_KINDS.filter(kind => advanced || kind !== 'body')
@@ -123,11 +133,11 @@ export function AppearancePartsCard() {
           offset={APPEARANCE_PARTS_OFFSETS.gender}
           value={view ? String(view.gender) : null}
           currentLabel={`不明な値 ${view?.gender}`}
-          options={GENDER_NAMES.map((g, i) => ({ value: String(i), label: `${g}（${i}）` }))}
+          options={BODY_KIND_NAMES.map((g, i) => ({ value: String(i), label: `${g}（${i}）${i >= 2 ? ' ❓' : ''}` }))}
           problem={problem}
           disabled={!advanced}
           hint={advanced ? '上級者モード：性別だけを書き換えます。反対の性別の部品と組み合わさると表示が崩れるおそれがあります' : '人物を選ぶと決まります'}
-          note="🔶 0＝男、1＝女"
+          note="🔶 0＝男、1＝女。🟢 2＝ローラ・3＝子供・4＝動物の見た目の組の値（主人公に書いたときの動きは ❓）"
           onChange={v => update(b => writeGender(b, Number(v), advanced))}
         />
         <SelectRow
@@ -135,11 +145,11 @@ export function AppearancePartsCard() {
           label="髪の色"
           offset={APPEARANCE_PARTS_OFFSETS.hairColor}
           value={view ? String(view.hairColor) : null}
-          currentLabel={`${HAIR_COLOR_NAMES[view?.hairColor ?? -1] ?? '未確認'}（${view?.hairColor}）`}
+          currentLabel={hairLabel(view?.hairColor ?? 0)}
           options={hairOptions}
           problem={problem}
-          hint={advanced ? '上級者モード：0〜15（u8 は 0〜255）' : `0〜${HAIR_COLOR_MAX}`}
-          note="✅ [U] 位置と 3＝黒。ほかの値は主人公設定の一覧の左からの位置とみている 🔶（U-19）"
+          hint={advanced ? '上級者モード：0〜15（0・10 以上は色がつきません）' : `${HAIR_COLOR_MIN}〜${HAIR_COLOR_MAX}`}
+          note="値＝主人公設定の一覧の左からの位置。✅ [U] 0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪。🔶 5＝赤・6〜9（U-19）"
           onChange={v => update(b => writeHairColor(b, Number(v), advanced))}
         />
         {kinds.map(kind => {

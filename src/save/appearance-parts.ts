@@ -3,8 +3,9 @@
 // - 0x3AAD4 u16 人物の番号 🟢。人物を指している間は、表示は部品・髪の色ともその人物から作られる（✅ [U] 2026-10-08）。
 //   部品や髪の色を変えるときは FFFF（個別に設定）にする ✅ [U]
 // - 0x3AAD6 u16 人物ごとに決まる値 🔶（U-19）。人物を選ぶときだけ書く
-// - 0x3AADA u8 髪の色 ✅位置 [U]。3＝黒 ✅ [U]、5＝赤 🔶、ほかの値は 🔶（U-19）
-// - 0x3AADC u8 性別 0＝男・1＝女 🔶。単独の書き込みは上級者モードだけ（ユーザー判断 2026-10-08）
+// - 0x3AADA u8 髪の色 ✅位置 [U]。0〜4 ✅ [U]、5〜9 🔶（U-19）
+// - 0x3AADC u8 性別（体の種類）0＝男・1＝女 🔶、2〜4 🟢。単独の書き込みは上級者モードだけ（ユーザー判断 2026-10-08）
+// - 個別に設定のとき上半身・下半身が FFFF だとゲームでエラーになる ✅ [U]。部品 53 の上半身はクラッシュする ✅ [U]
 // - 0x3AAE4 + 12k：部品の組。+0 部品の番号 u16、+2 ❓（書かない）、+4〜+B モデルの値 u16 × 4 🟢
 //   顔・髪型・小物4種は書き込みの反映を確認 ✅ [U]。上半身・下半身・足元・k＝4 は要ゲーム内確認（U-19）
 // ❓ U-1：固定オフセットを採用（ユーザー判断 2026-10-07）。ファイルサイズを検証する。
@@ -46,21 +47,36 @@ export const PART_WRITE_CONFIRMED: Readonly<Record<PartKind, boolean>> = {
 }
 
 /**
- * 髪の色の名前。値＝主人公設定の一覧の左からの位置とみている 🔶（U-19）。
- * 3＝黒 ✅ [U]、5＝赤 🔶 [U]。6〜9 は特典で選べる色の並び（赤の後ろ）からの推定 🔶。
+ * 髪の色の名前。値＝主人公設定の一覧の左からの位置（1 起点）。
+ * 0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪 ✅ [U] 2026-10-08、5＝赤 🔶 [U]（「たぶん赤」）。
+ * 6〜9 は特典で選べる色の並び（赤の後ろ）からの推定 🔶（U-19）。10 以上は色がつかない ✅ [U]
  */
 export const HAIR_COLOR_NAMES: Readonly<Record<number, string>> = {
+  0: 'なし',
+  1: '金髪',
+  2: '茶髪',
   3: '黒',
+  4: '銀髪',
   5: '赤',
   6: '黄緑',
   7: 'ピンク',
   8: '藍',
   9: '紫',
 }
-/** 通常モードで書ける髪の色の範囲 🔶 */
+/** 名前をゲーム内で確認した髪の色 ✅ [U] */
+export const HAIR_COLOR_CONFIRMED: ReadonlySet<number> = new Set([0, 1, 2, 3, 4])
+/** 通常モードで書ける髪の色の範囲（主人公設定の一覧にある色）。0・10 以上は上級者モードだけ */
+export const HAIR_COLOR_MIN = 1
 export const HAIR_COLOR_MAX = 9
 
+/** 人物の選択肢を分ける性別 */
 export const GENDER_NAMES = ['男', '女'] as const
+
+/**
+ * 0x3AADC の値の名前。0＝男・1＝女 🔶（主人公設定の人物）。
+ * 2＝ローラ・3＝子供・4＝動物は、その見た目の組の値 🟢（主人公に書いたときの動きは未確認 ❓）
+ */
+export const BODY_KIND_NAMES = ['男', '女', 'ローラ', '子供', '動物'] as const
 
 export type PartValue = {
   offset: number
@@ -121,20 +137,30 @@ export function genderName(value: number): Gender | null {
   return value === 0 ? '男' : value === 1 ? '女' : null
 }
 
-/** 人物の部品で「なし」があり得る種類。通常モードでは、この種類だけ「なし」を選べる */
+/**
+ * 個別に設定（0x3AAD4＝FFFF）のとき「なし」にするとゲームでエラーになる部品 ✅ [U] 2026-10-08。
+ * 人物を選んでいる間は「なし」でも表示できる（青年主人公の下半身など）。
+ */
+export const NONE_FORBIDDEN_WHEN_CUSTOM: readonly PartKind[] = ['upper', 'lower']
+
+/** 「なし」を選べる部品。通常モードでは人物の部品で「なし」があり得る種類だけ。上半身・下半身はどのモードでも選べない */
 export const NONE_ALLOWED: Readonly<Record<PartKind, boolean>> = Object.fromEntries(
-  PART_KINDS.map(k => [k, PERSONS.some(p => p.parts[k] === null)]),
+  PART_KINDS.map(k => [k, !NONE_FORBIDDEN_WHEN_CUSTOM.includes(k) && PERSONS.some(p => p.parts[k] === null)]),
 ) as Record<PartKind, boolean>
 
 /**
  * 部品の番号を検証する。−1 はなし。
+ * どのモードでも：表にない番号（モデルの値が決まらない）、クラッシュする部品、上半身・下半身の「なし」は拒否する。
  * 通常モード：名前のある部品で、性別の指定がないか主人公の性別と同じもの（ユーザー判断 2026-10-08）。k＝4（❓）は上級者モードだけ。
- * 上級者モード：表にある部品なら何でも（モデルの値が表から決まるので、表にない番号は書けない）。
  */
 export function validatePart(kind: PartKind, id: number, heroGender: number, advanced: boolean): string | null {
-  if (id === -1) return advanced || NONE_ALLOWED[kind] ? null : '通常モードでは「なし」にできません'
+  if (id === -1) {
+    if (NONE_FORBIDDEN_WHEN_CUSTOM.includes(kind)) return '上半身・下半身を「なし」にするとゲームでエラーになります'
+    return advanced || NONE_ALLOWED[kind] ? null : '通常モードでは「なし」にできません'
+  }
   const part = findPart(kind, id)
   if (!part) return `${id} は部品の表にありません`
+  if (part.crash) return 'この部品はロードでクラッシュします'
   if (advanced) return null
   if (kind === 'body') return '通常モードでは変更できません（部品の種類が未確認）'
   if (part.ja === '') return '名前のない部品は上級者モードでだけ選べます'
@@ -151,26 +177,38 @@ function writePartRecord(bytes: Uint8Array, kind: PartKind, id: number): void {
   models.forEach((m, i) => writeU16(bytes, offset + 4 + i * 2, m === -1 ? 0xffff : m))
 }
 
+/** 個別に設定にしたとき、上半身・下半身が「なし」だとゲームでエラーになる（✅ [U]）。その部品を先に選ばせる */
+function requireCustomizable(view: AppearancePartsView, kind?: PartKind, id?: number): void {
+  for (const k of NONE_FORBIDDEN_WHEN_CUSTOM) {
+    const next = k === kind ? id : view.parts[k].id
+    if (next === -1) {
+      throw new RangeError(`${k === 'upper' ? '上半身' : '下半身'}が「なし」のまま個別に設定にするとゲームでエラーになります。先に${k === 'upper' ? '上半身' : '下半身'}を選んでください`)
+    }
+  }
+}
+
 /** 部品1つを書き、人物の番号を「個別に設定」にする（✅ [U] 2026-10-08 の手順） */
 export function writePart(bytes: Uint8Array, kind: PartKind, id: number, advanced = false): void {
   const view = requireWritable(bytes)
   const error = validatePart(kind, id, view.gender, advanced)
   if (error) throw new RangeError(error)
+  requireCustomizable(view, kind, id)
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM)
   writePartRecord(bytes, kind, id)
 }
 
 export function validateHairColor(value: number, advanced: boolean): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 255) return '0〜255の整数を入力してください'
-  if (!advanced && value > HAIR_COLOR_MAX) return `通常モードでは0〜${HAIR_COLOR_MAX}を選んでください`
+  if (!advanced && (value < HAIR_COLOR_MIN || value > HAIR_COLOR_MAX)) return `通常モードでは${HAIR_COLOR_MIN}〜${HAIR_COLOR_MAX}を選んでください`
   return null
 }
 
 /** 髪の色を書き、人物の番号を「個別に設定」にする（人物を指している間は人物の色で表示されるため ✅ [U]） */
 export function writeHairColor(bytes: Uint8Array, value: number, advanced = false): void {
-  requireWritable(bytes)
+  const view = requireWritable(bytes)
   const error = validateHairColor(value, advanced)
   if (error) throw new RangeError(error)
+  requireCustomizable(view)
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM)
   writeU8(bytes, APPEARANCE_PARTS_OFFSETS.hairColor, value)
 }

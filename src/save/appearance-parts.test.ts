@@ -156,14 +156,38 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes[0x3aafc]).toBe(female.id)
   })
 
-  it('✅ [U] 髪の色は 0x3AADA に書き、人物の番号を FFFF にする。通常モードは 0〜9（🔶）', () => {
+  it('✅ [U] 髪の色は 0x3AADA に書き、人物の番号を FFFF にする。通常モードは一覧にある 1〜9（5〜9 の名前は 🔶）', () => {
     const bytes = makeSave()
     writeHairColor(bytes, 5)
     expect(bytes[0x3aada]).toBe(5)
     expect(Array.from(bytes.subarray(0x3aad4, 0x3aad6))).toEqual([0xff, 0xff])
     expect(() => writeHairColor(bytes, 10)).toThrow()
+    expect(() => writeHairColor(bytes, 0)).toThrow()
     writeHairColor(bytes, 10, true)
     expect(bytes[0x3aada]).toBe(10)
+    writeHairColor(bytes, 0, true)
+    expect(bytes[0x3aada]).toBe(0)
+  })
+
+  it('✅ [U] クラッシュする上半身 53 と、上半身・下半身の「なし」はどのモードでも拒否する', () => {
+    for (const advanced of [false, true]) {
+      expect(validatePart('upper', 53, 0, advanced)).toMatch(/クラッシュ/)
+      expect(validatePart('upper', -1, 0, advanced)).toMatch(/エラー/)
+      expect(validatePart('lower', -1, 0, advanced)).toMatch(/エラー/)
+    }
+  })
+
+  it('✅ [U] 個別に設定にするとき、上半身・下半身が「なし」なら先に選ばせる', () => {
+    const bytes = makeSave()
+    writePerson(bytes, 20) // 青年主人公は下半身なし（人物を選んでいる間は表示できる）
+    expect(readAppearanceParts(bytes)!.parts.lower.id).toBe(-1)
+    const before = bytes.slice()
+    expect(() => writePart(bytes, 'face', 43)).toThrow(/下半身/)
+    expect(() => writeHairColor(bytes, 1)).toThrow(/下半身/)
+    expect(bytes).toEqual(before)
+    writePart(bytes, 'lower', 88)
+    writePart(bytes, 'face', 43)
+    expect(readAppearanceParts(bytes)!.person).toBe(0xffff)
   })
 
   it('🔶 性別の単独の書き込みは上級者モードだけ', () => {
@@ -208,5 +232,13 @@ describe('見た目の部品と人物の datatable（🟢）', () => {
     expect(PARTS.upper.some(p => partGroup('upper', p) === '未使用')).toBe(true)
     expect(PARTS.gauntlet.map(p => p.id)).toContain(36)
     expect(PARTS.cape.map(p => p.id)).toEqual([0, 34, 35])
+  })
+
+  it('名前のない部品の見た目（✅ [U] 2026-10-08）と、クラッシュする部品', () => {
+    expect(PARTS.upper.find(p => p.id === 6)).toMatchObject({ ja: '', alias: 'ローラ', crash: false })
+    expect(PARTS.face.find(p => p.id === 27)!.alias).toBe('男の子')
+    expect(PARTS.upper.find(p => p.id === 53)!.crash).toBe(true)
+    // 名前がなければ、見た目が分かっても上級者モードの組のまま
+    expect(partGroup('upper', PARTS.upper.find(p => p.id === 6)!)).not.toMatch(/^(男|女|共通)$/)
   })
 })
