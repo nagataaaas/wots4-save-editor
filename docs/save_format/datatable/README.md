@@ -68,7 +68,7 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
   `gender` は性別（`0x3AADC` の 0＝男、1＝女）、`second_id` は `0x3AAD6` に入るとみられる値（空欄＝`FFFF`）🔶、`hair_color` はその人物の髪の色（`0x3AADA`）。
   88件すべてが主人公設定の一覧に出るかは 🔶
 - `appearance/face.csv`・`hair.csv`・`upper.csv`・`lower.csv`・`feet.csv`・`extra.csv`：主人公の見た目の部品。全行 🟢。番号は部品の種類ごとに別の空間。
-  `gender` は使える性別（男・女。空欄は指定なし）、`unlock_id` は解除に必要な特典（`unlock/unlock.csv` の ID。空欄は不要）、`dlc` は DLC の番号、
+  `gender` は使える性別（男・女。空欄は指定なし。服・小物は男用と女用で別の番号になる）、`unlock_id` は解除に必要な特典（`unlock/unlock.csv` の ID。空欄は不要）、`dlc` は DLC の番号、
   `cloth_id` は服の番号（`appearance/cloth.csv`。容姿のビット）。`extra.csv` の `kind` は手甲・脚絆・前掛け・合羽 🔶。
   `save_models` はその部品のモデルの値（u16 LE × 4、`FF FF`＝なし）で、部品の組の +4〜+B に部品の番号と組で書く値 🟢。
   名前のない部品は、特典の服の部品か、主人公設定に出ない部品（`備考`）。髪型の `cloth_id`（99〜125）は `cloth.csv` にない番号で、服のビット列で解放する（112〜119 は ✅ [U]）
