@@ -9,7 +9,7 @@ import {
   APPEARANCE_CURRENT_NOTES,
   APPEARANCE_CURRENT_OFFSETS,
   BODY_TYPES,
-  HEIGHT_NORMAL_RANGE,
+  heightWarning,
   SKIN_COLORS,
   readAppearanceCurrent,
   validateAppearanceCurrent,
@@ -19,10 +19,10 @@ import {
 
 const selectRows = [
   { key: 'body', label: '体型', names: BODY_TYPES, hint: undefined },
-  { key: 'skin', label: '肌色', names: SKIN_COLORS, hint: '色黒は黒人の容姿を選んだときに入る値。書き込みの反映は要ゲーム内確認（🔶 U-18）' },
+  { key: 'skin', label: '肌色', names: SKIN_COLORS, hint: '書き込みの反映は要ゲーム内確認（🔶 U-18）' },
 ] as const
-const numberRows: { key: AppearanceCurrentKey; label: string; hint: string; advancedHint: string }[] = [
-  { key: 'height', label: '身長（float32）', hint: `${HEIGHT_NORMAL_RANGE.join('〜')}の数値`, advancedHint: '100〜250（暫定）' },
+const numberRows: { key: AppearanceCurrentKey; label: string; hint: string; advancedHint: string | undefined }[] = [
+  { key: 'height', label: '身長（cm）', hint: '数値（小数可）', advancedHint: undefined },
   { key: 'related', label: '関連値（意味未確認）', hint: '観測した値：0・1・2。体型などとの関係は未確認（❓）', advancedHint: '0〜255' },
 ]
 
@@ -78,11 +78,12 @@ export function AppearanceCurrentCard() {
                 offset={APPEARANCE_CURRENT_OFFSETS[key]}
                 value={field?.value ?? null}
                 problem={field?.problem ?? null}
+                warning={key === 'height' && field?.value != null ? heightWarning(field.value) : null}
                 format={value => key === 'height' ? String(Number(value.toFixed(2))) : String(value)}
                 parse={parse}
                 apply={value => update(bytes => writeAppearanceCurrent(bytes, key, value, advanced))}
                 inputMode={key === 'height' ? 'decimal' : 'numeric'}
-                hint={<>{hint}{advanced && <><br />検証用範囲：{advancedHint}</>}</>}
+                hint={<>{hint}{advanced && advancedHint && <><br />検証用範囲：{advancedHint}</>}</>}
                 note={APPEARANCE_CURRENT_NOTES[key]}
               />
               {field?.offset !== null && field?.offset !== undefined && <p className="text-muted-foreground font-mono text-xs">生バイト：{field.raw}</p>}

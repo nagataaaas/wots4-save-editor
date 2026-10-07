@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU32, writeUtf16Fixed } from './binary'
 import { TS_SAVE_SIZE } from './hero'
-import { readAppearanceCurrent, writeAppearanceCurrent } from './appearance-current'
+import { heightWarning, readAppearanceCurrent, writeAppearanceCurrent } from './appearance-current'
 
 function makeSave(header = 0x3aad4, relatedHeader = 0x46334) {
   const bytes = new Uint8Array(TS_SAVE_SIZE)
@@ -103,37 +103,45 @@ describe('🔶❓ U-18 現在の見た目の候補（❓ U-1 固定位置）', (
     const bytes = makeSave()
     const before = bytes.slice()
     expect(() => writeAppearanceCurrent(bytes, 'skin', 8)).toThrow()
-    expect(() => writeAppearanceCurrent(bytes, 'height', 130)).toThrow()
-    expect(() => writeAppearanceCurrent(bytes, 'height', 221)).toThrow()
     expect(() => writeAppearanceCurrent(bytes, 'body', 3)).toThrow()
     expect(() => writeAppearanceCurrent(bytes, 'related', 3)).toThrow()
     expect(bytes).toEqual(before)
     writeAppearanceCurrent(bytes, 'skin', 8, true)
     writeAppearanceCurrent(bytes, 'body', 3, true)
-    writeAppearanceCurrent(bytes, 'height', 130, true)
     expect(readAppearanceCurrent(bytes).body.value).toBe(3)
     expect(() => writeAppearanceCurrent(bytes, 'related', 256, true)).toThrow()
-    expect(() => writeAppearanceCurrent(bytes, 'height', Infinity, true)).toThrow()
-    expect(() => writeAppearanceCurrent(bytes, 'height', 99, true)).toThrow()
   })
 
-  it('❓ U-1 サイズ違い・短いファイルと、🔶 U-18 不正な身長では書き込まない', () => {
+  it('身長は有限の数値なら書き込み、135〜220cmの外では警告だけ出す', () => {
+    const bytes = makeSave()
+    for (const value of [50, 134.9, 220.1, 300]) {
+      writeAppearanceCurrent(bytes, 'height', value)
+      expect(readAppearanceCurrent(bytes).height.problem).toBeNull()
+      expect(heightWarning(readAppearanceCurrent(bytes).height.value!)).toMatch(/135~220cm/)
+    }
+    for (const value of [135, 160, 220]) expect(heightWarning(value)).toBeNull()
+    expect(() => writeAppearanceCurrent(bytes, 'height', Infinity)).toThrow()
+    expect(() => writeAppearanceCurrent(bytes, 'height', NaN, true)).toThrow()
+  })
+
+  it('❓ U-1 サイズ違い・短いファイルと、有限でない身長では書き込まない', () => {
     const wrongSize = makeSave().slice(0, -1)
     expect(readAppearanceCurrent(wrongSize).body.problem).toMatch(/U-1/)
     expect(() => writeAppearanceCurrent(wrongSize, 'body', 1)).toThrow()
     const short = new Uint8Array(16)
     expect(readAppearanceCurrent(short).body.value).toBeNull()
     expect(() => writeAppearanceCurrent(short, 'body', 1)).toThrow()
-    for (const value of [NaN, Infinity, 99, 251]) {
+    for (const value of [NaN, Infinity]) {
       const invalid = makeSave()
       writeF32(invalid, 0x3aae0, value)
       const before = invalid.slice()
-      expect(readAppearanceCurrent(invalid).height.problem).toMatch(/U-18/)
+      expect(readAppearanceCurrent(invalid).height.problem).toMatch(/有限/)
       expect(() => writeAppearanceCurrent(invalid, 'height', 160)).toThrow()
       expect(invalid).toEqual(before)
     }
     const shifted = makeSave(0x12000, 0x23000)
     expect(readAppearanceCurrent(shifted).height.offset).toBe(0x3aae0)
-    expect(() => writeAppearanceCurrent(shifted, 'height', 160)).toThrow()
+    // 固定位置の外に並びがあっても固定位置を読む。0 cm は範囲外の警告だけ出る。
+    expect(heightWarning(readAppearanceCurrent(shifted).height.value!)).not.toBeNull()
   })
 })
