@@ -5,8 +5,8 @@
 // - 0x3AAD6 u16 人物ごとに決まる値 🔶（U-19）。人物を選ぶときだけ書く
 // - 0x3AADA u8 髪の色 ✅位置 [U]。0〜4 ✅ [U]、5〜9 🔶（U-19）
 // - 0x3AADC u8 性別（体の種類）0＝男・1＝女 🔶、2〜4 🟢。単独の書き込みは上級者モードだけ（ユーザー判断 2026-10-08）
-// - 個別に設定のとき上半身・下半身を FFFF にするとゲームでエラーになる ✅ [U]。部品 53 の上半身はクラッシュする ✅ [U]
-//   人物の「なし」が残ったまま個別に設定にするときは、止めずに警告する（ユーザー判断 2026-10-08）
+// - 上半身・下半身の「なし」は、組み合わせによっては読み込めない（エラーになった例・読めた例とも ✅ [U]、条件は ❓）。
+//   止めずに、その項目に警告を出す（ユーザー判断 2026-10-08）。部品 53 の上半身はクラッシュする ✅ [U]
 // - 0x3AAE4 + 12k：部品の組。+0 部品の番号 u16、+2 ❓（書かない）、+4〜+B モデルの値 u16 × 4 🟢
 //   顔・髪型・小物4種は書き込みの反映を確認 ✅ [U]。上半身・下半身・足元・k＝4 は要ゲーム内確認（U-19）
 // ❓ U-1：固定オフセットを採用（ユーザー判断 2026-10-07）。ファイルサイズを検証する。
@@ -142,26 +142,24 @@ export function genderName(value: number): Gender | null {
 }
 
 /**
- * 個別に設定（0x3AAD4＝FFFF）のとき「なし」にするとゲームでエラーになる部品 ✅ [U] 2026-10-08。
- * 人物を選んでいる間は「なし」でも表示できる（青年主人公の下半身など）。
+ * 「なし」にしていると、組み合わせによっては読み込めない部品（❓ U-19）。
+ * 個別に設定で上半身・下半身を FFFF にしてエラー・クラッシュした例と、男の子（上半身 41・足元 19）で下半身なしでも読めた例がある（✅ [U] 2026-10-08）
  */
-export const NONE_FORBIDDEN_WHEN_CUSTOM: readonly PartKind[] = ['upper', 'lower']
+export const NONE_RISKY: readonly PartKind[] = ['upper', 'lower']
 
-/** 「なし」を選べる部品。通常モードでは人物の部品で「なし」があり得る種類だけ。上半身・下半身はどのモードでも選べない */
+/** 「なし」を選べる部品。通常モードでは人物の部品で「なし」があり得る種類だけ、上級者モードではどれでも */
 export const NONE_ALLOWED: Readonly<Record<PartKind, boolean>> = Object.fromEntries(
-  PART_KINDS.map(k => [k, !NONE_FORBIDDEN_WHEN_CUSTOM.includes(k) && PERSONS.some(p => p.parts[k] === null)]),
+  PART_KINDS.map(k => [k, PERSONS.some(p => p.parts[k] === null)]),
 ) as Record<PartKind, boolean>
 
 /**
  * 部品の番号を検証する。−1 はなし。
- * どのモードでも：表にない番号（モデルの値が決まらない）、クラッシュする部品、上半身・下半身の「なし」は拒否する。
+ * どのモードでも：表にない番号（モデルの値が決まらない）とクラッシュする部品は拒否する。
  * 通常モード：名前のある部品で、性別の指定がないか主人公の性別と同じもの（ユーザー判断 2026-10-08）。k＝4（❓）は上級者モードだけ。
+ * 上半身・下半身の「なし」は拒否せず、partNoneWarning で警告する（ユーザー判断 2026-10-08）。
  */
 export function validatePart(kind: PartKind, id: number, heroGender: number, advanced: boolean): string | null {
-  if (id === -1) {
-    if (NONE_FORBIDDEN_WHEN_CUSTOM.includes(kind)) return '上半身・下半身を「なし」にするとゲームでエラーになります'
-    return advanced || NONE_ALLOWED[kind] ? null : '通常モードでは「なし」にできません'
-  }
+  if (id === -1) return advanced || NONE_ALLOWED[kind] ? null : '通常モードでは「なし」にできません'
   const part = findPart(kind, id)
   if (!part) return `${id} は部品の表にありません`
   if (part.crash) return 'この部品はロードでクラッシュします'
@@ -181,14 +179,9 @@ function writePartRecord(bytes: Uint8Array, kind: PartKind, id: number): void {
   models.forEach((m, i) => writeU16(bytes, offset + 4 + i * 2, m === -1 ? 0xffff : m))
 }
 
-/**
- * 個別に設定にしたとき上半身・下半身が「なし」だと、ゲームでエラーになるおそれがある（上半身・下半身を「なし」にした確認 ✅ [U] 2026-10-08）。
- * 人物（青年主人公の下半身など）の「なし」が残ったまま個別に設定にする場合は、止めずに警告だけ出す（ユーザー判断 2026-10-08）。
- * 部品 kind を id にしたときに残る「なし」の部品の警告文を返す。なければ null
- */
-export function customNoneWarning(view: AppearancePartsView, kind?: PartKind, id?: number): string | null {
-  const names = NONE_FORBIDDEN_WHEN_CUSTOM.filter(k => (k === kind ? id : view.parts[k].id) === -1).map(k => (k === 'upper' ? '上半身' : '下半身'))
-  return names.length ? `${names.join('・')}が「なし」のまま個別に設定にすると、ゲームでエラーになるかもしれません` : null
+/** その部品が「なし」のときの警告文（ユーザー判断 2026-10-08。止めない）。なければ null */
+export function partNoneWarning(kind: PartKind, id: number): string | null {
+  return id === -1 && NONE_RISKY.includes(kind) ? '「なし」にしていると、組み合わせによっては読み込めないかもしれません' : null
 }
 
 /** 部品1つを書き、人物の番号を「個別に設定」にする（✅ [U] 2026-10-08 の手順） */

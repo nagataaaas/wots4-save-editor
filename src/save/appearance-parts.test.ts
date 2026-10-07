@@ -6,7 +6,7 @@ import { readF32, writeF32 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import {
   NONE_ALLOWED,
-  customNoneWarning,
+  partNoneWarning,
   readAppearanceParts,
   validatePart,
   writeGender,
@@ -193,26 +193,25 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes[0x3aada]).toBe(0)
   })
 
-  it('✅ [U] クラッシュする上半身 53 と、上半身・下半身の「なし」はどのモードでも拒否する', () => {
-    for (const advanced of [false, true]) {
-      expect(validatePart('upper', 53, 0, advanced)).toMatch(/クラッシュ/)
-      expect(validatePart('upper', -1, 0, advanced)).toMatch(/エラー/)
-      expect(validatePart('lower', -1, 0, advanced)).toMatch(/エラー/)
-    }
+  it('✅ [U] クラッシュする上半身 53 はどのモードでも拒否する', () => {
+    for (const advanced of [false, true]) expect(validatePart('upper', 53, 0, advanced)).toMatch(/クラッシュ/)
   })
 
-  it('人物の下半身が「なし」のまま個別に設定にするときは、止めずに警告する（ユーザー判断 2026-10-08）', () => {
+  it('❓ 上半身・下半身の「なし」は止めずに、その項目に警告する（ユーザー判断 2026-10-08）', () => {
+    expect(validatePart('upper', -1, 0, true)).toBeNull()
+    expect(validatePart('lower', -1, 0, true)).toBeNull()
+    expect(NONE_ALLOWED.lower).toBe(true) // 青年主人公などの下半身がなし
+    expect(partNoneWarning('lower', -1)).toMatch(/組み合わせによっては読み込めない/)
+    expect(partNoneWarning('upper', -1)).toMatch(/組み合わせ/)
+    expect(partNoneWarning('lower', 88)).toBeNull()
+    expect(partNoneWarning('feet', -1)).toBeNull()
     const bytes = makeSave()
-    expect(customNoneWarning(readAppearanceParts(bytes)!)).toBeNull()
-    writePerson(bytes, 20) // 青年主人公は下半身なし（人物を選んでいる間は表示できる）
-    const view = readAppearanceParts(bytes)!
-    expect(view.parts.lower.id).toBe(-1)
-    expect(customNoneWarning(view)).toMatch(/下半身.*かもしれません/)
-    expect(customNoneWarning(view, 'lower', 88)).toBeNull()
+    writePerson(bytes, 20) // 青年主人公は下半身なし
     writePart(bytes, 'face', 43)
-    expect(readAppearanceParts(bytes)!.person).toBe(0xffff)
     writeHairColor(bytes, 1)
-    expect(bytes[0x3aada]).toBe(1)
+    expect(readAppearanceParts(bytes)!.person).toBe(0xffff)
+    writePart(bytes, 'lower', -1, true)
+    expect(readAppearanceParts(bytes)!.parts.lower.id).toBe(-1)
   })
 
   it('🔶 性別の単独の書き込みは上級者モードだけ', () => {
