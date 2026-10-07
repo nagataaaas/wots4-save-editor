@@ -6,12 +6,15 @@ import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import {
+  OCCUPATION_FLAG_OFFSETS,
+  SERIES_VALUES,
   SMITH_STATES,
   SMITH_STATE_OFFSET,
   TOWNSFOLK_END,
   TOWNSFOLK_LENGTH,
   TOWNSFOLK_NOTES,
   TOWNSFOLK_START,
+  occupationFlagOffset,
   readTownsfolk,
   validateTownsfolk,
   writeTownsfolk,
@@ -84,6 +87,34 @@ describe('🔶 町の人の状態の候補 0x011C〜0x05FF chunks/townsfolk', ()
     expect(() => writeTownsfolk(b, 0x0264, 81, { advanced: false })).toThrow(RangeError)
     writeTownsfolk(b, 0x0127, 1, { advanced: true })
     expect(b[0x0127]).toBe(1)
+  })
+
+  it('🟢 なりわいのフラグは 0x011C + 番号。✅ 0x0120（番号 4）は同心の続き物で、20・100 を通常モードで書ける', () => {
+    expect(occupationFlagOffset(4)).toBe(0x0120)
+    expect(occupationFlagOffset(31)).toBe(0x013b)
+    expect(TOWNSFOLK_NOTES[0x0120].name).toBe('同心の続き物')
+    const b = makeSave()
+    writeTownsfolk(b, 0x0120, 20, { advanced: false })
+    expect(b[0x0120]).toBe(20)
+    writeTownsfolk(b, 0x0120, 100, { advanced: false })
+    expect(b[0x0120]).toBe(100)
+    // 表にない値（例：12）は上級者モードだけ
+    expect(() => writeTownsfolk(b, 0x0120, 12, { advanced: false })).toThrow(RangeError)
+  })
+
+  it('🟢 続き物の値は 0・n0・n1（n＝1〜8）・90・91・97・99・100。❓ 90 番台の違いは未確認', () => {
+    expect(SERIES_VALUES.map((v) => v.value)).toEqual([
+      0, 10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 60, 61, 70, 71, 80, 81, 90, 91, 97, 99, 100,
+    ])
+    for (const n of [4, 5, 6, 7]) expect(TOWNSFOLK_NOTES[occupationFlagOffset(n)].values).toBe(SERIES_VALUES)
+  })
+
+  it('🟢 なりわいの画面で扱う番号は 4〜9・25〜31。鍛冶屋（11）・堂島（22）は含めない', () => {
+    expect(OCCUPATION_FLAG_OFFSETS.map((o) => o - 0x011c).sort((a, b) => a - b)).toEqual([
+      4, 5, 6, 7, 8, 9, 25, 26, 27, 28, 29, 30, 31,
+    ])
+    expect(TOWNSFOLK_NOTES[0x0138].values?.map((v) => v.value)).toEqual([0, 1, 2])
+    expect(TOWNSFOLK_NOTES[0x0135].values?.find((v) => v.value === 8)?.label).toBe('「四天王の証」を受け取った')
   })
 
   it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {

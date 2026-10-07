@@ -1,6 +1,7 @@
 // 町の人（店主など）の状態の候補 0x011C〜0x05FF（1,252 B）を、生の値で編集する。出典：docs/save_format/chunks/townsfolk（[U] 2026-10-06）。
 // 🟢 始まりは 0x011C（直前の 0x00DC〜0x011B は主人公名。hero.ts が UTF-16LE として扱うので、ここでは触らない）。
 //    0x011C〜 は「なりわいのフラグ」の配列（0x011C + 番号）。0x0120（番号 4、同心の続き物）は書き換えで確認（✅ 2026-10-07）。
+//    続き物などの番号（4〜9・25〜31）は OCCUPATION_FLAG_NOTES に値の表を持ち、なりわいの画面で編集する（4 以外は 🟢）。
 // 🔶 終わりの位置は未確定。当初は 0x04BF までとしていたが、さよ（0x0528）が見つかったので 0x05FF まで広げた。
 // 0x04C0〜0x0B2F は、手元のサンプルでは 0x0528 以外すべて 0（0x0B30 以降は float やカウンタ）。
 //
@@ -58,13 +59,115 @@ export const SMITH_STATES: readonly { value: number; label: string; group: strin
 
 export type TownsfolkValue = { value: number; label: string; group?: string };
 
+export type TownsfolkNote = { name?: string; note: string; values?: readonly TownsfolkValue[] };
+
+/** 🟢 なりわいのフラグ（0x011C + 番号、u8）の先頭。番号 31（0x013B）までは確認、配列の終わりは ❓ */
+export const OCCUPATION_FLAG_START = 0x011c;
+
+export function occupationFlagOffset(n: number): number {
+  return OCCUPATION_FLAG_START + n;
+}
+
+/**
+ * 続き物（番号 4〜7）の値。十の位が何件目か、一の位が 0＝依頼前・1＝依頼済み。100 で完了。
+ * ✅ 番号 4（同心）は 20＝2件目から始まる・100＝完了を書き換えで確認（2026-10-07）。番号 5〜7 は 🟢。
+ * 90・91・97・99 の細かい違いは ❓
+ */
+export const SERIES_VALUES: readonly TownsfolkValue[] = [
+  { value: 0, label: "依頼主に会う前" },
+  ...Array.from({ length: 8 }, (_, i) => [
+    { value: (i + 1) * 10, label: `${i + 1}件目を依頼する前`, group: `${i + 1}件目` },
+    { value: (i + 1) * 10 + 1, label: `${i + 1}件目を依頼済み`, group: `${i + 1}件目` },
+  ]).flat(),
+  ...[90, 91, 97, 99].map((value) => ({ value, label: "最後の件の前後", group: "最後の件" })),
+  { value: 100, label: "続き物を終えた" },
+];
+
+/** 意味の分かっていない段階の値（🟢 値の候補だけ分かっている） */
+const stepValues = (values: readonly number[]): TownsfolkValue[] =>
+  values.map((value) => ({ value, label: value === 0 ? "始まる前（❓）" : `段階 ${value}` }));
+
+/** 汁部（DLC）の 209〜212 の結果（🟢） */
+const SHIRUBE_RESULT_VALUES: readonly TownsfolkValue[] = [
+  { value: 0, label: "破棄・報告済み" },
+  { value: 1, label: "成功" },
+  { value: 2, label: "失敗を成功扱いにしてもらった（報酬なし）" },
+];
+
+const SHIRUBE_JOBS = ["今宵の虎徹は", "薬売り", "食い逃げ外国人", "おにぎり屋の用心棒"] as const;
+
+/**
+ * なりわいのフラグのうち、なりわいの画面で扱う番号の説明（chunks/townsfolk「なりわいのフラグ」）。
+ * 0x0120（番号 4）だけ ✅、ほかは 🟢。番号 2・16・20・21・23 は ❓ なので載せない
+ */
+export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
+  [occupationFlagOffset(4)]: {
+    name: "同心の続き物",
+    note: "なりわい 171〜178。書き換えると同心の次の依頼が変わる（確認済み：20 で2件目「督促状」から、100 で完了）",
+    values: SERIES_VALUES,
+  },
+  [occupationFlagOffset(5)]: { name: "極道の続き物", note: "🟢 なりわい 179〜186", values: SERIES_VALUES },
+  [occupationFlagOffset(6)]: { name: "泥棒さんの続き物", note: "🟢 なりわい 187〜194", values: SERIES_VALUES },
+  [occupationFlagOffset(7)]: { name: "おっつぁんの続き物", note: "🟢 なりわい 195〜206", values: SERIES_VALUES },
+  [occupationFlagOffset(8)]: {
+    name: "賭場の4件",
+    note: "🟢 なりわい 163〜166 の進み具合。各段階の意味は ❓",
+    values: stepValues([0, 10, 20, 30]),
+  },
+  [occupationFlagOffset(9)]: {
+    name: "賭場の女将の依頼",
+    note: "🟢 なりわい 167〜170・208 の進み具合。各段階の意味は ❓",
+    values: stepValues([0, 1, 10, 20, 21]),
+  },
+  [occupationFlagOffset(25)]: {
+    name: "四天王の話",
+    note: "🟢 続き物4系統（同心・極道・泥棒さん・おっつぁん）のどれかを終えたとき、ほかの3つがすべて 100 なら 1 になる",
+    values: [
+      { value: 0, label: "始まる前" },
+      { value: 1, label: "続き物4系統を全部終えた" },
+      { value: 8, label: "「四天王の証」を受け取った" },
+      { value: 99, label: "段階 99" },
+      { value: 100, label: "段階 100" },
+    ],
+  },
+  [occupationFlagOffset(26)]: {
+    name: "最後のなりわい",
+    note: "🟢 なりわい 207・208 の進み具合。99 以上で、続き物を終えた依頼主から8件を選び直せる（99 未満だと新しい依頼が出ないことは確認済み）",
+    values: [
+      ...stepValues([0, 10, 20]),
+      { value: 99, label: "続き物を選び直せる" },
+      { value: 100, label: "続き物を選び直せる（段階 100）" },
+    ],
+  },
+  [occupationFlagOffset(27)]: {
+    name: "汁部（DLC）と組んだ",
+    note: "🟢 人斬り 汁部理人と組むと 1",
+    values: [
+      { value: 0, label: "組んでいない" },
+      { value: 1, label: "組んだ" },
+    ],
+  },
+  ...Object.fromEntries(
+    SHIRUBE_JOBS.map((job, i) => [
+      occupationFlagOffset(28 + i),
+      {
+        name: `汁部の「${job}」の結果`,
+        note: `🟢 なりわい ${209 + i} の結果。汁部に報告すると 0 に戻る`,
+        values: SHIRUBE_RESULT_VALUES,
+      },
+    ]),
+  ),
+};
+
+/** なりわいの画面で扱うオフセット（町の人の状態の画面では入力欄を並べない） */
+export const OCCUPATION_FLAG_OFFSETS: readonly number[] = Object.keys(OCCUPATION_FLAG_NOTES).map(Number);
+
 /**
  * 差分で何か分かっているバイトの説明。name があるものは入力欄を最初から出す。
  * values があるものは値の表から選ぶ（通常モードでは表の値だけ書ける）
  */
-export const TOWNSFOLK_NOTES: Readonly<
-  Record<number, { name?: string; note: string; values?: readonly TownsfolkValue[] }>
-> = {
+export const TOWNSFOLK_NOTES: Readonly<Record<number, TownsfolkNote>> = {
+  ...OCCUPATION_FLAG_NOTES,
   0x0127: {
     name: "鍛冶屋の後継者イベント・鍛冶屋の状態",
     note: "書き換えで確認済み。踏み倒しの回数は 0x0B58（u32、この範囲の外）も +1 になった。周回後に誰が鍛冶屋になるかは 0x0132 が決める",
