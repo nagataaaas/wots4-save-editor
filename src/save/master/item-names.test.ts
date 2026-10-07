@@ -23,14 +23,22 @@ describe("🟢 アイテム datatable/item/item.csv", () => {
     expect(findItem(0xf2)).toBeUndefined();
   });
 
-  it("obtain：0＝道具、1＝その場で使う（料理・宿）、2＝手に入る経路がない", () => {
-    expect(findItem(0x02)?.obtain).toBe(0);
-    expect(findItem(0x30)?.obtain).toBe(1); // うなぎ丼
-    expect(findItem(0x6f)?.obtain).toBe(1); // 梅の間
-    expect(findItem(0x49)?.obtain).toBe(2); // 丼
-    expect(findItem(0x73)?.obtain).toBe(2); // 茶器の複製
-    expect(findItem(0xcd)?.obtain).toBe(2);
-    expect(ITEMS.filter((it) => it.obtain === 0)).toHaveLength(92);
+  it("kind：0＝道具、1＝料理、2＝宿、3＝なし（手に入る経路がない）", () => {
+    expect(findItem(0x02)?.kind).toBe(0);
+    expect(findItem(0x30)?.kind).toBe(1); // うなぎ丼
+    expect(findItem(0x6f)?.kind).toBe(2); // 梅の間
+    expect(findItem(0x49)?.kind).toBe(3); // 丼
+    expect(findItem(0x73)?.kind).toBe(3); // 茶器の複製
+    expect(findItem(0xcd)?.kind).toBe(3);
+    const count = (k: number) => ITEMS.filter((it) => it.kind === k).length;
+    expect([0, 1, 2, 3].map(count)).toEqual([92, 31, 4, 115]);
+  });
+
+  it("reading：読み。仮の値だった 0x00・0xE7 は空欄", () => {
+    expect(findItem(0x10)?.reading).toBe("といし");
+    expect(findItem(0xed)?.reading).toBe("ごうもんべやのかぎ");
+    expect(findItem(0x00)?.reading).toBe("");
+    expect(findItem(0xe7)?.reading).toBe("");
   });
 
   it("maxStack：1枠に持てる最大数", () => {

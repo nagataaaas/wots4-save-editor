@@ -3,28 +3,32 @@
 //
 // - ja・en：名前。🟢 ゲーム内の表記のまま。同じ名前が複数の ID にあるもの（部品箱・茶器・伝説の魚など）は、
 //   表示のときに itemDisplayName で ID を添えて見分ける
+// - reading：読み（ひらがな）🟢 ゲーム内の表記のまま。空欄は仮の値だったもの（item.csv の備考）。検索に使う
 // - descJa・descEn：説明文 🟢 ゲーム内の表記のまま
-// - obtain：0＝道具として手に入る、1＝その場で使う（料理屋の料理・宿）、2＝手に入る経路がない（未使用とみられる）🟢
+// - kind：種別 🟢。0＝道具、1＝料理（料理屋でその場で食べる）、2＝宿（梅・竹・松の間、入院）、3＝なし（手に入る経路がない。未使用とみられる）
 // - maxStack：手持ちの1枠にまとめて持てる最大数 🟢。ほとんど 1。箪笥はこの上限を超えて入る（[U] sample）
 import itemCsv from "../../../docs/save_format/datatable/item/item.csv?raw";
 
-/** 0＝道具として手に入る、1＝その場で使う、2＝手に入る経路がない */
-export type ItemObtain = 0 | 1 | 2;
+/** 0＝道具、1＝料理、2＝宿、3＝なし（手に入る経路がない） */
+export type ItemKind = 0 | 1 | 2 | 3;
 
 export type ItemEntry = {
   id: number;
   ja: string;
   en: string;
+  reading: string;
   descJa: string;
   descEn: string;
-  obtain: ItemObtain;
+  kind: ItemKind;
   maxStack: number;
 };
 
-export const ITEM_OBTAIN_LABELS: Record<ItemObtain, string> = {
+/** 種別の見出し。3 は「なし」だと選択肢の「なし」（空き枠）と紛らわしいので補足をつける */
+export const ITEM_KIND_LABELS: Record<ItemKind, string> = {
   0: "道具",
-  1: "その場で使う",
-  2: "手に入る経路がない",
+  1: "料理",
+  2: "宿",
+  3: "なし（手に入る経路がない）",
 };
 
 /** RFC 4180 の CSV を行・列に分ける（"..." の中のカンマ・改行・"" に対応） */
@@ -71,23 +75,25 @@ function loadItems(text: string): ItemEntry[] {
     id: col("id_dec"),
     ja: col("name_ja"),
     en: col("name_en"),
+    reading: col("reading"),
     descJa: col("description_ja"),
     descEn: col("description_en"),
-    obtain: col("obtain"),
+    kind: col("kind"),
     maxStack: col("max_stack"),
   };
   return rows
     .filter((r) => r.length > 1 && r[c.id] !== "65535") // 0xFFFF は「なし」で、アイテムではない
     .map((r) => {
-      const obtain = Number(r[c.obtain]);
-      if (obtain !== 0 && obtain !== 1 && obtain !== 2) throw new Error(`item.csv の obtain が不正です: ${r[c.id]}`);
+      const kind = Number(r[c.kind]);
+      if (kind !== 0 && kind !== 1 && kind !== 2 && kind !== 3) throw new Error(`item.csv の kind が不正です: ${r[c.id]}`);
       return {
         id: Number(r[c.id]),
         ja: r[c.ja],
         en: r[c.en],
+        reading: r[c.reading],
         descJa: r[c.descJa],
         descEn: r[c.descEn],
-        obtain,
+        kind,
         maxStack: Number(r[c.maxStack]),
       };
     });

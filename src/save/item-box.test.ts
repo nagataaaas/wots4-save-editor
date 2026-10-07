@@ -111,30 +111,33 @@ describe('readItemBox', () => {
     expect(v.slots[4].label).toBeNull()
   })
 
-  it('🟢 その場で使う物・手に入る経路がない ID は、通常モードでは書けず、上級者モードでは警告つきで書ける', () => {
+  it('🟢 種別が料理・宿・なしの ID は、通常モードでは書けず、上級者モードでは警告つきで書ける', () => {
     const b = makeSave()
     expect(() => writeItemBoxSlot(b, TOOLS_AREA, 2, 0x30, 1)).toThrow(/上級者モード/)
     writeItemBoxSlot(b, TOOLS_AREA, 2, 0x30, 1, ADV)
     writeItemBoxSlot(b, TOOLS_AREA, 3, 0x73, 1, ADV)
+    writeItemBoxSlot(b, TOOLS_AREA, 4, 0x6f, 1, ADV)
     expect(readItemBox(b, TOOLS_AREA).slots[2]).toMatchObject({ label: 'うなぎ丼', idWritable: false })
     const v = readItemBox(b, TOOLS_AREA, ADV)
     expect(v.slots[2]).toMatchObject({ label: 'うなぎ丼', idWritable: true })
-    expect(v.slots[2].warning).toContain('その場で使う')
+    expect(v.slots[2].warning).toContain('料理屋')
     expect(v.slots[3].warning).toContain('手に入る経路がない')
+    expect(v.slots[4].warning).toContain('宿')
   })
 })
 
 describe('選択肢', () => {
-  it('通常モードは道具だけ。上級者モードは「道具」「その場で使う」「手に入る経路がない」の見出しつき', () => {
+  it('通常モードは道具だけ。上級者モードは種別「道具」「料理」「宿」「なし」の見出しつき', () => {
     const normal = itemOptionGroups()
     expect(normal).toHaveLength(1)
     const ids = new Set(normal[0].items.map((o) => o.id))
     expect(ids.has(0x02)).toBe(true)
     expect(ids.has(0x30)).toBe(false)
     const adv = itemOptionGroups(ADV)
-    expect(adv.map((g) => g.label)).toEqual(['道具', 'その場で使う', '手に入る経路がない'])
+    expect(adv.map((g) => g.label)).toEqual(['道具', '料理', '宿', 'なし（手に入る経路がない）'])
     expect(adv[1].items.some((o) => o.id === 0x30)).toBe(true)
-    expect(adv[2].items.some((o) => o.id === 0xcd)).toBe(true)
+    expect(adv[2].items.map((o) => o.id)).toEqual([0x6f, 0x70, 0x71, 0x72])
+    expect(adv[3].items.some((o) => o.id === 0xcd)).toBe(true)
   })
 
   it('❓ U-12 のチップ・木札と、重要品の画面で扱う ID は、どのモードでも出さない', () => {
@@ -142,9 +145,9 @@ describe('選択肢', () => {
     for (const id of [0x2d, 0x2e, 0x00, 0x29, 0x2a, 0x2b, 0x2c, 0xed, 0xee]) expect(all.has(id)).toBe(false)
   })
 
-  it('検索用に英語名と16進の ID を持ち、選択肢に説明文を出す', () => {
+  it('検索用に英語名・読み・16進の ID を持ち、選択肢に説明文を出す', () => {
     const o = itemOptionGroups()[0].items.find((x) => x.id === 0x10)
-    expect(o?.keywords).toEqual(expect.arrayContaining(['Whetting Stone', '10', '0x10']))
+    expect(o?.keywords).toEqual(expect.arrayContaining(['Whetting Stone', 'といし', '10', '0x10']))
     expect(o?.description).toBe('非常に質の高い砥石。武器の耐久度400回復。')
   })
 })

@@ -19,10 +19,10 @@ import {
   type ItemOptionGroup,
   type ItemSlot,
 } from "./item-slot";
-import { ITEMS, ITEM_OBTAIN_LABELS, findItem, itemDisplayName, type ItemEntry } from "./master/item-names";
+import { ITEMS, ITEM_KIND_LABELS, findItem, itemDisplayName, type ItemEntry } from "./master/item-names";
 import { formatHex4 } from "@/lib/format";
 
-/** 上級者モード。その場で使う物・手に入る経路がない物と、最大数を超える個数を書ける */
+/** 上級者モード。種別が料理・宿・なし（手に入る経路がない）の ID と、最大数を超える個数を書ける */
 export type ItemBoxOptions = { advanced?: boolean };
 
 /** 個数として書ける値の上限（u16）。上級者モードで使う */
@@ -80,31 +80,32 @@ const ITEM_MARK_OFFSET = 4;
 const U12_IDS = new Set([0x2d, 0x2e]);
 const VALUABLE_IDS = new Set([0x00, 0x29, 0x2a, 0x2b, 0x2c, 0xed, 0xee]);
 
-const OBTAIN_CAUTION: Record<1 | 2, string> = {
-  1: "その場で使う物で、道具としては手に入りません（🟢）。枠に入れたときの動作は要ゲーム内確認です",
-  2: "手に入る経路がない ID です（🟢）。ゲーム内での表示・使用は要ゲーム内確認です",
+const KIND_CAUTION: Record<1 | 2 | 3, string> = {
+  1: "料理屋でその場で食べる料理で、道具としては手に入りません（🟢）。枠に入れたときの動作は要ゲーム内確認です",
+  2: "宿の部屋で、道具としては手に入りません（🟢）。枠に入れたときの動作は要ゲーム内確認です",
+  3: "手に入る経路がない ID です（🟢）。ゲーム内での表示・使用は要ゲーム内確認です",
 };
+
+const ALL_KINDS = [0, 1, 2, 3] as const;
 
 function toOption(it: ItemEntry): ItemOption {
   const hex = it.id.toString(16).toUpperCase().padStart(2, "0");
   return {
     id: it.id,
     label: itemDisplayName(it),
-    keywords: [it.ja, it.en, hex, `0x${hex}`],
+    keywords: [it.ja, it.en, it.reading, hex, `0x${hex}`].filter((k) => k !== ""),
     description: it.descJa,
-    caution: it.obtain === 0 ? undefined : OBTAIN_CAUTION[it.obtain],
+    caution: it.kind === 0 ? undefined : KIND_CAUTION[it.kind],
   };
 }
 
 const SELECTABLE = ITEMS.filter((it) => !U12_IDS.has(it.id) && !VALUABLE_IDS.has(it.id));
-const OPTIONS_BY_OBTAIN = ([0, 1, 2] as const).map((o) =>
-  SELECTABLE.filter((it) => it.obtain === o).map(toOption),
-);
+const OPTIONS_BY_KIND = ALL_KINDS.map((k) => SELECTABLE.filter((it) => it.kind === k).map(toOption));
 
-/** 通常モードは「道具」だけ。上級者モードは「その場で使う」「手に入る経路がない」も、見出しをつけて出す */
+/** 通常モードは「道具」だけ。上級者モードは「料理」「宿」「なし」も、種別の見出しをつけて出す */
 export function itemOptionGroups(options: ItemBoxOptions = {}): ItemOptionGroup[] {
-  if (!options.advanced) return [{ items: OPTIONS_BY_OBTAIN[0] }];
-  return ([0, 1, 2] as const).map((o) => ({ label: ITEM_OBTAIN_LABELS[o], items: OPTIONS_BY_OBTAIN[o] }));
+  if (!options.advanced) return [{ items: OPTIONS_BY_KIND[0] }];
+  return ALL_KINDS.map((k) => ({ label: ITEM_KIND_LABELS[k], items: OPTIONS_BY_KIND[k] }));
 }
 
 export function itemLabel(id: number): string | null {
@@ -121,8 +122,8 @@ export function validateItemId(id: number, options: ItemBoxOptions = {}): string
   if (VALUABLE_IDS.has(id)) return `${formatHex4(id)} は重要品の画面で扱う ID です`;
   const it = findItem(id);
   if (!it) return `道具の一覧にない ID です（${formatHex4(id)}）`;
-  if (it.obtain !== 0 && !options.advanced) {
-    return `${itemDisplayName(it)} は${ITEM_OBTAIN_LABELS[it.obtain]}物で、上級者モードでだけ書けます`;
+  if (it.kind !== 0 && !options.advanced) {
+    return `${itemDisplayName(it)} は種別「${ITEM_KIND_LABELS[it.kind]}」で、上級者モードでだけ書けます`;
   }
   return null;
 }
@@ -195,7 +196,7 @@ export function readItemBox(bytes: Uint8Array, area: ItemBoxArea, options: ItemB
         warning = `個数 ${count} は最大数 ${area.normalCountMax(item)} を超えています（上級者モードでだけ書ける値）`;
       }
       if (count === 0) warning = "個数が 0 です";
-      if (item && item.obtain !== 0) warning = OBTAIN_CAUTION[item.obtain];
+      if (item && item.kind !== 0) warning = KIND_CAUTION[item.kind];
       if (!hasItemMark(bytes, area, index)) warning = MISSING_MARK_WARNING;
       if (idProblem) warning = `${idProblem}。ほかの値に変更できます`;
     }

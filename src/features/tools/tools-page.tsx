@@ -123,7 +123,7 @@ function ItemBoxPage({
           <CardTitle className="flex flex-wrap items-center gap-2">
             {title}
             <InfoTip offset={`${formatOffset(area.offset)} から 8 B × ${area.slotCount} 件`}>
-              上級者モードでは、その場で使う物（料理屋の料理・宿）と手に入る経路がない ID も選べ、個数も最大数を超えて書けます。
+              上級者モードでは、種別が料理（料理屋の料理）・宿・なし（手に入る経路がない）の ID も選べ、個数も最大数を超えて書けます。
               チップ・木札は書くとゲーム内でセーブできなくなるため、どのモードでも選べません（❓ U-12）。
               会談の手紙・鉄・鍵は「重要品」の画面で扱います
             </InfoTip>
