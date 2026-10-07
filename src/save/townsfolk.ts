@@ -89,7 +89,7 @@ const stepValues = (values: readonly number[]): TownsfolkValue[] =>
 
 /** 汁部（DLC）の 209〜212 の結果（🟢） */
 const SHIRUBE_RESULT_VALUES: readonly TownsfolkValue[] = [
-  { value: 0, label: "破棄・報告済み" },
+  { value: 0, label: "なし（破棄・話して消えた）" },
   { value: 1, label: "成功" },
   { value: 2, label: "失敗を成功扱いにしてもらった（報酬なし）" },
 ];
@@ -140,11 +140,11 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     ],
   },
   [occupationFlagOffset(27)]: {
-    name: "汁部（DLC）と組んだ",
-    note: "🟢 人斬り 汁部理人と組むと 1",
+    name: "汁部（DLC）と組んでいる",
+    note: "🟢 人斬り 汁部理人と組むと 1。手を切ると 0（27〜31 がすべて 0 になる）",
     values: [
       { value: 0, label: "組んでいない" },
-      { value: 1, label: "組んだ" },
+      { value: 1, label: "組んでいる" },
     ],
   },
   ...Object.fromEntries(
@@ -152,7 +152,7 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
       occupationFlagOffset(28 + i),
       {
         name: `汁部の「${job}」の結果`,
-        note: `🟢 なりわい ${209 + i} の結果。汁部に報告すると 0 に戻る`,
+        note: `🟢 なりわい ${209 + i} を終えたときの結果。次に汁部と話すと 0 に戻る`,
         values: SHIRUBE_RESULT_VALUES,
       },
     ]),
@@ -161,6 +161,44 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
 
 /** なりわいの画面で扱うオフセット（町の人の状態の画面では入力欄を並べない） */
 export const OCCUPATION_FLAG_OFFSETS: readonly number[] = Object.keys(OCCUPATION_FLAG_NOTES).map(Number);
+
+/**
+ * 汁部（DLC）のなりわいのフラグ 27〜31 を、なりわいの画面では1つの欄にまとめる（🟢）。
+ * - 27：汁部と組んでいる。手を切ると 27〜31 がすべて 0 になる
+ * - 28〜31：209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）。次に汁部と話すと 0 に戻るので、立つのはふつう1つだけ
+ * 🔶 汁部は 209 → 212 の順に頼む続き物。ただし、どこまで進んだかはこのフラグではなく、なりわいごとの状態で決まる
+ *    （その状態が周回をまたぐ記録 0x33A4〜 と同じものかは ❓）
+ */
+export const SHIRUBE_FLAG_OFFSETS: readonly number[] = [27, 28, 29, 30, 31].map(occupationFlagOffset);
+
+export type ShirubeState = { key: string; label: string; group?: string; values: readonly number[] };
+
+export const SHIRUBE_STATES: readonly ShirubeState[] = [
+  { key: "none", label: "組んでいない", values: [0, 0, 0, 0, 0] },
+  { key: "partner", label: "組んでいる", values: [1, 0, 0, 0, 0] },
+  ...SHIRUBE_JOBS.flatMap((job, i) =>
+    ([1, 2] as const).map((result) => ({
+      key: `${209 + i}-${result}`,
+      label: `組んでいる・「${job}」を${result === 1 ? "成功" : "失敗を成功扱いにしてもらった（報酬なし）"}`,
+      group: "終えたばかり（次に汁部と話すと消える）",
+      values: [1, ...[0, 1, 2, 3].map((j) => (j === i ? result : 0))],
+    })),
+  ),
+];
+
+/** 27〜31 の今の値（5個）に合う組み合わせ。表にない組み合わせなら undefined */
+export function shirubeStateOf(values: readonly number[]): ShirubeState | undefined {
+  return SHIRUBE_STATES.find((s) => s.values.every((v, i) => v === values[i]));
+}
+
+/** 27〜31 を key の組み合わせにする（5 B だけを書く） */
+export function writeShirubeState(bytes: Uint8Array, key: string): void {
+  const state = SHIRUBE_STATES.find((s) => s.key === key);
+  if (!state) throw new RangeError(`汁部の状態が不明です: ${key}`);
+  const problem = readTownsfolk(bytes).problem;
+  if (problem) throw new RangeError(problem);
+  SHIRUBE_FLAG_OFFSETS.forEach((offset, i) => writeTownsfolk(bytes, offset, state.values[i], { advanced: false }));
+}
 
 /**
  * 差分で何か分かっているバイトの説明。name があるものは入力欄を最初から出す。

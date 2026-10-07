@@ -8,6 +8,8 @@ import { TS_SAVE_SIZE } from './hero'
 import {
   OCCUPATION_FLAG_OFFSETS,
   SERIES_VALUES,
+  SHIRUBE_FLAG_OFFSETS,
+  SHIRUBE_STATES,
   SMITH_STATES,
   SMITH_STATE_OFFSET,
   TOWNSFOLK_END,
@@ -16,7 +18,9 @@ import {
   TOWNSFOLK_START,
   occupationFlagOffset,
   readTownsfolk,
+  shirubeStateOf,
   validateTownsfolk,
+  writeShirubeState,
   writeTownsfolk,
 } from './townsfolk'
 
@@ -115,6 +119,26 @@ describe('🔶 町の人の状態の候補 0x011C〜0x05FF chunks/townsfolk', ()
     ])
     expect(TOWNSFOLK_NOTES[0x0138].values?.map((v) => v.value)).toEqual([0, 1, 2])
     expect(TOWNSFOLK_NOTES[0x0135].values?.find((v) => v.value === 8)?.label).toBe('「四天王の証」を受け取った')
+  })
+
+  it('🟢 汁部の 27〜31（0x0137〜0x013B）は1つの組み合わせとして読み書きする', () => {
+    expect(SHIRUBE_FLAG_OFFSETS).toEqual([0x0137, 0x0138, 0x0139, 0x013a, 0x013b])
+    // 組んでいない・組んでいる、209〜212 × 成功／失敗を成功扱い
+    expect(SHIRUBE_STATES).toHaveLength(10)
+    expect(shirubeStateOf([0, 0, 0, 0, 0])?.key).toBe('none')
+    expect(shirubeStateOf([1, 0, 0, 2, 0])?.key).toBe('211-2')
+    // 2つ以上の結果が立っている組み合わせは表にない
+    expect(shirubeStateOf([1, 1, 1, 0, 0])).toBeUndefined()
+
+    const before = makeSave()
+    const after = before.slice()
+    writeShirubeState(after, '210-1')
+    expect(diffOffsets(before, after)).toEqual([0x0137, 0x0139])
+    expect(Array.from(after.slice(0x0137, 0x013c))).toEqual([1, 0, 1, 0, 0])
+    writeShirubeState(after, 'none')
+    expect(diffOffsets(before, after)).toEqual([])
+    expect(() => writeShirubeState(after, 'x')).toThrow(RangeError)
+    expect(() => writeShirubeState(makeSave(TS_SAVE_SIZE + 4), 'none')).toThrow(RangeError)
   })
 
   it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
