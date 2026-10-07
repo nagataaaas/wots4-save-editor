@@ -1,4 +1,4 @@
-// 🔶❓ U-18・❓ U-1：差分で観測した値を固定位置に合成する。sample/ のファイルは読まない。
+// ✅ [U] 体型・身長・肌色の値、🔶❓ U-18 肌色の反映・関連値、❓ U-1：差分で観測した値を固定位置に合成する。sample/ のファイルは読まない。
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU32, writeUtf16Fixed } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -87,16 +87,30 @@ describe('🔶❓ U-18 現在の見た目の候補（❓ U-1 固定位置）', (
     expect([view.body.value, view.height.value, view.skin.value]).toEqual([1, 144, 1])
   })
 
-  it('🔶❓ U-18 通常モードで未観測の値を拒否し、上級者モードでは範囲内で許可する', () => {
+  it('✅ [U] 肌色0〜7・体型0〜2と、ふつうの0.9倍・1.1倍の身長を通常モードで書ける（肌色の反映は 🔶 U-18）', () => {
+    const bytes = makeSave()
+    for (let skin = 0; skin <= 7; skin++) {
+      writeAppearanceCurrent(bytes, 'skin', skin)
+      expect(readAppearanceCurrent(bytes).skin.value).toBe(skin)
+    }
+    for (const height of [157.5, 175, 192.5]) {
+      writeAppearanceCurrent(bytes, 'height', height)
+      expect(readAppearanceCurrent(bytes).height.value).toBe(height)
+    }
+  })
+
+  it('🔶❓ U-18 通常モードで意味の分からない値を拒否し、上級者モードでは範囲内で許可する', () => {
     const bytes = makeSave()
     const before = bytes.slice()
-    expect(() => writeAppearanceCurrent(bytes, 'skin', 2)).toThrow()
-    expect(() => writeAppearanceCurrent(bytes, 'height', 170)).toThrow()
+    expect(() => writeAppearanceCurrent(bytes, 'skin', 8)).toThrow()
+    expect(() => writeAppearanceCurrent(bytes, 'height', 130)).toThrow()
+    expect(() => writeAppearanceCurrent(bytes, 'height', 221)).toThrow()
     expect(() => writeAppearanceCurrent(bytes, 'body', 3)).toThrow()
+    expect(() => writeAppearanceCurrent(bytes, 'related', 3)).toThrow()
     expect(bytes).toEqual(before)
-    writeAppearanceCurrent(bytes, 'skin', 2, true)
+    writeAppearanceCurrent(bytes, 'skin', 8, true)
     writeAppearanceCurrent(bytes, 'body', 3, true)
-    writeAppearanceCurrent(bytes, 'height', 170, true)
+    writeAppearanceCurrent(bytes, 'height', 130, true)
     expect(readAppearanceCurrent(bytes).body.value).toBe(3)
     expect(() => writeAppearanceCurrent(bytes, 'related', 256, true)).toThrow()
     expect(() => writeAppearanceCurrent(bytes, 'height', Infinity, true)).toThrow()
