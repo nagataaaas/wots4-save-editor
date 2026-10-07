@@ -1,4 +1,4 @@
-import { Binary, Flag, Globe, Moon, Package, ScrollText, Store, Sword, Swords, User, Workflow, type LucideIcon } from 'lucide-react'
+import { Binary, Flag, Globe, Moon, Package, ScrollText, Shirt, Store, Sword, Swords, User, Workflow, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
 // 各領域の確度は docs/save_format/README.md §3 と各 chunk を参照（chunk 名を note に残す）。
@@ -11,6 +11,9 @@ export type SectionId =
   | 'tools'
   | 'chest'
   | 'valuables'
+  | 'accessories'
+  | 'appearance'
+  | 'unlocks'
   | 'world'
   | 'scenario'
   | 'event-chart'
@@ -71,6 +74,15 @@ export const sectionGroups: SectionGroup[] = [
           { id: 'tools', label: '所持', note: 'items（手持ち 8 B × 10件）' },
           { id: 'chest', label: '箪笥', note: 'items（箪笥の通常アイテム 8 B × 80件）' },
           { id: 'valuables', label: '重要品', note: 'items（貴重品 8 B × 10件。[TS] は先頭4件＝製錬用の鉄のみ編集）' },
+        ],
+      },
+      {
+        label: '容姿・特典',
+        icon: Shirt,
+        sections: [
+          { id: 'accessories', label: '装飾品', note: 'accessories（所持フラグ 1 B × 158）' },
+          { id: 'appearance', label: '容姿', note: 'appearance の服と unlocks の顔・髪型など（U-17）' },
+          { id: 'unlocks', label: '特典解除', note: 'unlocks 🔶 特典の状態（U-17）' },
         ],
       },
       { id: 'world', label: '世界', icon: Globe, note: 'date-location・factions・gates・facilities 🔶 日数・時間帯、治安、勢力、門・柵、施設' },

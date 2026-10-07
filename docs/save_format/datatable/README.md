@@ -23,6 +23,9 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 | `weapon/complete.csv`         | 完成武器（2〜116） | このリストのみ           | u16 LE                       | `FFFF`＝自作 | [weapon-record](../chunks/weapon-record/README.md) +0x06  |
 | `item/item.csv`               | 通常アイテム       | アイテム                 | u16 LE                       | `FFFF`       | [items](../chunks/items/README.md)                        |
 | `item/valuable.csv`           | 貴重品             | アイテム                 | u16 LE                       | `FFFF`       | [items](../chunks/items/README.md)                        |
+| `accessory/accessory.csv`     | 装飾品（0〜157）   | このリストのみ           | 所持フラグの添字（u8 × 158） |              | [accessories](../chunks/accessories/README.md)            |
+| `appearance/cloth.csv`        | 容姿の服（0〜241） | このリストのみ           | ビット番号（`0x3AB5C` から） |              | [appearance](../chunks/appearance/README.md)              |
+| `unlock/unlock.csv`           | 特典解除（0〜105） | このリストのみ           | 先頭16件・31・101 ✅ [U]／ほか 🔶 U-17 |       | [unlocks](../chunks/unlocks/README.md)                    |
 | `event/event.csv`             | イベント           | このリストのみ（添字）   | 配列の添字（u8 × 件数）      |              | [event-chart](../chunks/event-chart/README.md)            |
 | `event/chart-node.csv`        | イベントチャートのノード（0〜118） | このリストのみ | u16 LE                   |              | [hint](../chunks/hint/README.md) 0x3900                   |
 | `place/start-location.csv`    | 開始地点（現在地） | このリストのみ           | u8                           |              | [date-location](../chunks/date-location/README.md) 0x0013 |
@@ -49,6 +52,16 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
   `kind` は種別 🟢：0＝道具、1＝料理（料理屋でその場で食べる）、2＝宿（梅・竹・松の間、入院）、3＝なし（手に入る経路がない。未使用とみられる）。
   `max_stack` は手持ちの1枠にまとめて持てる最大数 🟢（ほとんど 1。がらくた 10、お宝 5、鉄 999、コイン 9999、エサ 10、宿 0）。
   箪笥の枠はこの数を超えて入る（[U] sample）。コード（`src/save/master/item-names.ts`）はこの CSV をビルド時にそのまま読み込む（列名で引くので、列の追加・並べ替えはしてよい）
+- `appearance/cloth.csv`：容姿設定の服の番号。0〜241 のうち194件（欠番は服がない番号）。全行 🟢（32〜46・238〜241 はゲーム内で確認 ✅）。
+  `name_ja`・`name_en` はその番号に入る部品の名前（ゲーム内の表記のまま、複数あるときは ` / ` で区切る）。`category` は部品の種類（上半身・下半身・足元・小物。小物は合羽・手甲・脚絆・前掛け）。
+  `dlc` は DLC の番号（1＝新撰組、2＝ドナドナ・さよ）。特典解除で手に入る服はこの表にない（`unlock/unlock.csv`）
+- `unlock/unlock.csv`：特典解除の一覧の106件。先頭16件の番号とゲーム内表示、31（J.J. の顔）の解除前後の差分、101（ライフルの免許）への2の書き込みの反映は ✅ [U]、ほかの対応は 🔶 U-17。`name_*`（名前）・`condition_*`（解除の条件）・`effect_*`（解除で何ができるか）はゲーム内の表記のまま 🟢。
+  `category` は名前から付けた分類（武器箪笥・難易度・肌の色・髪の色・体型・顔・髪型・服・装飾品・免許・その他）。
+  この番号がセーブの状態の表の添字と同じかは、先頭16件・31・101以外は未確認（`備考` が 🔶、U-17）。85〜99・105 は装飾品の特典で、装飾品の ID（`accessory/accessory.csv`）とは別の番号
+- `accessory/accessory.csv`：ID 0〜157 の全158件（欠番なし）。全行 🟢。`name_ja`・`name_en`・`description_ja`・`description_en` はゲーム内の表記のまま。
+  `part` は付ける場所（head＝頭、chest＝胸・背中、main＝腰、r_shoulder＝手・肩）。`dlc` は DLC の番号（空欄＝本編、0＝龍馬の脇差、1＝新撰組（近藤・土方）、2＝ドナドナ・さよ）。
+  `shop` は 1＝店で買える、0＝買えない（DLC か、特典の解除で手に入る物）。`menu_order` はゲーム内の一覧の並び順 🔶（0〜158、122 が欠番）。
+  ID と一覧の並び順は一致しない（ID 0 は新撰組の鉢金）
 - `npc/npc-name.csv`：全行 🟢。`sex` は m＝男、f＝女。`group` は unique＝固有の名前（1〜215）、placeholder＝勢力ごとの仮の名前（1001〜6002）、
   female＝町の女性の名前の候補（7001〜7150・8001〜8200）。約束の相手の町の人の名前は female から選ばれる 🔶。コードは `src/save/master/npc-names.ts` に同じ内容を持つ
 - `source`（パーツ・銘・魅力・完成武器・アイテム）：出典。`CT`＝Cheat Engine テーブル、`TS`＝[TS] の定義、`U`＝ユーザーのゲーム内確認、`SE-BBS`＝PS3版の掲示板。複数あるときは `;` で区切る
