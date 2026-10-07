@@ -46,19 +46,18 @@ export function AppSidebar({ active, onSelect }: Props) {
                 {group.items.map((node) =>
                   isFolder(node) ? (
                     <SidebarMenuItem key={node.label}>
-                      <SidebarMenuButton asChild className="pointer-events-none">
-                        <div>
-                          <node.icon />
-                          <span>{node.label}</span>
-                        </div>
+                      <SidebarMenuButton render={<div />} className="pointer-events-none">
+                        <node.icon />
+                        <span>{node.label}</span>
                       </SidebarMenuButton>
                       <SidebarMenuSub>
                         {node.sections.map((s) => (
                           <SidebarMenuSubItem key={s.id}>
-                            <SidebarMenuSubButton asChild isActive={s.id === active}>
-                              <button type="button" className="w-full" onClick={() => onSelect(s.id)}>
-                                <span>{s.label}</span>
-                              </button>
+                            <SidebarMenuSubButton
+                              render={<button type="button" className="w-full" onClick={() => onSelect(s.id)} />}
+                              isActive={s.id === active}
+                            >
+                              <span>{s.label}</span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}

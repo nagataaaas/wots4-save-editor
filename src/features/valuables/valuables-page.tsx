@@ -187,7 +187,12 @@ function ProbeCard({
           <div className="flex flex-wrap items-end gap-2">
             <div className="flex flex-col gap-1.5">
               <Label>開始 ID</Label>
-              <Select value={start} onValueChange={setStart} disabled={disabled}>
+              <Select
+                value={start}
+                items={PROBE_CANDIDATES.map((id) => ({ value: String(id), label: formatHex4(id) }))}
+                onValueChange={(v) => v !== null && setStart(v)}
+                disabled={disabled}
+              >
                 <SelectTrigger className="w-32 font-mono">
                   <SelectValue />
                 </SelectTrigger>

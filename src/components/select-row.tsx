@@ -1,24 +1,24 @@
 import { useState, type ReactNode } from 'react'
 import { InfoTip } from '@/components/info-tip'
+import { LazySelect } from '@/components/lazy-select'
 import { groupOptions, type SelectOption } from '@/components/select-options'
 import { WarningTip } from '@/components/warning-tip'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from '@/components/ui/select'
+
+function OptionContent({ option: o }: { option: SelectOption }) {
+  return (
+    <>
+      {o.icon && <o.icon />}
+      {o.label}
+    </>
+  )
+}
 
 function OptionItem({ option: o }: { option: SelectOption }) {
   return (
     <SelectItem value={o.value} disabled={o.disabled}>
-      {o.icon && <o.icon />}
-      {o.label}
+      <OptionContent option={o} />
     </SelectItem>
   )
 }
@@ -49,6 +49,10 @@ type Props = {
 export function SelectRow({ label, offset, badges, value, currentLabel, options, problem, disabled, warning, hint, note, onChange }: Props) {
   const [error, setError] = useState<string | null>(null)
   const listed = value === null || options.some((o) => o.value === value)
+  // トリガーに出す名前（Base UI の Select は閉じている間は選択肢を描かないので、items から引く）
+  const items: Record<string, ReactNode> = {}
+  for (const o of options) items[o.value] = <OptionContent option={o} />
+  if (!listed && value !== null) items[value] = `${currentLabel ?? value}（現在の値）`
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -58,9 +62,12 @@ export function SelectRow({ label, offset, badges, value, currentLabel, options,
         {!problem && <WarningTip warning={warning} />}
         {badges}
       </div>
-      <Select
-        // '' は Radix Select でプレースホルダー表示になる（undefined だと非制御扱いになる）
-        value={value ?? ''}
+      <LazySelect
+        // null でプレースホルダー表示になる
+        value={value}
+        items={items}
+        placeholder="未読み込み"
+        className="w-full"
         disabled={disabled || value === null || problem !== null || options.length === 0}
         onValueChange={(v) => {
           if (v === value) return
@@ -72,30 +79,25 @@ export function SelectRow({ label, offset, badges, value, currentLabel, options,
           }
         }}
       >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="未読み込み" />
-        </SelectTrigger>
-        <SelectContent>
-          {!listed && value !== null && (
-            <SelectItem value={value} disabled>
-              {currentLabel ?? value}（現在の値）
-            </SelectItem>
-          )}
-          {groupOptions(options).map((g, i) =>
-            g.name === undefined ? (
-              g.items.map((o) => <OptionItem key={o.value} option={o} />)
-            ) : (
-              <SelectGroup key={g.name}>
-                {i > 0 && <SelectSeparator />}
-                <SelectLabel>{g.name}</SelectLabel>
-                {g.items.map((o) => (
-                  <OptionItem key={o.value} option={o} />
-                ))}
-              </SelectGroup>
-            ),
-          )}
-        </SelectContent>
-      </Select>
+        {!listed && value !== null && (
+          <SelectItem value={value} disabled>
+            {currentLabel ?? value}（現在の値）
+          </SelectItem>
+        )}
+        {groupOptions(options).map((g, i) =>
+          g.name === undefined ? (
+            g.items.map((o) => <OptionItem key={o.value} option={o} />)
+          ) : (
+            <SelectGroup key={g.name}>
+              {i > 0 && <SelectSeparator />}
+              <SelectLabel>{g.name}</SelectLabel>
+              {g.items.map((o) => (
+                <OptionItem key={o.value} option={o} />
+              ))}
+            </SelectGroup>
+          ),
+        )}
+      </LazySelect>
       {problem ? (
         <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>
       ) : (

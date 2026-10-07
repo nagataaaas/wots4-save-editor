@@ -1177,7 +1177,12 @@ function BulkSelect({
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
       <Label>{label}</Label>
-      <Select value={value} disabled={disabled} onValueChange={onChange}>
+      <Select
+        value={value === "" ? null : value}
+        items={options}
+        disabled={disabled}
+        onValueChange={(v) => v !== null && onChange(v)}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="選ぶ" />
         </SelectTrigger>

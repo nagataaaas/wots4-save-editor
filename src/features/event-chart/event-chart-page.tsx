@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { Popover, PopoverContent } from "@/components/ui/popover";
 import { recordOptions, stateOptions } from "@/features/scenario/event-options";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatHex2 } from "@/lib/format";
@@ -191,6 +191,8 @@ function ChartCanvas({
 }) {
   const [selected, setSelected] = useState<number | null>(null);
   const selectedBox = CHART_BOXES.find((b) => b.node === selected);
+  // ポップオーバーを選んだ枠の位置に出すための、枠と同じ位置・大きさの要素
+  const [anchor, setAnchor] = useState<HTMLDivElement | null>(null);
 
   const looks = useMemo(
     () =>
@@ -239,19 +241,20 @@ function ChartCanvas({
             />
           ))}
         </svg>
+        {selectedBox && (
+          <div
+            ref={setAnchor}
+            className="pointer-events-none absolute"
+            style={{
+              left: px(selectedBox.col),
+              top: py(selectedBox.row + (1 - BOX_HEIGHT) / 2),
+              width: BOX_W,
+              height: BOX_H,
+            }}
+          />
+        )}
         <Popover open={selectedBox !== undefined} onOpenChange={(open) => !open && setSelected(null)}>
-          {selectedBox && (
-            <PopoverAnchor
-              className="pointer-events-none absolute"
-              style={{
-                left: px(selectedBox.col),
-                top: py(selectedBox.row + (1 - BOX_HEIGHT) / 2),
-                width: BOX_W,
-                height: BOX_H,
-              }}
-            />
-          )}
-          <PopoverContent className="w-80" align="start">
+          <PopoverContent className="w-80" align="start" anchor={anchor}>
             {selectedBox && (
               <BoxEditor box={selectedBox} events={events} look={looks.get(selectedBox.node) ?? "shown"} />
             )}

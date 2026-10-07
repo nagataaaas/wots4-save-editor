@@ -106,17 +106,17 @@ function EffectBox({ children }: { children: ReactNode }) {
 /** 開閉の三角（Collapsible の Trigger の中に置く。開いていると下向き） */
 const chevron = (
   <ChevronRight
-    className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-90"
+    className="size-4 shrink-0 transition-transform group-data-panel-open:rotate-90"
     aria-hidden
   />
 );
 
 /**
- * 開閉で高さが伸び縮みする中身（tw-animate-css の collapsible-down/up）。
+ * 開閉で高さが伸び縮みする中身（Base UI の --collapsible-panel-height を transition する）。
  * 高さ 0 でも余白が残らないよう、間隔は中に置いた要素の padding で取る
  */
 const COLLAPSIBLE_ANIMATION =
-  "overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up";
+  "h-(--collapsible-panel-height) overflow-hidden transition-[height] duration-200 ease-out data-ending-style:h-0 data-starting-style:h-0";
 
 /** クリックがボタン（開閉の Trigger、丸ハテナなど）の上か。ボタンは自分の動作だけをさせる */
 const isOnButton = (e: MouseEvent<HTMLElement>) =>
@@ -625,13 +625,18 @@ function WeaponCard({
   return (
     // 閉じているときはカード全体、開いているときは見出しの欄で開閉する（ユーザー判断 2026-10-05）。
     // キーボードでは見出しの Trigger で開閉できる
-    <Collapsible asChild open={open} onOpenChange={setOpen}>
-      <Card
-        className={open ? "gap-0" : "hover:bg-muted/40 cursor-pointer gap-0"}
-        onClick={(e) => {
-          if (!open && !isOnButton(e)) setOpen(true);
-        }}
-      >
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      render={
+        <Card
+          className={open ? "gap-0" : "hover:bg-muted/40 cursor-pointer gap-0"}
+          onClick={(e) => {
+            if (!open && !isOnButton(e)) setOpen(true);
+          }}
+        />
+      }
+    >
         <CardHeader
           className={open ? "cursor-pointer" : undefined}
           onClick={(e) => {
@@ -851,7 +856,6 @@ function WeaponCard({
             </Section>
           </CardContent>
         </CollapsibleContent>
-      </Card>
     </Collapsible>
   );
 }

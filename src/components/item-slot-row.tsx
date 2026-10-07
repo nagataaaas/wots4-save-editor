@@ -175,20 +175,22 @@ export function ItemSlotRow({
         )}
       >
         <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              aria-label={`${index + 1}件目の${noun}`}
-              disabled={readOnly}
-              className="w-full min-w-0 justify-between font-normal"
-            >
-              <span className={cn('truncate', slot === null && 'text-muted-foreground')}>{triggerText}</span>
-              <ChevronsUpDown className="opacity-50" />
-            </Button>
+          <PopoverTrigger
+            render={
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                aria-label={`${index + 1}件目の${noun}`}
+                disabled={readOnly}
+                className="w-full min-w-0 justify-between font-normal"
+              />
+            }
+          >
+            <span className={cn('truncate', slot === null && 'text-muted-foreground')}>{triggerText}</span>
+            <ChevronsUpDown className="opacity-50" />
           </PopoverTrigger>
-          <PopoverContent className="w-(--radix-popover-trigger-width) min-w-64 p-0" align="start">
+          <PopoverContent className="w-(--anchor-width) min-w-64 p-0" align="start">
             <Command filter={substringFilter}>
               <CommandInput placeholder={`${noun}を検索（名前・読み・英語名・ID）`} />
               <CommandList>

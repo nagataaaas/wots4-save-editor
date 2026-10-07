@@ -208,6 +208,11 @@ function LocationCard({
   const currentLoc = current === null ? undefined : findLocation(current);
   const isSelectable = current === null || selectableLocations.some((l) => l.value === current);
   const warning = currentLoc?.warning;
+  // Base UI の Select はトリガーに出す名前を items から引く
+  const locationItems: Record<string, string> = {};
+  for (const l of selectableLocations) locationItems[String(l.value)] = `${hex2(l.value)} ${l.label}${l.warning ? " ⚠" : ""}`;
+  if (!isSelectable && current !== null)
+    locationItems[String(current)] = `${hex2(current)} ${currentLoc?.label ?? "未調査"}（現在の値）`;
 
   return (
     <Card>
@@ -223,10 +228,12 @@ function LocationCard({
           <InfoTip offset={HERO_OFFSETS.location}></InfoTip>
         </div>
         <Select
-          // '' は Radix Select でプレースホルダー表示になる（undefined だと非制御扱いになる）
-          value={current === null ? "" : String(current)}
+          // null でプレースホルダー表示になる（undefined だと非制御扱いになる）
+          value={current === null ? null : String(current)}
+          items={locationItems}
           disabled={current === null || problem !== null}
           onValueChange={(s) => {
+            if (s === null) return;
             setError(null);
             try {
               onChange(Number(s));

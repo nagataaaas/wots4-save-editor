@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { InfoTip } from "@/components/info-tip";
+import { LazySelect } from "@/components/lazy-select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -153,7 +154,11 @@ export function AccessoriesPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <Select value={filter} onValueChange={(v: string) => setFilter(v as AccessoryFilter)}>
+            <Select
+              value={filter}
+              items={{ all: "すべて", owned: "所持", missing: "未所持" }}
+              onValueChange={(v) => v !== null && setFilter(v as AccessoryFilter)}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -232,6 +237,14 @@ export function AccessoriesPage() {
 // 🔶 U-17: 顔・髪型などの特典は容姿の服のビットとは別の状態列を使う。
 const APPEARANCE_UNLOCK_CATEGORIES = ["肌の色", "髪の色", "体型", "顔", "髪型", "服"] as const;
 
+const unlockStateLabel = (v: number) => UNLOCK_STATE_LABELS[v] ?? `${formatHex2(v)} 不明`;
+
+/** 「すべて」と種類の名前の選択肢（Base UI の Select の items） */
+const categoryItems = (categories: readonly string[]) => [
+  { value: "all", label: "すべて" },
+  ...categories.map((c) => ({ value: c, label: c })),
+];
+
 function UnlockStateRows({
   rows, view, readOnly, advanced, write,
 }: {
@@ -249,22 +262,20 @@ function UnlockStateRows({
         if (!options.includes(value)) options.push(value);
         return (
           <div key={u.id} className="flex flex-wrap items-center gap-3 py-1.5">
-            <Select
+            <LazySelect
               value={String(value)}
+              items={Object.fromEntries(options.map((o) => [String(o), unlockStateLabel(o)]))}
               disabled={readOnly || (value > 2 && !advanced)}
-              onValueChange={(v: string) => write((b) => writeUnlockState(b, u.id, Number(v), { advanced }))}
+              className="w-32"
+              aria-label={u.ja}
+              onValueChange={(v) => write((b) => writeUnlockState(b, u.id, Number(v), { advanced }))}
             >
-              <SelectTrigger className="w-32" aria-label={u.ja}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map((o) => (
-                  <SelectItem key={o} value={String(o)}>
-                    {UNLOCK_STATE_LABELS[o] ?? `${formatHex2(o)} 不明`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {options.map((o) => (
+                <SelectItem key={o} value={String(o)}>
+                  {unlockStateLabel(o)}
+                </SelectItem>
+              ))}
+            </LazySelect>
             <div className="flex min-w-0 flex-1 flex-col">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-muted-foreground font-mono text-xs">{u.id}</span>
@@ -311,7 +322,11 @@ function AppearanceUnlocksCard() {
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Input className="w-56" placeholder="顔・髪型・名前で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <Select value={category} onValueChange={setCategory}>
+            <Select
+              value={category}
+              items={categoryItems(APPEARANCE_UNLOCK_CATEGORIES)}
+              onValueChange={(v) => v !== null && setCategory(v)}
+            >
               <SelectTrigger className="w-32" aria-label="特典の種類"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">すべて</SelectItem>
@@ -363,7 +378,7 @@ export function AppearancePage() {
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Input className="w-56" placeholder="名前で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category} items={categoryItems(categories)} onValueChange={(v) => v !== null && setCategory(v)}>
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -376,7 +391,11 @@ export function AppearancePage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={filter} onValueChange={(v: string) => setFilter(v as ClothFilter)}>
+            <Select
+              value={filter}
+              items={{ all: "すべて", on: "解放済み", off: "未解放" }}
+              onValueChange={(v) => v !== null && setFilter(v as ClothFilter)}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -468,7 +487,7 @@ export function UnlocksPage() {
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Input className="w-56" placeholder="名前・条件で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category} items={categoryItems(categories)} onValueChange={(v) => v !== null && setCategory(v)}>
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>

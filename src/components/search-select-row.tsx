@@ -86,22 +86,24 @@ export function SearchSelectRow({
         {badges}
       </div>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            disabled={disabled || value === null || problem !== null || options.length === 0}
-            className="w-full justify-between font-normal"
-          >
-            <span className={`flex items-center gap-2 truncate ${value === null ? 'text-muted-foreground' : ''}`}>
-              {selected?.icon && <selected.icon />}
-              {triggerText}
-            </span>
-            <ChevronsUpDown className="opacity-50" />
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              disabled={disabled || value === null || problem !== null || options.length === 0}
+              className="w-full justify-between font-normal"
+            />
+          }
+        >
+          <span className={`flex items-center gap-2 truncate ${value === null ? 'text-muted-foreground' : ''}`}>
+            {selected?.icon && <selected.icon />}
+            {triggerText}
+          </span>
+          <ChevronsUpDown className="opacity-50" />
         </PopoverTrigger>
-        <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+        <PopoverContent className="w-(--anchor-width) p-0" align="start">
           <Command filter={substringFilter}>
             <CommandInput placeholder={searchPlaceholder} />
             <CommandList>
