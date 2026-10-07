@@ -2,6 +2,8 @@ import { useMemo, useState, type KeyboardEvent } from "react";
 import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { recordOptions, stateOptions } from "@/features/scenario/event-options";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
@@ -96,6 +98,8 @@ export function EventChartPage() {
       return { error: errorMessage(e) };
     }
   }, [save]);
+  // 名前が隠れる枠に、？？？の代わりに名前を出す。既定は隠す（ユーザー判断 2026-10-07）
+  const [revealNames, setRevealNames] = useState(false);
 
   if (result && "error" in result) {
     return (
@@ -127,8 +131,21 @@ export function EventChartPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <Legend />
-          <ChartCanvas key={save?.loadId ?? 0} events={result?.events ?? null} ctx={result?.ctx ?? NO_SAVE} />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Legend />
+            <div className="flex items-center gap-2">
+              <Switch id="reveal-names" checked={revealNames} onCheckedChange={setRevealNames} />
+              <Label htmlFor="reveal-names" className="text-xs">
+                隠れた名前を表示する
+              </Label>
+            </div>
+          </div>
+          <ChartCanvas
+            key={save?.loadId ?? 0}
+            events={result?.events ?? null}
+            ctx={result?.ctx ?? NO_SAVE}
+            revealNames={revealNames}
+          />
         </CardContent>
       </Card>
     </div>
@@ -162,7 +179,15 @@ function Legend() {
   );
 }
 
-function ChartCanvas({ events, ctx }: { events: EventsView | null; ctx: ChartContext }) {
+function ChartCanvas({
+  events,
+  ctx,
+  revealNames,
+}: {
+  events: EventsView | null;
+  ctx: ChartContext;
+  revealNames: boolean;
+}) {
   const [selected, setSelected] = useState<number | null>(null);
   const selectedBox = CHART_BOXES.find((b) => b.node === selected);
 
@@ -208,6 +233,7 @@ function ChartCanvas({ events, ctx }: { events: EventsView | null; ctx: ChartCon
               box={b}
               look={looks.get(b.node) ?? "shown"}
               selected={b.node === selected}
+              revealName={revealNames}
               onSelect={() => setSelected(b.node)}
             />
           ))}
@@ -239,11 +265,14 @@ function BoxShape({
   box,
   look,
   selected,
+  revealName,
   onSelect,
 }: {
   box: ChartBox;
   look: ChartBoxLook;
   selected: boolean;
+  /** 名前が隠れる枠でも、？？？の代わりに名前を出す */
+  revealName: boolean;
   onSelect: () => void;
 }) {
   const x = px(box.col);
@@ -287,7 +316,7 @@ function BoxShape({
   const color = KIND_COLORS[box.kind];
   const fill = masked ? MASKED.fill : color.fill;
   const stroke = masked ? MASKED.stroke : color.stroke;
-  const label = masked ? "？？？" : name;
+  const label = masked && !revealName ? "？？？" : name;
 
   return (
     <g {...common} aria-label={`${name}（${CHART_BOX_LOOK_LABELS[look]}）`}>
