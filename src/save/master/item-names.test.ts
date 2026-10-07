@@ -63,10 +63,10 @@ describe("🟢 アイテム datatable/item/item.csv", () => {
     ]);
   });
 
-  it("同じ名前の ID は表示名に ID を添える", () => {
+  it("表示名はゲーム内の表記のまま。同じ名前の ID にも ID を添えない（ユーザー判断 2026-10-07）", () => {
     expect(itemDisplayName(findItem(0x02)!)).toBe("おにぎり");
-    expect(itemDisplayName(findItem(0x1c)!)).toBe("茶器（0x1C）");
-    expect(itemDisplayName(findItem(0x0d)!)).toBe("部品箱（0x0D）");
-    expect(itemDisplayName(findItem(0xd7)!)).toBe("鮎の塩焼き（0xD7）");
+    expect(itemDisplayName(findItem(0x1c)!)).toBe("茶器");
+    expect(itemDisplayName(findItem(0x0d)!)).toBe("部品箱");
+    expect(itemDisplayName(findItem(0xd7)!)).toBe("鮎の塩焼き");
   });
 });

@@ -148,15 +148,13 @@ export function ItemSlotRow({
     </CommandItem>
   )
 
-  // 個数の上限の表示。通常モードの上限と、上級者モードで書ける上限が違えば両方出す
+  // 個数の上限。書ける上限（countMax）が通常の上限（normalMax）を超えるのは上級者モードのとき。
+  // 通常モードでは入力欄の min・max を 1 とその アイテムの上限にし、上級者モードではつけない（ユーザー判断 2026-10-07）
   const countMax = slot && !isEmpty ? countMaxFor?.(slot.id) : undefined
   const normalMax = slot && !isEmpty ? (normalCountMaxFor?.(slot.id) ?? countMax) : undefined
+  const overLimitAllowed = countMax !== undefined && normalMax !== undefined && countMax > normalMax
   const countLimitText =
-    showCount && normalMax !== undefined
-      ? countMax !== undefined && countMax > normalMax
-        ? `個数は最大 ${normalMax}（上級者モードのため ${countMax} まで書けます）`
-        : `個数は最大 ${normalMax}`
-      : null
+    showCount && normalMax !== undefined ? (overLimitAllowed ? `最大 ${normalMax}（超過可）` : `最大 ${normalMax}`) : null
 
   return (
     <div className="flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0">
@@ -171,7 +169,7 @@ export function ItemSlotRow({
       </div>
       <div
         className={cn(
-          'grid gap-2',
+          'grid items-start gap-2',
           investigate && showCount && 'grid-cols-[1fr_5.5rem_5.5rem]',
           investigate !== showCount && (investigate ? 'grid-cols-[1fr_5.5rem]' : 'grid-cols-[1fr_7rem]'),
         )}
@@ -192,7 +190,7 @@ export function ItemSlotRow({
           </PopoverTrigger>
           <PopoverContent className="w-(--radix-popover-trigger-width) min-w-64 p-0" align="start">
             <Command filter={substringFilter}>
-              <CommandInput placeholder={`${noun}を検索（名前・英語名・ID）`} />
+              <CommandInput placeholder={`${noun}を検索（名前・読み・英語名・ID）`} />
               <CommandList>
                 <CommandEmpty>見つかりません</CommandEmpty>
                 <CommandGroup>{item(EMPTY_ID, 'なし', ['FFFF'])}</CommandGroup>
@@ -226,29 +224,33 @@ export function ItemSlotRow({
           />
         )}
         {showCount && (
-          <Input
-            value={slot === null || isEmpty ? '' : countLocked ? String(slot.count) : draft}
-            disabled={slot === null || isEmpty}
-            readOnly={countLocked}
-            placeholder={slot === null ? '未読み込み' : isEmpty ? '—' : undefined}
-            type="number"
-            min={1}
-            max={countMax}
-            inputMode="numeric"
-            aria-label={`${index + 1}件目の個数`}
-            aria-invalid={error !== null}
-            onChange={(e) => handleCount(e.target.value)}
-            onBlur={() => {
-              // 不正な入力のまま離れたら、セーブ上の値に戻す
-              if (error && slot) {
-                setDraft(String(slot.count))
-                setError(null)
-              }
-            }}
-          />
+          <div className="flex min-w-0 flex-col gap-1">
+            <Input
+              value={slot === null || isEmpty ? '' : countLocked ? String(slot.count) : draft}
+              disabled={slot === null || isEmpty}
+              readOnly={countLocked}
+              placeholder={slot === null ? '未読み込み' : isEmpty ? '—' : undefined}
+              type="number"
+              min={overLimitAllowed || normalMax === undefined ? undefined : 1}
+              max={overLimitAllowed ? undefined : normalMax}
+              inputMode="numeric"
+              aria-label={`${index + 1}件目の個数`}
+              aria-invalid={error !== null}
+              onChange={(e) => handleCount(e.target.value)}
+              onBlur={() => {
+                // 不正な入力のまま離れたら、セーブ上の値に戻す
+                if (error && slot) {
+                  setDraft(String(slot.count))
+                  setError(null)
+                }
+              }}
+            />
+            {countLimitText && !slot?.problem && (
+              <p className="text-muted-foreground text-xs">{countLimitText}</p>
+            )}
+          </div>
         )}
       </div>
-      {countLimitText && !slot?.problem && <p className="text-muted-foreground text-xs">{countLimitText}</p>}
       {slot?.problem ? (
         <p className="text-muted-foreground text-xs">読み取り専用：{slot.problem}</p>
       ) : error ? (

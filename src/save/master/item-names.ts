@@ -1,8 +1,7 @@
 // アイテムのマスターデータ。docs/save_format/datatable/item/item.csv をビルド時に読み込む（表を二重に持たない）。
 // ID 0x00〜0xF1、欠番なし。ほかのモジュールに依存しない。
 //
-// - ja・en：名前。🟢 ゲーム内の表記のまま。同じ名前が複数の ID にあるもの（部品箱・茶器・伝説の魚など）は、
-//   表示のときに itemDisplayName で ID を添えて見分ける
+// - ja・en：名前。🟢 ゲーム内の表記のまま。同じ名前が複数の ID にあるもの（部品箱・茶器・伝説の魚など）も、そのまま表示する
 // - reading：読み（ひらがな）🟢 ゲーム内の表記のまま。空欄は仮の値だったもの（item.csv の備考）。検索に使う
 // - descJa・descEn：説明文 🟢 ゲーム内の表記のまま
 // - kind：種別 🟢。0＝道具、1＝料理（料理屋でその場で食べる）、2＝宿（梅・竹・松の間、入院）、3＝なし（手に入る経路がない。未使用とみられる）
@@ -107,11 +106,7 @@ export function findItem(id: number): ItemEntry | undefined {
   return BY_ID.get(id);
 }
 
-const NAME_COUNT = new Map<string, number>();
-for (const it of ITEMS) NAME_COUNT.set(it.ja, (NAME_COUNT.get(it.ja) ?? 0) + 1);
-
-/** 表示名。同じ名前が複数の ID にあるときは「（0x1C）」のように ID を添える */
+/** 表示名。ゲーム内の表記のまま（同じ名前が複数の ID にあっても ID は添えない。ユーザー判断 2026-10-07） */
 export function itemDisplayName(it: ItemEntry): string {
-  if ((NAME_COUNT.get(it.ja) ?? 0) <= 1) return it.ja;
-  return `${it.ja}（0x${it.id.toString(16).toUpperCase().padStart(2, "0")}）`;
+  return it.ja;
 }
