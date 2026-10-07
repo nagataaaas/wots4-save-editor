@@ -32,6 +32,7 @@ import {
 } from "@/save/hero";
 import { findLocation, selectableLocations } from "@/save/locations";
 import { AppearanceCurrentCard } from "./appearance-current-card";
+import { AppearancePartsCard } from "./appearance-parts-card";
 
 function parseAmount(key: U32Key, input: string): ParseResult<number> {
   if (!/^\d+$/.test(input.trim())) return { ok: false, error: "0以上の整数を入力してください" };
@@ -184,6 +185,8 @@ export function HeroPage() {
       </Card>
 
       <AppearanceCurrentCard />
+
+      <AppearancePartsCard />
 
       <LocationCard
         key={`${k}-location`}

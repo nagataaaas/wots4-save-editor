@@ -31,6 +31,7 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 | `appearance/upper.csv`        | 上半身（0〜146）   | このリストのみ           | u16 LE                       | `FFFF`       | [appearance](../chunks/appearance/README.md) `0x3AAE4`    |
 | `appearance/lower.csv`        | 下半身（0〜171）   | このリストのみ           | u16 LE                       | `FFFF`       | [appearance](../chunks/appearance/README.md) `0x3AAF0`    |
 | `appearance/feet.csv`         | 足元（0〜67）      | このリストのみ           | u16 LE                       | `FFFF`       | [appearance](../chunks/appearance/README.md) `0x3AB20`    |
+| `appearance/body.csv`         | 部品 k＝4（0〜14。種類は ❓） | このリストのみ   | u16 LE                       | `FFFF`       | [appearance](../chunks/appearance/README.md) `0x3AB14`    |
 | `appearance/extra.csv`        | 手甲・脚絆・前掛け・合羽（0〜53） | このリストのみ | u16 LE                   | `FFFF`       | [appearance](../chunks/appearance/README.md) `0x3AB2C`〜 |
 | `unlock/unlock.csv`           | 特典解除（0〜105） | このリストのみ           | 先頭16件・31・101 ✅ [U]／ほか 🔶 U-17 |       | [unlocks](../chunks/unlocks/README.md)                    |
 | `event/event.csv`             | イベント           | このリストのみ（添字）   | 配列の添字（u8 × 件数）      |              | [event-chart](../chunks/event-chart/README.md)            |
@@ -64,10 +65,10 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
   `name_ja`・`name_en` はその番号に入る部品の名前（ゲーム内の表記のまま、複数あるときは ` / ` で区切る）。`category` は部品の種類（上半身・下半身・足元・小物。小物は合羽・手甲・脚絆・前掛け）。
   `dlc` は DLC の番号（1＝新撰組、2＝ドナドナ・さよ）。特典解除で手に入る服はこの表にない（`unlock/unlock.csv`）
 - `appearance/person.csv`：主人公設定で選べる人物（容姿）の88件 🟢。ID は人物の番号（セーブの `0x3AAD4`）で、連番ではない。`height` はその人物の身長（cm、ふつうのとき）。
-  `upper`・`lower`・`face`・`hair`・`feet`・`gauntlet`（手甲）・`leggings`（脚絆）・`apron`（前掛け）・`cape`（合羽）はその人物の部品の番号（各部品の CSV の ID。空欄はなし）。
+  `upper`・`lower`・`face`・`hair`・`body`（部品 k＝4）・`feet`・`gauntlet`（手甲）・`leggings`（脚絆）・`apron`（前掛け）・`cape`（合羽）はその人物の部品の番号（各部品の CSV の ID。空欄はなし）。
   `gender` は性別（`0x3AADC` の 0＝男、1＝女）、`second_id` は `0x3AAD6` に入るとみられる値（空欄＝`FFFF`）🔶、`hair_color` はその人物の髪の色（`0x3AADA`）。
   88件すべてが主人公設定の一覧に出るかは 🔶
-- `appearance/face.csv`・`hair.csv`・`upper.csv`・`lower.csv`・`feet.csv`・`extra.csv`：主人公の見た目の部品。全行 🟢。番号は部品の種類ごとに別の空間。
+- `appearance/face.csv`・`hair.csv`・`upper.csv`・`lower.csv`・`body.csv`・`feet.csv`・`extra.csv`：主人公の見た目の部品。全行 🟢（`body.csv` は名前がなく、部品の種類は ❓）。番号は部品の種類ごとに別の空間。
   `gender` は使える性別（男・女。空欄は指定なし。服・小物は男用と女用で別の番号になる）、`unlock_id` は解除に必要な特典（`unlock/unlock.csv` の ID。空欄は不要）、`dlc` は DLC の番号、
   `cloth_id` は服の番号（`appearance/cloth.csv`。容姿のビット）。`extra.csv` の `kind` は手甲・脚絆・前掛け・合羽 🟢（✅ [U] 2026-10-08）。
   `save_models` はその部品のモデルの値（u16 LE × 4、`FF FF`＝なし）で、部品の組の +4〜+B に部品の番号と組で書く値 🟢。
