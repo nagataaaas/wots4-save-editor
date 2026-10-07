@@ -9,13 +9,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
+import { SearchSelectRow } from "@/components/search-select-row";
+import type { SelectOption } from "@/components/select-options";
 import {
-  OCCUPATION_ACCEPTED_OFFSET,
+  ACCEPT_OFFSETS,
+  acceptOccupation,
+  acceptRuleOf,
+  readAccepted,
+  releaseOccupation,
+  seriesAcceptOf,
+  writeSeriesState,
+  type AcceptedView,
+  type FlagWrite,
+} from "@/save/occupation-accept";
+import { TIME_SLOTS } from "@/save/scenario-date";
+import {
   OCCUPATION_CLEAR_COUNT_OFFSET,
   OCCUPATION_CLEAR_MAX,
   OCCUPATION_NOT_APPEARED,
@@ -50,17 +69,22 @@ import {
   TOWNSFOLK_NOTES,
   TOWNSFOLK_START,
   readTownsfolk,
-  writeTownsfolk,
   type TownsfolkView,
 } from "@/save/townsfolk";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-type Views = { occupations: OccupationView; townsfolk: TownsfolkView; shirube: ShirubeView };
+type Views = {
+  occupations: OccupationView;
+  townsfolk: TownsfolkView;
+  shirube: ShirubeView;
+  accepted: AcceptedView;
+};
 
 type StateKind = "hidden" | "open" | "cleared";
 
-const kindOf = (v: number): StateKind => (v === OCCUPATION_NOT_APPEARED ? "hidden" : v === 0 ? "open" : "cleared");
+const kindOf = (v: number): StateKind =>
+  v === OCCUPATION_NOT_APPEARED ? "hidden" : v === 0 ? "open" : "cleared";
 
 const KIND_LABELS: Record<StateKind, string> = {
   hidden: "まだ出ていない",
@@ -70,7 +94,13 @@ const KIND_LABELS: Record<StateKind, string> = {
 
 /** 種類を選んだときに書く値。クリア済みは今の回数を残し、0 回なら 1 にする */
 const valueForKind = (kind: StateKind, current: number) =>
-  kind === "hidden" ? OCCUPATION_NOT_APPEARED : kind === "open" ? 0 : kindOf(current) === "cleared" ? current : 1;
+  kind === "hidden"
+    ? OCCUPATION_NOT_APPEARED
+    : kind === "open"
+      ? 0
+      : kindOf(current) === "cleared"
+        ? current
+        : 1;
 
 /** 続き物（なりわいのフラグ）の欄の下に出す、その系統のなりわい */
 const FLAG_JOBS: Readonly<Record<number, readonly number[]>> = {
@@ -84,7 +114,9 @@ const FLAG_JOBS: Readonly<Record<number, readonly number[]>> = {
 };
 
 function range(from: number, to: number): number[] {
-  return Array.from({ length: to - from + 1 }, (_, i) => from + i).filter((id) => occupationById(id));
+  return Array.from({ length: to - from + 1 }, (_, i) => from + i).filter((id) =>
+    occupationById(id),
+  );
 }
 
 function matches(query: string, ...texts: string[]): boolean {
@@ -104,6 +136,7 @@ export function OccupationPage() {
           occupations: readOccupations(save.working),
           townsfolk: readTownsfolk(save.working),
           shirube: readShirube(save.working),
+          accepted: readAccepted(save.working),
         },
       };
     } catch (e) {
@@ -126,7 +159,9 @@ export function OccupationPage() {
       {!save && (
         <Alert>
           <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。</AlertDescription>
+          <AlertDescription>
+            サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。
+          </AlertDescription>
         </Alert>
       )}
       {result && "error" in result && (
@@ -147,23 +182,38 @@ export function OccupationPage() {
           <AlertDescription>{writeError}</AlertDescription>
         </Alert>
       )}
+      <SummaryCard
+        view={views?.occupations ?? null}
+        accepted={views?.accepted ?? null}
+        write={write}
+      />
       <SeriesCard
         key={`${save?.loadId ?? 0}-series`}
         view={views?.townsfolk ?? null}
         shirube={views?.shirube ?? null}
         write={write}
       />
-      <SummaryCard view={views?.occupations ?? null} write={write} />
-      <StatesCard key={`${save?.loadId ?? 0}-states`} view={views?.occupations ?? null} write={write} />
+      <StatesCard
+        key={`${save?.loadId ?? 0}-states`}
+        view={views?.occupations ?? null}
+        write={write}
+      />
     </div>
   );
 }
 
 // ---------------------------------------------------------------- クリア数・受注中
 
-function SummaryCard({ view, write }: { view: OccupationView | null; write: (m: (b: Uint8Array) => void) => void }) {
+function SummaryCard({
+  view,
+  accepted,
+  write,
+}: {
+  view: OccupationView | null;
+  accepted: AcceptedView | null;
+  write: (m: (b: Uint8Array) => void) => void;
+}) {
   const readOnly = !view || view.layoutProblem !== null;
-  const accepted = view && view.accepted !== 0 ? occupationById(view.accepted) : null;
   const mismatch = view !== null && view.clearCount !== view.stateSum;
 
   return (
@@ -171,7 +221,8 @@ function SummaryCard({ view, write }: { view: OccupationView | null; write: (m: 
       <CardHeader>
         <CardTitle>受注中・クリア数</CardTitle>
         <CardDescription>
-          クリアしたなりわいの数も周回をまたぐ統計で、下の記録の合計（クリア回数の合計）と揃えておきます。揃っていないときのゲームの動作は ❓ です。
+          クリアしたなりわいの数も周回をまたぐ統計で、下の記録の合計（クリア回数の合計）と揃えておきます。揃っていないときのゲームの動作は
+          ❓ です。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -182,26 +233,74 @@ function SummaryCard({ view, write }: { view: OccupationView | null; write: (m: 
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-sm">{view ? view.clearCount : "—"}</span>
-            <span className="text-muted-foreground text-xs">（状態の表の合計 {view ? view.stateSum : "—"}）</span>
-            <Button variant="outline" size="sm" disabled={readOnly || !mismatch} onClick={() => write(syncClearCount)}>
+            <span className="text-muted-foreground text-xs">
+              （状態の表の合計 {view ? view.stateSum : "—"}）
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={readOnly || !mismatch}
+              onClick={() => write(syncClearCount)}
+            >
               表の合計に揃える
             </Button>
           </div>
-          {mismatch && <p className="text-destructive text-xs">クリア数と状態の表の合計が違います</p>}
+          {mismatch && (
+            <p className="text-destructive text-xs">クリア数と状態の表の合計が違います</p>
+          )}
         </div>
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2">
-            <Label>受注中のなりわい</Label>
-            <InfoTip offset={OCCUPATION_ACCEPTED_OFFSET}>
-              u16。受注していなければ 0。周りの値（受注中の種類など）の意味が分かっていないので、表示だけです
-            </InfoTip>
-          </div>
-          <span className="text-sm">
-            {!view ? "—" : view.accepted === 0 ? "なし" : accepted ? `${view.accepted} ${accepted.ja}（${accepted.client}）` : `${view.accepted}（表にない ID）`}
-          </span>
-        </div>
+        <AcceptRow view={accepted} write={write} />
       </CardContent>
     </Card>
+  );
+}
+
+const flagWritesText = (writes: readonly FlagWrite[]) =>
+  writes.map((w) => `番号 ${w.flag}＝${w.value}`).join("、");
+
+/** 受注中のなりわい。受注・外す書き込みは occupation-accept.ts（✅ 受注中の情報、🟢 受注で書くフラグ、🔶 外すときのフラグ） */
+function AcceptRow({
+  view,
+  write,
+}: {
+  view: AcceptedView | null;
+  write: (m: (b: Uint8Array) => void) => void;
+}) {
+  const entry = view && view.id !== 0 ? occupationById(view.id) : undefined;
+  const rule = view && view.id !== 0 ? acceptRuleOf(view.id) : null;
+  const options: SelectOption[] = [
+    { value: "0", label: "受注していない" },
+    ...OCCUPATIONS.map((o) => ({
+      value: String(o.id),
+      label: `${o.id} ${o.ja}`,
+      group: OCCUPATION_GROUPS.find((g) => g.key === occupationGroupOf(o.id))?.label,
+      keywords: [o.client, o.en, o.type],
+    })),
+  ];
+  return (
+    <SearchSelectRow
+      label="受注中のなりわい"
+      offset={ACCEPT_OFFSETS.id}
+      badges={
+        <Badge variant="outline" className="font-normal">
+          書き込みは要ゲーム内確認
+        </Badge>
+      }
+      value={view === null ? null : String(view.id)}
+      currentLabel={view ? `${view.id} 表にない ID` : undefined}
+      options={options}
+      problem={view?.problem ?? null}
+      searchPlaceholder="名前・依頼主・ID"
+      note={`${formatOffset(ACCEPT_OFFSETS.id)} u16 ID、${formatOffset(ACCEPT_OFFSETS.day)} u16 受注した日（経過日数）、${formatOffset(ACCEPT_OFFSETS.slot)} u8 受注した時間帯、${formatOffset(ACCEPT_OFFSETS.active)} u8 受注中だけ FF。受注すると、今の日・時間帯で受注したことにし、続き物なら依頼主がそのとき書くなりわいのフラグ（同心の2件目なら番号 4＝21 など）も書きます。記録が「まだ出ていない」なら「出た・未クリア」にします。ほかのなりわいを受注中なら、先にそれを外します（続き物は「n 件目を依頼する前」に戻す）`}
+      hint={
+        view && view.id !== 0
+          ? `${view.day + 1}日目 ${TIME_SLOTS[view.slot] ?? `時間帯 ${view.slot}`}に受注${entry ? `（${entry.client}）` : ""}${rule?.onAccept.length ? `。受注中のフラグ：${flagWritesText(rule.onAccept)}` : ""}${rule?.onRelease.length ? `。外すと ${flagWritesText(rule.onRelease)}` : ""}`
+          : "受注すると、今の日・時間帯で受注したことになります"
+      }
+      onChange={(v) =>
+        write((b) => (v === "0" ? releaseOccupation(b) : acceptOccupation(b, Number(v))))
+      }
+    />
   );
 }
 
@@ -228,9 +327,10 @@ function SeriesCard({
           </InfoTip>
         </CardTitle>
         <CardDescription>
-          同心・極道・泥棒さん・おっつぁんの続き物は、十の位が何件目か、一の位が 0＝依頼前・1＝依頼済みです。
-          同心の続き物は、20 で2件目「督促状」から始まり、100 で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。
-          続き物を 100 にしても、最後のなりわいが 99 未満なら新しい依頼は出ません。
+          同心・極道・泥棒さん・おっつぁんの続き物は、十の位が何件目か、一の位が
+          0＝依頼前・1＝依頼済みです。 同心の続き物は、20 で2件目「督促状」から始まり、100
+          で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。 続き物を
+          100 にしても、最後のなりわいが 99 未満なら新しい依頼は出ません。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -238,25 +338,45 @@ function SeriesCard({
           const info = TOWNSFOLK_NOTES[offset];
           const current = view?.values[offset - TOWNSFOLK_START] ?? null;
           const jobs = FLAG_JOBS[offset];
+          const flag = offset - OCCUPATION_FLAG_START;
+          const isSeries = flag >= 4 && flag <= 7;
           return (
             <SelectRow
               key={offset}
-              label={`${info.name}（番号 ${offset - OCCUPATION_FLAG_START}）`}
+              label={`${info.name}（番号 ${flag}）`}
               offset={offset}
               badges={
-                offset === OCCUPATION_FLAG_START + 4 ? undefined : (
-                  <Badge variant="outline" className="font-normal">
-                    書き込みは要ゲーム内確認
-                  </Badge>
-                )
+                <Badge variant="outline" className="font-normal">
+                  {flag === 4 ? "受注の書き込みは要ゲーム内確認" : "書き込みは要ゲーム内確認"}
+                </Badge>
               }
               value={current === null ? null : String(current)}
               currentLabel={current === null ? undefined : `${current} 不明`}
-              options={(info.values ?? []).map((s) => ({ value: String(s.value), label: `${s.value} ${s.label}`, group: s.group }))}
+              options={(info.values ?? []).map((s) => {
+                const accept = seriesAcceptOf(flag, s.value);
+                return {
+                  value: String(s.value),
+                  label: `${s.value} ${s.label}${accept ? `（${accept} ${occupationById(accept)?.ja} を受注）` : ""}`,
+                  group: s.group,
+                };
+              })}
               problem={view?.problem ?? null}
-              note={info.note}
+              note={
+                isSeries
+                  ? `${info.note}。「依頼済み」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この続き物のなりわいを受注中なら受注を外します`
+                  : info.note
+              }
               hint={jobs && jobList(jobs)}
-              onChange={(v) => write((b) => writeTownsfolk(b, offset, Number(v), { advanced }))}
+              onChange={(v) =>
+                write((b) =>
+                  writeSeriesState(
+                    b,
+                    [{ flag, value: Number(v) }],
+                    seriesAcceptOf(flag, Number(v)),
+                    { advanced },
+                  ),
+                )
+              }
             />
           );
         })}
@@ -266,13 +386,20 @@ function SeriesCard({
   );
 }
 
-const jobList = (ids: readonly number[]) => ids.map((id) => `${id} ${occupationById(id)?.ja}`).join(" → ");
+const jobList = (ids: readonly number[]) =>
+  ids.map((id) => `${id} ${occupationById(id)?.ja}`).join(" → ");
 
 /**
  * 汁部（DLC）の続き物。なりわいのフラグ 27〜31 を1つの欄にまとめる（🟢。進み具合そのものはこの欄にない 🔶）。
  * 受注中のなりわい（0x45F4E）は書かない（受注中の欄にまとめる）
  */
-function ShirubeRow({ view, write }: { view: ShirubeView | null; write: (m: (b: Uint8Array) => void) => void }) {
+function ShirubeRow({
+  view,
+  write,
+}: {
+  view: ShirubeView | null;
+  write: (m: (b: Uint8Array) => void) => void;
+}) {
   return (
     <SelectRow
       label="汁部（DLC）の続き物（番号 27〜31）"
@@ -284,9 +411,14 @@ function ShirubeRow({ view, write }: { view: ShirubeView | null; write: (m: (b: 
       }
       value={view === null ? null : (view.state?.key ?? "current")}
       currentLabel={view ? `${view.values.join("・")} 表にない組み合わせ` : undefined}
-      options={SHIRUBE_STATES.map((s) => ({ value: s.key, label: s.label, group: s.group, selectedLabel: s.fullLabel }))}
+      options={SHIRUBE_STATES.map((s) => ({
+        value: s.key,
+        label: s.label,
+        group: s.group,
+        selectedLabel: s.fullLabel,
+      }))}
       problem={view?.problem ?? null}
-      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります。どれを選んでも 5 B すべてを書きます。受注しても 27〜31 は「組んだ」と同じ値で、受注中かどうかは「受注中のなりわい」${formatOffset(OCCUPATION_ACCEPTED_OFFSET)} にあります。この欄では受注中のなりわいに触りません`}
+      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります。どれを選んでも 5 B すべてを書きます。受注中は 27〜31 が「組んだ」と同じ値で、受注中のなりわい ${formatOffset(ACCEPT_OFFSETS.id)} が 209〜212 になります。「受注」を選ぶと「受注中のなりわい」の欄と同じ書き込みをし、ほかを選ぶと汁部のなりわいの受注を外します`}
       hint={`${jobList(SHIRUBE_JOB_IDS)} の順に頼まれます。どこまで進んだかはこの欄にも、下の記録にもありません（位置は未確認）`}
       onChange={(key) => write((b) => writeShirubeState(b, key))}
     />
@@ -297,7 +429,13 @@ function ShirubeRow({ view, write }: { view: ShirubeView | null; write: (m: (b: 
 
 type KindFilter = "all" | StateKind;
 
-function StatesCard({ view, write }: { view: OccupationView | null; write: (m: (b: Uint8Array) => void) => void }) {
+function StatesCard({
+  view,
+  write,
+}: {
+  view: OccupationView | null;
+  write: (m: (b: Uint8Array) => void) => void;
+}) {
   const { advanced } = useAdvancedMode();
   const readOnly = !view || view.layoutProblem !== null;
   const [query, setQuery] = useState("");
@@ -318,7 +456,10 @@ function StatesCard({ view, write }: { view: OccupationView | null; write: (m: (
       if (sync) syncClearCount(b);
     });
 
-  const groupItems = { all: "すべて", ...Object.fromEntries(OCCUPATION_GROUPS.map((g) => [g.key, g.label])) };
+  const groupItems = {
+    all: "すべて",
+    ...Object.fromEntries(OCCUPATION_GROUPS.map((g) => [g.key, g.label])),
+  };
   const filterItems = { all: "すべて", ...KIND_LABELS };
 
   return (
@@ -327,19 +468,26 @@ function StatesCard({ view, write }: { view: OccupationView | null; write: (m: (
         <CardTitle className="flex flex-wrap items-center gap-2">
           なりわいの記録（周回をまたぐ統計）
           <InfoTip offset={`${formatOffset(OCCUPATION_STATE_OFFSET)} + ID×2（u16 × 256）`}>
-            FFFF＝まだ出ていない、0＝出た・未クリア（🔶）、1 以上＝これまでの周回を通してクリアした回数。
-            1 にするとなりわい一覧でクリア済みになることを確認済み（今宵の虎徹は）
+            FFFF＝まだ出ていない、0＝出た・未クリア（🔶）、1
+            以上＝これまでの周回を通してクリアした回数。 1
+            にするとなりわい一覧でクリア済みになることを確認済み（今宵の虎徹は）
           </InfoTip>
           <CertaintyBadge mark="🔶" text="0 の意味と、FFFF・0 への書き込みは要ゲーム内確認" />
         </CardTitle>
         <CardDescription>
           ゲーム内の統計に出る、周回をまたいだなりわいごとのクリア回数です。クリア済みにしても、報酬（お金・容姿・装飾品）は増えず、今の周回の続き物も進みません（続き物は上の欄で進めます）。
-          全 {OCCUPATIONS.length} 件のうち、クリア済み {counts.cleared}・出た・未クリア {counts.open}・まだ出ていない {counts.hidden}
+          全 {OCCUPATIONS.length} 件のうち、クリア済み {counts.cleared}・出た・未クリア{" "}
+          {counts.open}・まだ出ていない {counts.hidden}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Input className="w-56" placeholder="名前・依頼主・ID で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input
+            className="w-56"
+            placeholder="名前・依頼主・ID で絞り込み"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
           <Select value={group} items={groupItems} onValueChange={(v) => v !== null && setGroup(v)}>
             <SelectTrigger className="w-44" aria-label="まとまり">
               <SelectValue />
@@ -353,7 +501,11 @@ function StatesCard({ view, write }: { view: OccupationView | null; write: (m: (
               ))}
             </SelectContent>
           </Select>
-          <Select value={filter} items={filterItems} onValueChange={(v) => v !== null && setFilter(v as KindFilter)}>
+          <Select
+            value={filter}
+            items={filterItems}
+            onValueChange={(v) => v !== null && setFilter(v as KindFilter)}
+          >
             <SelectTrigger className="w-44" aria-label="状態">
               <SelectValue />
             </SelectTrigger>
@@ -377,7 +529,8 @@ function StatesCard({ view, write }: { view: OccupationView | null; write: (m: (
               onClick={() =>
                 writeStates((b) => {
                   // クリア済みは、すでにクリアしたものの回数を残す
-                  for (const o of rows) writeOccupationStates(b, [o.id], valueForKind(k, view?.states[o.id] ?? 0));
+                  for (const o of rows)
+                    writeOccupationStates(b, [o.id], valueForKind(k, view?.states[o.id] ?? 0));
                 })
               }
             >
@@ -385,7 +538,11 @@ function StatesCard({ view, write }: { view: OccupationView | null; write: (m: (
             </Button>
           ))}
           <label className="flex items-center gap-2 text-sm">
-            <Switch checked={sync} onCheckedChange={(on: boolean) => setSync(on)} aria-label="クリア数も揃える" />
+            <Switch
+              checked={sync}
+              onCheckedChange={(on: boolean) => setSync(on)}
+              aria-label="クリア数も揃える"
+            />
             書き込むときにクリア数も揃える
           </label>
         </div>
@@ -433,7 +590,12 @@ function StateRow({
         disabled={readOnly}
         className="w-48"
         aria-label={o.ja}
-        onValueChange={(k) => value !== null && write((b) => writeOccupationState(b, o.id, valueForKind(k as StateKind, value), { advanced }))}
+        onValueChange={(k) =>
+          value !== null &&
+          write((b) =>
+            writeOccupationState(b, o.id, valueForKind(k as StateKind, value), { advanced }),
+          )
+        }
       >
         {(Object.keys(KIND_LABELS) as StateKind[]).map((k) => (
           <SelectItem key={k} value={k}>
@@ -467,7 +629,8 @@ function StateRow({
           {OCCUPATION_WRITE_CONFIRMED.has(o.id) && <span className="text-xs">✅</span>}
         </div>
         <span className="text-muted-foreground text-xs">
-          報酬 {o.reward.toLocaleString()} 文{o.bonus > 0 && `・追加 ${o.bonus.toLocaleString()} 文`}
+          報酬 {o.reward.toLocaleString()} 文
+          {o.bonus > 0 && `・追加 ${o.bonus.toLocaleString()} 文`}
           {o.deadlineDays !== null && `・期限 ${o.deadlineDays} 日`}
         </span>
       </div>
@@ -529,7 +692,9 @@ function CountInput({
       />
       <span className="text-muted-foreground text-xs">回</span>
       {error && <span className="text-destructive text-xs">{error}</span>}
-      {!error && !advanced && value > OCCUPATION_CLEAR_MAX && <span className="text-destructive text-xs">上限 {OCCUPATION_CLEAR_MAX} を超えています</span>}
+      {!error && !advanced && value > OCCUPATION_CLEAR_MAX && (
+        <span className="text-destructive text-xs">上限 {OCCUPATION_CLEAR_MAX} を超えています</span>
+      )}
     </div>
   );
 }
