@@ -1,18 +1,23 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は [U] 2026-10-06 の比較（docs/save_format/chunks/hidden-route）で見たもの。
-// 0x378E＝隠しルート（✅ [U] 2026-10-06 書き換えで確認。三姉妹見参＝添字70 が成功のときだけ効く）。
-// ❓ 0x378D・0x3793・0x3799・0x379F・0x37A2・0x37AA は意味不明（0x378D・0x3799・0x379F・0x37AA はルートの切り替えに効かなかった）。
+// 0x378E＝隠しルート（✅ [U] 2026-10-06 書き換えで確認。三姉妹見参＝添字70 が成功のときだけ効く）。2＝隠しルートを外れた（🟢）。
+// 🟢 0x378D は序章のあとの道筋（1＝通常、2＝隠しルートに入った）。0x378D・0x3799・0x379F・0x37AA はルートの切り替えに効かなかった（[U]）。
+// ❓ 0x37A2・0x379B は場面だけ分かっていて意味は未確認。🔶 0x37A3（会談の手紙）・0x37A4（黒船の状態）は意味が推定。
+// 🔶 好感度・ポイント（0x3792〜0x3797）の通常モードの上限 20 はゲームの上限ではない（yobai-points.ts と同じ）。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import {
   HIDDEN_ROUTE_EVENT_INDEX,
   HIDDEN_ROUTE_OFFSET,
+  HIDDEN_ROUTE_VALUES,
   RAW_ROUTE_OFFSETS,
+  ROUTE_CANDIDATE_NOTES,
   ROUTE_CANDIDATE_END,
   ROUTE_CANDIDATE_LENGTH,
   ROUTE_CANDIDATE_START,
   readRouteCandidates,
+  routeCandidateNormalMax,
   validateRouteCandidate,
   writeHiddenRoute,
   writeRouteCandidate,
@@ -67,7 +72,9 @@ describe('隠しルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/hi
     expect(readRouteCandidates(after).hiddenProblem).not.toBeNull()
   })
 
-  it('🔶 0x378E＝2（01 copy 12：怒りの矛先のあと。差分1回）も読み取り専用にしない', () => {
+  it('🟢 0x378E＝2（隠しルートを外れた）も読み取り専用にしない', () => {
+    expect(HIDDEN_ROUTE_VALUES.map((v) => v.value)).toEqual([0, 1, 2])
+    expect(HIDDEN_ROUTE_VALUES[2].label).toContain('外れた')
     const values = HIDDEN.slice()
     values[1] = 2
     const view = readRouteCandidates(makeSave(values))
@@ -75,9 +82,35 @@ describe('隠しルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/hi
     expect(view.hiddenProblem).toBeNull()
   })
 
-  it('見たことのない値（3 以上）は警告だけ出す', () => {
+  it('🟢 0x378D・0x379F・0x37A1・0x37AA などに名前と説明がある。❓ 0x37A2 は名前なし', () => {
+    expect(ROUTE_CANDIDATE_NOTES[0x378d].name).toBe('序章のあとの道筋')
+    expect(ROUTE_CANDIDATE_NOTES[0x379f].name).toBe('序章の大砲')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a1].name).toBe('小公女の薬')
+    expect(ROUTE_CANDIDATE_NOTES[0x37aa].name).toBe('チュートリアルの進み方')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a2].name).toBeUndefined()
+    expect(ROUTE_CANDIDATE_NOTES[0x37a3].name).toContain('推定')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a4].name).toContain('推定')
+  })
+
+  it('🔶 好感度・ポイント（0x3792〜0x3797）は通常モードで 0〜20。ほかは 0〜2', () => {
+    for (let o = 0x3792; o <= 0x3797; o++) expect(routeCandidateNormalMax(o)).toBe(20)
+    expect(routeCandidateNormalMax(0x378d)).toBe(2)
+    expect(routeCandidateNormalMax(0x37aa)).toBe(2)
+    expect(validateRouteCandidate(12, { advanced: false, offset: 0x3792 })).toBeNull()
+    expect(validateRouteCandidate(21, { advanced: false, offset: 0x3792 })).not.toBeNull()
+    expect(validateRouteCandidate(3, { advanced: false, offset: 0x37a2 })).not.toBeNull()
     const values = HIDDEN.slice()
-    values[5] = 3
+    values[0x3792 - ROUTE_CANDIDATE_START] = 12 // ローラの好感度を全部成功させた値
+    const b = makeSave(values)
+    expect(readRouteCandidates(b).warning).toBeNull()
+    writeRouteCandidate(b, 0x3793, 10, { advanced: false })
+    expect(b[0x3793]).toBe(10)
+    expect(() => writeRouteCandidate(b, 0x37a2, 10, { advanced: false })).toThrow(RangeError)
+  })
+
+  it('通常の進行では見ない値（好感度・ポイント以外で 3 以上）は警告だけ出す', () => {
+    const values = HIDDEN.slice()
+    values[0x378f - ROUTE_CANDIDATE_START] = 3
     const view = readRouteCandidates(makeSave(values))
     expect(view.warning).not.toBeNull()
     expect(view.problem).toBeNull()

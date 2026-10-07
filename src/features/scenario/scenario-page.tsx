@@ -56,10 +56,10 @@ import {
   HIDDEN_ROUTE_OFFSET,
   HIDDEN_ROUTE_VALUES,
   RAW_ROUTE_OFFSETS,
-  ROUTE_CANDIDATE_NORMAL_MAX,
   ROUTE_CANDIDATE_NOTES,
   ROUTE_CANDIDATE_START,
   readRouteCandidates,
+  routeCandidateNormalMax,
   validateRouteCandidate,
   writeHiddenRoute,
   writeRouteCandidate,
@@ -763,7 +763,7 @@ function RouteCandidatesCard({
                 ? undefined
                 : `今の三姉妹見参の状態：${formatHex2(sisters)}${sisters === 0x04 ? "（成功。隠しルートが効く）" : "（成功ではないので、1 にしても通常ルートのまま）"}`
             }
-            note="1 にしただけでは通常ルートのまま。三姉妹見参の状態も 04（成功）にすると隠しルート（お早い到着）に入る。0 にすると通常ルートに戻る。2 は、赤城が死んだ周回で怒りの矛先を終えたあとに見た値（意味は未確認）。隠しルートを過去の周回で記録していないと、正規のプレイでもチャートに失敗したイベントや先のイベントの枠が出ない"
+            note="1 にしただけでは通常ルートのまま。三姉妹見参の状態も 04（成功）にすると隠しルート（お早い到着）に入る。0 にすると通常ルートに戻る。2 は隠しルートを外れた状態（再起の望みで小暮が死ぬ、怒りの矛先の成功、闇討ちの失敗、傷心の帰国船の成功などで 2 になり、周回中は戻らない）。2 で大通りに行くと大老暗殺計画が起きる。隠しルートを過去の周回で記録していないと、正規のプレイでもチャートに失敗したイベントや先のイベントの枠が出ない"
             onChange={(v) => update((b) => writeHiddenRoute(b, Number(v), { advanced }))}
           />
         </div>
@@ -771,11 +771,11 @@ function RouteCandidatesCard({
         <div className="flex flex-col gap-3 border-t pt-4">
           <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
             周りのバイト（生の値）
-            <CertaintyBadge mark="❓" text="値の意味・書き換えの効果は未確認" />
+            <CertaintyBadge mark="🔶" text="書き換えたときのゲーム内の反映は未確認" />
           </div>
           <p className="text-muted-foreground text-xs">
-            隠しルートに入った直後のセーブでは、0x378D（02）・0x379F（1）・0x37AA（02）もほかのセーブと違いましたが、書き換えてもルートは変わりませんでした。
-            この範囲には、好感度や職など隠しルートに関係しないバイトも入っています。名前の付いたバイトも、値の意味は確かめていません。
+            0x378D は序章のあとの道筋（1＝通常の1〜3日目、2＝隠しルートに入った）、0x379F は序章の大砲です。0x378D・0x379F・0x37AA を書き換えても、ルートは変わりませんでした。
+            この範囲には、好感度や職など隠しルートに関係しないバイトも入っています。説明は、そのバイトが変わる場面です。書き換えたときのゲーム内の反映は確かめていません。
             {view?.warning && ` ${view.warning}`}
           </p>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -791,11 +791,11 @@ function RouteCandidatesCard({
                   problem={view?.problem ?? null}
                   format={String}
                   parse={(input) =>
-                    parseInteger(input, (v) => validateRouteCandidate(v, { advanced }))
+                    parseInteger(input, (v) => validateRouteCandidate(v, { advanced, offset }))
                   }
                   apply={(v) => update((b) => writeRouteCandidate(b, offset, v, { advanced }))}
                   inputMode="numeric"
-                  hint={advanced ? "0〜255" : `0〜${ROUTE_CANDIDATE_NORMAL_MAX}`}
+                  hint={advanced ? "0〜255" : `0〜${routeCandidateNormalMax(offset)}`}
                   note={info?.note}
                 />
               );

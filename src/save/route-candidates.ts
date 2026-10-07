@@ -1,46 +1,36 @@
-// 隠しルートのフラグ 0x378E と、その周り 0x378D〜0x37AA（30 B）の生の値。出典：[U] 2026-10-06 の比較と書き換え（docs/save_format/chunks/hidden-route）。
-//
-// 比べたセーブ：
-//   sample/S4-DATA_00                阿弥浜港争乱で大砲の般若党を倒し、三姉妹見参（イベント添字70＝04）で隠しルートに入った直後（1日目夕）
-//   sample/S4-DATA_01・copy〜copy 6  阿弥浜港争乱のあと通常ルート
-//   sample/S4-DATA_03                別の周回の4日目（通常ルート）
-// フラグ列 0x374E〜0x3837 のうち、00 だけがほかのどのセーブとも違う値だったのは 0x378D・0x378E・0x379F・0x37AA の4バイト。
+// 隠しルートのフラグ 0x378E と、その周り 0x378D〜0x37AA（30 B）の値。出典：docs/save_format/chunks/hidden-route、
+// [U] 2026-10-06 の比較と書き換え（chunks/hidden-route/reserch）。
 //
 // ✅ [U] 2026-10-06 の書き換え：
-//   00 で 0x378E を 0 → 通常ルートに入った。
-//   01 copy（通常ルート）で 0x378E を 1 にしただけ、0x378D・0x379F・0x37AA を 00 と同じ値にしても → 通常ルートのまま。
-//   01 copy で三姉妹見参（添字70）を成功（04）にしただけ → 通常ルートのまま。
-//   01 copy で三姉妹見参を成功にし、0x378E を 1 → 隠しルート（お早い到着）に入った。0x378D・0x37AA・0x3799 を足しても同じ。
-//   → 0x378E＝隠しルート（1）。効くのは三姉妹見参が成功（04）のときだけ。
-//   このとき病院が閉じていた（0x375D＝0）ため赤城が死に、再起の望みより後ろのイベントが起きなかった（[U]）。
-//   再起の望み（添字72）はチャートに出なかった。正規に隠しルートへ入った 00 も、添字71〜90 は A・B とも FF なので、
-//   書き換えのせいではなく、まだ起きていない初見のイベント（A・B とも FF）がチャートに出ないだけと考えられる（🔶 chunks/event-chart）。
-//   00 は A 添字70＝04 なのに B 添字70＝FF。記録 B は周回中には書かれない（🔶 周回の終わりか生きた証の保存で書かれる）。
+//   0x378E＝1 と三姉妹見参（イベント添字70）の成功（04）の両方がそろうと隠しルート（お早い到着）に入る。どちらか一方では通常ルートのまま。
+//   正規の隠しルートで 0x378E を 0 にすると通常ルートに入る。
+//   0x378D・0x379F・0x37AA・0x3799 を正規の隠しルートと同じ値にしても、ルートは変わらず、チャートの隠しルートの枠も出なかった。
 //
-//   書き換えた周回では、チャートに隠しルートの枠そのものが出なかった（[U] 2026-10-06。B の FF は「枠は出るが名前が隠れる」で別物）。
-//   0x379F＝1、さらに 0x378D＝02 を足しても枠は出なかった（[U] 2026-10-06）。
-//   ただし、新しい主人公の2周目に正規で隠しルートへ入った 01 copy 10〜12 でも、失敗した再起の望みやその先の枠は出なかった。
-//   同じ周回の 01 copy 10（隠しルートに入った直後）と 01 copy 13（入らずに阿弥浜港争乱を終えた）の差は、
-//   0x377F・0x378D・0x378E・0x379F・A 添字70・戦闘の記録・時間だけで、ほかに隠しルートで書かれるものはなかった。
-//   🔶 枠が出ないのは書き換えのせいではなく、過去の周回で隠しルートを記録していない（B が FF）ときのゲームの振る舞いと考えられる。
-//   ✅ [U] 2026-10-06：01 copy 12 で再起の望み（添字72、状態 05）の記録 B を 04 にすると、チャートに失敗として出た（05 を書いても出なかった）
-//   0x378D  ❓ 正規の隠しルートの4件（00・02・02 copy・01 copy 8）＝02、ほかはすべて 01。ルートの切り替えにも枠にも効かなかった。
-//              1日目のイベントの開始条件に関わる（🟢）
-//   0x3792  🟢 ローラの好感度
-//   0x3793  🟢 朱美の好感度。海兵隊の横暴に成功すると 0 → 1（2回再現。chunks/factions）
-//   0x3794〜0x3796  🟢 三姉妹（マユ・チカ・ユリ）の拷問のポイント
-//   0x3799  🟢 堂島の職。03 だけ 1。ルートの切り替えには効かなかった。値の意味は ❓
-//   0x379A  🟢 先生の職。値の意味は ❓
-//   0x379F  🟢 序章の大砲の状態（阿弥浜港争乱の大砲の場面で 1）。正規の隠しルートの4件＝1、ほかは 0。
-//              ルートの切り替えにも枠にも効かなかった
-//   0x37A2  ❓ 大寄せで 0 → 2。0 にしても門は変わらなかった（chunks/gates）
-//   0x37AA  🟢 チュートリアルの進み方。00＝02、01 系＝01、03＝00。ルートの切り替えには効かなかった
+// 🟢 0x378D  序章のあとの道筋。序章の終わり（阿弥浜港争乱の3連戦の終わりなど）で 1、三姉妹見参の成功で 2。
+//            1〜3日目の通常の勢力イベントはどれも開始条件が「= 1」。2 になると周回中は戻らない
+// 🟢 0x378E  隠しルート。三姉妹見参の成功で 1。隠しルートのイベントはどれも開始条件が「= 1」。
+//            2＝隠しルートを外れた（大老暗殺計画の側へ）。再起の望みで小暮が死ぬ、怒りの矛先の成功、
+//            小暮が死んでいるときに伯爵に刺激をの失敗・運命のルーレットで J.J が死ぬ、闇討ちの失敗、傷心の帰国船の成功で 2。戻らない。
+//            大老暗殺計画の開始条件は「三姉妹見参の成功（0x36EE = 4）かつ 0x378E = 2 かつ大通り」
+// 🟢 0x3792  ローラの好感度（yobai-points.ts）。0x3793 朱美の好感度。0x3794〜0x3796 三姉妹の拷問のポイント。0x3797 メリンダの峰打ちの点数
+// 🟢 0x3799  堂島の職。0x379A 先生の職（値の意味は ❓）
+// 🟢 0x379B  真実・夜の墓場でで朱美を送ると 1（意味は ❓）
+// 🟢 0x379F  序章の大砲。阿弥浜港争乱で大砲の般若党を倒すと 1。0 だと三姉妹見参が起きない
+// 🟢 0x37A0  欺きの代価で一人で剣崎を倒すと 1
+// 🟢 0x37A1  小公女倒れるで薬を持っている（薬屋で 1、小公女倒れるの成功で 0）
+// 🟢 0x37A2  場面だけ分かっている（意味は ❓）。再起の望みの失敗・将の器の成功・怒りの矛先の成功で 2（闇討ちの開始条件の1つ）。
+//            大寄せで攘夷ルートに入れないとき・志士の刀で戦闘になると・願い虚しくで手紙を託されると 2。同士救出の成功で 1
+// 🔶 0x37A3  会談の手紙の状態（願い虚しくで託されると 1、2 で領事館でローラへの報告の場面）
+// 🔶 0x37A4  黒船の状態か。黒船を我が手にの終わりで 1。破滅への道・傷心の帰国船・鬼怒川の魔手の失敗・夕暮れの船上で断ると 2
+// 🟢 0x37A8  最後通告に逆らうと 1。0x37A9 周回数か（🔶 chunks/scenario-flags）
+// 🟢 0x37AA  チュートリアルの進み方。1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）
 // 範囲の中には、隠しルートに関係しないバイト（好感度・職など）も入っている（範囲は差分から取ったもの）。
-// 0x378E 以外は、意味が分かっても値の意味や書き換えの効果を確かめていないので、生の値の欄として出す（AGENTS.md「未確認データの扱い」）。
+// 0x378E 以外は、書き換えたときのゲーム内の反映を確かめていないので、生の値の欄として出す（AGENTS.md「未確認データの扱い」）。
 //
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
+import { POINT_NORMAL_MAX, YOBAI_POINTS } from "./yobai-points";
 
 export const ROUTE_CANDIDATE_START = 0x378d;
 export const ROUTE_CANDIDATE_END = 0x37aa;
@@ -51,20 +41,24 @@ export const HIDDEN_ROUTE_OFFSET = 0x378e;
 /** 三姉妹見参のイベント添字 */
 export const HIDDEN_ROUTE_EVENT_INDEX = 70;
 
-/**
- * 0・1 は書き換えで確認（✅ [U] 2026-10-06）。
- * 2 は 01 copy 12（正規の1周目の隠しルートで、赤城が死んだあと怒りの矛先を終えた）で 1 → 2 になった値（🔶 差分1回、意味は ❓。
- * 怒りの矛先のあとは大老暗殺計画へ飛ぶ（docs/event.md）ので、希望の光に進めない隠しルートか）
- */
+/** 0・1 は書き換えで確認（✅ [U] 2026-10-06）。2 は 🟢（隠しルートを外れた。周回中は戻らない） */
 export const HIDDEN_ROUTE_VALUES: readonly { value: number; label: string }[] = [
-  { value: 0, label: "通常ルート" },
+  { value: 0, label: "隠しルートに入っていない" },
   { value: 1, label: "隠しルート" },
-  { value: 2, label: "隠しルート・怒りの矛先のあと（未確認）" },
+  { value: 2, label: "隠しルートを外れた（大老暗殺計画へ）" },
 ];
 const HIDDEN_ROUTE_MAX = 2;
 
-/** 通常モードで書ける上限。実セーブで見た値は 0〜2 */
+/** 通常モードで書ける上限（好感度・ポイント以外）。🟢 どのバイトも 0〜2 で使われる */
 export const ROUTE_CANDIDATE_NORMAL_MAX = 2;
+
+/** 好感度・ポイントのバイト（0x3792〜0x3797）。通常モードの上限は夜這いのページと同じ POINT_NORMAL_MAX（🔶 ゲームの上限ではない） */
+const POINT_OFFSETS: ReadonlySet<number> = new Set(YOBAI_POINTS.map((p) => p.offset));
+
+/** offset ごとの通常モードの上限 */
+export function routeCandidateNormalMax(offset: number): number {
+  return POINT_OFFSETS.has(offset) ? POINT_NORMAL_MAX : ROUTE_CANDIDATE_NORMAL_MAX;
+}
 
 /** 生の値で出すオフセット（隠しルートのフラグを除く） */
 export const RAW_ROUTE_OFFSETS: readonly number[] = Array.from(
@@ -72,41 +66,68 @@ export const RAW_ROUTE_OFFSETS: readonly number[] = Array.from(
   (_, i) => ROUTE_CANDIDATE_START + i,
 ).filter((o) => o !== HIDDEN_ROUTE_OFFSET);
 
-/** 意味や差分で何か分かっているバイトの名前と説明。ないバイトは全セーブで 0 */
+/** 意味や場面が分かっているバイトの名前と説明。ないバイトは意味不明（❓） */
 export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; note: string }>> = {
+  // 🟢
   0x378d: {
-    note: "❓ 正規の隠しルートのセーブはすべて 02、ほかは 01。1日目のイベントの発生に関わる。書き換えてもルートは変わらず、チャートの隠しルートの枠も出なかった",
+    name: "序章のあとの道筋",
+    note:
+      "1＝通常の1〜3日目（序章の終わりで 1。通常の勢力イベントはどれも 1 が条件）、2＝隠しルートに入った（三姉妹見参の成功で 2。周回中は戻らない）。" +
+      "書き換えてもルートは変わらず、チャートの隠しルートの枠も出なかった",
   },
-  // 🟢 名前 ／ ❓ 値の意味・書き換えの効果
-  // 0x3792〜0x3797 は夜這いのページ（yobai-points.ts）で 0〜20 まで書ける
-  0x3792: { name: "ローラの好感度", note: "夜這いのページで編集できる。10 以上で約束できる。書き換えの効果は未確認" },
-  0x3793: { name: "朱美の好感度", note: "海兵隊の横暴に成功すると 0 → 1（2回再現）。夜這いのページで編集できる" },
-  0x3794: { name: "万由の拷問のポイント", note: "夜這いのページで編集できる。書き換えの効果は未確認" },
-  0x3795: { name: "千佳の拷問のポイント", note: "夜這いのページで編集できる。書き換えの効果は未確認" },
-  0x3796: { name: "百合の拷問のポイント", note: "夜這いのページで編集できる。書き換えの効果は未確認" },
-  0x3797: { name: "メリンダの峰打ちの点数", note: "夜這いのページで編集できる。約束できる値は未確認" },
-  0x3799: {
-    name: "堂島の職",
-    note: "施設が変わった別周回（4日目）のセーブだけ 1。書き換えてもルートは変わらなかった",
+  // 🟢 0x3792〜0x3797 は夜這いのページ（yobai-points.ts）でも 0〜20 まで書ける。書き換えの反映は未確認
+  0x3792: {
+    name: "ローラの好感度",
+    note: "外国のイベントの成功で +1〜+3、失敗で −1。祝 病院開業で千両箱を奪うと 0。10 以上で夜這いの約束（夜這いのページでも編集できる）",
   },
-  0x379a: { name: "先生の職", note: "値の意味・書き換えの効果は未確認" },
+  0x3793: {
+    name: "朱美の好感度",
+    note: "海兵隊の横暴の成功で +1・失敗で −1、真実・夜の墓場でで朱美を送ると +1。10 以上で夜這いの約束（夜這いのページでも編集できる）",
+  },
+  0x3794: { name: "万由の拷問のポイント", note: "拷問で 10 以上なら夜這いの約束（夜這いのページでも編集できる）" },
+  0x3795: { name: "千佳の拷問のポイント", note: "拷問で 10 以上なら夜這いの約束（夜這いのページでも編集できる）" },
+  0x3796: { name: "百合の拷問のポイント", note: "拷問で 10 以上なら夜這いの約束（夜這いのページでも編集できる）" },
+  0x3797: {
+    name: "メリンダの峰打ちの点数",
+    note: "峰打ちで倒すと +2、剣術大会（攘夷）の3回戦で +5。約束できる値は未確認（夜這いのページでも編集できる）",
+  },
+  0x3799: { name: "堂島の職", note: "値の意味は未確認。書き換えてもルートは変わらなかった" },
+  0x379a: { name: "先生の職", note: "値の意味は未確認" },
+  0x379b: { note: "真実・夜の墓場でで朱美を送ると 1。意味は未確認" },
   0x379f: {
     name: "序章の大砲",
-    note: "阿弥浜港争乱の大砲の場面で 1。正規の隠しルートのセーブはすべて 1、ほかは 0。書き換えてもルートは変わらず、チャートの隠しルートの枠も出なかった",
+    note: "阿弥浜港争乱で大砲の般若党を倒すと 1。0 だと三姉妹見参が起きない。書き換えてもルートは変わらなかった",
   },
-  0x37a2: { note: "❓ 大寄せで 0 → 2。0 にしても門は変わらなかった" },
+  0x37a0: { note: "欺きの代価で一人で剣崎を倒すと 1" },
+  0x37a1: { name: "小公女の薬", note: "小公女倒れるで薬を持っている。町の薬屋で 1、小公女倒れるの成功で 0" },
+  // 🟢 場面 ／ ❓ 意味
+  0x37a2: {
+    note:
+      "意味は未確認。2 が闇討ちの条件の1つ。再起の望みの失敗・将の器の成功・怒りの矛先の成功・大寄せで攘夷ルートに入れない・" +
+      "志士の刀で戦闘・願い虚しくで手紙を託されると 2。同士救出の成功で 1",
+  },
+  // 🔶 意味
+  0x37a3: { name: "会談の手紙（推定）", note: "願い虚しくで手紙を託されると 1、2 で領事館でローラへの報告の場面になる" },
+  0x37a4: {
+    name: "黒船の状態（推定）",
+    note: "黒船を我が手にの終わりで 1。破滅への道・傷心の帰国船・鬼怒川の魔手の失敗・夕暮れの船上で断ると 2",
+  },
+  // 🟢 場面 ／ 🔶 0x37A9 の意味
+  0x37a8: { note: "最後通告に逆らうと 1" },
+  0x37a9: { name: "周回数（推定）", note: "周回数とみられる（未確認）" },
+  // 🟢
   0x37aa: {
     name: "チュートリアルの進み方",
-    note: "隠しルート直後＝02、阿弥浜港争乱のあと通常ルート＝01、別周回の4日目＝00。書き換えてもルートは変わらなかった",
+    note: "1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）。隠しルートとは関係しない",
   },
 };
 
 export type RouteCandidatesView = {
   values: number[];
-  /** 0x378E。0・1 以外なら hiddenProblem が入る */
+  /** 0x378E。0〜2 以外なら hiddenProblem が入る */
   hidden: number;
   hiddenProblem: string | null;
-  /** 見たことのない値があれば理由。編集はできる */
+  /** 通常の進行では見ない値があれば理由。編集はできる */
   warning: string | null;
   problem: string | null;
 };
@@ -116,10 +137,10 @@ export function readRouteCandidates(bytes: Uint8Array): RouteCandidatesView {
   const values = Array.from({ length: ROUTE_CANDIDATE_LENGTH }, (_, i) =>
     readU8(bytes, ROUTE_CANDIDATE_START + i),
   );
-  const bad = values.findIndex((v) => v > ROUTE_CANDIDATE_NORMAL_MAX);
+  const bad = values.findIndex((v, i) => v > routeCandidateNormalMax(ROUTE_CANDIDATE_START + i));
   const warning =
     bad >= 0
-      ? `0x${(ROUTE_CANDIDATE_START + bad).toString(16).toUpperCase()} に実セーブで見たことのない値があります（${values[bad]}）`
+      ? `0x${(ROUTE_CANDIDATE_START + bad).toString(16).toUpperCase()} に通常の進行では見ない値があります（${values[bad]}）`
       : null;
   const hidden = readU8(bytes, HIDDEN_ROUTE_OFFSET);
   const layoutProblem = checkLayout(bytes);
@@ -129,11 +150,13 @@ export function readRouteCandidates(bytes: Uint8Array): RouteCandidatesView {
   return { values, hidden, hiddenProblem, warning, problem: layoutProblem };
 }
 
-/** 通常モードは 0〜2、上級者モードは任意の u8。問題がなければ null */
-export function validateRouteCandidate(value: number, opts: { advanced: boolean }): string | null {
+/**
+ * 通常モードは 0〜routeCandidateNormalMax(offset)（offset を省くと 0〜2）、上級者モードは任意の u8。問題がなければ null
+ */
+export function validateRouteCandidate(value: number, opts: { advanced: boolean; offset?: number }): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 0xff) return `u8 の範囲外です: ${value}`;
-  if (!opts.advanced && value > ROUTE_CANDIDATE_NORMAL_MAX)
-    return `通常モードでは 0〜${ROUTE_CANDIDATE_NORMAL_MAX} を指定してください: ${value}`;
+  const max = opts.offset === undefined ? ROUTE_CANDIDATE_NORMAL_MAX : routeCandidateNormalMax(opts.offset);
+  if (!opts.advanced && value > max) return `通常モードでは 0〜${max} を指定してください: ${value}`;
   return null;
 }
 
@@ -148,7 +171,7 @@ export function writeRouteCandidate(
   if (view.problem) throw new RangeError(view.problem);
   if (offset < ROUTE_CANDIDATE_START || offset > ROUTE_CANDIDATE_END)
     throw new RangeError(`範囲外のオフセットです: 0x${offset.toString(16)}`);
-  const error = validateRouteCandidate(value, opts);
+  const error = validateRouteCandidate(value, { advanced: opts.advanced, offset });
   if (error) throw new RangeError(error);
   writeU8(bytes, offset, value);
 }
