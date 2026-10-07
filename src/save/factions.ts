@@ -12,8 +12,14 @@
 //                   売国奴を斬れで門前払いされ、ほかのイベントでは「直前に敵対行為を取った」ときの選択肢が出た。
 //                   そこで謝罪してイベントを成功させると、行2 が 0 に戻り、行0 が +1 された。
 //                   敵対行為で 1 になることが多いが、剣術大会の準備（攘夷と戦った）では立たず、代官所潜入では行1 なしで立った。
-//                   友好度を下げるか（行1）と敵対状態にするか（行2）は、イベントごとに別々に決まっていると考えられる（[U] の推定）。
+//                   友好度を下げるか（行1）と敵対状態にするか（行2）は、イベントの場面ごとに別々に決まる（🟢）。
+//                   会話で断ったときの失敗は行2 だけ、戦闘からの逃走・人物を倒したときは行1 も増えることが多い（🟢）。
 //                   剣術大会以後のルート分岐には使われない（1・5 でも入れた）
+//                   三姉妹見参の成功・ローラ奪還で3勢力とも 0、武人 琴吹光の開始で幕府・外国が 0（🟢）。
+//                   🔶 代官所潜入で見張りに見つかると幕府の行1 +1・行2 = 1（🟢）だが、上の差分では行1 が増えていない。要ゲーム内確認
+//   阿弥浜港争乱の結末（🟢）：3連勝→行2 すべて 0。般若党4人に手間取る・琴吹に助太刀→攘夷の行1 +1・行2 = 1。
+//                   「犬は好かん」→幕府・外国の行1 +1・行2 = 1。
+//   魔鱗組の力：攘夷の行0 − 行1 ≥ 3 のときだけ寝返りの選択肢が出る（🟢）
 //
 // 剣術大会以後のルート分岐（0x3789〜0x378C）：大寄せ（添字41）のときに書かれる。3回の観察（03 copy 9・04 copy 11・04 copy 12）
 //   0x3789〜0x378B 勢力ごと（幕府・外国・攘夷）。00 大寄せ前、01 ルートに入れる、02 入れない
@@ -25,6 +31,9 @@
 //   ✅ [U] 2026-10-05：大寄せの直前に表を書き換えて試した結果（行0, 行1, 行2 → ルート）
 //     3,0,0 → 入れる ／ 3,1,0 → 入れない ／ 4,1,0 → 入れる ／ 3,0,1 → 入れる ／ 3,0,5 → 入れる
 //   → **行0 − 行1 ≥ 3 でルートに入れる**。行2（敵対状態）は判定に使われない（ROUTE_THRESHOLD・routeEligible）
+//   🟢 幕府は加えて茂呂（0x3752）≠ 1（死亡でない）が要る。3勢力とも 02 なら 0x378C = 01（predictRouteJudge）
+//   🟢 大寄せのあと：公儀の剣を引き受ける→外国・攘夷 02、東国の騎士→幕府・攘夷 02、志士の刀→幕府・外国 02。
+//      相手に斬りかかって戦闘になると自分の勢力が 02。最後通告に逆らうと 0x3789〜0x378B すべて 02（0x37A8 = 1）
 //
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from './binary'
@@ -35,10 +44,13 @@ export const FACTION_TABLE_OFFSET = 0x3780 // 🔶 chunks/factions
 export const FACTIONS = ['幕府', '外国', '攘夷'] as const
 export const FACTION_ROWS = [
   { label: '友好度 +（協力・成功）', note: 'その勢力のイベントに参加・成功するたびに +1。友好度＝この値 − 下の「友好度 −」' },
-  { label: '友好度 −（不利益・敵対行為）', note: 'その勢力の人物と戦う・斬るなど、不利益を与えるたびに +1。剣術大会以後のルート分岐では上の値から引かれる' },
+  {
+    label: '友好度 −（不利益・敵対行為）',
+    note: 'その勢力の人物と戦う・斬る・戦闘から逃げるなど、不利益を与えるたびに +1（場面によっては +3）。会話で断っただけの失敗では増えない。剣術大会以後のルート分岐では上の値から引かれる',
+  },
   {
     label: '敵対状態',
-    note: '1 だと、その勢力のイベントで門前払いされたり、謝罪の選択肢が出たりする。謝罪して成功させると 0 に戻る。剣術大会以後のルート分岐には使われない',
+    note: '1 だと、その勢力のイベントで門前払いされたり、謝罪の選択肢が出たりする。謝罪して成功させると 0 に戻る。三姉妹見参の成功・ローラ奪還で3勢力とも 0 に戻る。剣術大会以後のルート分岐には使われない',
   },
 ] as const
 
@@ -67,6 +79,8 @@ export type FactionsView = {
   layoutProblem: string | null
   /** values[行][列] */
   values: number[][]
+  /** 茂呂の状態（0x3752）。大寄せで幕府ルートに入れるかの判定に使う（🟢） */
+  moro: number
   problem: string | null
 }
 
@@ -76,7 +90,8 @@ export function readFactions(bytes: Uint8Array): FactionsView {
   const values = FACTION_ROWS.map((_, r) => FACTIONS.map((_, c) => readU8(bytes, factionOffset(r, c))))
   const max = Math.max(...values.flat())
   const problem = max > PLAUSIBLE_MAX ? `値が大きすぎます（${max}）。位置がずれている可能性があります` : null
-  return { layoutProblem, values, problem: layoutProblem ?? problem }
+  const moro = readU8(bytes, MORO_OFFSET)
+  return { layoutProblem, values, moro, problem: layoutProblem ?? problem }
 }
 
 export function validateFactionValue(value: number, opts: { advanced: boolean }, row = 0): string | null {
@@ -89,9 +104,23 @@ export function validateFactionValue(value: number, opts: { advanced: boolean },
 /** 大寄せでルートに入れる友好度（行0 − 行1）の下限。✅ [U] 書き換えで5通り試した */
 export const ROUTE_THRESHOLD = 3
 
-/** 勢力 col（0〜2）が大寄せでルートに入れるか。values は readFactions の values（行0−行1 ≥ 3） */
-export function routeEligible(values: readonly (readonly number[])[], col: number): boolean {
+/** 茂呂の状態（chunks/characters）。1＝死亡のとき大寄せで幕府ルートに入れない（🟢） */
+export const MORO_OFFSET = 0x3752
+export const MORO_DEAD = 1
+
+/**
+ * 勢力 col（0〜2）が大寄せでルートに入れるか。values は readFactions の values（行0−行1 ≥ 3 ✅ [U]）。
+ * 🟢 幕府（col 0）は加えて茂呂（moro、0x3752）が 1（死亡）でないこと
+ */
+export function routeEligible(values: readonly (readonly number[])[], col: number, moro = 0): boolean {
+  if (col === 0 && moro === MORO_DEAD) return false
   return values[0][col] - values[1][col] >= ROUTE_THRESHOLD
+}
+
+/** 🟢 大寄せで書かれる値の予測。勢力ごとに 01／02、3勢力とも 02 なら無所属 01 */
+export function predictRouteJudge(values: readonly (readonly number[])[], moro: number): { judges: number[]; none: number } {
+  const judges = FACTIONS.map((_, c) => (routeEligible(values, c, moro) ? 0x01 : 0x02))
+  return { judges, none: judges.every((j) => j === 0x02) ? 0x01 : 0x00 }
 }
 
 export const ROUTE_JUDGE_OFFSET = 0x3789 // ✅ [U] chunks/factions 剣術大会以後のルート分岐（勢力ごと 3 B）

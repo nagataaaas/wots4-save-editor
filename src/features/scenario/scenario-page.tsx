@@ -93,6 +93,7 @@ import {
   FACTION_VALUE_MAX,
   HOSTILE_ROW,
   HOSTILE_VALUES,
+  MORO_DEAD,
   ROUTE_JUDGE_OFFSET,
   ROUTE_JUDGE_VALUES,
   ROUTE_NONE_OFFSET,
@@ -847,10 +848,10 @@ function RouteJudgeRows({
             problem={problem}
             hint={
               factions && !factions.problem
-                ? `今の記録なら大寄せで${routeEligible(factions.values, c) ? "入れる" : "入れない"}（友好度 ${factions.values[0][c]} − ${factions.values[1][c]} ＝ ${factions.values[0][c] - factions.values[1][c]}）`
+                ? `今の記録なら大寄せで${routeEligible(factions.values, c, factions.moro) ? "入れる" : "入れない"}（友好度 ${factions.values[0][c]} − ${factions.values[1][c]} ＝ ${factions.values[0][c] - factions.values[1][c]}${c === 0 && factions.moro === MORO_DEAD ? "。茂呂が死亡" : ""}）`
                 : undefined
             }
-            note={`大寄せのときに書かれる。友好度（友好度 + − 友好度 −）が ${ROUTE_THRESHOLD} 以上で 01（入れる）、それ未満で 02（入れない）。敵対状態は関係しない`}
+            note={`大寄せのときに書かれる。友好度（友好度 + − 友好度 −）が ${ROUTE_THRESHOLD} 以上で 01（入れる）、それ未満で 02（入れない）。敵対状態は関係しない。${c === 0 ? "幕府は茂呂（0x3752）が死亡（01）だと友好度にかかわらず 02。" : ""}大寄せのあと、ほかの勢力の剣術大会の誘いを引き受けると 02、その勢力の人物に斬りかかっても 02、最後通告に逆らうと 3勢力とも 02`}
             onChange={(v) => update((b) => writeRouteJudge(b, c, Number(v), { advanced }))}
           />
         ))}
@@ -862,7 +863,7 @@ function RouteJudgeRows({
           options={noneOptions}
           problem={problem}
           warning={view?.warning}
-          note="どの勢力にも入れないとき 01（根無し草）。勢力のどれかが 01 だと、ここが 01 でも根無し草にはならない"
+          note="大寄せで3勢力とも 02 のとき 01（根無し草）。勢力のどれかが 01 だと、ここが 01 でも根無し草にはならない"
           onChange={(v) => update((b) => writeRouteJudge(b, FACTIONS.length, Number(v), { advanced }))}
         />
       </div>
@@ -883,7 +884,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
         <CardDescription>
           0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。
           友好度は「友好度 +（協力・成功）− 友好度 −（不利益・敵対行為）」です（Wiki の説明と差分が合う）。
-          大寄せの時点で友好度が 3 以上の勢力のルートに入れます（書き換えで確認済み）。
+          大寄せの時点で友好度が 3 以上の勢力のルートに入れます（書き換えで確認済み）。幕府は茂呂が生きていることも条件です。
           友好度そのもの（符号つきの値）は別の場所にある可能性があります。
         </CardDescription>
       </CardHeader>

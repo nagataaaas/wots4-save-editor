@@ -4,8 +4,11 @@ import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import {
   FACTION_TABLE_OFFSET,
+  MORO_DEAD,
+  MORO_OFFSET,
   ROUTE_JUDGE_OFFSET,
   ROUTE_NONE_OFFSET,
+  predictRouteJudge,
   readFactions,
   readRouteJudge,
   routeEligible,
@@ -181,5 +184,33 @@ describe('剣術大会以後のルート分岐 chunks/factions（0x3789〜0x378C
     v.judges.forEach((j, c) => writeRouteJudge(after, c, j, { advanced: false }))
     writeRouteJudge(after, 3, v.none, { advanced: false })
     expect(diffOffsets(before, after)).toEqual([])
+  })
+})
+
+describe('🟢 大寄せの判定（茂呂・無所属）', () => {
+  const values = [
+    [3, 4, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+  ]
+
+  it('幕府は茂呂（0x3752）が 1（死亡）だと友好度が 3 以上でも入れない', () => {
+    expect(routeEligible(values, 0, 0)).toBe(true)
+    expect(routeEligible(values, 0, MORO_DEAD)).toBe(false)
+    // 茂呂は幕府だけに効く
+    expect(routeEligible(values, 1, MORO_DEAD)).toBe(true)
+  })
+
+  it('readFactions は茂呂の状態も読む', () => {
+    const b = makeSave(BAKUFU_ROUTE)
+    writeU8(b, MORO_OFFSET, MORO_DEAD)
+    const v = readFactions(b)
+    expect(v.moro).toBe(1)
+    expect(routeEligible(v.values, 0, v.moro)).toBe(false)
+  })
+
+  it('3勢力とも 02 なら無所属 01、どれかが入れるなら 00', () => {
+    expect(predictRouteJudge(values, 0)).toEqual({ judges: [1, 1, 2], none: 0 })
+    expect(predictRouteJudge([[3, 0, 0], [0, 0, 0], [0, 0, 0]], MORO_DEAD)).toEqual({ judges: [2, 2, 2], none: 1 })
   })
 })
