@@ -94,7 +94,7 @@ const SHIRUBE_RESULT_VALUES: readonly TownsfolkValue[] = [
   { value: 2, label: "失敗を成功扱いにしてもらった（報酬なし）" },
 ];
 
-const SHIRUBE_JOBS = ["今宵の虎徹は", "薬売り", "食い逃げ外国人", "おにぎり屋の用心棒"] as const;
+export const SHIRUBE_JOBS = ["今宵の虎徹は", "薬売り", "食い逃げ外国人", "おにぎり屋の用心棒"] as const;
 
 /**
  * なりわいのフラグのうち、なりわいの画面で扱う番号の説明（chunks/townsfolk「なりわいのフラグ」）。
@@ -161,53 +161,6 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
 
 /** なりわいの画面で扱うオフセット（町の人の状態の画面では入力欄を並べない） */
 export const OCCUPATION_FLAG_OFFSETS: readonly number[] = Object.keys(OCCUPATION_FLAG_NOTES).map(Number);
-
-/**
- * 汁部（DLC）のなりわいのフラグ 27〜31 を、なりわいの画面では1つの欄にまとめる（🟢）。
- * - 27：汁部と組んでいる。手を切ると 27〜31 がすべて 0 になる
- * - 28〜31：209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）。次に汁部と話すと 0 に戻るので、立つのはふつう1つだけ
- * 🔶 汁部は 209 → 212 の順に頼む続き物。ただし、どこまで進んだかはこのフラグではなく、なりわいごとの状態で決まる
- *    （その状態が周回をまたぐ記録 0x33A4〜 と同じものかは ❓）
- */
-export const SHIRUBE_FLAG_OFFSETS: readonly number[] = [27, 28, 29, 30, 31].map(occupationFlagOffset);
-
-export type ShirubeState = {
-  key: string;
-  label: string;
-  group?: string;
-  /** 選んだあとの欄に出す名前 */
-  fullLabel: string;
-  values: readonly number[];
-};
-
-export const SHIRUBE_STATES: readonly ShirubeState[] = [
-  { key: "none", label: "組んでいない", fullLabel: "組んでいない", values: [0, 0, 0, 0, 0] },
-  { key: "partner", label: "組んだ", fullLabel: "組んだ", values: [1, 0, 0, 0, 0] },
-  // 受注しても 27〜31 は変わらない（🟢 受注で書くのは 27＝1 だけ）。受注中かどうかは 0x45F4E にあるので、ここには出さない
-  ...SHIRUBE_JOBS.flatMap((job, i) =>
-    ([1, 2] as const).map((result) => ({
-      key: `${209 + i}-${result}`,
-      label: result === 1 ? "成功" : "失敗を成功扱いにしてもらった",
-      group: `「${job}」`,
-      fullLabel: `「${job}」${result === 1 ? "成功" : "失敗を成功扱いにしてもらった"}`,
-      values: [1, ...[0, 1, 2, 3].map((j) => (j === i ? result : 0))],
-    })),
-  ),
-];
-
-/** 27〜31 の今の値（5個）に合う組み合わせ。表にない組み合わせなら undefined */
-export function shirubeStateOf(values: readonly number[]): ShirubeState | undefined {
-  return SHIRUBE_STATES.find((s) => s.values.every((v, i) => v === values[i]));
-}
-
-/** 27〜31 を key の組み合わせにする（5 B だけを書く） */
-export function writeShirubeState(bytes: Uint8Array, key: string): void {
-  const state = SHIRUBE_STATES.find((s) => s.key === key);
-  if (!state) throw new RangeError(`汁部の状態が不明です: ${key}`);
-  const problem = readTownsfolk(bytes).problem;
-  if (problem) throw new RangeError(problem);
-  SHIRUBE_FLAG_OFFSETS.forEach((offset, i) => writeTownsfolk(bytes, offset, state.values[i], { advanced: false }));
-}
 
 /**
  * 差分で何か分かっているバイトの説明。name があるものは入力欄を最初から出す。

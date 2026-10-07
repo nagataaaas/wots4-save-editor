@@ -8,7 +8,9 @@
 //     ✅ 209 を 1 にすると、なりわい一覧でクリア済みになった。FFFF・0 への書き込みの反映は要ゲーム内確認
 //     🔶 上限の 999 は妥当性検証のための仮の値
 //   0x433A6  u16  クリアしたなりわいの数（状態の表の合計）🟢。揃っていないときの動作は ❓
-//   0x45F4E  u16  受注中のなりわいの ID。受注していなければ 0 🟢（書き込みは周りの値 0x45F52〜0x45F55 が ❓ なので扱わない）
+//   0x45F4E  u16  受注中のなりわいの ID。受注していなければ 0 🟢
+//   0x45F55  u8   受注中だけ FF 🔶
+//     書き込みは汁部の仕事（209〜212）だけ（shirube.ts）。ほかのなりわいは周りの値 0x45F52・0x45F54 が ❓ なので扱わない
 //
 // 続き物の進み具合は状態の表ではなく、なりわいのフラグ（0x011C + 番号、townsfolk.ts）にある。
 //
@@ -26,8 +28,10 @@ export const OCCUPATION_CLEAR_MAX = 999;
 
 /** 🟢 クリアしたなりわいの数 */
 export const OCCUPATION_CLEAR_COUNT_OFFSET = 0x433a6;
-/** 🟢 受注中のなりわいの ID（読むだけ） */
+/** 🟢 受注中のなりわいの ID。書くのは汁部の仕事（209〜212）だけ（shirube.ts） */
 export const OCCUPATION_ACCEPTED_OFFSET = 0x45f4e;
+/** 🔶 受注中だけ FF（u8） */
+export const OCCUPATION_ACCEPTING_OFFSET = 0x45f55;
 
 /** ✅ 状態を書き換えて反映を確かめた ID（209：1 でクリア済み） */
 export const OCCUPATION_WRITE_CONFIRMED: ReadonlySet<number> = new Set([209]);

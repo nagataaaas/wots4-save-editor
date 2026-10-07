@@ -16,6 +16,7 @@ import { formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
   OCCUPATION_ACCEPTED_OFFSET,
+  OCCUPATION_ACCEPTING_OFFSET,
   OCCUPATION_CLEAR_COUNT_OFFSET,
   OCCUPATION_CLEAR_MAX,
   OCCUPATION_NOT_APPEARED,
@@ -37,22 +38,26 @@ import {
   type OccupationEntry,
 } from "@/save/master/occupation-names";
 import {
+  SHIRUBE_FLAG_OFFSETS,
+  SHIRUBE_JOB_IDS,
+  SHIRUBE_STATES,
+  readShirube,
+  writeShirubeState,
+  type ShirubeView,
+} from "@/save/shirube";
+import {
   OCCUPATION_FLAG_OFFSETS,
   OCCUPATION_FLAG_START,
   TOWNSFOLK_NOTES,
-  SHIRUBE_FLAG_OFFSETS,
-  SHIRUBE_STATES,
   TOWNSFOLK_START,
   readTownsfolk,
-  shirubeStateOf,
-  writeShirubeState,
   writeTownsfolk,
   type TownsfolkView,
 } from "@/save/townsfolk";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-type Views = { occupations: OccupationView; townsfolk: TownsfolkView };
+type Views = { occupations: OccupationView; townsfolk: TownsfolkView; shirube: ShirubeView };
 
 type StateKind = "hidden" | "open" | "cleared";
 
@@ -95,7 +100,13 @@ export function OccupationPage() {
   const result = useMemo((): { views: Views } | { error: string } | null => {
     if (!save) return null;
     try {
-      return { views: { occupations: readOccupations(save.working), townsfolk: readTownsfolk(save.working) } };
+      return {
+        views: {
+          occupations: readOccupations(save.working),
+          townsfolk: readTownsfolk(save.working),
+          shirube: readShirube(save.working),
+        },
+      };
     } catch (e) {
       return { error: errorMessage(e) };
     }
@@ -137,7 +148,12 @@ export function OccupationPage() {
           <AlertDescription>{writeError}</AlertDescription>
         </Alert>
       )}
-      <SeriesCard key={`${save?.loadId ?? 0}-series`} view={views?.townsfolk ?? null} write={write} />
+      <SeriesCard
+        key={`${save?.loadId ?? 0}-series`}
+        view={views?.townsfolk ?? null}
+        shirube={views?.shirube ?? null}
+        write={write}
+      />
       <SummaryCard view={views?.occupations ?? null} write={write} />
       <StatesCard key={`${save?.loadId ?? 0}-states`} view={views?.occupations ?? null} write={write} />
     </div>
@@ -178,7 +194,7 @@ function SummaryCard({ view, write }: { view: OccupationView | null; write: (m: 
           <div className="flex items-center gap-2">
             <Label>受注中のなりわい</Label>
             <InfoTip offset={OCCUPATION_ACCEPTED_OFFSET}>
-              u16。受注していなければ 0。周りの値（受注中の種類など）の意味が分かっていないので、表示だけです
+              u16。受注していなければ 0。周りの値（受注中の種類など）の意味が分かっていないので、ここでは表示だけです。汁部の仕事の受注は「汁部（DLC）の続き物」の欄で選べます
             </InfoTip>
           </div>
           <span className="text-sm">
@@ -194,9 +210,11 @@ function SummaryCard({ view, write }: { view: OccupationView | null; write: (m: 
 
 function SeriesCard({
   view,
+  shirube,
   write,
 }: {
   view: TownsfolkView | null;
+  shirube: ShirubeView | null;
   write: (m: (b: Uint8Array) => void) => void;
 }) {
   const { advanced } = useAdvancedMode();
@@ -243,7 +261,7 @@ function SeriesCard({
             />
           );
         })}
-        <ShirubeRow view={view} write={write} />
+        <ShirubeRow view={shirube} write={write} />
       </CardContent>
     </Card>
   );
@@ -251,10 +269,12 @@ function SeriesCard({
 
 const jobList = (ids: readonly number[]) => ids.map((id) => `${id} ${occupationById(id)?.ja}`).join(" → ");
 
-/** 汁部（DLC）の続き物。なりわいのフラグ 27〜31 を1つの欄にまとめる（🟢。進み具合そのものはこの欄にない 🔶） */
-function ShirubeRow({ view, write }: { view: TownsfolkView | null; write: (m: (b: Uint8Array) => void) => void }) {
-  const values = view ? SHIRUBE_FLAG_OFFSETS.map((o) => view.values[o - TOWNSFOLK_START]) : null;
-  const state = values ? shirubeStateOf(values) : undefined;
+/**
+ * 汁部（DLC）の続き物。なりわいのフラグ 27〜31 と、汁部の仕事の受注（0x45F4E・0x45F55）を1つの欄にまとめる
+ * （🟢。✅ 209 の受注は差分で確認、210〜212 の受注の周りの値は ❓。進み具合そのものはこの欄にない 🔶）
+ */
+function ShirubeRow({ view, write }: { view: ShirubeView | null; write: (m: (b: Uint8Array) => void) => void }) {
+  const accepted = view && view.accepted !== 0 ? occupationById(view.accepted) : null;
   return (
     <SelectRow
       label="汁部（DLC）の続き物（番号 27〜31）"
@@ -264,12 +284,21 @@ function ShirubeRow({ view, write }: { view: TownsfolkView | null; write: (m: (b
           書き込みは要ゲーム内確認
         </Badge>
       }
-      value={values === null ? null : (state?.key ?? "current")}
-      currentLabel={values ? `${values.join("・")} 表にない組み合わせ` : undefined}
+      value={view === null ? null : (view.state?.key ?? "current")}
+      currentLabel={
+        view
+          ? `${view.values.join("・")}${view.accepted && SHIRUBE_JOB_IDS.includes(view.accepted) ? `（受注中 ${view.accepted}）` : ""} 表にない組み合わせ`
+          : undefined
+      }
       options={SHIRUBE_STATES.map((s) => ({ value: s.key, label: s.label, group: s.group, selectedLabel: s.fullLabel }))}
       problem={view?.problem ?? null}
-      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります。受注しても 27〜31 は変わらない（受注中は「受注中のなりわい」0x45F4E）ので、受注は選択肢にありません。どれを選んでも 5 B すべてを書きます`}
-      hint={`${jobList([209, 210, 211, 212])} の順に頼まれます。どこまで進んだかはこの欄ではなく、なりわいごとの状態で決まります（🔶 位置は未確認）`}
+      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります。どれを選んでも 5 B すべてを書きます。受注は 27 が 1 のうえで「受注中のなりわい」${formatOffset(OCCUPATION_ACCEPTED_OFFSET)} にその ID、${formatOffset(OCCUPATION_ACCEPTING_OFFSET)} に FF を書きます（「今宵の虎徹は」は受注の差分と一致。ほかの3件は周りの値が未確認）。受注以外を選ぶと、汁部の仕事の受注を外します。ほかのなりわいを受注中のときは、受注を選べません`}
+      hint={
+        <>
+          {jobList(SHIRUBE_JOB_IDS)} の順に頼まれます。どこまで進んだかはこの欄にも、下の記録にもありません（位置は未確認）。
+          {accepted && !SHIRUBE_JOB_IDS.includes(view!.accepted) && ` いまは ${view!.accepted} ${accepted.ja} を受注中です。`}
+        </>
+      }
       onChange={(key) => write((b) => writeShirubeState(b, key))}
     />
   );
