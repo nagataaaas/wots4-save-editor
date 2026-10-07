@@ -216,6 +216,9 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(() => writeGender(bytes, 1, false)).toThrow()
     writeGender(bytes, 1, true)
     expect(bytes[0x3aadc]).toBe(1)
+    // ✅ [U] 2026-10-08 体の種類 4（動物）はクラッシュするので上級者モードでも拒否する
+    expect(() => writeGender(bytes, 4, true)).toThrow(/クラッシュ/)
+    expect(bytes[0x3aadc]).toBe(1)
     expect(bytes[0x3aad4]).toBe(0xee)
   })
 

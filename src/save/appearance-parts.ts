@@ -78,6 +78,9 @@ export const GENDER_NAMES = ['男', '女'] as const
  */
 export const BODY_KIND_NAMES = BODY_KINDS
 
+/** 主人公に書くとロードでクラッシュする体の種類 ✅ [U] 2026-10-08（動物 4。人間の部品のままでも、下半身まで外してもクラッシュ）。選択肢に出さない */
+export const BODY_KIND_CRASH: readonly number[] = [4]
+
 export type PartValue = {
   offset: number
   /** −1 は FFFF（なし） */
@@ -218,6 +221,7 @@ export function writeGender(bytes: Uint8Array, value: number, advanced: boolean)
   requireWritable(bytes)
   if (!advanced) throw new RangeError('性別は上級者モードでだけ変更できます。通常は人物を選んでください')
   if (!Number.isInteger(value) || value < 0 || value > 255) throw new RangeError('0〜255の整数を入力してください')
+  if (BODY_KIND_CRASH.includes(value)) throw new RangeError('体の種類 4（動物）はロードでクラッシュします')
   writeU8(bytes, APPEARANCE_PARTS_OFFSETS.gender, value)
 }
 

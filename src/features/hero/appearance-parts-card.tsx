@@ -8,6 +8,7 @@ import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { useSave } from '@/lib/save-context'
 import {
   APPEARANCE_PARTS_OFFSETS,
+  BODY_KIND_CRASH,
   BODY_KIND_NAMES,
   GENDER_NAMES,
   HAIR_COLOR_CONFIRMED,
@@ -138,11 +139,13 @@ export function AppearancePartsCard() {
           offset={APPEARANCE_PARTS_OFFSETS.gender}
           value={view ? String(view.gender) : null}
           currentLabel={`不明な値 ${view?.gender}`}
-          options={BODY_KIND_NAMES.map((g, i) => ({ value: String(i), label: `${g}（${i}）${i >= 3 ? ' ❓' : ''}` }))}
+          options={BODY_KIND_NAMES.flatMap((g, i) =>
+            BODY_KIND_CRASH.includes(i) ? [] : [{ value: String(i), label: `${g}（${i}）${i >= 3 ? ' ❓' : ''}` }],
+          )}
           problem={problem}
           disabled={!advanced}
           hint={advanced ? '上級者モード：性別だけを書き換えます。反対の性別の部品と組み合わさると表示が崩れるおそれがあります' : '人物を選ぶと決まります'}
-          note="🔶 0＝男、1＝女。2＝ローラ（✅ [U] 人物として表示を確認）。🟢 3＝子供・4＝動物の見た目の組の値（主人公に書いたときの動きは ❓）"
+          note="🔶 0＝男、1＝女。2＝ローラ（✅ [U] 人物として表示を確認）。🟢 3＝子供の見た目の組の値（主人公に書いたときの動きは ❓）。4＝動物はロードでクラッシュするので出さない（✅ [U]）"
           onChange={v => update(b => writeGender(b, Number(v), advanced))}
         />
         <SelectRow
