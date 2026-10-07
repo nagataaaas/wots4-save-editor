@@ -3,10 +3,18 @@
 // 代官所の表門（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、書き換えで開くことを確認（✅ [U] 2026-10-06）。
 // 代官所の裏門（0x37FB）は 🟢 意味のみ。1＝閉じるは 🔶、書き換えで裏門が開くかは ❓ 要ゲーム内確認。
 // 大寄せ前の門 0x377D（代官所）・0x377E（居留地）・0x377F（神社）は 1 で開き、書き換えで反映された（✅ [U] 2026-10-06）。
+// 大寄せ以降の門は 🟢 大寄せでルートに入れなかった勢力の門が 1 になる。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
-import { WORLD_FLAGS, readWorldFlags, writeWorldFlag } from './world-flags'
+import {
+  SCENARIO_FLAGS,
+  WORLD_FLAGS,
+  readScenarioFlags,
+  readWorldFlags,
+  writeScenarioFlag,
+  writeWorldFlag,
+} from './world-flags'
 
 /**
  * WORLD_FLAGS の順。大寄せ以降の4つは 04 copy 11（根無し草、大寄せのあと。3つの門がすべて閉じている）、
@@ -70,6 +78,81 @@ describe('門・柵のフラグ chunks/gates', () => {
     const before = makeSave(NO_ROUTE)
     const after = before.slice()
     readWorldFlags(after).values.forEach((v, i) => writeWorldFlag(after, i, v, { advanced: false }))
+    expect(diffOffsets(before, after)).toEqual([])
+  })
+})
+
+// そのほかのフラグ（chunks/scenario-flags）。どれも 🟢 1 になる場面だけが分かっていて、
+// 書き換えたときのゲーム内の反映は要ゲーム内確認。0x3762・0x3763（立ち入り）と 0x37C0（黒船の大砲）は意味が 🔶、
+// ほかは 1 のとき何が変わるかが ❓。
+describe('そのほかのフラグ chunks/scenario-flags', () => {
+  /**
+   * SCENARIO_FLAGS の順。大寄せで外国・攘夷のルートに入れず（0x3761・0x37C6 が 1）、
+   * 大老と三姉妹の前（0x3762・0x3763 が 1）、剣術大会で2試合勝ち抜いたところ、という合成の値
+   */
+  const VALUES = [1, 1, 1, 1, 0, 2, 0, 0, 0]
+
+  function makeOther(values: number[], size = TS_SAVE_SIZE): Uint8Array {
+    const b = new Uint8Array(size)
+    SCENARIO_FLAGS.forEach((f, i) => writeU8(b, f.offset, values[i]))
+    // 隣のバイト（門 0x3764・0x37C3、隠しルートの範囲 0x37A2）も置き、書き込みで変わらないことを見る
+    writeU8(b, 0x3764, 1)
+    writeU8(b, 0x37c3, 1)
+    writeU8(b, 0x37a2, 2)
+    return b
+  }
+
+  it('位置と候補の値', () => {
+    expect(SCENARIO_FLAGS.map((f) => f.offset)).toEqual([
+      0x3761, 0x37c6, 0x3762, 0x3763, 0x3760, 0x37ab, 0x37f7, 0x37f8, 0x37c0,
+    ])
+    // 🟢 剣術大会で勝ち抜いた試合数は 0〜3
+    expect(SCENARIO_FLAGS[5].values.map((v) => v.value)).toEqual([0, 1, 2, 3])
+    // 🔶 意味に推測が入るのは 0x3762・0x3763・0x37C0。ほかは ❓
+    expect(SCENARIO_FLAGS.filter((f) => f.certainty === '🔶').map((f) => f.offset)).toEqual([0x3762, 0x3763, 0x37c0])
+    // 門と重ならない
+    const gates = new Set(WORLD_FLAGS.map((f) => f.offset))
+    expect(SCENARIO_FLAGS.some((f) => gates.has(f.offset))).toBe(false)
+  })
+
+  it('生の値を読む。候補にない値でも読み取り専用にしない', () => {
+    expect(readScenarioFlags(makeOther(VALUES))).toEqual({ values: VALUES, problem: null })
+    const odd = [...VALUES]
+    odd[0] = 7
+    expect(readScenarioFlags(makeOther(odd))).toEqual({ values: odd, problem: null })
+  })
+
+  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+    const b = makeOther(VALUES, TS_SAVE_SIZE + 4)
+    expect(readScenarioFlags(b).problem).not.toBeNull()
+    expect(() => writeScenarioFlag(b, 0, 0, { advanced: true })).toThrow(RangeError)
+  })
+
+  it('書き込みは、そのフラグの1バイトだけを変える', () => {
+    SCENARIO_FLAGS.forEach((f, i) => {
+      const before = makeOther(VALUES)
+      const after = before.slice()
+      writeScenarioFlag(after, i, VALUES[i] === 0 ? 1 : 0, { advanced: false })
+      expect(diffOffsets(before, after)).toEqual([f.offset])
+    })
+  })
+
+  it('通常モードは候補の値だけ。上級者モードでは任意の u8', () => {
+    const b = makeOther(VALUES)
+    expect(() => writeScenarioFlag(b, 0, 2, { advanced: false })).toThrow(RangeError)
+    expect(() => writeScenarioFlag(b, 5, 4, { advanced: false })).toThrow(RangeError)
+    expect(() => writeScenarioFlag(b, SCENARIO_FLAGS.length, 0, { advanced: false })).toThrow(RangeError)
+    expect(() => writeScenarioFlag(b, 0, 0x100, { advanced: true })).toThrow(RangeError)
+    writeScenarioFlag(b, 5, 3, { advanced: false })
+    expect(b[0x37ab]).toBe(3)
+    writeScenarioFlag(b, 0, 2, { advanced: true })
+    expect(b[0x3761]).toBe(2)
+  })
+
+  it('読み出し→書き戻しでバイト列が一致する', () => {
+    const before = makeOther(VALUES)
+    const after = before.slice()
+    readScenarioFlags(after).values.forEach((v, i) => writeScenarioFlag(after, i, v, { advanced: false }))
     expect(diffOffsets(before, after)).toEqual([])
   })
 })

@@ -18,9 +18,13 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import {
+  SCENARIO_FLAGS,
   WORLD_FLAGS,
+  readScenarioFlags,
   readWorldFlags,
+  writeScenarioFlag,
   writeWorldFlag,
+  type ScenarioFlagsView,
   type WorldFlagMeaning,
   type WorldFlagsView,
 } from "@/save/world-flags";
@@ -238,6 +242,7 @@ export function ScenarioPage() {
         route={views?.route ?? null}
       />
       <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
+      <ScenarioFlagsCard key={`${k}-scenario-flags`} />
       <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
       <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
       <TownsfolkCard key={`${k}-townsfolk`} view={views?.townsfolk ?? null} />
@@ -464,7 +469,8 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
           ルート分岐を書き換えても、門が閉じたままだとそのルートに進めません。
           代官所の表門（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、1 → 0 の書き換えで開くことを確認済みです。
           代官所の裏門（0x37FB）は表門と同じ場面で同じ値になるので、表門とそろえてください（裏門が開くかは要ゲーム内確認）。
-          この4つは大寄せのときに書かれ、それより前の門には関係しません。
+          この4つは大寄せで、ルートに入れなかった勢力の門が閉じます（それより前の門には関係しません）。
+          居留地の門と神社入口の柵は、大寄せのあとのイベントでも閉じることがあります。
           大寄せ前の代官所（0x377D）・居留地（0x377E）・神社（0x377F）の門は、値が逆で 1 が開いている状態です（書き換えで反映を確認済み）。
         </CardDescription>
       </CardHeader>
@@ -480,6 +486,51 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
             problem={view?.problem ?? null}
             note={flag.note}
             onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** 門・施設・人物以外で、1 になる場面の分かったフラグ（生の値＋候補） */
+function ScenarioFlagsCard() {
+  const { save, update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const view = useMemo((): ScenarioFlagsView | null => {
+    if (!save) return null;
+    try {
+      return readScenarioFlags(save.working);
+    } catch {
+      return null;
+    }
+  }, [save]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>そのほかのフラグ</CardTitle>
+        <CardDescription>
+          値が変わる場面だけが分かっているフラグです。書き換えたときにゲームへどう反映されるかは確かめていません（要ゲーム内確認）。
+          通常モードでは、その場面で現れる値だけを選べます。
+        </CardDescription>
+        <div className="flex flex-wrap gap-2">
+          <CertaintyBadge mark="❓" text="書き換えの反映は未確認" />
+        </div>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3">
+        {SCENARIO_FLAGS.map((flag, i) => (
+          <SelectRow
+            key={flag.offset}
+            label={flag.label}
+            offset={flag.offset}
+            badges={flag.certainty === "🔶" ? <CertaintyBadge mark="🔶" text="意味は推測" /> : undefined}
+            value={view ? String(view.values[i]) : null}
+            currentLabel={view ? `${view.values[i]} 不明` : undefined}
+            options={flag.values.map((v) => ({ value: String(v.value), label: v.label }))}
+            problem={view?.problem ?? null}
+            note={flag.note}
+            onChange={(v) => update((b) => writeScenarioFlag(b, i, Number(v), { advanced }))}
           />
         ))}
       </CardContent>
