@@ -10,7 +10,8 @@
 //   0x433A6  u16  クリアしたなりわいの数（状態の表の合計）🟢。揃っていないときの動作は ❓
 //   0x45F4E  u16  受注中のなりわいの ID。受注していなければ 0 🟢
 //   0x45F55  u8   受注中だけ FF 🔶
-//     書き込みは汁部の仕事（209〜212）だけ（shirube.ts）。ほかのなりわいは周りの値 0x45F52・0x45F54 が ❓ なので扱わない
+//     周りの値 0x45F52・0x45F54 が ❓（「出頭命令」で 3・2、「今宵の虎徹は」で 0・0）なので、まだ書かない。
+//     受注の書き込みは、どのなりわいでもこの場所1か所にまとめる（汁部の欄などからは書かない）
 //
 // 続き物の進み具合は状態の表ではなく、なりわいのフラグ（0x011C + 番号、townsfolk.ts）にある。
 //
@@ -28,7 +29,7 @@ export const OCCUPATION_CLEAR_MAX = 999;
 
 /** 🟢 クリアしたなりわいの数 */
 export const OCCUPATION_CLEAR_COUNT_OFFSET = 0x433a6;
-/** 🟢 受注中のなりわいの ID。書くのは汁部の仕事（209〜212）だけ（shirube.ts） */
+/** 🟢 受注中のなりわいの ID（読むだけ） */
 export const OCCUPATION_ACCEPTED_OFFSET = 0x45f4e;
 /** 🔶 受注中だけ FF（u8） */
 export const OCCUPATION_ACCEPTING_OFFSET = 0x45f55;

@@ -16,7 +16,6 @@ import { formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
   OCCUPATION_ACCEPTED_OFFSET,
-  OCCUPATION_ACCEPTING_OFFSET,
   OCCUPATION_CLEAR_COUNT_OFFSET,
   OCCUPATION_CLEAR_MAX,
   OCCUPATION_NOT_APPEARED,
@@ -194,7 +193,7 @@ function SummaryCard({ view, write }: { view: OccupationView | null; write: (m: 
           <div className="flex items-center gap-2">
             <Label>受注中のなりわい</Label>
             <InfoTip offset={OCCUPATION_ACCEPTED_OFFSET}>
-              u16。受注していなければ 0。周りの値（受注中の種類など）の意味が分かっていないので、ここでは表示だけです。汁部の仕事の受注は「汁部（DLC）の続き物」の欄で選べます
+              u16。受注していなければ 0。周りの値（受注中の種類など）の意味が分かっていないので、表示だけです
             </InfoTip>
           </div>
           <span className="text-sm">
@@ -270,11 +269,10 @@ function SeriesCard({
 const jobList = (ids: readonly number[]) => ids.map((id) => `${id} ${occupationById(id)?.ja}`).join(" → ");
 
 /**
- * 汁部（DLC）の続き物。なりわいのフラグ 27〜31 と、汁部の仕事の受注（0x45F4E・0x45F55）を1つの欄にまとめる
- * （🟢。✅ 209 の受注は差分で確認、210〜212 の受注の周りの値は ❓。進み具合そのものはこの欄にない 🔶）
+ * 汁部（DLC）の続き物。なりわいのフラグ 27〜31 を1つの欄にまとめる（🟢。進み具合そのものはこの欄にない 🔶）。
+ * 受注中のなりわい（0x45F4E）は書かない（受注中の欄にまとめる）
  */
 function ShirubeRow({ view, write }: { view: ShirubeView | null; write: (m: (b: Uint8Array) => void) => void }) {
-  const accepted = view && view.accepted !== 0 ? occupationById(view.accepted) : null;
   return (
     <SelectRow
       label="汁部（DLC）の続き物（番号 27〜31）"
@@ -285,20 +283,11 @@ function ShirubeRow({ view, write }: { view: ShirubeView | null; write: (m: (b: 
         </Badge>
       }
       value={view === null ? null : (view.state?.key ?? "current")}
-      currentLabel={
-        view
-          ? `${view.values.join("・")}${view.accepted && SHIRUBE_JOB_IDS.includes(view.accepted) ? `（受注中 ${view.accepted}）` : ""} 表にない組み合わせ`
-          : undefined
-      }
+      currentLabel={view ? `${view.values.join("・")} 表にない組み合わせ` : undefined}
       options={SHIRUBE_STATES.map((s) => ({ value: s.key, label: s.label, group: s.group, selectedLabel: s.fullLabel }))}
       problem={view?.problem ?? null}
-      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります。どれを選んでも 5 B すべてを書きます。受注は 27 が 1 のうえで「受注中のなりわい」${formatOffset(OCCUPATION_ACCEPTED_OFFSET)} にその ID、${formatOffset(OCCUPATION_ACCEPTING_OFFSET)} に FF を書きます（「今宵の虎徹は」は受注の差分と一致。ほかの3件は周りの値が未確認）。受注以外を選ぶと、汁部の仕事の受注を外します。ほかのなりわいを受注中のときは、受注を選べません`}
-      hint={
-        <>
-          {jobList(SHIRUBE_JOB_IDS)} の順に頼まれます。どこまで進んだかはこの欄にも、下の記録にもありません（位置は未確認）。
-          {accepted && !SHIRUBE_JOB_IDS.includes(view!.accepted) && ` いまは ${view!.accepted} ${accepted.ja} を受注中です。`}
-        </>
-      }
+      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります。どれを選んでも 5 B すべてを書きます。受注しても 27〜31 は「組んだ」と同じ値で、受注中かどうかは「受注中のなりわい」${formatOffset(OCCUPATION_ACCEPTED_OFFSET)} にあります。この欄では受注中のなりわいに触りません`}
+      hint={`${jobList(SHIRUBE_JOB_IDS)} の順に頼まれます。どこまで進んだかはこの欄にも、下の記録にもありません（位置は未確認）`}
       onChange={(key) => write((b) => writeShirubeState(b, key))}
     />
   );
