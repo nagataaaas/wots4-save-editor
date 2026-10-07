@@ -102,6 +102,8 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes.subarray(0x3aae8, 0x3aaf0)).toEqual(hex('5C 00 FF FF FF FF FF FF'))
     expect(bytes.subarray(0x3ab0c, 0x3ab14)).toEqual(hex('34 00 FF FF 34 00 FF FF'))
     expect(bytes.subarray(0x3ab24, 0x3ab2c)).toEqual(hex('23 01 FF FF FF FF FF FF'))
+    // 男の子の足元は子供の裸足 19（ユーザー判断 2026-10-08。組の値は草履 23）
+    expect(findPerson(153)!.parts.feet).toBe(19)
     for (const [id, kind] of [[153, 3], [155, 3]] as const) {
       expect(findPerson(id)).toMatchObject({ bodyKind: kind, selectable: false })
       writePerson(bytes, id, true)
