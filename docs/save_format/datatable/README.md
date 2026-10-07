@@ -24,6 +24,7 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 | `item/item.csv`               | 通常アイテム       | アイテム                 | u16 LE                       | `FFFF`       | [items](../chunks/items/README.md)                        |
 | `item/valuable.csv`           | 貴重品             | アイテム                 | u16 LE                       | `FFFF`       | [items](../chunks/items/README.md)                        |
 | `event/event.csv`             | イベント           | このリストのみ（添字）   | 配列の添字（u8 × 件数）      |              | [event-chart](../chunks/event-chart/README.md)            |
+| `event/chart-node.csv`        | イベントチャートのノード（0〜118） | このリストのみ | u16 LE                   |              | [hint](../chunks/hint/README.md) 0x3900                   |
 | `place/start-location.csv`    | 開始地点（現在地） | このリストのみ           | u8                           |              | [date-location](../chunks/date-location/README.md) 0x0013 |
 | `place/night-visit-place.csv` | 夜の約束の場所     | このリストのみ           | u16 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x08      |
 | `occupation/occupation.csv`   | なりわい           | このリストのみ（0〜255） | 状態の表の添字               |              | [occupation](../chunks/occupation/README.md)              |
@@ -40,6 +41,8 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 - `place/night-visit-place.csv` の `layout`：その場所で正しく表示される「人と布団の配置」（約束の枠 +0x0A）。実データで見た組と 🟢 の組を書く。複数あるときは `;` で区切る。どれが実データで見た組かは `備考` に書く。
   🟢 の組は町の人の約束と特別な相手（さよ・先生・ローラ・メリンダ・三姉妹など）の約束で使われる組（全72組）。実データで見た組はすべてこの中にある
 - `event/event.csv` の `name_en`：英語版のゲーム内の表記
+- `event/chart-node.csv`：全行 🟢。`name_ja`・`name_en` はチャートの枠に出る名前で、同じイベントの別の枠は名前が違うことがある（39 町の薬師＝小公女倒れる、30 闇討ち ～小暮捜索）。
+  `event_id` はそのノードのイベントの通し番号（`event/event.csv` の ID）。イベントに当たらないノードは空欄
 - `npc/npc-name.csv`：全行 🟢。`sex` は m＝男、f＝女。`group` は unique＝固有の名前（1〜215）、placeholder＝勢力ごとの仮の名前（1001〜6002）、
   female＝町の女性の名前の候補（7001〜7150・8001〜8200）。約束の相手の町の人の名前は female から選ばれる 🔶。コードは `src/save/master/npc-names.ts` に同じ内容を持つ
 - `source`（パーツ・銘・魅力・完成武器・アイテム）：出典。`CT`＝Cheat Engine テーブル、`TS`＝[TS] の定義、`U`＝ユーザーのゲーム内確認、`SE-BBS`＝PS3版の掲示板。複数あるときは `;` で区切る

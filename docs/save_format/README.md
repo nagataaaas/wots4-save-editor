@@ -123,7 +123,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x003780`      | `0x00378C`   | [factions](chunks/factions/README.md)             | 勢力の友好度・敵対状態・ルート分岐             | ✅                            |
 | `0x00378D`      | `0x0037AA`   | [hidden-route](chunks/hidden-route/README.md)     | 隠しルートと、その周りの好感度・職など         | ✅ 0x378E ／ 一部 🟢 ／ ほか ❓ |
 | `0x003838`      | `0x0038FF`   | [event-chart](chunks/event-chart/README.md)       | イベントの記録 B（周回をまたぐ）               | ✅                            |
-| `0x003900`      | `0x003901`   | [hint](chunks/hint/README.md)                     | 次のイベントのヒント                           | ✅位置 ／ ❓値                 |
+| `0x003900`      | `0x003901`   | [hint](chunks/hint/README.md)                     | 次のイベントのヒント（最後に進めたイベントのノード番号） | ✅位置 ／ 🟢値 ／ ❓文との対応 |
 | `0x003902`      | `0x00399F` ❓ | [accessories](chunks/accessories/README.md)       | 装飾品の所持フラグ                             | 🔶                            |
 | `0x0058C0`      | `0x005BDF`   | [items](chunks/items/README.md)                   | 箪笥・手持ち・貴重品のアイテム                 | ✅                            |
 | `0x005C3C`      | `0x006197`   | [memory-garbage](chunks/memory-garbage/README.md) | アドレス風の値（0x7C 刻み12か所）              | 🔶                            |

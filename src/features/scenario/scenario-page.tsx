@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
+import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
+import { CHART_NODES } from "@/save/master/chart-nodes";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -62,8 +64,11 @@ import {
   type RouteCandidatesView,
 } from "@/save/route-candidates";
 import {
+  HINT_DEFAULT_TEXT,
+  HINT_NONE,
   HINT_NORMAL_MAX,
   HINT_OFFSET,
+  hintLabel,
   readHint,
   validateHint,
   writeHint,
@@ -368,33 +373,69 @@ function HintCard({ view }: { view: HintView | null }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           次のイベントのヒント
-          <CertaintyBadge mark="❓" text="値とヒントの文の対応は未確認" />
+          <CertaintyBadge mark="❓" text="2日目以降のノードのヒントの文は未確認" />
         </CardTitle>
         <CardDescription>
-          0x3900（u16）を書き換えると、ヒントの文が変わることを確認済みです（6＝「港の様子でも見てみるか」）。
-          ヒントが琴吹光探検隊のとき 3、阿片密売を阻止せよのとき 6、西洋医学お断りのとき 9 でした。
-          ただし 7・13・18 は「さて　どうしたものか」（ヒントなし）になり、値と文の対応は分かっていません。
-          {view && ` 生の値：${view.value}（0x${view.value.toString(16).toUpperCase().padStart(4, "0")}）`}
+          0x3900（u16）には、最後に状態を進めたイベントの、チャート上のノード番号（0〜{HINT_NORMAL_MAX}）が入ります。
+          ゲームはこの番号からヒントの文を決めます。ノード番号はイベントの通し番号とは別です。
+          ヒントの文が分かっているのは1日目のノード 2〜10 だけです（🔶。6＝「港の様子でも見てみるか」は確認済み）。ほかのノードの文は未確認（❓）です。
+          {view &&
+            ` 現在の値：${hintLabel(view.value)}（0x${view.value.toString(16).toUpperCase().padStart(4, "0")}）。ヒントの文：${
+              view.text ? `「${view.text}」🔶` : "未確認 ❓"
+            }`}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        <FieldRow
-          label="ヒントの番号"
-          offset={HINT_OFFSET}
-          value={view?.value ?? null}
-          problem={view?.problem ?? null}
-          warning={view?.warning}
-          format={String}
-          parse={(input) => parseHint(input, advanced)}
-          apply={(v) => update((b) => writeHint(b, v, { advanced }))}
-          inputMode="text"
-          hint={advanced ? "0〜65535（0x 付きの16進数も可）" : `0〜${HINT_NORMAL_MAX} か 65535（0xFFFF）`}
-          note="🔶 実セーブで見た値：2・3・5・6・8・9・10・78・83・86・88・89、65535（0xFFFF。寝て5日目にしたセーブ。ヒントなしか）"
-        />
+      <CardContent className="flex flex-col gap-4">
+        <Alert>
+          <AlertTitle>🔶 時間帯が合わないと既定の文になります</AlertTitle>
+          <AlertDescription>
+            ノードの時間帯と現在の時間帯が合わないと、ヒントは既定の「{HINT_DEFAULT_TEXT}」になります。
+            ヒントを変えたいときは、現在の時間帯の直前に当たるノードを選んでください（例：2日目昼のセーブに 7・13・18・83・89 を書くと既定の文でした）。
+          </AlertDescription>
+        </Alert>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SearchSelectRow
+            label="ノード（イベント）"
+            offset={HINT_OFFSET}
+            searchPlaceholder="番号・イベント名・英語名で検索"
+            value={view ? String(view.value) : null}
+            currentLabel={view ? hintLabel(view.value) : undefined}
+            options={hintOptions}
+            problem={view?.problem ?? null}
+            warning={view?.warning}
+            hint="イベントに当たらないノード・表にない値は警告します"
+            note="🟢 ノードの表：datatable/event/chart-node.csv。1つのイベントが複数のノードを持つことがあります（大老暗殺計画は7つ など）。0xFFFF＝なし（🔶）"
+            onChange={(v) => update((b) => writeHint(b, Number(v), { advanced }))}
+          />
+          <FieldRow
+            label="生の値"
+            offset={HINT_OFFSET}
+            value={view?.value ?? null}
+            problem={view?.problem ?? null}
+            warning={view?.warning}
+            format={String}
+            parse={(input) => parseHint(input, advanced)}
+            apply={(v) => update((b) => writeHint(b, v, { advanced }))}
+            inputMode="text"
+            hint={advanced ? "0〜65535（0x 付きの16進数も可）" : `0〜${HINT_NORMAL_MAX} か 65535（0xFFFF）`}
+            note="0x3900〜0x3901 の2バイトだけを書きます。上級者モードでは任意の u16 を書けます"
+          />
+        </div>
       </CardContent>
     </Card>
   );
 }
+
+/** 🟢 ノード 0〜118 と 🔶 0xFFFF（なし） */
+const hintOptions: SelectOption[] = [
+  ...CHART_NODES.map((n) => ({
+    value: String(n.id),
+    label: hintLabel(n.id),
+    group: n.eventId === null ? "イベントに当たらないノード" : "イベントのノード",
+    keywords: [String(n.id), n.ja ?? "", n.en ?? ""],
+  })),
+  { value: String(HINT_NONE), label: hintLabel(HINT_NONE), group: "なし", keywords: ["65535", "0xFFFF", "なし"] },
+];
 
 const flagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
   close: [
