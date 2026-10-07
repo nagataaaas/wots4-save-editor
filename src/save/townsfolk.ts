@@ -112,12 +112,17 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(7)]: { name: "【宿無し】おっつぁん", note: "🟢 居留地のおっつぁんの連続なりわい 195〜206", values: SERIES_VALUES },
   [occupationFlagOffset(8)]: {
     name: "【同心頭】佐古津",
-    note: "🟢 代官所の同心頭 佐古津上武之介から受ける、賭場を偵察・訪問・襲撃・殲滅するなりわい 163〜166 の進み具合。各段階の意味は ❓",
+    note:
+      "🟢 代官所の同心頭 佐古津上武之介の治安なりわい 163〜166（賭場を偵察・訪問・襲撃・殲滅）。" +
+      "連続ではなく、そのときの治安で受けられるなりわいが変わり、何回でも受けられる（[U] 2026-10-07）。各値の意味は ❓",
     values: stepValues([0, 10, 20, 30]),
   },
   [occupationFlagOffset(9)]: {
     name: "【賭場】女将",
-    note: "🟢 賭場の女将から受ける治安なりわい 167〜170（代官所を偵察・訪問・襲撃・殲滅）の進み具合。女将は最終なりわい（阿弥浜八人衆 208）を始める人でもある。各段階の意味は ❓",
+    note:
+      "🟢 賭場の女将の治安なりわい 167〜170（代官所を偵察・訪問・襲撃・殲滅）。" +
+      "連続ではなく、そのときの治安で受けられるなりわいが変わり、何回でも受けられる（[U] 2026-10-07）。" +
+      "女将は最終なりわい（阿弥浜八人衆 208）を始める人でもある。各値の意味は ❓",
     values: stepValues([0, 1, 10, 20, 21]),
   },
   [occupationFlagOffset(25)]: {
@@ -132,7 +137,7 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     ],
   },
   [occupationFlagOffset(26)]: {
-    name: "最後のなりわい",
+    name: "最終なりわい",
     note:
       "🟢 なりわい 207・208 と、熊神（おっつぁん）の病気の進み具合。10 以上が治療済み（女将が薬代を出した）。" +
       "43 以上で医者が「病み上がり」と言う（43 ちょうどを書く場面はなく、99・100 で当てはまる）。" +

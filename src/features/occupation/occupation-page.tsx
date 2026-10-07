@@ -64,7 +64,6 @@ import {
   type ShirubeView,
 } from "@/save/shirube";
 import {
-  OCCUPATION_FLAG_OFFSETS,
   OCCUPATION_FLAG_START,
   TOWNSFOLK_NOTES,
   TOWNSFOLK_START,
@@ -109,7 +108,7 @@ const FLAG_JOBS: Readonly<Record<number, readonly number[]>> = {
   [OCCUPATION_FLAG_START + 6]: range(187, 194),
   [OCCUPATION_FLAG_START + 7]: range(195, 206),
   [OCCUPATION_FLAG_START + 8]: range(163, 166),
-  [OCCUPATION_FLAG_START + 9]: [167, 168, 169, 170, 208],
+  [OCCUPATION_FLAG_START + 9]: [167, 168, 169, 170],
   [OCCUPATION_FLAG_START + 26]: [207, 208],
 };
 
@@ -187,12 +186,9 @@ export function OccupationPage() {
         accepted={views?.accepted ?? null}
         write={write}
       />
-      <SeriesCard
-        key={`${save?.loadId ?? 0}-series`}
-        view={views?.townsfolk ?? null}
-        shirube={views?.shirube ?? null}
-        write={write}
-      />
+      <SeriesCard view={views?.townsfolk ?? null} write={write} />
+      <SecurityCard view={views?.townsfolk ?? null} write={write} />
+      <DlcCard view={views?.shirube ?? null} write={write} />
       <StatesCard
         key={`${save?.loadId ?? 0}-states`}
         view={views?.occupations ?? null}
@@ -304,90 +300,131 @@ function AcceptRow({
   );
 }
 
-// ---------------------------------------------------------------- 連続なりわいなどの進み具合
+// ---------------------------------------------------------------- 依頼主ごとの進み具合（なりわいのフラグ）
 
-function SeriesCard({
-  view,
-  shirube,
-  write,
-}: {
+type FlagCardProps = {
   view: TownsfolkView | null;
-  shirube: ShirubeView | null;
   write: (m: (b: Uint8Array) => void) => void;
-}) {
-  const { advanced } = useAdvancedMode();
+};
 
+/** 連続なりわい（番号 4〜7）、最終なりわい（26）、四天王の話（25） */
+const SERIES_CARD_FLAGS = [4, 5, 6, 7, 26, 25] as const;
+/** 治安なりわい（番号 8・9） */
+const SECURITY_CARD_FLAGS = [8, 9] as const;
+
+const flagOffsetTip = `${formatOffset(OCCUPATION_FLAG_START)} + 番号（u8）`;
+
+function SeriesCard({ view, write }: FlagCardProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
-          依頼主ごとの進み具合
-          <InfoTip offset={`${formatOffset(OCCUPATION_FLAG_START)} + 番号（u8）`}>
+          連続なりわい
+          <InfoTip offset={flagOffsetTip}>
             なりわいのフラグ。依頼主はこの値を見て次の依頼を出します（状態の表は見ません）。「連続なりわい」は Wiki での呼び方です（ゲーム内には呼び方がありません）
           </InfoTip>
         </CardTitle>
         <CardDescription>
-          【岡っ引き】野戸仏・【極道】小鳩・【泥棒】泥棒さん・【宿無し】おっつぁんの連続なりわいは、十の位が何件目か、一の位が
-          0＝依頼前・1＝依頼済みです。 野戸仏の連続なりわいは、20 で2件目「督促状」から始まり、100
-          で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。 連続なりわいを
-          100 にしても、最後のなりわいが 99 未満なら新しい依頼は出ません。
+          【岡っ引き】野戸仏・【極道】小鳩・【泥棒】泥棒さん・【宿無し】おっつぁんの4種類。十の位が何件目か、一の位が
+          0＝依頼前・1＝依頼済みです。野戸仏は、20 で2件目「督促状」から始まり、100
+          で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。
+          4種類をすべて終えると四天王の話が進み、最終なりわいにつながります。連続なりわいを 100
+          にしても、最終なりわいが 99 未満なら新しい依頼は出ません。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
-        {OCCUPATION_FLAG_OFFSETS.filter((o) => !SHIRUBE_FLAG_OFFSETS.includes(o)).map((offset) => {
-          const info = TOWNSFOLK_NOTES[offset];
-          const current = view?.values[offset - TOWNSFOLK_START] ?? null;
-          const jobs = FLAG_JOBS[offset];
-          const flag = offset - OCCUPATION_FLAG_START;
-          const isSeries = flag >= 4 && flag <= 7;
-          return (
-            <SelectRow
-              key={offset}
-              label={`${info.name}（番号 ${flag}）`}
-              offset={offset}
-              badges={
-                <Badge variant="outline" className="font-normal">
-                  {flag === 4 ? "受注の書き込みは要ゲーム内確認" : "書き込みは要ゲーム内確認"}
-                </Badge>
-              }
-              value={current === null ? null : String(current)}
-              currentLabel={current === null ? undefined : `${current} 不明`}
-              options={(info.values ?? []).map((s) => {
-                const accept = seriesAcceptOf(flag, s.value);
-                return {
-                  value: String(s.value),
-                  label: `${s.value} ${s.label}${accept ? `（${accept} ${occupationById(accept)?.ja} を受注）` : ""}`,
-                  group: s.group,
-                };
-              })}
-              problem={view?.problem ?? null}
-              note={
-                isSeries
-                  ? `${info.note}。「依頼済み」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この連続なりわいを受注中なら受注を外します`
-                  : info.note
-              }
-              hint={jobs && jobList(jobs)}
-              onChange={(v) =>
-                write((b) =>
-                  writeSeriesState(
-                    b,
-                    [{ flag, value: Number(v) }],
-                    seriesAcceptOf(flag, Number(v)),
-                    { advanced },
-                  ),
-                )
-              }
-            />
-          );
-        })}
-        <ShirubeRow view={shirube} write={write} />
+        {SERIES_CARD_FLAGS.map((flag) => (
+          <FlagRow key={flag} flag={flag} view={view} write={write} />
+        ))}
       </CardContent>
     </Card>
   );
 }
 
-const jobList = (ids: readonly number[]) =>
-  ids.map((id) => `${id} ${occupationById(id)?.ja}`).join(" → ");
+function SecurityCard({ view, write }: FlagCardProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          治安なりわい
+          <InfoTip offset={flagOffsetTip}>なりわいのフラグ</InfoTip>
+        </CardTitle>
+        <CardDescription>
+          【同心頭】佐古津と【賭場】女将の2人から受けるなりわいです。連続なりわいではなく、そのときの治安によって受けられるなりわいが変わり、何回でも受けられます。
+          女将は最終なりわい（阿弥浜八人衆）を始める人でもあります。値の意味は未確認で、書き込みの反映は要ゲーム内確認です。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        {SECURITY_CARD_FLAGS.map((flag) => (
+          <FlagRow key={flag} flag={flag} view={view} write={write} separator="・" />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DlcCard({ view, write }: { view: ShirubeView | null; write: (m: (b: Uint8Array) => void) => void }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          DLC なりわい
+          <InfoTip offset={flagOffsetTip}>なりわいのフラグ 27〜31</InfoTip>
+        </CardTitle>
+        <CardDescription>人斬り 汁部理人と組んで受けるなりわい（209〜212）です。</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        <ShirubeRow view={view} write={write} />
+      </CardContent>
+    </Card>
+  );
+}
+
+/** なりわいのフラグ1つの欄。連続なりわい（番号 4〜7）の「依頼済み」は、そのなりわいの受注も書く */
+function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { flag: number; separator?: string }) {
+  const { advanced } = useAdvancedMode();
+  const offset = OCCUPATION_FLAG_START + flag;
+  const info = TOWNSFOLK_NOTES[offset];
+  const current = view?.values[offset - TOWNSFOLK_START] ?? null;
+  const jobs = FLAG_JOBS[offset];
+  const isSeries = flag >= 4 && flag <= 7;
+  return (
+    <SelectRow
+      label={`${info.name}（番号 ${flag}）`}
+      offset={offset}
+      badges={
+        <Badge variant="outline" className="font-normal">
+          {flag === 4 ? "受注の書き込みは要ゲーム内確認" : "書き込みは要ゲーム内確認"}
+        </Badge>
+      }
+      value={current === null ? null : String(current)}
+      currentLabel={current === null ? undefined : `${current} 不明`}
+      options={(info.values ?? []).map((s) => {
+        const accept = seriesAcceptOf(flag, s.value);
+        return {
+          value: String(s.value),
+          label: `${s.value} ${s.label}${accept ? `（${accept} ${occupationById(accept)?.ja} を受注）` : ""}`,
+          group: s.group,
+        };
+      })}
+      problem={view?.problem ?? null}
+      note={
+        isSeries
+          ? `${info.note}。「依頼済み」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この連続なりわいを受注中なら受注を外します`
+          : info.note
+      }
+      hint={jobs && jobList(jobs, separator)}
+      onChange={(v) =>
+        write((b) =>
+          writeSeriesState(b, [{ flag, value: Number(v) }], seriesAcceptOf(flag, Number(v)), { advanced }),
+        )
+      }
+    />
+  );
+}
+
+const jobList = (ids: readonly number[], separator = " → ") =>
+  ids.map((id) => `${id} ${occupationById(id)?.ja}`).join(separator);
 
 /**
  * 汁部（DLC）のなりわい。なりわいのフラグ 27〜31 を1つの欄にまとめる（🟢。進み具合そのものはこの欄にない 🔶）。

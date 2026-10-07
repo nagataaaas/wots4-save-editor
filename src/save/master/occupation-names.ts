@@ -69,8 +69,8 @@ export function occupationById(id: number): OccupationEntry | undefined {
 
 /**
  * 画面で使うなりわいのまとまり。ids は ID の範囲（欠番を含む）。
- * 🟢 3〜161 は町の基本のなりわい、163〜166 は代官所の佐古津、167〜170 は賭場の女将（治安なりわい）、171〜206 は4つの連続なりわい、
- * 207・208 は最後のなりわい、209〜212 は汁部（DLC）
+ * 🟢 3〜161 は町の基本のなりわい、163〜166 は代官所の佐古津・167〜170 は賭場の女将の治安なりわい、171〜206 は4つの連続なりわい、
+ * 207・208 は最終なりわい、209〜212 は汁部（DLC）
  */
 export const OCCUPATION_GROUPS: readonly { key: string; label: string; from: number; to: number }[] = [
   { key: "basic", label: "町のなりわい", from: 3, to: 161 },
@@ -80,7 +80,7 @@ export const OCCUPATION_GROUPS: readonly { key: string; label: string; from: num
   { key: "gangster", label: "【極道】小鳩", from: 179, to: 186 },
   { key: "thief", label: "【泥棒】泥棒さん", from: 187, to: 194 },
   { key: "homeless", label: "【宿無し】おっつぁん", from: 195, to: 206 },
-  { key: "final", label: "最後のなりわい", from: 207, to: 208 },
+  { key: "final", label: "最終なりわい", from: 207, to: 208 },
   { key: "shirube", label: "汁部（DLC）", from: 209, to: 212 },
 ];
 

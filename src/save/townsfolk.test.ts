@@ -122,7 +122,7 @@ describe('🔶 町の人の状態の候補 0x011C〜0x05FF chunks/townsfolk', ()
     expect(TOWNSFOLK_NOTES[0x0135].values?.find((v) => v.value === 8)?.label).toBe('「四天王の証」を受け取った')
   })
 
-  it('🟢 番号 26（0x0136）は最後のなりわいと熊神の病気。10＝治療、20＝阿弥浜八人衆を受注。🔶 治療すると 207 から 208 に発展', () => {
+  it('🟢 番号 26（0x0136）は最終なりわいと熊神の病気。10＝治療、20＝阿弥浜八人衆を受注。🔶 治療すると 207 から 208 に発展', () => {
     expect(TOWNSFOLK_NOTES[0x0136].values?.map((v) => v.value)).toEqual([0, 1, 2, 10, 11, 12, 15, 20, 99, 100])
     expect(TOWNSFOLK_NOTES[0x0136].values?.find((v) => v.value === 10)?.label).toBe('女将が薬代を出した（治療）')
     const b = makeSave()

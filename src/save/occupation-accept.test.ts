@@ -58,7 +58,7 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     expect(acceptRuleOf(210).onAccept).toEqual([
       { flag: 27, value: 1 }, { flag: 28, value: 0 }, { flag: 29, value: 0 }, { flag: 30, value: 0 }, { flag: 31, value: 0 },
     ])
-    // 基本・佐古津・女将・最後のなりわいはフラグを書かない
+    // 基本・佐古津・女将・最終なりわいはフラグを書かない
     for (const id of [3, 163, 167, 207, 208]) expect(acceptRuleOf(id)).toEqual({ onAccept: [], onRelease: [] })
     // 🔶 外すときは n1 を n0 に戻す
     expect(acceptRuleOf(172).onRelease).toEqual([{ flag: 4, value: 20 }])
