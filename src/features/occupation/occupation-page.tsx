@@ -40,8 +40,12 @@ import {
   OCCUPATION_FLAG_OFFSETS,
   OCCUPATION_FLAG_START,
   TOWNSFOLK_NOTES,
+  SHIRUBE_FLAG_OFFSETS,
+  SHIRUBE_STATES,
   TOWNSFOLK_START,
   readTownsfolk,
+  shirubeStateOf,
+  writeShirubeState,
   writeTownsfolk,
   type TownsfolkView,
 } from "@/save/townsfolk";
@@ -56,7 +60,7 @@ const kindOf = (v: number): StateKind => (v === OCCUPATION_NOT_APPEARED ? "hidde
 
 const KIND_LABELS: Record<StateKind, string> = {
   hidden: "まだ出ていない",
-  open: "受けられる・未クリア",
+  open: "出た・未クリア",
   cleared: "クリア済み",
 };
 
@@ -133,8 +137,8 @@ export function OccupationPage() {
           <AlertDescription>{writeError}</AlertDescription>
         </Alert>
       )}
+      <SeriesCard key={`${save?.loadId ?? 0}-series`} view={views?.townsfolk ?? null} write={write} />
       <SummaryCard view={views?.occupations ?? null} write={write} />
-      <SeriesCard key={`${save?.loadId ?? 0}-series`} view={views?.townsfolk ?? null} states={views?.occupations.states ?? null} write={write} />
       <StatesCard key={`${save?.loadId ?? 0}-states`} view={views?.occupations ?? null} write={write} />
     </div>
   );
@@ -150,9 +154,9 @@ function SummaryCard({ view, write }: { view: OccupationView | null; write: (m: 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>クリア数・受注中</CardTitle>
+        <CardTitle>受注中・クリア数</CardTitle>
         <CardDescription>
-          クリアしたなりわいの数は、下の状態の表の合計（クリア回数の合計）と揃えておきます。揃っていないときのゲームの動作は ❓ です。
+          クリアしたなりわいの数も周回をまたぐ統計で、下の記録の合計（クリア回数の合計）と揃えておきます。揃っていないときのゲームの動作は ❓ です。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -190,11 +194,9 @@ function SummaryCard({ view, write }: { view: OccupationView | null; write: (m: 
 
 function SeriesCard({
   view,
-  states,
   write,
 }: {
   view: TownsfolkView | null;
-  states: readonly number[] | null;
   write: (m: (b: Uint8Array) => void) => void;
 }) {
   const { advanced } = useAdvancedMode();
@@ -215,7 +217,7 @@ function SeriesCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
-        {OCCUPATION_FLAG_OFFSETS.map((offset) => {
+        {OCCUPATION_FLAG_OFFSETS.filter((o) => !SHIRUBE_FLAG_OFFSETS.includes(o)).map((offset) => {
           const info = TOWNSFOLK_NOTES[offset];
           const current = view?.values[offset - TOWNSFOLK_START] ?? null;
           const jobs = FLAG_JOBS[offset];
@@ -236,26 +238,44 @@ function SeriesCard({
               options={(info.values ?? []).map((s) => ({ value: String(s.value), label: `${s.value} ${s.label}`, group: s.group }))}
               problem={view?.problem ?? null}
               note={info.note}
-              hint={
-                jobs &&
-                jobs
-                  .map((id) => {
-                    const v = states?.[id];
-                    const mark = v === undefined ? "" : kindOf(v) === "cleared" ? "✓" : "";
-                    return `${id} ${occupationById(id)?.ja}${mark}`;
-                  })
-                  .join(" → ")
-              }
+              hint={jobs && jobList(jobs)}
               onChange={(v) => write((b) => writeTownsfolk(b, offset, Number(v), { advanced }))}
             />
           );
         })}
+        <ShirubeRow view={view} write={write} />
       </CardContent>
     </Card>
   );
 }
 
-// ---------------------------------------------------------------- 状態の表
+const jobList = (ids: readonly number[]) => ids.map((id) => `${id} ${occupationById(id)?.ja}`).join(" → ");
+
+/** 汁部（DLC）の続き物。なりわいのフラグ 27〜31 を1つの欄にまとめる（🟢。進み具合そのものはこの欄にない 🔶） */
+function ShirubeRow({ view, write }: { view: TownsfolkView | null; write: (m: (b: Uint8Array) => void) => void }) {
+  const values = view ? SHIRUBE_FLAG_OFFSETS.map((o) => view.values[o - TOWNSFOLK_START]) : null;
+  const state = values ? shirubeStateOf(values) : undefined;
+  return (
+    <SelectRow
+      label="汁部（DLC）の続き物（番号 27〜31）"
+      offset={SHIRUBE_FLAG_OFFSETS[0]}
+      badges={
+        <Badge variant="outline" className="font-normal">
+          書き込みは要ゲーム内確認
+        </Badge>
+      }
+      value={values === null ? null : (state?.key ?? "current")}
+      currentLabel={values ? `${values.join("・")} 表にない組み合わせ` : undefined}
+      options={SHIRUBE_STATES.map((s) => ({ value: s.key, label: s.label, group: s.group }))}
+      problem={view?.problem ?? null}
+      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります`}
+      hint={`${jobList([209, 210, 211, 212])} の順に頼まれます。どこまで進んだかはこの欄ではなく、なりわいごとの状態で決まります（🔶 位置は未確認）`}
+      onChange={(key) => write((b) => writeShirubeState(b, key))}
+    />
+  );
+}
+
+// ---------------------------------------------------------------- 周回をまたぐ記録
 
 type KindFilter = "all" | StateKind;
 
@@ -287,16 +307,16 @@ function StatesCard({ view, write }: { view: OccupationView | null; write: (m: (
     <Card>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
-          なりわいの状態
+          なりわいの記録（周回をまたぐ統計）
           <InfoTip offset={`${formatOffset(OCCUPATION_STATE_OFFSET)} + ID×2（u16 × 256）`}>
-            FFFF＝まだ出ていない、0＝受けられる・未クリア（🔶）、1 以上＝クリアした回数。
+            FFFF＝まだ出ていない、0＝出た・未クリア（🔶）、1 以上＝これまでの周回を通してクリアした回数。
             1 にするとなりわい一覧でクリア済みになることを確認済み（今宵の虎徹は）
           </InfoTip>
           <CertaintyBadge mark="🔶" text="0 の意味と、FFFF・0 への書き込みは要ゲーム内確認" />
         </CardTitle>
         <CardDescription>
-          なりわいごとのクリア回数です。クリア済みにしても、報酬（お金・容姿・装飾品）は増えず、続き物も進みません（続き物は上の欄で進めます）。
-          全 {OCCUPATIONS.length} 件のうち、クリア済み {counts.cleared}・受けられる {counts.open}・まだ出ていない {counts.hidden}
+          ゲーム内の統計に出る、周回をまたいだなりわいごとのクリア回数です。クリア済みにしても、報酬（お金・容姿・装飾品）は増えず、今の周回の続き物も進みません（続き物は上の欄で進めます）。
+          全 {OCCUPATIONS.length} 件のうち、クリア済み {counts.cleared}・出た・未クリア {counts.open}・まだ出ていない {counts.hidden}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
