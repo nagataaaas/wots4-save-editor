@@ -1,6 +1,6 @@
 // アイテムの表（datatable/item/item.csv、全行 🟢）と同じ内容かを、要所の行で確かめる。
 import { describe, expect, it } from "vitest";
-import { ITEMS, findItem, itemDisplayName } from "./item-names";
+import { ITEMS, findItem, itemDisplayName, parseCsv } from "./item-names";
 
 describe("🟢 アイテム datatable/item/item.csv", () => {
   it("ID 0x00〜0xF1 の242件。欠番・重複なし", () => {
@@ -40,6 +40,19 @@ describe("🟢 アイテム datatable/item/item.csv", () => {
     expect(findItem(0x29)?.maxStack).toBe(999);
     expect(findItem(0x74)?.maxStack).toBe(9999);
     expect(findItem(0xc4)?.maxStack).toBe(10);
+  });
+
+  it("説明文（日本語・英語）を持つ。カンマ・引用符を含む行も読める", () => {
+    expect(findItem(0x02)?.descJa).toBe("貴重なお米携帯食料。作ってくれた人の気持ちが伝わる。活力300回復。");
+    expect(findItem(0x01)?.descEn).toContain('"sooshee.');
+    expect(ITEMS.every((it) => it.descJa !== "")).toBe(true);
+  });
+
+  it("parseCsv：引用符の中のカンマ・改行・二重引用符", () => {
+    expect(parseCsv('a,"b,c","d""e"\r\n1,"x\ny",\n')).toEqual([
+      ["a", "b,c", 'd"e'],
+      ["1", "x\ny", ""],
+    ]);
   });
 
   it("同じ名前の ID は表示名に ID を添える", () => {

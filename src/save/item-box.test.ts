@@ -8,6 +8,7 @@ import {
   TOOLS_AREA,
   itemBoxSlotOffset,
   itemCountMax,
+  itemNormalCountMax,
   itemOptionGroups,
   readItemBox,
   repairItemMarks,
@@ -141,9 +142,10 @@ describe('選択肢', () => {
     for (const id of [0x2d, 0x2e, 0x00, 0x29, 0x2a, 0x2b, 0x2c, 0xed, 0xee]) expect(all.has(id)).toBe(false)
   })
 
-  it('検索用に英語名と16進の ID を持つ', () => {
+  it('検索用に英語名と16進の ID を持ち、選択肢に説明文を出す', () => {
     const o = itemOptionGroups()[0].items.find((x) => x.id === 0x10)
     expect(o?.keywords).toEqual(expect.arrayContaining(['Whetting Stone', '10', '0x10']))
+    expect(o?.description).toBe('非常に質の高い砥石。武器の耐久度400回復。')
   })
 })
 
@@ -154,6 +156,9 @@ describe('個数の上限', () => {
     expect(itemCountMax(TOOLS_AREA, 0x74)).toBe(9999)
     expect(itemCountMax(CHEST_AREA, 0x10)).toBe(999)
     expect(itemCountMax(TOOLS_AREA, 0x10, ADV)).toBe(ITEM_COUNT_SYSTEM_MAX)
+    // 画面に出す通常モードの上限は、上級者モードでも変わらない
+    expect(itemNormalCountMax(TOOLS_AREA, 0x18)).toBe(10)
+    expect(itemNormalCountMax(CHEST_AREA, 0x18)).toBe(999)
   })
 
   it('最大数を超える個数は、通常モードでは拒否し、上級者モードでは書ける', () => {

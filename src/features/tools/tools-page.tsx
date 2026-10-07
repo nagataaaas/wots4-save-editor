@@ -13,6 +13,7 @@ import {
   TOOLS_AREA,
   itemBoxSlotOffset,
   itemCountMax,
+  itemNormalCountMax,
   itemOptionGroups,
   readItemBox,
   repairItemMarks,
@@ -142,6 +143,7 @@ function ItemBoxPage({
                 groups={groups}
                 noun={title}
                 countMaxFor={(id) => itemCountMax(area, id, { advanced })}
+                normalCountMaxFor={(id) => itemNormalCountMax(area, id)}
                 onChange={(id, count) => update((b) => writeItemBoxSlot(b, area, i, id, count, { advanced }))}
               />
             )

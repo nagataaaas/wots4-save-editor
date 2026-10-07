@@ -45,6 +45,7 @@ export function ItemSlotRow({
   investigate = false,
   showCount = true,
   countMaxFor,
+  normalCountMaxFor,
   onChange,
 }: {
   index: number
@@ -58,8 +59,10 @@ export function ItemSlotRow({
   investigate?: boolean
   /** 個数の欄を出す */
   showCount?: boolean
-  /** ID ごとの個数の上限。なければ ITEM_COUNT_MAX */
+  /** ID ごとの個数の上限（書ける値）。なければ ITEM_COUNT_MAX */
   countMaxFor?: (id: number) => number
+  /** ID ごとの通常モードの個数の上限（表示用）。上級者モードで countMaxFor がこれを超えるときに両方を表示する */
+  normalCountMaxFor?: (id: number) => number
   onChange: (id: number, count: number) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -135,12 +138,25 @@ export function ItemSlotRow({
     if (count !== slot.count) run(() => onChange(slot.id, count))
   }
 
-  const item = (id: number, label: string, keywords: readonly string[] = []) => (
+  const item = (id: number, label: string, keywords: readonly string[] = [], description?: string) => (
     <CommandItem key={id} value={String(id)} keywords={[label, ...keywords]} onSelect={() => choose(id)}>
-      {label}
-      <Check className={cn('ml-auto', slot?.id === id ? 'opacity-100' : 'opacity-0')} />
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span>{label}</span>
+        {description && <span className="text-muted-foreground text-xs leading-snug">{description}</span>}
+      </span>
+      <Check className={cn('ml-auto shrink-0', slot?.id === id ? 'opacity-100' : 'opacity-0')} />
     </CommandItem>
   )
+
+  // 個数の上限の表示。通常モードの上限と、上級者モードで書ける上限が違えば両方出す
+  const countMax = slot && !isEmpty ? countMaxFor?.(slot.id) : undefined
+  const normalMax = slot && !isEmpty ? (normalCountMaxFor?.(slot.id) ?? countMax) : undefined
+  const countLimitText =
+    showCount && normalMax !== undefined
+      ? countMax !== undefined && countMax > normalMax
+        ? `個数は最大 ${normalMax}（上級者モードのため ${countMax} まで書けます）`
+        : `個数は最大 ${normalMax}`
+      : null
 
   return (
     <div className="flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0">
@@ -183,7 +199,9 @@ export function ItemSlotRow({
                 {groups.map((g, gi) => (
                   <Fragment key={g.label ?? `group-${gi}`}>
                     <CommandSeparator />
-                    <CommandGroup heading={g.label}>{g.items.map((v) => item(v.id, v.label, v.keywords))}</CommandGroup>
+                    <CommandGroup heading={g.label}>
+                      {g.items.map((v) => item(v.id, v.label, v.keywords, v.description))}
+                    </CommandGroup>
                   </Fragment>
                 ))}
               </CommandList>
@@ -213,6 +231,9 @@ export function ItemSlotRow({
             disabled={slot === null || isEmpty}
             readOnly={countLocked}
             placeholder={slot === null ? '未読み込み' : isEmpty ? '—' : undefined}
+            type="number"
+            min={1}
+            max={countMax}
             inputMode="numeric"
             aria-label={`${index + 1}件目の個数`}
             aria-invalid={error !== null}
@@ -227,6 +248,7 @@ export function ItemSlotRow({
           />
         )}
       </div>
+      {countLimitText && !slot?.problem && <p className="text-muted-foreground text-xs">{countLimitText}</p>}
       {slot?.problem ? (
         <p className="text-muted-foreground text-xs">読み取り専用：{slot.problem}</p>
       ) : error ? (

@@ -91,6 +91,7 @@ function toOption(it: ItemEntry): ItemOption {
     id: it.id,
     label: itemDisplayName(it),
     keywords: [it.ja, it.en, hex, `0x${hex}`],
+    description: it.descJa,
     caution: it.obtain === 0 ? undefined : OBTAIN_CAUTION[it.obtain],
   };
 }
@@ -126,11 +127,15 @@ export function validateItemId(id: number, options: ItemBoxOptions = {}): string
   return null;
 }
 
-/** その ID に書ける個数の上限。通常モードは area の上限、上級者モードは u16 の上限 */
-export function itemCountMax(area: ItemBoxArea, id: number, options: ItemBoxOptions = {}): number {
-  if (options.advanced) return ITEM_COUNT_SYSTEM_MAX;
+/** 通常モードの個数の上限（画面に出す値）。手持ちは最大数、箪笥は 999 */
+export function itemNormalCountMax(area: ItemBoxArea, id: number): number {
   const it = findItem(id);
   return it ? area.normalCountMax(it) : ITEM_COUNT_MAX;
+}
+
+/** その ID に書ける個数の上限。通常モードは area の上限、上級者モードは u16 の上限 */
+export function itemCountMax(area: ItemBoxArea, id: number, options: ItemBoxOptions = {}): number {
+  return options.advanced ? ITEM_COUNT_SYSTEM_MAX : itemNormalCountMax(area, id);
 }
 
 export function validateItemBoxCount(

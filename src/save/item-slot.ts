@@ -23,6 +23,8 @@ export type ItemOption = {
   caution?: string
   /** 検索で label のほかに部分一致させる語（英語名・16進の ID など） */
   keywords?: readonly string[]
+  /** 選択肢の下に小さく出す説明文 */
+  description?: string
 }
 
 /** 選択肢の見出しつきのまとまり。label がなければ見出しを出さない */

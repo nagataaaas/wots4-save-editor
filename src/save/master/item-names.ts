@@ -1,11 +1,12 @@
-// アイテムのマスターデータ。docs/save_format/datatable/item/item.csv の名前・obtain・max_stack と同じ内容
-// （ID 0x00〜0xF1、欠番なし。説明文は CSV にだけ持つ）。ほかのモジュールに依存しない。
+// アイテムのマスターデータ。docs/save_format/datatable/item/item.csv をビルド時に読み込む（表を二重に持たない）。
+// ID 0x00〜0xF1、欠番なし。ほかのモジュールに依存しない。
 //
-// - ja：日本語名。🟢 ゲーム内の表記のまま。同じ名前が複数の ID にあるもの（部品箱・茶器・伝説の魚など）は、
+// - ja・en：名前。🟢 ゲーム内の表記のまま。同じ名前が複数の ID にあるもの（部品箱・茶器・伝説の魚など）は、
 //   表示のときに itemDisplayName で ID を添えて見分ける
-// - en：英語版のゲーム内の表記 🟢
+// - descJa・descEn：説明文 🟢 ゲーム内の表記のまま
 // - obtain：0＝道具として手に入る、1＝その場で使う（料理屋の料理・宿）、2＝手に入る経路がない（未使用とみられる）🟢
 // - maxStack：手持ちの1枠にまとめて持てる最大数 🟢。ほとんど 1。箪笥はこの上限を超えて入る（[U] sample）
+import itemCsv from "../../../docs/save_format/datatable/item/item.csv?raw";
 
 /** 0＝道具として手に入る、1＝その場で使う、2＝手に入る経路がない */
 export type ItemObtain = 0 | 1 | 2;
@@ -14,6 +15,8 @@ export type ItemEntry = {
   id: number;
   ja: string;
   en: string;
+  descJa: string;
+  descEn: string;
   obtain: ItemObtain;
   maxStack: number;
 };
@@ -24,250 +27,73 @@ export const ITEM_OBTAIN_LABELS: Record<ItemObtain, string> = {
   2: "手に入る経路がない",
 };
 
-export const ITEMS: readonly ItemEntry[] = [
-  { id: 0x00, ja: "会談の手紙", en: "Meeting Invitation", obtain: 0, maxStack: 1 },
-  { id: 0x01, ja: "伯爵の寿司", en: "The Count's Sushi", obtain: 0, maxStack: 1 },
-  { id: 0x02, ja: "おにぎり", en: "Onigiri", obtain: 0, maxStack: 1 },
-  { id: 0x03, ja: "腐ったおにぎり", en: "Rotten Onigiri", obtain: 0, maxStack: 1 },
-  { id: 0x04, ja: "干物", en: "Dried Fish", obtain: 0, maxStack: 1 },
-  { id: 0x05, ja: "ひよこういろう", en: "Steamed Cake", obtain: 0, maxStack: 1 },
-  { id: 0x06, ja: "きのこ", en: "Mushroom", obtain: 0, maxStack: 1 },
-  { id: 0x07, ja: "毒きのこ", en: "Poison Mushroom", obtain: 0, maxStack: 1 },
-  { id: 0x08, ja: "阿修羅きのこ", en: "Asura Mushroom", obtain: 0, maxStack: 1 },
-  { id: 0x09, ja: "秘薬", en: "Medicine", obtain: 0, maxStack: 1 },
-  { id: 0x0a, ja: "技ノ書", en: "Moves Scroll", obtain: 0, maxStack: 1 },
-  { id: 0x0b, ja: "奥義ノ書", en: "Special Moves Scroll", obtain: 0, maxStack: 1 },
-  { id: 0x0c, ja: "秘奥義ノ書", en: "Legendary Moves Scroll", obtain: 0, maxStack: 1 },
-  { id: 0x0d, ja: "部品箱", en: "Parts Box (Blade)", obtain: 0, maxStack: 1 },
-  { id: 0x0e, ja: "部品箱", en: "Parts Box (Guard)", obtain: 0, maxStack: 1 },
-  { id: 0x0f, ja: "部品箱", en: "Parts Box (Grip)", obtain: 0, maxStack: 1 },
-  { id: 0x10, ja: "砥石", en: "Whetting Stone", obtain: 0, maxStack: 1 },
-  { id: 0x11, ja: "打ち粉", en: "Polishing Powder", obtain: 0, maxStack: 1 },
-  { id: 0x12, ja: "お酒", en: "Sake", obtain: 0, maxStack: 1 },
-  { id: 0x13, ja: "刀油", en: "Blade Oil", obtain: 0, maxStack: 1 },
-  { id: 0x14, ja: "お金袋小", en: "Money Bag (S)", obtain: 0, maxStack: 1 },
-  { id: 0x15, ja: "お金袋中", en: "Money Bag (M)", obtain: 0, maxStack: 1 },
-  { id: 0x16, ja: "お金袋大", en: "Money Bag (L)", obtain: 0, maxStack: 1 },
-  { id: 0x17, ja: "お金袋特大", en: "Money Bag (XL)", obtain: 0, maxStack: 1 },
-  { id: 0x18, ja: "がらくた", en: "Junk", obtain: 0, maxStack: 10 },
-  { id: 0x19, ja: "お宝", en: "Treasure", obtain: 0, maxStack: 5 },
-  { id: 0x1a, ja: "大根", en: "White Radish", obtain: 0, maxStack: 1 },
-  { id: 0x1b, ja: "百両箱", en: "100 Ryo Box", obtain: 0, maxStack: 1 },
-  { id: 0x1c, ja: "茶器", en: "Tea Set", obtain: 0, maxStack: 1 },
-  { id: 0x1d, ja: "人参", en: "Carrot", obtain: 0, maxStack: 1 },
-  { id: 0x1e, ja: "鬼辛子", en: "Red Pepper", obtain: 0, maxStack: 1 },
-  { id: 0x1f, ja: "たまご", en: "Egg", obtain: 0, maxStack: 1 },
-  { id: 0x20, ja: "プリセット目録", en: "Preset Book", obtain: 0, maxStack: 1 },
-  { id: 0x21, ja: "オレ流目録", en: "Style Book", obtain: 0, maxStack: 1 },
-  { id: 0x22, ja: "白紙目録", en: "Blank Book", obtain: 0, maxStack: 1 },
-  { id: 0x23, ja: "うめぼし（大）", en: "Umeboshi (L)", obtain: 0, maxStack: 1 },
-  { id: 0x24, ja: "うめぼし", en: "Umeboshi", obtain: 0, maxStack: 1 },
-  { id: 0x25, ja: "梅酒", en: "Plum Wine", obtain: 0, maxStack: 1 },
-  { id: 0x26, ja: "チョコレート", en: "Chocolate", obtain: 0, maxStack: 1 },
-  { id: 0x27, ja: "空き瓶", en: "Glass Bottle", obtain: 0, maxStack: 1 },
-  { id: 0x28, ja: "ワイン", en: "Wine Bottle", obtain: 0, maxStack: 1 },
-  { id: 0x29, ja: "くず鉄", en: "Scrap Metal", obtain: 0, maxStack: 999 },
-  { id: 0x2a, ja: "卸し鉄(おろしがね)", en: "Ground Metal", obtain: 0, maxStack: 999 },
-  { id: 0x2b, ja: "堂島鋼(どうじまはがね)", en: "Dojima Steel", obtain: 0, maxStack: 999 },
-  { id: 0x2c, ja: "緋緋色金(ひひいろかね)", en: "Hihiirokane", obtain: 0, maxStack: 999 },
-  { id: 0x2d, ja: "チップ", en: "Casino Chip", obtain: 0, maxStack: 1 },
-  { id: 0x2e, ja: "木札", en: "Wooden Tag", obtain: 0, maxStack: 1 },
-  { id: 0x2f, ja: "チラシ", en: "Flyer", obtain: 0, maxStack: 1 },
-  { id: 0x30, ja: "うなぎ丼", en: "Eel Bowl", obtain: 1, maxStack: 1 },
-  { id: 0x31, ja: "天丼", en: "Tempura Bowl", obtain: 1, maxStack: 1 },
-  { id: 0x32, ja: "鉄火丼", en: "Tuna Bowl", obtain: 1, maxStack: 1 },
-  { id: 0x33, ja: "熱燗", en: "Hot Sake", obtain: 1, maxStack: 1 },
-  { id: 0x34, ja: "ししゃも", en: "Willow Leaf Fish", obtain: 1, maxStack: 1 },
-  { id: 0x35, ja: "野沢菜", en: "Turnip", obtain: 1, maxStack: 1 },
-  { id: 0x36, ja: "里芋のにっころがし", en: "Stewed Taro", obtain: 1, maxStack: 1 },
-  { id: 0x37, ja: "刺身の盛り合わせ", en: "Sashimi Assortment", obtain: 1, maxStack: 1 },
-  { id: 0x38, ja: "マグロ", en: "Tuna", obtain: 1, maxStack: 1 },
-  { id: 0x39, ja: "アナゴ", en: "Sea Eel", obtain: 1, maxStack: 1 },
-  { id: 0x3a, ja: "海老", en: "Shrimp", obtain: 1, maxStack: 1 },
-  { id: 0x3b, ja: "玉子", en: "Cooked Egg", obtain: 1, maxStack: 1 },
-  { id: 0x3c, ja: "三色団子", en: "3 Flavor Dango", obtain: 1, maxStack: 1 },
-  { id: 0x3d, ja: "あんころもち", en: "Sweet Bean Mochi", obtain: 1, maxStack: 1 },
-  { id: 0x3e, ja: "ビッグステーキ", en: "Big Steak", obtain: 1, maxStack: 1 },
-  { id: 0x3f, ja: "骨付き肉", en: "Haunch of Meat", obtain: 1, maxStack: 1 },
-  { id: 0x40, ja: "ソーダ水", en: "Soda Water", obtain: 0, maxStack: 1 },
-  { id: 0x41, ja: "鮎の塩焼き", en: "Grilled Sweetfish", obtain: 1, maxStack: 1 },
-  { id: 0x42, ja: "南蛮炒め蕎麦", en: "Spicy Stir-fried Soba", obtain: 1, maxStack: 1 },
-  { id: 0x43, ja: "かけそば", en: "Hot Soba", obtain: 1, maxStack: 1 },
-  { id: 0x44, ja: "きつねそば", en: "Kitsune Soba", obtain: 1, maxStack: 1 },
-  { id: 0x45, ja: "たぬきそば", en: "Tanuki Soba", obtain: 1, maxStack: 1 },
-  { id: 0x46, ja: "月見そば", en: "Egg Soba", obtain: 1, maxStack: 1 },
-  { id: 0x47, ja: "お茶づけ", en: "Tea Rice", obtain: 1, maxStack: 1 },
-  { id: 0x48, ja: "冷や", en: "Cold Sake", obtain: 1, maxStack: 1 },
-  { id: 0x49, ja: "丼", en: "Rice Bowl", obtain: 2, maxStack: 1 },
-  { id: 0x4a, ja: "かけうどん", en: "Hot Udon", obtain: 1, maxStack: 1 },
-  { id: 0x4b, ja: "きつねうどん", en: "Kitsune Udon", obtain: 1, maxStack: 1 },
-  { id: 0x4c, ja: "たぬきうどん", en: "Tanuki Udon", obtain: 1, maxStack: 1 },
-  { id: 0x4d, ja: "月見うどん", en: "Egg Udon", obtain: 1, maxStack: 1 },
-  { id: 0x4e, ja: "饅頭", en: "Steamed Bun Cake", obtain: 1, maxStack: 1 },
-  { id: 0x4f, ja: "箸", en: "Chopsticks", obtain: 2, maxStack: 1 },
-  { id: 0x50, ja: "シロギス", en: "Whiting", obtain: 0, maxStack: 1 },
-  { id: 0x51, ja: "アナゴ", en: "Sea Eel", obtain: 0, maxStack: 1 },
-  { id: 0x52, ja: "ボラ", en: "Mullet", obtain: 0, maxStack: 1 },
-  { id: 0x53, ja: "マサバ", en: "Mackerel", obtain: 0, maxStack: 1 },
-  { id: 0x54, ja: "コイ", en: "Koi", obtain: 0, maxStack: 1 },
-  { id: 0x55, ja: "カツオ", en: "Bonito", obtain: 0, maxStack: 1 },
-  { id: 0x56, ja: "ハゼ", en: "Goby", obtain: 0, maxStack: 1 },
-  { id: 0x57, ja: "メバル", en: "Rock Fish", obtain: 0, maxStack: 1 },
-  { id: 0x58, ja: "カサゴ", en: "Scorpion Fish", obtain: 0, maxStack: 1 },
-  { id: 0x59, ja: "アジ", en: "Horse Mackerel", obtain: 0, maxStack: 1 },
-  { id: 0x5a, ja: "ヤマメ", en: "Japanese Salmon", obtain: 0, maxStack: 1 },
-  { id: 0x5b, ja: "マダイ", en: "Red Sea Bream", obtain: 0, maxStack: 1 },
-  { id: 0x5c, ja: "タコ", en: "Octopus", obtain: 0, maxStack: 1 },
-  { id: 0x5d, ja: "ニホンザリガニ", en: "Japanese Crayfish", obtain: 0, maxStack: 1 },
-  { id: 0x5e, ja: "アカヒトデ", en: "Red Starfish", obtain: 0, maxStack: 1 },
-  { id: 0x5f, ja: "伝説の魚", en: "Legendary Fish", obtain: 0, maxStack: 1 },
-  { id: 0x60, ja: "伝説の魚", en: "Legendary Fish", obtain: 0, maxStack: 1 },
-  { id: 0x61, ja: "伝説の魚", en: "Legendary Fish", obtain: 0, maxStack: 1 },
-  { id: 0x62, ja: "空き缶", en: "Tin Can", obtain: 0, maxStack: 1 },
-  { id: 0x63, ja: "錆びた空き缶", en: "Rusty Tin Can", obtain: 0, maxStack: 1 },
-  { id: 0x64, ja: "長靴", en: "Rubber Boots", obtain: 0, maxStack: 1 },
-  { id: 0x65, ja: "藁人形", en: "Straw Doll", obtain: 0, maxStack: 1 },
-  { id: 0x66, ja: "ウニ", en: "Sea Urchin", obtain: 0, maxStack: 1 },
-  { id: 0x67, ja: "おにぎり（梅）", en: "Onigiri (Sour Plum)", obtain: 0, maxStack: 1 },
-  { id: 0x68, ja: "おにぎり（鮭）", en: "Onigiri (Salmon)", obtain: 0, maxStack: 1 },
-  { id: 0x69, ja: "おにぎり（高菜）", en: "Onigiri (Takana Pickles)", obtain: 0, maxStack: 1 },
-  { id: 0x6a, ja: "おにぎり（昆布）", en: "Onigiri (Dried Seaweed)", obtain: 0, maxStack: 1 },
-  { id: 0x6b, ja: "朱美のにっころがし", en: "Akemi's Stewed Potatoes", obtain: 1, maxStack: 1 },
-  { id: 0x6c, ja: "秘蔵の熱燗", en: "Special Hot Sake", obtain: 1, maxStack: 1 },
-  { id: 0x6d, ja: "極上ワイン", en: "High Grade Wine", obtain: 0, maxStack: 1 },
-  { id: 0x6e, ja: "ビンテージワイン", en: "Vintage Wine", obtain: 0, maxStack: 1 },
-  { id: 0x6f, ja: "梅の間", en: "Ume Room", obtain: 1, maxStack: 0 },
-  { id: 0x70, ja: "竹の間", en: "Take Room", obtain: 1, maxStack: 0 },
-  { id: 0x71, ja: "松の間", en: "Matsu Room", obtain: 1, maxStack: 0 },
-  { id: 0x72, ja: "入院", en: "Hospitalized", obtain: 1, maxStack: 0 },
-  { id: 0x73, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x74, ja: "コイン", en: "Prize Chip", obtain: 0, maxStack: 9999 },
-  { id: 0x75, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x76, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x77, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x78, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x79, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x7a, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x7b, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x7c, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x7d, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x7e, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x7f, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x80, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x81, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x82, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x83, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x84, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x85, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x86, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x87, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x88, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x89, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x8a, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x8b, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x8c, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x8d, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x8e, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x8f, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x90, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x91, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x92, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x93, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x94, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x95, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x96, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x97, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x98, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x99, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x9a, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x9b, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x9c, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x9d, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x9e, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0x9f, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa0, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa1, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa2, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa3, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa4, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa5, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa6, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa7, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa8, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xa9, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xaa, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xab, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xac, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xad, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xae, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xaf, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb0, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb1, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb2, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb3, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb4, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb5, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb6, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb7, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb8, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xb9, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xba, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xbb, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xbc, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xbd, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xbe, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xbf, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xc0, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xc1, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xc2, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xc3, ja: "茶器", en: "Tea Set", obtain: 2, maxStack: 1 },
-  { id: 0xc4, ja: "ミミズ", en: "Earthworms", obtain: 0, maxStack: 10 },
-  { id: 0xc5, ja: "ゴカイ", en: "Sandworms", obtain: 0, maxStack: 10 },
-  { id: 0xc6, ja: "オキアミ", en: "Krill", obtain: 0, maxStack: 10 },
-  { id: 0xc7, ja: "エビ", en: "Shrimp", obtain: 0, maxStack: 10 },
-  { id: 0xc8, ja: "小魚", en: "Minnow", obtain: 0, maxStack: 10 },
-  { id: 0xc9, ja: "疑似餌", en: "Lure", obtain: 0, maxStack: 10 },
-  { id: 0xca, ja: "ねりエサ", en: "Organic Bait", obtain: 0, maxStack: 10 },
-  { id: 0xcb, ja: "もち", en: "Mochi", obtain: 0, maxStack: 10 },
-  { id: 0xcc, ja: "力ミミズ", en: "Super Earthworms", obtain: 0, maxStack: 10 },
-  { id: 0xcd, ja: "疲労に効く薬", en: "Energy Medicine", obtain: 2, maxStack: 1 },
-  { id: 0xce, ja: "熱燗", en: "Hot Sake", obtain: 2, maxStack: 1 },
-  { id: 0xcf, ja: "熱燗", en: "Hot Sake", obtain: 2, maxStack: 1 },
-  { id: 0xd0, ja: "熱燗", en: "Hot Sake", obtain: 2, maxStack: 1 },
-  { id: 0xd1, ja: "三色団子", en: "3 Flavor Dango", obtain: 2, maxStack: 1 },
-  { id: 0xd2, ja: "三色団子", en: "3 Flavor Dango", obtain: 2, maxStack: 1 },
-  { id: 0xd3, ja: "三色団子", en: "3 Flavor Dango", obtain: 2, maxStack: 1 },
-  { id: 0xd4, ja: "あんころもち", en: "Sweet Bean Mochi", obtain: 2, maxStack: 1 },
-  { id: 0xd5, ja: "あんころもち", en: "Sweet Bean Mochi", obtain: 2, maxStack: 1 },
-  { id: 0xd6, ja: "あんころもち", en: "Sweet Bean Mochi", obtain: 2, maxStack: 1 },
-  { id: 0xd7, ja: "鮎の塩焼き", en: "Grilled Sweetfish", obtain: 2, maxStack: 1 },
-  { id: 0xd8, ja: "鮎の塩焼き", en: "Grilled Sweetfish", obtain: 2, maxStack: 1 },
-  { id: 0xd9, ja: "鮎の塩焼き", en: "Grilled Sweetfish", obtain: 2, maxStack: 1 },
-  { id: 0xda, ja: "冷や", en: "Cold Sake", obtain: 2, maxStack: 1 },
-  { id: 0xdb, ja: "冷や", en: "Cold Sake", obtain: 2, maxStack: 1 },
-  { id: 0xdc, ja: "冷や", en: "Cold Sake", obtain: 2, maxStack: 1 },
-  { id: 0xdd, ja: "マグロ", en: "Tuna", obtain: 2, maxStack: 1 },
-  { id: 0xde, ja: "アナゴ", en: "Sea Eel", obtain: 2, maxStack: 1 },
-  { id: 0xdf, ja: "海老", en: "Shrimp", obtain: 2, maxStack: 1 },
-  { id: 0xe0, ja: "玉子", en: "Cooked Egg", obtain: 2, maxStack: 1 },
-  { id: 0xe1, ja: "玉子", en: "Cooked Egg", obtain: 2, maxStack: 1 },
-  { id: 0xe2, ja: "玉子", en: "Cooked Egg", obtain: 2, maxStack: 1 },
-  { id: 0xe3, ja: "玉子", en: "Cooked Egg", obtain: 2, maxStack: 1 },
-  { id: 0xe4, ja: "ビッグステーキ", en: "Big Steak", obtain: 2, maxStack: 1 },
-  { id: 0xe5, ja: "ビッグステーキ", en: "Big Steak", obtain: 2, maxStack: 1 },
-  { id: 0xe6, ja: "ビッグステーキ", en: "Big Steak", obtain: 2, maxStack: 1 },
-  { id: 0xe7, ja: "花束", en: "Flower Bouquet", obtain: 2, maxStack: 1 },
-  { id: 0xe8, ja: "花束", en: "Flower Bouquet", obtain: 0, maxStack: 1 },
-  { id: 0xe9, ja: "マグロ", en: "Tuna", obtain: 2, maxStack: 1 },
-  { id: 0xea, ja: "アナゴ", en: "Sea Eel", obtain: 2, maxStack: 1 },
-  { id: 0xeb, ja: "海老", en: "Shrimp", obtain: 2, maxStack: 1 },
-  { id: 0xec, ja: "玉子", en: "Cooked Egg", obtain: 2, maxStack: 1 },
-  { id: 0xed, ja: "拷問部屋の鍵", en: "Torture Chamber Key", obtain: 0, maxStack: 1 },
-  { id: 0xee, ja: "謎の鍵", en: "Mysterious Key", obtain: 0, maxStack: 1 },
-  { id: 0xef, ja: "お金袋特大", en: "Money Bag (XL)", obtain: 0, maxStack: 1 },
-  { id: 0xf0, ja: "西洋医学の水", en: "Western Medicine Water", obtain: 2, maxStack: 1 },
-  { id: 0xf1, ja: "疲無人参", en: "Stamina Carrot", obtain: 2, maxStack: 1 },
-];
+/** RFC 4180 の CSV を行・列に分ける（"..." の中のカンマ・改行・"" に対応） */
+export function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else if (c === '"') quoted = false;
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") {
+      row.push(field);
+      field = "";
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else field += c;
+  }
+  if (field !== "" || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function loadItems(text: string): ItemEntry[] {
+  const [header, ...rows] = parseCsv(text.replace(/^﻿/, ""));
+  const col = (name: string) => {
+    const i = header.indexOf(name);
+    if (i < 0) throw new Error(`item.csv に ${name} 列がありません`);
+    return i;
+  };
+  const c = {
+    id: col("id_dec"),
+    ja: col("name_ja"),
+    en: col("name_en"),
+    descJa: col("description_ja"),
+    descEn: col("description_en"),
+    obtain: col("obtain"),
+    maxStack: col("max_stack"),
+  };
+  return rows
+    .filter((r) => r.length > 1 && r[c.id] !== "65535") // 0xFFFF は「なし」で、アイテムではない
+    .map((r) => {
+      const obtain = Number(r[c.obtain]);
+      if (obtain !== 0 && obtain !== 1 && obtain !== 2) throw new Error(`item.csv の obtain が不正です: ${r[c.id]}`);
+      return {
+        id: Number(r[c.id]),
+        ja: r[c.ja],
+        en: r[c.en],
+        descJa: r[c.descJa],
+        descEn: r[c.descEn],
+        obtain,
+        maxStack: Number(r[c.maxStack]),
+      };
+    });
+}
+
+export const ITEMS: readonly ItemEntry[] = loadItems(itemCsv);
 
 const BY_ID = new Map(ITEMS.map((it) => [it.id, it]));
 
