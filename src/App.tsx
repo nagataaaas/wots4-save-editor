@@ -22,7 +22,7 @@ export default function App() {
           <TooltipProvider>
             <SidebarProvider>
               <AppSidebar active={active} onSelect={setActive} />
-              <SidebarInset>
+              <SidebarInset className="min-w-0">
                 <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
                   <SidebarTrigger className="-ml-1" />
                   <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
@@ -31,7 +31,7 @@ export default function App() {
                     {section.label}
                   </h1>
                 </header>
-                <div className="mx-auto w-full max-w-5xl p-4">
+                <div className={`mx-auto w-full p-4 ${section.wide ? 'min-w-0' : 'max-w-5xl'}`}>
                   {Page ? <Page /> : <SectionPlaceholder section={section} />}
                 </div>
               </SidebarInset>

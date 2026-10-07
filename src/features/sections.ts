@@ -1,4 +1,4 @@
-import { Binary, Flag, Moon, Package, ScrollText, Store, Sword, Swords, User, type LucideIcon } from 'lucide-react'
+import { Binary, Flag, Moon, Package, ScrollText, Store, Sword, Swords, User, Workflow, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
 // 各領域の確度は docs/save_format/README.md §3 と各 chunk を参照（chunk 名を note に残す）。
@@ -12,6 +12,7 @@ export type SectionId =
   | 'chest'
   | 'valuables'
   | 'scenario'
+  | 'event-chart'
   | 'yobai'
   | 'styles'
   | 'ore-ryu'
@@ -23,6 +24,8 @@ export type Section = {
   label: string
   /** 対応する解析ドキュメントの chunk（docs/save_format/chunks/{slug}） */
   note: string
+  /** 横に長い画面。本文の幅の上限（max-w-5xl）を外す */
+  wide?: boolean
 }
 
 /** サイドバー直下に並ぶ項目（アイコンつき） */
@@ -70,6 +73,7 @@ export const sectionGroups: SectionGroup[] = [
         ],
       },
       { id: 'scenario', label: 'シナリオ', icon: Flag, note: 'date-location・event-chart・factions 🔶 日数・時間帯、イベントの状態、勢力の記録' },
+      { id: 'event-chart', label: 'イベントチャート', icon: Workflow, note: 'event-chart イベントの状態とチャート表示の記録', wide: true },
       { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit 夜の約束（場所・人物）と夜這いの記録 🔶' },
       { id: 'styles', label: '流派', icon: ScrollText, note: 'styles 🔶 0x018BC0 付近' },
       { id: 'ore-ryu', label: '俺流', icon: Swords, note: 'custom-style ❓ U-6' },

@@ -126,10 +126,7 @@ import {
 } from "@/save/scenario-date";
 import {
   EVENT_NAMES,
-  EVENT_RECORDS,
-  EVENT_RECORDS_SEEN,
   EVENT_RECORD_OFFSET,
-  EVENT_STATES,
   EVENT_STATE_OFFSET,
   EVENT_GAP_INDICES,
   EVENT_GAP_NOTES,
@@ -144,6 +141,7 @@ import {
   type EventEntry,
   type EventsView,
 } from "@/save/scenario-events";
+import { recordOptions, stateOptions } from "./event-options";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -982,28 +980,6 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
       </CardContent>
     </Card>
   );
-}
-
-/** 🟢 状態の値は 00〜05・FF で全部なので、上級者モードでも選択肢は同じ */
-const stateOptions: SelectOption[] = EVENT_STATES.map((s) => ({
-  value: String(s.value),
-  label: `${formatHex2(s.value)} ${s.label}${s.confirmed ? "" : "（未確認）"}`,
-}));
-
-function recordOptions(advanced: boolean): SelectOption[] {
-  const options: SelectOption[] = EVENT_RECORDS.map((r) => ({
-    value: String(r.value),
-    label: `${formatHex2(r.value)} ${r.label}`,
-  }));
-  // 上級者モードでは、記録で見たがチャート表示への効き方を確かめていない値（05 など）も選べるようにする
-  if (advanced)
-    for (const r of EVENT_RECORDS_SEEN)
-      options.push({
-        value: String(r.value),
-        label: `${formatHex2(r.value)} ${r.label}`,
-        group: "未確認の値",
-      });
-  return options;
 }
 
 /** イベントの状態。view が null ならセーブ未読み込み */
