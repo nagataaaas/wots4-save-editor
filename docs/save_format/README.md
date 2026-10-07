@@ -134,6 +134,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x018BC0` 付近 | ❓            | [styles](chunks/styles/README.md)                 | 通常流派                                       | 🔶                            |
 | `0x019200` 付近 | ❓            | [custom-style](chunks/custom-style/README.md)     | 俺流                                           | ✅位置 ／ ❓構造（U-6）        |
 | `0x01A6B2`      | `0x01AD7B`   | [belt-copy](chunks/belt-copy/README.md)           | 帯刀武器のコピー                               | 🔶                            |
+| `0x03AAD4`      | `0x03AB5B`   | [appearance](chunks/appearance/README.md)         | 主人公の見た目（人物・肌色・性別・体型・身長・部品の番号） | ✅肌色・体型・身長 ／ 🟢部品 ／ 一部 ❓ |
 | `0x03AB5C`      | `0x03AB7A`   | [appearance](chunks/appearance/README.md)         | 容姿の解放ビット（服の番号 0〜241 ごとに1ビット） | ✅位置 ／ 🟢服の対応          |
 | `0x043318`      | `0x043381`   | [unlocks](chunks/unlocks/README.md)               | 特典解除の状態（確認したセーブ、1 B × 106）    | 先頭16件・101 ✅ [U]／ほか 🔶 U-17 |
 | `0x0433A6`      | `0x0433A7`   | [occupation](chunks/occupation/README.md)         | クリアしたなりわいの数                         | 🔶                            |
@@ -160,7 +161,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 治安                     | 0〜99、初期値50。とても良い 90〜99／良い 70〜89／普通 30〜69／悪い 10〜29／とても悪い 0〜9。周回をまたいで引き継がれる。[date-location](chunks/date-location/README.md) の `0x0015` が候補 🔶 |
 | 難易度                   | 易しい・普通（最初から）、難しい・超難しい（特典で解放）。変更は周回開始時だけ。セーブスロット一覧に表示されるのでヘッダ付近にあると推定 🔶。値は0〜3の列挙値と推定 🔶 |
-| 外見                     | 現在の体型 `0x3AADD`・身長 `0x3AAE0`（float32 LE）・肌色 `0x3AAD8` は ✅ [U]（U-18、[appearance](chunks/appearance/README.md)）。顔・髪型などの保存位置は ❓ |
+| 外見                     | 現在の体型 `0x3AADD`・身長 `0x3AAE0`（float32 LE）・肌色 `0x3AAD8` は ✅ [U]（U-18、[appearance](chunks/appearance/README.md)）。人物の番号 `0x3AAD4`、顔・髪型・服の部品の番号 `0x3AAE4`〜（12 B × 10）は 🟢。部品の書き込みの反映は未確認（U-19） |
 | 斬殺数（全体）           | 流派ごとの斬殺数は存在する。[stats](chunks/stats/README.md) の 0x0BC8・0x0BCC が候補                                                                                 |
 | エンディング記録・周回数 | ❓                                                                                                                                                                    |
 | 特典（PC版）             | ❓（PS3版は §4）                                                                                                                                                      |
