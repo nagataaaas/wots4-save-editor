@@ -65,6 +65,7 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
   `dlc` は DLC の番号（1＝新撰組、2＝ドナドナ・さよ）。特典解除で手に入る服はこの表にない（`unlock/unlock.csv`）
 - `appearance/person.csv`：主人公設定で選べる人物（容姿）の88件 🟢。ID は人物の番号（セーブの `0x3AAD4`）で、連番ではない。`height` はその人物の身長（cm、ふつうのとき）。
   `upper`・`lower`・`face`・`hair`・`feet`・`gauntlet`（手甲）・`leggings`（脚絆）・`apron`（前掛け）・`cape`（合羽）はその人物の部品の番号（各部品の CSV の ID。空欄はなし）。
+  `gender` は性別（`0x3AADC` の 0＝男、1＝女）、`second_id` は `0x3AAD6` に入るとみられる値（空欄＝`FFFF`）🔶、`hair_color` はその人物の髪の色（`0x3AADA`）。
   88件すべてが主人公設定の一覧に出るかは 🔶
 - `appearance/face.csv`・`hair.csv`・`upper.csv`・`lower.csv`・`feet.csv`・`extra.csv`：主人公の見た目の部品。全行 🟢。番号は部品の種類ごとに別の空間。
   `gender` は使える性別（男・女。空欄は指定なし）、`unlock_id` は解除に必要な特典（`unlock/unlock.csv` の ID。空欄は不要）、`dlc` は DLC の番号、
