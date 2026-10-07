@@ -7,7 +7,13 @@ import { recordOptions, stateOptions } from "@/features/scenario/event-options";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatHex2 } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
-import { CHART_BOX_LOOK_LABELS, chartBoxLook, type ChartBoxLook, type ChartNow } from "@/save/event-chart-view";
+import {
+  CHART_BOX_LOOK_LABELS,
+  chartBoxLook,
+  hiddenRouteEntered,
+  type ChartBoxLook,
+  type ChartContext,
+} from "@/save/event-chart-view";
 import { CHART_NODES } from "@/save/master/chart-nodes";
 import {
   BOX_HEIGHT,
@@ -22,6 +28,7 @@ import {
   type ChartBox,
   type ChartBoxKind,
 } from "@/save/master/event-chart-layout";
+import { readRouteCandidates } from "@/save/route-candidates";
 import { readDate } from "@/save/scenario-date";
 import {
   EVENT_NAMES,
@@ -63,7 +70,9 @@ const KIND_COLORS: Readonly<Record<ChartBoxKind, { fill: string; stroke: string;
 };
 const MASKED = { fill: "#7A7A7A", stroke: "#111111", text: "#D4D4D4" };
 
-type Read = { events: EventsView; now: ChartNow } | { error: string } | null;
+type Read = { events: EventsView; ctx: ChartContext } | { error: string } | null;
+
+const NO_SAVE: ChartContext = { now: null, hiddenRouteEntered: false };
 
 export function EventChartPage() {
   const { save } = useSave();
@@ -73,8 +82,16 @@ export function EventChartPage() {
     try {
       const b = save.working;
       const date = readDate(b);
-      // 日付が検証に落ちたときは、時間帯の経過による失敗の印を付けない
-      return { events: readEvents(b), now: date.problem ? null : { day: date.day, slot: date.slot } };
+      const events = readEvents(b);
+      const route = readRouteCandidates(b);
+      return {
+        events,
+        ctx: {
+          // 日付が検証に落ちたときは、時間帯の経過による失敗の印を付けない
+          now: date.problem ? null : { day: date.day, slot: date.slot },
+          hiddenRouteEntered: hiddenRouteEntered(events.entries, route.hiddenProblem ? null : route.hidden),
+        },
+      };
     } catch (e) {
       return { error: errorMessage(e) };
     }
@@ -104,13 +121,14 @@ export function EventChartPage() {
           <CardTitle>イベントチャート</CardTitle>
           <CardDescription>
             ゲームの「状況」のチャートを、イベントの状態（0x36A8＋添字）とチャート表示の記録（0x3838＋添字）から描いたものです。
-            グレーの「？？？」は名前が隠れる枠、赤い斜線は失敗です。隠しルートの枠ごと出ないものは点線で示します。
+            グレーの「？？？」は名前が隠れる枠、赤い斜線は失敗です。隠しルートに入ったことがない（隠しルートのフラグ 0x378E が 0 で、三姉妹見参の状態も記録も 04 でない）ときは、
+            ゲームでは隠しルートの枠ごと出ないので、点線で示します。
             線は出し分けの規則が分からないため、常に全部描いています。状態が 01〜03 のときの見え方は未確認です（要ゲーム内確認）。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <Legend />
-          <ChartCanvas key={save?.loadId ?? 0} events={result?.events ?? null} now={result?.now ?? null} />
+          <ChartCanvas key={save?.loadId ?? 0} events={result?.events ?? null} ctx={result?.ctx ?? NO_SAVE} />
         </CardContent>
       </Card>
     </div>
@@ -144,7 +162,7 @@ function Legend() {
   );
 }
 
-function ChartCanvas({ events, now }: { events: EventsView | null; now: ChartNow }) {
+function ChartCanvas({ events, ctx }: { events: EventsView | null; ctx: ChartContext }) {
   const [selected, setSelected] = useState<number | null>(null);
   const selectedBox = CHART_BOXES.find((b) => b.node === selected);
 
@@ -154,10 +172,10 @@ function ChartCanvas({ events, now }: { events: EventsView | null; now: ChartNow
         CHART_BOXES.map((b) => {
           const id = boxEventId(b);
           const entry = events && id !== null ? (events.entries[id] ?? null) : null;
-          return [b.node, chartBoxLook(entry, now, b)];
+          return [b.node, chartBoxLook(entry, ctx, b)];
         }),
       ),
-    [events, now],
+    [events, ctx],
   );
 
   return (
