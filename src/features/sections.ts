@@ -69,7 +69,7 @@ export const sectionGroups: SectionGroup[] = [
         icon: Package,
         sections: [
           { id: 'tools', label: '所持', note: 'items（手持ち 8 B × 10件）' },
-          { id: 'chest', label: '箪笥', note: 'items（箪笥の通常アイテム）' },
+          { id: 'chest', label: '箪笥', note: 'items（箪笥の通常アイテム 8 B × 80件）' },
           { id: 'valuables', label: '重要品', note: 'items（貴重品 8 B × 10件。[TS] は先頭4件＝製錬用の鉄のみ編集）' },
         ],
       },

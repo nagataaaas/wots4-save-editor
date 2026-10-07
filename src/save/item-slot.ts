@@ -21,6 +21,8 @@ export type ItemOption = {
   label: string
   /** 確定していない点。あれば、この ID が入った枠に警告として出す */
   caution?: string
+  /** 検索で label のほかに部分一致させる語（英語名・16進の ID など） */
+  keywords?: readonly string[]
 }
 
 /** 選択肢の見出しつきのまとまり。label がなければ見出しを出さない */
@@ -50,9 +52,9 @@ export type ItemSlot = {
   warning: string | null
 }
 
-export function validateItemCount(count: number): string | null {
+export function validateItemCount(count: number, max: number = ITEM_COUNT_MAX): string | null {
   if (!Number.isInteger(count)) return '整数を入力してください'
-  if (count < 1 || count > ITEM_COUNT_MAX) return `1〜${ITEM_COUNT_MAX} の範囲で入力してください`
+  if (count < 1 || count > max) return `1〜${max} の範囲で入力してください`
   return null
 }
 
@@ -64,14 +66,20 @@ export function readItemSlotRaw(bytes: Uint8Array, offset: number): RawItemSlot 
 
 /**
  * 枠の ID と個数（+0x00〜+0x03）を書く。+0x04〜+0x07 は変えない。
- * ID の妥当性は呼び出し側で検証する。個数は「なし」なら 0、それ以外は 1〜ITEM_COUNT_MAX。
+ * ID の妥当性は呼び出し側で検証する。個数は「なし」なら 0、それ以外は 1〜max（既定は ITEM_COUNT_MAX）。
  * 「なし」（0xFFFF）の個数を 0 にするのは 🔶 推測（空き枠の個数は 0 と推定。実セーブで未確認）。
  */
-export function writeItemSlotRaw(bytes: Uint8Array, offset: number, id: number, count: number): void {
+export function writeItemSlotRaw(
+  bytes: Uint8Array,
+  offset: number,
+  id: number,
+  count: number,
+  max: number = ITEM_COUNT_MAX,
+): void {
   if (id === EMPTY_ID) {
     if (count !== 0) throw new RangeError('「なし」の個数は 0 です')
   } else {
-    const countProblem = validateItemCount(count)
+    const countProblem = validateItemCount(count, max)
     if (countProblem) throw new RangeError(countProblem)
   }
   writeU16(bytes, offset, id)

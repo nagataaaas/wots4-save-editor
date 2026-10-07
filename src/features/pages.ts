@@ -3,7 +3,7 @@ import { BeltPage } from '@/features/belt/belt-page'
 import { EventChartPage } from '@/features/event-chart/event-chart-page'
 import { HeroPage } from '@/features/hero/hero-page'
 import { ScenarioPage, WorldPage } from '@/features/scenario/scenario-page'
-import { ToolsPage } from '@/features/tools/tools-page'
+import { ChestPage, ToolsPage } from '@/features/tools/tools-page'
 import { ValuablesPage } from '@/features/valuables/valuables-page'
 import { YobaiPage } from '@/features/yobai/yobai-page'
 import type { SectionId } from '@/features/sections'
@@ -13,6 +13,7 @@ export const pages: Partial<Record<SectionId, ComponentType>> = {
   hero: HeroPage,
   belt: BeltPage,
   tools: ToolsPage,
+  chest: ChestPage,
   valuables: ValuablesPage,
   world: WorldPage,
   scenario: ScenarioPage,

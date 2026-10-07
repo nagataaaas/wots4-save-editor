@@ -43,6 +43,11 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 - `event/event.csv` の `name_en`：英語版のゲーム内の表記
 - `event/chart-node.csv`：全行 🟢。`name_ja`・`name_en` はチャートの枠に出る名前で、同じイベントの別の枠は名前が違うことがある（39 町の薬師＝小公女倒れる、30 闇討ち ～小暮捜索）。
   `event_id` はそのノードのイベントの通し番号（`event/event.csv` の ID）。イベントに当たらないノードは空欄
+- `item/item.csv`：ID 0x00〜0xF1 の全242件（欠番なし）と 0xFFFF。`name_ja`・`name_en`・`description_ja`・`description_en` はゲーム内の表記のまま 🟢
+  （同じ名前が複数の ID にあるもの（部品箱・茶器・伝説の魚・熱燗など）も表記のまま。ゲーム内で見分けた違いは `備考` に書く）。
+  `obtain` は 0＝道具として手に入る、1＝その場で使う（料理屋の料理・宿）、2＝手に入る経路がない（未使用とみられる）🟢。
+  `max_stack` は手持ちの1枠にまとめて持てる最大数 🟢（ほとんど 1。がらくた 10、お宝 5、鉄 999、コイン 9999、エサ 10、宿 0）。
+  箪笥の枠はこの数を超えて入る（[U] sample）。コードは `src/save/master/item-names.ts` に名前・`obtain`・`max_stack` を持つ
 - `npc/npc-name.csv`：全行 🟢。`sex` は m＝男、f＝女。`group` は unique＝固有の名前（1〜215）、placeholder＝勢力ごとの仮の名前（1001〜6002）、
   female＝町の女性の名前の候補（7001〜7150・8001〜8200）。約束の相手の町の人の名前は female から選ばれる 🔶。コードは `src/save/master/npc-names.ts` に同じ内容を持つ
 - `source`（パーツ・銘・魅力・完成武器・アイテム）：出典。`CT`＝Cheat Engine テーブル、`TS`＝[TS] の定義、`U`＝ユーザーのゲーム内確認、`SE-BBS`＝PS3版の掲示板。複数あるときは `;` で区切る
@@ -110,8 +115,8 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 
 ### 3.3 アイテム
 
-`item/item.csv` と `item/valuable.csv` は同じ ID 空間 🔶（貴重品 0x29〜0x2E は通常アイテムの ID の間にある。0x0000 は両方にある）。
-0x73〜0xC3 の多くは表示が「茶器」になる未実装の ID 🔶。
+`item/item.csv` と `item/valuable.csv` は同じ ID 空間 🟢（`item.csv` は貴重品の ID も含む全件。`valuable.csv` は重要品の画面で扱う ID の一覧）。
+0x73・0x75〜0xC3 は 0x1C の茶器の複製で、手に入る経路がない 🟢。
 
 ### 3.4 そのほか
 
