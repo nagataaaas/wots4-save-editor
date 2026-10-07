@@ -56,6 +56,34 @@ function SelectTrigger({
   )
 }
 
+/**
+ * 選択中の項目が一覧のスクロール範囲の外にあれば、中央に来るようにスクロールする。
+ * base-ui はトリガーに項目を重ねられるときだけ選択中の項目を見せ、画面の空きが足りないときやタッチで開いたときは先頭のまま開くため
+ */
+function scrollSelectedIntoView(popup: HTMLElement) {
+  const item = popup.querySelector<HTMLElement>("[data-slot=select-item][data-selected]")
+  if (!item) return
+  let scroller: HTMLElement | null = item.parentElement
+  while (scroller && scroller !== popup && scroller.scrollHeight <= scroller.clientHeight) {
+    scroller = scroller.parentElement
+  }
+  if (!scroller || scroller.scrollHeight <= scroller.clientHeight) return
+  const s = scroller.getBoundingClientRect()
+  const i = item.getBoundingClientRect()
+  if (i.top >= s.top && i.bottom <= s.bottom) return
+  scroller.scrollTop += i.top - s.top - (s.height - i.height) / 2
+}
+
+// 開いた直後の位置決め（max-height の反映、位置合わせをやめたときの組み直し）はいつ終わるか決まっていないので、
+// 開いてから 0.5 秒は大きさが変わるたびに確かめる（見えていれば何もしない）。
+// 描画ごとに作り直すと開くたび以外にも呼ばれ、ユーザーのスクロールを戻してしまうので固定の関数にする
+function selectPopupRef(el: HTMLDivElement | null) {
+  if (!el) return
+  const observer = new ResizeObserver(() => scrollSelectedIntoView(el))
+  observer.observe(el)
+  setTimeout(() => observer.disconnect(), 500)
+}
+
 function SelectContent({
   className,
   children,
@@ -85,6 +113,7 @@ function SelectContent({
           data-align-trigger={alignItemWithTrigger}
           className={cn("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
           {...props}
+          ref={selectPopupRef}
         >
           <SelectScrollUpButton />
           <SelectPrimitive.List>{children}</SelectPrimitive.List>

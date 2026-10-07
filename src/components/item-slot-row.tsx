@@ -191,7 +191,7 @@ export function ItemSlotRow({
             <ChevronsUpDown className="opacity-50" />
           </PopoverTrigger>
           <PopoverContent className="w-(--anchor-width) min-w-64 p-0" align="start">
-            <Command filter={substringFilter}>
+            <Command filter={substringFilter} defaultValue={slot ? String(slot.id) : undefined}>
               <CommandInput placeholder={`${noun}を検索（名前・読み・英語名・ID）`} />
               <CommandList>
                 <CommandEmpty>見つかりません</CommandEmpty>

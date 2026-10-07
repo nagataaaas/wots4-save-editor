@@ -104,7 +104,7 @@ export function SearchSelectRow({
           <ChevronsUpDown className="opacity-50" />
         </PopoverTrigger>
         <PopoverContent className="w-(--anchor-width) p-0" align="start">
-          <Command filter={substringFilter}>
+          <Command filter={substringFilter} defaultValue={value ?? undefined}>
             <CommandInput placeholder={searchPlaceholder} />
             <CommandList>
               <CommandEmpty>見つかりません</CommandEmpty>
