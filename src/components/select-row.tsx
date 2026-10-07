@@ -51,7 +51,7 @@ export function SelectRow({ label, offset, badges, value, currentLabel, options,
   const listed = value === null || options.some((o) => o.value === value)
   // トリガーに出す名前（Base UI の Select は閉じている間は選択肢を描かないので、items から引く）
   const items: Record<string, ReactNode> = {}
-  for (const o of options) items[o.value] = <OptionContent option={o} />
+  for (const o of options) items[o.value] = <OptionContent option={o.selectedLabel ? { ...o, label: o.selectedLabel } : o} />
   if (!listed && value !== null) items[value] = `${currentLabel ?? value}（現在の値）`
 
   return (

@@ -171,16 +171,25 @@ export const OCCUPATION_FLAG_OFFSETS: readonly number[] = Object.keys(OCCUPATION
  */
 export const SHIRUBE_FLAG_OFFSETS: readonly number[] = [27, 28, 29, 30, 31].map(occupationFlagOffset);
 
-export type ShirubeState = { key: string; label: string; group?: string; values: readonly number[] };
+export type ShirubeState = {
+  key: string;
+  label: string;
+  group?: string;
+  /** 選んだあとの欄に出す名前 */
+  fullLabel: string;
+  values: readonly number[];
+};
 
 export const SHIRUBE_STATES: readonly ShirubeState[] = [
-  { key: "none", label: "組んでいない", values: [0, 0, 0, 0, 0] },
-  { key: "partner", label: "組んでいる", values: [1, 0, 0, 0, 0] },
+  { key: "none", label: "組んでいない", fullLabel: "組んでいない", values: [0, 0, 0, 0, 0] },
+  { key: "partner", label: "組んだ", fullLabel: "組んだ", values: [1, 0, 0, 0, 0] },
+  // 受注しても 27〜31 は変わらない（🟢 受注で書くのは 27＝1 だけ）。受注中かどうかは 0x45F4E にあるので、ここには出さない
   ...SHIRUBE_JOBS.flatMap((job, i) =>
     ([1, 2] as const).map((result) => ({
       key: `${209 + i}-${result}`,
-      label: `組んでいる・「${job}」を${result === 1 ? "成功" : "失敗を成功扱いにしてもらった（報酬なし）"}`,
-      group: "終えたばかり（次に汁部と話すと消える）",
+      label: result === 1 ? "成功" : "失敗を成功扱いにしてもらった",
+      group: `「${job}」`,
+      fullLabel: `「${job}」${result === 1 ? "成功" : "失敗を成功扱いにしてもらった"}`,
       values: [1, ...[0, 1, 2, 3].map((j) => (j === i ? result : 0))],
     })),
   ),

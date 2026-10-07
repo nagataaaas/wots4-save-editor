@@ -266,9 +266,9 @@ function ShirubeRow({ view, write }: { view: TownsfolkView | null; write: (m: (b
       }
       value={values === null ? null : (state?.key ?? "current")}
       currentLabel={values ? `${values.join("・")} 表にない組み合わせ` : undefined}
-      options={SHIRUBE_STATES.map((s) => ({ value: s.key, label: s.label, group: s.group }))}
+      options={SHIRUBE_STATES.map((s) => ({ value: s.key, label: s.label, group: s.group, selectedLabel: s.fullLabel }))}
       problem={view?.problem ?? null}
-      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります`}
+      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります。受注しても 27〜31 は変わらない（受注中は「受注中のなりわい」0x45F4E）ので、受注は選択肢にありません。どれを選んでも 5 B すべてを書きます`}
       hint={`${jobList([209, 210, 211, 212])} の順に頼まれます。どこまで進んだかはこの欄ではなく、なりわいごとの状態で決まります（🔶 位置は未確認）`}
       onChange={(key) => write((b) => writeShirubeState(b, key))}
     />

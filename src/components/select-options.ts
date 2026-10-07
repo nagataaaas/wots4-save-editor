@@ -12,6 +12,8 @@ export type SelectOption = {
   icon?: LucideIcon | null
   group?: string
   keywords?: readonly string[]
+  /** 選んだあとの欄に出す名前（group の見出しがないと分からない label のとき）。SelectRow で使う */
+  selectedLabel?: string
 }
 
 export type OptionGroup = { name: string | undefined; items: SelectOption[] }
