@@ -98,7 +98,7 @@ export const sectionGroups: SectionGroup[] = [
   },
   {
     label: '解析',
-    items: [{ id: 'raw', label: '生データ', icon: Binary, note: '未確認領域のバイト表示' }],
+    items: [{ id: 'raw', label: '生データ', icon: Binary, note: 'ファイル全体の16進表示（README §3 の領域で色分け）・差分・検索。書き換えは上級者モードのみ' }],
   },
 ]
 

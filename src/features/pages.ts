@@ -6,6 +6,7 @@ import { OccupationPage } from '@/features/occupation/occupation-page'
 import { ScenarioPage, WorldPage } from '@/features/scenario/scenario-page'
 import { ChestPage, ToolsPage } from '@/features/tools/tools-page'
 import { AccessoriesPage, AppearancePage, UnlocksPage } from '@/features/unlocks/unlocks-page'
+import { RawPage } from '@/features/raw/raw-page'
 import { ValuablesPage } from '@/features/valuables/valuables-page'
 import { YobaiPage } from '@/features/yobai/yobai-page'
 import type { SectionId } from '@/features/sections'
@@ -25,4 +26,5 @@ export const pages: Partial<Record<SectionId, ComponentType>> = {
   'event-chart': EventChartPage,
   occupation: OccupationPage,
   yobai: YobaiPage,
+  raw: RawPage,
 }
