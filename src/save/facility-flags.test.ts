@@ -4,7 +4,13 @@
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
-import { FACILITY_FLAGS, readFacilityFlags, writeFacilityFlag } from './facility-flags'
+import {
+  FACILITY_FLAGS,
+  facilitiesReadyForLightOfHope,
+  facilitySlotEvent,
+  readFacilityFlags,
+  writeFacilityFlag,
+} from './facility-flags'
 
 /** sample/S4-DATA_03（病院＝開・語学所＝開・カジノ＝閉）の値 */
 const CHANGED = [1, 1, 1]
@@ -64,6 +70,34 @@ describe('施設のフラグ chunks/facilities', () => {
     expect(() => writeFacilityFlag(b, FACILITY_FLAGS.length, 0, { advanced: false })).toThrow(RangeError)
     writeFacilityFlag(b, 0, 2, { advanced: true })
     expect(b[0x375d]).toBe(2)
+  })
+
+  it('🟢 2日目の各枠で、値によって起きるイベントが入れ替わる', () => {
+    const slotsOf = (i: number) => FACILITY_FLAGS[i].slots.map((s) => [s.when0, s.when1])
+    expect(slotsOf(0)).toEqual([
+      ['西洋医学お断り', '病院廃業の企て'],
+      ['病院占拠事件', '祝 病院開業'],
+    ])
+    expect(slotsOf(1)).toEqual([
+      ['ライジングサン', 'カジノ再建を急げ'],
+      ['カジノを破壊せよ', 'カジノ再建断固阻止'],
+      ['運命のルーレット', '伯爵に刺激を'],
+    ])
+    expect(slotsOf(2)).toEqual([
+      ['講師ご到着', '語学所開設'],
+      ['語学無用', '講師を亡き者に'],
+    ])
+    const hospitalShogunate = FACILITY_FLAGS[0].slots[0]
+    expect(facilitySlotEvent(hospitalShogunate, 0)).toBe('西洋医学お断り')
+    expect(facilitySlotEvent(hospitalShogunate, 1)).toBe('病院廃業の企て')
+    expect(facilitySlotEvent(hospitalShogunate, 2)).toBeNull()
+  })
+
+  it('🟢 希望の光には病院・語学所が開き、カジノが閉じている（3つとも 1）必要がある', () => {
+    const view = readFacilityFlags(makeSave(CHANGED))
+    expect(facilitiesReadyForLightOfHope(view.values)).toBe(true)
+    expect(facilitiesReadyForLightOfHope(readFacilityFlags(makeSave(INITIAL)).values)).toBe(false)
+    expect(facilitiesReadyForLightOfHope([1, 0, 1])).toBe(false)
   })
 
   it('読み出し→書き戻しでバイト列が一致する', () => {

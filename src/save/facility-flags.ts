@@ -13,6 +13,12 @@
 // 3つとも 0 が初期状態（病院・語学所は閉、カジノは開）。
 // 03 の周回では施設のイベントの状態 A（添字 13〜27）が 00（未発生）なので、前の周回から引き継がれた値と考えられる（🔶 chunks/facilities）。
 //
+// 🟢 値を変える場面・値で分かれるイベント（chunks/facilities「ゲーム側の仕様」）：
+//   - 2日目の各枠は、施設の値で起きるイベントが入れ替わる（FACILITY_FLAGS の slots）
+//   - 隠しルートでは、病院が 1 なら再起の望みで「英国の病院に連れて行こう」が出る。語学所が 1 なら闇討ちで
+//     「赤城のようになりたくないのか？」が出る。カジノは前の周回から引き継がれ、2日目夕までに変わらない
+//   - 希望の光に進むには、病院・語学所が開き（1）、カジノが閉じている（1）必要がある（FACILITY_FLAGS の lightOfHope）
+//
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
@@ -20,32 +26,69 @@ import { checkLayout } from "./hero";
 /** 1 の意味。close＝1 で閉じる、open＝1 で開く */
 export type FacilityFlagMeaning = "close" | "open";
 
+/** 🟢 2日目の1つの枠。施設の値が 0 のとき when0、1 のとき when1 のイベントが起きる */
+export type FacilitySlot = {
+  /** 枠（勢力・時間帯） */
+  label: string;
+  when0: string;
+  when1: string;
+};
+
 export type FacilityFlag = {
   offset: number;
   label: string;
   note: string;
   meaning: FacilityFlagMeaning;
+  /** 🟢 値で起きるイベントが入れ替わる枠 */
+  slots: readonly FacilitySlot[];
+  /** 🟢 隠しルートで希望の光に進むのに要る値 */
+  lightOfHope: 0 | 1;
 };
 
-/** 値は 0 か 1。✅ [U] すべて書き換えで反映されることを確認 */
+/** 値は 0 か 1。✅ [U] すべて書き換えで反映されることを確認。note・slots・lightOfHope は 🟢 */
 export const FACILITY_FLAGS: readonly FacilityFlag[] = [
   {
     offset: 0x375d,
     label: "病院",
-    note: "1 で開く。初期状態は 0（閉）。病院占拠事件で開き、西洋医学お断り・病院廃業の企てで閉じる",
+    note:
+      "1 で開く。初期状態は 0（閉）。病院占拠事件の成功で開く。" +
+      "病院廃業の企てで千両箱を奪って報告する・祝 病院開業で千両箱を奪うと閉じる（病院廃業の企てで一行を通すと開いたまま）。" +
+      "西洋医学お断りでは閉じたまま。1 のとき、隠しルートの再起の望みで「英国の病院に連れて行こう」が出る",
     meaning: "open",
+    slots: [
+      { label: "幕府・2日目昼", when0: "西洋医学お断り", when1: "病院廃業の企て" },
+      { label: "外国・2日目昼", when0: "病院占拠事件", when1: "祝 病院開業" },
+    ],
+    lightOfHope: 1,
   },
   {
     offset: 0x375e,
     label: "カジノ",
-    note: "1 で閉じる。初期状態は 0（開）。カジノを破壊せよで閉じ、カジノ再建を急げで開く",
+    note:
+      "1 で閉じる。初期状態は 0（開）。カジノを破壊せよの成功で閉じる（寝返ると開いたまま）。" +
+      "カジノ再建を急げの成功、カジノ再建断固阻止で寝返る・伯爵から逃げると開く。" +
+      "隠しルートでは前の周回から引き継いだ値のまま2日目夕を迎え、1 なら伯爵に刺激を、0 なら運命のルーレットが起きる",
     meaning: "close",
+    slots: [
+      { label: "外国・2日目夜", when0: "ライジングサン", when1: "カジノ再建を急げ" },
+      { label: "攘夷・2日目夜", when0: "カジノを破壊せよ", when1: "カジノ再建断固阻止" },
+      { label: "隠しルート・2日目夕", when0: "運命のルーレット", when1: "伯爵に刺激を" },
+    ],
+    lightOfHope: 1,
   },
   {
     offset: 0x375f,
     label: "語学所",
-    note: "1 で開く。初期状態は 0（閉）。講師ご到着で開き、語学無用で閉じる",
+    note:
+      "1 で開く。初期状態は 0（閉）。講師ご到着で講師を送り届けると開く。" +
+      "語学所開設で講師が殺される・講師を亡き者にで講師を斬ると閉じる（講師を亡き者にで逃げ切られると開いたまま）。" +
+      "語学無用では閉じたまま。1 のとき、隠しルートの闇討ちで「赤城のようになりたくないのか？」が出る",
     meaning: "open",
+    slots: [
+      { label: "幕府・2日目夕", when0: "講師ご到着", when1: "語学所開設" },
+      { label: "攘夷・2日目夕", when0: "語学無用", when1: "講師を亡き者に" },
+    ],
+    lightOfHope: 1,
   },
 ];
 
@@ -62,6 +105,18 @@ export function readFacilityFlags(bytes: Uint8Array): FacilityFlagsView {
   const problem =
     bad >= 0 ? `${FACILITY_FLAGS[bad].label} の値が 0・1 以外です（${values[bad]}）` : null;
   return { values, problem: layoutProblem ?? problem };
+}
+
+/** 🟢 2日目のその枠で起きるイベント。値が 0・1 以外なら null */
+export function facilitySlotEvent(slot: FacilitySlot, value: number): string | null {
+  if (value === 0) return slot.when0;
+  if (value === 1) return slot.when1;
+  return null;
+}
+
+/** 🟢 希望の光に進むための施設の条件がそろっているか（病院・語学所が開き、カジノが閉じている） */
+export function facilitiesReadyForLightOfHope(values: readonly number[]): boolean {
+  return FACILITY_FLAGS.every((f, i) => values[i] === f.lightOfHope);
 }
 
 /** index 番目のフラグの1バイトだけを書く。通常モードでは 0・1 だけ、上級者モードでは任意の u8 */

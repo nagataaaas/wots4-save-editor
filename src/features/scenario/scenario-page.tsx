@@ -26,6 +26,8 @@ import {
 } from "@/save/world-flags";
 import {
   FACILITY_FLAGS,
+  facilitiesReadyForLightOfHope,
+  facilitySlotEvent,
   readFacilityFlags,
   writeFacilityFlag,
   type FacilityFlagsView,
@@ -497,21 +499,40 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
           病院（0x375D）・カジノ（0x375E）・語学所（0x375F）の開閉です。書き換えで反映を確認済みです。
           カジノだけ値が逆で、1 が閉じている状態です。3つとも 0 が初期状態（病院・語学所は閉、カジノは開）です。
           周回をまたいで引き継がれると考えられます。
+          2日目の各枠では、施設の値によって起きるイベントが入れ替わります。
+          隠しルートで希望の光に進むには、病院・語学所が開き、カジノが閉じている必要があります。
+          {view &&
+            !view.problem &&
+            (facilitiesReadyForLightOfHope(view.values)
+              ? " 今のセーブはこの条件を満たしています。"
+              : " 今のセーブはこの条件を満たしていません。")}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
         {FACILITY_FLAGS.map((flag, i) => (
-          <SelectRow
-            key={flag.offset}
-            label={flag.label}
-            offset={flag.offset}
-            value={view ? String(view.values[i]) : null}
-            currentLabel={view ? `${view.values[i]} 不明` : undefined}
-            options={flagOptions[flag.meaning]}
-            problem={view?.problem ?? null}
-            note={flag.note}
-            onChange={(v) => update((b) => writeFacilityFlag(b, i, Number(v), { advanced }))}
-          />
+          <div key={flag.offset} className="grid content-start gap-2">
+            <SelectRow
+              label={flag.label}
+              offset={flag.offset}
+              value={view ? String(view.values[i]) : null}
+              currentLabel={view ? `${view.values[i]} 不明` : undefined}
+              options={flagOptions[flag.meaning]}
+              problem={view?.problem ?? null}
+              note={flag.note}
+              onChange={(v) => update((b) => writeFacilityFlag(b, i, Number(v), { advanced }))}
+            />
+            <ul className="text-muted-foreground list-disc pl-5 text-xs">
+              {flag.slots.map((slot) => {
+                const current = view ? facilitySlotEvent(slot, view.values[i]) : null;
+                return (
+                  <li key={slot.label}>
+                    {slot.label}：0 で{slot.when0}、1 で{slot.when1}
+                    {current && `（今は${current}）`}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         ))}
       </CardContent>
     </Card>
