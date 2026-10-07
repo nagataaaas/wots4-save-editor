@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
+import { CollapsibleCard } from "@/components/collapsible-card";
 import { InfoTip } from "@/components/info-tip";
 import { LazySelect } from "@/components/lazy-select";
 import { SelectRow } from "@/components/select-row";
@@ -187,8 +188,8 @@ export function OccupationPage() {
         write={write}
       />
       <SeriesCard view={views?.townsfolk ?? null} write={write} />
-      <SecurityCard view={views?.townsfolk ?? null} write={write} />
       <DlcCard view={views?.shirube ?? null} write={write} />
+      <SecurityCard view={views?.townsfolk ?? null} write={write} />
       <StatesCard
         key={`${save?.loadId ?? 0}-states`}
         view={views?.occupations ?? null}
@@ -343,23 +344,21 @@ function SeriesCard({ view, write }: FlagCardProps) {
 
 function SecurityCard({ view, write }: FlagCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          治安なりわい
-          <InfoTip offset={flagOffsetTip}>なりわいのフラグ</InfoTip>
-        </CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="治安なりわい"
+      extra={<InfoTip offset={flagOffsetTip}>なりわいのフラグ</InfoTip>}
+      description={
+        <>
           【同心頭】佐古津と【賭場】女将の2人から受けるなりわいです。連続なりわいではなく、そのときの治安によって受けられるなりわいが変わり、何回でも受けられます。
           女将は最終なりわい（阿弥浜八人衆）を始める人でもあります。値の意味は未確認で、書き込みの反映は要ゲーム内確認です。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        {SECURITY_CARD_FLAGS.map((flag) => (
-          <FlagRow key={flag} flag={flag} view={view} write={write} separator="・" />
-        ))}
-      </CardContent>
-    </Card>
+        </>
+      }
+      contentClassName="grid gap-4 sm:grid-cols-2"
+    >
+      {SECURITY_CARD_FLAGS.map((flag) => (
+        <FlagRow key={flag} flag={flag} view={view} write={write} separator="・" />
+      ))}
+    </CollapsibleCard>
   );
 }
 
@@ -500,24 +499,27 @@ function StatesCard({
   const filterItems = { all: "すべて", ...KIND_LABELS };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          なりわいの記録（周回をまたぐ統計）
+    <CollapsibleCard
+      title="なりわいの記録（周回をまたぐ統計）"
+      extra={
+        <>
           <InfoTip offset={`${formatOffset(OCCUPATION_STATE_OFFSET)} + ID×2（u16 × 256）`}>
             FFFF＝まだ出ていない、0＝出た・未クリア（🔶）、1
             以上＝これまでの周回を通してクリアした回数。 1
             にするとなりわい一覧でクリア済みになることを確認済み（今宵の虎徹は）
           </InfoTip>
           <CertaintyBadge mark="🔶" text="0 の意味と、FFFF・0 への書き込みは要ゲーム内確認" />
-        </CardTitle>
-        <CardDescription>
+        </>
+      }
+      description={
+        <>
           ゲーム内の統計に出る、周回をまたいだなりわいごとのクリア回数です。クリア済みにしても、報酬（お金・容姿・装飾品）は増えず、今の周回の連続なりわいも進みません（連続なりわいは上の欄で進めます）。
           全 {OCCUPATIONS.length} 件のうち、クリア済み {counts.cleared}・出た・未クリア{" "}
           {counts.open}・まだ出ていない {counts.hidden}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
+        </>
+      }
+      contentClassName="flex flex-col gap-3"
+    >
         <div className="flex flex-wrap items-center gap-2">
           <Input
             className="w-56"
@@ -596,8 +598,7 @@ function StatesCard({
             />
           ))}
         </div>
-      </CardContent>
-    </Card>
+    </CollapsibleCard>
   );
 }
 
