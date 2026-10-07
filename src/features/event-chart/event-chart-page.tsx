@@ -60,7 +60,8 @@ const py = (row: number) => MARGIN + row * ROW_PX;
 
 // ゲーム画面のチャートの色に寄せる
 const BACKGROUND = "#F4E6EA";
-const LINK_COLOR = "#B3263A";
+// ゲームの線はふだん黒。赤くなる線の規則は ❓ なので、赤い線は描かない
+const LINK_COLOR = "#2B2B2B";
 const FAILED_COLOR = "#E00000";
 const TEXT_COLOR = "#3B2A2E";
 const KIND_COLORS: Readonly<Record<ChartBoxKind, { fill: string; stroke: string; label: string }>> = {
@@ -127,7 +128,7 @@ export function EventChartPage() {
             ゲームの「状況」のチャートを、イベントの状態（0x36A8＋添字）とチャート表示の記録（0x3838＋添字）から描いたものです。
             グレーの「？？？」は名前が隠れる枠、赤い斜線は失敗です。隠しルートに入ったことがない（隠しルートのフラグ 0x378E が 0 で、三姉妹見参の状態も記録も 04 でない）ときは、
             ゲームでは隠しルートの枠ごと出ないので、点線で示します。
-            線は出し分けの規則が分からないため、常に全部描いています。状態が 01〜03 のときの見え方は未確認です（要ゲーム内確認）。
+            線は出し分けの規則が分からないため、常に全部を黒で描いています（ゲームで赤くなる線の規則は未確認）。状態が 01〜03 のときの見え方は未確認です（要ゲーム内確認）。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
