@@ -1,5 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { CertaintyBadge } from '@/components/certainty-badge'
+import { InfoTip } from '@/components/info-tip'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 import { SearchSelectRow } from '@/components/search-select-row'
 import type { SelectOption } from '@/components/select-options'
 import { SelectRow } from '@/components/select-row'
@@ -19,10 +22,12 @@ import {
   PERSON_CUSTOM,
   partNoneWarning,
   genderName,
+  isNude,
   readAppearanceParts,
   validatePart,
   writeGender,
   writeHairColor,
+  writeNude,
   writePart,
   writePerson,
 } from '@/save/appearance-parts'
@@ -74,6 +79,39 @@ const PART_NOTES: Record<PartKind, string> = {
   leggings: '✅ [U] 部品の番号と、色違いまで含めたモデルの値を書く',
   apron: '✅ [U] 部品の番号と、色違いまで含めたモデルの値を書く',
   cape: '✅ [U] 部品の番号と、色違いまで含めたモデルの値を書く',
+}
+
+/** 上裸・下裸のボタン。体の種類が男・女のときだけ使える（✅ [U] 2026-10-08、ユーザー判断 2026-10-08） */
+function NudeButtons({ disabled, onNude }: { disabled: boolean; onNude: (kind: 'upper' | 'lower') => void }) {
+  const [error, setError] = useState<string | null>(null)
+  const run = (kind: 'upper' | 'lower') => {
+    setError(null)
+    try {
+      onNude(kind)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    }
+  }
+  return (
+    <div className="flex flex-col gap-1.5 sm:col-span-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Label>裸</Label>
+        <InfoTip offset={APPEARANCE_PARTS_OFFSETS.parts}>
+          ✅ [U] 服の部品のモデルの値から服の層を外し、体の層だけにする。男：上半身 117（110）・下半身 88（196）、女：上半身 98（152）・下半身 26（233）
+        </InfoTip>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" disabled={disabled} onClick={() => run('upper')}>
+          上裸
+        </Button>
+        <Button variant="outline" size="sm" disabled={disabled} onClick={() => run('lower')}>
+          下裸
+        </Button>
+      </div>
+      <p className="text-muted-foreground text-xs">体の種類が男・女のときだけ使えます。足元は変えません</p>
+      {error && <p className="text-destructive text-xs">{error}</p>}
+    </div>
+  )
 }
 
 /** 人物・性別・髪の色・顔・髪型・服（0x3AAD4〜0x3AB5B）。U-19 */
@@ -160,6 +198,10 @@ export function AppearancePartsCard() {
           note="値＝主人公設定の一覧の左からの位置。✅ [U] 0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪。🔶 5＝赤・6〜9（U-19）"
           onChange={v => update(b => writeHairColor(b, Number(v), advanced))}
         />
+        <NudeButtons
+          disabled={view === null || problem !== null || (view.gender !== 0 && view.gender !== 1)}
+          onNude={kind => update(b => writeNude(b, kind))}
+        />
         {kinds.map(kind => {
           const part = view?.parts[kind]
           const current = part && part.id !== -1 ? findPart(kind, part.id) : undefined
@@ -179,7 +221,13 @@ export function AppearancePartsCard() {
                 currentLabel={part?.id === -1 ? 'なし（FFFF）' : current ? partLabel(current) : `表にない番号 ${part?.id}`}
                 options={partOptions(kind, heroGender, advanced)}
                 problem={problem}
-                hint={advanced ? undefined : `${genderName(heroGender) ?? '不明な性別'}の名前のある部品だけを表示しています`}
+                hint={
+                  (kind === 'upper' || kind === 'lower') && view && isNude(view, kind)
+                    ? `今は${kind === 'upper' ? '上裸' : '下裸'}です（服の層を外して体の層だけにしています）`
+                    : advanced
+                      ? undefined
+                      : `${genderName(heroGender) ?? '不明な性別'}の名前のある部品だけを表示しています`
+                }
                 // その項目が「なし」のときだけ（止めない。ユーザー判断 2026-10-08）
                 warning={part ? partNoneWarning(kind, part.id) : null}
                 note={PART_NOTES[kind]}

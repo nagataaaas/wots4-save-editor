@@ -6,7 +6,9 @@ import { readF32, writeF32 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import {
   NONE_ALLOWED,
+  isNude,
   partNoneWarning,
+  writeNude,
   readAppearanceParts,
   validatePart,
   writeGender,
@@ -170,6 +172,37 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes.subarray(0x3ab48, 0x3ab50)).toEqual(hex('4B 01 FF FF FF FF FF FF'))
     expect(bytes.subarray(0x3ab50, 0x3ab52)).toEqual(hex('22 00'))
     expect(bytes.subarray(0x3ab54, 0x3ab5c)).toEqual(hex('43 01 FF FF FF FF FF FF'))
+  })
+
+  it('✅ [U] 上裸・下裸は服の層を外した体の層だけを書く（MN・FN の値）', () => {
+    const male = makeSave()
+    writeNude(male, 'upper')
+    writeNude(male, 'lower')
+    expect(Array.from(male.subarray(0x3aad4, 0x3aad6))).toEqual([0xff, 0xff])
+    expect(male.subarray(0x3aae4, 0x3aae6)).toEqual(hex('75 00'))
+    expect(male.subarray(0x3aae8, 0x3aaf0)).toEqual(hex('6E 00 FF FF FF FF FF FF'))
+    expect(male.subarray(0x3aaf0, 0x3aaf2)).toEqual(hex('58 00'))
+    expect(male.subarray(0x3aaf4, 0x3aafc)).toEqual(hex('C4 00 FF FF FF FF FF FF'))
+    const view = readAppearanceParts(male)!
+    expect([isNude(view, 'upper'), isNude(view, 'lower')]).toEqual([true, true])
+    // 足元は変えない
+    expect(male.subarray(0x3ab20, 0x3ab2c)).toEqual(makeSave().subarray(0x3ab20, 0x3ab2c))
+
+    const female = makeSave()
+    female[0x3aadc] = 1
+    expect(isNude(readAppearanceParts(female)!, 'upper')).toBe(false)
+    writeNude(female, 'upper')
+    writeNude(female, 'lower')
+    expect(female.subarray(0x3aae4, 0x3aae6)).toEqual(hex('62 00'))
+    expect(female.subarray(0x3aae8, 0x3aaf0)).toEqual(hex('98 00 FF FF FF FF FF FF'))
+    expect(female.subarray(0x3aaf0, 0x3aaf2)).toEqual(hex('1A 00'))
+    expect(female.subarray(0x3aaf4, 0x3aafc)).toEqual(hex('E9 00 FF FF FF FF FF FF'))
+
+    const laura = makeSave()
+    laura[0x3aadc] = 2
+    const before = laura.slice()
+    expect(() => writeNude(laura, 'upper')).toThrow(/男・女/)
+    expect(laura).toEqual(before)
   })
 
   it('「なし」は FFFF とモデルの値 FFFF × 4 を書く', () => {

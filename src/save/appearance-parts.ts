@@ -171,12 +171,42 @@ export function validatePart(kind: PartKind, id: number, heroGender: number, adv
   return null
 }
 
-function writePartRecord(bytes: Uint8Array, kind: PartKind, id: number): void {
+function writePartRecord(bytes: Uint8Array, kind: PartKind, id: number, models?: readonly number[]): void {
   const offset = partOffset(kind)
-  const models = id === -1 ? [-1, -1, -1, -1] : findPart(kind, id)!.models
+  const m = models ?? (id === -1 ? [-1, -1, -1, -1] : findPart(kind, id)!.models)
   writeU16(bytes, offset, id === -1 ? 0xffff : id)
   // +2 は意味が分からないので書かない（❓）
-  models.forEach((m, i) => writeU16(bytes, offset + 4 + i * 2, m === -1 ? 0xffff : m))
+  m.forEach((v, i) => writeU16(bytes, offset + 4 + i * 2, v === -1 ? 0xffff : v))
+}
+
+/**
+ * 上裸・下裸：服の部品のモデルの値から服の層を外し、体の層だけにする（✅ [U] 2026-10-08 の MN・FN）。
+ * 体の種類ごとの部品の番号とモデルの値。男・女だけ（ユーザー判断 2026-10-08）
+ */
+export const NUDE_PRESETS: Readonly<Record<'upper' | 'lower', Readonly<Record<0 | 1, { part: number; models: readonly [number, number, number, number] }>>>> = {
+  // 男：117 裸（110）。女：98 コルセット（152, 180）の体の層 152
+  upper: { 0: { part: 117, models: [110, -1, -1, -1] }, 1: { part: 98, models: [152, -1, -1, -1] } },
+  // 男：88 ふんどし（196, 255）の体の層 196。女：26 さらし（233, 276）の体の層 233
+  lower: { 0: { part: 88, models: [196, -1, -1, -1] }, 1: { part: 26, models: [233, -1, -1, -1] } },
+}
+
+function nudePreset(gender: number, kind: 'upper' | 'lower') {
+  return gender === 0 || gender === 1 ? NUDE_PRESETS[kind][gender] : null
+}
+
+/** 上半身・下半身が今の体の種類の裸のときに true */
+export function isNude(view: AppearancePartsView, kind: 'upper' | 'lower'): boolean {
+  const p = nudePreset(view.gender, kind)
+  return p !== null && view.parts[kind].id === p.part && view.parts[kind].models.every((m, i) => m === p.models[i])
+}
+
+/** 上半身・下半身を裸にし、人物の番号を「個別に設定」にする。体の種類が男・女のときだけ */
+export function writeNude(bytes: Uint8Array, kind: 'upper' | 'lower'): void {
+  const view = requireWritable(bytes)
+  const p = nudePreset(view.gender, kind)
+  if (!p) throw new RangeError('裸にできるのは体の種類が男・女のときだけです')
+  writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM)
+  writePartRecord(bytes, kind, p.part, p.models)
 }
 
 /** その部品が「なし」のときの警告文（ユーザー判断 2026-10-08。止めない）。なければ null */
