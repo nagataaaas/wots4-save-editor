@@ -1,4 +1,4 @@
-// ✅ [U] 体型・身長・肌色の値、🔶❓ U-18 肌色の反映・関連値、❓ U-1：差分で観測した値を固定位置に合成する。sample/ のファイルは読まない。
+// ✅ [U] 体型・身長・肌色、❓ 関連値、❓ U-1：差分で観測した値を固定位置に合成する。sample/ のファイルは読まない。
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU32, writeUtf16Fixed } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -14,8 +14,8 @@ function makeSave(header = 0x3aad4, relatedHeader = 0x46334) {
   return bytes
 }
 
-describe('🔶❓ U-18 現在の見た目の候補（❓ U-1 固定位置）', () => {
-  it('✅ 体型・身長の反映を確認。🔶 U-18 性別変更後も固定位置を読み、編集後も保持する', () => {
+describe('現在の見た目（❓ U-1 固定位置）', () => {
+  it('✅ 体型・身長の反映を確認。性別変更後も固定位置を読み、編集後も保持する', () => {
     const bytes = makeSave()
     // copy 5 の観測値を合成。容姿ID、性別側の値、現在・関連領域の身長が変わる。
     bytes.set([0xee, 0, 0xff, 0xff, 0, 0, 3, 0, 0, 0, 0, 0], 0x3aad4)
@@ -35,7 +35,7 @@ describe('🔶❓ U-18 現在の見た目の候補（❓ U-1 固定位置）', (
     expect(bytes).toEqual(before)
   })
 
-  it('🔶 U-18 見た目の写しがあっても固定位置だけを編集する', () => {
+  it('見た目の写しがあっても固定位置だけを編集する', () => {
     const bytes = makeSave()
     bytes.set([0xee, 0, 0xff, 0xff, 0, 0, 3, 0, 0, 0, 0, 0], 0x3aad4)
     writeF32(bytes, 0x3aae0, 175)
@@ -46,7 +46,7 @@ describe('🔶❓ U-18 現在の見た目の候補（❓ U-1 固定位置）', (
     expect(bytes[0x3db88 + 9]).toBe(0)
   })
 
-  it('❓ U-1・🔶 U-18 周辺のID・区切り・名前の並びに依存せず固定位置を読む', () => {
+  it('❓ U-1・周辺のID・区切り・名前の並びに依存せず固定位置を読む', () => {
     const bytes = makeSave()
     bytes.fill(0xaa, 0x3aad4, 0x3aad8)
     bytes.fill(0xbb, 0x3aad9, 0x3aadd)
@@ -66,7 +66,7 @@ describe('🔶❓ U-18 現在の見た目の候補（❓ U-1 固定位置）', (
     ['skin', 3, [0x3aad8]],
     ['height', 176, [0x3aae2]],
     ['related', 1, [0x4633c]],
-  ] as const)('🔶❓ U-18 %s の変更は指定バイトのみで、読み出し→書き戻しで全バイト一致', (key, value, offsets) => {
+  ] as const)('%s の変更は指定バイトのみで、読み出し→書き戻しで全バイト一致', (key, value, offsets) => {
     const before = makeSave()
     const bytes = before.slice()
     const original = readAppearanceCurrent(bytes)[key].value!
@@ -78,7 +78,7 @@ describe('🔶❓ U-18 現在の見た目の候補（❓ U-1 固定位置）', (
     expect(bytes).toEqual(before)
   })
 
-  it('🔶 U-18 低い・細め・褐色の観測値を合成したデータで読む', () => {
+  it('低い・細め・褐色の観測値を合成したデータで読む', () => {
     const bytes = makeSave()
     bytes[0x3aadd] = 1
     bytes[0x3aad8] = 1
@@ -87,7 +87,7 @@ describe('🔶❓ U-18 現在の見た目の候補（❓ U-1 固定位置）', (
     expect([view.body.value, view.height.value, view.skin.value]).toEqual([1, 144, 1])
   })
 
-  it('✅ [U] 肌色0〜7・体型0〜2と、ふつうの0.9倍・1.1倍の身長を通常モードで書ける（肌色の反映は 🔶 U-18）', () => {
+  it('✅ [U] 肌色0〜7・体型0〜2と、ふつうの0.9倍・1.1倍の身長を通常モードで書ける', () => {
     const bytes = makeSave()
     for (let skin = 0; skin <= 7; skin++) {
       writeAppearanceCurrent(bytes, 'skin', skin)
@@ -99,7 +99,7 @@ describe('🔶❓ U-18 現在の見た目の候補（❓ U-1 固定位置）', (
     }
   })
 
-  it('🔶❓ U-18 通常モードで意味の分からない値を拒否し、上級者モードでは範囲内で許可する', () => {
+  it('通常モードで意味の分からない値を拒否し、上級者モードでは範囲内で許可する', () => {
     const bytes = makeSave()
     const before = bytes.slice()
     expect(() => writeAppearanceCurrent(bytes, 'skin', 8)).toThrow()

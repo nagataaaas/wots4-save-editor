@@ -19,14 +19,14 @@ import {
 
 const selectRows = [
   { key: 'body', label: '体型', names: BODY_TYPES, hint: undefined },
-  { key: 'skin', label: '肌色', names: SKIN_COLORS, hint: '書き込みの反映は要ゲーム内確認（🔶 U-18）' },
+  { key: 'skin', label: '肌色', names: SKIN_COLORS, hint: undefined },
 ] as const
 const numberRows: { key: AppearanceCurrentKey; label: string; hint: string; advancedHint: string | undefined }[] = [
   { key: 'height', label: '身長（cm）', hint: '数値（小数可）', advancedHint: undefined },
   { key: 'related', label: '関連値（意味未確認）', hint: '観測した値：0・1・2。体型などとの関係は未確認（❓）', advancedHint: '0〜255' },
 ]
 
-/** 体型・身長・肌色の値は ✅。肌色の書き込み反映と関連値は 🔶❓ U-18。 */
+/** 体型・身長・肌色は ✅。関連値は ❓ として生の値を表示する。 */
 export function AppearanceCurrentCard() {
   const { save, update } = useSave()
   const { advanced } = useAdvancedMode()
@@ -36,10 +36,10 @@ export function AppearanceCurrentCard() {
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           現在の見た目
-          <CertaintyBadge mark="🔶" text="U-18 肌色の反映・関連値は確認中" />
+          <CertaintyBadge mark="❓" text="関連値は意味未確認" />
         </CardTitle>
         <CardDescription>
-          体型・身長の変更はゲーム内で確認済みです。肌色の書き込みの反映と関連値は確認中です。
+          体型・身長・肌色の変更はゲーム内で確認済みです。関連値の意味は未確認です。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">

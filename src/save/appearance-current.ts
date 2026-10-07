@@ -1,11 +1,11 @@
-// ✅ [U] 2026-10-07 体型・身長の書き込み反映、肌色の値の意味、低い・高いがふつうの身長の0.9倍・1.1倍であることを確認。
-// 肌色の書き込み反映は 🔶 U-18、関連値は ❓ U-18。
+// ✅ [U] 2026-10-07 体型・身長・肌色の書き込み反映、低い・高いがふつうの身長の0.9倍・1.1倍であることを確認。
+// 関連値の意味は ❓。
 // ❓ U-1：固定オフセットを採用（ユーザー判断 2026-10-07）。サイズ・境界・身長が有限の数値であることを検証する。
 import { readF32, readU8, writeF32, writeU8 } from './binary'
 import { checkLayout } from './hero'
 
 export type AppearanceCurrentKey = 'skin' | 'body' | 'height' | 'related'
-// ✅ 体型・身長・肌色の位置、❓ U-18 関連値。差分：04 copy 2〜5。
+// ✅ 体型・身長・肌色の位置、❓ 関連値。差分：04 copy 2〜5。
 export const APPEARANCE_CURRENT_OFFSETS = {
   skin: 0x3aad8,
   body: 0x3aadd,
@@ -32,10 +32,10 @@ export function heightWarning(value: number): string | null {
 }
 
 export const APPEARANCE_CURRENT_NOTES = {
-  skin: '✅ [U] 値の意味。0＝ふつう、1＝褐色、2＝色黒、3＝色白、4＝赤、5＝白、6＝緑、7＝青。書き込みの反映は要ゲーム内確認（🔶 U-18）。変更するのは1 Bのみ。',
+  skin: '✅ [U] 値の意味。0＝ふつう、1＝褐色、2＝色黒、3＝色白、4＝赤、5＝白、6＝緑、7＝青。1 Bの変更による反映をゲーム内で確認済み。',
   body: '✅ 0＝ふつう、1＝細め、2＝太め。1 Bの変更による反映をゲーム内で確認済み。',
   height: '✅ cm 単位の float32 LE（4 B）。低い・高いは、ふつうの身長の0.9倍・1.1倍の値になる。',
-  related: '❓ U-18：3件で0・1・2だった関連値。意味と保存幅は未確認。変更するのは1 Bのみ。',
+  related: '❓ 3件で0・1・2だった関連値。意味と保存幅は未確認。変更するのは1 Bのみ。',
 } as const
 
 export type AppearanceCurrentField = {
@@ -66,7 +66,7 @@ export function readAppearanceCurrent(bytes: Uint8Array): AppearanceCurrentView 
   }
 }
 
-/** 通常モードは意味の分かる値だけ。身長は有限の数値なら許可する。上級者モードでは検証用の値も許可する（🔶❓ U-18）。 */
+/** 通常モードは意味の分かる値だけ。身長は有限の数値なら許可する。上級者モードでは u8 の全範囲を許可する。 */
 export function validateAppearanceCurrent(key: AppearanceCurrentKey, value: number, advanced: boolean): string | null {
   if (!Number.isFinite(value)) return '有限の数値を入力してください'
   if (key === 'height') {
@@ -79,7 +79,7 @@ export function validateAppearanceCurrent(key: AppearanceCurrentKey, value: numb
   return value <= max ? null : `通常モードでは0〜${max}を入力してください`
 }
 
-/** 指定した1項目だけ上書きする。体型・身長は ✅、肌色・関連値の反映は 🔶❓ U-18。 */
+/** 指定した1項目だけ上書きする。体型・身長・肌色は ✅、関連値は ❓。 */
 export function writeAppearanceCurrent(bytes: Uint8Array, key: AppearanceCurrentKey, value: number, advanced = false): void {
   const error = validateAppearanceCurrent(key, value, advanced)
   if (error) throw new RangeError(error)
