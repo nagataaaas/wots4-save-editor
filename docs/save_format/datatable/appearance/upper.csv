@@ -1,5 +1,5 @@
 id_dec,id_hex,save_bytes_le,name_ja,name_en,alias_ja,crash,gender,cloth_id,unlock_id,dlc,save_models,備考
-0,0x00,00 00,,,青年主人公の部品,,男,,,,53 00 FF FF FF FF FF FF,🟢 主人公設定で選べる人物の部品
+0,0x00,00 00,,,主人公（青年・若年・壮年）の服,,男,,,,53 00 FF FF FF FF FF FF,✅ [U] 2026-10-08 ゲームで青年主人公・壮年主人公を選んで保存した値
 1,0x01,01 00,,,琴吹 光・新代官の部品,,男,,69,,54 00 FF FF FF FF FF FF,🟢 主人公設定で選べる人物の部品
 2,0x02,02 00,,,茂呂 茂の部品,,男,,70,,56 00 FF FF FF FF FF FF,🟢 主人公設定で選べる人物の部品
 3,0x03,03 00,,,鬼怒川 怨仙の部品,,男,,71,,57 00 FF FF FF FF FF FF,🟢 主人公設定で選べる人物の部品

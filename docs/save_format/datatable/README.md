@@ -67,7 +67,8 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 - `appearance/person.csv`：主人公設定で選べる人物（容姿）の88件と、出ない見た目の組3件 🟢。ID は人物の番号（セーブの `0x3AAD4`）で、連番ではない。`height` はその人物の身長（cm、ふつうのとき）。
   `upper`・`lower`・`face`・`hair`・`body`（部品 k＝4）・`feet`・`gauntlet`（手甲）・`leggings`（脚絆）・`apron`（前掛け）・`cape`（合羽）はその人物の部品の番号（各部品の CSV の ID。空欄はなし）。
   `body_kind` は体の種類（`0x3AADC` の 0＝男、1＝女、2＝ローラ、3＝子供）、`second_id` は `0x3AAD6` に入るとみられる値（空欄＝`FFFF`）🔶、`hair_color` はその人物の髪の色（`0x3AADA`）。
-  `selectable` は 1＝主人公設定の一覧に出る人物（88件。全部出るかは 🔶）、0＝出ない見た目の組（ローラ・男の子・女の子 ✅ [U]。エディタでは上級者モードだけ）
+  `selectable` は 1＝主人公設定の一覧に出る人物（88件。全部出るかは 🔶）、0＝出ない見た目の組（ローラ・男の子・女の子 ✅ [U]。エディタでは上級者モードだけ）。
+  主人公3人の行は、ゲームで選んで保存した値に合わせてある（青年・壮年 ✅ [U]、若年 🔶）
 - `appearance/face.csv`・`hair.csv`・`upper.csv`・`lower.csv`・`body.csv`・`feet.csv`・`extra.csv`：主人公の見た目の部品。全行 🟢（`body.csv` は名前がなく、部品の種類は ❓）。番号は部品の種類ごとに別の空間。
   `gender` は使える性別（男・女。空欄は指定なし。服・小物は男用と女用で別の番号になる）、`unlock_id` は解除に必要な特典（`unlock/unlock.csv` の ID。空欄は不要）、`dlc` は DLC の番号、
   `cloth_id` は服の番号（`appearance/cloth.csv`。容姿のビット）。`extra.csv` の `kind` は手甲・脚絆・前掛け・合羽 🟢（✅ [U] 2026-10-08）。

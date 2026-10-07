@@ -111,6 +111,27 @@ describe('主人公の見た目のレコード（U-19）', () => {
     }
   })
 
+  it('✅ [U] 青年主人公・壮年主人公は、ゲームで選んで保存したセーブと同じ値を書く（組の +2 を除く）', () => {
+    const expected = {
+      // 人物の番号、0x3AAD6、部品の組（+0 と +4〜+B）。2026-10-08 の実セーブの観測値
+      20: { head: '14 00 14 00', parts: [[0, '53 00 FF FF FF FF FF FF'], [-1, 'FF FF FF FF FF FF FF FF'], [0, '01 00 FF FF FF FF FF FF'], [0, '2C 00 FF FF 2C 00 FF FF'], [7, '1A 01 FF FF FF FF FF FF'], [0, '1F 01 38 01 1F 01 FF FF']] },
+      0: { head: '00 00 00 00', parts: [[0, '53 00 FF FF FF FF FF FF'], [-1, 'FF FF FF FF FF FF FF FF'], [31, '02 00 29 00 FF FF FF FF'], [38, '2D 00 FF FF 2D 00 FF FF'], [7, '1A 01 FF FF FF FF FF FF'], [0, '1F 01 38 01 1F 01 FF FF']] },
+    } as const
+    for (const [id, e] of Object.entries(expected)) {
+      const bytes = makeSave()
+      writePerson(bytes, Number(id))
+      expect(bytes.subarray(0x3aad4, 0x3aad8)).toEqual(hex(e.head))
+      expect([bytes[0x3aada], bytes[0x3aadc]]).toEqual([3, 0])
+      expect(readF32(bytes, 0x3aae0)).toBe(175)
+      e.parts.forEach(([partId, models], k) => {
+        const view = readAppearanceParts(bytes)!.parts
+        const kind = (['upper', 'lower', 'face', 'hair', 'body', 'feet'] as const)[k]
+        expect(view[kind].id).toBe(partId)
+        expect(bytes.subarray(0x3aae8 + 12 * k, 0x3aaf0 + 12 * k)).toEqual(hex(models))
+      })
+    }
+  })
+
   it('✅ [U] 人物を選ぶとき、低い・高いの倍率を引き継ぐ', () => {
     const bytes = makeSave()
     writeF32(bytes, 0x3aae0, 192.5)
