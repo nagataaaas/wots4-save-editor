@@ -46,7 +46,7 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,備考
 44,0x2C,,志士の刀,Blades of the Patriots,
 45,0x2D,,根無し草,Idle Chatter,
 46,0x2E,,剣術大会開催,Battle Tournament Opens,
-47,0x2F,,剣術大会（幕府）,Battle Tournament (Shogunate),🟢 チャートには出ない
+47,0x2F,,剣術大会（幕府）,Battle Tournament (Shogunate),🟢 チャートには出ない。47〜50 は出場した勢力の1つだけが 03、優勝で 04、負け・降参で 05
 48,0x30,,剣術大会（外国）,Battle Tournament (Foreigners),🟢 チャートには出ない
 49,0x31,,剣術大会（攘夷）,Battle Tournament (Prajnas),🟢 チャートには出ない
 50,0x32,,剣術大会（無所属）,Battle Tournament (Independent),🟢 チャートには出ない
@@ -83,7 +83,7 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,備考
 81,0x51,,伯爵救出,Rescuing the Count,
 82,0x52,,人間湯通しの恐怖,A Day at the Spa,
 83,0x53,,大老暗殺計画,Plot to Assassinate the Chief Minister,
-84,0x54,,,,❓ 対応するイベントが分かっていない。どのサンプルでも A・B とも FF
+84,0x54,,,,🟢 名前不明。ローラの決意（85）の前半の導入。場面が始まると 04 になり、85 の開始条件が「84 = 04」。チャートには名前が出ない
 85,0x55,,ローラの決意,Laura's Determination,
 86,0x56,,士魂は屈せず,The Fighting Spirit Never Dies,
 87,0x57,,ローラ奪還,Rescuing Laura,

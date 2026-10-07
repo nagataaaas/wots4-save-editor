@@ -929,7 +929,7 @@ function EventsCard({ view }: { view: EventsView | null }) {
           <div className="text-sm font-medium">チャートに出ない添字（フラグ確認用）</div>
           <p className="text-muted-foreground text-xs">
             名前の付いた添字の間にある、チャートに出ない・ゲームで起きない添字です。
-            47〜50 は剣術大会（幕府・外国・攘夷・無所属）、67 は未実装とみられる悲しみのローラ、84 はどのイベントか分かっていません。
+            47〜50 は剣術大会（幕府・外国・攘夷・無所属）、67 は未実装とみられる悲しみのローラ、84 は名前の分からないローラの決意の導入です。
             一括設定の対象にはしていません。
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

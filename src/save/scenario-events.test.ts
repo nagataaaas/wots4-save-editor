@@ -13,6 +13,7 @@ import {
   namedIndices,
   readEvents,
   recordLabel,
+  stateLabel,
   writeEventRecord,
   writeEventRecords,
   writeEventState,
@@ -86,8 +87,10 @@ describe('書き込み 🔶 要ゲーム内確認', () => {
 
   it('通常モードは 00〜05・FF（01〜04 の意味は 🟢）。上級者モードでは任意の u8', () => {
     writeEventState(makeSave(A_START), 36, 0x01, { advanced: false })
-    // 🟢 02＝参加を決めた（chunks/event-chart）。実データでは未確認
+    // 🟢 02＝導入を見て断った・保留した、03＝引き受けた・進行中（chunks/event-chart）。02 は実データでは未確認
     writeEventState(makeSave(A_START), 9, 0x02, { advanced: false })
+    expect(stateLabel(0x02)).toBe('断った・保留した')
+    expect(stateLabel(0x03)).toBe('引き受けた・進行中')
     const b = makeSave(A_START)
     expect(() => writeEventState(b, 9, 0x06, { advanced: false })).toThrow(RangeError)
     expect(() => writeEventState(b, 9, 0x100, { advanced: true })).toThrow(RangeError)
@@ -177,11 +180,13 @@ describe('一括設定（デバッグ用）', () => {
     const named = new Set(namedIndices())
     const gaps = Array.from({ length: 100 }, (_, i) => i).filter((i) => !named.has(i))
     expect(EVENT_GAP_INDICES).toEqual(gaps)
-    // 🟢 47〜50 は剣術大会（チャートに出ない）。67 は未実装（[U] 2026-10-06）。84 は ❓
+    // 🟢 47〜50 は剣術大会（チャートに出ない。出場した勢力だけ 03、優勝 04、負け・降参 05）。67 は未実装（[U] 2026-10-06）。
+    // 🟢 84 は名前不明のローラの決意の導入（始まると 04、85 の開始条件が「84 = 04」）
     expect(EVENT_GAP_NOTES[47].name).toBe('剣術大会（幕府）')
     expect(EVENT_GAP_NOTES[50].name).toBe('剣術大会（無所属）')
+    expect(EVENT_GAP_NOTES[50].note).toMatch(/優勝で 04/)
     expect(EVENT_GAP_NOTES[67].name).toBe('悲しみのローラ')
-    expect(EVENT_GAP_NOTES[84].name).toBeNull()
+    expect(EVENT_GAP_NOTES[84].name).toBe('（名前不明。ローラの決意の導入）')
     expect(EVENT_GAP_INDICES.some((i) => named.has(i))).toBe(false)
     // フラグ確認用に、1件ずつは書ける
     const b = makeSave(A_START)
