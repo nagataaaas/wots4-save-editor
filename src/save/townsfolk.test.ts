@@ -23,8 +23,8 @@ const COPY5: Record<number, number> = { 0x0127: 0x6e, 0x012c: 1, 0x0258: 1, 0x02
 function makeSave(size = TS_SAVE_SIZE): Uint8Array {
   const b = new Uint8Array(size)
   for (const [offset, value] of Object.entries(COPY5)) writeU8(b, Number(offset), value)
-  // 前後のバイト（0x00FF・0x0600）も置き、書き込みで変わらないことを見る
-  writeU8(b, 0x00ff, 7)
+  // 前後のバイト（主人公名の最後 0x011B・0x0600）も置き、書き込みで変わらないことを見る
+  writeU8(b, 0x011b, 7)
   writeU8(b, 0x0600, 7)
   return b
 }
@@ -35,12 +35,13 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 町の人の状態の候補 0x0100〜0x05FF chunks/townsfolk', () => {
-  it('🔶 0x0100〜0x05FF の1,280バイトを読む（終わりの位置は未確定）', () => {
-    expect(TOWNSFOLK_LENGTH).toBe(1280)
+describe('🔶 町の人の状態の候補 0x011C〜0x05FF chunks/townsfolk', () => {
+  it('🔶 0x011C〜0x05FF の1,252バイトを読む（🟢 始まりは主人公名の直後。終わりの位置は未確定）', () => {
+    expect(TOWNSFOLK_START).toBe(0x011c)
+    expect(TOWNSFOLK_LENGTH).toBe(1252)
     const view = readTownsfolk(makeSave())
     expect(view.problem).toBeNull()
-    expect(view.values).toHaveLength(1280)
+    expect(view.values).toHaveLength(1252)
     expect(view.values[0x02c4 - TOWNSFOLK_START]).toBe(1)
     expect(view.values[0x0127 - TOWNSFOLK_START]).toBe(0x6e)
   })
@@ -98,6 +99,12 @@ describe('🔶 町の人の状態の候補 0x0100〜0x05FF chunks/townsfolk', ()
       writeTownsfolk(after, offset, before[offset] === 1 ? 0 : 1, { advanced: false })
       expect(diffOffsets(before, after)).toEqual([offset])
     }
+  })
+
+  it('主人公名（0x00DC〜0x011B）には書かない', () => {
+    const b = makeSave()
+    for (const offset of [0x00dc, 0x0100, 0x011b])
+      expect(() => writeTownsfolk(b, offset, 0, { advanced: true })).toThrow(RangeError)
   })
 
   it('範囲の外には書かない', () => {

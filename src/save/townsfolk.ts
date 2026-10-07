@@ -1,4 +1,6 @@
-// 町の人（店主など）の状態の候補 0x0100〜0x05FF（1,280 B）を、生の値で編集する。出典：docs/save_format/chunks/townsfolk（[U] 2026-10-06）。
+// 町の人（店主など）の状態の候補 0x011C〜0x05FF（1,252 B）を、生の値で編集する。出典：docs/save_format/chunks/townsfolk（[U] 2026-10-06）。
+// 🟢 始まりは 0x011C（直前の 0x00DC〜0x011B は主人公名。hero.ts が UTF-16LE として扱うので、ここでは触らない）。
+//    0x011C〜 は「なりわいのフラグ」の配列（0x011C + 番号）。0x0120（番号 4、同心の続き物）は書き換えで確認（✅ 2026-10-07）。
 // 🔶 終わりの位置は未確定。当初は 0x04BF までとしていたが、さよ（0x0528）が見つかったので 0x05FF まで広げた。
 // 0x04C0〜0x0B2F は、手元のサンプルでは 0x0528 以外すべて 0（0x0B30 以降は float やカウンタ）。
 //
@@ -24,7 +26,8 @@
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
 
-export const TOWNSFOLK_START = 0x0100;
+/** 🟢 主人公名（〜0x011B）の直後 */
+export const TOWNSFOLK_START = 0x011c;
 /** 🔶 終わりは未確定（上のコメント） */
 export const TOWNSFOLK_END = 0x05ff;
 export const TOWNSFOLK_LENGTH = TOWNSFOLK_END - TOWNSFOLK_START + 1;

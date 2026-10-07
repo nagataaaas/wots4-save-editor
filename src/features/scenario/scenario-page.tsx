@@ -678,9 +678,11 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
 }
 
 const TOWNSFOLK_ROW = 16;
+/** 表の行は 16 バイト境界から始める。範囲の始まり（0x011C）より前のマスは空けておく */
+const TOWNSFOLK_FIRST_ROW = TOWNSFOLK_START - (TOWNSFOLK_START % TOWNSFOLK_ROW);
 
 /**
- * 1バイト分の入力欄。町の人の状態（0x0100〜0x05FF）用。
+ * 1バイト分の入力欄。町の人の状態（0x011C〜0x05FF）用。
  * 値の表があるバイト（0x0127・0x0132）は表から選ぶ。raw なら数値で入力する（表にない値を上級者モードで書くため）
  */
 function TownsfolkField({
@@ -735,15 +737,15 @@ function TownsfolkField({
   );
 }
 
-/** 🔶 町の人（店主など）の状態の候補（0x0100〜0x05FF）の生の値。view が null ならセーブ未読み込み */
+/** 🔶 町の人（店主など）の状態の候補（0x011C〜0x05FF）の生の値。view が null ならセーブ未読み込み */
 function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
   const [selected, setSelected] = useState<number | null>(null);
   const named = Object.keys(TOWNSFOLK_NOTES)
     .map(Number)
     .filter((o) => TOWNSFOLK_NOTES[o].name);
   const rows = Array.from(
-    { length: TOWNSFOLK_LENGTH / TOWNSFOLK_ROW },
-    (_, r) => TOWNSFOLK_START + r * TOWNSFOLK_ROW,
+    { length: Math.ceil((TOWNSFOLK_START + TOWNSFOLK_LENGTH - TOWNSFOLK_FIRST_ROW) / TOWNSFOLK_ROW) },
+    (_, r) => TOWNSFOLK_FIRST_ROW + r * TOWNSFOLK_ROW,
   );
 
   return (
@@ -754,7 +756,7 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
           <CertaintyBadge mark="🔶" text="並び方と書き換えの効果は未確認" />
         </CardTitle>
         <CardDescription>
-          0x0100〜0x05FF の1,280バイトです（終わりの位置は未確定）。ほとんど 0 で、町の人（店主など）ごとの状態やイベントの進み具合の表と推定しています。
+          0x011C〜0x05FF の1,252バイトです（終わりの位置は未確定。直前の 0x00DC〜0x011B は主人公名）。ほとんど 0 で、町の人（店主など）ごとの状態やイベントの進み具合の表と推定しています。
           鍛冶屋の後継者イベント・鍛冶屋の状態（0x0127）、堂島が鍛冶屋を継いだか（0x0132。周回後に誰が鍛冶屋になるかを決める）、堂島の死亡（0x0264）は、書き換えで確認済みです。
           寿司屋の店主（0x02C4）と鍛冶屋のおやじ（0x0444）は 1 で死亡です。0 に戻すと生き返ることを確認済みです。
           さよ（DLC、0x0528）も 1 で死亡と見ていますが、差分1回だけで、0 に戻して生き返るかは未確認です。
@@ -780,6 +782,7 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
                   </th>
                   {Array.from({ length: TOWNSFOLK_ROW }, (_, c) => {
                     const offset = rowStart + c;
+                    if (offset < TOWNSFOLK_START) return <td key={c} className="p-0" />;
                     const v = view?.values[offset - TOWNSFOLK_START] ?? null;
                     const info = TOWNSFOLK_NOTES[offset];
                     return (
