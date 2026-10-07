@@ -602,7 +602,7 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           人物の状態（生の値）
-          <CertaintyBadge mark="🔶" text="書き換えの効果は要ゲーム内確認。マユ・チカ・ユリの値は未確認" />
+          <CertaintyBadge mark="🔶" text="書き換えの効果は要ゲーム内確認。万由・千佳・百合の値は未確認" />
         </CardTitle>
         <CardDescription>
           イベントの状態のすぐ後ろにある15バイトで、重要人物ごとの状態（生死など）です。周回の始めはすべて 0 です。
