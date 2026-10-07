@@ -1,4 +1,4 @@
-import { Binary, Flag, Moon, Package, ScrollText, Store, Sword, Swords, User, Workflow, type LucideIcon } from 'lucide-react'
+import { Binary, Flag, Globe, Moon, Package, ScrollText, Store, Sword, Swords, User, Workflow, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
 // 各領域の確度は docs/save_format/README.md §3 と各 chunk を参照（chunk 名を note に残す）。
@@ -11,6 +11,7 @@ export type SectionId =
   | 'tools'
   | 'chest'
   | 'valuables'
+  | 'world'
   | 'scenario'
   | 'event-chart'
   | 'yobai'
@@ -72,7 +73,8 @@ export const sectionGroups: SectionGroup[] = [
           { id: 'valuables', label: '重要品', note: 'items（貴重品 8 B × 10件。[TS] は先頭4件＝製錬用の鉄のみ編集）' },
         ],
       },
-      { id: 'scenario', label: 'シナリオ', icon: Flag, note: 'date-location・event-chart・factions 🔶 日数・時間帯、イベントの状態、勢力の記録' },
+      { id: 'world', label: '世界', icon: Globe, note: 'date-location・factions・gates・facilities 🔶 日数・時間帯、治安、勢力、門・柵、施設' },
+      { id: 'scenario', label: 'シナリオ', icon: Flag, note: 'event-chart・scenario-flags・characters・hidden-route 🔶 イベントの状態、フラグ、人物、隠しルート' },
       { id: 'event-chart', label: 'イベントチャート', icon: Workflow, note: 'event-chart イベントの状態とチャート表示の記録', wide: true },
       { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit 夜の約束（場所・人物）と夜這いの記録 🔶' },
       { id: 'styles', label: '流派', icon: ScrollText, note: 'styles 🔶 0x018BC0 付近' },

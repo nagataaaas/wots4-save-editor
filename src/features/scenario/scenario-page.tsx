@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
@@ -166,7 +166,67 @@ function parseInteger(input: string, validate: (v: number) => string | null): Pa
   return error ? { ok: false, error } : { ok: true, value };
 }
 
+/** シナリオ：イベント・フラグ・人物・隠しルート・ヒント */
 export function ScenarioPage() {
+  return (
+    <ViewsPage
+      note={
+        <>
+          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの event-chart・scenario-flags・characters・townsfolk・hidden-route・hint）。
+          イベントの失敗（05）・未到達（FF）、チャート表示は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+        </>
+      }
+    >
+      {(views, k) => (
+        <>
+          <ScenarioFlagsCard key={`${k}-scenario-flags`} />
+          <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
+          <TownsfolkCard key={`${k}-townsfolk`} view={views?.townsfolk ?? null} />
+          <RouteCandidatesCard
+            key={`${k}-route-candidates`}
+            view={views?.routeCandidates ?? null}
+            sisters={views?.events.entries[HIDDEN_ROUTE_EVENT_INDEX]?.state ?? null}
+          />
+          <HintCard key={`${k}-hint`} view={views?.hint ?? null} />
+          <EventsCard key={`${k}-events`} view={views?.events ?? null} />
+        </>
+      )}
+    </ViewsPage>
+  );
+}
+
+/** 世界：日数・時間帯、治安、勢力、門・柵、施設（ユーザー判断 2026-10-07） */
+export function WorldPage() {
+  return (
+    <ViewsPage
+      note={
+        <>
+          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの date-location・factions・gates・facilities）。
+          日数・時間帯、勢力の友好度 +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+        </>
+      }
+    >
+      {(views, k) => (
+        <>
+          <DateCard key={`${k}-date`} view={views?.date ?? null} />
+          <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />
+          <FactionCard key={`${k}-factions`} view={views?.factions ?? null} route={views?.route ?? null} />
+          <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
+          <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
+        </>
+      )}
+    </ViewsPage>
+  );
+}
+
+/** セーブを読み、共通の注意書きを出して、children に各欄を描かせる。views が null ならセーブ未読み込み、k は読み込みごとの key */
+function ViewsPage({
+  note,
+  children,
+}: {
+  note: ReactNode;
+  children: (views: Views | null, k: number) => ReactNode;
+}) {
   const { save } = useSave();
 
   const result = useMemo((): { views: Views } | { error: string } | null => {
@@ -226,31 +286,12 @@ export function ScenarioPage() {
       <Alert>
         <AlertTitle>検証用（要ゲーム内確認）</AlertTitle>
         <AlertDescription>
-          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの event-chart・factions・date-location）。
-          日数・時間帯、イベントの失敗（05）・未到達（FF）、チャート表示、勢力の友好度 +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+          {note}
           書き換える前のセーブを残してから試してください。
         </AlertDescription>
       </Alert>
 
-      <DateCard key={`${k}-date`} view={views?.date ?? null} />
-      <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />
-      <FactionCard
-        key={`${k}-factions`}
-        view={views?.factions ?? null}
-        route={views?.route ?? null}
-      />
-      <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
-      <ScenarioFlagsCard key={`${k}-scenario-flags`} />
-      <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
-      <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
-      <TownsfolkCard key={`${k}-townsfolk`} view={views?.townsfolk ?? null} />
-      <RouteCandidatesCard
-        key={`${k}-route-candidates`}
-        view={views?.routeCandidates ?? null}
-        sisters={views?.events.entries[HIDDEN_ROUTE_EVENT_INDEX]?.state ?? null}
-      />
-      <HintCard key={`${k}-hint`} view={views?.hint ?? null} />
-      <EventsCard key={`${k}-events`} view={views?.events ?? null} />
+      {children(views, k)}
     </div>
   );
 }
