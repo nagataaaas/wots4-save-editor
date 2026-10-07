@@ -29,7 +29,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🟢 汁部（DLC）の続き物 なりわいのフラグ 27〜31 ＋ 受注', () => {
+describe('🟢 汁部（DLC）のなりわい なりわいのフラグ 27〜31 ＋ 受注', () => {
   it('🟢 27〜31 は 0x0137〜0x013B。選択肢は組んでいない・組んだと、209〜212 × 受注／成功／失敗を成功扱い', () => {
     expect(SHIRUBE_FLAG_OFFSETS).toEqual([0x0137, 0x0138, 0x0139, 0x013a, 0x013b])
     expect(SHIRUBE_STATES.map((s) => s.key)).toEqual([

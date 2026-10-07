@@ -2,7 +2,7 @@
 //
 // 🟢 ID 3〜212 のうち170件。ID がそのままセーブの状態の表の添字（chunks/occupation）。
 // ✅ 209〜212 は受注・クリアの差分で添字と受注中の ID が一致した。
-// - client：依頼主。続き物は「同心 野戸仏新太郎」のように名前つき
+// - client：依頼主。組合なりわいは「同心 野戸仏新太郎」のように名前つき
 // - type：討伐・破壊・配達・伝言・説得・盗み など
 // - alignment：善良・悪質・空（ふつう）
 // - reward・bonus：成功報酬・追加報酬（文）
@@ -69,15 +69,17 @@ export function occupationById(id: number): OccupationEntry | undefined {
 
 /**
  * 画面で使うなりわいのまとまり。ids は ID の範囲（欠番を含む）。
- * 🟢 3〜161 は町の基本のなりわい、163〜170 は賭場、171〜206 は4系統の続き物、207・208 は最後のなりわい、209〜212 は汁部（DLC）
+ * 🟢 3〜161 は町の基本のなりわい、163〜166 は代官所の佐古津、167〜170 は賭場の女将（治安なりわい）、171〜206 は4つの組合なりわい、
+ * 207・208 は最後のなりわい、209〜212 は汁部（DLC）
  */
 export const OCCUPATION_GROUPS: readonly { key: string; label: string; from: number; to: number }[] = [
   { key: "basic", label: "町のなりわい", from: 3, to: 161 },
-  { key: "casino", label: "賭場", from: 162, to: 170 },
-  { key: "police", label: "同心の続き物", from: 171, to: 178 },
-  { key: "gangster", label: "極道の続き物", from: 179, to: 186 },
-  { key: "thief", label: "泥棒さんの続き物", from: 187, to: 194 },
-  { key: "homeless", label: "おっつぁんの続き物", from: 195, to: 206 },
+  { key: "sakotsu", label: "【同心頭】佐古津", from: 162, to: 166 },
+  { key: "okami", label: "【賭場】女将", from: 167, to: 170 },
+  { key: "police", label: "【岡っ引き】野戸仏", from: 171, to: 178 },
+  { key: "gangster", label: "【極道】小鳩", from: 179, to: 186 },
+  { key: "thief", label: "【泥棒】泥棒さん", from: 187, to: 194 },
+  { key: "homeless", label: "【宿無し】おっつぁん", from: 195, to: 206 },
   { key: "final", label: "最後のなりわい", from: 207, to: 208 },
   { key: "shirube", label: "汁部（DLC）", from: 209, to: 212 },
 ];

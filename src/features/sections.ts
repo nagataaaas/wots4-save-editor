@@ -89,7 +89,7 @@ export const sectionGroups: SectionGroup[] = [
       { id: 'world', label: '世界', icon: Globe, note: 'date-location・factions・gates・facilities 🔶 日数・時間帯、治安、勢力、門・柵、施設' },
       { id: 'scenario', label: 'シナリオ', icon: Flag, note: 'event-chart・scenario-flags・characters・hidden-route 🔶 イベントの状態、フラグ、人物、隠しルート' },
       { id: 'event-chart', label: 'イベントチャート', icon: Workflow, note: 'event-chart イベントの状態とチャート表示の記録', wide: true },
-      { id: 'occupation', label: 'なりわい', icon: ClipboardList, note: 'occupation・townsfolk（なりわいのフラグ）状態の表・クリア数・続き物の進み具合' },
+      { id: 'occupation', label: 'なりわい', icon: ClipboardList, note: 'occupation・townsfolk（なりわいのフラグ）状態の表・クリア数・組合なりわいの進み具合' },
       { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit 夜の約束（場所・人物）と夜這いの記録 🔶' },
       { id: 'styles', label: '流派', icon: ScrollText, note: 'styles 🔶 0x018BC0 付近' },
       { id: 'ore-ryu', label: '俺流', icon: Swords, note: 'custom-style ❓ U-6' },

@@ -1,4 +1,4 @@
-// 汁部（DLC）の続き物を、なりわいの画面の1つの欄で読み書きする。出典：docs/save_format/chunks/townsfolk「汁部（DLC）の続き物」。
+// 汁部（DLC）のなりわい 209〜212 の進み具合を、なりわいの画面の1つの欄で読み書きする。出典：docs/save_format/chunks/townsfolk「汁部（DLC）のなりわい」。
 //
 //   なりわいのフラグ 27〜31（0x0137〜0x013B、townsfolk.ts）🟢
 //     27      汁部と組んでいる。手を切ると 27〜31 がすべて 0 になる

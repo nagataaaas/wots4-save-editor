@@ -48,7 +48,7 @@ describe("🟢 なりわいの表 datatable/occupation/occupation.csv", () => {
     expect(new Set(OCCUPATIONS.map((o) => o.id)).size).toBe(170);
   });
 
-  it("✅ 差分の4件（209〜212）と、同心の続き物の1・2件目（171・172）", () => {
+  it("✅ 差分の4件（209〜212）と、【岡っ引き】野戸仏の組合なりわいの1・2件目（171・172）", () => {
     expect([209, 210, 211, 212].map((id) => occupationById(id)?.ja)).toEqual([
       "今宵の虎徹は",
       "薬売り",
@@ -62,6 +62,8 @@ describe("🟢 なりわいの表 datatable/occupation/occupation.csv", () => {
   it("🟢 まとまりの範囲は重ならず、表の全件がどれかに入る", () => {
     for (let i = 1; i < OCCUPATION_GROUPS.length; i++) expect(OCCUPATION_GROUPS[i].from).toBe(OCCUPATION_GROUPS[i - 1].to + 1);
     expect(occupationGroupOf(171)).toBe("police");
+    expect(occupationGroupOf(163)).toBe("sakotsu");
+    expect(occupationGroupOf(170)).toBe("okami");
     expect(occupationGroupOf(212)).toBe("shirube");
     for (const o of OCCUPATIONS) expect(OCCUPATION_GROUPS.some((g) => o.id >= g.from && o.id <= g.to)).toBe(true);
   });
