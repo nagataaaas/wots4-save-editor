@@ -5,7 +5,8 @@
 // - 0x3AAD6 u16 人物ごとに決まる値 🔶（U-19）。人物を選ぶときだけ書く
 // - 0x3AADA u8 髪の色 ✅位置 [U]。0〜4 ✅ [U]、5〜9 🔶（U-19）
 // - 0x3AADC u8 性別（体の種類）0＝男・1＝女 🔶、2〜4 🟢。単独の書き込みは上級者モードだけ（ユーザー判断 2026-10-08）
-// - 個別に設定のとき上半身・下半身が FFFF だとゲームでエラーになる ✅ [U]。部品 53 の上半身はクラッシュする ✅ [U]
+// - 個別に設定のとき上半身・下半身を FFFF にするとゲームでエラーになる ✅ [U]。部品 53 の上半身はクラッシュする ✅ [U]
+//   人物の「なし」が残ったまま個別に設定にするときは、止めずに警告する（ユーザー判断 2026-10-08）
 // - 0x3AAE4 + 12k：部品の組。+0 部品の番号 u16、+2 ❓（書かない）、+4〜+B モデルの値 u16 × 4 🟢
 //   顔・髪型・小物4種は書き込みの反映を確認 ✅ [U]。上半身・下半身・足元・k＝4 は要ゲーム内確認（U-19）
 // ❓ U-1：固定オフセットを採用（ユーザー判断 2026-10-07）。ファイルサイズを検証する。
@@ -74,7 +75,7 @@ export const GENDER_NAMES = ['男', '女'] as const
 
 /**
  * 0x3AADC の値の名前。0＝男・1＝女 🔶（主人公設定の人物）。
- * 2＝ローラ（✅ [U] 2026-10-08 人物として表示を確認）・3＝子供・4＝動物は、その見た目の組の値 🟢
+ * 2＝ローラ・3＝子供（✅ [U] 2026-10-08 人物として表示を確認）・4＝動物は、その見た目の組の値 🟢
  */
 export const BODY_KIND_NAMES = BODY_KINDS
 
@@ -180,14 +181,14 @@ function writePartRecord(bytes: Uint8Array, kind: PartKind, id: number): void {
   models.forEach((m, i) => writeU16(bytes, offset + 4 + i * 2, m === -1 ? 0xffff : m))
 }
 
-/** 個別に設定にしたとき、上半身・下半身が「なし」だとゲームでエラーになる（✅ [U]）。その部品を先に選ばせる */
-function requireCustomizable(view: AppearancePartsView, kind?: PartKind, id?: number): void {
-  for (const k of NONE_FORBIDDEN_WHEN_CUSTOM) {
-    const next = k === kind ? id : view.parts[k].id
-    if (next === -1) {
-      throw new RangeError(`${k === 'upper' ? '上半身' : '下半身'}が「なし」のまま個別に設定にするとゲームでエラーになります。先に${k === 'upper' ? '上半身' : '下半身'}を選んでください`)
-    }
-  }
+/**
+ * 個別に設定にしたとき上半身・下半身が「なし」だと、ゲームでエラーになるおそれがある（上半身・下半身を「なし」にした確認 ✅ [U] 2026-10-08）。
+ * 人物（青年主人公の下半身など）の「なし」が残ったまま個別に設定にする場合は、止めずに警告だけ出す（ユーザー判断 2026-10-08）。
+ * 部品 kind を id にしたときに残る「なし」の部品の警告文を返す。なければ null
+ */
+export function customNoneWarning(view: AppearancePartsView, kind?: PartKind, id?: number): string | null {
+  const names = NONE_FORBIDDEN_WHEN_CUSTOM.filter(k => (k === kind ? id : view.parts[k].id) === -1).map(k => (k === 'upper' ? '上半身' : '下半身'))
+  return names.length ? `${names.join('・')}が「なし」のまま個別に設定にすると、ゲームでエラーになるかもしれません` : null
 }
 
 /** 部品1つを書き、人物の番号を「個別に設定」にする（✅ [U] 2026-10-08 の手順） */
@@ -195,7 +196,6 @@ export function writePart(bytes: Uint8Array, kind: PartKind, id: number, advance
   const view = requireWritable(bytes)
   const error = validatePart(kind, id, view.gender, advanced)
   if (error) throw new RangeError(error)
-  requireCustomizable(view, kind, id)
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM)
   writePartRecord(bytes, kind, id)
 }
@@ -208,10 +208,9 @@ export function validateHairColor(value: number, advanced: boolean): string | nu
 
 /** 髪の色を書き、人物の番号を「個別に設定」にする（人物を指している間は人物の色で表示されるため ✅ [U]） */
 export function writeHairColor(bytes: Uint8Array, value: number, advanced = false): void {
-  const view = requireWritable(bytes)
+  requireWritable(bytes)
   const error = validateHairColor(value, advanced)
   if (error) throw new RangeError(error)
-  requireCustomizable(view)
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM)
   writeU8(bytes, APPEARANCE_PARTS_OFFSETS.hairColor, value)
 }
@@ -231,7 +230,7 @@ const HEIGHT_RATIOS = [0.9, 1, 1.1]
 /**
  * 人物を選ぶ（✅ [U] 2026-10-08 H1・H2）。人物の番号・0x3AAD6・性別・身長・髪の色・全部の部品とモデルの値を、その人物の値で書く。
  * 身長は、今の人物の身長に対する低い・高いの倍率を引き継ぐ（今が個別に設定のときや倍率が分からないときはふつう）。体型・肌色は変えない。
- * 主人公設定に出ない見た目の組（ローラ ✅ [U]、男の子・女の子 🔶）は上級者モードだけ。
+ * 主人公設定に出ない見た目の組（ローラ・男の子・女の子 ✅ [U]）は上級者モードだけ。
  */
 export function writePerson(bytes: Uint8Array, personId: number, advanced = false): void {
   const view = requireWritable(bytes)

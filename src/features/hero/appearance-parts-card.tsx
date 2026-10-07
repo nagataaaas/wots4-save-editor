@@ -17,6 +17,7 @@ import {
   HAIR_COLOR_NAMES,
   PART_WRITE_CONFIRMED,
   PERSON_CUSTOM,
+  customNoneWarning,
   genderName,
   readAppearanceParts,
   validatePart,
@@ -89,7 +90,7 @@ export function AppearancePartsCard() {
   const personOptions: SelectOption[] = PERSONS.filter(p => advanced || p.selectable)
     .map(p => ({
       value: String(p.id),
-      label: `${p.ja}（${p.id}）${p.dlc !== null ? ' [DLC]' : ''}${p.selectable || p.id === 29 ? '' : ' 🔶'}`,
+      label: `${p.ja}（${p.id}）${p.dlc !== null ? ' [DLC]' : ''}`,
       group: p.selectable ? GENDER_NAMES[p.bodyKind] : PERSON_HIDDEN_GROUP,
       keywords: [String(p.id), p.en],
     }))
@@ -106,6 +107,8 @@ export function AppearancePartsCard() {
   }))
 
   const kinds = PART_KINDS.filter(kind => advanced || kind !== 'body')
+  // 人物の上半身・下半身の「なし」が残ったまま個別に設定にするときの警告（止めない。ユーザー判断 2026-10-08）
+  const noneWarning = view ? customNoneWarning(view) : null
 
   return (
     <Card>
@@ -140,12 +143,12 @@ export function AppearancePartsCard() {
           value={view ? String(view.gender) : null}
           currentLabel={`不明な値 ${view?.gender}`}
           options={BODY_KIND_NAMES.flatMap((g, i) =>
-            BODY_KIND_CRASH.includes(i) ? [] : [{ value: String(i), label: `${g}（${i}）${i >= 3 ? ' ❓' : ''}` }],
+            BODY_KIND_CRASH.includes(i) ? [] : [{ value: String(i), label: `${g}（${i}）` }],
           )}
           problem={problem}
           disabled={!advanced}
           hint={advanced ? '上級者モード：性別だけを書き換えます。反対の性別の部品と組み合わさると表示が崩れるおそれがあります' : '人物を選ぶと決まります'}
-          note="🔶 0＝男、1＝女。2＝ローラ（✅ [U] 人物として表示を確認）。🟢 3＝子供の見た目の組の値（主人公に書いたときの動きは ❓）。4＝動物はロードでクラッシュするので出さない（✅ [U]）"
+          note="🔶 0＝男、1＝女。2＝ローラ・3＝子供（✅ [U] 人物として表示を確認）。4＝動物はロードでクラッシュするので出さない（✅ [U]）"
           onChange={v => update(b => writeGender(b, Number(v), advanced))}
         />
         <SelectRow
@@ -158,6 +161,7 @@ export function AppearancePartsCard() {
           problem={problem}
           hint={advanced ? '上級者モード：0〜15（0・10 以上は色がつきません）' : `${HAIR_COLOR_MIN}〜${HAIR_COLOR_MAX}`}
           note="値＝主人公設定の一覧の左からの位置。✅ [U] 0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪。🔶 5＝赤・6〜9（U-19）"
+          warning={noneWarning}
           onChange={v => update(b => writeHairColor(b, Number(v), advanced))}
         />
         {kinds.map(kind => {
@@ -180,6 +184,7 @@ export function AppearancePartsCard() {
                 options={partOptions(kind, heroGender, advanced)}
                 problem={problem}
                 hint={advanced ? undefined : `${genderName(heroGender) ?? '不明な性別'}の名前のある部品だけを表示しています`}
+                warning={noneWarning}
                 note={PART_NOTES[kind]}
                 searchPlaceholder={`${PART_KIND_LABELS[kind]}を検索`}
                 onChange={v => update(b => writePart(b, kind, Number(v), advanced))}

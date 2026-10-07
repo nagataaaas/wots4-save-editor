@@ -10,7 +10,7 @@
 // 人物（person.csv、全行 🟢。主人公設定の一覧に全部出るかは 🔶）：
 // - id：人物の番号（セーブの 0x3AAD4）。連番ではない
 // - bodyKind：体の種類（0x3AADC）、secondId：0x3AAD6 に入る値 🔶（null＝FFFF）、hairColor：髪の色（0x3AADA）
-// - selectable：主人公設定の一覧に出る人物。出ないローラ（✅ [U]）・男の子・女の子（🔶）は上級者モードだけ
+// - selectable：主人公設定の一覧に出る人物。出ないローラ・男の子・女の子（✅ [U] 2026-10-08）は上級者モードだけ
 // - parts：その人物の部品の番号（null＝なし）
 import bodyCsv from "../../../docs/save_format/datatable/appearance/body.csv?raw";
 import extraCsv from "../../../docs/save_format/datatable/appearance/extra.csv?raw";
@@ -72,7 +72,7 @@ export type PersonEntry = {
   secondId: number | null;
   hairColor: number;
   parts: Record<PartKind, number | null>;
-  /** 主人公設定の一覧に出る人物（🔶）。false は上級者モードだけで選べる見た目の組（ローラ ✅ [U]、男の子・女の子 🔶） */
+  /** 主人公設定の一覧に出る人物（🔶）。false は上級者モードだけで選べる見た目の組（ローラ・男の子・女の子 ✅ [U]） */
   selectable: boolean;
 };
 

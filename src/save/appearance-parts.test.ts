@@ -6,6 +6,7 @@ import { readF32, writeF32 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import {
   NONE_ALLOWED,
+  customNoneWarning,
   readAppearanceParts,
   validatePart,
   writeGender,
@@ -87,7 +88,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(readF32(bytes, 0x3aae0)).toBe(175)
   })
 
-  it('✅ [U] ローラ（体の種類 2）は上級者モードだけで選べる。男の子・女の子は 🔶 要ゲーム内確認', () => {
+  it('✅ [U] ローラ（体の種類 2）・男の子・女の子（体の種類 3）は上級者モードだけで選べる', () => {
     const bytes = makeSave()
     const before = bytes.slice()
     expect(() => writePerson(bytes, 29)).toThrow(/上級者/)
@@ -198,17 +199,18 @@ describe('主人公の見た目のレコード（U-19）', () => {
     }
   })
 
-  it('✅ [U] 個別に設定にするとき、上半身・下半身が「なし」なら先に選ばせる', () => {
+  it('人物の下半身が「なし」のまま個別に設定にするときは、止めずに警告する（ユーザー判断 2026-10-08）', () => {
     const bytes = makeSave()
+    expect(customNoneWarning(readAppearanceParts(bytes)!)).toBeNull()
     writePerson(bytes, 20) // 青年主人公は下半身なし（人物を選んでいる間は表示できる）
-    expect(readAppearanceParts(bytes)!.parts.lower.id).toBe(-1)
-    const before = bytes.slice()
-    expect(() => writePart(bytes, 'face', 43)).toThrow(/下半身/)
-    expect(() => writeHairColor(bytes, 1)).toThrow(/下半身/)
-    expect(bytes).toEqual(before)
-    writePart(bytes, 'lower', 88)
+    const view = readAppearanceParts(bytes)!
+    expect(view.parts.lower.id).toBe(-1)
+    expect(customNoneWarning(view)).toMatch(/下半身.*かもしれません/)
+    expect(customNoneWarning(view, 'lower', 88)).toBeNull()
     writePart(bytes, 'face', 43)
     expect(readAppearanceParts(bytes)!.person).toBe(0xffff)
+    writeHairColor(bytes, 1)
+    expect(bytes[0x3aada]).toBe(1)
   })
 
   it('🔶 性別の単独の書き込みは上級者モードだけ', () => {
