@@ -1,0 +1,497 @@
+import { useMemo, useState } from "react";
+import { CertaintyBadge } from "@/components/certainty-badge";
+import { InfoTip } from "@/components/info-tip";
+import { LazySelect } from "@/components/lazy-select";
+import { SelectRow } from "@/components/select-row";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { formatOffset } from "@/lib/format";
+import { useSave } from "@/lib/save-context";
+import {
+  OCCUPATION_ACCEPTED_OFFSET,
+  OCCUPATION_CLEAR_COUNT_OFFSET,
+  OCCUPATION_CLEAR_MAX,
+  OCCUPATION_NOT_APPEARED,
+  OCCUPATION_STATE_OFFSET,
+  OCCUPATION_WRITE_CONFIRMED,
+  occupationStateOffset,
+  readOccupations,
+  syncClearCount,
+  validateOccupationState,
+  writeOccupationState,
+  writeOccupationStates,
+  type OccupationView,
+} from "@/save/occupation";
+import {
+  OCCUPATIONS,
+  OCCUPATION_GROUPS,
+  occupationById,
+  occupationGroupOf,
+  type OccupationEntry,
+} from "@/save/master/occupation-names";
+import {
+  OCCUPATION_FLAG_OFFSETS,
+  OCCUPATION_FLAG_START,
+  TOWNSFOLK_NOTES,
+  TOWNSFOLK_START,
+  readTownsfolk,
+  writeTownsfolk,
+  type TownsfolkView,
+} from "@/save/townsfolk";
+
+const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+type Views = { occupations: OccupationView; townsfolk: TownsfolkView };
+
+type StateKind = "hidden" | "open" | "cleared";
+
+const kindOf = (v: number): StateKind => (v === OCCUPATION_NOT_APPEARED ? "hidden" : v === 0 ? "open" : "cleared");
+
+const KIND_LABELS: Record<StateKind, string> = {
+  hidden: "まだ出ていない",
+  open: "受けられる・未クリア",
+  cleared: "クリア済み",
+};
+
+/** 種類を選んだときに書く値。クリア済みは今の回数を残し、0 回なら 1 にする */
+const valueForKind = (kind: StateKind, current: number) =>
+  kind === "hidden" ? OCCUPATION_NOT_APPEARED : kind === "open" ? 0 : kindOf(current) === "cleared" ? current : 1;
+
+/** 続き物（なりわいのフラグ）の欄の下に出す、その系統のなりわい */
+const FLAG_JOBS: Readonly<Record<number, readonly number[]>> = {
+  [OCCUPATION_FLAG_START + 4]: range(171, 178),
+  [OCCUPATION_FLAG_START + 5]: range(179, 186),
+  [OCCUPATION_FLAG_START + 6]: range(187, 194),
+  [OCCUPATION_FLAG_START + 7]: range(195, 206),
+  [OCCUPATION_FLAG_START + 8]: range(163, 166),
+  [OCCUPATION_FLAG_START + 9]: [167, 168, 169, 170, 208],
+  [OCCUPATION_FLAG_START + 26]: [207, 208],
+};
+
+function range(from: number, to: number): number[] {
+  return Array.from({ length: to - from + 1 }, (_, i) => from + i).filter((id) => occupationById(id));
+}
+
+function matches(query: string, ...texts: string[]): boolean {
+  const q = query.trim().toLowerCase();
+  return q === "" || texts.some((t) => t.toLowerCase().includes(q));
+}
+
+/** なりわい：状態の表・クリア数・受注中、続き物の進み具合（なりわいのフラグ） */
+export function OccupationPage() {
+  const { save, update } = useSave();
+  const [writeError, setWriteError] = useState<string | null>(null);
+  const result = useMemo((): { views: Views } | { error: string } | null => {
+    if (!save) return null;
+    try {
+      return { views: { occupations: readOccupations(save.working), townsfolk: readTownsfolk(save.working) } };
+    } catch (e) {
+      return { error: errorMessage(e) };
+    }
+  }, [save]);
+  const views = result && "views" in result ? result.views : null;
+
+  function write(mutator: (bytes: Uint8Array) => void) {
+    setWriteError(null);
+    try {
+      update(mutator);
+    } catch (e) {
+      setWriteError(errorMessage(e));
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {!save && (
+        <Alert>
+          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
+          <AlertDescription>サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。</AlertDescription>
+        </Alert>
+      )}
+      {result && "error" in result && (
+        <Alert variant="destructive">
+          <AlertTitle>読み込めません</AlertTitle>
+          <AlertDescription>{result.error}</AlertDescription>
+        </Alert>
+      )}
+      {views?.occupations.layoutProblem && (
+        <Alert variant="destructive">
+          <AlertTitle>読み取り専用</AlertTitle>
+          <AlertDescription>{views.occupations.layoutProblem}</AlertDescription>
+        </Alert>
+      )}
+      {writeError && (
+        <Alert variant="destructive">
+          <AlertTitle>書き込めません</AlertTitle>
+          <AlertDescription>{writeError}</AlertDescription>
+        </Alert>
+      )}
+      <SummaryCard view={views?.occupations ?? null} write={write} />
+      <SeriesCard key={`${save?.loadId ?? 0}-series`} view={views?.townsfolk ?? null} states={views?.occupations.states ?? null} write={write} />
+      <StatesCard key={`${save?.loadId ?? 0}-states`} view={views?.occupations ?? null} write={write} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- クリア数・受注中
+
+function SummaryCard({ view, write }: { view: OccupationView | null; write: (m: (b: Uint8Array) => void) => void }) {
+  const readOnly = !view || view.layoutProblem !== null;
+  const accepted = view && view.accepted !== 0 ? occupationById(view.accepted) : null;
+  const mismatch = view !== null && view.clearCount !== view.stateSum;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>クリア数・受注中</CardTitle>
+        <CardDescription>
+          クリアしたなりわいの数は、下の状態の表の合計（クリア回数の合計）と揃えておきます。揃っていないときのゲームの動作は ❓ です。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <Label>クリアしたなりわいの数</Label>
+            <InfoTip offset={OCCUPATION_CLEAR_COUNT_OFFSET}>u16。状態の表の合計に等しい</InfoTip>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-sm">{view ? view.clearCount : "—"}</span>
+            <span className="text-muted-foreground text-xs">（状態の表の合計 {view ? view.stateSum : "—"}）</span>
+            <Button variant="outline" size="sm" disabled={readOnly || !mismatch} onClick={() => write(syncClearCount)}>
+              表の合計に揃える
+            </Button>
+          </div>
+          {mismatch && <p className="text-destructive text-xs">クリア数と状態の表の合計が違います</p>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <Label>受注中のなりわい</Label>
+            <InfoTip offset={OCCUPATION_ACCEPTED_OFFSET}>
+              u16。受注していなければ 0。周りの値（受注中の種類など）の意味が分かっていないので、表示だけです
+            </InfoTip>
+          </div>
+          <span className="text-sm">
+            {!view ? "—" : view.accepted === 0 ? "なし" : accepted ? `${view.accepted} ${accepted.ja}（${accepted.client}）` : `${view.accepted}（表にない ID）`}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------- 続き物の進み具合
+
+function SeriesCard({
+  view,
+  states,
+  write,
+}: {
+  view: TownsfolkView | null;
+  states: readonly number[] | null;
+  write: (m: (b: Uint8Array) => void) => void;
+}) {
+  const { advanced } = useAdvancedMode();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          続き物の進み具合
+          <InfoTip offset={`${formatOffset(OCCUPATION_FLAG_START)} + 番号（u8）`}>
+            なりわいのフラグ。依頼主はこの値を見て次の依頼を出します（状態の表は見ません）
+          </InfoTip>
+        </CardTitle>
+        <CardDescription>
+          同心・極道・泥棒さん・おっつぁんの続き物は、十の位が何件目か、一の位が 0＝依頼前・1＝依頼済みです。
+          同心の続き物は、20 で2件目「督促状」から始まり、100 で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。
+          続き物を 100 にしても、最後のなりわいが 99 未満なら新しい依頼は出ません。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        {OCCUPATION_FLAG_OFFSETS.map((offset) => {
+          const info = TOWNSFOLK_NOTES[offset];
+          const current = view?.values[offset - TOWNSFOLK_START] ?? null;
+          const jobs = FLAG_JOBS[offset];
+          return (
+            <SelectRow
+              key={offset}
+              label={`${info.name}（番号 ${offset - OCCUPATION_FLAG_START}）`}
+              offset={offset}
+              badges={
+                offset === OCCUPATION_FLAG_START + 4 ? undefined : (
+                  <Badge variant="outline" className="font-normal">
+                    書き込みは要ゲーム内確認
+                  </Badge>
+                )
+              }
+              value={current === null ? null : String(current)}
+              currentLabel={current === null ? undefined : `${current} 不明`}
+              options={(info.values ?? []).map((s) => ({ value: String(s.value), label: `${s.value} ${s.label}`, group: s.group }))}
+              problem={view?.problem ?? null}
+              note={info.note}
+              hint={
+                jobs &&
+                jobs
+                  .map((id) => {
+                    const v = states?.[id];
+                    const mark = v === undefined ? "" : kindOf(v) === "cleared" ? "✓" : "";
+                    return `${id} ${occupationById(id)?.ja}${mark}`;
+                  })
+                  .join(" → ")
+              }
+              onChange={(v) => write((b) => writeTownsfolk(b, offset, Number(v), { advanced }))}
+            />
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------- 状態の表
+
+type KindFilter = "all" | StateKind;
+
+function StatesCard({ view, write }: { view: OccupationView | null; write: (m: (b: Uint8Array) => void) => void }) {
+  const { advanced } = useAdvancedMode();
+  const readOnly = !view || view.layoutProblem !== null;
+  const [query, setQuery] = useState("");
+  const [group, setGroup] = useState("all");
+  const [filter, setFilter] = useState<KindFilter>("all");
+  const [sync, setSync] = useState(true);
+
+  const rows = OCCUPATIONS.filter((o) => group === "all" || occupationGroupOf(o.id) === group)
+    .filter((o) => matches(query, o.ja, o.en, o.client, o.type, String(o.id)))
+    .filter((o) => filter === "all" || !view || kindOf(view.states[o.id]) === filter);
+  const counts = { hidden: 0, open: 0, cleared: 0 };
+  if (view) for (const o of OCCUPATIONS) counts[kindOf(view.states[o.id])]++;
+
+  /** 状態を書き、指定があればクリア数も揃える */
+  const writeStates = (mutator: (b: Uint8Array) => void) =>
+    write((b) => {
+      mutator(b);
+      if (sync) syncClearCount(b);
+    });
+
+  const groupItems = { all: "すべて", ...Object.fromEntries(OCCUPATION_GROUPS.map((g) => [g.key, g.label])) };
+  const filterItems = { all: "すべて", ...KIND_LABELS };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          なりわいの状態
+          <InfoTip offset={`${formatOffset(OCCUPATION_STATE_OFFSET)} + ID×2（u16 × 256）`}>
+            FFFF＝まだ出ていない、0＝受けられる・未クリア（🔶）、1 以上＝クリアした回数。
+            1 にするとなりわい一覧でクリア済みになることを確認済み（今宵の虎徹は）
+          </InfoTip>
+          <CertaintyBadge mark="🔶" text="0 の意味と、FFFF・0 への書き込みは要ゲーム内確認" />
+        </CardTitle>
+        <CardDescription>
+          なりわいごとのクリア回数です。クリア済みにしても、報酬（お金・容姿・装飾品）は増えず、続き物も進みません（続き物は上の欄で進めます）。
+          全 {OCCUPATIONS.length} 件のうち、クリア済み {counts.cleared}・受けられる {counts.open}・まだ出ていない {counts.hidden}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Input className="w-56" placeholder="名前・依頼主・ID で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Select value={group} items={groupItems} onValueChange={(v) => v !== null && setGroup(v)}>
+            <SelectTrigger className="w-44" aria-label="まとまり">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">すべて</SelectItem>
+              {OCCUPATION_GROUPS.map((g) => (
+                <SelectItem key={g.key} value={g.key}>
+                  {g.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filter} items={filterItems} onValueChange={(v) => v !== null && setFilter(v as KindFilter)}>
+            <SelectTrigger className="w-44" aria-label="状態">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">すべて</SelectItem>
+              {(Object.keys(KIND_LABELS) as StateKind[]).map((k) => (
+                <SelectItem key={k} value={k}>
+                  {KIND_LABELS[k]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {(Object.keys(KIND_LABELS) as StateKind[]).map((k) => (
+            <Button
+              key={k}
+              variant="outline"
+              size="sm"
+              disabled={readOnly || rows.length === 0}
+              onClick={() =>
+                writeStates((b) => {
+                  // クリア済みは、すでにクリアしたものの回数を残す
+                  for (const o of rows) writeOccupationStates(b, [o.id], valueForKind(k, view?.states[o.id] ?? 0));
+                })
+              }
+            >
+              表示中を「{KIND_LABELS[k]}」に
+            </Button>
+          ))}
+          <label className="flex items-center gap-2 text-sm">
+            <Switch checked={sync} onCheckedChange={(on: boolean) => setSync(on)} aria-label="クリア数も揃える" />
+            書き込むときにクリア数も揃える
+          </label>
+        </div>
+        <div className="flex flex-col divide-y">
+          {rows.map((o) => (
+            <StateRow
+              key={o.id}
+              entry={o}
+              value={view?.states[o.id] ?? null}
+              accepted={view?.accepted === o.id}
+              readOnly={readOnly}
+              advanced={advanced}
+              write={writeStates}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StateRow({
+  entry: o,
+  value,
+  accepted,
+  readOnly,
+  advanced,
+  write,
+}: {
+  entry: OccupationEntry;
+  value: number | null;
+  accepted: boolean;
+  readOnly: boolean;
+  advanced: boolean;
+  write: (m: (b: Uint8Array) => void) => void;
+}) {
+  const kind = value === null ? null : kindOf(value);
+  const offset = occupationStateOffset(o.id);
+  return (
+    <div className="flex flex-wrap items-center gap-3 py-1.5">
+      <LazySelect
+        value={kind}
+        items={KIND_LABELS}
+        placeholder="未読み込み"
+        disabled={readOnly}
+        className="w-48"
+        aria-label={o.ja}
+        onValueChange={(k) => value !== null && write((b) => writeOccupationState(b, o.id, valueForKind(k as StateKind, value), { advanced }))}
+      >
+        {(Object.keys(KIND_LABELS) as StateKind[]).map((k) => (
+          <SelectItem key={k} value={k}>
+            {KIND_LABELS[k]}
+          </SelectItem>
+        ))}
+      </LazySelect>
+      {kind === "cleared" && value !== null && (
+        <CountInput id={o.id} value={value} readOnly={readOnly} advanced={advanced} write={write} />
+      )}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-muted-foreground font-mono text-xs">{o.id}</span>
+          <span className="text-sm">{o.ja}</span>
+          <InfoTip offset={offset}>
+            {o.en}
+            {o.noteJa && `。${o.noteJa}`}
+          </InfoTip>
+          <Badge variant="secondary" className="font-normal">
+            {o.client}
+          </Badge>
+          <Badge variant="outline" className="font-normal">
+            {o.type}
+          </Badge>
+          {o.alignment && (
+            <Badge variant="outline" className="font-normal">
+              {o.alignment}
+            </Badge>
+          )}
+          {accepted && <Badge className="font-normal">受注中</Badge>}
+          {OCCUPATION_WRITE_CONFIRMED.has(o.id) && <span className="text-xs">✅</span>}
+        </div>
+        <span className="text-muted-foreground text-xs">
+          報酬 {o.reward.toLocaleString()} 文{o.bonus > 0 && `・追加 ${o.bonus.toLocaleString()} 文`}
+          {o.deadlineDays !== null && `・期限 ${o.deadlineDays} 日`}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** クリア回数の入力欄。Enter か欄を離れたときに書く */
+function CountInput({
+  id,
+  value,
+  readOnly,
+  advanced,
+  write,
+}: {
+  id: number;
+  value: number;
+  readOnly: boolean;
+  advanced: boolean;
+  write: (m: (b: Uint8Array) => void) => void;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  const [error, setError] = useState<string | null>(null);
+  const [shown, setShown] = useState(value);
+  // セーブ側の値が変わったら入力中の値を捨てる
+  if (shown !== value) {
+    setShown(value);
+    setDraft(String(value));
+    setError(null);
+  }
+
+  function commit() {
+    const text = draft.trim();
+    if (!/^\d+$/.test(text) || Number(text) < 1) {
+      setError("1 以上の整数");
+      return;
+    }
+    const v = Number(text);
+    const problem = validateOccupationState(id, v, value, { advanced });
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setError(null);
+    if (v !== value) write((b) => writeOccupationState(b, id, v, { advanced }));
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Input
+        className="w-20"
+        inputMode="numeric"
+        aria-label="クリア回数"
+        disabled={readOnly}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && commit()}
+      />
+      <span className="text-muted-foreground text-xs">回</span>
+      {error && <span className="text-destructive text-xs">{error}</span>}
+      {!error && !advanced && value > OCCUPATION_CLEAR_MAX && <span className="text-destructive text-xs">上限 {OCCUPATION_CLEAR_MAX} を超えています</span>}
+    </div>
+  );
+}
