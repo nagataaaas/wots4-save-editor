@@ -102,7 +102,7 @@ const valueForKind = (kind: StateKind, current: number) =>
         ? current
         : 1;
 
-/** 組合なりわいなど（なりわいのフラグ）の欄の下に出す、その依頼主のなりわい */
+/** 連続なりわいなど（なりわいのフラグ）の欄の下に出す、その依頼主のなりわい */
 const FLAG_JOBS: Readonly<Record<number, readonly number[]>> = {
   [OCCUPATION_FLAG_START + 4]: range(171, 178),
   [OCCUPATION_FLAG_START + 5]: range(179, 186),
@@ -124,7 +124,7 @@ function matches(query: string, ...texts: string[]): boolean {
   return q === "" || texts.some((t) => t.toLowerCase().includes(q));
 }
 
-/** なりわい：状態の表・クリア数・受注中、組合なりわいなどの進み具合（なりわいのフラグ） */
+/** なりわい：状態の表・クリア数・受注中、連続なりわいなどの進み具合（なりわいのフラグ） */
 export function OccupationPage() {
   const { save, update } = useSave();
   const [writeError, setWriteError] = useState<string | null>(null);
@@ -291,7 +291,7 @@ function AcceptRow({
       options={options}
       problem={view?.problem ?? null}
       searchPlaceholder="名前・依頼主・ID"
-      note={`${formatOffset(ACCEPT_OFFSETS.id)} u16 ID、${formatOffset(ACCEPT_OFFSETS.day)} u16 受注した日（経過日数）、${formatOffset(ACCEPT_OFFSETS.slot)} u8 受注した時間帯、${formatOffset(ACCEPT_OFFSETS.active)} u8 受注中だけ FF。受注すると、今の日・時間帯で受注したことにし、組合なりわいなら依頼主がそのとき書くなりわいのフラグ（野戸仏の2件目なら番号 4＝21 など）も書きます。記録が「まだ出ていない」なら「出た・未クリア」にします。ほかのなりわいを受注中なら、先にそれを外します（組合なりわいは「n 件目を依頼する前」に戻す）`}
+      note={`${formatOffset(ACCEPT_OFFSETS.id)} u16 ID、${formatOffset(ACCEPT_OFFSETS.day)} u16 受注した日（経過日数）、${formatOffset(ACCEPT_OFFSETS.slot)} u8 受注した時間帯、${formatOffset(ACCEPT_OFFSETS.active)} u8 受注中だけ FF。受注すると、今の日・時間帯で受注したことにし、連続なりわいなら依頼主がそのとき書くなりわいのフラグ（野戸仏の2件目なら番号 4＝21 など）も書きます。記録が「まだ出ていない」なら「出た・未クリア」にします。ほかのなりわいを受注中なら、先にそれを外します（連続なりわいは「n 件目を依頼する前」に戻す）`}
       hint={
         view && view.id !== 0
           ? `${view.day + 1}日目 ${TIME_SLOTS[view.slot] ?? `時間帯 ${view.slot}`}に受注${entry ? `（${entry.client}）` : ""}${rule?.onAccept.length ? `。受注中のフラグ：${flagWritesText(rule.onAccept)}` : ""}${rule?.onRelease.length ? `。外すと ${flagWritesText(rule.onRelease)}` : ""}`
@@ -304,7 +304,7 @@ function AcceptRow({
   );
 }
 
-// ---------------------------------------------------------------- 組合なりわいなどの進み具合
+// ---------------------------------------------------------------- 連続なりわいなどの進み具合
 
 function SeriesCard({
   view,
@@ -323,13 +323,13 @@ function SeriesCard({
         <CardTitle className="flex flex-wrap items-center gap-2">
           依頼主ごとの進み具合
           <InfoTip offset={`${formatOffset(OCCUPATION_FLAG_START)} + 番号（u8）`}>
-            なりわいのフラグ。依頼主はこの値を見て次の依頼を出します（状態の表は見ません）。「組合なりわい」はこのエディタでの呼び方で、Wiki では「連続なりわい」と呼ばれています
+            なりわいのフラグ。依頼主はこの値を見て次の依頼を出します（状態の表は見ません）。「連続なりわい」は Wiki での呼び方です（ゲーム内には呼び方がありません）
           </InfoTip>
         </CardTitle>
         <CardDescription>
-          【岡っ引き】野戸仏・【極道】小鳩・【泥棒】泥棒さん・【宿無し】おっつぁんの組合なりわいは、十の位が何件目か、一の位が
-          0＝依頼前・1＝依頼済みです。 野戸仏の組合なりわいは、20 で2件目「督促状」から始まり、100
-          で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。 組合なりわいを
+          【岡っ引き】野戸仏・【極道】小鳩・【泥棒】泥棒さん・【宿無し】おっつぁんの連続なりわいは、十の位が何件目か、一の位が
+          0＝依頼前・1＝依頼済みです。 野戸仏の連続なりわいは、20 で2件目「督促状」から始まり、100
+          で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。 連続なりわいを
           100 にしても、最後のなりわいが 99 未満なら新しい依頼は出ません。
         </CardDescription>
       </CardHeader>
@@ -363,7 +363,7 @@ function SeriesCard({
               problem={view?.problem ?? null}
               note={
                 isSeries
-                  ? `${info.note}。「依頼済み」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この組合なりわいを受注中なら受注を外します`
+                  ? `${info.note}。「依頼済み」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この連続なりわいを受注中なら受注を外します`
                   : info.note
               }
               hint={jobs && jobList(jobs)}
@@ -475,7 +475,7 @@ function StatesCard({
           <CertaintyBadge mark="🔶" text="0 の意味と、FFFF・0 への書き込みは要ゲーム内確認" />
         </CardTitle>
         <CardDescription>
-          ゲーム内の統計に出る、周回をまたいだなりわいごとのクリア回数です。クリア済みにしても、報酬（お金・容姿・装飾品）は増えず、今の周回の組合なりわいも進みません（組合なりわいは上の欄で進めます）。
+          ゲーム内の統計に出る、周回をまたいだなりわいごとのクリア回数です。クリア済みにしても、報酬（お金・容姿・装飾品）は増えず、今の周回の連続なりわいも進みません（連続なりわいは上の欄で進めます）。
           全 {OCCUPATIONS.length} 件のうち、クリア済み {counts.cleared}・出た・未クリア{" "}
           {counts.open}・まだ出ていない {counts.hidden}
         </CardDescription>

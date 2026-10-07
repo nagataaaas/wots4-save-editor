@@ -89,7 +89,7 @@ describe('🔶 町の人の状態の候補 0x011C〜0x05FF chunks/townsfolk', ()
     expect(b[0x0127]).toBe(1)
   })
 
-  it('🟢 なりわいのフラグは 0x011C + 番号。✅ 0x0120（番号 4）は【岡っ引き】野戸仏の組合なりわいで、20・100 を通常モードで書ける', () => {
+  it('🟢 なりわいのフラグは 0x011C + 番号。✅ 0x0120（番号 4）は【岡っ引き】野戸仏の連続なりわいで、20・100 を通常モードで書ける', () => {
     expect(occupationFlagOffset(4)).toBe(0x0120)
     expect(occupationFlagOffset(31)).toBe(0x013b)
     expect(TOWNSFOLK_NOTES[0x0120].name).toBe('【岡っ引き】野戸仏')
@@ -107,7 +107,7 @@ describe('🔶 町の人の状態の候補 0x011C〜0x05FF chunks/townsfolk', ()
     expect(() => writeTownsfolk(b, 0x0120, 12, { advanced: false })).toThrow(RangeError)
   })
 
-  it('🟢 組合なりわいの値は 0・n0・n1（n＝1〜8）・90・91・97・99・100。❓ 90 番台の違いは未確認', () => {
+  it('🟢 連続なりわいの値は 0・n0・n1（n＝1〜8）・90・91・97・99・100。❓ 90 番台の違いは未確認', () => {
     expect(SERIES_VALUES.map((v) => v.value)).toEqual([
       0, 10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 60, 61, 70, 71, 80, 81, 90, 91, 97, 99, 100,
     ])

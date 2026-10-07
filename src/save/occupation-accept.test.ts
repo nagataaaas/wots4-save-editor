@@ -43,7 +43,7 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     expect(ACCEPT_OFFSETS).toEqual({ id: 0x45f4e, day: 0x45f52, slot: 0x45f54, active: 0x45f55 })
   })
 
-  it('🟢 組合なりわいは n 件目の受注で n1。小鳩・おっつぁんの8件目は書かず 80、おっつぁんの 203・206 は 61・80', () => {
+  it('🟢 連続なりわいは n 件目の受注で n1。小鳩・おっつぁんの8件目は書かず 80、おっつぁんの 203・206 は 61・80', () => {
     expect(acceptRuleOf(171).onAccept).toEqual([{ flag: 4, value: 11 }])
     expect(acceptRuleOf(178).onAccept).toEqual([{ flag: 4, value: 81 }])
     expect(acceptRuleOf(185).onAccept).toEqual([{ flag: 5, value: 71 }])
@@ -66,7 +66,7 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     expect(ACCEPT_RULES.size).toBe(8 * 4 + 2 + 4)
   })
 
-  it('🟢 組合なりわいの「n 件目を依頼済み」の値から、受注するなりわいを引く', () => {
+  it('🟢 連続なりわいの「n 件目を依頼済み」の値から、受注するなりわいを引く', () => {
     expect(seriesAcceptOf(4, 21)).toBe(172)
     expect(seriesAcceptOf(7, 41)).toBe(199)
     expect(seriesAcceptOf(5, 81)).toBeUndefined()
@@ -84,7 +84,7 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     expect(after[stateOffset(3)]).toBe(0)
   })
 
-  it('🟢 組合なりわいの受注はフラグも書き、ほかのなりわいを受注中なら先に外す（🔶 n1 → n0）', () => {
+  it('🟢 連続なりわいの受注はフラグも書き、ほかのなりわいを受注中なら先に外す（🔶 n1 → n0）', () => {
     const b = makeSave()
     acceptOccupation(b, 172)
     expect(b[flagOffset(4)]).toBe(21)
@@ -105,15 +105,15 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     expect(readAccepted(after)).toMatchObject({ id: 0, day: 0, slot: 0, active: 0 })
   })
 
-  it('組合なりわいの欄から：依頼済みを選ぶと受注し、ほかの値を選ぶとその組合なりわいの受注だけを外す', () => {
+  it('連続なりわいの欄から：依頼済みを選ぶと受注し、ほかの値を選ぶとその連続なりわいの受注だけを外す', () => {
     const b = makeSave()
     writeSeriesState(b, [{ flag: 4, value: 31 }], seriesAcceptOf(4, 31), { advanced: false })
     expect(b[flagOffset(4)]).toBe(31)
     expect(readAccepted(b).id).toBe(173)
-    // 別の組合なりわいを書いても受注はそのまま
+    // 別の連続なりわいを書いても受注はそのまま
     writeSeriesState(b, [{ flag: 5, value: 30 }], undefined, { advanced: false })
     expect(readAccepted(b).id).toBe(173)
-    // 同じ組合なりわいを「依頼する前」にすると、受注中の情報だけを 0 にする（選んだ値はそのまま）
+    // 同じ連続なりわいを「依頼する前」にすると、受注中の情報だけを 0 にする（選んだ値はそのまま）
     writeSeriesState(b, [{ flag: 4, value: 40 }], undefined, { advanced: false })
     expect(b[flagOffset(4)]).toBe(40)
     expect(readAccepted(b)).toMatchObject({ id: 0, day: 0, slot: 0, active: 0 })

@@ -1,7 +1,7 @@
 // 町の人（店主など）の状態の候補 0x011C〜0x05FF（1,252 B）を、生の値で編集する。出典：docs/save_format/chunks/townsfolk（[U] 2026-10-06）。
 // 🟢 始まりは 0x011C（直前の 0x00DC〜0x011B は主人公名。hero.ts が UTF-16LE として扱うので、ここでは触らない）。
-//    0x011C〜 は「なりわいのフラグ」の配列（0x011C + 番号）。0x0120（番号 4、【岡っ引き】野戸仏の組合なりわい）は書き換えで確認（✅ 2026-10-07）。
-//    組合なりわいなどの番号（4〜9・25〜31）は OCCUPATION_FLAG_NOTES に値の表を持ち、なりわいの画面で編集する（4 以外は 🟢）。
+//    0x011C〜 は「なりわいのフラグ」の配列（0x011C + 番号）。0x0120（番号 4、【岡っ引き】野戸仏の連続なりわい）は書き換えで確認（✅ 2026-10-07）。
+//    連続なりわいなどの番号（4〜9・25〜31）は OCCUPATION_FLAG_NOTES に値の表を持ち、なりわいの画面で編集する（4 以外は 🟢）。
 // 🔶 終わりの位置は未確定。当初は 0x04BF までとしていたが、さよ（0x0528）が見つかったので 0x05FF まで広げた。
 // 0x04C0〜0x0B2F は、手元のサンプルでは 0x0528 以外すべて 0（0x0B30 以降は float やカウンタ）。
 //
@@ -69,8 +69,8 @@ export function occupationFlagOffset(n: number): number {
 }
 
 /**
- * 組合なりわい（番号 4〜7）の値。十の位が何件目か、一の位が 0＝依頼前・1＝依頼済み。100 で完了。
- * 「組合なりわい」はこのエディタでの呼び方（ゲーム内の文には呼び方がなく、開発用のメニューだけ「組合ミッション」）。
+ * 連続なりわい（番号 4〜7）の値。十の位が何件目か、一の位が 0＝依頼前・1＝依頼済み。100 で完了。
+ * 「連続なりわい」は Wiki での呼び方（ゲーム内の文には呼び方がなく、開発用のメニューだけ「組合ミッション」）。
  * ✅ 番号 4（野戸仏）は 20＝2件目から始まる・100＝完了を書き換えで確認（2026-10-07）。番号 5〜7 は 🟢。
  * 90・91・97・99 の細かい違いは ❓
  */
@@ -81,7 +81,7 @@ export const SERIES_VALUES: readonly TownsfolkValue[] = [
     { value: (i + 1) * 10 + 1, label: `${i + 1}件目を依頼済み`, group: `${i + 1}件目` },
   ]).flat(),
   ...[90, 91, 97, 99].map((value) => ({ value, label: "最後の件の前後", group: "最後の件" })),
-  { value: 100, label: "組合なりわいを終えた" },
+  { value: 100, label: "連続なりわいを終えた" },
 ];
 
 /** 意味の分かっていない段階の値（🟢 値の候補だけ分かっている） */
@@ -104,12 +104,12 @@ export const SHIRUBE_JOBS = ["今宵の虎徹は", "薬売り", "食い逃げ外
 export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(4)]: {
     name: "【岡っ引き】野戸仏",
-    note: "代官所の同心 野戸仏新太郎の組合なりわい 171〜178。書き換えると野戸仏の次の依頼が変わる（確認済み：20 で2件目「督促状」から、100 で完了）",
+    note: "代官所の同心 野戸仏新太郎の連続なりわい 171〜178。書き換えると野戸仏の次の依頼が変わる（確認済み：20 で2件目「督促状」から、100 で完了）",
     values: SERIES_VALUES,
   },
-  [occupationFlagOffset(5)]: { name: "【極道】小鳩", note: "🟢 町の極道者 小鳩戒の組合なりわい 179〜186", values: SERIES_VALUES },
-  [occupationFlagOffset(6)]: { name: "【泥棒】泥棒さん", note: "🟢 港の泥棒さんの組合なりわい 187〜194", values: SERIES_VALUES },
-  [occupationFlagOffset(7)]: { name: "【宿無し】おっつぁん", note: "🟢 居留地のおっつぁんの組合なりわい 195〜206", values: SERIES_VALUES },
+  [occupationFlagOffset(5)]: { name: "【極道】小鳩", note: "🟢 町の極道者 小鳩戒の連続なりわい 179〜186", values: SERIES_VALUES },
+  [occupationFlagOffset(6)]: { name: "【泥棒】泥棒さん", note: "🟢 港の泥棒さんの連続なりわい 187〜194", values: SERIES_VALUES },
+  [occupationFlagOffset(7)]: { name: "【宿無し】おっつぁん", note: "🟢 居留地のおっつぁんの連続なりわい 195〜206", values: SERIES_VALUES },
   [occupationFlagOffset(8)]: {
     name: "【同心頭】佐古津",
     note: "🟢 代官所の同心頭 佐古津上武之介から受ける、賭場を偵察・訪問・襲撃・殲滅するなりわい 163〜166 の進み具合。各段階の意味は ❓",
@@ -122,10 +122,10 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   },
   [occupationFlagOffset(25)]: {
     name: "四天王の話",
-    note: "🟢 組合なりわい4つ（野戸仏・小鳩・泥棒さん・おっつぁん）のどれかを終えたとき、ほかの3つがすべて 100 なら 1 になる",
+    note: "🟢 連続なりわい4つ（野戸仏・小鳩・泥棒さん・おっつぁん）のどれかを終えたとき、ほかの3つがすべて 100 なら 1 になる",
     values: [
       { value: 0, label: "始まる前" },
-      { value: 1, label: "組合なりわい4つを全部終えた" },
+      { value: 1, label: "連続なりわい4つを全部終えた" },
       { value: 8, label: "「四天王の証」を受け取った" },
       { value: 99, label: "段階 99" },
       { value: 100, label: "段階 100" },
@@ -136,7 +136,7 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     note:
       "🟢 なりわい 207・208 と、熊神（おっつぁん）の病気の進み具合。10 以上が治療済み（女将が薬代を出した）。" +
       "43 以上で医者が「病み上がり」と言う（43 ちょうどを書く場面はなく、99・100 で当てはまる）。" +
-      "99 以上で、組合なりわいを終えた依頼主から8件を選び直せる（99 未満だと新しい依頼が出ないことは確認済み）。" +
+      "99 以上で、連続なりわいを終えた依頼主から8件を選び直せる（99 未満だと新しい依頼が出ないことは確認済み）。" +
       "治療すると 12 以降に進み、四天王対四人組（207）から阿弥浜八人衆（208）に発展する。治療しないと 207 で終わる（🔶）",
     values: [
       { value: 0, label: "始まる前" },
@@ -147,8 +147,8 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
       { value: 12, label: "外国の軍団の話を聞いた（四天王の話も 60）", group: "阿弥浜八人衆" },
       { value: 15, label: "四人組が街道で迎え撃つ", group: "阿弥浜八人衆" },
       { value: 20, label: "阿弥浜八人衆を受注した", group: "阿弥浜八人衆" },
-      { value: 99, label: "組合なりわいを選び直せる", group: "終わったあと" },
-      { value: 100, label: "阿弥浜八人衆を終えた（組合なりわいを選び直せる）", group: "終わったあと" },
+      { value: 99, label: "連続なりわいを選び直せる", group: "終わったあと" },
+      { value: 100, label: "阿弥浜八人衆を終えた（連続なりわいを選び直せる）", group: "終わったあと" },
     ],
   },
   [occupationFlagOffset(27)]: {

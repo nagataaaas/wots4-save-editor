@@ -767,7 +767,7 @@ function TownsfolkField({
 /** 🔶 町の人（店主など）の状態の候補（0x011C〜0x05FF）の生の値。view が null ならセーブ未読み込み */
 function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
   const [selected, setSelected] = useState<number | null>(null);
-  // なりわいのフラグ（組合なりわいなど）はなりわいの画面で編集する
+  // なりわいのフラグ（連続なりわいなど）はなりわいの画面で編集する
   const named = Object.keys(TOWNSFOLK_NOTES)
     .map(Number)
     .filter((o) => TOWNSFOLK_NOTES[o].name && !OCCUPATION_FLAG_OFFSETS.includes(o));
@@ -783,7 +783,7 @@ function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
           0x011C〜0x05FF の1,252バイトです（終わりの位置は未確定。直前の 0x00DC〜0x011B
           は主人公名）。ほとんど 0
           で、町の人（店主など）ごとの状態やイベントの進み具合の表と推定しています。
-          先頭の 0x011C〜 はなりわいのフラグで、組合なりわいの進み具合などは「なりわい」の画面で値の表から選べます。
+          先頭の 0x011C〜 はなりわいのフラグで、連続なりわいの進み具合などは「なりわい」の画面で値の表から選べます。
           鍛冶屋の後継者イベント・鍛冶屋の状態（0x0127）、堂島が鍛冶屋を継いだか（0x0132。周回後に誰が鍛冶屋になるかを決める）、堂島の死亡（0x0264）は、書き換えで確認済みです。
           寿司屋の店主（0x02C4）と鍛冶屋のおやじ（0x0444）は 1 で死亡です。0
           に戻すと生き返ることを確認済みです。 さよ（DLC、0x0528）も 1

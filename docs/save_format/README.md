@@ -108,7 +108,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x000008`      | `0x00000F`   | [money](chunks/money/README.md)                   | 所持金・金庫                                   | ✅                            |
 | `0x000010`      | `0x000018`   | [date-location](chunks/date-location/README.md)   | シナリオの段階・時間帯・現在地（開始地点）・治安の候補 | ✅位置 ／ 一部 🔶❓             |
 | `0x0000DC`      | `0x00011B`   | [player-name](chunks/player-name/README.md)       | 主人公名                                       | ✅                            |
-| `0x00011C`      | `0x0005FF` ❓ | [townsfolk](chunks/townsfolk/README.md)           | なりわいのフラグ（`0x011C`〜、組合なりわい・鍛冶屋など）と町の人（店主など）の状態 | 🟢開始 ／ 一部 ✅             |
+| `0x00011C`      | `0x0005FF` ❓ | [townsfolk](chunks/townsfolk/README.md)           | なりわいのフラグ（`0x011C`〜、連続なりわい・鍛冶屋など）と町の人（店主など）の状態 | 🟢開始 ／ 一部 ✅             |
 | `0x000B3C`      | ❓            | [stats](chunks/stats/README.md)                   | 侍点・プレイ時間・斬殺数・経過日数などの記録   | 一部 ✅                       |
 | `0x000C84`      | ❓            | [kill-counts](chunks/kill-counts/README.md)       | 敵の種類ごとの斬殺数（周回中）                 | 🔶                            |
 | `0x001C24`      | ❓            | [kill-counts](chunks/kill-counts/README.md)       | 敵の種類ごとの斬殺数（累計）                   | 🔶                            |
