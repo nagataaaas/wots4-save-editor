@@ -9,7 +9,8 @@
 //
 // 人物（person.csv、全行 🟢。主人公設定の一覧に全部出るかは 🔶）：
 // - id：人物の番号（セーブの 0x3AAD4）。連番ではない
-// - gender：0＝男、1＝女（0x3AADC）、secondId：0x3AAD6 に入る値 🔶（null＝FFFF）、hairColor：髪の色（0x3AADA）
+// - bodyKind：体の種類（0x3AADC）、secondId：0x3AAD6 に入る値 🔶（null＝FFFF）、hairColor：髪の色（0x3AADA）
+// - selectable：主人公設定の一覧に出る人物。出ないローラ（✅ [U]）・男の子・女の子（🔶）は上級者モードだけ
 // - parts：その人物の部品の番号（null＝なし）
 import bodyCsv from "../../../docs/save_format/datatable/appearance/body.csv?raw";
 import extraCsv from "../../../docs/save_format/datatable/appearance/extra.csv?raw";
@@ -65,13 +66,18 @@ export type PersonEntry = {
   en: string;
   dlc: number | null;
   height: number;
-  /** 0＝男、1＝女 */
-  gender: 0 | 1;
+  /** 体の種類（0x3AADC）。BODY_KINDS の添字：0＝男、1＝女、2＝ローラ、3＝子供 */
+  bodyKind: number;
   /** null は FFFF */
   secondId: number | null;
   hairColor: number;
   parts: Record<PartKind, number | null>;
+  /** 主人公設定の一覧に出る人物（🔶）。false は上級者モードだけで選べる見た目の組（ローラ ✅ [U]、男の子・女の子 🔶） */
+  selectable: boolean;
 };
+
+/** 0x3AADC の値の名前。0＝男・1＝女 🔶、2＝ローラ・3＝子供・4＝動物 🟢（U-19） */
+export const BODY_KINDS = ["男", "女", "ローラ", "子供", "動物"] as const;
 
 function table(text: string, file: string): { col: (name: string) => number; rows: string[][] } {
   const [header, ...rows] = parseCsv(text.replace(/^﻿/, ""));
@@ -161,23 +167,27 @@ function loadPersons(text: string): PersonEntry[] {
     en: col("name_en"),
     dlc: col("dlc"),
     height: col("height"),
-    gender: col("gender"),
+    bodyKind: col("body_kind"),
     secondId: col("second_id"),
     hairColor: col("hair_color"),
+    selectable: col("selectable"),
   };
   return rows.map((r) => {
     const parts = {} as Record<PartKind, number | null>;
     for (const k of PART_KINDS) parts[k] = optNum(r[col(PERSON_PART_COLUMNS[k])]);
+    const bodyKind = BODY_KINDS.indexOf(r[c.bodyKind] as (typeof BODY_KINDS)[number]);
+    if (bodyKind < 0) throw new Error(`person.csv の ${r[c.id]} の body_kind が読めません`);
     return {
       id: Number(r[c.id]),
       ja: r[c.ja],
       en: r[c.en],
       dlc: optNum(r[c.dlc]),
       height: Number(r[c.height]),
-      gender: r[c.gender] === "女" ? 1 : 0,
+      bodyKind,
       secondId: optNum(r[c.secondId]),
       hairColor: Number(r[c.hairColor]),
       parts,
+      selectable: r[c.selectable] === "1",
     };
   });
 }

@@ -11,7 +11,7 @@
 // ❓ U-1：固定オフセットを採用（ユーザー判断 2026-10-07）。ファイルサイズを検証する。
 import { readU16, readU8, writeF32, writeU16, writeU8, readF32 } from './binary'
 import { checkLayout } from './hero'
-import { findPart, findPerson, PART_KINDS, PERSONS, type Gender, type PartKind } from './master/appearance-parts'
+import { BODY_KINDS, findPart, findPerson, PART_KINDS, PERSONS, type Gender, type PartKind } from './master/appearance-parts'
 
 export const APPEARANCE_PARTS_OFFSETS = {
   person: 0x3aad4,
@@ -74,9 +74,9 @@ export const GENDER_NAMES = ['男', '女'] as const
 
 /**
  * 0x3AADC の値の名前。0＝男・1＝女 🔶（主人公設定の人物）。
- * 2＝ローラ・3＝子供・4＝動物は、その見た目の組の値 🟢（主人公に書いたときの動きは未確認 ❓）
+ * 2＝ローラ（✅ [U] 2026-10-08 人物として表示を確認）・3＝子供・4＝動物は、その見た目の組の値 🟢
  */
-export const BODY_KIND_NAMES = ['男', '女', 'ローラ', '子供', '動物'] as const
+export const BODY_KIND_NAMES = BODY_KINDS
 
 export type PartValue = {
   offset: number
@@ -227,18 +227,20 @@ const HEIGHT_RATIOS = [0.9, 1, 1.1]
 /**
  * 人物を選ぶ（✅ [U] 2026-10-08 H1・H2）。人物の番号・0x3AAD6・性別・身長・髪の色・全部の部品とモデルの値を、その人物の値で書く。
  * 身長は、今の人物の身長に対する低い・高いの倍率を引き継ぐ（今が個別に設定のときや倍率が分からないときはふつう）。体型・肌色は変えない。
+ * 主人公設定に出ない見た目の組（ローラ ✅ [U]、男の子・女の子 🔶）は上級者モードだけ。
  */
-export function writePerson(bytes: Uint8Array, personId: number): void {
+export function writePerson(bytes: Uint8Array, personId: number, advanced = false): void {
   const view = requireWritable(bytes)
   const person = findPerson(personId)
   if (!person) throw new RangeError(`${personId} は人物の表にありません`)
+  if (!person.selectable && !advanced) throw new RangeError(`${person.ja}は上級者モードでだけ選べます`)
   const current = findPerson(view.person)
   const height = readF32(bytes, APPEARANCE_PARTS_OFFSETS.height)
   const ratio = current ? HEIGHT_RATIOS.find(r => Math.abs(height - current.height * r) < 0.01) ?? 1 : 1
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, person.id)
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.secondId, person.secondId ?? 0xffff)
   writeU8(bytes, APPEARANCE_PARTS_OFFSETS.hairColor, person.hairColor)
-  writeU8(bytes, APPEARANCE_PARTS_OFFSETS.gender, person.gender)
+  writeU8(bytes, APPEARANCE_PARTS_OFFSETS.gender, person.bodyKind)
   writeF32(bytes, APPEARANCE_PARTS_OFFSETS.height, person.height * ratio)
   for (const kind of PART_KINDS) writePartRecord(bytes, kind, person.parts[kind] ?? -1)
 }

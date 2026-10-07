@@ -87,6 +87,27 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(readF32(bytes, 0x3aae0)).toBe(175)
   })
 
+  it('✅ [U] ローラ（体の種類 2）は上級者モードだけで選べる。男の子・女の子は 🔶 要ゲーム内確認', () => {
+    const bytes = makeSave()
+    const before = bytes.slice()
+    expect(() => writePerson(bytes, 29)).toThrow(/上級者/)
+    expect(bytes).toEqual(before)
+    writePerson(bytes, 29, true)
+    // ユーザーが貼り付けて表示を確認したバイト列（2026-10-08）
+    expect(bytes.subarray(0x3aad4, 0x3aad8)).toEqual(hex('1D 00 1D 00'))
+    expect([bytes[0x3aada], bytes[0x3aadc]]).toEqual([0, 2])
+    expect(bytes.subarray(0x3aae0, 0x3aae4)).toEqual(hex('00 00 0E 43'))
+    expect(bytes.subarray(0x3aae4, 0x3aae6)).toEqual(hex('06 00'))
+    expect(bytes.subarray(0x3aae8, 0x3aaf0)).toEqual(hex('5C 00 FF FF FF FF FF FF'))
+    expect(bytes.subarray(0x3ab0c, 0x3ab14)).toEqual(hex('34 00 FF FF 34 00 FF FF'))
+    expect(bytes.subarray(0x3ab24, 0x3ab2c)).toEqual(hex('23 01 FF FF FF FF FF FF'))
+    for (const [id, kind] of [[153, 3], [155, 3]] as const) {
+      expect(findPerson(id)).toMatchObject({ bodyKind: kind, selectable: false })
+      writePerson(bytes, id, true)
+      expect(bytes[0x3aadc]).toBe(kind)
+    }
+  })
+
   it('✅ [U] 人物を選ぶとき、低い・高いの倍率を引き継ぐ', () => {
     const bytes = makeSave()
     writeF32(bytes, 0x3aae0, 192.5)
@@ -213,7 +234,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
 describe('見た目の部品と人物の datatable（🟢）', () => {
   it('人物「幕末の志士」の部品', () => {
     const p = findPerson(238)!
-    expect(p).toMatchObject({ ja: '幕末の志士', height: 175, gender: 0, secondId: null, hairColor: 3 })
+    expect(p).toMatchObject({ ja: '幕末の志士', height: 175, bodyKind: 0, secondId: null, hairColor: 3, selectable: true })
     expect(p.parts).toMatchObject({ upper: 70, lower: 95, face: 43, hair: 42, body: 7, feet: 33, gauntlet: null, cape: null })
   })
 

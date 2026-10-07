@@ -38,6 +38,7 @@ import {
 } from '@/save/master/appearance-parts'
 
 const GROUP_ORDER: readonly PartGroup[] = ['男', '女', '共通', 'セット用', '未使用']
+const PERSON_HIDDEN_GROUP = '主人公設定に出ない人物'
 
 function partLabel(p: PartEntry): string {
   const tags = [p.dlc !== null ? 'DLC' : null, p.unlockId !== null ? '特典' : null].filter(Boolean)
@@ -82,12 +83,16 @@ export function AppearancePartsCard() {
   const problem = view === null ? (save ? 'ファイルが小さすぎて読めません' : null) : view.problem
   const heroGender = view?.gender ?? 0
 
-  const personOptions: SelectOption[] = PERSONS.map(p => ({
-    value: String(p.id),
-    label: `${p.ja}（${p.id}）${p.dlc !== null ? ' [DLC]' : ''}`,
-    group: GENDER_NAMES[p.gender],
-    keywords: [String(p.id), p.en],
-  })).sort((a, b) => (a.group === b.group ? 0 : a.group === '男' ? -1 : 1))
+  // 男・女の順に主人公設定の人物、上級者モードでは続けて主人公設定に出ない見た目の組（ローラ ✅ [U]、男の子・女の子 🔶）
+  const personGroups = [...GENDER_NAMES, PERSON_HIDDEN_GROUP]
+  const personOptions: SelectOption[] = PERSONS.filter(p => advanced || p.selectable)
+    .map(p => ({
+      value: String(p.id),
+      label: `${p.ja}（${p.id}）${p.dlc !== null ? ' [DLC]' : ''}${p.selectable || p.id === 29 ? '' : ' 🔶'}`,
+      group: p.selectable ? GENDER_NAMES[p.bodyKind] : PERSON_HIDDEN_GROUP,
+      keywords: [String(p.id), p.en],
+    }))
+    .sort((a, b) => personGroups.indexOf(a.group) - personGroups.indexOf(b.group))
   const person = view ? findPerson(view.person) : undefined
 
   const hairMin = advanced ? 0 : HAIR_COLOR_MIN
@@ -115,7 +120,7 @@ export function AppearancePartsCard() {
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <SearchSelectRow
-          key={`${k}-person`}
+          key={`${k}-person-${advanced}`}
           label="人物"
           offset={APPEARANCE_PARTS_OFFSETS.person}
           value={view ? String(view.person) : null}
@@ -125,7 +130,7 @@ export function AppearancePartsCard() {
           hint={person ? `身長 ${person.height}cm（ふつう）` : view?.person === PERSON_CUSTOM ? '顔・髪型・服を個別に設定しています' : undefined}
           note="🟢 人物の番号。✅ [U] 選び直して見た目が変わることを確認。0x3AAD6 に書く値は 🔶（U-19）。身長は今の低い・高いの倍率を引き継ぐ"
           searchPlaceholder="人物を検索"
-          onChange={v => update(b => writePerson(b, Number(v)))}
+          onChange={v => update(b => writePerson(b, Number(v), advanced))}
         />
         <SelectRow
           key={`${k}-gender-${advanced}`}
@@ -133,11 +138,11 @@ export function AppearancePartsCard() {
           offset={APPEARANCE_PARTS_OFFSETS.gender}
           value={view ? String(view.gender) : null}
           currentLabel={`不明な値 ${view?.gender}`}
-          options={BODY_KIND_NAMES.map((g, i) => ({ value: String(i), label: `${g}（${i}）${i >= 2 ? ' ❓' : ''}` }))}
+          options={BODY_KIND_NAMES.map((g, i) => ({ value: String(i), label: `${g}（${i}）${i >= 3 ? ' ❓' : ''}` }))}
           problem={problem}
           disabled={!advanced}
           hint={advanced ? '上級者モード：性別だけを書き換えます。反対の性別の部品と組み合わさると表示が崩れるおそれがあります' : '人物を選ぶと決まります'}
-          note="🔶 0＝男、1＝女。🟢 2＝ローラ・3＝子供・4＝動物の見た目の組の値（主人公に書いたときの動きは ❓）"
+          note="🔶 0＝男、1＝女。2＝ローラ（✅ [U] 人物として表示を確認）。🟢 3＝子供・4＝動物の見た目の組の値（主人公に書いたときの動きは ❓）"
           onChange={v => update(b => writeGender(b, Number(v), advanced))}
         />
         <SelectRow
