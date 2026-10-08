@@ -170,50 +170,46 @@ export const skillName = (s: { nameJa: string }): string => s.nameJa || '（名�
 /** 段の呼び名（0 初段 … 4 伍段、5 極）🔶 値と画面の対応 */
 export const RANK_LABELS = ['初段', '弐段', '参段', '四段', '伍段', '極'] as const
 
-/** 技の表の 1 行。派生元の下に派生先を並べたときの深さと、どの技から派生するか */
+/** 技の表の 1 行。派生元の下に派生先を並べたときの深さ */
 export type SheetSkillRow = {
+  /** 行の識別子（根からの技の番号の並び）。同じ技が複数の派生元の下に出るので技の番号だけでは重なる */
+  key: string
   skill: SheetSkill
   /** 木の深さ（0＝根） */
   depth: number
-  /** 派生元（parent）の技の番号。覚えると派生元の状態が 2 になる */
-  parent: number | null
-  /** この技の前に出す技の番号のうち、同じ技の表にあるもの（stance-skill.csv の prev） */
-  prev: number[]
-  /** 字下げで示した親以外の派生元・前に出す技。字下げだけでは分からないので画面に書く */
-  others: number[]
 }
 
 /**
- * 技の表の技を、派生元（parent）か前に出す技（prev）の下に派生先が来る順に並べる 🟢（datatable/sect）。
- * 木の親は parent を優先し、なければ同じ技の表にある prev の最初の技。親のない技は技の番号順に根として並べる。
+ * 技の表の技を、派生元の下に派生先が来る順に並べる 🟢（datatable/sect）。
+ * 派生元は parent（覚えると派生元の状態が 2 になる）と、同じ技の表にある前に出す技（stance-skill.csv の prev）。
+ * 派生元が複数ある技は、それぞれの派生元の下に出す（派生先も一緒に繰り返す）。派生元のない技は技の番号順に根として並べる。
  */
 export function sheetSkillRows(sheet: SkillSheet): SheetSkillRow[] {
   const nos = new Set(sheet.skills.map((s) => s.skillNo))
-  const info = new Map(
+  const sources = new Map(
     sheet.skills.map((s) => {
-      const prev = (findStanceSkill(sheet.stance, s.skillNo)?.prev ?? []).filter((p) => nos.has(p) && p !== s.skillNo)
-      const parent = s.parent !== null && s.parent !== s.skillNo ? s.parent : null
-      const treeParent = parent !== null && nos.has(parent) ? parent : (prev[0] ?? null)
-      return [s.skillNo, { skill: s, parent, prev, treeParent }]
+      const prev = findStanceSkill(sheet.stance, s.skillNo)?.prev ?? []
+      const all = [...new Set([...(s.parent === null ? [] : [s.parent]), ...prev])]
+      return [s.skillNo, all.filter((p) => nos.has(p) && p !== s.skillNo)]
     }),
   )
-  const children = new Map<number, number[]>()
-  for (const [no, { treeParent }] of info) {
-    if (treeParent !== null) children.set(treeParent, [...(children.get(treeParent) ?? []), no])
+  const children = new Map<number, SheetSkill[]>()
+  for (const s of sheet.skills) {
+    for (const p of sources.get(s.skillNo)!) children.set(p, [...(children.get(p) ?? []), s])
   }
 
   const rows: SheetSkillRow[] = []
-  const visited = new Set<number>()
-  const visit = (no: number, depth: number, shownParent: number | null) => {
-    if (visited.has(no)) return
-    visited.add(no)
-    const { skill, parent, prev } = info.get(no)!
-    const others = [...new Set([...(parent === null ? [] : [parent]), ...prev])].filter((p) => p !== shownParent)
-    rows.push({ skill, depth, parent, prev, others })
-    for (const c of children.get(no) ?? []) visit(c, depth + 1, no)
+  const shown = new Set<number>()
+  // path は根からこの技までの技の番号。輪になる派生元（データにはないが念のため）はたどらない
+  const visit = (s: SheetSkill, path: number[]) => {
+    if (path.includes(s.skillNo)) return
+    const next = [...path, s.skillNo]
+    shown.add(s.skillNo)
+    rows.push({ key: next.join('-'), skill: s, depth: path.length })
+    for (const c of children.get(s.skillNo) ?? []) visit(c, next)
   }
-  for (const s of sheet.skills) if (info.get(s.skillNo)!.treeParent === null) visit(s.skillNo, 0, null)
-  // 親をたどると輪になる技（データにはないが念のため）は根として足す
-  for (const s of sheet.skills) visit(s.skillNo, 0, null)
+  for (const s of sheet.skills) if (sources.get(s.skillNo)!.length === 0) visit(s, [])
+  // 派生元をたどると輪になって根に届かない技は根として足す
+  for (const s of sheet.skills) if (!shown.has(s.skillNo)) visit(s, [])
   return rows
 }

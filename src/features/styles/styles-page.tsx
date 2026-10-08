@@ -16,7 +16,6 @@ import {
   findSect,
   findSkillSheet,
   findStance,
-  findStanceSkill,
   sheetSkillRows,
   skillName,
   type Sect,
@@ -228,7 +227,7 @@ function SectCard({
           </Button>
           <span className="text-muted-foreground text-xs">
             派生先を覚えた技は「派生先あり」（2）になります。段 5（極）にはならないので、必要なら下の段を 5 にしてください。
-            技は派生元の下に字下げして並べます。ほかの技からも派生する技は「← A からも」と書きます。
+            技は派生元の下に字下げして並べます。派生元が複数ある技は、それぞれの派生元の下に出します。
           </span>
         </div>
 
@@ -271,20 +270,13 @@ function SectCard({
               {findStance(sheet.stance)?.nameJa}の技（技の表 {sheet.id}）
             </h3>
             <ul className="divide-y text-sm">
-              {sheetSkillRows(sheet).map(({ skill: s, depth, others }) => {
+              {sheetSkillRows(sheet).map(({ key, skill: s, depth }) => {
                 const state = states[s.skillNo];
-                const name = (no: number) =>
-                  skillName(sheet.skills.find((x) => x.skillNo === no) ?? findStanceSkill(sheet.stance, no) ?? { nameJa: `技 ${no}` });
                 return (
-                  <li key={s.skillNo} className="flex flex-wrap items-center gap-2 py-1">
-                    <span className="flex min-w-44 flex-col" style={{ paddingLeft: `${depth * 1.25}rem` }}>
-                      <span>
-                        {depth > 0 && <span className="text-muted-foreground mr-1">└</span>}
-                        {skillName(s)}
-                      </span>
-                      {others.length > 0 && (
-                        <span className="text-muted-foreground text-xs">← {others.map(name).join("・")} からも</span>
-                      )}
+                  <li key={key} className="flex flex-wrap items-center gap-2 py-1">
+                    <span className="min-w-44" style={{ paddingLeft: `${depth * 1.25}rem` }}>
+                      {depth > 0 && <span className="text-muted-foreground mr-1">└</span>}
+                      {skillName(s)}
                     </span>
                     <StateBadge state={state} />
                     <SkillMeta skillId={s.skillId} />

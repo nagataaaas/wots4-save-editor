@@ -5,12 +5,9 @@ const summary = (sheet: SkillSheet) =>
   sheetSkillRows(sheet).map((r) => `${'  '.repeat(r.depth)}${r.skill.skillNo}`)
 
 describe('sheetSkillRows 🟢', () => {
-  it('技の表 0：前に出す技・派生元の下に派生先を並べる', () => {
-    const rows = sheetSkillRows(findSkillSheet(0)!)
-    expect(rows.map((r) => r.skill.skillNo).sort((a, b) => a - b)).toEqual(
-      findSkillSheet(0)!.skills.map((s) => s.skillNo),
-    )
-    expect(summary(findSkillSheet(0)!)).toEqual([
+  it('技の表 0：派生元（前に出す技・parent）の下に派生先を並べ、派生元が複数ある技は繰り返す', () => {
+    const sheet = findSkillSheet(0)!
+    expect(summary(sheet)).toEqual([
       '0',
       '  1',
       '    2',
@@ -21,8 +18,11 @@ describe('sheetSkillRows 🟢', () => {
       '  19',
       '25',
       '36',
-      // 昇雷閃（37）は昇雲閃（36）の派生。追昇閃（54）は 36・37 の次で、木の親は最初の 36
+      // 昇雷閃（37）は昇雲閃（36）の派生
       '  37',
+      // 追昇閃（54）は 36・37 の次なので、どちらの下にも出す（続く斬馬一閃 58 も）
+      '    54',
+      '      58',
       '  54',
       '    58',
       '38',
@@ -33,15 +33,12 @@ describe('sheetSkillRows 🟢', () => {
       // 丸食い（89）は早食い（88）の派生
       '  89',
     ])
-    const row = (no: number) => rows.find((r) => r.skill.skillNo === no)!
-    expect(row(37)).toMatchObject({ parent: 36, prev: [], others: [] })
-    // 字下げで示す 36 以外の 37 だけを画面に書く
-    expect(row(54)).toMatchObject({ parent: null, prev: [36, 37], others: [37] })
-    expect(row(19)).toMatchObject({ parent: null, prev: [16], others: [] })
-    expect(row(0)).toMatchObject({ others: [] })
+    const rows = sheetSkillRows(sheet)
+    expect(new Set(rows.map((r) => r.key)).size).toBe(rows.length)
+    expect(new Set(rows.map((r) => r.skill.skillNo))).toEqual(new Set(sheet.skills.map((s) => s.skillNo)))
   })
 
-  it('派生元・前に出す技が輪になっても全部の技を 1 回ずつ並べる', () => {
+  it('派生元が輪になっても全部の技を出し、輪はたどらない', () => {
     const base = findSkillSheet(0)!
     const sheet: SkillSheet = {
       ...base,
