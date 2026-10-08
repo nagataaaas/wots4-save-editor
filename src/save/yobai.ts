@@ -33,6 +33,7 @@
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
+import { NIGHT_VISIT_PLACE_TABLE } from "./master/dataset/night-visit-place";
 import { labelOf, nameOf } from "./master/labels";
 import { npcName } from "./master/npc-names";
 
@@ -66,86 +67,22 @@ export const YOBAI_COUNTERS: readonly { offset: number; size: 1 | 4; note: strin
   { offset: 0x37c8, size: 1, note: "フラグ列の中。夜這いの回数と合わないセーブがある" },
 ];
 
-/** ✅ [U] 2026-10-06：約束の場所 +0x08（書き換えて、約束の画面に出る名前を見た） */
-export const PLACES: readonly string[] = [
-  "港　ほったて小屋",
-  "港　寿司屋裏",
-  "港　海運業者",
-  "港　回船問屋",
-  "港　質屋",
-  "港　歯医者",
-  "港　二階建ての洋館",
-  "港　天板写真館",
-  "港　灯台",
-  "町　長屋",
-  "町　長屋",
-  "町　長屋",
-  "町　長屋　稲荷前",
-  "町　長屋　稲荷前",
-  "町　長屋　稲荷前",
-  "町　長屋　稲荷前",
-  "町　お屋敷",
-  "町　提灯の掛かった家",
-  "町　めし屋の向かい",
-  "町　提灯のかかった家の向かい",
-  "居留地　病院の隣",
-  "居留地　両替屋",
-  "居留地　新聞社",
-  "居留地　質屋",
-  "大通り　呉服屋の向かい",
-  "大通り　ワイン店",
-  "大通り　ビール店",
-  "町　鍛冶屋",
-  "領事館　二階ローラの部屋",
-  "代官所　離れ",
-  "代官所　離れ",
-  "居酒屋　二階",
-  "黒船　ベッド脇の部屋",
-  "港　骨董屋",
-  "領事館　一階左の部屋",
-];
+const PLACE_ROWS = Object.values(NIGHT_VISIT_PLACE_TABLE);
+
+/**
+ * ✅ [U] 2026-10-06：約束の場所 +0x08（書き換えて、約束の画面に出る名前を見た）。
+ * datatable/place/night-visit-place.csv の name_ja（添字＝場所の値）
+ */
+export const PLACES: readonly string[] = PLACE_ROWS.map((r) => r.name_ja);
 
 /**
  * 🟢 約束で使われる（場所、配置）の組（候補75行の重なりを除いて72組。datatable/place/night-visit-place.csv の layout 列）。
  * 町の人の約束と特別な相手（さよ・先生・ローラ・メリンダ・三姉妹など）の約束の組
  */
-const GREEN_PLACE_LAYOUTS: readonly (readonly [number, readonly number[]])[] = [
-  [0x00, [0x03]],
-  [0x01, [0x07, 0x09, 0x26]],
-  [0x02, [0x0a, 0x29, 0x38]],
-  [0x03, [0x11, 0x13, 0x30]],
-  [0x04, [0x0c, 0x0d]],
-  [0x05, [0x0d, 0x36]],
-  [0x06, [0x0e, 0x10, 0x2d]],
-  [0x07, [0x12, 0x31]],
-  [0x08, [0x33, 0x3c]],
-  [0x09, [0x21]],
-  [0x0a, [0x05, 0x24, 0x32]],
-  [0x0b, [0x04, 0x22]],
-  [0x0c, [0x06]],
-  [0x0d, [0x03]],
-  [0x0e, [0x06, 0x23, 0x3b]],
-  [0x0f, [0x04]],
-  [0x10, [0x11, 0x13, 0x3d]],
-  [0x11, [0x0a, 0x0b, 0x20, 0x35]],
-  [0x12, [0x2a]],
-  [0x13, [0x0f, 0x2e]],
-  [0x14, [0x0e, 0x10]],
-  [0x15, [0x0b, 0x28, 0x37]],
-  [0x16, [0x2b, 0x39]],
-  [0x17, [0x12, 0x2f]],
-  [0x18, [0x08, 0x25, 0x27]],
-  [0x19, [0x0f, 0x2c]],
-  [0x1a, [0x0c]],
-  [0x1b, [0x1f]],
-  [0x1c, [0x3a]],
-  [0x1d, [0x19, 0x1a, 0x1b, 0x1c]],
-  [0x1e, [0x17, 0x18]],
-  [0x1f, [0x14, 0x15, 0x16]],
-  [0x20, [0x1e]],
-  [0x21, [0x34]],
-  [0x22, [0x1d]],
-];
+const GREEN_PLACE_LAYOUTS: readonly (readonly [number, readonly number[]])[] = PLACE_ROWS.map((r) => [
+  r.id_dec,
+  r.layout.split(";").map((s) => parseInt(s, 16)),
+]);
 
 /**
  * ✅ [U] 約束の実データで見た組の注記。すべて 🟢 の組の中にある。
