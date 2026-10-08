@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { writeU16 } from "./binary";
 import { TS_SAVE_SIZE } from "./hero";
 import { OCCUPATIONS, OCCUPATION_GROUPS, occupationById, occupationGroupOf } from "./master/occupation-names";
+import { occupationLabel } from "./master/labels";
 import {
   OCCUPATION_ACCEPTED_OFFSET,
   OCCUPATION_CLEAR_COUNT_OFFSET,
@@ -49,14 +50,13 @@ describe("🟢 なりわいの表 datatable/occupation/occupation.csv", () => {
   });
 
   it("✅ 差分の4件（209〜212）と、【岡っ引き】野戸仏の連続なりわいの1・2件目（171・172）", () => {
-    expect([209, 210, 211, 212].map((id) => occupationById(id)?.ja)).toEqual([
-      "今宵の虎徹は",
-      "薬売り",
-      "食い逃げ外国人",
-      "おにぎり屋の用心棒",
-    ]);
-    expect(occupationById(171)?.ja).toBe("出頭命令");
-    expect(occupationById(172)?.ja).toBe("督促状");
+    const ja = (id: number) => {
+      const entry = occupationById(id);
+      return entry && occupationLabel(entry.labelId);
+    };
+    expect([209, 210, 211, 212].map(ja)).toEqual(["今宵の虎徹は", "薬売り", "食い逃げ外国人", "おにぎり屋の用心棒"]);
+    expect(ja(171)).toBe("出頭命令");
+    expect(ja(172)).toBe("督促状");
   });
 
   it("🟢 まとまりの範囲は重ならず、表の全件がどれかに入る", () => {

@@ -33,7 +33,8 @@ import {
 import { readRouteCandidates } from "@/save/route-candidates";
 import { readDate } from "@/save/scenario-date";
 import {
-  EVENT_NAMES,
+  EVENT_LIST,
+  eventNameOf,
   EVENT_RECORD_OFFSET,
   EVENT_STATE_OFFSET,
   readEvents,
@@ -375,10 +376,10 @@ function BoxEditor({ box, events, look }: { box: ChartBox; events: EventsView | 
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-0.5">
         <div className="text-sm font-medium">
-          {index}. {EVENT_NAMES[index]?.name ?? boxName(box)}
+          {index}. {eventNameOf(index) ?? boxName(box)}
         </div>
         <div className="text-muted-foreground text-xs">
-          {EVENT_NAMES[index]?.day}
+          {EVENT_LIST[index]?.day}
           {events && `　チャート：${CHART_BOX_LOOK_LABELS[look]}`}
         </div>
       </div>

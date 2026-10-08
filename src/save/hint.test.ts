@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
+import { chartNodeLabel } from './master/labels'
 import {
   HINT_DEFAULT_TEXT,
   HINT_NONE,
@@ -39,7 +40,7 @@ describe('次のイベントのヒント 0x3900（🟢 チャートのノード�
   it('u16 で読み、ノードのイベントを引く', () => {
     const view = readHint(makeSave(COPY6_HINT))
     expect(view.value).toBe(9)
-    expect(view.node?.ja).toBe('阿片密売を阻止せよ')
+    expect(view.node && chartNodeLabel(view.node)).toBe('阿片密売を阻止せよ')
     expect(view.warning).toBeNull()
     expect(view.problem).toBeNull()
   })
@@ -60,7 +61,7 @@ describe('次のイベントのヒント 0x3900（🟢 チャートのノード�
     ]
     for (const [value, name] of seen) {
       const view = readHint(makeSave(value))
-      expect(view.node?.ja).toBe(name)
+      expect(view.node && chartNodeLabel(view.node)).toBe(name)
       expect(view.warning).toBeNull()
     }
   })

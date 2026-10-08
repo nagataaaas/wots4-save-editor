@@ -58,7 +58,7 @@ export function hintLabel(value: number): string {
   if (value === HINT_NONE) return `${value}（0xFFFF）なし 🔶`;
   const node = chartNode(value);
   if (!node) return `${value}（ノード表にない値）`;
-  return node.labelId ? `${value} ${chartNodeLabel(node)}` : `${value}（イベントに当たらないノード）`;
+  return node.labelId !== null ? `${value} ${chartNodeLabel(node)}` : `${value}（イベントに当たらないノード）`;
 }
 
 /** 表にない値・イベントに当たらないノードなら警告の文。0xFFFF とイベントのノードは null */

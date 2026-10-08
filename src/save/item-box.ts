@@ -19,7 +19,7 @@ import {
   type ItemOptionGroup,
   type ItemSlot,
 } from "./item-slot";
-import { labelOf } from "./master/labels";
+import { labelKeywords, labelOf } from "./master/labels";
 import { ITEMS, ITEM_KIND_LABELS, findItem, type ItemEntry } from "./master/item-names";
 import { formatHex4 } from "@/lib/format";
 
@@ -96,7 +96,7 @@ function toOption(it: ItemEntry): ItemOption {
   return {
     id: it.id,
     label: itemDisplayLabel(it),
-    keywords: [itemDisplayLabel(it), it.en, it.reading, hex, `0x${hex}`].filter((k) => k !== ""),
+    keywords: [...labelKeywords({ kind: "item", id: it.labelId }), hex, `0x${hex}`],
     description: it.descJa,
     caution: it.kind === 0 ? undefined : KIND_CAUTION[it.kind],
   };

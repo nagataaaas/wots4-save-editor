@@ -10,6 +10,7 @@ import {
   EVENT_STATE_OFFSET,
   EVENT_GAP_INDICES,
   EVENT_GAP_NOTES,
+  eventNameOf,
   namedIndices,
   readEvents,
   recordLabel,
@@ -174,6 +175,13 @@ describe('一括設定（デバッグ用）', () => {
     const named = [...Array.from({ length: 100 }, (_, i) => i).filter((i) => !unknown.includes(i)), 116]
     expect(namedIndices()).toEqual(named)
     expect(diffOffsets(before, after)).toEqual(named.map((i) => EVENT_STATE_OFFSET + i))
+  })
+
+  it('一覧の添字は、どれもイベントの表（event.csv）に名前がある', () => {
+    expect(namedIndices().filter((i) => eventNameOf(i) === null)).toEqual([])
+    expect(eventNameOf(6)).toBe('志士との出会い')
+    expect(eventNameOf(28)).toBe('大老　鬼怒川怨仙')
+    expect(eventNameOf(84)).toBeNull()
   })
 
   it('欠番（47〜50・67・84）は名前の付いた 0〜99 の残りで、一括設定の対象に入らない', () => {

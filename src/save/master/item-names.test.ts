@@ -1,26 +1,32 @@
 // アイテムの表（datatable/item/item.csv、全行 🟢）と同じ内容かを、要所の行で確かめる。
 import { describe, expect, it } from "vitest";
-import { ITEMS, findItem, itemDisplayName, parseCsv } from "./item-names";
+import { ITEMS, ITEM_LABELS, findItem, parseCsv } from "./item-names";
+import { itemLabelId } from "./label-types";
+import { itemLabel } from "./labels";
+
+const label = (id: number) => ITEM_LABELS.get(itemLabelId(id));
 
 describe("🟢 アイテム datatable/item/item.csv", () => {
   it("ID 0x00〜0xF1 の242件。欠番・重複なし", () => {
     expect(ITEMS.map((it) => it.id)).toEqual(Array.from({ length: 0xf2 }, (_, i) => i));
+    expect(ITEM_LABELS.size).toBe(0xf2);
   });
 
   it("✅ [TS][U] の名前と合う。部品箱は英語名で刃・鍔・柄", () => {
-    expect(findItem(0x00)?.ja).toBe("会談の手紙");
-    expect(findItem(0x09)?.ja).toBe("秘薬");
-    expect([0x0d, 0x0e, 0x0f].map((id) => findItem(id)?.ja)).toEqual(["部品箱", "部品箱", "部品箱"]);
-    expect([0x0d, 0x0e, 0x0f].map((id) => findItem(id)?.en)).toEqual([
+    expect(label(0x00)?.ja).toBe("会談の手紙");
+    expect(label(0x09)?.ja).toBe("秘薬");
+    expect([0x0d, 0x0e, 0x0f].map((id) => label(id)?.ja)).toEqual(["部品箱", "部品箱", "部品箱"]);
+    expect([0x0d, 0x0e, 0x0f].map((id) => label(id)?.en)).toEqual([
       "Parts Box (Blade)",
       "Parts Box (Guard)",
       "Parts Box (Grip)",
     ]);
-    expect(findItem(0x12)?.ja).toBe("お酒");
-    expect(findItem(0x21)?.ja).toBe("オレ流目録");
-    expect(findItem(0xed)?.ja).toBe("拷問部屋の鍵");
-    expect(findItem(0xee)?.ja).toBe("謎の鍵");
+    expect(label(0x12)?.ja).toBe("お酒");
+    expect(label(0x21)?.ja).toBe("オレ流目録");
+    expect(label(0xed)?.ja).toBe("拷問部屋の鍵");
+    expect(label(0xee)?.ja).toBe("謎の鍵");
     expect(findItem(0xf2)).toBeUndefined();
+    expect(label(0xf2)).toBeUndefined();
   });
 
   it("kind：0＝道具、1＝料理、2＝宿、3＝なし（手に入る経路がない）", () => {
@@ -35,10 +41,10 @@ describe("🟢 アイテム datatable/item/item.csv", () => {
   });
 
   it("reading：読み。仮の値だった 0x00・0xE7 は空欄", () => {
-    expect(findItem(0x10)?.reading).toBe("といし");
-    expect(findItem(0xed)?.reading).toBe("ごうもんべやのかぎ");
-    expect(findItem(0x00)?.reading).toBe("");
-    expect(findItem(0xe7)?.reading).toBe("");
+    expect(label(0x10)?.reading).toBe("といし");
+    expect(label(0xed)?.reading).toBe("ごうもんべやのかぎ");
+    expect(label(0x00)?.reading).toBe("");
+    expect(label(0xe7)?.reading).toBe("");
   });
 
   it("maxStack：1枠に持てる最大数", () => {
@@ -64,9 +70,9 @@ describe("🟢 アイテム datatable/item/item.csv", () => {
   });
 
   it("表示名はゲーム内の表記のまま。同じ名前の ID にも ID を添えない（ユーザー判断 2026-10-07）", () => {
-    expect(itemDisplayName(findItem(0x02)!)).toBe("おにぎり");
-    expect(itemDisplayName(findItem(0x1c)!)).toBe("茶器");
-    expect(itemDisplayName(findItem(0x0d)!)).toBe("部品箱");
-    expect(itemDisplayName(findItem(0xd7)!)).toBe("鮎の塩焼き");
+    expect(itemLabel(itemLabelId(0x02))).toBe("おにぎり");
+    expect(itemLabel(itemLabelId(0x1c))).toBe("茶器");
+    expect(itemLabel(itemLabelId(0x0d))).toBe("部品箱");
+    expect(itemLabel(itemLabelId(0xd7))).toBe("鮎の塩焼き");
   });
 });

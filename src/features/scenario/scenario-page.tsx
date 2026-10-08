@@ -5,7 +5,7 @@ import type { SelectOption } from "@/components/select-options";
 import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
 import { CHART_NODES, type ChartNodeEntry } from "@/save/master/chart-nodes";
-import { chartNodeLabel, findLabel } from "@/save/master/labels";
+import { chartNodeLabel } from "@/save/master/labels";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -127,7 +127,8 @@ import {
   type DateView,
 } from "@/save/scenario-date";
 import {
-  EVENT_NAMES,
+  EVENT_LIST,
+  eventNameOf,
   EVENT_RECORD_OFFSET,
   EVENT_STATE_OFFSET,
   EVENT_GAP_INDICES,
@@ -493,10 +494,11 @@ function HintCard({ view }: { view: HintView | null }) {
 }
 
 /** 🟢 ノード 0〜118 と 🔶 0xFFFF（なし） */
-const hintOptionKeywords = (node: ChartNodeEntry) => {
-  const label = node.labelId ? findLabel({ kind: "event", id: node.labelId }) : undefined;
-  return [String(node.id), chartNodeLabel(node, ""), label?.en ?? ""];
-};
+const hintOptionKeywords = (node: ChartNodeEntry) => [
+  String(node.id),
+  chartNodeLabel(node, ""),
+  chartNodeLabel(node, "", "en"),
+];
 
 const hintOptions: SelectOption[] = [
   ...CHART_NODES.map((n) => ({
@@ -1289,9 +1291,9 @@ function EventBox({
 }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
-  const name = EVENT_NAMES[index];
+  const name = EVENT_LIST[index];
   const gap = EVENT_GAP_NOTES[index];
-  const title = name?.name ?? gap?.name;
+  const title = name ? eventNameOf(index) : gap?.name;
 
   return (
     <div className="flex flex-col gap-3 rounded-md border p-3">

@@ -50,11 +50,12 @@ import {
   writeOccupationStates,
   type OccupationView,
 } from "@/save/occupation";
-import { labelOf } from "@/save/master/labels";
+import { labelKeywords, occupationGroupLabel, occupationLabel } from "@/save/master/labels";
 import {
   OCCUPATIONS,
   OCCUPATION_GROUPS,
   occupationById,
+  occupationGroupByKey,
   occupationGroupOf,
   type OccupationEntry,
 } from "@/save/master/occupation-names";
@@ -126,13 +127,18 @@ function matches(query: string, ...texts: string[]): boolean {
   return q === "" || texts.some((t) => t.toLowerCase().includes(q));
 }
 
-const occupationLabel = (entry: OccupationEntry) =>
-  labelOf({ kind: "occupation", id: entry.labelId });
+const entryLabel = (entry: OccupationEntry) => occupationLabel(entry.labelId);
+const entryKeywords = (entry: OccupationEntry) => labelKeywords({ kind: "occupation", id: entry.labelId });
 
 function occupationLabelById(id: number): string | undefined {
   const entry = occupationById(id);
-  return entry ? occupationLabel(entry) : undefined;
+  return entry ? entryLabel(entry) : undefined;
 }
+
+const groupLabelOf = (id: number) => {
+  const group = occupationGroupByKey(occupationGroupOf(id));
+  return group && occupationGroupLabel(group);
+};
 
 /** なりわい：状態の表・クリア数・受注中、連続なりわいなどの進み具合（なりわいのフラグ） */
 export function OccupationPage() {
@@ -279,9 +285,9 @@ function AcceptRow({
     { value: "0", label: "受注していない" },
     ...OCCUPATIONS.map((o) => ({
       value: String(o.id),
-      label: `${o.id} ${occupationLabel(o)}`,
-      group: OCCUPATION_GROUPS.find((g) => g.key === occupationGroupOf(o.id))?.label,
-      keywords: [occupationLabel(o), o.client, o.en, o.type],
+      label: `${o.id} ${entryLabel(o)}`,
+      group: groupLabelOf(o.id),
+      keywords: [...entryKeywords(o), o.client, o.type],
     })),
   ];
   return (
@@ -490,7 +496,7 @@ function StatesCard({
   const [sync, setSync] = useState(true);
 
   const rows = OCCUPATIONS.filter((o) => group === "all" || occupationGroupOf(o.id) === group)
-    .filter((o) => matches(query, occupationLabel(o), o.en, o.client, o.type, String(o.id)))
+    .filter((o) => matches(query, ...entryKeywords(o), o.client, o.type, String(o.id)))
     .filter((o) => filter === "all" || !view || kindOf(view.states[o.id]) === filter);
   const counts = { hidden: 0, open: 0, cleared: 0 };
   if (view) for (const o of OCCUPATIONS) counts[kindOf(view.states[o.id])]++;
@@ -504,7 +510,7 @@ function StatesCard({
 
   const groupItems = {
     all: "すべて",
-    ...Object.fromEntries(OCCUPATION_GROUPS.map((g) => [g.key, g.label])),
+    ...Object.fromEntries(OCCUPATION_GROUPS.map((g) => [g.key, occupationGroupLabel(g)])),
   };
   const filterItems = { all: "すべて", ...KIND_LABELS };
 
@@ -545,7 +551,7 @@ function StatesCard({
               <SelectItem value="all">すべて</SelectItem>
               {OCCUPATION_GROUPS.map((g) => (
                 <SelectItem key={g.key} value={g.key}>
-                  {g.label}
+                  {occupationGroupLabel(g)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -637,7 +643,7 @@ function StateRow({
         placeholder="未読み込み"
         disabled={readOnly}
         className="w-48"
-        aria-label={occupationLabel(o)}
+        aria-label={entryLabel(o)}
         onValueChange={(k) =>
           value !== null &&
           write((b) =>
@@ -659,7 +665,7 @@ function StateRow({
           <span className="text-muted-foreground font-mono text-xs">{o.id}</span>
           <span className="text-sm"><GameLabel occupation={o.labelId} /></span>
           <InfoTip offset={offset}>
-            {o.en}
+            <GameLabel occupation={o.labelId} lang="en" />
             {o.noteJa && `。${o.noteJa}`}
           </InfoTip>
           <Badge variant="secondary" className="font-normal">
