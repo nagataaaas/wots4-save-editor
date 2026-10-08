@@ -45,6 +45,12 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 | `place/night-visit-place.csv` | 夜の約束の場所     | このリストのみ           | u16 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x08      |
 | `occupation/occupation.csv`   | なりわい（3〜212） | このリストのみ（0〜255） | 状態の表の添字・u16 LE       |              | [occupation](../chunks/occupation/README.md)              |
 | `npc/npc-name.csv`            | 人物の名前         | このリストのみ（1〜8200）| u32 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x1C・記録 +0x04 |
+| `sect/sect.csv`               | 流派（0〜112）     | このリストのみ           | i16 LE                       |              | [styles](../chunks/styles/README.md)、[sect-scrolls](../chunks/sect-scrolls/README.md) |
+| `sect/stance.csv`             | 構え（0〜12）      | このリストのみ           | i16 LE                       |              | [skill-states](../chunks/skill-states/README.md)          |
+| `sect/skill-sheet.csv`        | 技の表（0〜93）    | このリストのみ           | i16 LE                       | `FFFF`       | [styles](../chunks/styles/README.md) +0x08〜+0x0C         |
+| `sect/sheet-skill.csv`        | 技の表ごとの技     | 技の表 × 128＋技の番号   | 状態の表の添字（u8 × 128）   |              | [skill-states](../chunks/skill-states/README.md)          |
+| `sect/skill.csv`              | 技（0〜961）       | このリストのみ           | u16 LE                       |              | [belt-copy](../chunks/belt-copy/README.md) 技の +2、[skill-kills](../chunks/skill-kills/README.md) +0 |
+| `sect/stance-skill.csv`       | 構えごとの技       | 構え × 128＋技の番号     | 状態の表の添字・u8           |              | [skill-states](../chunks/skill-states/README.md)、[belt-copy](../chunks/belt-copy/README.md) |
 
 リスト固有の列：
 
@@ -75,6 +81,20 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
   `kind` は種別 🟢：0＝道具、1＝料理（料理屋でその場で食べる）、2＝宿（梅・竹・松の間、入院）、3＝なし（手に入る経路がない。未使用とみられる）。
   `max_stack` は手持ちの1枠にまとめて持てる最大数 🟢（ほとんど 1。がらくた 10、お宝 5、鉄 999、コイン 9999、エサ 10、宿 0）。
   箪笥の枠はこの数を超えて入る（[U] sample）
+- `sect/sect.csv`：流派（全 110 件）🟢。`name_ja`・`name_en` はゲーム内の表記（「……」は主人公が手に入れられない流派。英語版で仮の名前の行は空欄）。
+  `stance` は構え（`sect/stance.csv`）、`slot` は構えの組（[styles](../chunks/styles/README.md) `0x18A00 + 2×slot`）、`sheet1`〜`sheet3` は技の表（`sect/skill-sheet.csv`。空欄はなし）、
+  `thr1`〜`thr4` は弐段〜伍段になる修練度、`scroll_no` は流派の書の番号（[sect-scrolls](../chunks/sect-scrolls/README.md) +0x00。空欄は書がない）
+- `sect/stance.csv`：構え 0〜12 🟢。`slot` は構えの組（0 刀・1 槍・2 無手・3 拳銃・4 ライフル・5 二刀）
+- `sect/skill-sheet.csv`：技の表 🟢（84・85 は欠番）。`stance` は構え、`skill_count` は技の数。`name_ja`・`name_en` は技の表の名前で、番号との対応は 🔶（使う流派の名前と一致する）
+- `sect/sheet-skill.csv`：技の表ごとの技 🟢。ID は「技の表 × 128 ＋ 技の番号」。`skill_no` は構えの中の技の番号（状態の表の添字）、`skill_id` は技の ID（[skill-kills](../chunks/skill-kills/README.md)・[belt-copy](../chunks/belt-copy/README.md) の技の ID）。
+  名前が空欄の技は名前のない技（ゲームでは「……」）。`cond` は習得条件の番号（0＝流派を装備したときに覚える基本の技）、`cond_ja` はゲーム内の技の表に出る条件の文、
+  `rank` は必要な段（0＝初段 … 4＝伍段、−1＝なし）、`points` は覚えたときに増える腕前点、`parent` は派生元の技の番号
+- `sect/skill.csv`：技 🟢（ID は技の ID。`sheet-skill.csv`・`stance-skill.csv` の `skill_id`）。`command` はコマンドの値（0＝なし。防御技はすべて 0）、
+  `command_ja` はその表記（弱＝弱攻撃、強＝強攻撃、ガード、→ は相手の方、← は相手と逆、←→ は左右に入れる、ジャンプ中強は 🔶。ゲームの画面ではキー設定のキーの絵で出る）、
+  `defense_group` は防御技の組（空欄は攻撃技。同じ組の防御技は俺流の 1 つの構えに 1 つまで）、`attack` は技の詳細に出る攻撃力（「攻：」）、`points` は腕前点、
+  `attrs` は技の属性（浮かせる・吹き飛ばす・投げ・当て身投げ・防御不可能・打撃投げ・防御崩し・攻撃を受けてものけぞらない・特定の武器でしか使えない。`・` 区切り）
+- `sect/stance-skill.csv`：構えごとの全技 🟢（技の表にない技も含む）。ID は「構え × 128 ＋ 技の番号」。`first` は 1＝初段の技（構えから最初に出せる技）、
+  `next` は続けて出せる技の番号、`prev` はこの技の前に出す技の番号（どちらも空白区切り）。俺流の技の表の技はこの表から作る
 - `appearance/cloth.csv`：容姿設定の服の番号。0〜241 のうち194件（欠番は服がない番号）。全行 🟢（32〜46・238〜241 はゲーム内で確認 ✅）。
   `name_ja`・`name_en` はその番号に入る部品の名前（ゲーム内の表記のまま、複数あるときは ` / ` で区切る）。`category` は部品の種類（上半身・下半身・足元・小物。小物は合羽・手甲・脚絆・前掛け）。
   `dlc` は DLC の番号（1＝新撰組、2＝ドナドナ・さよ）。特典解除で手に入る服はこの表にない（`unlock/unlock.csv`）
