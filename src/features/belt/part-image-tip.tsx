@@ -55,7 +55,8 @@ export function PartImageTip({ completeIds }: { completeIds: readonly number[] }
         ref={setAnchor}
         role="img"
         aria-label={`このパーツを使う武器の画像：${images.map((i) => weaponIdLabel(i.id)).join('、')}`}
-        className="text-muted-foreground hover:text-foreground inline-flex shrink-0"
+        // 無効の欄（鞘を上書きしていないとき。ボタンは pointer-events: none）でもホバーできるようにする
+        className="text-muted-foreground hover:text-foreground pointer-events-auto inline-flex shrink-0"
         onPointerEnter={() => setOpen(true)}
         onPointerLeave={() => setOpen(false)}
       >

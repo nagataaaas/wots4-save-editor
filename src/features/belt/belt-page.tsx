@@ -39,6 +39,7 @@ import {
   TITLES,
   COMPLETE_WEAPONS,
   completeWeaponsUsingPart,
+  completeWeaponsUsingSheath,
   WEAPON_FIELDS,
   WEAPON_TYPES,
   WEAPON_NUMBER_RANGES,
@@ -204,6 +205,8 @@ const SHEATH_OPTIONS: SelectOption[] = [...SHEATHS]
       label: sheathName(x),
       group: kind ? WEAPON_KIND_LABELS[kind].ja : undefined,
       keywords: x.names.flatMap((n) => weaponSearchTerms(n)),
+      // 左端の画像アイコンにホバーすると、その鞘を使う完成武器の画像を出す
+      leading: <PartImageTip completeIds={completeWeaponsUsingSheath(x.id)} />,
     };
   });
 const TITLE_OPTIONS: SelectOption[] = [

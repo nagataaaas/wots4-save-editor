@@ -20,6 +20,7 @@ import {
   WEAPON_NAME_MAX_CHARS,
   completeWeaponByParts,
   completeWeaponsUsingPart,
+  completeWeaponsUsingSheath,
   matchesCompleteWeapon,
   writeCompleteWeapon,
   decodeTitle,
@@ -741,5 +742,18 @@ describe('部品を使う完成武器（パーツ一覧の画像）', () => {
     expect(usedBy.every((id) => COMPLETE_WEAPONS.find((w) => w.id === id)!.build.kind === 'normal')).toBe(true)
     const jacqueline = SPECIAL_BLADES.find((p) => (p.value & 0xffff) === 0)!
     expect(completeWeaponsUsingPart('blade', jacqueline)).toEqual([9])
+  })
+})
+
+describe('鞘を使う完成武器（鞘の一覧の画像）', () => {
+  it('🟢 通常の完成武器はどれも自分の鞘から引け、特殊武器は鞘から引けない', () => {
+    for (const w of COMPLETE_WEAPONS) {
+      const all = SHEATHS.flatMap((x) => completeWeaponsUsingSheath(x.id))
+      expect(all.includes(w.id), w.name ?? '').toBe(w.build.kind === 'normal')
+    }
+  })
+
+  it('🟢 中道刀の鞘（0x18）は中道刀を含む', () => {
+    expect(completeWeaponsUsingSheath(0x18)).toContain(0x0002)
   })
 })

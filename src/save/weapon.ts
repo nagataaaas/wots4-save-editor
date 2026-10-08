@@ -681,6 +681,13 @@ export function completeWeaponsUsingPart(kind: PartKind, option: PartOption): nu
   }).map((w) => w.id);
 }
 
+/** その鞘（X）を使う完成武器の ID（完成武器ID の順）。🟢 complete.csv の sheath_x で引く。特殊武器は鞘がないので含まない */
+export function completeWeaponsUsingSheath(sheath: number): number[] {
+  return COMPLETE_WEAPONS.filter(({ build }) => build.kind === "normal" && build.sheath === sheath).map(
+    (w) => w.id,
+  );
+}
+
 /**
  * 選択肢の一覧。特殊武器の刃は特殊武器の刃の間だけで変えられ、鍔・柄は変えられない（D-15）。
  * 規則で X を計算できない [CT] の刃（x が null）も含む（isXUnknown）
