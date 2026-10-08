@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { CertaintyBadge } from '@/components/certainty-badge'
 import { FieldRow, type ParseResult } from '@/components/field-row'
 import { SelectRow } from '@/components/select-row'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +8,7 @@ import {
   APPEARANCE_CURRENT_NOTES,
   APPEARANCE_CURRENT_OFFSETS,
   BODY_TYPES,
+  HEIGHT_CHOICES,
   heightWarning,
   SKIN_COLORS,
   readAppearanceCurrent,
@@ -20,13 +20,13 @@ import {
 const selectRows = [
   { key: 'body', label: '体型', names: BODY_TYPES, hint: undefined },
   { key: 'skin', label: '肌色', names: SKIN_COLORS, hint: undefined },
+  { key: 'heightChoice', label: '身長の選択肢', names: HEIGHT_CHOICES, hint: '容姿設定を開いたときのカーソル位置。身長（cm）は変わらない' },
 ] as const
 const numberRows: { key: AppearanceCurrentKey; label: string; hint: string; advancedHint: string | undefined }[] = [
   { key: 'height', label: '身長（cm）', hint: '数値（小数可）', advancedHint: undefined },
-  { key: 'related', label: '関連値（意味未確認）', hint: '観測した値：0・1・2。体型などとの関係は未確認（❓）', advancedHint: '0〜255' },
 ]
 
-/** 体型・身長・肌色は ✅。関連値は ❓ として生の値を表示する。 */
+/** 体型・身長・肌色は ✅、身長の選択肢は 🟢。 */
 export function AppearanceCurrentCard() {
   const { save, update } = useSave()
   const { advanced } = useAdvancedMode()
@@ -34,12 +34,9 @@ export function AppearanceCurrentCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          現在の見た目
-          <CertaintyBadge mark="❓" text="関連値は意味未確認" />
-        </CardTitle>
+        <CardTitle>現在の見た目</CardTitle>
         <CardDescription>
-          体型・身長・肌色の変更はゲーム内で確認済みです。関連値の意味は未確認です。
+          体型・身長・肌色の変更はゲーム内で確認済みです。身長の選択肢は、身長（cm）を変えたら合わせておいてください。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
