@@ -9,9 +9,11 @@
 // - deadlineDays：期限（日）。空は期限なし（null）
 import occupationCsv from "../../../docs/save_format/datatable/occupation/occupation.csv?raw";
 import { parseCsv } from "./item-names";
+import { occupationId, occupationLabelId, type OccupationId, type OccupationLabelId } from "./label-types";
 
 export type OccupationEntry = {
-  id: number;
+  id: OccupationId;
+  labelId: OccupationLabelId;
   ja: string;
   en: string;
   client: string;
@@ -44,24 +46,28 @@ function loadOccupations(text: string): OccupationEntry[] {
   };
   return rows
     .filter((r) => r.length > 1)
-    .map((r) => ({
-      id: Number(r[c.id]),
-      ja: r[c.ja],
-      en: r[c.en],
-      client: r[c.client],
-      type: r[c.type],
-      alignment: r[c.alignment],
-      reward: Number(r[c.reward]),
-      bonus: Number(r[c.bonus]),
-      deadlineDays: r[c.deadline] === "" ? null : Number(r[c.deadline]),
-      noteJa: r[c.note] ?? "",
-    }));
+    .map((r) => {
+      const id = Number(r[c.id]);
+      return {
+        id: occupationId(id),
+        labelId: occupationLabelId(id),
+        ja: r[c.ja],
+        en: r[c.en],
+        client: r[c.client],
+        type: r[c.type],
+        alignment: r[c.alignment],
+        reward: Number(r[c.reward]),
+        bonus: Number(r[c.bonus]),
+        deadlineDays: r[c.deadline] === "" ? null : Number(r[c.deadline]),
+        noteJa: r[c.note] ?? "",
+      };
+    });
 }
 
 /** ID 順 */
 export const OCCUPATIONS: readonly OccupationEntry[] = loadOccupations(occupationCsv);
 
-const BY_ID = new Map(OCCUPATIONS.map((o) => [o.id, o]));
+const BY_ID = new Map<number, OccupationEntry>(OCCUPATIONS.map((o) => [o.id, o]));
 
 export function occupationById(id: number): OccupationEntry | undefined {
   return BY_ID.get(id);

@@ -5,9 +5,10 @@
 // - 1001〜6002：勢力ごとの仮の名前（まちお・まちこ など）
 // - 7001〜7150・8001〜8200：町の女性の名前の候補（約束の相手の名前はここから選ばれる 🔶）
 // ほかのモジュールに依存しない。
+import { npcId, npcLabelId, type NpcId, type NpcLabelId } from "./label-types";
 
 export type NpcSex = "m" | "f";
-export type NpcNameEntry = { id: number; ja: string; en: string; sex: NpcSex };
+export type NpcNameEntry = { id: NpcId; labelId: NpcLabelId; ja: string; en: string; sex: NpcSex };
 
 const ROWS: readonly (readonly [number, string, string, NpcSex])[] = [
   [1, "赤城", "Akagi", "m"],
@@ -589,9 +590,15 @@ const ROWS: readonly (readonly [number, string, string, NpcSex])[] = [
   [8200, "ロビン", "Robin", "m"],
 ];
 
-export const NPC_NAMES: readonly NpcNameEntry[] = ROWS.map(([id, ja, en, sex]) => ({ id, ja, en, sex }));
+export const NPC_NAMES: readonly NpcNameEntry[] = ROWS.map(([id, ja, en, sex]) => ({
+  id: npcId(id),
+  labelId: npcLabelId(id),
+  ja,
+  en,
+  sex,
+}));
 
-const BY_ID = new Map(NPC_NAMES.map((n) => [n.id, n]));
+const BY_ID = new Map<number, NpcNameEntry>(NPC_NAMES.map((n) => [n.id, n]));
 
 export function npcName(id: number): NpcNameEntry | undefined {
   return BY_ID.get(id);

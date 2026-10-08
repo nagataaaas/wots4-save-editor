@@ -5,10 +5,12 @@
 // - 1つのイベントが複数のノードを持つことがある（大老暗殺計画は7つ、大老 鬼怒川怨仙は4つ、小公女倒れる（通し番号 34）は町の薬師を含めて3つ）🟢
 // - イベントに当たらないノード（0・1・53・113・114・118）は名前と通し番号が null 🟢
 // ほかのモジュールに依存しない。
+import { eventLabelId, type EventLabelId } from "./label-types";
 
 export type ChartNodeEntry = {
   id: number;
   /** null はイベントに当たらないノード */
+  labelId: EventLabelId | null;
   ja: string | null;
   en: string | null;
   /** イベントの通し番号（0x36A8 + n の n）。null はイベントに当たらないノード */
@@ -140,8 +142,8 @@ const ROWS: readonly (readonly [number, string, string, number] | readonly [numb
 /** 🟢 ノード 0〜118（ID 昇順、欠番なし） */
 export const CHART_NODES: readonly ChartNodeEntry[] = ROWS.map((r) =>
   r.length === 1
-    ? { id: r[0], ja: null, en: null, eventId: null }
-    : { id: r[0], ja: r[1], en: r[2], eventId: r[3] },
+    ? { id: r[0], labelId: null, ja: null, en: null, eventId: null }
+    : { id: r[0], labelId: eventLabelId(r[0]), ja: r[1], en: r[2], eventId: r[3] },
 );
 
 /** 🟢 ノード番号の最大値 */
