@@ -668,6 +668,20 @@ export function completeWeaponByParts(bytes: Uint8Array, offset: number): number
 }
 
 /**
+ * その部品を使う完成武器の ID（完成武器ID の順）。🟢 complete.csv の部品の構成で引く。
+ * 特殊武器の刃は特殊武器の間だけ、通常の刃・鍔・柄は通常の武器の間だけで比べる
+ */
+export function completeWeaponsUsingPart(kind: PartKind, option: PartOption): number[] {
+  const id = partId(kind, option.value, option.source);
+  const special = kind === "blade" && option.source === "ts" && isSpecialBlade(option.value);
+  return COMPLETE_WEAPONS.filter(({ build }) => {
+    if ((build.kind === "special") !== special) return false;
+    if (kind === "blade") return build.blade === id;
+    return build.kind === "normal" && build[kind] === id;
+  }).map((w) => w.id);
+}
+
+/**
  * 選択肢の一覧。特殊武器の刃は特殊武器の刃の間だけで変えられ、鍔・柄は変えられない（D-15）。
  * 規則で X を計算できない [CT] の刃（x が null）も含む（isXUnknown）
  */

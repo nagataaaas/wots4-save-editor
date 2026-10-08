@@ -98,6 +98,7 @@ export function SearchSelectRow({
           }
         >
           <span className={`flex items-center gap-2 truncate ${value === null ? 'text-muted-foreground' : ''}`}>
+            {selected?.leading}
             {selected?.icon && <selected.icon />}
             {triggerText}
           </span>
@@ -120,6 +121,7 @@ export function SearchSelectRow({
                         disabled={o.disabled}
                         onSelect={() => select(o.value)}
                       >
+                        {o.leading}
                         {o.icon && <o.icon />}
                         {o.label}
                         <Check className={`ml-auto ${o.value === value ? 'opacity-100' : 'opacity-0'}`} />

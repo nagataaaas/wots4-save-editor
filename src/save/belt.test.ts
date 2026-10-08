@@ -19,6 +19,7 @@ import {
   WEAPON_FIELDS,
   WEAPON_NAME_MAX_CHARS,
   completeWeaponByParts,
+  completeWeaponsUsingPart,
   matchesCompleteWeapon,
   writeCompleteWeapon,
   decodeTitle,
@@ -714,5 +715,31 @@ describe('指定武器に変更する（完成武器の構成で置き換える�
     expect(b[o + WEAPON_FIELDS.attack]).toBe(10)
     expect(v.charms.value).toEqual([9, 9, 4])
     expect(() => writeCompleteWeapon(b, o, 0xffff)).toThrow() // 自作は構成がない
+  })
+})
+
+describe('部品を使う完成武器（パーツ一覧の画像）', () => {
+  const usedBy = (kind: 'blade' | 'guard' | 'grip', list: readonly PartOption[], id: number) =>
+    list.some((p) => completeWeaponsUsingPart(kind, p).includes(id))
+
+  it('🟢 どの完成武器も、刃・鍔・柄の選択肢のどれかから引ける', () => {
+    for (const w of COMPLETE_WEAPONS) {
+      if (w.build.kind === 'special') {
+        expect(usedBy('blade', SPECIAL_BLADES, w.id), `${w.name} の刃`).toBe(true)
+        continue
+      }
+      expect(usedBy('blade', BLADES, w.id), `${w.name} の刃`).toBe(true)
+      expect(usedBy('guard', GUARDS, w.id), `${w.name} の鍔`).toBe(true)
+      expect(usedBy('grip', GRIPS, w.id), `${w.name} の柄`).toBe(true)
+    }
+  })
+
+  it('🟢 中道刀の鍔（0x0D）は中道刀を含み、特殊武器は含まない。特殊武器の刃は特殊武器だけを引く', () => {
+    const guard = GUARDS.find((p) => p.source === 'ts' && ((p.value >>> 8) & 0xffff) === 0x0d)!
+    const usedBy = completeWeaponsUsingPart('guard', guard)
+    expect(usedBy).toContain(0x0002)
+    expect(usedBy.every((id) => COMPLETE_WEAPONS.find((w) => w.id === id)!.build.kind === 'normal')).toBe(true)
+    const jacqueline = SPECIAL_BLADES.find((p) => (p.value & 0xffff) === 0)!
+    expect(completeWeaponsUsingPart('blade', jacqueline)).toEqual([9])
   })
 })

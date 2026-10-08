@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 /**
  * 選択肢1つ分（SelectRow・SearchSelectRow で共通）。
@@ -14,6 +15,8 @@ export type SelectOption = {
   keywords?: readonly string[]
   /** 選んだあとの欄に出す名前（group の見出しがないと分からない label のとき）。SelectRow で使う */
   selectedLabel?: string
+  /** 一覧の項目と、選んだあとの欄の左端に出すもの（画像のアイコンなど）。ボタンの中に置くので、ボタンにしない。SearchSelectRow で使う */
+  leading?: ReactNode
 }
 
 export type OptionGroup = { name: string | undefined; items: SelectOption[] }

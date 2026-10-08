@@ -38,6 +38,7 @@ import {
   CHARMS,
   TITLES,
   COMPLETE_WEAPONS,
+  completeWeaponsUsingPart,
   WEAPON_FIELDS,
   WEAPON_TYPES,
   WEAPON_NUMBER_RANGES,
@@ -68,6 +69,7 @@ import {
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import type { LucideIcon } from "lucide-react";
 import { charmIcon, titleIcon } from "./effect-icons";
+import { PartImageTip } from "./part-image-tip";
 import { weaponImageUrl } from "@/save/master/weapon-images";
 import {
   WEAPON_KIND_LABELS,
@@ -623,7 +625,9 @@ function WeaponCard({
           : name;
       const group = special ? undefined : WEAPON_KIND_LABELS[weaponKind(p.name)].ja;
       // 読み・ja・en の部分一致で検索できる（ユーザー判断 2026-10-05）
-      return { value: partKey(p), label, group, keywords: weaponSearchTerms(p.name) };
+      // 左端の画像アイコンにホバーすると、そのパーツを使う完成武器の画像を出す
+      const leading = <PartImageTip completeIds={completeWeaponsUsingPart(kind, p)} />;
+      return { value: partKey(p), label, group, keywords: weaponSearchTerms(p.name), leading };
     });
     const digits = kind === "grip" ? 4 : 6;
     return (
