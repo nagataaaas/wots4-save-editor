@@ -1,13 +1,13 @@
 id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
-0,0x0000,00 00 FF FF,ジャクリーン,Jacqueline,TS,
-1,0x0001,01 00 FF FF,虎爪（無手）,Tiger Claw,U,ゲーム内で確認（[U] 2026-10-05）
-2,0x0002,02 00 FF FF,53年式ライフル,53 Rifle,U,ゲーム内で確認（[U] 2026-10-05）
-3,0x0003,03 00 FF FF,竹富士,Bamboozler,U,ゲーム内で確認（[U] 2026-10-05）
-4,0x0004,04 00 FF FF,十手,Hooked Truncheon,TS,
-5,0x0005,05 00 FF FF,冥澱,Maidenmaker,U,ゲーム内で確認（[U] 2026-10-05）
-6,0x0006,06 00 FF FF,鬼ヶ島,Ogre Isle,U,拳銃; ゲーム内で確認（[U] 2026-10-05）
-7,0x0007,07 00 FF FF,クズリ爪,Dragon Claw,U,ゲーム内で確認（[U] 2026-10-05）
-8,0x0008,08 00 FF FF,出刃包丁,Sharp Knife,TS,
-9,0x0009,09 00 FF FF,エンジェル（ライフル）,Angel,U,ゲーム内で確認（[U] 2026-10-05）
-10,0x000A,0A 00 FF FF,カツオ,Cutlette,TS,
-11,0x000B,0B 00 FF FF,M2リボルバー,M2 Revolver,TS,
+0,0x0000,00 00 FF FF,ジャクリーン,Jacqueline,TS,D-15
+1,0x0001,01 00 FF FF,虎爪（無手）,Tiger Claw,U,ゲーム内で確認（[U] 2026-10-05）; D-15 [U]
+2,0x0002,02 00 FF FF,53年式ライフル,53 Rifle,U,ゲーム内で確認（[U] 2026-10-05）; D-15 [U]
+3,0x0003,03 00 FF FF,竹富士,Bamboozler,U,ゲーム内で確認（[U] 2026-10-05）; D-15 [U]
+4,0x0004,04 00 FF FF,十手,Hooked Truncheon,TS,D-15
+5,0x0005,05 00 FF FF,冥澱,Maidenmaker,U,ゲーム内で確認（[U] 2026-10-05）; D-15 [U]
+6,0x0006,06 00 FF FF,鬼ヶ島,Ogre Isle,U,拳銃; ゲーム内で確認（[U] 2026-10-05）; D-15 [U]
+7,0x0007,07 00 FF FF,クズリ爪,Dragon Claw,U,ゲーム内で確認（[U] 2026-10-05）; D-15 [U]
+8,0x0008,08 00 FF FF,出刃包丁,Sharp Knife,TS,D-15
+9,0x0009,09 00 FF FF,エンジェル（ライフル）,Angel,U,ゲーム内で確認（[U] 2026-10-05）; D-15 [U]
+10,0x000A,0A 00 FF FF,カツオ,Cutlette,TS,D-15
+11,0x000B,0B 00 FF FF,M2リボルバー,M2 Revolver,TS,D-15

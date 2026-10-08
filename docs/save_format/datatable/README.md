@@ -48,6 +48,9 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 リスト固有の列：
 
 - `weapon/blade.csv` の `sheath_x`：その刃を組み立てたときに書かれる鞘の ID（X、[weapon-record](../chunks/weapon-record/README.md) +0x0A）🟢。見た目の鞘が同じ武器どうしは同じ値になる
+- `weapon/blade.csv`・`guard.csv`・`grip.csv` の `save_bytes_le`：[TS] の定義値、または実セーブでゲーム内の表示を確かめたバイト列（刃・鍔は 3 B、柄は 2 B）。
+  エディタはこの値をそのまま書く。空欄の行は ID だけが分かっている行で、ID（と刃は `sheath_x`）から書く値を組み立てる（[weapon-record](../chunks/weapon-record/README.md) のパーツ、U-3）
+- `weapon/complete.csv` の `reading`：名前の読み（ひらがな）。武器の名前を五十音順に並べるのに使う（刃の読みは 🟢 に合わせた。ユーザー判断 2026-10-07）。特殊武器は ID 順に並べるので空欄
 - `weapon/complete.csv` の `blade`・`sheath_x`・`guard`・`grip`：その完成武器の部品の ID 🟢。特殊武器は `blade` が特殊武器の刃の ID（`weapon/blade-special.csv`）で、ほかは空欄。
   `weapon_type` はその完成武器の武器種（[weapon-record](../chunks/weapon-record/README.md) +0x1E。0＝刀 1＝槍 2＝爪 3＝拳銃 4＝ライフル）🟢
 - `weapon/complete.csv` の `unique_bytes`・`name_no`・`flag_22`：その完成武器のレコードに入る値 🟢。[weapon-record](../chunks/weapon-record/README.md) の
