@@ -1,11 +1,12 @@
 // 主人公の見た目の部品と人物（容姿）のマスターデータ。docs/save_format/datatable/appearance/*.csv から生成した dataset/*.ts を使う（表を二重に持たない）。
 //
-// 部品（face・hair・upper・lower・body・feet・extra.csv、全行 🟢。body.csv は部品の種類が ❓）：
+// 部品（face・hair・upper・lower・body・feet・extra.csv、全行 🟢。body.csv は手 🟢）：
 // - id：部品の番号。部品の種類ごとに別の空間（セーブの部品の組の先頭 u16）
 // - gender：使える性別（'男'・'女'。null はどちらでもない）
 // - models：モデルの値 u16 × 4（−1＝なし）。部品の番号と組でセーブに書く 🟢（色違いまで ✅ [U] 2026-10-08、U-19）
 // - unlockId：解除に必要な特典（unlock.csv の番号）、clothId：服の番号（容姿のビット）、dlc：DLC の番号
 // - alias：名前のない部品の見た目（確度は CSV の備考）、crash：ロードでクラッシュする部品（✅ [U] 2026-10-08）
+// - layers：層1〜4の形（メッシュ）の名前と、その形に張れるテクスチャ（色違い）🟢。models の値はテクスチャの番号
 //
 // 人物（person.csv、全行 🟢。主人公設定の一覧に全部出るかは 🔶）：
 // - id：人物の番号（セーブの 0x3AAD4）。連番ではない
@@ -23,7 +24,7 @@ import { UPPER_TABLE } from "./dataset/upper";
 
 /**
  * 部品の組（セーブの 0x3AAE4 + 12k）の並び。k＝0 上半身 … 9 合羽。
- * 上半身・下半身・顔・髪型・足元 🟢、手甲・脚絆・前掛け・合羽 ✅ [U] 2026-10-08、k＝4 の種類は ❓（U-19）
+ * 上半身・下半身・顔・髪型・足元 🟢、手甲・脚絆・前掛け・合羽 ✅ [U] 2026-10-08、k＝4 は手 🟢（J.J の手の書き込みの反映 ✅ [U] 2026-10-08）
  */
 export const PART_KINDS = ["upper", "lower", "face", "hair", "body", "feet", "gauntlet", "leggings", "apron", "cape"] as const;
 export type PartKind = (typeof PART_KINDS)[number];
@@ -33,7 +34,7 @@ export const PART_KIND_LABELS: Record<PartKind, string> = {
   lower: "下半身",
   face: "顔",
   hair: "髪型",
-  body: "部品 k＝4（種類不明）",
+  body: "手",
   feet: "足元",
   gauntlet: "手甲",
   leggings: "脚絆",
@@ -57,6 +58,19 @@ export type PartEntry = {
   alias: string;
   /** ✅ [U] ロードでクラッシュする。選択肢に出さない */
   crash: boolean;
+  /** 層1〜4。null はその層なし。値（テクスチャ）は色違いの順 🟢 */
+  layers: readonly [PartLayer | null, PartLayer | null, PartLayer | null, PartLayer | null];
+};
+
+/**
+ * 部品の層1つ。形（メッシュ）は部品の番号で決まり、セーブの値（models）はテクスチャの番号
+ * （✅ [U] 2026-10-08：形はそのまま別の部品の値でテクスチャだけ替わった）。
+ */
+export type PartLayer = {
+  /** 「部位（持ち主）」。持ち主は区別のための呼び名 🟢 */
+  mesh: string;
+  /** その形に張れるテクスチャの番号（色違いの順） */
+  textures: readonly number[];
 };
 
 export type PersonEntry = {
@@ -85,6 +99,8 @@ type PartRow = {
   name_en: string | null;
   gender: string | null;
   save_models: string;
+  layer_meshes: string;
+  layer_textures: string;
   unlock_id?: number | null;
   cloth_id?: number | null;
   dlc?: number | string | null;
@@ -106,6 +122,20 @@ function parseModels(text: string, file: string, id: number): PartEntry["models"
   return [v[0], v[1], v[2], v[3]];
 }
 
+/** layer_meshes "足（浪人）|小物1（浪人）||" と layer_textures "299 300|309||" → 層4つ */
+function parseLayers(meshes: string, textures: string, file: string, id: number): PartEntry["layers"] {
+  const m = meshes.split("|");
+  const t = textures.split("|");
+  if (m.length !== 4 || t.length !== 4) throw new Error(`${file} の ${id} の layer_meshes・layer_textures が読めません`);
+  const layers = m.map((mesh, i): PartLayer | null => {
+    if (mesh === "") return null;
+    const values = t[i].split(" ").map(Number);
+    if (values.length === 0 || values.some((v) => !Number.isInteger(v))) throw new Error(`${file} の ${id} の layer_textures が読めません`);
+    return { mesh, textures: values };
+  });
+  return [layers[0], layers[1], layers[2], layers[3]];
+}
+
 function loadParts(table: Readonly<Record<number, PartRow>>, file: string, kind?: string): PartEntry[] {
   return Object.values(table)
     .filter((r) => kind === undefined || r.kind === kind)
@@ -122,6 +152,7 @@ function loadParts(table: Readonly<Record<number, PartRow>>, file: string, kind?
         dlc: optNum(r.dlc),
         alias: r.alias_ja ?? "",
         crash: r.crash === 1,
+        layers: parseLayers(r.layer_meshes ?? "", r.layer_textures ?? "", file, r.id_dec),
       };
     });
 }

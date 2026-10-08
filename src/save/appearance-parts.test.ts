@@ -1,6 +1,7 @@
 // 主人公の見た目のレコード（人物・髪の色・性別・部品）。sample/ のファイルは読まず、実セーブで観測した値を合成する。
 // 部品の番号・モデルの値 🟢、顔・髪型・小物・人物選択の書き込みは ✅ [U] 2026-10-08（U-19）。
-// 上半身・下半身・足元・k＝4 の書き込み、0x3AAD6（🔶）、髪の色の 3 以外（🔶）は U-19 の判定待ち。
+// 手（k＝4）・足元の層を外す書き込みは ✅ [U] 2026-10-08。層を別の部品の値にする組み合わせは 🔶（上級者モードだけ）。
+// 上半身・下半身・足元の部品の書き込み、髪の色の 3 以外（🔶）は U-19 の判定待ち。
 import { describe, expect, it } from 'vitest'
 import { readF32, writeF32 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -15,8 +16,11 @@ import {
   writeHairColor,
   writePart,
   writePerson,
+  layersCustomized,
+  validateLayer,
+  writeLayer,
 } from './appearance-parts'
-import { PARTS, PERSONS, findPerson, partGroup } from './master/appearance-parts'
+import { PARTS, PART_KINDS, PERSONS, findPart, findPerson, partGroup } from './master/appearance-parts'
 
 const hex = (s: string) => Uint8Array.from(s.trim().split(/\s+/), x => parseInt(x, 16))
 
@@ -203,6 +207,58 @@ describe('主人公の見た目のレコード（U-19）', () => {
     const before = laura.slice()
     expect(() => writeNude(laura, 'upper')).toThrow(/男・女/)
     expect(laura).toEqual(before)
+  })
+
+  it('✅ [U] 2026-10-08 手（k＝4）を J.J の手（3）にした書き込みと同じバイトを書く。上級者モードだけ', () => {
+    const before = makeSave()
+    const bytes = before.slice()
+    expect(() => writePart(bytes, 'body', 3, false)).toThrow(RangeError)
+    writePart(bytes, 'body', 3, true)
+    expect(Array.from(bytes.subarray(0x3aad4, 0x3aad6))).toEqual([0xff, 0xff])
+    expect(Array.from(bytes.subarray(0x3ab14, 0x3ab16))).toEqual([0x03, 0x00])
+    expect(Array.from(bytes.subarray(0x3ab18, 0x3ab20))).toEqual(Array.from(hex('1a 01 5f 00 ff ff ff ff')))
+    // 組の +2 は書かない
+    expect(changed(before, bytes).every(i => i < 0x3aad6 || (i >= 0x3ab14 && i < 0x3ab20 && i !== 0x3ab16 && i !== 0x3ab17))).toBe(true)
+  })
+
+  it('✅ [U] 2026-10-08 足元の層2（履物）を外す。その層だけを FFFF にし、部品の番号・ほかの層は変えない（ユーザー判断：層は上級者モードだけ）', () => {
+    const bytes = makeSave()
+    writePart(bytes, 'feet', 0, true)
+    const before = bytes.slice()
+    expect(() => writeLayer(bytes, 'feet', 1, -1, false)).toThrow(/上級者モード/)
+    writeLayer(bytes, 'feet', 1, -1, true)
+    expect(changed(before, bytes)).toEqual([0x3ab26, 0x3ab27])
+    expect(readAppearanceParts(bytes)!.parts.feet).toMatchObject({ id: 0, models: [287, -1, 287, -1] })
+  })
+
+  it('🟢 層の値は、その部品のその層の形の色違いだけ（✅ [U] 別の形のテクスチャは異形になった）', () => {
+    const bytes = makeSave()
+    // ✅ [U] 2026-10-08 幕末の志士の足元（33）の層1に青年主人公の足のテクスチャ 287 → ブーツの形に草履のテクスチャ。拒否する
+    expect(validateLayer('feet', 33, 0, 287, true)).toMatch(/色違いではありません/)
+    // 幕末の志士の足元には層2・層4がない
+    expect(validateLayer('feet', 33, 1, -1, true)).toMatch(/層2がありません/)
+    expect(validateLayer('feet', 33, 3, -1, true)).not.toBeNull()
+    expect(validateLayer('feet', 33, 4, -1, true)).not.toBeNull()
+    // 浪人の足元（1）の層1は3色
+    writePart(bytes, 'feet', 1, true)
+    expect(findPart('feet', 1)!.layers[0]).toEqual({ mesh: '足（浪人）', textures: [299, 300, 301] })
+    // 標準は 301・309・301
+    writeLayer(bytes, 'feet', 0, 299, true)
+    const view = readAppearanceParts(bytes)!
+    expect(view.parts.feet.models).toEqual([299, 309, 301, -1])
+    expect(layersCustomized('feet', view.parts.feet)).toBe(true)
+    expect(layersCustomized('upper', view.parts.upper)).toBe(false)
+    // 部品が「なし」のときは選べない（合羽は幕末の志士ではなし）
+    expect(() => writeLayer(bytes, 'cape', 0, -1, true)).toThrow(/なし/)
+  })
+
+  it('🟢 どの部品も、標準の層の値はその層の色違いに含まれ、層のない所は FFFF', () => {
+    for (const kind of PART_KINDS)
+      for (const p of PARTS[kind])
+        p.layers.forEach((def, i) => {
+          if (def) expect(def.textures, `${kind} ${p.id} 層${i + 1}`).toContain(p.models[i])
+          else expect(p.models[i], `${kind} ${p.id} 層${i + 1}`).toBe(-1)
+        })
   })
 
   it('「なし」は FFFF とモデルの値 FFFF × 4 を書く', () => {

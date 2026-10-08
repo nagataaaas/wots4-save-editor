@@ -23,13 +23,17 @@ import {
   partNoneWarning,
   genderName,
   isNude,
+  LAYER_COUNT,
+  layersCustomized,
   readAppearanceParts,
   validatePart,
   writeGender,
   writeHairColor,
+  writeLayer,
   writeNude,
   writePart,
   writePerson,
+  type PartValue,
 } from '@/save/appearance-parts'
 import {
   PARTS,
@@ -40,6 +44,7 @@ import {
   findPerson,
   partGroup,
   type PartEntry,
+  type PartLayer,
   type PartGroup,
   type PartKind,
 } from '@/save/master/appearance-parts'
@@ -68,12 +73,73 @@ function partOptions(kind: PartKind, heroGender: number, advanced: boolean): Sel
   return [...none, ...opts]
 }
 
+/** 層の選択肢：なし＋その形の色違い。部品の標準の色に印を付ける（ユーザー判断 2026-10-08） */
+function layerOptions(def: PartLayer, standard: number): SelectOption[] {
+  return [
+    { value: '-1', label: 'なし（この層を消す）' },
+    ...def.textures.map((t, i) => ({ value: String(t), label: `色${i + 1}（${t}）${t === standard ? '［標準］' : ''}` })),
+  ]
+}
+
+/**
+ * 上級者モードだけ：部品の層ごとに「なし」か色違いを選ぶ。部品の番号（形）は変えない。
+ * 値はテクスチャの番号で、形は部品の番号で決まる（✅ [U] 2026-10-08）
+ */
+function LayerEditor({
+  kind,
+  part,
+  problem,
+  onChange,
+}: {
+  kind: PartKind
+  part: PartValue
+  problem: string | null
+  onChange: (layer: number, value: number) => void
+}) {
+  const entry = part.id === -1 ? undefined : findPart(kind, part.id)
+  if (!entry) return null
+  const customized = layersCustomized(kind, part)
+  const layers = Array.from({ length: LAYER_COUNT }, (_, i) => i).filter(i => entry.layers[i] !== null || part.models[i] !== -1)
+  if (layers.length === 0) return null
+  return (
+    <details className="rounded-md border px-3 py-2" open={customized}>
+      <summary className="cursor-pointer text-sm">
+        層ごとに選ぶ{customized && <span className="text-muted-foreground ml-2 text-xs">（今は部品の標準と違います）</span>}
+      </summary>
+      <div className="mt-2 grid gap-3">
+        <p className="text-muted-foreground text-xs">
+          形は部品で決まります。層ごとに、消すか色違いを選べます。部品を選び直すと標準に戻ります。
+        </p>
+        {layers.map(layer => {
+          const def = entry.layers[layer]
+          const value = part.models[layer]
+          return (
+            <SelectRow
+              key={layer}
+              label={`層${layer + 1}：${def?.mesh ?? 'この部品にない層'}`}
+              offset={part.offset + 4 + layer * 2}
+              value={String(value)}
+              currentLabel={def ? `この形の色違いではない値 ${value}` : `値 ${value}`}
+              options={def ? layerOptions(def, entry.models[layer]) : []}
+              problem={problem}
+              disabled={!def}
+              hint={def ? undefined : 'この部品にはない層です'}
+              note="🟢 値はテクスチャの番号で、形は部品の番号で決まる（✅ [U] 2026-10-08）。なしにすると層が消える（足元の層2で履物が消えた ✅ [U]）"
+              onChange={v => onChange(layer, Number(v))}
+            />
+          )
+        })}
+      </div>
+    </details>
+  )
+}
+
 const PART_NOTES: Record<PartKind, string> = {
   upper: '🟢 部品の番号とモデルの値（u16 × 4）を書く。書き込みの反映は要ゲーム内確認（U-19）',
   lower: '🟢 部品の番号とモデルの値（u16 × 4）を書く。書き込みの反映は要ゲーム内確認（U-19）',
   face: '🟢 部品の番号とモデルの値を書く。✅ [U] 書き込みの反映を確認',
   hair: '🟢 部品の番号とモデルの値を書く。✅ [U] 書き込みの反映を確認',
-  body: '❓ 部品の種類が分からない（名前のない15種）。上級者モードだけ。書き込みの反映は要ゲーム内確認（U-19）',
+  body: '🟢 手のモデル（名前のない15種）。上級者モードだけ。✅ [U] J.J の手の書き込みの反映を確認',
   feet: '🟢 部品の番号とモデルの値（u16 × 4）を書く。書き込みの反映は要ゲーム内確認（U-19）',
   gauntlet: '✅ [U] 部品の番号と、色違いまで含めたモデルの値を書く',
   leggings: '✅ [U] 部品の番号と、色違いまで含めたモデルの値を書く',
@@ -211,9 +277,7 @@ export function AppearancePartsCard() {
                 label={PART_KIND_LABELS[kind]}
                 offset={part?.offset ?? 0}
                 badges={
-                  kind === 'body' ? (
-                    <CertaintyBadge mark="❓" text="種類不明" />
-                  ) : !PART_WRITE_CONFIRMED[kind] ? (
+                  !PART_WRITE_CONFIRMED[kind] ? (
                     <CertaintyBadge mark="🔶" text="要ゲーム内確認" />
                   ) : undefined
                 }
@@ -235,6 +299,9 @@ export function AppearancePartsCard() {
                 onChange={v => update(b => writePart(b, kind, Number(v), advanced))}
               />
               {part && <p className="text-muted-foreground font-mono text-xs">生バイト：{part.raw}</p>}
+              {advanced && part && (
+                <LayerEditor kind={kind} part={part} problem={problem} onChange={(layer, v) => update(b => writeLayer(b, kind, layer, v, advanced))} />
+              )}
             </div>
           )
         })}

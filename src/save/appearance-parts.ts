@@ -2,17 +2,28 @@
 //
 // - 0x3AAD4 u16 人物の番号 🟢。人物を指している間は、表示は部品・髪の色ともその人物から作られる（✅ [U] 2026-10-08）。
 //   部品や髪の色を変えるときは FFFF（個別に設定）にする ✅ [U]
-// - 0x3AAD6 u16 人物ごとに決まる値 🔶（U-19）。人物を選ぶときだけ書く
+// - 0x3AAD6 u16 人物ごとに決まる値（拷問などで着替えさせられる姿を引く人物）🟢。人物を選ぶときだけ書く
 // - 0x3AADA u8 髪の色 ✅位置 [U]。0〜4 ✅ [U]、5〜9 🔶（U-19）
 // - 0x3AADC u8 性別（体の種類）0＝男・1＝女 🔶、2〜4 🟢。単独の書き込みは上級者モードだけ（ユーザー判断 2026-10-08）
 // - 上半身・下半身の「なし」は、組み合わせによっては読み込めない（エラーになった例・読めた例とも ✅ [U]、条件は ❓）。
 //   止めずに、その項目に警告を出す（ユーザー判断 2026-10-08）。部品 53 の上半身はクラッシュする ✅ [U]
-// - 0x3AAE4 + 12k：部品の組。+0 部品の番号 u16、+2 ❓（書かない）、+4〜+B モデルの値 u16 × 4 🟢
-//   顔・髪型・小物4種は書き込みの反映を確認 ✅ [U]。上半身・下半身・足元・k＝4 は要ゲーム内確認（U-19）
+// - 0x3AAE4 + 12k：部品の組。+0 部品の番号 u16、+2 使われていない 🔶（書かない）、+4〜+B モデルの値（層）u16 × 4 🟢
+//   顔・髪型・小物4種・手（k＝4）は書き込みの反映を確認 ✅ [U]。上半身・下半身・足元は要ゲーム内確認（U-19）
+//   モデルの値はテクスチャの番号で、形は部品の番号で決まる（✅ [U] 2026-10-08）。層ごとに「なし」か色違いを選ぶのは上級者モードだけ
+//   （ユーザー判断 2026-10-08）。足元の層を外した書き込みの反映 ✅ [U] 2026-10-08
 // ❓ U-1：固定オフセットを採用（ユーザー判断 2026-10-07）。ファイルサイズを検証する。
 import { readU16, readU8, writeF32, writeU16, writeU8, readF32 } from './binary'
 import { checkLayout } from './hero'
-import { BODY_KINDS, findPart, findPerson, PART_KINDS, PERSONS, type Gender, type PartKind } from './master/appearance-parts'
+import {
+  BODY_KINDS,
+  findPart,
+  findPerson,
+  PART_KIND_LABELS,
+  PART_KINDS,
+  PERSONS,
+  type Gender,
+  type PartKind,
+} from './master/appearance-parts'
 
 export const APPEARANCE_PARTS_OFFSETS = {
   person: 0x3aad4,
@@ -39,7 +50,7 @@ export const PART_WRITE_CONFIRMED: Readonly<Record<PartKind, boolean>> = {
   lower: false,
   face: true,
   hair: true,
-  body: false,
+  body: true,
   feet: false,
   gauntlet: true,
   leggings: true,
@@ -155,7 +166,7 @@ export const NONE_ALLOWED: Readonly<Record<PartKind, boolean>> = Object.fromEntr
 /**
  * 部品の番号を検証する。−1 はなし。
  * どのモードでも：表にない番号（モデルの値が決まらない）とクラッシュする部品は拒否する。
- * 通常モード：名前のある部品で、性別の指定がないか主人公の性別と同じもの（ユーザー判断 2026-10-08）。k＝4（❓）は上級者モードだけ。
+ * 通常モード：名前のある部品で、性別の指定がないか主人公の性別と同じもの（ユーザー判断 2026-10-08）。手（k＝4）は全部名前がないので上級者モードだけ。
  * 上半身・下半身の「なし」は拒否せず、partNoneWarning で警告する（ユーザー判断 2026-10-08）。
  */
 export function validatePart(kind: PartKind, id: number, heroGender: number, advanced: boolean): string | null {
@@ -164,7 +175,6 @@ export function validatePart(kind: PartKind, id: number, heroGender: number, adv
   if (!part) return `${id} は部品の表にありません`
   if (part.crash) return 'この部品はロードでクラッシュします'
   if (advanced) return null
-  if (kind === 'body') return '通常モードでは変更できません（部品の種類が未確認）'
   if (part.ja === '') return '名前のない部品は上級者モードでだけ選べます'
   const g = genderName(heroGender)
   if (part.gender !== null && part.gender !== g) return '通常モードでは主人公と同じ性別の部品だけ選べます'
@@ -221,6 +231,45 @@ export function writePart(bytes: Uint8Array, kind: PartKind, id: number, advance
   if (error) throw new RangeError(error)
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM)
   writePartRecord(bytes, kind, id)
+}
+
+/** 層の番号（0〜3）。部品の組の +4 + 2·layer */
+export const LAYER_COUNT = 4
+
+/**
+ * 層（モデルの値）1つを検証する。上級者モードだけ（ユーザー判断 2026-10-08）。
+ * 値はテクスチャの番号で、形は部品の番号で決まる（✅ [U] 2026-10-08）。
+ * −1（なし）か、その部品のその層の形の色違いだけを許す。別の形のテクスチャは崩れる（✅ [U] 髪型・足元）
+ */
+export function validateLayer(kind: PartKind, partId: number, layer: number, value: number, advanced: boolean): string | null {
+  if (!advanced) return '層の組み合わせは上級者モードでだけ変更できます'
+  if (!Number.isInteger(layer) || layer < 0 || layer >= LAYER_COUNT) return `層は 0〜${LAYER_COUNT - 1} です`
+  if (partId === -1) return '部品が「なし」のときは層を選べません。先に部品を選んでください'
+  const part = findPart(kind, partId)
+  if (!part) return `${partId} は${PART_KIND_LABELS[kind]}の表にない部品です`
+  const def = part.layers[layer]
+  if (!def) return `この部品には層${layer + 1}がありません`
+  if (value === -1 || def.textures.includes(value)) return null
+  return `${value} は層${layer + 1}（${def.mesh}）の色違いではありません`
+}
+
+/**
+ * 部品の層（モデルの値）1つだけを書き、人物の番号を「個別に設定」にする。部品の番号とほかの層は変えない。
+ * なし（FFFF）にするとその層が消える（足元の層2で履物が消えた ✅ [U] 2026-10-08）
+ */
+export function writeLayer(bytes: Uint8Array, kind: PartKind, layer: number, value: number, advanced = false): void {
+  const view = requireWritable(bytes)
+  const error = validateLayer(kind, view.parts[kind].id, layer, value, advanced)
+  if (error) throw new RangeError(error)
+  writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM)
+  writeU16(bytes, partOffset(kind) + 4 + layer * 2, value === -1 ? 0xffff : value)
+}
+
+/** 部品の層が、その部品の標準の値（表の save_models）と違うときに true。表にない部品は false */
+export function layersCustomized(kind: PartKind, part: PartValue): boolean {
+  if (part.id === -1) return false
+  const entry = findPart(kind, part.id)
+  return entry !== undefined && part.models.some((m, i) => m !== entry.models[i])
 }
 
 export function validateHairColor(value: number, advanced: boolean): string | null {
