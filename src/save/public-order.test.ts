@@ -1,6 +1,6 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 🔶 0x0015 が治安という位置は差分からの推定（鍛冶屋で踏み倒すと 44 → 34）。❓ 要ゲーム内確認。
-// 段階の境目は [W] の仕様（docs/save_format/README.md §5）。
+// 0x0015 が治安で、書き換えがゲームに反映されることは ✅ [U] 2026-10-08（鍛冶屋で踏み倒すと 44 → 34）。
+// 段階の境目は [W] の仕様（docs/save_format/chunks/date-location「治安の段階」）。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -30,8 +30,8 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 治安の候補 0x0015（❓ 要ゲーム内確認）', () => {
-  it('u8 で読み、段階の候補を付ける', () => {
+describe('✅ [U] 治安 0x0015', () => {
+  it('u8 で読み、[W] の段階を付ける', () => {
     expect(readPublicOrder(makeSave(BEFORE_RUNOFF))).toEqual({ value: 44, level: '普通', warning: null, problem: null })
   })
 

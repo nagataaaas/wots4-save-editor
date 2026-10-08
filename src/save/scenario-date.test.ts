@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32, writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
-import { DATE_OFFSETS, readDate, writeDayTime, writePending } from './scenario-date'
+import { DATE_OFFSETS, STAGES, linkedStage, readDate, writeDayTime, writePending, writeStage } from './scenario-date'
 
 /** 0x0010〜0x0014 の5バイトと 0x0BD8 の u32（差分で見た実際の値） */
 const SEEN = {
@@ -52,10 +52,8 @@ describe('readDate chunks/date-location', () => {
     expect(readDate(makeSave(SEEN.day6Noon))).toMatchObject({ day: 6, slot: 0, problem: null })
   })
 
-  it('0x0010 が 400 なのに 0x0BD8 が3日目以前なら読み取り専用にする', () => {
-    const b = makeSave(SEEN.day5Noon)
-    writeU32(b, DATE_OFFSETS.dayIndex, 2)
-    expect(readDate(b).problem).toMatch(/400/)
+  it('差分で見た値は、段階が日数・時間帯と連動している', () => {
+    for (const seen of Object.values(SEEN)) expect(readDate(makeSave(seen)).linked).toBe(true)
   })
 
   it('保留量が入っていれば警告する', () => {
@@ -64,24 +62,38 @@ describe('readDate chunks/date-location', () => {
     expect(v.warning).toMatch(/保留量/)
   })
 
-  it('0x0010 と 0x0014 の時間帯が食い違えば読み取り専用にする', () => {
+  it('1〜3日目・400 の段階が日数・時間帯と合わないときは警告する（編集はできる）', () => {
     const b = makeSave(SEEN.day1Evening)
     writeU8(b, DATE_OFFSETS.slot, 2)
-    expect(readDate(b).problem).toMatch(/一致しません/)
+    expect(readDate(b)).toMatchObject({ linked: false, problem: null })
+    expect(readDate(b).warning).toMatch(/合っていません/)
+    const c = makeSave(SEEN.day5Noon)
+    writeU32(c, DATE_OFFSETS.dayIndex, 2)
+    expect(readDate(c)).toMatchObject({ day: 3, linked: false, problem: null })
+    expect(readDate(c).warning).toMatch(/合っていません/)
   })
 
-  it('0x0010 の日と 0x0BD8＋1 が食い違えば読み取り専用にする', () => {
-    const b = makeSave(SEEN.day1Evening)
-    writeU16(b, DATE_OFFSETS.dayTime, 210)
-    expect(readDate(b).problem).toMatch(/0x0BD8/)
+  it('🟢 話の進み具合で決まる段階（0・410 以降）は連動しないが、警告もしない', () => {
+    for (const v of [0, 410, 500, 999]) {
+      const b = makeSave(SEEN.day6Noon)
+      writeU16(b, DATE_OFFSETS.dayTime, v)
+      expect(readDate(b)).toMatchObject({ stage: v, linked: false, problem: null, warning: null })
+    }
   })
 
-  it('0x0010 が「日×100＋時間帯×10」の形でなければ読み取り専用にする', () => {
-    for (const v of [0, 105, 130, 99, 410, 500]) {
+  it('一覧にない段階は警告する（編集はできる）', () => {
+    for (const v of [105, 130, 4096]) {
       const b = makeSave(SEEN.day1Evening)
       writeU16(b, DATE_OFFSETS.dayTime, v)
-      expect(readDate(b).problem).not.toBeNull()
+      expect(readDate(b)).toMatchObject({ linked: false, problem: null })
+      expect(readDate(b).warning).toMatch(/一覧にない/)
     }
+  })
+
+  it('時間帯（0x0014）が 0〜2 の外なら読み取り専用にする', () => {
+    const b = makeSave(SEEN.day1Evening)
+    writeU8(b, DATE_OFFSETS.slot, 3)
+    expect(readDate(b).problem).toMatch(/0x0014/)
   })
 
   it('保留量が 0・10 以外なら読み取り専用にする', () => {
@@ -166,11 +178,74 @@ describe('書き込み', () => {
     expect(() => writePending(after, 20)).toThrow(RangeError)
   })
 
+  it('段階が連動していないときは、日数・時間帯を書いても 0x0010 を変えない', () => {
+    for (const stage of [0, 500, 4096]) {
+      const before = makeSave(SEEN.day6Noon)
+      writeU16(before, DATE_OFFSETS.dayTime, stage)
+      const after = before.slice()
+      writeDayTime(after, 2, 1, { advanced: false })
+      expect(diffOffsets(before, after)).toEqual([0x14, DATE_OFFSETS.dayIndex])
+      expect(readDate(after)).toMatchObject({ day: 2, slot: 1, stage })
+    }
+  })
+
   it('妥当性検証に落ちている状態では書かない', () => {
     const b = makeSave(SEEN.day1Evening)
-    writeU8(b, DATE_OFFSETS.slot, 2)
+    writeU8(b, DATE_OFFSETS.slot, 3)
     const before = b.slice()
     expect(() => writeDayTime(b, 1, 0, { advanced: false })).toThrow(RangeError)
+    expect(() => writeStage(b, 0)).toThrow(RangeError)
     expect(diffOffsets(before, b)).toEqual([])
+  })
+})
+
+describe('段階 0x0010', () => {
+  it('🟢 一覧の値。実セーブで見たのは 0・100・110・120・200・400', () => {
+    expect(STAGES.filter((s) => s.seen).map((s) => s.value)).toEqual([0, 100, 110, 120, 200, 400])
+    expect(STAGES.map((s) => s.value)).toEqual([0, 100, 110, 120, 200, 210, 220, 300, 310, 320, 400, 410, 420, 500, 510, 520, 600, 999])
+  })
+
+  it('連動する段階は 1〜3日目が「日×100＋時間帯×10」、4日目以降が 400', () => {
+    expect([linkedStage(1, 0), linkedStage(2, 1), linkedStage(3, 2), linkedStage(4, 0), linkedStage(9, 2)]).toEqual([100, 210, 320, 400, 400])
+  })
+
+  it('段階を書くと 0x0010 だけが変わる。日数・時間帯は変えない', () => {
+    const before = makeSave(SEEN.day5Evening)
+    const after = before.slice()
+    writeStage(after, 210)
+    expect(diffOffsets(before, after)).toEqual([0x10, 0x11])
+    expect(readDate(after)).toMatchObject({ stage: 210, day: 5, slot: 1, linked: false })
+  })
+
+  it('✅ [U] 0（序章）は書かない（0x0010 だけでは序章のイベントが始まらない。new-cycle.ts を使う）', () => {
+    const b = makeSave(SEEN.day5Evening)
+    expect(() => writeStage(b, 0)).toThrow(/新しい周回を始める/)
+  })
+
+  it('❓ 410 以降は書けるが、ゲーム内の動作は要ゲーム内確認', () => {
+    const b = makeSave(SEEN.day6Noon)
+    writeStage(b, 500)
+    expect(Array.from(b.slice(0x10, 0x12))).toEqual([0xf4, 0x01])
+  })
+
+  it('一覧にない値は書かない', () => {
+    const b = makeSave(SEEN.day1Evening)
+    for (const v of [-1, 105, 4096, 1000]) expect(() => writeStage(b, v)).toThrow(RangeError)
+  })
+
+  it('連動していない段階を書いたあとは、日数・時間帯を変えても段階が残る', () => {
+    const b = makeSave(SEEN.day6Noon)
+    writeStage(b, 510)
+    writeDayTime(b, 7, 2, { advanced: false })
+    expect(readDate(b)).toMatchObject({ stage: 510, day: 7, slot: 2 })
+  })
+
+  it('読み出し→書き戻しでバイト列が一致する', () => {
+    for (const seen of Object.values(SEEN)) {
+      const before = makeSave(seen)
+      const after = before.slice()
+      writeStage(after, readDate(after).stage)
+      expect(diffOffsets(before, after)).toEqual([])
+    }
   })
 })

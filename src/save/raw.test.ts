@@ -46,7 +46,8 @@ describe('領域の一覧（docs/save_format/README.md §3）', () => {
   })
 
   it('どこにも入らない位置と、終了が ❓ の領域だけの位置は null', () => {
-    expect(innermostRegion(0x0000)).toBeNull()
+    expect(innermostRegion(0x0000)?.chunk).toBe('difficulty')
+    expect(innermostRegion(0x0001)).toBeNull()
     // 0x0B3C（stats）は終了が ❓ なので色分けに使わない
     expect(innermostRegion(0x0b3c)).toBeNull()
   })

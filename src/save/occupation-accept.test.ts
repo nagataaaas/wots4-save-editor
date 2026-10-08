@@ -122,7 +122,8 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
   it('表にない ID、日付が読めないセーブ、U-1 に落ちるセーブには書かない', () => {
     expect(() => acceptOccupation(makeSave(), 7)).toThrow(RangeError)
     const badDate = makeSave()
-    writeU16(badDate, 0x0010, 0)
+    // 時間帯（0x0014）が 0〜2 の外
+    writeU8(badDate, 0x0014, 3)
     expect(() => acceptOccupation(badDate, 3)).toThrow(RangeError)
     const big = makeSave(TS_SAVE_SIZE + 4)
     expect(readAccepted(big).problem).not.toBeNull()

@@ -1,6 +1,9 @@
 import { memo, useMemo, useState, type ReactNode } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
+import { InfoTip } from "@/components/info-tip";
+import { Badge } from "@/components/ui/badge";
+import { startNewCycle } from "@/save/new-cycle";
 import type { SelectOption } from "@/components/select-options";
 import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
@@ -116,14 +119,25 @@ import {
   type RouteJudgeView,
 } from "@/save/factions";
 import {
+  DIFFICULTIES,
+  DIFFICULTY_OFFSET,
+  readDifficulty,
+  writeDifficulty,
+  type DifficultyView,
+} from "@/save/difficulty";
+import {
   DATE_OFFSETS,
   DAY_RANGE,
+  DAY_TIME_AFTER_DAY3,
   PENDING_VALUES,
+  STAGES,
+  STAGE_PROLOGUE,
   TIME_SLOTS,
   readDate,
   validateDay,
   writeDayTime,
   writePending,
+  writeStage,
   type DateView,
 } from "@/save/scenario-date";
 import {
@@ -149,6 +163,7 @@ import { recordOptions, stateOptions } from "./event-options";
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 type Views = {
+  difficulty: DifficultyView;
   date: DateView;
   events: EventsView;
   factions: FactionsView;
@@ -206,13 +221,14 @@ export function WorldPage() {
       note={
         <>
           この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
-          date-location・factions・gates・facilities）。 日数・時間帯、勢力の友好度
+          difficulty・date-location・factions・gates・facilities）。 難易度、新しい周回を始める書き込み、日数・時間帯、治安、勢力の友好度
           +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
         </>
       }
     >
       {(views, k) => (
         <>
+          <CycleCard key={`${k}-cycle`} view={views?.difficulty ?? null} />
           <DateCard key={`${k}-date`} view={views?.date ?? null} />
           <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />
           <FactionCard
@@ -244,6 +260,7 @@ function ViewsPage({
       const b = save.working;
       return {
         views: {
+          difficulty: readDifficulty(b),
           date: readDate(b),
           events: readEvents(b),
           factions: readFactions(b),
@@ -305,25 +322,114 @@ function ViewsPage({
   );
 }
 
+const difficultyOptions: SelectOption[] = DIFFICULTIES.map((d) => ({
+  value: String(d.value),
+  label: d.certainty === "✅" ? d.label : `${d.label}（🔶 推測）`,
+}));
+
+/** 難易度（0x0000）と、新しい周回を始める書き込み（new-cycle.ts）。view が null ならセーブ未読み込み */
+function CycleCard({ view }: { view: DifficultyView | null }) {
+  const { update } = useSave();
+  const [armed, setArmed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const start = () => {
+    if (!armed) return setArmed(true);
+    setArmed(false);
+    try {
+      update(startNewCycle);
+      setError(null);
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>難易度・周回</CardTitle>
+        <CardDescription>
+          難易度は 0x0000 の値です。易しい＝0・超難しい＝3 は、スロット一覧の表示と一致しました。書き換えはゲーム内の難易度に反映されます（確認済み）。
+          「新しい周回を始める」は、周回ごとに初期化されるとみられる値（日付・イベントの状態・シナリオのフラグ・周回中の記録など）を、エンディング後のセーブの値にそろえます。
+          次のロードの「続きから」で難易度と主人公の設定に進み、序章のイベント（船上の侍）から新しい周回として遊べます（確認済み）。
+          段階だけを 0 にして主人公の設定だけをやり直すときは、「主人公」画面のボタンを使います。
+          {view && ` 生の値：${view.value}`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        <SelectRow
+          label="難易度"
+          offset={DIFFICULTY_OFFSET}
+          badges={<CertaintyBadge mark="🔶" text="普通＝1・難しい＝2 は推測" />}
+          value={view ? String(view.value) : null}
+          currentLabel={view ? `不明な値 ${view.value}` : undefined}
+          options={difficultyOptions}
+          problem={view?.problem ?? null}
+          warning={view?.warning}
+          note="0x0000 の1バイトだけを書きます。普通＝1・難しい＝2 は 0 と 3 の間を埋めた推測です（🔶）。幅は u8 とみています（0x0001〜0x0007 は見たセーブではすべて 0）"
+          onChange={(v) => update((b) => writeDifficulty(b, Number(v)))}
+        />
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Label>新しい周回</Label>
+            <InfoTip offset={DATE_OFFSETS.dayTime}>
+              書く値はすべてエンディング後のセーブの値です：段階 0x0010＝0、保留量 0x0012・時間帯 0x0014＝0、現在地 0x0013＝0x27（港（騒乱／希望の光用））、
+              周回中のプレイ時間 0x0B90・0x0BC0・周回中の斬殺数 0x0BC8・0x0BD0・経過日数 0x0BD8＝0、敵の種類ごとの斬殺数（周回中）0x0C84〜0x1C23＝0、
+              イベントの状態 A 0x36A8〜0x374D（00／FF の並び）、シナリオのフラグ 0x374E〜0x3837＝0（施設と堂島の職 0x3799 は変えない）、ヒント 0x3900＝FFFF。
+              難易度・記録 B・所持品・特典・町の人・なりわい・夜這い・治安・累計の記録は変えません。元に戻す操作はないので、書き換える前のセーブを残してください
+            </InfoTip>
+            <CertaintyBadge mark="🔶" text="初期化の範囲はエンディング後のセーブ1件から推定" />
+          </div>
+          <Button
+            variant={armed ? "destructive" : "outline"}
+            size="sm"
+            className="w-fit"
+            disabled={!view || view.problem !== null}
+            onClick={start}
+            onBlur={() => setArmed(false)}
+          >
+            {armed ? "もう一度押すと書き込みます" : "新しい周回を始める"}
+          </Button>
+          {error && <p className="text-destructive text-xs">{error}</p>}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 const slotOptions: SelectOption[] = TIME_SLOTS.map((label, i) => ({ value: String(i), label }));
 const pendingOptions: SelectOption[] = PENDING_VALUES.map((v) => ({
   value: String(v),
   label: v === 0 ? "0（なし）" : `${v}（エリア移動・ロードで時間帯が1つ進む）`,
 }));
+/** ❓ 410 以降は書き込んだときのゲーム内の動作を確かめていない。0（序章）は「新しい周回を始める」か主人公画面のボタンで書くので選ばせない */
+const stageOptions: SelectOption[] = STAGES.map((s) => ({
+  value: String(s.value),
+  label:
+    s.value === STAGE_PROLOGUE
+      ? `${s.value}：${s.label}（「新しい周回を始める」などで書く）`
+      : `${s.value}：${s.label}${s.value > DAY_TIME_AFTER_DAY3 ? "（❓ 要ゲーム内確認）" : ""}`,
+  selectedLabel: `${s.value}：${s.label}`,
+  disabled: s.value === STAGE_PROLOGUE,
+}));
 
-/** 日数・時間帯。view が null ならセーブ未読み込み */
+/** 日数・時間帯・段階。view が null ならセーブ未読み込み */
 function DateCard({ view }: { view: DateView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const range = advanced ? DAY_RANGE.system : DAY_RANGE.normal;
   const problem = view?.problem ?? null;
+  const linkNote = view?.linked
+    ? "段階は日数・時間帯に連動しています。日数・時間帯を変えると段階（0x0010）も合わせて書きます"
+    : "段階は日数・時間帯に連動していません。日数・時間帯を変えても段階（0x0010）は変えません";
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>日数・時間帯</CardTitle>
+        <CardTitle>日数・時間帯・段階</CardTitle>
         <CardDescription>
-          日数（0x0BD8・0x0010・0x0014）・時間帯（0x0010・0x0014）・保留量（0x0012）は、書き換えがゲームに反映されることを確認済みです。
+          日数（0x0BD8）はゲーム内の日数の表示、時間帯（0x0014）は昼・夕・夜、段階（0x0010）はイベントが起きるかどうかを決めます。
+          1〜3日目と4日目以降（剣術大会の前）は、段階が日数・時間帯から決まるので連動して書きます。それより先の段階は話の進み具合で決まるので、別々に変えます。
           日を進めると、過ぎた時間帯に済ませていないイベントはチャートで失敗と表示されます（寝て日を飛ばしたときと同じ）。
           {view &&
             ` 生の値：0x0010＝${view.raw.dayTime}、0x0012＝${view.pending}、0x0014＝${view.raw.slot}、0x0BD8＝${view.raw.dayIndex}`}
@@ -341,7 +447,7 @@ function DateCard({ view }: { view: DateView | null }) {
           apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
           inputMode="numeric"
           hint={`${range.min}〜${range.max}日目`}
-          note="0x0BD8（u32、経過日数）・0x0010（u16）・0x0014（u8）を書きます。0x0010 だけでは日数は変わりませんでした。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示されます（セーブ上の状態は変わりません）。4日目以降は 0x0010 に 400 を書きます"
+          note="0x0BD8（u32、経過日数）と 0x0014（u8）を書き、段階が連動しているときは 0x0010（u16）も書きます。ゲーム内で反映を確認済み。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示されます（セーブ上の状態は変わりません）"
         />
         <SelectRow
           label="時間帯"
@@ -349,8 +455,26 @@ function DateCard({ view }: { view: DateView | null }) {
           value={view ? String(view.slot) : null}
           options={slotOptions}
           problem={problem}
-          note="0x0010（u16）と 0x0014（u8）を書きます。ゲーム内で反映を確認済み"
+          note="0x0014（u8）を書き、段階が連動しているときは 0x0010（u16）も書きます。ゲーム内で反映を確認済み"
           onChange={(v) => update((b) => writeDayTime(b, view!.day, Number(v), { advanced }))}
+        />
+        <SelectRow
+          label="段階"
+          offset={DATE_OFFSETS.dayTime}
+          badges={
+            view && (
+              <Badge variant="outline" className="font-normal">
+                {view.linked ? "連動中" : "連動していません"}
+              </Badge>
+            )
+          }
+          value={view ? String(view.stage) : null}
+          currentLabel={view ? `一覧にない値 ${view.stage}` : undefined}
+          options={stageOptions}
+          problem={problem}
+          hint={view ? linkNote : undefined}
+          note="0x0010（u16）だけを書きます。日数・時間帯は変えません。0（序章）にするときは、上の「新しい周回を始める」か、主人公画面の「難易度と主人公設定を行えるようにする」を使います。410 以降を書いたときのゲーム内の動作は確かめていません"
+          onChange={(v) => update((b) => writeStage(b, Number(v)))}
         />
         <SelectRow
           label="時間帯を進める保留量"
@@ -371,7 +495,7 @@ const publicOrderLevelsText = PUBLIC_ORDER_LEVELS.map(
     `${l.label} ${l.min}〜${i === 0 ? PUBLIC_ORDER_MAX : PUBLIC_ORDER_LEVELS[i - 1].min - 1}`,
 ).join("／");
 
-/** 治安の候補（0x0015）。view が null ならセーブ未読み込み */
+/** 治安（0x0015。✅ [U] 書き換えはゲームに反映される）。view が null ならセーブ未読み込み */
 function PublicOrderCard({ view }: { view: PublicOrderView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -381,12 +505,11 @@ function PublicOrderCard({ view }: { view: PublicOrderView | null }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           治安
-          <CertaintyBadge mark="🔶" text="位置は差分からの推定。要ゲーム内確認" />
+          <CertaintyBadge mark="🔶" text="範囲と段階の境目は外部情報" />
         </CardTitle>
         <CardDescription>
-          0x0015（u8）を治安の候補として出しています。鍛冶屋で踏み倒すと 10 下がり、手元のセーブでは
-          0〜99 に収まっていました。
-          書き換えがゲーム内の「今の治安」に反映されるかは確かめていません。 段階（候補）：
+          0x0015（u8）が治安です。書き換えはゲーム内の治安に反映されます（確認済み）。鍛冶屋で踏み倒すと 10 下がり、手元のセーブでは
+          0〜99 に収まっていました。 段階（外部情報）：
           {publicOrderLevelsText}。
           {view &&
             ` 生の値：${view.value}（${formatHex2(view.value)}）${view.level ? `＝${view.level}` : ""}`}
@@ -394,7 +517,7 @@ function PublicOrderCard({ view }: { view: PublicOrderView | null }) {
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
         <FieldRow
-          label="治安（候補）"
+          label="治安"
           offset={PUBLIC_ORDER_OFFSET}
           value={view?.value ?? null}
           problem={view?.problem ?? null}
@@ -404,7 +527,7 @@ function PublicOrderCard({ view }: { view: PublicOrderView | null }) {
           apply={(v) => update((b) => writePublicOrder(b, v, { advanced }))}
           inputMode="numeric"
           hint={advanced ? "0〜255" : `0〜${PUBLIC_ORDER_MAX}`}
-          note="🔶 0x0015 の1バイトだけを書きます。1日目のセーブで 0 の例があり、初期値 50 とは合いません（❓）"
+          note="0x0015 の1バイトだけを書きます。1日目のセーブで 0 の例があり、初期値 50 とは合いません（❓）"
         />
       </CardContent>
     </Card>

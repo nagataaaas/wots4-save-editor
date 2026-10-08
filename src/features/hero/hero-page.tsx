@@ -31,6 +31,9 @@ import {
   type U32Key,
 } from "@/save/hero";
 import { findLocation, selectableLocations } from "@/save/locations";
+import { enableCharacterSetup } from "@/save/new-cycle";
+import { DATE_OFFSETS } from "@/save/scenario-date";
+import { Button } from "@/components/ui/button";
 import { AppearanceCurrentCard } from "./appearance-current-card";
 import { AppearancePartsCard } from "./appearance-parts-card";
 
@@ -193,7 +196,58 @@ export function HeroPage() {
         view={view}
         onChange={(v) => update((b) => writeLocation(b, v))}
       />
+
+      <CharacterSetupCard key={`${k}-setup`} view={view} />
     </div>
+  );
+}
+
+/** 0x0010 だけを 0 にする（new-cycle.ts の enableCharacterSetup。✅ [U] 次のロードで難易度と主人公の設定に進む） */
+function CharacterSetupCard({ view }: { view: HeroView | null }) {
+  const { update } = useSave();
+  const [armed, setArmed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const run = () => {
+    if (!armed) return setArmed(true);
+    setArmed(false);
+    try {
+      update(enableCharacterSetup);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>難易度・主人公設定のやり直し</CardTitle>
+        <CardDescription>
+          次のロードの「続きから」で、難易度と主人公の設定に進むようにします（確認済み）。イベントの状態は今の周回のままなので、序章のイベントは始まらず、セーブした場所から続きます。
+          周回をはじめからやり直すときは、「世界」画面の「新しい周回を始める」を使います。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Label>難易度と主人公設定</Label>
+          <InfoTip offset={DATE_OFFSETS.dayTime}>
+            段階 0x0010（u16）だけを 0 にします。ほかのバイトは変えません。0 から元の段階に戻すときは「世界」画面の段階の欄で選び直してください
+          </InfoTip>
+        </div>
+        <Button
+          variant={armed ? "destructive" : "outline"}
+          size="sm"
+          className="w-fit"
+          disabled={!view || view.layoutProblem !== null}
+          onClick={run}
+          onBlur={() => setArmed(false)}
+        >
+          {armed ? "もう一度押すと書き込みます" : "難易度と主人公設定を行えるようにする"}
+        </Button>
+        {error && <p className="text-destructive text-xs">{error}</p>}
+      </CardContent>
+    </Card>
   );
 }
 

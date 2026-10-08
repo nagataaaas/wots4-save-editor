@@ -1,17 +1,17 @@
-// 治安。出典：docs/save_format/chunks/date-location（0x0015）と docs/save_format/README.md §5（治安の仕様）。
+// 治安。出典：docs/save_format/chunks/date-location（0x0015 と治安の段階）。
 //
-//   0x0015 u8  🔶 治安の候補。位置は差分から推定しただけで、ゲーム内の表示との照合はしていない（❓ 要ゲーム内確認）。
-//              根拠：鍛冶屋のおやじから踏み倒すと 44 → 34（−10）になった（chunks/townsfolk の調査記録 2026-10-06_blacksmith-sushi.md）。
-//              sample/ の S4-DATA_01・01 copy・01 copy 2・01 copy 3・02 で 61・59・90・20・72 と、治安の範囲 0〜99 に収まる。
+//   0x0015 u8  治安 ✅ [U] 2026-10-08（書き換えるとゲーム内の治安に反映された）。
+//              鍛冶屋のおやじから踏み倒すと 44 → 34（−10）になる（chunks/townsfolk の調査記録 2026-10-06_blacksmith-sushi.md）。
+//              実セーブ5件で 61・59・90・20・72 と、治安の範囲 0〜99 に収まる。
 //              1日目のセーブでは 0 の例がある（chunks/date-location の調査記録 2026-10-05_time-of-day.md）。初期値 50 とは合わない ❓
 //   治安の仕様（[W]）：0〜99、初期値 50。とても良い 90〜99／良い 70〜89／普通 30〜69／悪い 10〜29／とても悪い 0〜9
+//   🔶 範囲と段階の境目は [W] の仕様で、セーブの値との照合はしていない
 //
-// 未確認データなので「生の値＋候補の段階」の形で出す（AGENTS.md「未確認データの扱い」）。
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
 
-/** 🔶 治安の候補の位置 */
+/** ✅ [U] 治安の位置 */
 export const PUBLIC_ORDER_OFFSET = 0x15;
 
 /** [W] 治安の範囲。通常モードはこの範囲だけ、上級者モードは任意の u8 */
@@ -60,7 +60,7 @@ export function validatePublicOrder(value: number, opts: { advanced: boolean }):
   return null;
 }
 
-/** 0x0015 の1バイトだけを書く（🔶 位置は推定。❓ 要ゲーム内確認） */
+/** 0x0015 の1バイトだけを書く（✅ [U] 書き換えはゲームに反映される） */
 export function writePublicOrder(bytes: Uint8Array, value: number, opts: { advanced: boolean }): void {
   const view = readPublicOrder(bytes);
   if (view.problem) throw new RangeError(view.problem);
