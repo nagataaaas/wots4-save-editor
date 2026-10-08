@@ -34,9 +34,11 @@ describe('sheetSkillRows 🟢', () => {
       '  89',
     ])
     const row = (no: number) => rows.find((r) => r.skill.skillNo === no)!
-    expect(row(37)).toMatchObject({ parent: 36, prev: [] })
-    expect(row(54)).toMatchObject({ parent: null, prev: [36, 37] })
-    expect(row(19)).toMatchObject({ parent: null, prev: [16] })
+    expect(row(37)).toMatchObject({ parent: 36, prev: [], others: [] })
+    // 字下げで示す 36 以外の 37 だけを画面に書く
+    expect(row(54)).toMatchObject({ parent: null, prev: [36, 37], others: [37] })
+    expect(row(19)).toMatchObject({ parent: null, prev: [16], others: [] })
+    expect(row(0)).toMatchObject({ others: [] })
   })
 
   it('派生元・前に出す技が輪になっても全部の技を 1 回ずつ並べる', () => {

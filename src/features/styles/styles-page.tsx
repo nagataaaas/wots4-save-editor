@@ -228,7 +228,7 @@ function SectCard({
           </Button>
           <span className="text-muted-foreground text-xs">
             派生先を覚えた技は「派生先あり」（2）になります。段 5（極）にはならないので、必要なら下の段を 5 にしてください。
-            技は派生元の下に字下げして並べます（「← A の派生」は A から派生する技、「← A の次」は A に続けて出す技）。
+            技は派生元の下に字下げして並べます。ほかの技からも派生する技は「← A からも」と書きます。
           </span>
         </div>
 
@@ -271,7 +271,7 @@ function SectCard({
               {findStance(sheet.stance)?.nameJa}の技（技の表 {sheet.id}）
             </h3>
             <ul className="divide-y text-sm">
-              {sheetSkillRows(sheet).map(({ skill: s, depth, parent, prev }) => {
+              {sheetSkillRows(sheet).map(({ skill: s, depth, others }) => {
                 const state = states[s.skillNo];
                 const name = (no: number) =>
                   skillName(sheet.skills.find((x) => x.skillNo === no) ?? findStanceSkill(sheet.stance, no) ?? { nameJa: `技 ${no}` });
@@ -282,12 +282,8 @@ function SectCard({
                         {depth > 0 && <span className="text-muted-foreground mr-1">└</span>}
                         {skillName(s)}
                       </span>
-                      {(parent !== null || prev.length > 0) && (
-                        <span className="text-muted-foreground text-xs">
-                          {parent !== null && `← ${name(parent)} の派生`}
-                          {parent !== null && prev.length > 0 && "・"}
-                          {prev.length > 0 && `← ${prev.map(name).join("・")} の次`}
-                        </span>
+                      {others.length > 0 && (
+                        <span className="text-muted-foreground text-xs">← {others.map(name).join("・")} からも</span>
                       )}
                     </span>
                     <StateBadge state={state} />

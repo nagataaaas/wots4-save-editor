@@ -179,6 +179,8 @@ export type SheetSkillRow = {
   parent: number | null
   /** この技の前に出す技の番号のうち、同じ技の表にあるもの（stance-skill.csv の prev） */
   prev: number[]
+  /** 字下げで示した親以外の派生元・前に出す技。字下げだけでは分からないので画面に書く */
+  others: number[]
 }
 
 /**
@@ -202,15 +204,16 @@ export function sheetSkillRows(sheet: SkillSheet): SheetSkillRow[] {
 
   const rows: SheetSkillRow[] = []
   const visited = new Set<number>()
-  const visit = (no: number, depth: number) => {
+  const visit = (no: number, depth: number, shownParent: number | null) => {
     if (visited.has(no)) return
     visited.add(no)
     const { skill, parent, prev } = info.get(no)!
-    rows.push({ skill, depth, parent, prev })
-    for (const c of children.get(no) ?? []) visit(c, depth + 1)
+    const others = [...new Set([...(parent === null ? [] : [parent]), ...prev])].filter((p) => p !== shownParent)
+    rows.push({ skill, depth, parent, prev, others })
+    for (const c of children.get(no) ?? []) visit(c, depth + 1, no)
   }
-  for (const s of sheet.skills) if (info.get(s.skillNo)!.treeParent === null) visit(s.skillNo, 0)
+  for (const s of sheet.skills) if (info.get(s.skillNo)!.treeParent === null) visit(s.skillNo, 0, null)
   // 親をたどると輪になる技（データにはないが念のため）は根として足す
-  for (const s of sheet.skills) visit(s.skillNo, 0)
+  for (const s of sheet.skills) visit(s.skillNo, 0, null)
   return rows
 }
