@@ -7,10 +7,10 @@ title:
   en: Strike in the Dark
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの2日目夜。[将の器](hidden__2_day__ability_to_lead.md)のあと、神社の小暮に会うと始まり、夜の町で茂呂を襲う小暮を止める。
-    小暮を説得すると3日目昼の[学問のすすめ](hidden__3_day__pursuit_of_knowledge.md)へ。茂呂か小暮が死ぬと隠しルートの希望の光への道が閉じる。
+    真ルートの2日目夜。[将の器](best__2_day__ability_to_lead.md)のあと、神社の小暮に会うと始まり、夜の町で茂呂を襲う小暮を止める。
+    小暮を説得すると3日目昼の[学問のすすめ](best__3_day__pursuit_of_knowledge.md)へ。茂呂か小暮が死ぬと真ルートの希望の光への道が閉じる。
 
 summary: >-
   仲間の信頼を失った小暮が、結果で取り戻そうと茂呂を斬りに行く。夜の町で茂呂と小暮が向き合う場面で、どちらにつくか、止めるかを選ぶ。
@@ -42,7 +42,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート
+    meaning: 真ルート
     confidence: 🟢
   - flag: 段階
     test: "== 220"
@@ -57,7 +57,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功、小暮が死んでいるときに運命のルーレット・伯爵に刺激をで J.J を倒した）
+    meaning: 真ルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功、小暮が死んでいるときに運命のルーレット・伯爵に刺激をで J.J を倒した）
     confidence: 🟢
   - flag: "0x374F"
     serial: 167
@@ -88,7 +88,7 @@ flag_changes:
     serial: 230
     value: "= 2"
     when: 失敗したとき
-    meaning: 隠しルートの希望の光への道が閉じ、大老暗殺計画へ進む
+    meaning: 真ルートの希望の光への道が閉じ、大老暗殺計画へ進む
     confidence: 🟢
   - flag: "0x3752"
     serial: 170
@@ -120,7 +120,7 @@ sources: ["[A]"]
 3. 茂呂につくと、小暮と戦闘（茂呂が味方）。小暮につくと、茂呂と戦闘（小暮が味方）。どちらでも茂呂か小暮が死んで失敗（`0x36F5` = 5）
 4. 小暮に「早まるな 小暮！」と言うと、小暮が「俺は赤城のように人の上に立つ器ではない」と語り、もう一度選択肢が出る。語学所 `0x375F`（通し番号 183）が開いているときだけ「赤城のようになりたくないのか？」が出る
 5. 「赤城のようになりたくないのか？」：茂呂が小暮を挑発し、小暮と戦闘になる。小暮を倒しきらずに戦闘を終えると（[A] では峰打ちで活力を 0 にする）、「俺の負けだ……とどめを刺せ」と言う小暮を茂呂が説得し、明日語学所に来いと誘う。成功（`0x36F5` = 4）
-6. 失敗すると隠しルート `0x378E`（通し番号 230）が 2 になる
+6. 失敗すると真ルート `0x378E`（通し番号 230）が 2 になる
 
 ## 選択肢
 
@@ -151,19 +151,19 @@ sources: ["[A]"]
 
 | 対象 | 変化 | 場面 | 確度 |
 |---|---|---|---|
-| 隠しルート `0x378E`（通し番号 230） | 2（[大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)へ） | 失敗 | 🟢 |
-| 隠しルート `0x378E` | 1 のまま | 成功 | 🟢 |
+| 真ルート `0x378E`（通し番号 230） | 2（[大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)へ） | 失敗 | 🟢 |
+| 真ルート `0x378E` | 1 のまま | 成功 | 🟢 |
 | 茂呂 `0x3752`（通し番号 170） | 1（死亡） | 上の表 | 🟢 |
 | 小暮 `0x374F`（通し番号 167） | 1（死亡） | 上の表 | 🟢 |
 | 時間帯を進める保留量 | +10 | 成功・失敗 | 🟢 |
 
-- 茂呂は幕府ルートにかかわる人物で、3日目夜に死んでいると幕府ルートに入れない（[characters](../save_format/chunks/characters/README.md)）。隠しルートでの影響は ❓
+- 茂呂は幕府ルートにかかわる人物で、3日目夜に死んでいると幕府ルートに入れない（[characters](../save_format/chunks/characters/README.md)）。真ルートでの影響は ❓
 - 語学所の開閉は前の周回からの引き継ぎで決まる（[facilities](../save_format/chunks/facilities/README.md)）。語学所が閉じていると成功できない
 
 ## 前後のイベント
 
-- 前：[将の器](hidden__2_day__ability_to_lead.md)、[伯爵に刺激を](hidden__2_day__down_for_the_count.md)／[運命のルーレット](hidden__2_day__dice_of_destiny.md)
-- 次：[学問のすすめ](hidden__3_day__pursuit_of_knowledge.md)（成功時）／[大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)（失敗時）
+- 前：[将の器](best__2_day__ability_to_lead.md)、[伯爵に刺激を](best__2_day__down_for_the_count.md)／[運命のルーレット](best__2_day__dice_of_destiny.md)
+- 次：[学問のすすめ](best__3_day__pursuit_of_knowledge.md)（成功時）／[大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)（失敗時）
 
 ## 未確認のこと
 

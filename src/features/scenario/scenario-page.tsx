@@ -61,16 +61,16 @@ import {
   type TownsfolkView,
 } from "@/save/townsfolk";
 import {
-  HIDDEN_ROUTE_EVENT_INDEX,
-  HIDDEN_ROUTE_OFFSET,
-  HIDDEN_ROUTE_VALUES,
+  BEST_ROUTE_EVENT_INDEX,
+  BEST_ROUTE_OFFSET,
+  BEST_ROUTE_VALUES,
   RAW_ROUTE_OFFSETS,
   ROUTE_CANDIDATE_NOTES,
   ROUTE_CANDIDATE_START,
   readRouteCandidates,
   routeCandidateNormalMax,
   validateRouteCandidate,
-  writeHiddenRoute,
+  writeBestRoute,
   writeRouteCandidate,
   type RouteCandidatesView,
 } from "@/save/route-candidates";
@@ -184,14 +184,14 @@ function parseInteger(input: string, validate: (v: number) => string | null): Pa
   return error ? { ok: false, error } : { ok: true, value };
 }
 
-/** シナリオ：イベント・フラグ・人物・隠しルート・ヒント */
+/** シナリオ：イベント・フラグ・人物・真ルート・ヒント */
 export function ScenarioPage() {
   return (
     <ViewsPage
       note={
         <>
           この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
-          event-chart・scenario-flags・characters・townsfolk・hidden-route・hint）。
+          event-chart・scenario-flags・characters・townsfolk・best-route・hint）。
           イベントの失敗（05）・未到達（FF）、チャート表示は書き換えの反映を確認済みです。そのほかの値は確かめていません。
         </>
       }
@@ -204,7 +204,7 @@ export function ScenarioPage() {
           <RouteCandidatesCard
             key={`${k}-route-candidates`}
             view={views?.routeCandidates ?? null}
-            sisters={views?.events.entries[HIDDEN_ROUTE_EVENT_INDEX]?.state ?? null}
+            sisters={views?.events.entries[BEST_ROUTE_EVENT_INDEX]?.state ?? null}
           />
           <HintCard key={`${k}-hint`} view={views?.hint ?? null} />
           <EventsCard key={`${k}-events`} view={views?.events ?? null} />
@@ -750,7 +750,7 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
           が初期状態（病院・語学所は閉、カジノは開）です。
           周回をまたいで引き継がれると考えられます。
           2日目の各枠では、施設の値によって起きるイベントが入れ替わります。
-          隠しルートで希望の光に進むには、病院・語学所が開き、カジノが閉じている必要があります。
+          真ルートで希望の光に進むには、病院・語学所が開き、カジノが閉じている必要があります。
           {view &&
             !view.problem &&
             (facilitiesReadyForLightOfHope(view.values)
@@ -1003,13 +1003,13 @@ const TownsfolkTable = memo(function TownsfolkTable({
   );
 });
 
-const hiddenRouteOptions: SelectOption[] = HIDDEN_ROUTE_VALUES.map((v) => ({
+const bestRouteOptions: SelectOption[] = BEST_ROUTE_VALUES.map((v) => ({
   value: String(v.value),
   label: `${v.value} ${v.label}`,
 }));
 
 /**
- * 隠しルート（0x378E）と、その周り 0x378D〜0x37AA の生の値。view が null ならセーブ未読み込み。
+ * 真ルート（0x378E）と、その周り 0x378D〜0x37AA の生の値。view が null ならセーブ未読み込み。
  * sisters は三姉妹見参（イベント添字70）の状態 A
  */
 function RouteCandidatesCard({
@@ -1025,10 +1025,10 @@ function RouteCandidatesCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>隠しルート</CardTitle>
+        <CardTitle>真ルート</CardTitle>
         <CardDescription>
-          0x378E が 1 で隠しルートです（書き換えで確認済み）。ただし、三姉妹見参（イベント
-          {HIDDEN_ROUTE_EVENT_INDEX}）が成功（04）でないと効きません。
+          0x378E が 1 で真ルートです（書き換えで確認済み）。ただし、三姉妹見参（イベント
+          {BEST_ROUTE_EVENT_INDEX}）が成功（04）でないと効きません。
           病院（0x375D）が閉じていると赤城が死に、再起の望みより後ろのイベントが起きません。
         </CardDescription>
       </CardHeader>
@@ -1036,18 +1036,18 @@ function RouteCandidatesCard({
         <div className="grid gap-4 sm:grid-cols-3">
           <SelectRow
             label="ルート"
-            offset={HIDDEN_ROUTE_OFFSET}
-            value={view ? String(view.hidden) : null}
-            currentLabel={view ? `${view.hidden} 不明` : undefined}
-            options={hiddenRouteOptions}
-            problem={view?.hiddenProblem ?? null}
+            offset={BEST_ROUTE_OFFSET}
+            value={view ? String(view.best) : null}
+            currentLabel={view ? `${view.best} 不明` : undefined}
+            options={bestRouteOptions}
+            problem={view?.bestProblem ?? null}
             hint={
               sisters === null
                 ? undefined
-                : `今の三姉妹見参の状態：${formatHex2(sisters)}${sisters === 0x04 ? "（成功。隠しルートが効く）" : "（成功ではないので、1 にしても通常ルートのまま）"}`
+                : `今の三姉妹見参の状態：${formatHex2(sisters)}${sisters === 0x04 ? "（成功。真ルートが効く）" : "（成功ではないので、1 にしても通常ルートのまま）"}`
             }
-            note="1 にしただけでは通常ルートのまま。三姉妹見参の状態も 04（成功）にすると隠しルート（お早い到着）に入る。0 にすると通常ルートに戻る。2 は隠しルートを外れた状態（再起の望みで小暮が死ぬ、怒りの矛先の成功、闇討ちの失敗、傷心の帰国船の成功などで 2 になり、周回中は戻らない）。2 で大通りに行くと大老暗殺計画が起きる。隠しルートを過去の周回で記録していないと、正規のプレイでもチャートに失敗したイベントや先のイベントの枠が出ない"
-            onChange={(v) => update((b) => writeHiddenRoute(b, Number(v), { advanced }))}
+            note="1 にしただけでは通常ルートのまま。三姉妹見参の状態も 04（成功）にすると真ルート（お早い到着）に入る。0 にすると通常ルートに戻る。2 は真ルートを外れた状態（再起の望みで小暮が死ぬ、怒りの矛先の成功、闇討ちの失敗、傷心の帰国船の成功などで 2 になり、周回中は戻らない）。2 で大通りに行くと大老暗殺計画が起きる。真ルートを過去の周回で記録していないと、正規のプレイでもチャートに失敗したイベントや先のイベントの枠が出ない"
+            onChange={(v) => update((b) => writeBestRoute(b, Number(v), { advanced }))}
           />
         </div>
 
@@ -1057,9 +1057,9 @@ function RouteCandidatesCard({
             <CertaintyBadge mark="🔶" text="書き換えたときのゲーム内の反映は未確認" />
           </div>
           <p className="text-muted-foreground text-xs">
-            0x378D は序章のあとの道筋（1＝通常の1〜3日目、2＝隠しルートに入った）、0x379F
+            0x378D は序章のあとの道筋（1＝通常の1〜3日目、2＝真ルートに入った）、0x379F
             は序章の大砲です。0x378D・0x379F・0x37AA を書き換えても、ルートは変わりませんでした。
-            この範囲には、好感度や職など隠しルートに関係しないバイトも入っています。説明は、そのバイトが変わる場面です。書き換えたときのゲーム内の反映は確かめていません。
+            この範囲には、好感度や職など真ルートに関係しないバイトも入っています。説明は、そのバイトが変わる場面です。書き換えたときのゲーム内の反映は確かめていません。
             {view?.warning && ` ${view.warning}`}
           </p>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -1237,8 +1237,8 @@ function EventsCard({ view }: { view: EventsView | null }) {
           「チャート表示」は周回をまたぐ記録（0x3838＋添字、🔶 生きた証）で、FF
           なら枠だけ出て名前が隠れ、04 なら名前が出ます（確認済み）。ただし FF
           でも、状態が成功（04）のイベントは名前が出ます（確認済み）。
-          隠しルートのイベントだけは、チャート表示が FF
-          だと、成功したもの以外は枠ごと出ません（正規のプレイでも同じ。隠しルート以外は FF
+          真ルートのイベントだけは、チャート表示が FF
+          だと、成功したもの以外は枠ごと出ません（正規のプレイでも同じ。真ルート以外は FF
           でも失敗が出ます）。 チャート表示を 04
           にすると、失敗したイベントも、まだ起きていない先のイベント（大老暗殺計画など）も出ます（確認済み）。
         </CardDescription>
@@ -1450,7 +1450,7 @@ function EventBox({
           }
           options={recordOptions(advanced)}
           problem={problem}
-          note="周回をまたぐ記録（生きた証）。FF で名前が隠れ、04 で名前が出る。FF でも状態が成功（04）なら出ます。隠しルートのイベントは FF だと成功以外は枠ごと出ないので、ここを 04 にすると出ます（確認済み）。ほかの周回にも引き継がれる可能性があります"
+          note="周回をまたぐ記録（生きた証）。FF で名前が隠れ、04 で名前が出る。FF でも状態が成功（04）なら出ます。真ルートのイベントは FF だと成功以外は枠ごと出ないので、ここを 04 にすると出ます（確認済み）。ほかの周回にも引き継がれる可能性があります"
           onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
         />
       </div>

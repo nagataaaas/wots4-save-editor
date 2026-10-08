@@ -7,10 +7,10 @@ title:
   en: The Sad Boat Home
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの3日目夕で、J.J が死んでいるか寿司屋の店主が死んでいるときの分岐（どちらも生きていて J.J と友なら[刺激が欲しい](hidden__3_day__in_need_of_encouragement.md)）。
-    伯爵の死の責任を問われたローラが本国へ帰る。成功で隠しルートの希望の光への道が閉じ、[大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)へ進む。
+    真ルートの3日目夕で、J.J が死んでいるか寿司屋の店主が死んでいるときの分岐（どちらも生きていて J.J と友なら[刺激が欲しい](best__3_day__in_need_of_encouragement.md)）。
+    伯爵の死の責任を問われたローラが本国へ帰る。成功で真ルートの希望の光への道が閉じ、[大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)へ進む。
 
 summary: >-
   港でローラが帰国の船に乗る場面に立ち会う。J.J が死んでいてメリンダが生きていれば、メリンダが「おまえのせいで公使様は失脚された」と海兵隊と襲ってくる。
@@ -32,7 +32,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート
+    meaning: 真ルート
     confidence: 🟢
   - flag: "0x3758"
     serial: 176
@@ -57,7 +57,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功、小暮が死んでいるときに J.J を倒した、闇討ちの失敗）
+    meaning: 真ルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功、小暮が死んでいるときに J.J を倒した、闇討ちの失敗）
     confidence: 🟢
 
 flag_changes:
@@ -77,7 +77,7 @@ flag_changes:
     serial: 230
     value: "= 2"
     when: 成功したとき
-    meaning: 隠しルートの希望の光への道が閉じ、大老暗殺計画へ進む
+    meaning: 真ルートの希望の光への道が閉じ、大老暗殺計画へ進む
     confidence: 🟢
   - flag: "0x3764"
     serial: 188
@@ -125,7 +125,7 @@ sources: ["[A]"]
 | 生きている（J.J が死んでいる） | 1（死んでいる） | 戦闘なしで成功 |
 | 死んでいる | — | 戦闘なしで成功 |
 
-3. 成功（`0x36F8` = 4）。隠しルート `0x378E`（通し番号 230）が 2 になり、居留地の門 `0x3764`（通し番号 188）が閉じる
+3. 成功（`0x36F8` = 4）。真ルート `0x378E`（通し番号 230）が 2 になり、居留地の門 `0x3764`（通し番号 188）が閉じる
 
 ## 選択肢
 
@@ -137,7 +137,7 @@ sources: ["[A]"]
 
 | 対象 | 変化 | 場面 | 確度 |
 |---|---|---|---|
-| 隠しルート `0x378E`（通し番号 230） | 2（[大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)へ） | 成功 | 🟢 |
+| 真ルート `0x378E`（通し番号 230） | 2（[大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)へ） | 成功 | 🟢 |
 | 居留地の門（大寄せ以降）`0x3764`（通し番号 188） | 1（閉じる）。[A] の「以後、領事館内と黒船に入れない」に当たる | 見送りのあと | 🟢 |
 | `0x3790`（通し番号 232） | 1（意味は ❓。外国ルートでローラが死ぬ場面でも 1 になる） | 見送りのあと | 🟢 |
 | `0x37A4`（通し番号 252） | 2（意味は ❓。外国ルートでローラが死ぬ場面でも 2 になる） | 見送りのあと | 🟢 |
@@ -149,8 +149,8 @@ sources: ["[A]"]
 
 ## 前後のイベント
 
-- 前：[学問のすすめ](hidden__3_day__pursuit_of_knowledge.md)（[運命のルーレット](hidden__2_day__dice_of_destiny.md)・[伯爵に刺激を](hidden__2_day__down_for_the_count.md)で J.J が死んだとき、または寿司屋の店主が死んでいるとき）
-- 次：[大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)
+- 前：[学問のすすめ](best__3_day__pursuit_of_knowledge.md)（[運命のルーレット](best__2_day__dice_of_destiny.md)・[伯爵に刺激を](best__2_day__down_for_the_count.md)で J.J が死んだとき、または寿司屋の店主が死んでいるとき）
+- 次：[大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)
 
 ## 未確認のこと
 

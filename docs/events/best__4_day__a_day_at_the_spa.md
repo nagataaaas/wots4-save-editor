@@ -7,10 +7,10 @@ title:
   en: A Day at the Spa
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの4日目以降の最初のイベント。[伯爵救出](hidden__3_day__rescuing_the_count.md)の成功が条件で、
-    終わるとそのまま[（名前不明）](hidden__4_day__event_84.md)・[ローラの決意](hidden__4_day__lauras_determination.md)の場面へ続く。
+    真ルートの4日目以降の最初のイベント。[伯爵救出](best__3_day__rescuing_the_count.md)の成功が条件で、
+    終わるとそのまま[（名前不明）](best__4_day__event_84.md)・[ローラの決意](best__4_day__lauras_determination.md)の場面へ続く。
 
 summary: >-
   大通りの人だかりにいるローラに近づくと、鬼怒川が攘夷志士を釜茹でにする公開処刑を見せられる。
@@ -37,7 +37,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート（失敗していない）
+    meaning: 真ルート（失敗していない）
     confidence: 🟢
   - flag: 段階
     test: "== 400"
@@ -52,7 +52,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（3日目夕までの場面で 2 になる。2 から戻らない）
+    meaning: 真ルートを外れた（3日目夕までの場面で 2 になる。2 から戻らない）
     confidence: 🟢
   - flag: "0x3758"
     serial: 176
@@ -76,7 +76,7 @@ flag_changes:
   - flag: 段階
     value: "= 410"
     when: 成功したとき
-    meaning: 隠しルートの4日目以降（410）に進む
+    meaning: 真ルートの4日目以降（410）に進む
     confidence: 🟢
 
 sources: [A]
@@ -89,7 +89,7 @@ sources: [A]
 1. 4日目以降、伯爵救出を成功させていると、大通りに入ったところで導入になる（`0x36FA`（通し番号 82）= 1）
 2. 人だかりの中のローラに近づくと、ローラに「あれを見てください」と処刑台を示される。抜刀したまま近づくと、先に「そんなもの仕舞ってください」と言われる
 3. 鬼怒川が「面白い見世物」として、攘夷志士を釜で茹でる公開処刑を始める。三姉妹が見物して楽しむ。飛び出そうとする仲間を「今飛び出しても犬死だぞ」と止める場面がある
-4. ローラが「耐えられません……行きましょう」と言って場を離れ、成功（`0x36FA` = 4）。段階が 410 になり、時間帯を挟まずに[（名前不明）](hidden__4_day__event_84.md)の場面へ移る
+4. ローラが「耐えられません……行きましょう」と言って場を離れ、成功（`0x36FA` = 4）。段階が 410 になり、時間帯を挟まずに[（名前不明）](best__4_day__event_84.md)の場面へ移る
 
 ## 選択肢
 
@@ -112,8 +112,8 @@ sources: [A]
 
 ## 前後のイベント
 
-- 前：[伯爵救出](hidden__3_day__rescuing_the_count.md)（成功が条件）
-- 次：[（名前不明）](hidden__4_day__event_84.md) → [ローラの決意](hidden__4_day__lauras_determination.md)（続けて起きる）
+- 前：[伯爵救出](best__3_day__rescuing_the_count.md)（成功が条件）
+- 次：[（名前不明）](best__4_day__event_84.md) → [ローラの決意](best__4_day__lauras_determination.md)（続けて起きる）
 
 ## 未確認のこと
 

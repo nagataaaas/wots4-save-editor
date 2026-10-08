@@ -7,9 +7,9 @@ title:
   en: Laura's Determination
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    [（名前不明）](hidden__4_day__event_84.md)の成功が条件。成功するとそのまま[士魂は屈せず](hidden__4_day__the_fighting_spirit_never_dies.md)へ続く。
+    [（名前不明）](best__4_day__event_84.md)の成功が条件。成功するとそのまま[士魂は屈せず](best__4_day__the_fighting_spirit_never_dies.md)へ続く。
 
 summary: >-
   代官所の前で待つローラに付き添い、代官所内で鬼怒川に公開処刑をやめるよう抗議する。鬼怒川はこれを宣戦布告とみなし、
@@ -36,11 +36,11 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート（失敗していない）
+    meaning: 真ルート（失敗していない）
     confidence: 🟢
   - flag: 段階
     test: "== 410"
-    meaning: 隠しルートの4日目以降（410）
+    meaning: 真ルートの4日目以降（410）
     confidence: 🟢
   - flag: 現在の地域
     test: "== 18"
@@ -51,7 +51,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（3日目夕までの場面で 2 になる。人間湯通しの恐怖から先が起きない）
+    meaning: 真ルートを外れた（3日目夕までの場面で 2 になる。人間湯通しの恐怖から先が起きない）
     confidence: 🟢
   - flag: "0x3758"
     serial: 176
@@ -81,7 +81,7 @@ flag_changes:
   - flag: 段階
     value: "= 420"
     when: 成功したとき
-    meaning: 隠しルートの4日目以降（420）に進む
+    meaning: 真ルートの4日目以降（420）に進む
     confidence: 🟢
 
 sources: [A]
@@ -91,12 +91,12 @@ sources: [A]
 
 ## 流れ
 
-1. [（名前不明）](hidden__4_day__event_84.md)のあと、代官所の門の前にローラが立っている。近づくと「追いかけてきて下さったのですか？」と言われ、選択肢が出る
+1. [（名前不明）](best__4_day__event_84.md)のあと、代官所の門の前にローラが立っている。近づくと「追いかけてきて下さったのですか？」と言われ、選択肢が出る
 2. 「少し待っていてくれ」を選ぶと `0x36FD`（通し番号 85）= 2 になり、ローラはその場で待つ。もう一度近づくと「準備はよろしいですか？」と聞かれる
 3. 「一緒に行こう」（または2回目以降の「さあ行こう」）で `0x36FD` = 3 になり、代官所内の座敷へ移る
 4. ローラが鬼怒川に公開処刑をやめるよう抗議する。鬼怒川は「日本国への内政干渉」「宣戦布告とみなし あなたを処刑します」と返し、魔鱗組との戦闘になる
 5. 魔鱗組を5人倒すと戦闘が終わる。鬼怒川がローラの首に刃を当てて「動くなっ」と脅し、主人公は抵抗をやめて捕らえられる（「いい土産が出来ました」「娘達はさぞ喜ぶでしょうよ」）
-6. 成功（`0x36FD` = 4）。段階が 420 になり、そのまま[士魂は屈せず](hidden__4_day__the_fighting_spirit_never_dies.md)へ移る
+6. 成功（`0x36FD` = 4）。段階が 420 になり、そのまま[士魂は屈せず](best__4_day__the_fighting_spirit_never_dies.md)へ移る
 
 ## 選択肢
 
@@ -122,8 +122,8 @@ sources: [A]
 
 ## 前後のイベント
 
-- 前：[（名前不明）](hidden__4_day__event_84.md)（成功が条件）
-- 次：[士魂は屈せず](hidden__4_day__the_fighting_spirit_never_dies.md)（続けて起きる）
+- 前：[（名前不明）](best__4_day__event_84.md)（成功が条件）
+- 次：[士魂は屈せず](best__4_day__the_fighting_spirit_never_dies.md)（続けて起きる）
 
 ## 未確認のこと
 

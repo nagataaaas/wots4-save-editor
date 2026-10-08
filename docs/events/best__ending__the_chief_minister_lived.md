@@ -7,10 +7,10 @@ title:
   en: The Chief Minister Lived
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートに失敗したときの結末。[大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)の成功から続けて起きる。
-    隠しルートを最後まで進めたときの結末は[希望の光](hidden__ending__the_light_of_hope.md)。
+    真ルートに失敗したときの結末。[大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)の成功から続けて起きる。
+    真ルートを最後まで進めたときの結末は[希望の光](best__ending__the_light_of_hope.md)。
 
 summary: >-
   暗殺の翌日、死んだはずの鬼怒川が現れ、陰謀は失敗に終わったと告げる。暗殺した鬼怒川は影武者だった。
@@ -33,7 +33,7 @@ conditions:
 failure_conditions:
   - flag: 段階
     test: ">= 410"
-    meaning: 隠しルートを外れないまま人間湯通しの恐怖を終えた（大老暗殺計画が起きなくなる）
+    meaning: 真ルートを外れないまま人間湯通しの恐怖を終えた（大老暗殺計画が起きなくなる）
     confidence: 🟢
 
 flag_changes:
@@ -61,7 +61,7 @@ sources: [A]
 
 ## 流れ
 
-1. [大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)で鬼怒川を倒すと、続けてこの結末になる。段階 = 999、`0x370B`（通し番号 99）= 4 になる
+1. [大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)で鬼怒川を倒すと、続けてこの結末になる。段階 = 999、`0x370B`（通し番号 99）= 4 になる
 2. 暗殺に加わった仲間（琴吹と、小暮・茂呂・J.J・メリンダのうち状態が 0 で、戦闘で倒れなかった者）が場面に残る
 3. 「次の日」。鬼怒川が現れ、「諸君らの浅はかな陰謀は 失敗に終わりました」「私の方が 一枚上手だった」と告げる
 4. 語り：暗殺した鬼怒川は影武者だった。正義は往々にして少数派であり、より多くの力を結集しなければ真の勝利は得られないのかもしれない、と結ばれる
@@ -85,8 +85,8 @@ sources: [A]
 
 ## 前後のイベント
 
-- 前：[大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)
-- 隠しルートのもう1つの結末：[希望の光](hidden__ending__the_light_of_hope.md)
+- 前：[大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)
+- 真ルートのもう1つの結末：[希望の光](best__ending__the_light_of_hope.md)
 
 ## 未確認のこと
 

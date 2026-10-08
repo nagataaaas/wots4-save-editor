@@ -37,7 +37,7 @@ conditions:
   - flag: "0x378D"
     serial: 229
     test: "== 1"
-    meaning: 通常ルート（隠しルートでは起きない）
+    meaning: 通常ルート（真ルートでは起きない）
     confidence: 🟢
   - flag: 時間帯
     test: "== 0"

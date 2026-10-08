@@ -7,10 +7,10 @@ title:
   en: A Speedy Arrival
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの1日目夕。[三姉妹見参](hidden__prologue__meeting_with_the_three_sisters.md)のあと、大通りの人だかりで起きる。
-    成功するとそのまま1日目夜の[再起の望み](hidden__1_day__praying_for_recovery.md)に続く。
+    真ルートの1日目夕。[三姉妹見参](best__prologue__meeting_with_the_three_sisters.md)のあと、大通りの人だかりで起きる。
+    成功するとそのまま1日目夜の[再起の望み](best__1_day__praying_for_recovery.md)に続く。
 
 summary: >-
   大通りに大老 鬼怒川怨仙の行列が来る。娘に恥をかかせたと主人公が狙われ、赤城・小暮が加勢して琴吹・魔鱗組と戦う。
@@ -32,7 +32,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート
+    meaning: 真ルート
     confidence: 🟢
   - flag: 段階
     test: "== 110"
@@ -75,7 +75,7 @@ sources: ["[A]"]
 2. 大老 鬼怒川怨仙の行列が到着し、三姉妹が主人公を指して「あの男ですわ」。鬼怒川が琴吹たちをけしかける
 3. 赤城（「手を貸すぜ」）と小暮が加勢し、琴吹・魔鱗組と戦闘になる。敵を一定数倒すと戦闘が終わる（🔶 10人）。琴吹・赤城・小暮は体力が半分を切ると倒れない（🔶）
 4. 戦いのあと、鉄砲隊の一斉射撃で赤城が撃たれ、小暮が赤城を抱えて退く。成功（`0x36EF` = 4）
-5. 段階が1日目夜（120）になり、続けて[再起の望み](hidden__1_day__praying_for_recovery.md)が始まる
+5. 段階が1日目夜（120）になり、続けて[再起の望み](best__1_day__praying_for_recovery.md)が始まる
 
 ## 選択肢
 
@@ -94,8 +94,8 @@ sources: ["[A]"]
 
 ## 前後のイベント
 
-- 前：[三姉妹見参](hidden__prologue__meeting_with_the_three_sisters.md)
-- 次：[再起の望み](hidden__1_day__praying_for_recovery.md)
+- 前：[三姉妹見参](best__prologue__meeting_with_the_three_sisters.md)
+- 次：[再起の望み](best__1_day__praying_for_recovery.md)
 
 ## 未確認のこと
 

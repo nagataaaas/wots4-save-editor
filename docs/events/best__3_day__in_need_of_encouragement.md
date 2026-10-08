@@ -7,10 +7,10 @@ title:
   en: In Need of Encouragement
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの3日目夕。[伯爵に刺激を](hidden__2_day__down_for_the_count.md)で J.J と友になり、寿司屋の店主が生きているときに起きる。
-    成功すると3日目夜の[伯爵救出](hidden__3_day__rescuing_the_count.md)へ進む。
+    真ルートの3日目夕。[伯爵に刺激を](best__2_day__down_for_the_count.md)で J.J と友になり、寿司屋の店主が生きているときに起きる。
+    成功すると3日目夜の[伯爵救出](best__3_day__rescuing_the_count.md)へ進む。
 
 summary: >-
   寿司屋に入ると、J.J が寿司屋の店主に弟子入りして寿司を握っている。J.J の寿司を食べたあと、御大老の命で J.J が「日本の伝統文化を汚した罪」で連行され、
@@ -42,7 +42,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート
+    meaning: 真ルート
     confidence: 🟢
   - flag: 段階
     test: "== 310"
@@ -57,7 +57,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功、小暮が死んでいるときに J.J を倒した、闇討ちの失敗）
+    meaning: 真ルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功、小暮が死んでいるときに J.J を倒した、闇討ちの失敗）
     confidence: 🟢
   - flag: "0x3758"
     serial: 176
@@ -128,12 +128,12 @@ sources: ["[A]"]
 | アイテム | 店に置かれたものを拾える（[A] では伯爵の寿司） | 成功 | 🔶 |
 | 時間帯を進める保留量 | +10 | 成功 | 🟢 |
 
-- [A] は「終了で希望の光・ED が確定」としている。このイベントで隠しルート `0x378E` は書き換えない
+- [A] は「終了で希望の光・ED が確定」としている。このイベントで真ルート `0x378E` は書き換えない
 
 ## 前後のイベント
 
-- 前：[学問のすすめ](hidden__3_day__pursuit_of_knowledge.md)（[伯爵に刺激を](hidden__2_day__down_for_the_count.md)の成功が前提）
-- 次：[伯爵救出](hidden__3_day__rescuing_the_count.md)
+- 前：[学問のすすめ](best__3_day__pursuit_of_knowledge.md)（[伯爵に刺激を](best__2_day__down_for_the_count.md)の成功が前提）
+- 次：[伯爵救出](best__3_day__rescuing_the_count.md)
 
 ## 未確認のこと
 

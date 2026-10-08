@@ -7,14 +7,14 @@ title:
   en: Meeting with the Three Sisters
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの入口。[阿弥浜港争乱](other__prologue__amihama_harbor_skirmish.md)で大砲を操作している般若党を倒していると、3連戦のあとにこのイベントへ続く。
-    成功すると隠しルートに入り、1日目夕の[お早い到着](hidden__1_day__a_speedy_arrival.md)へ進む。
+    真ルートの入口。[阿弥浜港争乱](other__prologue__amihama_harbor_skirmish.md)で大砲を操作している般若党を倒していると、3連戦のあとにこのイベントへ続く。
+    成功すると真ルートに入り、1日目夕の[お早い到着](best__1_day__a_speedy_arrival.md)へ進む。
 
 summary: >-
   阿弥浜港争乱の3連戦の直後、鬼怒川三姉妹（万由・千佳・百合）が港に乗り込んできて戦闘になる。3人とも倒しきれず、一定まで削ると倒れて退散する。
-  成功で隠しルートのフラグ `0x378E` が 1、`0x378D` が 2 になり、段階が1日目夕に飛ぶ。
+  成功で真ルートのフラグ `0x378E` が 1、`0x378D` が 2 になり、段階が1日目夕に飛ぶ。
 
 timing:
   phase: 序章
@@ -101,7 +101,7 @@ flag_changes:
     serial: 230
     value: "= 1"
     when: 成功したとき
-    meaning: 隠しルートに入る
+    meaning: 真ルートに入る
     confidence: 🟢
   - flag: "0x378D"
     serial: 229
@@ -138,19 +138,19 @@ sources: ["[A]"]
 
 | 対象 | 変化 | 場面 | 確度 |
 |---|---|---|---|
-| 隠しルート `0x378E`（通し番号 230） | 0 → 1 | 成功 | 🟢 |
+| 真ルート `0x378E`（通し番号 230） | 0 → 1 | 成功 | 🟢 |
 | `0x378D`（通し番号 229） | 1 → 2。2 のあいだ通常の1〜3日目のイベント（志士との出会い・代官所の面々・小公女謁見など）は起きない | 成功 | 🟢 |
 | 勢力の敵対状態 `0x3786`〜`0x3788`（通し番号 222〜224） | 幕府・外国・攘夷すべて 0 | 成功 | 🟢 |
 | 大寄せ前の門 `0x377D`〜`0x377F`（通し番号 213〜215） | 代官所・居留地・神社すべて 1（開く） | 成功 | 🟢 |
 | 段階 | 110（1日目夕） | 成功 | 🟢 |
 
-- 隠しルートに入るには `0x378E` = 1 と、このイベントの成功（`0x36EE` = 4）の両方が要る（[hidden-route](../save_format/chunks/hidden-route/README.md)）
+- 真ルートに入るには `0x378E` = 1 と、このイベントの成功（`0x36EE` = 4）の両方が要る（[best-route](../save_format/chunks/best-route/README.md)）
 - 序章の大砲の状態 `0x379F` はこのイベントの成否では変わらない
 
 ## 前後のイベント
 
 - 前：[阿弥浜港争乱](other__prologue__amihama_harbor_skirmish.md)
-- 次：[お早い到着](hidden__1_day__a_speedy_arrival.md)
+- 次：[お早い到着](best__1_day__a_speedy_arrival.md)
 
 ## 未確認のこと
 

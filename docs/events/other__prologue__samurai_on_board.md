@@ -81,7 +81,7 @@ flag_changes:
     serial: 229
     value: "= 1"
     when: 船が港に着いたとき
-    meaning: 通常の周回（三姉妹見参で隠しルートに入ると 2）。ほとんどの通常イベントの発生条件が 1 を要求する
+    meaning: 通常の周回（三姉妹見参で真ルートに入ると 2）。ほとんどの通常イベントの発生条件が 1 を要求する
     confidence: 🟢
   - flag: "0x37AA"
     serial: 258

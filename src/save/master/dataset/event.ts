@@ -70,7 +70,7 @@ export const EVENT_TABLE = {
   67: { "id_dec": 67, "save_bytes_le": null, "name_ja": "悲しみのローラ", "name_en": "Grief-Stricken Laura", "備考": "未実装のイベントとみられる（[U] 2026-10-06）" },
   68: { "id_dec": 68, "save_bytes_le": null, "name_ja": "夕暮れの船上", "name_en": "Twilight On Board", "備考": "" },
   69: { "id_dec": 69, "save_bytes_le": null, "name_ja": "討ち入り", "name_en": "The Raid", "備考": "" },
-  70: { "id_dec": 70, "save_bytes_le": null, "name_ja": "三姉妹見参", "name_en": "Meeting with the Three Sisters", "備考": "成功すると隠しルートに入れる（../../chunks/hidden-route/README.md）" },
+  70: { "id_dec": 70, "save_bytes_le": null, "name_ja": "三姉妹見参", "name_en": "Meeting with the Three Sisters", "備考": "成功すると真ルートに入れる（../../chunks/best-route/README.md）" },
   71: { "id_dec": 71, "save_bytes_le": null, "name_ja": "お早い到着", "name_en": "A Speedy Arrival", "備考": "" },
   72: { "id_dec": 72, "save_bytes_le": null, "name_ja": "再起の望み", "name_en": "Praying for Recovery", "備考": "" },
   73: { "id_dec": 73, "save_bytes_le": null, "name_ja": "将の器", "name_en": "Ability to Lead", "備考": "" },

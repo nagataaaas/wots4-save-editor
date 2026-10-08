@@ -7,10 +7,10 @@ title:
   en: Down for the Count
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの2日目夕で、カジノが閉じているときの分岐（開いているときは[運命のルーレット](hidden__2_day__dice_of_destiny.md)）。
-    J.J を寿司屋へ案内して成功すると、3日目夕の[刺激が欲しい](hidden__3_day__in_need_of_encouragement.md)の条件がそろう。J.J を斬ると[傷心の帰国船](hidden__3_day__the_sad_boat_home.md)へ。
+    真ルートの2日目夕で、カジノが閉じているときの分岐（開いているときは[運命のルーレット](best__2_day__dice_of_destiny.md)）。
+    J.J を寿司屋へ案内して成功すると、3日目夕の[刺激が欲しい](best__3_day__in_need_of_encouragement.md)の条件がそろう。J.J を斬ると[傷心の帰国船](best__3_day__the_sad_boat_home.md)へ。
 
 summary: >-
   カジノがなくなって退屈している J.J に、黒船の船長室で「刺激的なこと」を求められる。散歩に連れ出して港の寿司屋まで案内すると、J.J は寿司に感激して主人公を「最高の友」と呼ぶ。
@@ -37,7 +37,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート
+    meaning: 真ルート
     confidence: 🟢
   - flag: 段階
     test: "== 210"
@@ -52,7 +52,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功）
+    meaning: 真ルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功）
     confidence: 🟢
 
 flag_changes:
@@ -108,7 +108,7 @@ flag_changes:
     serial: 230
     value: "= 2"
     when: J.J を倒したとき、小暮 `0x374F` が 1（死亡）なら
-    meaning: 隠しルートの希望の光への道が閉じる
+    meaning: 真ルートの希望の光への道が閉じる
     confidence: 🟢
   - flag: 時間帯を進める保留量
     value: "+ 10"
@@ -166,17 +166,17 @@ sources: ["[A]"]
 | J.J `0x3758`（通し番号 176） | 4（友になった） | 成功 | 🟢 |
 | `0x3769`（通し番号 193） | 1（意味は ❓） | 成功 | 🟢 |
 | J.J `0x3758` | 1（死亡） | J.J を倒したとき | 🟢 |
-| 隠しルート `0x378E`（通し番号 230） | 2 | J.J を倒したとき、小暮が死んでいれば | 🟢 |
+| 真ルート `0x378E`（通し番号 230） | 2 | J.J を倒したとき、小暮が死んでいれば | 🟢 |
 | 時間帯を進める保留量 | +10 | 成功・J.J を倒したとき | 🟢 |
 
 - 寿司屋の状態 `0x37F9`（通し番号 337）は、寿司屋の店主を殺すと 1 になる（[scenario-flags](../save_format/chunks/scenario-flags/README.md)）。このイベントでは書き換えない
 - 寿司屋の店主が死んでいると寿司屋へ案内する道がなく、成功できない
-- カジノの開閉 `0x375E`（通し番号 182）は前の周回から引き継がれ、隠しルートでは2日目夕までに変わる場面がない（🟢）。周回の始めにカジノが開いていれば、このイベントは起きない
+- カジノの開閉 `0x375E`（通し番号 182）は前の周回から引き継がれ、真ルートでは2日目夕までに変わる場面がない（🟢）。周回の始めにカジノが開いていれば、このイベントは起きない
 
 ## 前後のイベント
 
-- 前：[将の器](hidden__2_day__ability_to_lead.md)（カジノ `0x375E` = 1 のとき）
-- 次：[闇討ち](hidden__2_day__strike_in_the_dark.md) → [刺激が欲しい](hidden__3_day__in_need_of_encouragement.md)（成功時。J.J `0x3758` = 4）／[傷心の帰国船](hidden__3_day__the_sad_boat_home.md)（J.J を倒したとき、または寿司屋の店主が死んでいるとき）
+- 前：[将の器](best__2_day__ability_to_lead.md)（カジノ `0x375E` = 1 のとき）
+- 次：[闇討ち](best__2_day__strike_in_the_dark.md) → [刺激が欲しい](best__3_day__in_need_of_encouragement.md)（成功時。J.J `0x3758` = 4）／[傷心の帰国船](best__3_day__the_sad_boat_home.md)（J.J を倒したとき、または寿司屋の店主が死んでいるとき）
 
 ## 未確認のこと
 

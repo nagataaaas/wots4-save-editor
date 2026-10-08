@@ -7,10 +7,10 @@ title:
   en: Rescuing Laura
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    [士魂は屈せず](hidden__4_day__the_fighting_spirit_never_dies.md)のあと、代官所内から出ようとすると起きる。
-    成功するとそのまま[鬼怒川を追え](hidden__after_tournament__in_pursuit_of_kinugawa.md)へ続く。
+    [士魂は屈せず](best__4_day__the_fighting_spirit_never_dies.md)のあと、代官所内から出ようとすると起きる。
+    成功するとそのまま[鬼怒川を追え](best__after_tournament__in_pursuit_of_kinugawa.md)へ続く。
 
 summary: >-
   大通りの処刑台でローラの釜茹でを止める。魔鱗組、鬼怒川、魔鱗親衛隊と3回戦う。途中で赤城が駆けつけてローラを逃がし、
@@ -31,7 +31,7 @@ conditions:
     confidence: 🔶
   - flag: 段階
     test: "== 420"
-    meaning: 隠しルートの4日目以降（420）
+    meaning: 真ルートの4日目以降（420）
     confidence: 🟢
   - flag: 時間帯
     test: "== 2"
@@ -46,7 +46,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（3日目夕までの場面で 2 になる。人間湯通しの恐怖から先が起きない）
+    meaning: 真ルートを外れた（3日目夕までの場面で 2 になる。人間湯通しの恐怖から先が起きない）
     confidence: 🟢
   - flag: "0x3758"
     serial: 176
@@ -115,13 +115,13 @@ sources: [A]
 
 ## 流れ
 
-1. [士魂は屈せず](hidden__4_day__the_fighting_spirit_never_dies.md)のあと、茂呂・小暮と代官所内の出口へ向かうと、大通りの処刑台の場面に移る（`0x3760` = 1 のときは続けて移る）
+1. [士魂は屈せず](best__4_day__the_fighting_spirit_never_dies.md)のあと、茂呂・小暮と代官所内の出口へ向かうと、大通りの処刑台の場面に移る（`0x3760` = 1 のときは続けて移る）
 2. 捕らえられかけた琴吹のところへ主人公たちが駆けつけ、`0x36FF`（通し番号 87）= 3 になる。琴吹・茂呂・小暮と一緒に魔鱗組と戦う（1回目）
 3. 鬼怒川がローラの命を盾に脅すが、赤城が「待たせたな」と駆けつけ、その隙にローラが逃げる。ここで赤城と J.J の状態が 0 に戻り、段階が 500、時間帯が昼になる
 4. 鬼怒川と1対1で戦う（2回目）。鬼怒川に追い詰められて「落ちなさい」と迫られる場面で選択肢が出る（台詞だけ変わる）
 5. 鬼怒川を倒すと「為政者は時として鬼になる」と言い残して倒れるが、「一度や二度殺したくらいでは死なない」と起き上がり、魔鱗親衛隊を呼ぶ
 6. 琴吹・茂呂・小暮・J.J・赤城、メリンダ（生きていれば）と一緒に魔鱗親衛隊と戦う（3回目）。親衛隊を倒すと仲間が「ここは引き受けた」「早く鬼怒川を追うんだ」と言い、成功（`0x36FF` = 4）
-7. そのまま[鬼怒川を追え](hidden__after_tournament__in_pursuit_of_kinugawa.md)へ移る
+7. そのまま[鬼怒川を追え](best__after_tournament__in_pursuit_of_kinugawa.md)へ移る
 
 ## 選択肢
 
@@ -147,8 +147,8 @@ sources: [A]
 
 ## 前後のイベント
 
-- 前：[士魂は屈せず](hidden__4_day__the_fighting_spirit_never_dies.md)
-- 次：[鬼怒川を追え](hidden__after_tournament__in_pursuit_of_kinugawa.md)（続けて起きる）
+- 前：[士魂は屈せず](best__4_day__the_fighting_spirit_never_dies.md)
+- 次：[鬼怒川を追え](best__after_tournament__in_pursuit_of_kinugawa.md)（続けて起きる）
 
 ## 未確認のこと
 

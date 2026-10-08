@@ -1,4 +1,4 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { useSave } from "@/lib/save-context";
 import {
   CHART_BOX_LOOK_LABELS,
   chartBoxLook,
-  hiddenRouteEntered,
+  bestRouteEntered,
   type ChartBoxLook,
   type ChartContext,
 } from "@/save/event-chart-view";
@@ -70,13 +70,13 @@ const KIND_COLORS: Readonly<Record<ChartBoxKind, { fill: string; stroke: string;
   shogunate: { fill: "#D8EDC7", stroke: "#78A955", label: "幕府" },
   foreigners: { fill: "#CFE4F1", stroke: "#5E9BC4", label: "外国" },
   other: { fill: "#F3EBC2", stroke: "#C2A845", label: "その他" },
-  hidden: { fill: "#E6D6EF", stroke: "#9C6FB8", label: "隠しルート" },
+  best: { fill: "#E6D6EF", stroke: "#9C6FB8", label: "真ルート" },
 };
 const MASKED = { fill: "#7A7A7A", stroke: "#111111", text: "#D4D4D4" };
 
 type Read = { events: EventsView; ctx: ChartContext } | { error: string } | null;
 
-const NO_SAVE: ChartContext = { now: null, hiddenRouteEntered: false };
+const NO_SAVE: ChartContext = { now: null, bestRouteEntered: false };
 
 export function EventChartPage() {
   const { save } = useSave();
@@ -93,7 +93,7 @@ export function EventChartPage() {
         ctx: {
           // 日付が検証に落ちたときは、時間帯の経過による失敗の印を付けない
           now: date.problem ? null : { day: date.day, slot: date.slot },
-          hiddenRouteEntered: hiddenRouteEntered(events.entries, route.hiddenProblem ? null : route.hidden),
+          bestRouteEntered: bestRouteEntered(events.entries, route.bestProblem ? null : route.best),
         },
       };
     } catch (e) {
@@ -127,8 +127,8 @@ export function EventChartPage() {
           <CardTitle>イベントチャート</CardTitle>
           <CardDescription>
             ゲームの「状況」のチャートを、イベントの状態（0x36A8＋添字）とチャート表示の記録（0x3838＋添字）から描いたものです。
-            グレーの「？？？」は名前が隠れる枠、赤い斜線は失敗です。隠しルートに入ったことがない（隠しルートのフラグ 0x378E が 0 で、三姉妹見参の状態も記録も 04 でない）ときは、
-            ゲームでは隠しルートの枠ごと出ないので、点線で示します。
+            グレーの「？？？」は名前が隠れる枠、赤い斜線は失敗です。真ルートに入ったことがない（真ルートのフラグ 0x378E が 0 で、三姉妹見参の状態も記録も 04 でない）ときは、
+            ゲームでは真ルートの枠ごと出ないので、点線で示します。
             線は出し分けの規則が分からないため、常に全部を黒で描いています（ゲームで赤くなる線の規則は未確認）。状態が 01〜03 のときの見え方は未確認です（要ゲーム内確認）。
           </CardDescription>
         </CardHeader>
@@ -194,6 +194,8 @@ function ChartCanvas({
   const selectedBox = CHART_BOXES.find((b) => b.node === selected);
   // ポップオーバーを選んだ枠の位置に出すための、枠と同じ位置・大きさの要素
   const [anchor, setAnchor] = useState<HTMLDivElement | null>(null);
+  // 最初の説明ボタンではなく編集パネルにフォーカスし、開いた直後に Tooltip が出るのを防ぐ。
+  const editorRef = useRef<HTMLDivElement>(null);
 
   const looks = useMemo(
     () =>
@@ -255,7 +257,7 @@ function ChartCanvas({
           />
         )}
         <Popover open={selectedBox !== undefined} onOpenChange={(open) => !open && setSelected(null)}>
-          <PopoverContent className="w-80" align="start" anchor={anchor}>
+          <PopoverContent ref={editorRef} initialFocus={editorRef} className="w-80" align="start" anchor={anchor}>
             {selectedBox && (
               <BoxEditor box={selectedBox} events={events} look={looks.get(selectedBox.node) ?? "shown"} />
             )}
@@ -399,7 +401,7 @@ function BoxEditor({ box, events, look }: { box: ChartBox; events: EventsView | 
         currentLabel={entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined}
         options={recordOptions(advanced)}
         problem={problem}
-        note="周回をまたぐ記録（生きた証）。FF で名前が隠れ、04 で名前が出る。FF でも状態が成功（04）なら出ます。隠しルートのイベントは FF だと成功以外は枠ごと出ません（確認済み）。ほかの周回にも引き継がれる可能性があります"
+        note="周回をまたぐ記録（生きた証）。FF で名前が隠れ、04 で名前が出る。FF でも状態が成功（04）なら出ます。真ルートのイベントは FF だと成功以外は枠ごと出ません（確認済み）。ほかの周回にも引き継がれる可能性があります"
         onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
       />
       {shared && (

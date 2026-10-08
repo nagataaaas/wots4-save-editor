@@ -10,7 +10,7 @@ faction:
   name: 共通・無所属
   route: >-
     序章の本編。どちらに味方したかで、1日目に挨拶できる勢力（代官所・居留地の門）と勢力の敵対状態が決まる。
-    大砲の般若党2人を倒して3連勝すると隠しルート（三姉妹見参）へ、負けると簀巻き日和か拷問へ進む。
+    大砲の般若党2人を倒して3連勝すると真ルート（三姉妹見参）へ、負けると簀巻き日和か拷問へ進む。
 
 summary: >-
   港で般若党が英国海兵隊・幕府の同心ともめている騒ぎに加わる。チュートリアルの戦いのあと、赤城がローラを捕らえ、
@@ -280,7 +280,7 @@ sources: [A]
 | 結末 | 場面 | `0x36A9` | `0x377D` 代官所の門 | `0x377E` 居留地の門 | 友好度 − | `0x3786` 幕府 | `0x3787` 外国 | `0x3788` 攘夷 | 次 |
 |---|---|---|---|---|---|---|---|---|---|
 | A | 3連勝（大砲の2人を倒していない）。赤城は神社へ、琴吹は代官所へ、ローラは領事館へ誘う | 4 | 1 | 1 | — | 0 | 0 | 0 | 1日目 昼 |
-| 大砲 | 3連勝（大砲の2人を倒した） | 4 | — | — | — | — | — | 1 | [三姉妹見参](hidden__prologue__meeting_with_the_three_sisters.md) |
+| 大砲 | 3連勝（大砲の2人を倒した） | 4 | — | — | — | — | — | 1 | [三姉妹見参](best__prologue__meeting_with_the_three_sisters.md) |
 | B | 般若党4人を30秒で倒せず、そのあと4人を倒す。赤城が退き、ローラが領事館へ誘う | 4 | — | 1 | 攘夷 +1（`0x3785`） | 0 | 0 | 1 | 1日目 昼 |
 | C | 琴吹に助太刀して勝つ。琴吹が代官所へ誘う | 4 | 1 | — | 攘夷 +1（`0x3785`） | 0 | 0 | 1 | 1日目 昼 |
 | D | 赤城と組んで勝つ。赤城が神社へ誘う | 4 | — | — | 幕府 +1（`0x3783`）、外国 +1（`0x3784`） | 1 | 1 | 0 | 1日目 昼 |
@@ -309,7 +309,7 @@ sources: [A]
 
 - 前：[船上の侍](other__prologue__samurai_on_board.md)
 - 次：1日目 昼の [志士との出会い](prajna__1_day__encounter_with_the_patriots.md)・[代官所の面々](shogunate__1_day__the_magistrates_offices.md)・[小公女謁見](foreigners__1_day__audience_with_the_littlest_public_servant.md)（成功時）／
-  [三姉妹見参](hidden__prologue__meeting_with_the_three_sisters.md)（大砲）／[簀巻き日和](other__prologue__all_wrapped_up.md)（般若党側に負け）／[嵐のあと](other__1_day__after_the_storm.md)（失敗のあと港へ）
+  [三姉妹見参](best__prologue__meeting_with_the_three_sisters.md)（大砲）／[簀巻き日和](other__prologue__all_wrapped_up.md)（般若党側に負け）／[嵐のあと](other__1_day__after_the_storm.md)（失敗のあと港へ）
 - 2周目以降に人だかりを避けて港を離れると、このイベントの代わりに [嵐のあと](other__1_day__after_the_storm.md) が起きる
 
 ## 未確認のこと

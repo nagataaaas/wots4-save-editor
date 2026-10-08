@@ -35,7 +35,7 @@ export const RAW_REGIONS: readonly RawRegion[] = [
   { start: 0x00375d, end: 0x00375f, chunk: 'facilities', label: '施設（病院・カジノ・語学所）', certainty: '✅' },
   { start: 0x003764, end: 0x0037fb, chunk: 'gates', label: '門の開閉（飛び飛びの7バイト）', certainty: '✅ ／ 0x37FB 🟢' },
   { start: 0x003780, end: 0x00378c, chunk: 'factions', label: '勢力の友好度・敵対状態・ルート分岐', certainty: '✅' },
-  { start: 0x00378d, end: 0x0037aa, chunk: 'hidden-route', label: '隠しルートと、その周りの好感度・職など', certainty: '✅ 0x378E ／ 一部 🟢 ／ ほか ❓' },
+  { start: 0x00378d, end: 0x0037aa, chunk: 'best-route', label: '真ルートと、その周りの好感度・職など', certainty: '✅ 0x378E ／ 一部 🟢 ／ ほか ❓' },
   { start: 0x003838, end: 0x0038ff, chunk: 'event-chart', label: 'イベントの記録 B（周回をまたぐ）', certainty: '✅' },
   { start: 0x003900, end: 0x003901, chunk: 'hint', label: '次のイベントのヒント', certainty: '✅位置 ／ 🟢値' },
   { start: 0x003902, end: 0x00399f, chunk: 'accessories', label: '装飾品の所持フラグ', certainty: '✅' },

@@ -69,7 +69,7 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,備考
 67,0x43,,悲しみのローラ,Grief-Stricken Laura,未実装のイベントとみられる（[U] 2026-10-06）
 68,0x44,,夕暮れの船上,Twilight On Board,
 69,0x45,,討ち入り,The Raid,
-70,0x46,,三姉妹見参,Meeting with the Three Sisters,成功すると隠しルートに入れる（../../chunks/hidden-route/README.md）
+70,0x46,,三姉妹見参,Meeting with the Three Sisters,成功すると真ルートに入れる（../../chunks/best-route/README.md）
 71,0x47,,お早い到着,A Speedy Arrival,
 72,0x48,,再起の望み,Praying for Recovery,
 73,0x49,,将の器,Ability to Lead,

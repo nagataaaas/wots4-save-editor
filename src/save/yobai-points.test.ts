@@ -1,5 +1,5 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// 位置と意味は 🟢（docs/save_format/chunks/hidden-route）。書き換えの反映は未確認（要ゲーム内確認）。
+// 位置と意味は 🟢（docs/save_format/chunks/best-route）。書き換えの反映は未確認（要ゲーム内確認）。
 // 🔶 POINT_NORMAL_MAX（20）はしきい値 10・攻略手順どおりの 11 より上に取った値で、ゲームの上限ではない。
 // ❓ メリンダの峰打ちの点数（0x3797）で約束できる値は未確認。
 // ❓ U-1 判定待ちのため、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
@@ -26,7 +26,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out;
 }
 
-describe("夜這いに関わる好感度・ポイント chunks/hidden-route", () => {
+describe("夜這いに関わる好感度・ポイント chunks/best-route", () => {
   it("🟢 0x3792〜0x3797 の6バイトを読む", () => {
     expect(YOBAI_POINTS.map((p) => p.offset).sort()).toEqual([0x3792, 0x3793, 0x3794, 0x3795, 0x3796, 0x3797]);
     const view = readYobaiPoints(makeSave());

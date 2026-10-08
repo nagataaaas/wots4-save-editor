@@ -7,10 +7,10 @@ title:
   en: Praying for Recovery
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの1日目夜。[お早い到着](hidden__1_day__a_speedy_arrival.md)から続けて起きる。
-    赤城を病院に運んで助けると2日目昼の[将の器](hidden__2_day__ability_to_lead.md)へ、赤城が死ぬと[怒りの矛先](hidden__2_day__the_sting_of_hatred.md)へ分かれる。
+    真ルートの1日目夜。[お早い到着](best__1_day__a_speedy_arrival.md)から続けて起きる。
+    赤城を病院に運んで助けると2日目昼の[将の器](best__2_day__ability_to_lead.md)へ、赤城が死ぬと[怒りの矛先](best__2_day__the_sting_of_hatred.md)へ分かれる。
 
 summary: >-
   撃たれた赤城が神社の奥で寝かされ、医者は手の施しようがないと言う。病院が開いていれば「英国の病院に連れて行こう」を選べ、赤城は手術で助かる（成功）。
@@ -32,7 +32,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート
+    meaning: 真ルート
     confidence: 🟢
   - flag: 段階
     test: "== 120"
@@ -127,7 +127,7 @@ flag_changes:
     serial: 230
     value: "= 2"
     when: 戦闘で小暮を倒したとき
-    meaning: 隠しルートの希望の光への道が閉じ、大老暗殺計画へ進む
+    meaning: 真ルートの希望の光への道が閉じ、大老暗殺計画へ進む
     confidence: 🟢
   - flag: 時間帯を進める保留量
     value: "+ 10"
@@ -142,7 +142,7 @@ sources: ["[A]"]
 
 ## 流れ
 
-1. [お早い到着](hidden__1_day__a_speedy_arrival.md)のあと、神社の奥で撃たれた赤城が寝かされている。小暮と般若党が医者を問い詰めている（`0x36F0`（通し番号 72）= 3、時間帯が夜になる）
+1. [お早い到着](best__1_day__a_speedy_arrival.md)のあと、神社の奥で撃たれた赤城が寝かされている。小暮と般若党が医者を問い詰めている（`0x36F0`（通し番号 72）= 3、時間帯が夜になる）
 2. 医者に話しかけると選択肢が出るが、どれを選んでも「手の施しようがない」「何度診ても同じだ」などと返され、話は進まない
 3. 小暮に話しかけると、赤城をどうするかの選択肢が出る。病院 `0x375D`（通し番号 181）が開いているときだけ「英国の病院に連れて行こう」が出る
 4. 「英国の病院に連れて行こう」：赤城は嫌がるが、小暮が「病院とやらに案内してくれ」。居留地の病院でローラが診て手術し、赤城は助かる。成功（`0x36F0` = 4、赤城 `0x374E` = 3）
@@ -168,12 +168,12 @@ sources: ["[A]"]
 |---|---|---|---|
 | 赤城 `0x374E`（通し番号 166） | 3（病院で助かった） | 成功 | 🟢 |
 | 赤城 `0x374E` | 1（死亡） | 失敗 | 🟢 |
-| `0x37A2`（通し番号 250） | 2。[闇討ち](hidden__2_day__strike_in_the_dark.md)の開始条件の1つ | 失敗 | 🟢 |
+| `0x37A2`（通し番号 250） | 2。[闇討ち](best__2_day__strike_in_the_dark.md)の開始条件の1つ | 失敗 | 🟢 |
 | `0x3791`（通し番号 233） | 1（意味は ❓） | 失敗 | 🟢 |
 | `0x37B2`・`0x37B3`・`0x37C7`（通し番号 266・267・287） | 1（意味は ❓） | 成功 | 🟢 |
 | 攘夷の敵対状態 `0x3788`（通し番号 224） | 1 | 赤城・小暮に斬りかかって戦闘になったとき | 🟢 |
 | 小暮 `0x374F`（通し番号 167） | 1（死亡） | 戦闘で小暮を倒したとき | 🟢 |
-| 隠しルート `0x378E`（通し番号 230） | 2（[大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)へ） | 戦闘で小暮を倒したとき | 🟢 |
+| 真ルート `0x378E`（通し番号 230） | 2（[大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)へ） | 戦闘で小暮を倒したとき | 🟢 |
 | 時間帯を進める保留量 | +10 | 成功・失敗 | 🟢 |
 
 - 病院の開閉は前の周回からの引き継ぎで決まる（[facilities](../save_format/chunks/facilities/README.md)）。病院が閉じていると赤城を助ける方法がない
@@ -181,8 +181,8 @@ sources: ["[A]"]
 
 ## 前後のイベント
 
-- 前：[お早い到着](hidden__1_day__a_speedy_arrival.md)
-- 次：[将の器](hidden__2_day__ability_to_lead.md)（成功時。赤城 `0x374E` = 3）／[怒りの矛先](hidden__2_day__the_sting_of_hatred.md)（失敗時。赤城 `0x374E` = 1）／[大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md)（小暮を倒したとき）
+- 前：[お早い到着](best__1_day__a_speedy_arrival.md)
+- 次：[将の器](best__2_day__ability_to_lead.md)（成功時。赤城 `0x374E` = 3）／[怒りの矛先](best__2_day__the_sting_of_hatred.md)（失敗時。赤城 `0x374E` = 1）／[大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md)（小暮を倒したとき）
 
 ## 未確認のこと
 

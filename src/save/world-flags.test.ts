@@ -95,7 +95,7 @@ describe('そのほかのフラグ chunks/scenario-flags', () => {
   function makeOther(values: number[], size = TS_SAVE_SIZE): Uint8Array {
     const b = new Uint8Array(size)
     SCENARIO_FLAGS.forEach((f, i) => writeU8(b, f.offset, values[i]))
-    // 隣のバイト（門 0x3764・0x37C3、隠しルートの範囲 0x37A2）も置き、書き込みで変わらないことを見る
+    // 隣のバイト（門 0x3764・0x37C3、真ルートの範囲 0x37A2）も置き、書き込みで変わらないことを見る
     writeU8(b, 0x3764, 1)
     writeU8(b, 0x37c3, 1)
     writeU8(b, 0x37a2, 2)

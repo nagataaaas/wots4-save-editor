@@ -7,10 +7,10 @@ title:
   en: Pursuit of Knowledge
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの3日目昼。[闇討ち](hidden__2_day__strike_in_the_dark.md)で小暮を説得すると起きる。
-    3日目夕は J.J の状態と寿司屋の状態で[刺激が欲しい](hidden__3_day__in_need_of_encouragement.md)か[傷心の帰国船](hidden__3_day__the_sad_boat_home.md)に分かれる。
+    真ルートの3日目昼。[闇討ち](best__2_day__strike_in_the_dark.md)で小暮を説得すると起きる。
+    3日目夕は J.J の状態と寿司屋の状態で[刺激が欲しい](best__3_day__in_need_of_encouragement.md)か[傷心の帰国船](best__3_day__the_sad_boat_home.md)に分かれる。
 
 summary: >-
   語学所で、茂呂に誘われて来た小暮と一緒に英語と地理の授業を受ける。そこへ御大老の命で語学所を取り潰しに来た一団が現れ、小暮と一緒に戦う。
@@ -37,7 +37,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート
+    meaning: 真ルート
     confidence: 🟢
   - flag: 段階
     test: "== 300"
@@ -56,7 +56,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功、小暮が死んでいるときに J.J を倒した、闇討ちの失敗）
+    meaning: 真ルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功、小暮が死んでいるときに J.J を倒した、闇討ちの失敗）
     confidence: 🟢
   - flag: "0x374F"
     serial: 167
@@ -122,8 +122,8 @@ sources: ["[A]"]
 
 ## 前後のイベント
 
-- 前：[闇討ち](hidden__2_day__strike_in_the_dark.md)（成功時）
-- 次：[刺激が欲しい](hidden__3_day__in_need_of_encouragement.md)（J.J `0x3758` = 4 で寿司屋の店主が生きているとき）／[傷心の帰国船](hidden__3_day__the_sad_boat_home.md)（J.J が死んでいるか寿司屋の店主が死んでいるとき）
+- 前：[闇討ち](best__2_day__strike_in_the_dark.md)（成功時）
+- 次：[刺激が欲しい](best__3_day__in_need_of_encouragement.md)（J.J `0x3758` = 4 で寿司屋の店主が生きているとき）／[傷心の帰国船](best__3_day__the_sad_boat_home.md)（J.J が死んでいるか寿司屋の店主が死んでいるとき）
 
 ## 未確認のこと
 

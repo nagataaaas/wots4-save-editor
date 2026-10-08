@@ -7,10 +7,10 @@ title:
   en: Ability to Lead
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの2日目昼。[再起の望み](hidden__1_day__praying_for_recovery.md)で赤城を病院に送ったときに起きる。
-    成功すると2日目夜の[闇討ち](hidden__2_day__strike_in_the_dark.md)の条件がそろう。
+    真ルートの2日目昼。[再起の望み](best__1_day__praying_for_recovery.md)で赤城を病院に送ったときに起きる。
+    成功すると2日目夜の[闇討ち](best__2_day__strike_in_the_dark.md)の条件がそろう。
 
 summary: >-
   赤城の留守を預かる小暮のもとで、般若党が同志集めと武器の買い出しに出るが、刀ばかり大量に買い込んで金を使い果たす。
@@ -37,7 +37,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート
+    meaning: 真ルート
     confidence: 🟢
   - flag: 段階
     test: "== 200"
@@ -57,7 +57,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（再起の望みで小暮を倒した）
+    meaning: 真ルートを外れた（再起の望みで小暮を倒した）
     confidence: 🟢
 
 flag_changes:
@@ -127,7 +127,7 @@ sources: ["[A]"]
 
 | 対象 | 変化 | 場面 | 確度 |
 |---|---|---|---|
-| `0x37A2`（通し番号 250） | 2。[闇討ち](hidden__2_day__strike_in_the_dark.md)の開始条件の1つ | 成功 | 🟢 |
+| `0x37A2`（通し番号 250） | 2。[闇討ち](best__2_day__strike_in_the_dark.md)の開始条件の1つ | 成功 | 🟢 |
 | 小暮 `0x374F`（通し番号 167） | 1（死亡） | 小暮を倒したとき | 🟢 |
 | 時間帯を進める保留量 | +10 | 成功・小暮を倒したとき | 🟢 |
 
@@ -135,10 +135,10 @@ sources: ["[A]"]
 
 ## 前後のイベント
 
-- 前：[再起の望み](hidden__1_day__praying_for_recovery.md)（成功時）
-- 次：[伯爵に刺激を](hidden__2_day__down_for_the_count.md)（カジノが閉じているとき）／[運命のルーレット](hidden__2_day__dice_of_destiny.md)（カジノが開いているとき）→ [闇討ち](hidden__2_day__strike_in_the_dark.md)
+- 前：[再起の望み](best__1_day__praying_for_recovery.md)（成功時）
+- 次：[伯爵に刺激を](best__2_day__down_for_the_count.md)（カジノが閉じているとき）／[運命のルーレット](best__2_day__dice_of_destiny.md)（カジノが開いているとき）→ [闇討ち](best__2_day__strike_in_the_dark.md)
 
 ## 未確認のこと
 
 - 🔶 魔鱗組との戦闘の終わる条件（10人・15人）と、小暮が倒れても死なないこと
-- ❓ 小暮を倒したあと、隠しルート `0x378E` がどうなるか（このイベントでは書き換えない。小暮が死んでいると、伯爵に刺激を・運命のルーレットで J.J を倒したときに `0x378E` が 2 になる。`0x37A2` が 2 にならないので闇討ちは起きない 🟢）
+- ❓ 小暮を倒したあと、真ルート `0x378E` がどうなるか（このイベントでは書き換えない。小暮が死んでいると、伯爵に刺激を・運命のルーレットで J.J を倒したときに `0x378E` が 2 になる。`0x37A2` が 2 にならないので闇討ちは起きない 🟢）

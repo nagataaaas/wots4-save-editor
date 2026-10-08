@@ -17,7 +17,7 @@ events/
 
 | 部分 | 値 |
 |---|---|
-| `kind` | `prajna` 攘夷（般若党）／`shogunate` 幕府／`foreigners` 外国／`other` 共通・無所属／`hidden` 隠しルート |
+| `kind` | `prajna` 攘夷（般若党）／`shogunate` 幕府／`foreigners` 外国／`other` 共通・無所属／`best` 真ルート |
 | `phase_label_slug` | `prologue` 序章／`1_day`〜`3_day` 1〜3日目／`4_day` 4日目以降（剣術大会前）／`after_tournament` 剣術大会以降／`after_kinugawa` 鬼怒川の魔手以降／`ending` 結末。複数の段階に出るイベントは最初の段階 |
 | `title_en_slug` | 英語名を小文字にし、アポストロフィを除いて、英数字以外の並びを `_` 1つにしたもの |
 
@@ -80,13 +80,13 @@ events/
 - 時間帯が過ぎた：状態は `00` のまま、日数からチャートに失敗と表示される（✅）
 - 同じ時間帯のイベントを1つ終えた：時間帯が進み、その枠のほかのイベントは起こせなくなる。2日目の施設（病院 `0x375D`・カジノ `0x375E`・語学所 `0x375F`）の状態で、同じ枠の2つのイベントのどちらが起きるかが決まるが、これもこの規則に含める
 - 同じ枠の対になるイベントを引き受けた：開始条件「状態 `<= 2`」が満たされなくなる（🟢。チャートの表示は ❓）
-- 隠しルートに入った（`0x378D`（通し番号 229）= 2）：序章の[三姉妹見参](hidden__prologue__meeting_with_the_three_sisters.md)の成功で 2 になり、その周回では 1 に戻らない。序章より後の、隠しルート以外のイベントはすべて起こせなくなる（🟢）
+- 真ルートに入った（`0x378D`（通し番号 229）= 2）：序章の[三姉妹見参](best__prologue__meeting_with_the_three_sisters.md)の成功で 2 になり、その周回では 1 に戻らない。序章より後の、真ルート以外のイベントはすべて起こせなくなる（🟢）
 
 各ファイルに書くのは次のもの。
 
 | 種類 | 状態の値 | 書き方 |
 |---|---|---|
-| 開始条件のフラグが戻らない値になった（人物の死亡、ルートが閉じた、隠しルートを外れた など） | `02` 以下のまま（チャートの表示は ❓） | そのフラグと値 |
+| 開始条件のフラグが戻らない値になった（人物の死亡、ルートが閉じた、真ルートを外れた など） | `02` 以下のまま（チャートの表示は ❓） | そのフラグと値 |
 | 別の場面で状態に `05` が書かれる | `05` | 書かれる場面を `meaning` に書く |
 
 開始条件のフラグでも、あとで元に戻るもの（勢力との敵対など）は書かない。日数に関係なく進むイベント（4日目以降・剣術大会以降）で、段階が先へ進むと起こせなくなるものは「段階」の条件として書く。
@@ -100,7 +100,7 @@ events/
 | 200・210・220 | 2日目 昼・夕・夜 |
 | 300・310・320 | 3日目 昼・夕・夜 |
 | 400 | 4日目以降（剣術大会前） |
-| 410・420 | 隠しルートの4日目以降。剣術大会の1回戦・2回戦のあと、最後通告でもこの値になる |
+| 410・420 | 真ルートの4日目以降。剣術大会の1回戦・2回戦のあと、最後通告でもこの値になる |
 | 500・510・520 | 剣術大会以降 |
 | 600 | 鬼怒川の魔手以降 |
 | 999 | 結末 |
@@ -208,32 +208,32 @@ events/
 | 91 | `0x3703` | [熱き魂](prajna__ending__fevered_spirits.md) | 結末 |
 | 92 | `0x3704` | [攘夷の炎](prajna__ending__the_flames_of_prajna.md) | 結末 |
 
-### 隠しルート
+### 真ルート
 
 | 通し番号 | 状態 | イベント | 段階 |
 |---|---|---|---|
-| 70 | `0x36EE` | [三姉妹見参](hidden__prologue__meeting_with_the_three_sisters.md) | 序章 |
-| 71 | `0x36EF` | [お早い到着](hidden__1_day__a_speedy_arrival.md) | 1日目 夕 |
-| 72 | `0x36F0` | [再起の望み](hidden__1_day__praying_for_recovery.md) | 1日目 夜 |
-| 73 | `0x36F1` | [将の器](hidden__2_day__ability_to_lead.md) | 2日目 昼 |
-| 74 | `0x36F2` | [怒りの矛先](hidden__2_day__the_sting_of_hatred.md) | 2日目 昼 |
-| 75 | `0x36F3` | [伯爵に刺激を](hidden__2_day__down_for_the_count.md) | 2日目 夕 |
-| 76 | `0x36F4` | [運命のルーレット](hidden__2_day__dice_of_destiny.md) | 2日目 夕 |
-| 77 | `0x36F5` | [闇討ち](hidden__2_day__strike_in_the_dark.md) | 2日目 夜 |
-| 83 | `0x36FB` | [大老暗殺計画](hidden__2_day__plot_to_assassinate_the_chief_minister.md) | 2日目 昼〜4日目以降 |
-| 78 | `0x36F6` | [学問のすすめ](hidden__3_day__pursuit_of_knowledge.md) | 3日目 昼 |
-| 79 | `0x36F7` | [刺激が欲しい](hidden__3_day__in_need_of_encouragement.md) | 3日目 夕 |
-| 80 | `0x36F8` | [傷心の帰国船](hidden__3_day__the_sad_boat_home.md) | 3日目 夕 |
-| 81 | `0x36F9` | [伯爵救出](hidden__3_day__rescuing_the_count.md) | 3日目 夜 |
-| 82 | `0x36FA` | [人間湯通しの恐怖](hidden__4_day__a_day_at_the_spa.md) | 4日目以降 |
-| 84 | `0x36FC` | [（名前不明）](hidden__4_day__event_84.md)（ローラの決意の前半の導入） | 4日目以降（410） |
-| 85 | `0x36FD` | [ローラの決意](hidden__4_day__lauras_determination.md) | 4日目以降（410） |
-| 86 | `0x36FE` | [士魂は屈せず](hidden__4_day__the_fighting_spirit_never_dies.md) | 4日目以降（420） |
-| 87 | `0x36FF` | [ローラ奪還](hidden__4_day__rescuing_laura.md) | 4日目以降（420） |
-| 88 | `0x3700` | [鬼怒川を追え](hidden__after_tournament__in_pursuit_of_kinugawa.md) | 剣術大会以降 |
-| 89 | `0x3701` | [黒船の決闘](hidden__after_tournament__black_ship_battle.md) | 剣術大会以降 |
-| 90 | `0x3702` | [希望の光](hidden__ending__the_light_of_hope.md) | 結末 |
-| 99 | `0x370B` | [大老は生きていた](hidden__ending__the_chief_minister_lived.md) | 結末 |
+| 70 | `0x36EE` | [三姉妹見参](best__prologue__meeting_with_the_three_sisters.md) | 序章 |
+| 71 | `0x36EF` | [お早い到着](best__1_day__a_speedy_arrival.md) | 1日目 夕 |
+| 72 | `0x36F0` | [再起の望み](best__1_day__praying_for_recovery.md) | 1日目 夜 |
+| 73 | `0x36F1` | [将の器](best__2_day__ability_to_lead.md) | 2日目 昼 |
+| 74 | `0x36F2` | [怒りの矛先](best__2_day__the_sting_of_hatred.md) | 2日目 昼 |
+| 75 | `0x36F3` | [伯爵に刺激を](best__2_day__down_for_the_count.md) | 2日目 夕 |
+| 76 | `0x36F4` | [運命のルーレット](best__2_day__dice_of_destiny.md) | 2日目 夕 |
+| 77 | `0x36F5` | [闇討ち](best__2_day__strike_in_the_dark.md) | 2日目 夜 |
+| 83 | `0x36FB` | [大老暗殺計画](best__2_day__plot_to_assassinate_the_chief_minister.md) | 2日目 昼〜4日目以降 |
+| 78 | `0x36F6` | [学問のすすめ](best__3_day__pursuit_of_knowledge.md) | 3日目 昼 |
+| 79 | `0x36F7` | [刺激が欲しい](best__3_day__in_need_of_encouragement.md) | 3日目 夕 |
+| 80 | `0x36F8` | [傷心の帰国船](best__3_day__the_sad_boat_home.md) | 3日目 夕 |
+| 81 | `0x36F9` | [伯爵救出](best__3_day__rescuing_the_count.md) | 3日目 夜 |
+| 82 | `0x36FA` | [人間湯通しの恐怖](best__4_day__a_day_at_the_spa.md) | 4日目以降 |
+| 84 | `0x36FC` | [（名前不明）](best__4_day__event_84.md)（ローラの決意の前半の導入） | 4日目以降（410） |
+| 85 | `0x36FD` | [ローラの決意](best__4_day__lauras_determination.md) | 4日目以降（410） |
+| 86 | `0x36FE` | [士魂は屈せず](best__4_day__the_fighting_spirit_never_dies.md) | 4日目以降（420） |
+| 87 | `0x36FF` | [ローラ奪還](best__4_day__rescuing_laura.md) | 4日目以降（420） |
+| 88 | `0x3700` | [鬼怒川を追え](best__after_tournament__in_pursuit_of_kinugawa.md) | 剣術大会以降 |
+| 89 | `0x3701` | [黒船の決闘](best__after_tournament__black_ship_battle.md) | 剣術大会以降 |
+| 90 | `0x3702` | [希望の光](best__ending__the_light_of_hope.md) | 結末 |
+| 99 | `0x370B` | [大老は生きていた](best__ending__the_chief_minister_lived.md) | 結末 |
 
 ### 載せていない番号
 

@@ -15,7 +15,7 @@
 ## 全体の前提
 
 - 1〜3日目は昼・夕・夜の3枠。各枠で、攘夷・幕府・外国それぞれのイベントが1つずつ（施設の状態によって2つのうちどちらか）用意されている
-- 4日目以降と隠しルートは、日数の経過と関係なく進む [A]
+- 4日目以降と真ルートは、日数の経過と関係なく進む [A]
 - 1〜3日目の報酬つきイベントは、基本的に大成功 1500文、成功・失敗 500文 [A]
 - 2日目のイベントは主に施設（語学所・病院・カジノ）の開設・閉鎖にかかわる。施設の状態は周回をまたいで引き継がれる（[facilities](save_format/chunks/facilities/README.md)）
 - 4日目の勢力イベントに参加するには、その勢力のイベントに2つ以上参加し、その勢力に敵対するイベント（勢力の人物を斬るものなど）に参加していないことが必要 [F]。
@@ -28,7 +28,7 @@
 スタートメニュー「状況」のチャートと同じ列の並び（[F] のチャート上の位置）で、全イベントの遷移を1枚にまとめたもの。分岐の条件は下の各表 [A] から取った。
 
 凡例：
-- 色：赤＝攘夷（般若党）、緑＝幕府、青＝外国、黄＝その他、紫＝隠しルート
+- 色：赤＝攘夷（般若党）、緑＝幕府、青＝外国、黄＝その他、紫＝真ルート
 - 線：実線＝通常の進行、点線＝寝返り・失敗・特殊条件による分岐
 - 形：角丸＝エンディング、黒丸＝その時間帯のどのイベントからでも次へ進む合流点
 - 2日目のイベントは施設の状態によって、同じ枠の2つのうちどちらかが起こる
@@ -37,12 +37,11 @@
 
 ```mermaid
 flowchart LR
-  %% クラス名に hidden を使うと、表示側の CSS の .hidden { display: none } に当たってノードが消えるので避ける
   classDef prajna fill:#EACCCA,stroke:#B5514F,color:#000
   classDef shogunate fill:#D5E8C8,stroke:#6A9A4F,color:#000
   classDef foreigners fill:#CDDFE9,stroke:#5991B6,color:#000
   classDef other fill:#EDE7CD,stroke:#C4B35B,color:#000
-  classDef hiddenroute fill:#E2CEE7,stroke:#8E5A9B,color:#000
+  classDef bestroute fill:#E2CEE7,stroke:#8E5A9B,color:#000
   classDef junction fill:#333,stroke:#333
 
   subgraph P01["1日目 昼"]
@@ -53,19 +52,19 @@ flowchart LR
     E05["代官所の面々"]:::shogunate
     E06["小公女謁見"]:::foreigners
     E07["簀巻き日和"]:::other
-    E08["三姉妹見参"]:::hiddenroute
+    E08["三姉妹見参"]:::bestroute
   end
   subgraph P02["1日目 夕"]
     E09["海兵隊の横暴"]:::prajna
     E10["琴吹光探検隊"]:::shogunate
     E11["電信あり"]:::foreigners
-    E12["お早い到着"]:::hiddenroute
+    E12["お早い到着"]:::bestroute
   end
   subgraph P03["1日目 夜"]
     E13["代官所潜入"]:::prajna
     E14["阿片密売を阻止せよ"]:::shogunate
     E15["辻斬りを辻斬る"]:::foreigners
-    E16["再起の望み"]:::hiddenroute
+    E16["再起の望み"]:::bestroute
   end
   subgraph P04["2日目 昼"]
     E17["欺きの代価"]:::prajna
@@ -73,8 +72,8 @@ flowchart LR
     E19["病院廃業の企て<br/>（病院 開設時）"]:::shogunate
     E20["病院占拠事件<br/>（病院 閉鎖時）"]:::foreigners
     E21["祝・病院開業<br/>（病院 開設時）"]:::foreigners
-    E22["将の器"]:::hiddenroute
-    E23["怒りの矛先"]:::hiddenroute
+    E22["将の器"]:::bestroute
+    E23["怒りの矛先"]:::bestroute
   end
   subgraph P05["2日目 夕"]
     E24["語学無用<br/>（語学所 閉鎖時）"]:::prajna
@@ -82,8 +81,8 @@ flowchart LR
     E26["講師御到着<br/>（語学所 閉鎖時）"]:::shogunate
     E27["語学所開設<br/>（語学所 開設時）"]:::shogunate
     E28["お団子物語"]:::foreigners
-    E29["伯爵に刺激を"]:::hiddenroute
-    E30["運命のルーレット"]:::hiddenroute
+    E29["伯爵に刺激を"]:::bestroute
+    E30["運命のルーレット"]:::bestroute
   end
   subgraph P06["2日目 夜"]
     E31["カジノを破壊せよ<br/>（カジノ 開設時）"]:::prajna
@@ -91,11 +90,11 @@ flowchart LR
     E33["ガイジンとゲイシャ"]:::shogunate
     E34["ライジングサン<br/>（カジノ 開設時）"]:::foreigners
     E35["カジノ再建を急げ<br/>（カジノ 閉鎖時）"]:::foreigners
-    E36["闇討ち"]:::hiddenroute
+    E36["闇討ち"]:::bestroute
   end
   subgraph P07["3日目 全体"]
     E37["大老 鬼怒川怨仙"]:::other
-    E38["学問のすすめ"]:::hiddenroute
+    E38["学問のすすめ"]:::bestroute
   end
   subgraph P08["3日目 昼"]
     E39["血で血を洗う戦い"]:::prajna
@@ -107,13 +106,13 @@ flowchart LR
     E43["売国奴を斬れ"]:::prajna
     E44["大老と三姉妹"]:::shogunate
     E45["小公女倒れる"]:::foreigners
-    E46["刺激が欲しい"]:::hiddenroute
-    E47["傷心の帰国船"]:::hiddenroute
+    E46["刺激が欲しい"]:::bestroute
+    E47["傷心の帰国船"]:::bestroute
   end
   subgraph P10["3日目 夜"]
     E48["夜の墓場で"]:::prajna
     E49["真実"]:::prajna
-    E50["伯爵救出"]:::hiddenroute
+    E50["伯爵救出"]:::bestroute
     E51["仕組まれた襲撃"]:::prajna
     E52["罠を破れ"]:::prajna
     E53["剣術大会の準備"]:::shogunate
@@ -121,8 +120,8 @@ flowchart LR
   end
   subgraph P11["4日目以降（1）"]
     E55["大老の大寄せ"]:::other
-    E56["人間湯通しの恐怖"]:::hiddenroute
-    E57["大老暗殺計画"]:::hiddenroute
+    E56["人間湯通しの恐怖"]:::bestroute
+    E57["大老暗殺計画"]:::bestroute
   end
   subgraph P12["4日目以降（2）"]
     E58["志士の刀"]:::prajna
@@ -136,33 +135,33 @@ flowchart LR
   subgraph P14["4日目以降（4）"]
     E63["覇者となる"]:::other
     E64["最後通告"]:::other
-    E65["ローラの決意"]:::hiddenroute
+    E65["ローラの決意"]:::bestroute
   end
   subgraph P15["4日目以降（5）"]
     E66["臆病風"]:::prajna
     E67["闇黒の意志"]:::shogunate
     E68["願い虚しく"]:::foreigners
-    E69["士魂は屈せず"]:::hiddenroute
+    E69["士魂は屈せず"]:::bestroute
   end
   subgraph P16["4日目以降（6）"]
     E70["同士救出"]:::prajna
     E71["大老武断"]:::shogunate
     E72["憂国の士"]:::shogunate
     E73["鬼怒川の魔手"]:::foreigners
-    E74["ローラ奪還"]:::hiddenroute
+    E74["ローラ奪還"]:::bestroute
   end
   subgraph P17["4日目以降（7）"]
     E75["領事館斬り込み"]:::prajna
     E76["般若党壊滅"]:::shogunate
     E77["三匹で斬る"]:::shogunate
     E78["夕暮れの船上"]:::foreigners
-    E79["鬼怒川を追え"]:::hiddenroute
+    E79["鬼怒川を追え"]:::bestroute
   end
   subgraph P18["4日目以降（8）"]
     E80["武士の魂"]:::prajna
     E81["黒船を我が手に"]:::shogunate
     E82["討ち入り"]:::foreigners
-    E83["黒船の決闘"]:::hiddenroute
+    E83["黒船の決闘"]:::bestroute
   end
   subgraph P19["4日目以降（9）"]
     E84["剣客茂呂茂"]:::shogunate
@@ -177,8 +176,8 @@ flowchart LR
     E91(["侍一直線"]):::foreigners
     E92(["魔鱗組として"]):::other
     E93(["釜茹で侍"]):::other
-    E94(["希望の光"]):::hiddenroute
-    E95(["大老は生きていた"]):::hiddenroute
+    E94(["希望の光"]):::bestroute
+    E95(["大老は生きていた"]):::bestroute
   end
 
   %% ---- 1日目 ----
@@ -333,7 +332,7 @@ flowchart LR
   E78 -->|"誘いを断る"| E82
   E82 -->|"三姉妹に勝つ"| E91
 
-  %% 隠しルート
+  %% 真ルート
   E08 -->|"三姉妹を全員倒す"| E12
   E12 -->|"琴吹／魔鱗組を倒す"| E16
   E16 -->|"瀕死の赤城を病院へ"| E22
@@ -374,7 +373,7 @@ flowchart LR
 | 昼 | 代官所の面々 | The Magistrate's Offices | 幕府 | 代官所へ挨拶に行く | 会話中に抜刀すると同心・岡っ引きと戦闘 |
 | 昼 | 小公女謁見 | Audience with the Littlest Public Servant | 外国 | 領事館へ挨拶に行く | 会話中に抜刀するとメリンダ・海兵隊と戦闘 |
 | 昼 | 簀巻き日和 | All Wrapped Up | その他 | 【阿弥浜港争乱】の般若党戦で降参するか、命が一定以下になる | 堂島（鍛冶屋になっていない場合）に助けを求めると、手持ちの武器全部と引き換えに助かる。馬車に撥ねられるとゲームオーバー（チャートに残らない） |
-| 昼 | 三姉妹見参 | Meeting with the Three Sisters | 隠し | 下表 | [隠しルート](#隠しルート)へ |
+| 昼 | 三姉妹見参 | Meeting with the Three Sisters | 真 | 下表 | [真ルート](#真ルート)へ |
 | 夕 | 海兵隊の横暴 | Violent Behavior of the Marine Corps | 攘夷 | 町の居酒屋に入る | 海兵隊を注意すると戦闘。ライフル持ちまで全滅で 1500文。「混ぜてもらう」と赤城と戦闘（報酬なし） |
 | 夕 | 琴吹光探検隊 | Hikaru Kotobuki's Explorer's Club | 幕府 | 大通りで琴吹に話しかける | 洞窟最奥で般若党と戦闘、1500文。女性主人公だけの選択肢を選ぶと失敗 |
 | 夕 | 電信あり | The Telegraph | 外国 | 居留地の領事館前でローラに近づく | 茂呂と般若党を倒す、1500文 |
@@ -391,7 +390,7 @@ flowchart LR
 | 「犬は好かん」またはスキップ | 赤城側について琴吹たちと戦闘 | 神社 |
 | 「娘から手を離せ」→般若党4人を短時間で倒せない | 赤城戦は省略 | 領事館 |
 | 「娘から手を離せ」→般若党4人を短時間で倒す→赤城・メリンダ・琴吹に3連勝 | — | 神社・領事館・代官所すべて |
-| 赤城戦の最中に、大砲を操作している般若党2人を倒す | 【三姉妹見参】へ（隠しルート） | — |
+| 赤城戦の最中に、大砲を操作している般若党2人を倒す | 【三姉妹見参】へ（真ルート） | — |
 | 般若党戦で降参 | 【簀巻き日和】へ | — |
 
 ### 2日目
@@ -521,7 +520,7 @@ stateDiagram-v2
 | 海外雄飛・ED | Setting Off to Foreign Lands | ローラの誘いに乗る |
 | 侍一直線・ED | Samurai Straight | 【討ち入り】で三姉妹に勝つ |
 
-## 隠しルート
+## 真ルート
 
 入口：【阿弥浜港争乱】の赤城戦の最中に、大砲を操作している般若党2人を倒す [A]。
 ベストエンディング（希望の光）を見るには、前の周回までに語学所開設・病院開設・カジノ閉鎖にしておく [A]。

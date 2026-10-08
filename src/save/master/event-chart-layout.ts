@@ -12,7 +12,7 @@ import { CHART_NODES } from './chart-nodes'
 import { chartNodeLabel } from './labels'
 
 /** 枠の色。スクリーンショットの塗りの色（勢力）に合わせる */
-export type ChartBoxKind = 'prajna' | 'shogunate' | 'foreigners' | 'other' | 'hidden'
+export type ChartBoxKind = 'prajna' | 'shogunate' | 'foreigners' | 'other' | 'best'
 
 export type ChartBox = {
   /** chart-nodes.ts のノード番号 */
@@ -46,7 +46,7 @@ const P = 'prajna'
 const S = 'shogunate'
 const F = 'foreigners'
 const O = 'other'
-const H = 'hidden'
+const H = 'best'
 
 const ROWS: readonly Row[] = [
   // 1日目
@@ -200,7 +200,7 @@ export const CHART_LINKS: readonly ChartLink[] = [
   { from: [64], to: [60, 59] },
   { from: [60], to: [104] },
   { from: [59], to: [106] },
-  // 隠しルート
+  // 真ルート
   { from: [56], to: [90] },
   { from: [90], to: [11] },
   { from: [11], to: [17, 18] },

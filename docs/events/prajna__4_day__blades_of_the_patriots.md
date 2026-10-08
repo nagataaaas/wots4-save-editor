@@ -35,7 +35,7 @@ conditions:
     confidence: 🟢
   - flag: "0x378D"
     test: "== 1"
-    meaning: 通常の周回（隠しルートでない）
+    meaning: 通常の周回（真ルートでない）
     confidence: 🟢
   - flag: 時間帯
     test: "== 0"

@@ -1,15 +1,15 @@
-// 隠しルートのフラグ 0x378E と、その周り 0x378D〜0x37AA（30 B）の値。出典：docs/save_format/chunks/hidden-route、
-// [U] 2026-10-06 の比較と書き換え（chunks/hidden-route/reserch）。
+// 真ルートのフラグ 0x378E と、その周り 0x378D〜0x37AA（30 B）の値。出典：docs/save_format/chunks/best-route、
+// [U] 2026-10-06 の比較と書き換え（chunks/best-route/reserch）。
 //
 // ✅ [U] 2026-10-06 の書き換え：
-//   0x378E＝1 と三姉妹見参（イベント添字70）の成功（04）の両方がそろうと隠しルート（お早い到着）に入る。どちらか一方では通常ルートのまま。
-//   正規の隠しルートで 0x378E を 0 にすると通常ルートに入る。
-//   0x378D・0x379F・0x37AA・0x3799 を正規の隠しルートと同じ値にしても、ルートは変わらず、チャートの隠しルートの枠も出なかった。
+//   0x378E＝1 と三姉妹見参（イベント添字70）の成功（04）の両方がそろうと真ルート（お早い到着）に入る。どちらか一方では通常ルートのまま。
+//   正規の真ルートで 0x378E を 0 にすると通常ルートに入る。
+//   0x378D・0x379F・0x37AA・0x3799 を正規の真ルートと同じ値にしても、ルートは変わらず、チャートの真ルートの枠も出なかった。
 //
 // 🟢 0x378D  序章のあとの道筋。序章の終わり（阿弥浜港争乱の3連戦の終わりなど）で 1、三姉妹見参の成功で 2。
 //            1〜3日目の通常の勢力イベントはどれも開始条件が「= 1」。2 になると周回中は戻らない
-// 🟢 0x378E  隠しルート。三姉妹見参の成功で 1。隠しルートのイベントはどれも開始条件が「= 1」。
-//            2＝隠しルートを外れた（大老暗殺計画の側へ）。再起の望みで小暮が死ぬ、怒りの矛先の成功、
+// 🟢 0x378E  真ルート。三姉妹見参の成功で 1。真ルートのイベントはどれも開始条件が「= 1」。
+//            2＝真ルートを外れた（大老暗殺計画の側へ）。再起の望みで小暮が死ぬ、怒りの矛先の成功、
 //            小暮が死んでいるときに伯爵に刺激をの失敗・運命のルーレットで J.J が死ぬ、闇討ちの失敗、傷心の帰国船の成功で 2。戻らない。
 //            大老暗殺計画の開始条件は「三姉妹見参の成功（0x36EE = 4）かつ 0x378E = 2 かつ大通り」
 // 🟢 0x3792  ローラの好感度（yobai-points.ts）。0x3793 朱美の好感度。0x3794〜0x3796 三姉妹の拷問のポイント。0x3797 メリンダの峰打ちの点数
@@ -24,7 +24,7 @@
 // 🔶 0x37A4  黒船の状態か。黒船を我が手にの終わりで 1。破滅への道・傷心の帰国船・鬼怒川の魔手の失敗・夕暮れの船上で断ると 2
 // 🟢 0x37A8  最後通告に逆らうと 1。0x37A9 周回数か（🔶 chunks/scenario-flags）
 // 🟢 0x37AA  チュートリアルの進み方。1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）
-// 範囲の中には、隠しルートに関係しないバイト（好感度・職など）も入っている（範囲は差分から取ったもの）。
+// 範囲の中には、真ルートに関係しないバイト（好感度・職など）も入っている（範囲は差分から取ったもの）。
 // 0x378E 以外は、書き換えたときのゲーム内の反映を確かめていないので、生の値の欄として出す（AGENTS.md「未確認データの扱い」）。
 //
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
@@ -36,18 +36,18 @@ export const ROUTE_CANDIDATE_START = 0x378d;
 export const ROUTE_CANDIDATE_END = 0x37aa;
 export const ROUTE_CANDIDATE_LENGTH = ROUTE_CANDIDATE_END - ROUTE_CANDIDATE_START + 1;
 
-/** ✅ [U] 隠しルート（1）。三姉妹見参（イベント添字70）が成功（04）のときだけ効く */
-export const HIDDEN_ROUTE_OFFSET = 0x378e;
+/** ✅ [U] 真ルート（1）。三姉妹見参（イベント添字70）が成功（04）のときだけ効く */
+export const BEST_ROUTE_OFFSET = 0x378e;
 /** 三姉妹見参のイベント添字 */
-export const HIDDEN_ROUTE_EVENT_INDEX = 70;
+export const BEST_ROUTE_EVENT_INDEX = 70;
 
-/** 0・1 は書き換えで確認（✅ [U] 2026-10-06）。2 は 🟢（隠しルートを外れた。周回中は戻らない） */
-export const HIDDEN_ROUTE_VALUES: readonly { value: number; label: string }[] = [
-  { value: 0, label: "隠しルートに入っていない" },
-  { value: 1, label: "隠しルート" },
-  { value: 2, label: "隠しルートを外れた（大老暗殺計画へ）" },
+/** 0・1 は書き換えで確認（✅ [U] 2026-10-06）。2 は 🟢（真ルートを外れた。周回中は戻らない） */
+export const BEST_ROUTE_VALUES: readonly { value: number; label: string }[] = [
+  { value: 0, label: "真ルートに入っていない" },
+  { value: 1, label: "真ルート" },
+  { value: 2, label: "真ルートを外れた（大老暗殺計画へ）" },
 ];
-const HIDDEN_ROUTE_MAX = 2;
+const BEST_ROUTE_MAX = 2;
 
 /** 通常モードで書ける上限（好感度・ポイント以外）。🟢 どのバイトも 0〜2 で使われる */
 export const ROUTE_CANDIDATE_NORMAL_MAX = 2;
@@ -60,11 +60,11 @@ export function routeCandidateNormalMax(offset: number): number {
   return POINT_OFFSETS.has(offset) ? POINT_NORMAL_MAX : ROUTE_CANDIDATE_NORMAL_MAX;
 }
 
-/** 生の値で出すオフセット（隠しルートのフラグを除く） */
+/** 生の値で出すオフセット（真ルートのフラグを除く） */
 export const RAW_ROUTE_OFFSETS: readonly number[] = Array.from(
   { length: ROUTE_CANDIDATE_LENGTH },
   (_, i) => ROUTE_CANDIDATE_START + i,
-).filter((o) => o !== HIDDEN_ROUTE_OFFSET);
+).filter((o) => o !== BEST_ROUTE_OFFSET);
 
 /** 意味や場面が分かっているバイトの名前と説明。ないバイトは意味不明（❓） */
 export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; note: string }>> = {
@@ -72,8 +72,8 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; not
   0x378d: {
     name: "序章のあとの道筋",
     note:
-      "1＝通常の1〜3日目（序章の終わりで 1。通常の勢力イベントはどれも 1 が条件）、2＝隠しルートに入った（三姉妹見参の成功で 2。周回中は戻らない）。" +
-      "書き換えてもルートは変わらず、チャートの隠しルートの枠も出なかった",
+      "1＝通常の1〜3日目（序章の終わりで 1。通常の勢力イベントはどれも 1 が条件）、2＝真ルートに入った（三姉妹見参の成功で 2。周回中は戻らない）。" +
+      "書き換えてもルートは変わらず、チャートの真ルートの枠も出なかった",
   },
   // 🟢 0x3792〜0x3797 は夜這いのページ（yobai-points.ts）でも 0〜20 まで書ける。書き換えの反映は未確認
   0x3792: {
@@ -118,15 +118,15 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; not
   // 🟢
   0x37aa: {
     name: "チュートリアルの進み方",
-    note: "1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）。隠しルートとは関係しない",
+    note: "1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）。真ルートとは関係しない",
   },
 };
 
 export type RouteCandidatesView = {
   values: number[];
-  /** 0x378E。0〜2 以外なら hiddenProblem が入る */
-  hidden: number;
-  hiddenProblem: string | null;
+  /** 0x378E。0〜2 以外なら bestProblem が入る */
+  best: number;
+  bestProblem: string | null;
   /** 通常の進行では見ない値があれば理由。編集はできる */
   warning: string | null;
   problem: string | null;
@@ -142,12 +142,12 @@ export function readRouteCandidates(bytes: Uint8Array): RouteCandidatesView {
     bad >= 0
       ? `0x${(ROUTE_CANDIDATE_START + bad).toString(16).toUpperCase()} に通常の進行では見ない値があります（${values[bad]}）`
       : null;
-  const hidden = readU8(bytes, HIDDEN_ROUTE_OFFSET);
+  const best = readU8(bytes, BEST_ROUTE_OFFSET);
   const layoutProblem = checkLayout(bytes);
-  const hiddenProblem =
+  const bestProblem =
     layoutProblem ??
-    (hidden > HIDDEN_ROUTE_MAX ? `隠しルートのフラグが 0〜${HIDDEN_ROUTE_MAX} 以外です（${hidden}）` : null);
-  return { values, hidden, hiddenProblem, warning, problem: layoutProblem };
+    (best > BEST_ROUTE_MAX ? `真ルートのフラグが 0〜${BEST_ROUTE_MAX} 以外です（${best}）` : null);
+  return { values, best, bestProblem, warning, problem: layoutProblem };
 }
 
 /**
@@ -177,11 +177,11 @@ export function writeRouteCandidate(
 }
 
 /** 0x378E の1バイトだけを書く。通常モードでは 0〜2 だけ、上級者モードでは任意の u8 */
-export function writeHiddenRoute(bytes: Uint8Array, value: number, opts: { advanced: boolean }): void {
+export function writeBestRoute(bytes: Uint8Array, value: number, opts: { advanced: boolean }): void {
   const view = readRouteCandidates(bytes);
-  if (view.hiddenProblem) throw new RangeError(view.hiddenProblem);
+  if (view.bestProblem) throw new RangeError(view.bestProblem);
   if (!Number.isInteger(value) || value < 0 || value > 0xff) throw new RangeError(`u8 の範囲外です: ${value}`);
-  if (!opts.advanced && value > HIDDEN_ROUTE_MAX)
-    throw new RangeError(`0〜${HIDDEN_ROUTE_MAX} を指定してください: ${value}`);
-  writeU8(bytes, HIDDEN_ROUTE_OFFSET, value);
+  if (!opts.advanced && value > BEST_ROUTE_MAX)
+    throw new RangeError(`0〜${BEST_ROUTE_MAX} を指定してください: ${value}`);
+  writeU8(bytes, BEST_ROUTE_OFFSET, value);
 }

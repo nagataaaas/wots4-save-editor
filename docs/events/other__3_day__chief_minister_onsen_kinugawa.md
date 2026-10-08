@@ -31,7 +31,7 @@ conditions:
   - flag: "0x378D"
     serial: 229
     test: "== 1"
-    meaning: 通常の周回（隠しルートでは起きない）
+    meaning: 通常の周回（真ルートでは起きない）
     confidence: 🟢
   - flag: 段階
     test: "in [300, 310, 320, 400]"

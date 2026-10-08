@@ -7,10 +7,10 @@ title:
   en: Black Ship Battle
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    [鬼怒川を追え](hidden__after_tournament__in_pursuit_of_kinugawa.md)から続けて起きる、隠しルート最後の戦闘。
-    成功するとそのまま結末の[希望の光](hidden__ending__the_light_of_hope.md)へ続く。
+    [鬼怒川を追え](best__after_tournament__in_pursuit_of_kinugawa.md)から続けて起きる、真ルート最後の戦闘。
+    成功するとそのまま結末の[希望の光](best__ending__the_light_of_hope.md)へ続く。
 
 summary: >-
   鬼怒川に黒船を奪われ、主人公は単身で黒船に乗り込んで鬼怒川と1対1で戦う。倒された鬼怒川は「私の勝ちだ」と言い残し、
@@ -46,7 +46,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（3日目夕までの場面で 2 になる。人間湯通しの恐怖から先が起きない）
+    meaning: 真ルートを外れた（3日目夕までの場面で 2 になる。人間湯通しの恐怖から先が起きない）
     confidence: 🟢
   - flag: "0x3758"
     serial: 176
@@ -91,11 +91,11 @@ sources: [A]
 
 ## 流れ
 
-1. 港で、鬼怒川の姿が見えないと思ったところで黒船を奪われたことに気づく（「しまった 黒船を奪われたぞ」）。仲間たちが援護し、主人公は黒船へ向かう。ここで[鬼怒川を追え](hidden__after_tournament__in_pursuit_of_kinugawa.md)が成功（`0x3700`（通し番号 88）= 4）になる
+1. 港で、鬼怒川の姿が見えないと思ったところで黒船を奪われたことに気づく（「しまった 黒船を奪われたぞ」）。仲間たちが援護し、主人公は黒船へ向かう。ここで[鬼怒川を追え](best__after_tournament__in_pursuit_of_kinugawa.md)が成功（`0x3700`（通し番号 88）= 4）になる
 2. `0x3701`（通し番号 89）= 3 になり、黒船の上の場面へ移る。段階が 510、時間帯が夕になる
 3. 鬼怒川が「どこまで私の邪魔をすれば気が済むのやら」「さぁ 来なさい」と迎え、鬼怒川と1対1で戦う
 4. 鬼怒川を倒すと、鬼怒川は「まだだ……」と立ち上がろうとしたあと、「私の勝ちだ」「秩序と規律の体制を守ったのです」と言い残す
-5. 成功（`0x3701` = 4）。港の仲間たちが黒船を見て「もとより覚悟の上だったか」「あいつこそ武士の中の武士だ」と言い、結末の[希望の光](hidden__ending__the_light_of_hope.md)へ移る
+5. 成功（`0x3701` = 4）。港の仲間たちが黒船を見て「もとより覚悟の上だったか」「あいつこそ武士の中の武士だ」と言い、結末の[希望の光](best__ending__the_light_of_hope.md)へ移る
 
 ## 選択肢
 
@@ -121,8 +121,8 @@ sources: [A]
 
 ## 前後のイベント
 
-- 前：[鬼怒川を追え](hidden__after_tournament__in_pursuit_of_kinugawa.md)（続けて起きる）
-- 次：[希望の光](hidden__ending__the_light_of_hope.md)（結末。続けて起きる）
+- 前：[鬼怒川を追え](best__after_tournament__in_pursuit_of_kinugawa.md)（続けて起きる）
+- 次：[希望の光](best__ending__the_light_of_hope.md)（結末。続けて起きる）
 
 ## 未確認のこと
 

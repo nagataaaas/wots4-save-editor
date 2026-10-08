@@ -42,7 +42,7 @@ conditions:
   - flag: "0x378D"
     serial: 229
     test: "== 1"
-    meaning: 通常ルート（隠しルートでは 2 で起きない）
+    meaning: 通常ルート（真ルートでは 2 で起きない）
     confidence: 🟢
   - flag: 段階
     test: "== 100"
@@ -57,7 +57,7 @@ failure_conditions:
   - flag: "0x36A9"
     serial: 1
     test: "!= 4"
-    meaning: 序章の阿弥浜港争乱に成功していない（失敗した、または隠しルートに入った。序章のあとは変わらない）
+    meaning: 序章の阿弥浜港争乱に成功していない（失敗した、または真ルートに入った。序章のあとは変わらない）
     confidence: 🟢
   - flag: "0x377D"
     serial: 213

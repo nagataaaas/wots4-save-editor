@@ -7,9 +7,9 @@ title:
   en: In Pursuit of Kinugawa
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    [ローラ奪還](hidden__4_day__rescuing_laura.md)から続けて起きる。敵を全員倒すとそのまま[黒船の決闘](hidden__after_tournament__black_ship_battle.md)へ続く。
+    [ローラ奪還](best__4_day__rescuing_laura.md)から続けて起きる。敵を全員倒すとそのまま[黒船の決闘](best__after_tournament__black_ship_battle.md)へ続く。
 
 summary: >-
   逃げた鬼怒川を追って港へ向かい、待ち受ける敵と戦う。`0x3760` が 1 なら三姉妹ととぐろが相手で、まだらが味方につく。
@@ -45,7 +45,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（3日目夕までの場面で 2 になる。人間湯通しの恐怖から先が起きない）
+    meaning: 真ルートを外れた（3日目夕までの場面で 2 になる。人間湯通しの恐怖から先が起きない）
     confidence: 🟢
   - flag: "0x3758"
     serial: 176
@@ -79,7 +79,7 @@ sources: [A]
 
 ## 流れ
 
-[ローラ奪還](hidden__4_day__rescuing_laura.md)のあと、港へ移って `0x3700`（通し番号 88）= 3 になる。`0x3760`（通し番号 184）が 1 かどうかで相手が変わる（🟢）。
+[ローラ奪還](best__4_day__rescuing_laura.md)のあと、港へ移って `0x3700`（通し番号 88）= 3 になる。`0x3760`（通し番号 184）が 1 かどうかで相手が変わる（🟢）。
 
 ### `0x3760` が 1 のとき
 
@@ -91,7 +91,7 @@ sources: [A]
 1. とぐろ・まだらが「御大老様に逆らう者は生かしてはおけぬ」「我ら『暗闇脳天』が相手だ」と立ちふさがる
 2. とぐろ・まだらとの戦闘。2人を倒すと終わる
 
-どちらも、敵を全員倒すと[黒船の決闘](hidden__after_tournament__black_ship_battle.md)の場面へ移り、そこで成功（`0x3700` = 4）になる。
+どちらも、敵を全員倒すと[黒船の決闘](best__after_tournament__black_ship_battle.md)の場面へ移り、そこで成功（`0x3700` = 4）になる。
 
 ## 選択肢
 
@@ -115,12 +115,12 @@ sources: [A]
 
 ## 前後のイベント
 
-- 前：[ローラ奪還](hidden__4_day__rescuing_laura.md)（続けて起きる）
-- 次：[黒船の決闘](hidden__after_tournament__black_ship_battle.md)（続けて起きる）
-- `0x3760` で[士魂は屈せず](hidden__4_day__the_fighting_spirit_never_dies.md)の流れも変わる（1 なら三姉妹は檻に閉じ込められ、ここで再び戦う。1 でなければ三姉妹は士魂は屈せずで倒される）
+- 前：[ローラ奪還](best__4_day__rescuing_laura.md)（続けて起きる）
+- 次：[黒船の決闘](best__after_tournament__black_ship_battle.md)（続けて起きる）
+- `0x3760` で[士魂は屈せず](best__4_day__the_fighting_spirit_never_dies.md)の流れも変わる（1 なら三姉妹は檻に閉じ込められ、ここで再び戦う。1 でなければ三姉妹は士魂は屈せずで倒される）
 
 ## 未確認のこと
 
 - [A] は「鬼怒川・魔鱗組、処刑台で鬼怒川、魔鱗親衛隊、港でとぐろ・まだら・暗闇脳天と連戦」と書く。処刑台までの戦闘はローラ奪還の中で起きる。また『暗闇脳天』はとぐろ・まだらの組の名前で、港の敵は2人（`0x3760` が 1 なら三姉妹ととぐろ）
-- ❓ `0x3760` が 1 になる場面（[士魂は屈せず](hidden__4_day__the_fighting_spirit_never_dies.md)の「未確認のこと」）
+- ❓ `0x3760` が 1 になる場面（[士魂は屈せず](best__4_day__the_fighting_spirit_never_dies.md)の「未確認のこと」）
 - ❓ 戦闘から逃げたとき、主人公が倒れたときの扱い

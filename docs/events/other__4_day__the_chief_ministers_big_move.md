@@ -121,7 +121,7 @@ flag_changes:
     serial: 250
     value: "= 2"
     when: 攘夷ルートが 2 のとき
-    meaning: 不明。隠しルートのイベントでも 2 になる
+    meaning: 不明。真ルートのイベントでも 2 になる
     confidence: 🟢値 ／ ❓意味
   - flag: "0x37A1"
     serial: 249

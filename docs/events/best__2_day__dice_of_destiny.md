@@ -7,10 +7,10 @@ title:
   en: Dice of Destiny
 
 faction:
-  name: 隠しルート
+  name: 真ルート
   route: >-
-    隠しルートの2日目夕で、カジノが開いているときの分岐（閉じているときは[伯爵に刺激を](hidden__2_day__down_for_the_count.md)）。
-    成功すると J.J が死に、3日目夕は[傷心の帰国船](hidden__3_day__the_sad_boat_home.md)になる。
+    真ルートの2日目夕で、カジノが開いているときの分岐（閉じているときは[伯爵に刺激を](best__2_day__down_for_the_count.md)）。
+    成功すると J.J が死に、3日目夕は[傷心の帰国船](best__3_day__the_sad_boat_home.md)になる。
 
 summary: >-
   港のカジノで、J.J の用心棒が借金を払えない客を脅している。用心棒2人を倒すと J.J が「今度はボクが相手になろう」と現れ、
@@ -37,7 +37,7 @@ conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 1"
-    meaning: 隠しルート
+    meaning: 真ルート
     confidence: 🟢
   - flag: 段階
     test: "== 210"
@@ -52,7 +52,7 @@ failure_conditions:
   - flag: "0x378E"
     serial: 230
     test: "== 2"
-    meaning: 隠しルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功）
+    meaning: 真ルートを外れた（再起の望みで小暮を倒した、怒りの矛先の成功）
     confidence: 🟢
 
 flag_changes:
@@ -78,7 +78,7 @@ flag_changes:
     serial: 230
     value: "= 2"
     when: 成功したとき、小暮 `0x374F` が 1（死亡）なら
-    meaning: 隠しルートの希望の光への道が閉じる
+    meaning: 真ルートの希望の光への道が閉じる
     confidence: 🟢
   - flag: 時間帯を進める保留量
     value: "+ 10"
@@ -112,17 +112,17 @@ sources: ["[A]"]
 | 対象 | 変化 | 場面 | 確度 |
 |---|---|---|---|
 | J.J `0x3758`（通し番号 176） | 1（死亡） | 成功 | 🟢 |
-| 隠しルート `0x378E`（通し番号 230） | 2 | 成功、小暮が死んでいれば | 🟢 |
+| 真ルート `0x378E`（通し番号 230） | 2 | 成功、小暮が死んでいれば | 🟢 |
 | 時間帯を進める保留量 | +10 | 成功 | 🟢 |
 
 - カジノの開閉 `0x375E`（通し番号 182）はこのイベントでは変わらない
-- カジノの開閉は前の周回から引き継がれ、隠しルートでは2日目夕までに変わる場面がない（🟢）。周回の始めにカジノが閉じていれば、このイベントは起きない
-- 成功しても J.J は死ぬので、3日目夕は[刺激が欲しい](hidden__3_day__in_need_of_encouragement.md)ではなく[傷心の帰国船](hidden__3_day__the_sad_boat_home.md)の条件（J.J 死亡）を満たす
+- カジノの開閉は前の周回から引き継がれ、真ルートでは2日目夕までに変わる場面がない（🟢）。周回の始めにカジノが閉じていれば、このイベントは起きない
+- 成功しても J.J は死ぬので、3日目夕は[刺激が欲しい](best__3_day__in_need_of_encouragement.md)ではなく[傷心の帰国船](best__3_day__the_sad_boat_home.md)の条件（J.J 死亡）を満たす
 
 ## 前後のイベント
 
-- 前：[将の器](hidden__2_day__ability_to_lead.md)（カジノ `0x375E` = 0 のとき）
-- 次：[闇討ち](hidden__2_day__strike_in_the_dark.md) → [傷心の帰国船](hidden__3_day__the_sad_boat_home.md)
+- 前：[将の器](best__2_day__ability_to_lead.md)（カジノ `0x375E` = 0 のとき）
+- 次：[闇討ち](best__2_day__strike_in_the_dark.md) → [傷心の帰国船](best__3_day__the_sad_boat_home.md)
 
 ## 未確認のこと
 
