@@ -145,7 +145,7 @@ export function EventChartPage() {
               </Label>
             </div>
           </div>
-          {result && result.view.cursorMaxCol >= 0 && !result.view.endingReached && (
+          {result && cursorLimited(result.view) && (
             <p className="text-muted-foreground text-xs">
               ゲームでは、カーソルは名前・進行中・失敗のどれかの枠のうち最も右の列（破線）より右へ動きません。
               {result.view.scrollLocked
@@ -163,6 +163,14 @@ export function EventChartPage() {
       </Card>
     </div>
   );
+}
+
+/**
+ * カーソルの右端（ここから先は見えない）を示すか。結末に到達しているとき（ユーザー判断 2026-10-09）と、
+ * カーソルが最後の列（結末の列）まで届いていて右に見えない部分がないときは示さない
+ */
+function cursorLimited(view: ChartView): boolean {
+  return !view.endingReached && view.cursorMaxCol >= 0 && view.cursorMaxCol + 1 < CHART_COLS;
 }
 
 function Legend() {
@@ -248,11 +256,7 @@ function ChartCanvas({
         ...armSegment(l, k),
       })),
     );
-  // 結末に到達していれば、カーソルの右端（ここから先は見えない）は示さない（ユーザー判断 2026-10-09）
-  const cursorX =
-    !view.endingReached && Number.isFinite(view.cursorMaxCol) && view.cursorMaxCol >= 0
-      ? colX(view.cursorMaxCol + 1)
-      : null;
+  const cursorX = cursorLimited(view) ? colX(view.cursorMaxCol + 1) : null;
 
   return (
     <div className="overflow-x-auto rounded-md border">
