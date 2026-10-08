@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { CollapsibleCard } from "@/components/collapsible-card";
+import { GameLabel } from "@/components/game-label";
 import { InfoTip } from "@/components/info-tip";
 import { LazySelect } from "@/components/lazy-select";
 import { SelectRow } from "@/components/select-row";
@@ -49,6 +50,7 @@ import {
   writeOccupationStates,
   type OccupationView,
 } from "@/save/occupation";
+import { labelOf } from "@/save/master/labels";
 import {
   OCCUPATIONS,
   OCCUPATION_GROUPS,
@@ -122,6 +124,14 @@ function range(from: number, to: number): number[] {
 function matches(query: string, ...texts: string[]): boolean {
   const q = query.trim().toLowerCase();
   return q === "" || texts.some((t) => t.toLowerCase().includes(q));
+}
+
+const occupationLabel = (entry: OccupationEntry) =>
+  labelOf({ kind: "occupation", id: entry.labelId });
+
+function occupationLabelById(id: number): string | undefined {
+  const entry = occupationById(id);
+  return entry ? occupationLabel(entry) : undefined;
 }
 
 /** なりわい：状態の表・クリア数・受注中、連続なりわいなどの進み具合（なりわいのフラグ） */
@@ -269,9 +279,9 @@ function AcceptRow({
     { value: "0", label: "受注していない" },
     ...OCCUPATIONS.map((o) => ({
       value: String(o.id),
-      label: `${o.id} ${o.ja}`,
+      label: `${o.id} ${occupationLabel(o)}`,
       group: OCCUPATION_GROUPS.find((g) => g.key === occupationGroupOf(o.id))?.label,
-      keywords: [o.client, o.en, o.type],
+      keywords: [occupationLabel(o), o.client, o.en, o.type],
     })),
   ];
   return (
@@ -402,7 +412,7 @@ function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { f
         const accept = seriesAcceptOf(flag, s.value);
         return {
           value: String(s.value),
-          label: `${s.value} ${s.label}${accept ? `（${accept} ${occupationById(accept)?.ja} を受注）` : ""}`,
+          label: `${s.value} ${s.label}${accept ? `（${accept} ${occupationLabelById(accept)} を受注）` : ""}`,
           group: s.group,
         };
       })}
@@ -423,7 +433,7 @@ function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { f
 }
 
 const jobList = (ids: readonly number[], separator = " → ") =>
-  ids.map((id) => `${id} ${occupationById(id)?.ja}`).join(separator);
+  ids.map((id) => `${id} ${occupationLabelById(id)}`).join(separator);
 
 /**
  * 汁部（DLC）のなりわい。なりわいのフラグ 27〜31 を1つの欄にまとめる（🟢。進み具合そのものはこの欄にない 🔶）。
@@ -480,7 +490,7 @@ function StatesCard({
   const [sync, setSync] = useState(true);
 
   const rows = OCCUPATIONS.filter((o) => group === "all" || occupationGroupOf(o.id) === group)
-    .filter((o) => matches(query, o.ja, o.en, o.client, o.type, String(o.id)))
+    .filter((o) => matches(query, occupationLabel(o), o.en, o.client, o.type, String(o.id)))
     .filter((o) => filter === "all" || !view || kindOf(view.states[o.id]) === filter);
   const counts = { hidden: 0, open: 0, cleared: 0 };
   if (view) for (const o of OCCUPATIONS) counts[kindOf(view.states[o.id])]++;
@@ -627,7 +637,7 @@ function StateRow({
         placeholder="未読み込み"
         disabled={readOnly}
         className="w-48"
-        aria-label={o.ja}
+        aria-label={occupationLabel(o)}
         onValueChange={(k) =>
           value !== null &&
           write((b) =>
@@ -647,7 +657,7 @@ function StateRow({
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-muted-foreground font-mono text-xs">{o.id}</span>
-          <span className="text-sm">{o.ja}</span>
+          <span className="text-sm"><GameLabel occupation={o.labelId} /></span>
           <InfoTip offset={offset}>
             {o.en}
             {o.noteJa && `。${o.noteJa}`}

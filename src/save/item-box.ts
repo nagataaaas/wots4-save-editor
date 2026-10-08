@@ -19,7 +19,8 @@ import {
   type ItemOptionGroup,
   type ItemSlot,
 } from "./item-slot";
-import { ITEMS, ITEM_KIND_LABELS, findItem, itemDisplayName, type ItemEntry } from "./master/item-names";
+import { labelOf } from "./master/labels";
+import { ITEMS, ITEM_KIND_LABELS, findItem, type ItemEntry } from "./master/item-names";
 import { formatHex4 } from "@/lib/format";
 
 /** 上級者モード。種別が料理・宿・なし（手に入る経路がない）の ID と、最大数を超える個数を書ける */
@@ -88,12 +89,14 @@ const KIND_CAUTION: Record<1 | 2 | 3, string> = {
 
 const ALL_KINDS = [0, 1, 2, 3] as const;
 
+const itemDisplayLabel = (it: ItemEntry) => labelOf({ kind: "item", id: it.labelId });
+
 function toOption(it: ItemEntry): ItemOption {
   const hex = it.id.toString(16).toUpperCase().padStart(2, "0");
   return {
     id: it.id,
-    label: itemDisplayName(it),
-    keywords: [it.ja, it.en, it.reading, hex, `0x${hex}`].filter((k) => k !== ""),
+    label: itemDisplayLabel(it),
+    keywords: [itemDisplayLabel(it), it.en, it.reading, hex, `0x${hex}`].filter((k) => k !== ""),
     description: it.descJa,
     caution: it.kind === 0 ? undefined : KIND_CAUTION[it.kind],
   };
@@ -111,7 +114,7 @@ export function itemOptionGroups(options: ItemBoxOptions = {}): ItemOptionGroup[
 export function itemLabel(id: number): string | null {
   if (id === EMPTY_ID) return "なし";
   const it = findItem(id);
-  return it ? itemDisplayName(it) : null;
+  return it ? itemDisplayLabel(it) : null;
 }
 
 /** 書き込める ID。選択肢にある道具か、なし */
@@ -123,7 +126,7 @@ export function validateItemId(id: number, options: ItemBoxOptions = {}): string
   const it = findItem(id);
   if (!it) return `道具の一覧にない ID です（${formatHex4(id)}）`;
   if (it.kind !== 0 && !options.advanced) {
-    return `${itemDisplayName(it)} は種別「${ITEM_KIND_LABELS[it.kind]}」で、上級者モードでだけ書けます`;
+    return `${itemDisplayLabel(it)} は種別「${ITEM_KIND_LABELS[it.kind]}」で、上級者モードでだけ書けます`;
   }
   return null;
 }

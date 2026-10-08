@@ -33,6 +33,7 @@
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
+import { labelOf } from "./master/labels";
 import { npcName } from "./master/npc-names";
 
 export const PROMISE_OFFSET = 0x14038;
@@ -213,7 +214,8 @@ export const KNOWN_LOOKS: readonly KnownValue[] = [
 
 /** 名前の表示。🟢 名前の表（npc-names）にない ID は 16進数 */
 export function nameLabel(id: number): string {
-  return npcName(id)?.ja ?? `0x${id.toString(16).toUpperCase()}`;
+  const entry = npcName(id);
+  return entry ? labelOf({ kind: "npc", id: entry.labelId }) : `0x${id.toString(16).toUpperCase()}`;
 }
 
 /** ✅ [U] 血液型（1〜4 は書き換えで確認。5 はさよの「？」） */

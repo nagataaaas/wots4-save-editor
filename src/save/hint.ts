@@ -12,6 +12,7 @@
 import { readU16, writeU16 } from "./binary";
 import { checkLayout } from "./hero";
 import { CHART_NODE_MAX, chartNode, type ChartNodeEntry } from "./master/chart-nodes";
+import { chartNodeLabel } from "./master/labels";
 
 export const HINT_OFFSET = 0x3900;
 
@@ -57,7 +58,7 @@ export function hintLabel(value: number): string {
   if (value === HINT_NONE) return `${value}（0xFFFF）なし 🔶`;
   const node = chartNode(value);
   if (!node) return `${value}（ノード表にない値）`;
-  return node.ja ? `${value} ${node.ja}` : `${value}（イベントに当たらないノード）`;
+  return node.labelId ? `${value} ${chartNodeLabel(node)}` : `${value}（イベントに当たらないノード）`;
 }
 
 /** 表にない値・イベントに当たらないノードなら警告の文。0xFFFF とイベントのノードは null */

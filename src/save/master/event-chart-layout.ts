@@ -7,8 +7,9 @@
 // - 1つのイベントが複数のノードを持つもののうち、スクリーンショットに出ていないノードは描かない：
 //   大老 鬼怒川怨仙 73・74・115、学問のすすめ 117、町の薬師 39、小公女倒れる 40、闇討ち ～小暮捜索 30、
 //   大老暗殺計画 57・61・67・68・69・70、士魂は屈せず 75、願い虚しく 100・116、討ち入り 79、悲しみのローラ 54（未実装とみられる）
-// ほかのモジュールに依存しない（chart-nodes.ts のみ）。
+// 名前の表示は共通ラベル層から引く。
 import { CHART_NODES } from './chart-nodes'
+import { chartNodeLabel } from './labels'
 
 /** 枠の色。スクリーンショットの塗りの色（勢力）に合わせる */
 export type ChartBoxKind = 'prajna' | 'shogunate' | 'foreigners' | 'other' | 'hidden'
@@ -227,7 +228,8 @@ export function boxEventId(box: ChartBox): number | null {
 
 /** ノード番号から、チャートに出す名前 */
 export function boxName(box: ChartBox): string {
-  return CHART_NODES[box.node]?.ja ?? `ノード ${box.node}`
+  const node = CHART_NODES[box.node]
+  return node ? chartNodeLabel(node) : `ノード ${box.node}`
 }
 
 /** 列の幅を 1 としたときの枠の幅（スクリーンショットでは列の間隔 約82px に対して枠 約68px） */

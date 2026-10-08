@@ -2,7 +2,7 @@ import { CHART_NODES } from "./chart-nodes";
 import { ITEMS } from "./item-names";
 import { NPC_NAMES } from "./npc-names";
 import { OCCUPATIONS } from "./occupation-names";
-import { eventLabelId, type LabelRef, type Language, type LocalizedLabel } from "./label-types";
+import { eventLabelId, type EventLabelId, type LabelRef, type Language, type LocalizedLabel } from "./label-types";
 
 export const ITEM_LABELS: ReadonlyMap<number, LocalizedLabel> = new Map(
   ITEMS.map((it) => [it.labelId, { ja: it.ja, en: it.en, reading: it.reading }]),
@@ -43,4 +43,11 @@ export function labelOf(ref: LabelRef, lang: Language = "ja", fallback?: string)
 
 export function unknownLabel(ref: LabelRef): string {
   return `不明（${ref.kind}:${Number(ref.id)}）`;
+}
+
+export function chartNodeLabel(
+  node: { id: number; labelId: EventLabelId | null },
+  fallback = `ノード ${node.id}`,
+): string {
+  return node.labelId ? labelOf({ kind: "event", id: node.labelId }, "ja", fallback) : fallback;
 }

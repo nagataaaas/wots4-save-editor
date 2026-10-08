@@ -41,7 +41,8 @@ import {
   type RecordView,
   type YobaiView,
 } from "@/save/yobai";
-import { NPC_NAMES, npcNameGroup } from "@/save/master/npc-names";
+import { labelOf } from "@/save/master/labels";
+import { NPC_NAMES, npcNameGroup, type NpcNameEntry } from "@/save/master/npc-names";
 import {
   POINT_NORMAL_MAX,
   YOBAI_POINTS,
@@ -81,12 +82,14 @@ const placeOptions: SelectOption[] = PLACES.map((name, i) => ({ value: String(i)
 const knownOptions = (known: readonly KnownValue[]): SelectOption[] =>
   known.map((k) => ({ value: String(k.value), label: `${k.label}（${hex(k.value)}）` }));
 
+const npcLabel = (entry: NpcNameEntry) => labelOf({ kind: "npc", id: entry.labelId });
+
 /** 🟢 名前の表の全件。区分ごとにまとめ、英語名でも検索できるようにする */
 const nameOptions: SelectOption[] = NPC_NAMES.map((n) => ({
   value: String(n.id),
-  label: `${n.ja}（${hex(n.id)}）`,
+  label: `${npcLabel(n)}（${hex(n.id)}）`,
   group: npcNameGroup(n.id),
-  keywords: [n.ja, n.en, String(n.id), hex(n.id)],
+  keywords: [npcLabel(n), n.en, String(n.id), hex(n.id)],
 }));
 
 const PERSON_FIELDS: Record<

@@ -4,7 +4,8 @@ import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
 import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
-import { CHART_NODES } from "@/save/master/chart-nodes";
+import { CHART_NODES, type ChartNodeEntry } from "@/save/master/chart-nodes";
+import { chartNodeLabel, findLabel } from "@/save/master/labels";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -492,12 +493,17 @@ function HintCard({ view }: { view: HintView | null }) {
 }
 
 /** 🟢 ノード 0〜118 と 🔶 0xFFFF（なし） */
+const hintOptionKeywords = (node: ChartNodeEntry) => {
+  const label = node.labelId ? findLabel({ kind: "event", id: node.labelId }) : undefined;
+  return [String(node.id), chartNodeLabel(node, ""), label?.en ?? ""];
+};
+
 const hintOptions: SelectOption[] = [
   ...CHART_NODES.map((n) => ({
     value: String(n.id),
     label: hintLabel(n.id),
     group: n.eventId === null ? "イベントに当たらないノード" : "イベントのノード",
-    keywords: [String(n.id), n.ja ?? "", n.en ?? ""],
+    keywords: hintOptionKeywords(n),
   })),
   {
     value: String(HINT_NONE),
