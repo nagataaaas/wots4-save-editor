@@ -40,6 +40,7 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 | `unlock/unlock.csv`           | 特典解除（0〜105） | このリストのみ           | 先頭16件・31・101 ✅ [U]／ほか 🔶 U-17 |       | [unlocks](../chunks/unlocks/README.md)                    |
 | `event/event.csv`             | イベント           | このリストのみ（添字）   | 配列の添字（u8 × 件数）      |              | [event-chart](../chunks/event-chart/README.md)            |
 | `event/chart-node.csv`        | イベントチャートのノード（0〜118） | このリストのみ | u16 LE                   |              | [hint](../chunks/hint/README.md) 0x3900                   |
+| `event/chart-cell.csv`        | イベントチャートの升（枠と線、335件） | このリストのみ | セーブにない（チャートの並び） |        | [event-chart](../chunks/event-chart/README.md)            |
 | `place/start-location.csv`    | 開始地点（現在地） | このリストのみ           | u8                           |              | [date-location](../chunks/date-location/README.md) 0x0013 |
 | `place/night-visit-place.csv` | 夜の約束の場所     | このリストのみ           | u16 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x08      |
 | `occupation/occupation.csv`   | なりわい（3〜212） | このリストのみ（0〜255） | 状態の表の添字・u16 LE       |              | [occupation](../chunks/occupation/README.md)              |
@@ -63,6 +64,11 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 - `occupation/occupation.csv`：ID 3〜212 の全170件（欠番あり）、全行 🟢。`name_ja`・`name_en`・`client_ja`（依頼主）はゲーム内の表記。`type` は種類（討伐・破壊・配達・伝言・説得・説得・盗み）、`alignment` は善良・悪質（空欄はどちらでもない）、`reward` は成功報酬（文）、`bonus` は1人・1つあたりの追加報酬（文）、`deadline_days` は期限の日数（空欄は期限なし）
 - `event/chart-node.csv`：全行 🟢。`name_ja`・`name_en` はチャートの枠に出る名前で、同じイベントの別の枠は名前が違うことがある（39 町の薬師＝小公女倒れる、30 闇討ち ～小暮捜索）。
   `event_id` はそのノードのイベントの通し番号（`event/event.csv` の ID）。イベントに当たらないノードは空欄
+  `phase` はそのノードの段階（[date-location](../chunks/date-location/README.md) の `0x0010` と同じ値。段階のないノードは空欄）、
+  `route` はチャートの行の種類（`prajna` 攘夷・`shogunate` 幕府・`foreigners` 外国・`other` 共通・無所属・`best` 真ルート・`tutorial` チャートに出ないノード）
+- `event/chart-cell.csv`：イベントチャートの升の並び。全行 🟢。ID は升の順（上の行から、行の中は左から）。`col`・`row` は格子の位置（列 0〜46・行 0〜10。枠は偶数の列）。
+  `type` は `frame`（枠）か `line`（線）。`node` は枠のノード番号（`event/chart-node.csv`）。`shape` は線の形（左・右・上・下のどちらへ伸びるか。1 ─、2 ┼、3 ┬、4 ┴、5 ┤、6 ├、7 ┘、8 ┐、9 ┌、10 └、11 │）。
+  `備考` が「短い横線」の線は、枠の列にある横線。`hidden` は 1 が真ルートの升（ふだんは出ない）、2 が真ルートへの分かれ目の線、0 が通常。出し方は [event-chart](../chunks/event-chart/README.md)
 - `item/item.csv`：ID 0x00〜0xF1 の全242件（欠番なし）と 0xFFFF。`name_ja`・`name_en`・`description_ja`・`description_en` はゲーム内の表記のまま 🟢
   （同じ名前が複数の ID にあるもの（部品箱・茶器・伝説の魚・熱燗など）も表記のまま。ゲーム内で見分けた違いは `備考` に書く）。
   `reading` は読み（ひらがな）で、ゲーム内の表記のまま 🟢（0x00・0xE7 は仮の値だったので空欄。`備考` 参照）。

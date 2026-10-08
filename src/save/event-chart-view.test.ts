@@ -1,82 +1,158 @@
-// イベントチャートの枠の描き分け。規則は docs/save_format/chunks/event-chart「チャート表示の規則」。
+// イベントチャートの描き分け。規則は docs/save_format/chunks/event-chart「チャート表示の規則」（🟢。✅ の付いたものは実セーブ・書き換えで確認）。
 import { describe, expect, it } from "vitest";
-import { chartBoxLook, bestRouteEntered, type ChartNow } from "./event-chart-view";
-import type { ChartBox } from "./master/event-chart-layout";
+import { chartViewWithoutSave, computeChartView, frameLookLabel, type ChartInput } from "./event-chart-view";
+import { CHART_CELLS, CHART_FRAMES, type ChartFrame } from "./master/event-chart-layout";
 
-const faction: ChartBox = { node: 5, col: 3, row: 0, kind: "prajna", day: 1, slot: 1 }; // 海兵隊の横暴（1日目夕）
-const later: ChartBox = { node: 95, col: 14, row: 0, kind: "prajna" }; // 志士の刀（日と時間帯なし）
-const best: ChartBox = { node: 56, col: 2, row: 8, kind: "best" }; // 三姉妹見参
-const e = (state: number, record: number, index = 0) => ({ index, state, record });
-const at = (now: ChartNow, bestRouteEntered = false) => ({ now, bestRouteEntered });
-const noon = at({ day: 1, slot: 0 });
+/** 通し番号ごとの状態と記録。指定しないものは FF・FF（未到達・記録なし） */
+function input(states: Record<number, [state: number, record?: number]>, opts: Partial<ChartInput> = {}): ChartInput {
+  const entries = Array.from({ length: 166 }, (_, index) => {
+    const [state, record] = states[index] ?? [0xff];
+    return { index, state, record: record ?? 0xff };
+  });
+  return { entries, playCount: 0, clearTotal: 0, ...opts };
+}
 
-describe("chartBoxLook", () => {
-  it("セーブ未読み込みは名前を出す", () => {
-    expect(chartBoxLook(null, at(null), faction)).toBe("shown");
-    expect(chartBoxLook(null, at(null), best)).toBe("shown");
+const frameOf = (eventId: number): ChartFrame => CHART_FRAMES.find((f) => f.eventId === eventId)!;
+const lineAt = (col: number, row: number) => CHART_CELLS.find((c) => c.col === col && c.row === row && c.type === "line")!;
+
+/** 序章の船上の侍（0）・阿弥浜港争乱（1）を終えた状態 */
+const PROLOGUE = { 0: [0x04], 1: [0x04] } as const satisfies Record<number, [number]>;
+
+describe("枠の名前と印", () => {
+  it("セーブがなければ全部の枠を名前つきで出す", () => {
+    const v = chartViewWithoutSave();
+    for (const f of CHART_FRAMES) expect(v.frames.get(f.id)).toMatchObject({ visible: true, named: true });
   });
 
-  it("✅ 記録 04 なら名前を出し、状態 05 なら失敗の印", () => {
-    expect(chartBoxLook(e(0x04, 0x04), noon, faction)).toBe("shown");
-    expect(chartBoxLook(e(0x05, 0x04), noon, faction)).toBe("shown-failed");
-    expect(chartBoxLook(e(0xff, 0x04), noon, faction)).toBe("shown");
+  it("✅ 記録 04 か状態 04 なら名前を出す。記録 FF で状態 FF・05 なら隠す", () => {
+    const v = computeChartView(input({ 6: [0xff, 0x04], 7: [0x04], 8: [0x05], 9: [0xff] }));
+    expect(v.frames.get(frameOf(6).id)!.named).toBe(true);
+    expect(v.frames.get(frameOf(7).id)!.named).toBe(true);
+    expect(v.frames.get(frameOf(8).id)).toMatchObject({ named: false, failed: true, missed: false });
+    expect(v.frames.get(frameOf(9).id)!.named).toBe(false);
   });
 
-  it("✅ 記録 FF でも状態 04 なら名前を出す", () => {
-    expect(chartBoxLook(e(0x04, 0xff), noon, faction)).toBe("shown");
-    expect(chartBoxLook(e(0x04, 0xff), noon, best)).toBe("shown");
+  it("状態 05 でも記録 04 なら名前を出す", () => {
+    const v = computeChartView(input({ 8: [0x05, 0x04] }));
+    expect(v.frames.get(frameOf(8).id)).toMatchObject({ named: true, failed: true });
   });
 
-  it("✅ 記録 FF で状態 FF・00・05 なら名前を隠す", () => {
-    expect(chartBoxLook(e(0xff, 0xff), noon, faction)).toBe("masked");
-    expect(chartBoxLook(e(0x00, 0xff), noon, faction)).toBe("masked");
-    expect(chartBoxLook(e(0x05, 0xff), noon, faction)).toBe("masked-failed");
+  it("状態 03 は名前を出して光る。01・02 は何も変わらない", () => {
+    const v = computeChartView(input({ 6: [0x03], 7: [0x01], 8: [0x02] }));
+    expect(v.frames.get(frameOf(6).id)).toMatchObject({ named: true, inProgress: true });
+    expect(v.frames.get(frameOf(7).id)).toMatchObject({ named: false, inProgress: false, reached: false });
+    expect(v.frames.get(frameOf(8).id)).toMatchObject({ named: false, reached: false });
   });
 
-  it("❓ 記録 FF で状態 01〜03、記録 00・03・05 は名前を隠すとして描く", () => {
-    for (const s of [0x01, 0x02, 0x03]) expect(chartBoxLook(e(s, 0xff), noon, faction)).toBe("masked");
-    for (const r of [0x00, 0x03, 0x05]) expect(chartBoxLook(e(0x00, r), noon, later)).toBe("masked");
-  });
-
-  it("✅ 真ルートの枠は、記録 FF で状態 04 以外なら枠ごと出ない（真ルートに入ったことがない）", () => {
-    for (const s of [0x00, 0x01, 0x03, 0x05, 0xff]) expect(chartBoxLook(e(s, 0xff), noon, best)).toBe("absent");
-    expect(chartBoxLook(e(0x05, 0x04), noon, best)).toBe("shown-failed");
-  });
-
-  it("🔶 真ルートに入ったことがあれば、真ルートの枠もほかの枠と同じに描く（ユーザー判断 2026-10-07）", () => {
-    const entered = at({ day: 1, slot: 0 }, true);
-    expect(chartBoxLook(e(0x00, 0xff), entered, best)).toBe("masked");
-    expect(chartBoxLook(e(0x05, 0xff), entered, best)).toBe("masked-failed");
-    expect(chartBoxLook(e(0x04, 0xff), entered, best)).toBe("shown");
-  });
-
-  it("✅ 時間帯が過ぎた未処理の勢力イベントは失敗（🔶 当たるイベントの範囲）", () => {
-    expect(chartBoxLook(e(0x00, 0x04), at({ day: 1, slot: 1 }), faction)).toBe("shown");
-    expect(chartBoxLook(e(0x00, 0x04), at({ day: 1, slot: 2 }), faction)).toBe("shown-failed");
-    expect(chartBoxLook(e(0xff, 0xff), at({ day: 2, slot: 0 }), faction)).toBe("masked-failed");
-    expect(chartBoxLook(e(0x00, 0x04), at({ day: 5, slot: 0 }), faction)).toBe("shown-failed");
-    // 進行中・成功は時間帯が過ぎても失敗にしない
-    expect(chartBoxLook(e(0x03, 0x04), at({ day: 2, slot: 0 }), faction)).toBe("shown");
-    expect(chartBoxLook(e(0x04, 0x04), at({ day: 2, slot: 0 }), faction)).toBe("shown");
-    // 日と時間帯を持たない枠、日付が分からないときは失敗にしない
-    expect(chartBoxLook(e(0x00, 0x04), at({ day: 9, slot: 2 }), later)).toBe("shown");
-    expect(chartBoxLook(e(0x00, 0x04), at(null), faction)).toBe("shown");
+  it("見え方の説明", () => {
+    const v = computeChartView(input({ 8: [0x05] }));
+    expect(frameLookLabel(v.frames.get(frameOf(8).id)!)).toBe("名前が隠れる（？？？）・失敗");
+    expect(frameLookLabel(v.frames.get(frameOf(70).id)!)).toBe("ゲームでは枠ごと出ない");
   });
 });
 
-describe("bestRouteEntered（ユーザー判断 2026-10-07）", () => {
-  const entries = (state: number, record: number) =>
-    Array.from({ length: 166 }, (_, i) => (i === 70 ? e(state, record, i) : e(0x00, 0xff, i)));
-
-  it("🟢 0x378E が 1・2 なら入ったことがある", () => {
-    expect(bestRouteEntered(entries(0x00, 0xff), 1)).toBe(true);
-    expect(bestRouteEntered(entries(0x00, 0xff), 2)).toBe(true);
-    expect(bestRouteEntered(entries(0x00, 0xff), 0)).toBe(false);
+describe("時間帯を過ぎた枠", () => {
+  it("後ろの段階に到達すると、何もしなかった段階の、たどっている行の枠が失敗になる", () => {
+    // 志士との出会い（6、1日目昼）→ 代官所潜入（12、1日目夜）。1日目夕の攘夷の枠は 海兵隊の横暴（9）
+    const v = computeChartView(input({ ...PROLOGUE, 6: [0x04], 12: [0x04] }));
+    expect(v.frames.get(frameOf(9).id)).toMatchObject({ failed: true, missed: true });
+    // ほかの行の同じ段階の枠（琴吹光探検隊 7・電信あり 8）には付かない
+    expect(v.frames.get(frameOf(7).id)!.failed).toBe(false);
+    expect(v.frames.get(frameOf(8).id)!.failed).toBe(false);
+    // 到達した段階より後ろの枠にも付かない
+    expect(v.frames.get(frameOf(17).id)!.failed).toBe(false);
   });
 
-  it("🟢 三姉妹見参の状態 04、🔶 記録 04 なら入ったことがある", () => {
-    expect(bestRouteEntered(entries(0x04, 0xff), 0)).toBe(true);
-    expect(bestRouteEntered(entries(0x00, 0x04), 0)).toBe(true);
-    expect(bestRouteEntered(entries(0x05, 0xff), null)).toBe(false);
+  it("たどる行は共通の行から始まる", () => {
+    // 序章のあと、1日目昼に何もせず 1日目夕の 海兵隊の横暴（9）に到達：1日目昼の共通の枠（嵐のあと 3）が失敗になる
+    const v = computeChartView(input({ ...PROLOGUE, 9: [0x04] }));
+    expect(v.frames.get(frameOf(3).id)).toMatchObject({ failed: true, missed: true });
+    expect(v.frames.get(frameOf(6).id)!.failed).toBe(false);
+  });
+
+  it("同じ段階で別の枠に到達していれば付かない", () => {
+    const v = computeChartView(input({ ...PROLOGUE, 6: [0x04], 9: [0x04] }));
+    for (const id of [3, 4, 5, 6, 7, 8]) expect(v.frames.get(frameOf(id).id)!.failed, `通し番号 ${id}`).toBe(false);
+  });
+});
+
+describe("真ルートの升", () => {
+  it("✅ 状態 05（失敗）だけでは枠が出ない", () => {
+    const v = computeChartView(input({ 72: [0x05] }));
+    expect(v.frames.get(frameOf(72).id)!.visible).toBe(false);
+  });
+
+  it("✅ 状態 04・記録 04 なら出る。状態 03 でも出る", () => {
+    const v = computeChartView(input({ 70: [0x04], 71: [0xff, 0x04], 72: [0x03] }));
+    for (const id of [70, 71, 72]) expect(v.frames.get(frameOf(id).id)!.visible, `通し番号 ${id}`).toBe(true);
+    expect(v.frames.get(frameOf(73).id)!.visible).toBe(false);
+  });
+
+  it("周回数が 3 以上なら全部の枠が出る。2 なら出ない", () => {
+    const shown = (playCount: number) => {
+      const v = computeChartView(input({}, { playCount }));
+      return CHART_FRAMES.filter((f) => f.hidden !== 0).every((f) => v.frames.get(f.id)!.visible);
+    };
+    expect(shown(2)).toBe(false);
+    expect(shown(3)).toBe(true);
+  });
+
+  it("周回数が 3 以上なら、真ルートの線も全部つながって出る", () => {
+    const v = computeChartView(input(PROLOGUE, { playCount: 3 }));
+    for (const c of CHART_CELLS.filter((x) => x.type === "line"))
+      expect(v.lines.get(c.id)!.includes("hidden"), `升 ${c.col},${c.row}`).toBe(false);
+  });
+
+  it("真ルートの枠が出ていなければ、真ルートの線と分かれ目の下の腕は出ない", () => {
+    const v = computeChartView(input(PROLOGUE));
+    for (const c of CHART_CELLS.filter((x) => x.type === "line" && x.hidden === 1))
+      for (const a of v.lines.get(c.id)!) expect(a === "none" || a === "hidden").toBe(true);
+    const fork = v.lines.get(lineAt(3, 6).id)!;
+    expect(fork).toEqual(["none", "black", "black", "hidden"]);
+  });
+
+  it("三姉妹見参（70）が出ると、分かれ目から 70 までの線が出て、その先は出ない", () => {
+    const v = computeChartView(input({ ...PROLOGUE, 70: [0x04] }));
+    expect(v.lines.get(lineAt(3, 6).id)![3]).not.toBe("hidden");
+    expect(v.lines.get(lineAt(3, 7).id)!.filter((a) => a === "hidden")).toEqual([]);
+    expect(v.lines.get(lineAt(3, 8).id)!.filter((a) => a === "hidden")).toEqual([]);
+    // 70 とお早い到着（71）のあいだ
+    expect(v.lines.get(lineAt(5, 8).id)!.filter((a) => a !== "none")).toEqual(["hidden", "hidden"]);
+  });
+});
+
+describe("赤い線", () => {
+  it("到達した枠どうしをつなぐ道を赤くする", () => {
+    // 船上の侍と阿弥浜港争乱のあいだの ┬。下の腕は嵐のあと（未到達）へ向かうので黒
+    const v = computeChartView(input(PROLOGUE));
+    expect(v.lines.get(lineAt(1, 0).id)).toEqual(["red", "red", "none", "black"]);
+  });
+
+  it("記録 04 だけの枠と、状態 01・02 の枠は到達した枠に入らない", () => {
+    for (const s of [[0xff, 0x04], [0x01], [0x02]] as const) {
+      const v = computeChartView(input({ 0: [0x04], 1: [...s] }));
+      expect(v.lines.get(lineAt(1, 0).id)!.includes("red"), s.join(",")).toBe(false);
+    }
+  });
+
+  it("失敗した枠への道も赤くなる。分かれ道では到達した枠へ向かう腕だけ", () => {
+    const v = computeChartView(input({ ...PROLOGUE, 6: [0x05] }));
+    const toPrajna = v.lines.get(lineAt(3, 0).id)!;
+    expect(toPrajna[1]).toBe("red");
+    // 1日目昼の幕府・外国の枠へ下りる腕は赤くない
+    expect(toPrajna[3]).toBe("black");
+  });
+});
+
+describe("カーソルの範囲とスクロール", () => {
+  it("到達した枠と記録 04 の枠のうち最も右の列", () => {
+    expect(computeChartView(input({})).cursorMaxCol).toBe(-1);
+    expect(computeChartView(input(PROLOGUE)).cursorMaxCol).toBe(2);
+    expect(computeChartView(input({ ...PROLOGUE, 12: [0xff, 0x04] })).cursorMaxCol).toBe(frameOf(12).col);
+  });
+
+  it("クリア回数の合計が 0 なら左右にスクロールできない", () => {
+    expect(computeChartView(input({}, { clearTotal: 0 })).scrollLocked).toBe(true);
+    expect(computeChartView(input({}, { clearTotal: 1 })).scrollLocked).toBe(false);
   });
 });

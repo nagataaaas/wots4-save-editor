@@ -16,7 +16,14 @@ export type ChartNodeEntry = {
   labelId: EventLabelId | null;
   /** イベントの通し番号（0x36A8 + n の n）。null はイベントに当たらないノード */
   eventId: number | null;
+  /** 🟢 そのノードの段階（0〜999、date-location の 0x0010 と同じ値）。null は段階のないノード */
+  phase: number | null;
+  /** 🟢 チャートの行の種類（勢力・共通・真ルート。tutorial はチャートに出ないノード） */
+  route: ChartRoute;
 };
+
+/** 🟢 チャートの行の種類 */
+export type ChartRoute = "prajna" | "shogunate" | "foreigners" | "other" | "best" | "tutorial";
 
 const ROWS = Object.values(CHART_NODE_TABLE);
 
@@ -25,6 +32,8 @@ export const CHART_NODES: readonly ChartNodeEntry[] = ROWS.map((r) => ({
   id: r.id_dec,
   labelId: r.event_id === null ? null : eventLabelId(r.event_id),
   eventId: r.event_id,
+  phase: r.phase,
+  route: r.route,
 }));
 
 /** 🟢 イベントの名前と違う名前を持つノード（ノード番号 → 名前） */

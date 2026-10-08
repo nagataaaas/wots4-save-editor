@@ -1,91 +1,87 @@
-// イベントチャートの枠の配置（スクリーンショットから書き起こしたもの）が、ノードの表と食い違っていないか、
-// 枠や線が重なっていないかを確かめる。
+// イベントチャートの升の並び（datatable/event/chart-cell.csv、全行 🟢）が、ノードの表と食い違っていないかを確かめる。
 import { describe, expect, it } from "vitest";
 import { CHART_NODES } from "./chart-nodes";
 import {
-  BOX_WIDTH,
-  CHART_BOXES,
+  CHART_CELLS,
   CHART_COLS,
-  CHART_LINKS,
+  CHART_FRAMES,
+  CHART_LINES,
+  CHART_NEIGHBORS,
   CHART_ROWS,
-  boxEventId,
-  boxName,
-  chartBox,
-  linkSegments,
+  frameName,
 } from "./event-chart-layout";
 
-describe("イベントチャートの枠", () => {
-  it("どの枠も 🟢 ノードの表にあり、イベントの通し番号を持つ", () => {
-    for (const b of CHART_BOXES) {
-      expect(CHART_NODES[b.node]?.eventId, `ノード ${b.node}`).not.toBeNull();
-      expect(boxEventId(b)).toBe(CHART_NODES[b.node].eventId);
-    }
+const frameAt = (col: number, row: number) => CHART_FRAMES.find((f) => f.col === col && f.row === row);
+
+describe("🟢 イベントチャートの升", () => {
+  it("枠 95 個（真ルート 21 個）と線 240 本。格子は 47 列 × 11 行", () => {
+    expect(CHART_CELLS).toHaveLength(335);
+    expect(CHART_FRAMES).toHaveLength(95);
+    expect(CHART_FRAMES.filter((f) => f.hidden !== 0)).toHaveLength(21);
+    expect(CHART_LINES).toHaveLength(240);
+    expect([CHART_COLS, CHART_ROWS]).toEqual([47, 11]);
   });
 
-  it("ノード番号は重複しない", () => {
-    const nodes = CHART_BOXES.map((b) => b.node);
+  it("同じ升に2つ置かない。枠は偶数の列", () => {
+    const keys = CHART_CELLS.map((c) => `${c.col},${c.row}`);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const f of CHART_FRAMES) expect(f.col % 2).toBe(0);
+  });
+
+  it("升は上の行から、行の中は左から並ぶ", () => {
+    const order = CHART_CELLS.map((c) => c.row * 100 + c.col);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+
+  it("枠のノードはどれもイベントに当たる。同じノードの枠は1つ", () => {
+    for (const f of CHART_FRAMES) expect(CHART_NODES[f.node].eventId).toBe(f.eventId);
+    const nodes = CHART_FRAMES.map((f) => f.node);
     expect(new Set(nodes).size).toBe(nodes.length);
   });
 
-  it("同じ列・段に2つの枠を置かない", () => {
-    const cells = CHART_BOXES.map((b) => `${b.col},${b.row}`);
-    expect(new Set(cells).size).toBe(cells.length);
+  it("真ルートの升は行 8〜10 と、そこへ下りる行 7 の縦線。分かれ目の線は列 3・行 6 の ├ だけ", () => {
+    for (const c of CHART_CELLS.filter((x) => x.hidden === 1)) expect(c.row).toBeGreaterThanOrEqual(c.type === "line" ? 7 : 8);
+    expect(CHART_CELLS.filter((x) => x.hidden === 1 && x.row === 7).map((c) => [c.col, c.type === "line" && c.shape])).toEqual([[3, 11]]);
+    // 行 8 の横線のうち 4 本（列 15・17・34・44）だけは隠しの印がない（真ルートを知らなくても出るとみられる。要ゲーム内確認）
+    const unmarked = CHART_CELLS.filter((x) => x.row >= 8 && x.hidden !== 1);
+    expect(unmarked.map((c) => [c.col, c.row, c.type])).toEqual([
+      [15, 8, "line"],
+      [17, 8, "line"],
+      [34, 8, "line"],
+      [44, 8, "line"],
+    ]);
+    const fork = CHART_CELLS.filter((c) => c.hidden === 2);
+    expect(fork.map((c) => [c.col, c.row, c.type === "line" && c.shape])).toEqual([[3, 6, 6]]);
   });
 
-  it("列・段の範囲に収まる", () => {
-    for (const b of CHART_BOXES) {
-      expect(b.col).toBeGreaterThanOrEqual(0);
-      expect(b.col).toBeLessThan(CHART_COLS);
-      expect(b.row).toBeGreaterThanOrEqual(0);
-      expect(b.row).toBeLessThan(CHART_ROWS);
-    }
+  it("要所の枠の位置と名前", () => {
+    expect(frameName(frameAt(0, 0)!)).toBe("船上の侍");
+    expect(frameName(frameAt(2, 0)!)).toBe("阿弥浜港争乱");
+    expect(frameName(frameAt(4, 6)!)).toBe("簀巻き日和");
+    expect(frameName(frameAt(4, 8)!)).toBe("三姉妹見参");
+    expect(frameName(frameAt(46, 8)!)).toBe("希望の光");
+    expect(frameAt(4, 8)!.route).toBe("best");
+    expect(frameAt(16, 0)!.route).toBe("other");
   });
 
-  it("名前は 🟢 ノードの表から引く", () => {
-    expect(boxName(chartBox(78)!)).toBe("船上の侍");
-    expect(boxName(chartBox(109)!)).toBe("大老は生きていた");
+  it("剣術大会（47〜50）・悲しみのローラ（67）・84 の枠はない", () => {
+    const ids = new Set(CHART_FRAMES.map((f) => f.eventId));
+    for (const id of [47, 48, 49, 50, 67, 84]) expect(ids.has(id), `通し番号 ${id}`).toBe(false);
   });
 
-  it("日と時間帯を持つのは勢力の枠だけで、1〜3日目", () => {
-    for (const b of CHART_BOXES.filter((x) => x.day !== undefined)) {
-      expect(["prajna", "shogunate", "foreigners"]).toContain(b.kind);
-      expect(b.slot).toBeDefined();
-    }
-  });
-});
-
-describe("イベントチャートの線", () => {
-  it("両端のノードがどれも枠にある", () => {
-    for (const l of CHART_LINKS)
-      for (const n of [...l.from, ...l.to]) expect(chartBox(n), `ノード ${n}`).toBeDefined();
+  it("隣どうしは両方からつながる", () => {
+    for (const c of CHART_CELLS)
+      CHART_NEIGHBORS.get(c.id)!.forEach((n, k) => {
+        if (!n) return;
+        const back = CHART_NEIGHBORS.get(n.id)![k ^ 1];
+        expect(back?.id, `升 ${c.id} の向き ${k}`).toBe(c.id);
+      });
   });
 
-  it("出発の枠は同じ列で、到着の枠はそれより右", () => {
-    for (const l of CHART_LINKS) {
-      const fromCols = new Set(l.from.map((n) => chartBox(n)!.col));
-      expect(fromCols.size).toBe(1);
-      const [col] = fromCols;
-      for (const n of l.to) expect(chartBox(n)!.col).toBeGreaterThan(col);
-    }
-  });
-
-  it("横の線は、つなぐ枠のほかの枠に重ならない", () => {
-    for (const l of CHART_LINKS)
-      for (const s of linkSegments(l)) {
-        if (s.y1 !== s.y2) continue;
-        const [left, right] = [Math.min(s.x1, s.x2), Math.max(s.x1, s.x2)];
-        const hit = CHART_BOXES.filter(
-          (b) => b.node !== s.node && b.row + 0.5 === s.y1 && b.col < right && b.col + BOX_WIDTH > left,
-        );
-        expect(hit.map((b) => b.node), `${l.from.join(",")} → ${l.to.join(",")}`).toEqual([]);
-      }
-  });
-
-  it("縦の線は列の隙間にある", () => {
-    for (const l of CHART_LINKS)
-      for (const s of linkSegments(l).filter((x) => x.x1 === x.x2)) {
-        const frac = s.x1 - Math.floor(s.x1);
-        expect(frac).toBeGreaterThan(BOX_WIDTH);
-      }
+  it("船上の侍の右は線で、阿弥浜港争乱につながる", () => {
+    const start = frameAt(0, 0)!;
+    const line = CHART_NEIGHBORS.get(start.id)![1]!;
+    expect(line.type).toBe("line");
+    expect(CHART_NEIGHBORS.get(line.id)![1]?.id).toBe(frameAt(2, 0)!.id);
   });
 });
