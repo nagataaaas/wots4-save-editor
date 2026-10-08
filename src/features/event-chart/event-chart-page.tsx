@@ -128,7 +128,7 @@ export function EventChartPage() {
             ゲームの「状況」のチャートを、ゲームと同じ升の並びと規則で、イベントの状態（0x36A8＋添字）・チャート表示の記録（0x3838＋添字）・周回数（0x0B8C）から描いたものです。
             状態が 03・04 か記録が 04 の枠は名前が出て、それ以外は「？？？」です。状態が 05 の枠と、後ろの段階に進んだのに何もしなかった時間帯の枠には失敗の印が付きます。
             赤い線は、今の周回で到達した枠（状態 03〜05、時間帯を過ぎて失敗）どうしをつなぐ道です。
-            真ルートの枠は、状態が 03・04 か記録が 04 のときだけ出ます（周回数が {PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら全部出ます）。ゲームで出ない升は点線で薄く描いています。
+            真ルートの枠は、状態が 03・04 か記録が 04 のときだけ出ます（周回数が {PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら全部出ます）。ゲームで出ない升は点線で薄く描いています（今の周回で結末に到達しているときは描きません）。
             ゲームは「いま始められるイベント」も到達した枠として扱いますが、それはセーブだけでは決まらないので、ここでは描いていません。
             真ルートの扱い・赤い線・カーソルの範囲は、ゲームのデータから読んだ規則で、ゲーム内では確かめていません（要ゲーム内確認）。
             {result &&
@@ -264,11 +264,13 @@ function ChartCanvas({
           {cursorX !== null && view.scrollLocked && (
             <rect x={cursorX} y={0} width={WIDTH - cursorX} height={HEIGHT} fill="#000" fillOpacity={0.12} />
           )}
-          <g stroke={HIDDEN_COLOR} strokeOpacity={0.6} strokeWidth={1} strokeDasharray="3 3" fill="none">
-            {arms(["hidden"]).map((s) => (
-              <line key={s.key} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} />
-            ))}
-          </g>
+          {!view.endingReached && (
+            <g stroke={HIDDEN_COLOR} strokeOpacity={0.6} strokeWidth={1} strokeDasharray="3 3" fill="none">
+              {arms(["hidden"]).map((s) => (
+                <line key={s.key} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} />
+              ))}
+            </g>
+          )}
           <g stroke={LINK_COLOR} strokeWidth={1.5} fill="none" strokeLinecap="square">
             {arms(["black"]).map((s) => (
               <line key={s.key} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} />
@@ -282,7 +284,8 @@ function ChartCanvas({
           {cursorX !== null && (
             <line x1={cursorX} y1={0} x2={cursorX} y2={HEIGHT} stroke="#555" strokeWidth={1} strokeDasharray="6 4" />
           )}
-          {CHART_FRAMES.map((f) => (
+          {/* 結末に到達していれば、ゲームで出ない枠は描かない（ユーザー判断 2026-10-09） */}
+          {CHART_FRAMES.filter((f) => !view.endingReached || view.frames.get(f.id)!.visible).map((f) => (
             <FrameShape
               key={f.id}
               frame={f}
@@ -352,7 +355,7 @@ function FrameShape({
   } as const;
   const color = ROUTE_COLORS[frame.route];
 
-  // ゲームで出ない枠：クリックして編集できるように、薄い点線だけ描く
+  // ゲームで出ない枠：クリックして編集できるように、薄い点線だけ描く。隠れた名前を表示するときは名前も薄く出す
   if (!look.visible)
     return (
       <g {...common}>
@@ -368,6 +371,20 @@ function FrameShape({
           strokeOpacity={selected ? 1 : 0.45}
           strokeDasharray="3 3"
         />
+        {revealName && (
+          <text
+            x={x + w / 2}
+            y={y + FRAME_H / 2}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={11}
+            fill={TEXT_COLOR}
+            fillOpacity={0.5}
+            style={{ userSelect: "none" }}
+          >
+            {name}
+          </text>
+        )}
       </g>
     );
 

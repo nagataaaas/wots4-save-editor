@@ -58,6 +58,8 @@ export type ChartView = {
   cursorMaxCol: number
   /** クリア回数の合計が 0 で、左右のスクロールと縮小ができない */
   scrollLocked: boolean
+  /** 今の周回で結末（段階 999）の枠に到達した（状態 03〜05）。エディタはゲームで出ない升を描かない（ユーザー判断 2026-10-09） */
+  endingReached: boolean
 }
 
 export type ChartInput = {
@@ -70,6 +72,8 @@ export type ChartInput = {
 const RECORD_SHOWN = 0x04
 const OTHER_ROUTE = 'other'
 const PHASE_STEP = 10
+/** 🟢 結末の段階 */
+const ENDING_PHASE = 999
 /** ゲームが1つの段階で調べる枠の数 */
 const FRAMES_PER_PHASE = 10
 
@@ -95,6 +99,7 @@ export function chartViewWithoutSave(): ChartView {
     ),
     cursorMaxCol: Infinity,
     scrollLocked: false,
+    endingReached: false,
   }
 }
 
@@ -218,7 +223,8 @@ export function computeChartView({ entries, playCount, clearTotal }: ChartInput)
       }),
     )
   }
-  return { frames, lines, cursorMaxCol, scrollLocked: clearTotal === 0 }
+  const endingReached = CHART_FRAMES.some((f) => f.phase === ENDING_PHASE && reached(f))
+  return { frames, lines, cursorMaxCol, scrollLocked: clearTotal === 0, endingReached }
 }
 
 /** 🟢 時間帯を過ぎた枠に失敗の印を付ける（冒頭のコメント） */

@@ -144,6 +144,16 @@ describe("赤い線", () => {
   });
 });
 
+describe("結末への到達", () => {
+  it("結末の枠の状態が 03〜05 なら到達。記録 04 だけでは到達にしない", () => {
+    expect(computeChartView(input(PROLOGUE)).endingReached).toBe(false);
+    expect(computeChartView(input({ ...PROLOGUE, 92: [0x04] })).endingReached).toBe(true);
+    expect(computeChartView(input({ ...PROLOGUE, 92: [0x05] })).endingReached).toBe(true);
+    expect(computeChartView(input({ ...PROLOGUE, 92: [0xff, 0x04] })).endingReached).toBe(false);
+    expect(chartViewWithoutSave().endingReached).toBe(false);
+  });
+});
+
 describe("カーソルの範囲とスクロール", () => {
   it("到達した枠と記録 04 の枠のうち最も右の列", () => {
     expect(computeChartView(input({})).cursorMaxCol).toBe(-1);
