@@ -65,7 +65,7 @@ export const sectionGroups: SectionGroup[] = [
         sections: [
           { id: 'belt', label: '帯刀', note: 'weapon-record（帯刀 3本）、belt-state（帯刀の状態）' },
           { id: 'weapon-bag', label: '武器袋', note: 'weapon-record（武器袋 10本）' },
-          { id: 'weapon-chest', label: '刀箪笥', note: 'weapon-record（武器箪笥 200本）' },
+          { id: 'weapon-chest', label: '刀箪笥', note: 'weapon-record（武器箪笥 200本の本数と容量 🟢）' },
         ],
       },
       {
