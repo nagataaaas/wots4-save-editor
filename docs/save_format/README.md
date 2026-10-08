@@ -130,9 +130,9 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x005C3C`      | `0x006197`   | [memory-garbage](chunks/memory-garbage/README.md) | アドレス風の値（0x7C 刻み12か所）              | 🔶                            |
 | `0x00A4C8`      | `0x0129F6`   | [weapon-record](chunks/weapon-record/README.md)   | 帯刀中・武器袋・武器箪笥の武器（0xA0 × 213件）と武器箪笥の本数・容量 | ✅ ／ 🟢境界・本数と容量 |
 | `0x00A6A8`      | `0x00A6AF`   | [belt-state](chunks/belt-state/README.md)         | 帯刀の状態（本数・選択中・二刀流・峰打）       | ✅読み ／ 🟢読み込み ／ ❓書き込み |
-| `0x0137EC`      | `0x013C2F`   | [night-visit](chunks/night-visit/README.md)       | 夜這いの記録                                   | 一部 ✅                       |
+| `0x0137EC`      | `0x014037`   | [night-visit](chunks/night-visit/README.md)       | 夜這いの回数・記録（100件）・段階・相手ごとの回数 | 一部 ✅ ／ 🟢                 |
 | `0x014038`      | `0x014063`   | [night-visit](chunks/night-visit/README.md)       | 夜の約束の枠                                   | 一部 ✅                       |
-| `0x018BC0` 付近 | ❓            | [styles](chunks/styles/README.md)                 | 通常流派                                       | 🔶                            |
+| `0x018A0C`      | `0x0190ED`   | [styles](chunks/styles/README.md)                 | 流派ごとの修練度・段（16 B × 件数）            | 🟢 ／ 一部 ❓                 |
 | `0x019200` 付近 | ❓            | [custom-style](chunks/custom-style/README.md)     | 俺流                                           | ✅位置 ／ ❓構造（U-6）        |
 | `0x01A610`      | `0x01AD7B`   | [belt-copy](chunks/belt-copy/README.md)           | 0x408 B の記録の配列（帯刀と同じ並びを含む）   | 🟢件数・周期 ／ 🔶中身         |
 | `0x03AAD4`      | `0x03AB5B`   | [appearance](chunks/appearance/README.md)         | 主人公の見た目（人物・肌色・性別・体型・身長・部品の番号） | ✅肌色・体型・身長 ／ 🟢部品 ／ 一部 ❓ |
