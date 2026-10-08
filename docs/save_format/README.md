@@ -139,7 +139,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x03AB5C`      | `0x03AB7A`   | [appearance](chunks/appearance/README.md)         | 容姿の解放ビット（服の番号 0〜241 ごとに1ビット） | ✅位置 ／ 🟢服の対応          |
 | `0x043318`      | `0x043381`   | [unlocks](chunks/unlocks/README.md)               | 特典解除の状態（確認したセーブ、1 B × 106）    | 先頭16件・101 ✅ [U]／ほか 🔶 U-17 |
 | `0x0433A6`      | `0x0433A7`   | [occupation](chunks/occupation/README.md)         | クリアしたなりわいの数                         | 🔶                            |
-| `0x0440D0`      | ❓            | [market-weapons](chunks/market-weapons/README.md) | 流通中の刀                                     | ✅位置 ／ ❓長さ（U-11）       |
+| `0x0440D8`      | `0x045F3B`   | [market-weapons](chunks/market-weapons/README.md) | 流通中の武器（15件 × 0xA4 B）・道具・刃・鍔・柄 | 🟢                            |
 | `0x045F40`      | `0x045F55`   | [occupation](chunks/occupation/README.md)         | 受注中のなりわい                               | 🔶                            |
 
 ## 4. PS3版でだけ分かっている位置
@@ -232,7 +232,6 @@ DLC の影響を調べるときは、DLC を無効化するより「DLC アイ�
 | タスク                                              | 差分を取るゲーム内操作                           | 関連 |
 | --------------------------------------------------- | ------------------------------------------------ | ---- |
 | 武器レコード内の未解析領域（+0x1C・+0x8E の意味など） | 帯刀中の武器のダンプとゲーム内の表示値を照合する |      |
-| 流通中の刀の1件あたりのバイト数と件数               | 0x440D0 以降で繰り返しの周期を探す               | U-11 |
 | 治安 `0x0015` の初期値（1日目のセーブで 0 の例がある）（[date-location](chunks/date-location/README.md)） | 新しい周回を始めて1日目にセーブし、ゲーム内の治安と照合する |      |
 | エンディング記録と周回数、エンディングで初期化される範囲（[date-location](chunks/date-location/README.md)） | 同じ周回のエンディングの直前と直後のセーブを比べる |      |
 | 難易度の 1・2（[difficulty](chunks/difficulty/README.md)） | 普通・難しいで始めた周回のセーブの `0x0000` を読む |      |

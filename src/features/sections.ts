@@ -93,7 +93,7 @@ export const sectionGroups: SectionGroup[] = [
       { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit 夜の約束（場所・人物）と夜這いの記録 🔶' },
       { id: 'styles', label: '流派', icon: ScrollText, note: 'styles 🔶 0x018BC0 付近' },
       { id: 'ore-ryu', label: '俺流', icon: Swords, note: 'custom-style ❓ U-6' },
-      { id: 'circulating', label: '流通中の刀', icon: Store, note: 'market-weapons ❓ U-11' },
+      { id: 'circulating', label: '流通', icon: Store, note: 'market-weapons 🟢 持ち去られた武器・道具・部品（読み取り専用）' },
     ],
   },
   {

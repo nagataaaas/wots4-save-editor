@@ -59,7 +59,12 @@ export const RAW_REGIONS: readonly RawRegion[] = [
   { start: 0x03ab5c, end: 0x03ab7a, chunk: 'appearance', label: '容姿の解放ビット', certainty: '✅位置 ／ 🟢服の対応' },
   { start: 0x043318, end: 0x043381, chunk: 'unlocks', label: '特典解除の状態', certainty: '先頭16件・101 ✅ ／ ほか 🔶 U-17' },
   { start: 0x0433a6, end: 0x0433a7, chunk: 'occupation', label: 'クリアしたなりわいの数', certainty: '🔶' },
-  { start: 0x0440d0, end: null, chunk: 'market-weapons', label: '流通中の刀', certainty: '✅位置 ／ ❓長さ（U-11）' },
+  // 🟢 流通の記録。武器は武器レコード 0xA0 B ＋ 持っている町の人の番号 4 B
+  { start: 0x0440d8, end: 0x044a73, chunk: 'market-weapons', label: '流通中の武器', certainty: '🟢', recordSize: 0xa4 },
+  { start: 0x044a74, end: 0x044aeb, chunk: 'market-weapons', label: '流通中の道具', certainty: '🟢', recordSize: 0x0c },
+  { start: 0x044aec, end: 0x0452bb, chunk: 'market-weapons', label: '流通中の刃', certainty: '🟢', recordSize: 0x14 },
+  { start: 0x0452bc, end: 0x0458fb, chunk: 'market-weapons', label: '流通中の鍔', certainty: '🟢', recordSize: 0x10 },
+  { start: 0x0458fc, end: 0x045f3b, chunk: 'market-weapons', label: '流通中の柄', certainty: '🟢', recordSize: 0x10 },
   { start: 0x045f40, end: 0x045f55, chunk: 'occupation', label: '受注中のなりわい', certainty: '🔶' },
 ]
 
