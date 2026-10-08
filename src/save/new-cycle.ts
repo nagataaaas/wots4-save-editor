@@ -32,6 +32,7 @@ import { findItem } from './master/item-names'
 import { DATE_OFFSETS } from './scenario-date'
 import { EVENT_STATE_OFFSET } from './scenario-events'
 import { WEAPON_RECORD_BYTES } from './weapon'
+import { WEAPON_BAG_COUNT, weaponBagOffset } from './weapon-bag'
 import { WEAPON_CHEST_CAPACITY, WEAPON_CHEST_COUNT, WEAPON_CHEST_OFFSET } from './weapon-chest'
 
 /** 物語の終わり方。clear＝結末を見た、gone＝町を立ち去った */
@@ -68,8 +69,6 @@ const MONEY = 0x0008
 const VAULT = 0x000c
 const VAULT_MAX = 999_999
 
-/** 🟢 武器袋（10件、0xA0 B） */
-const WEAPON_BAG = { offset: 0xa6b0, slots: 10 } as const
 /** 🟢 武器レコードの刃・X・鍔・柄（u16 × 4）。どれも負なら空き */
 const WEAPON_PARTS = 0x02
 
@@ -171,8 +170,8 @@ function weaponChestFreeSlot(bytes: Uint8Array): number {
 
 /** 🟢 武器袋 → 武器箪笥。空けた袋の枠は全部 0、刃・X・鍔・柄が FFFF */
 function moveBagWeapons(bytes: Uint8Array, report: NewCycleReport): void {
-  for (let i = WEAPON_BAG.slots - 1; i >= 0; i--) {
-    const at = WEAPON_BAG.offset + i * WEAPON_RECORD_BYTES
+  for (let i = WEAPON_BAG_COUNT - 1; i >= 0; i--) {
+    const at = weaponBagOffset(i)
     if (readI16(bytes, at + WEAPON_PARTS) < 0) continue
     const slot = weaponChestFreeSlot(bytes)
     if (slot < 0) {

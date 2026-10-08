@@ -9,6 +9,7 @@ import { ChestPage, ToolsPage } from '@/features/tools/tools-page'
 import { AccessoriesPage, AppearancePage, UnlocksPage } from '@/features/unlocks/unlocks-page'
 import { RawPage } from '@/features/raw/raw-page'
 import { ValuablesPage } from '@/features/valuables/valuables-page'
+import { WeaponBagPage } from '@/features/weapon-bag/weapon-bag-page'
 import { WeaponChestPage } from '@/features/weapon-chest/weapon-chest-page'
 import { YobaiPage } from '@/features/yobai/yobai-page'
 import type { SectionId } from '@/features/sections'
@@ -17,6 +18,7 @@ import type { SectionId } from '@/features/sections'
 export const pages: Partial<Record<SectionId, ComponentType>> = {
   hero: HeroPage,
   belt: BeltPage,
+  'weapon-bag': WeaponBagPage,
   'weapon-chest': WeaponChestPage,
   tools: ToolsPage,
   chest: ChestPage,

@@ -1,0 +1,193 @@
+import { createElement, type ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+import { InfoTip } from "@/components/info-tip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { formatOffset } from "@/lib/format";
+import { WEAPON_FIELDS, type WeaponView } from "@/save/weapon";
+import { charmEffects, titleEffect } from "@/save/weapon-effects";
+import { charmIcon, titleIcon } from "./effect-icons";
+import { useWeaponRows } from "./use-weapon-rows";
+import { Chevron } from "./weapon-rows";
+import { COLLAPSIBLE_ANIMATION, type WeaponUpdate } from "./weapon-ui";
+
+// 武器1件分の編集欄（帯刀・武器袋・刀箪笥で共通。開いたときの中身）。
+
+/** 効果の行の先頭に付けるアイコン */
+function EffectIcon({ icon }: { icon: LucideIcon | null }) {
+  return icon
+    ? createElement(icon, { className: "mt-0.5 size-4 shrink-0", "aria-hidden": true })
+    : null;
+}
+
+/** 銘・魅力の下に出す「今の効果」の枠。効果は [W] 鍛冶屋ページ（p20）の記載で、確定として扱う */
+function EffectBox({ children }: { children: ReactNode }) {
+  return (
+    <div className="bg-muted/40 flex flex-col gap-1 rounded-md border p-3 text-sm">
+      <span className="text-muted-foreground text-xs font-medium">今の効果</span>
+      {children}
+    </div>
+  );
+}
+
+/** 武器の編集欄の中の、開閉できるひとまとまり */
+function Section({
+  title,
+  defaultOpen,
+  children,
+}: {
+  title: string;
+  defaultOpen: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Collapsible defaultOpen={defaultOpen} className="flex flex-col">
+      <CollapsibleTrigger className="group hover:text-foreground text-muted-foreground flex items-center gap-1 border-b pb-1 text-left text-sm font-medium">
+        <Chevron />
+        {title}
+      </CollapsibleTrigger>
+      {/* overflow-hidden で入力欄のフォーカスリングが切れないよう、-mx-1 px-1 で少し広げる */}
+      <CollapsibleContent className={`${COLLAPSIBLE_ANIMATION} -mx-1 px-1`}>
+        <div className="flex flex-col gap-4 pt-4 pb-1">{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+/** 現在値と最大値のように、2つで1組の数値をまとめる枠 */
+function NumberPair({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-md border p-3">
+      <span className="text-sm font-medium">{title}</span>
+      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * 武器1件分の編集欄。weapon が null ならセーブ未読み込み。base はレコードの先頭。
+ * sectionsOpen は「攻撃力・耐久・質」などのまとまりを最初から開いておくか（武器袋・刀箪笥は閉じる。ユーザー判断 2026-10-09）
+ */
+export function WeaponEditor({
+  weapon,
+  base,
+  update,
+  sectionsOpen = true,
+}: {
+  weapon: WeaponView | null;
+  base: number;
+  update: WeaponUpdate;
+  sectionsOpen?: boolean;
+}) {
+  const rows = useWeaponRows({ weapon, base, update });
+  const charms = weapon?.charms ?? null;
+  const effects = charms ? charmEffects(charms.value) : [];
+  const title = titleEffect(weapon?.title.value ?? null);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {rows.name}
+        {rows.weaponId}
+        {rows.weaponType}
+        <div className="sm:col-span-3">{rows.nameHidden}</div>
+      </div>
+
+      {rows.complete}
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        {/* 鞘は刃に合わせて決まるので、刃のすぐ下に置く */}
+        <div className="flex flex-col gap-4">
+          {rows.part("blade")}
+          {rows.sheath}
+        </div>
+        {rows.part("guard")}
+        {rows.part("grip")}
+      </div>
+
+      <Section title="攻撃力・耐久・質" defaultOpen={sectionsOpen}>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{rows.number("attack")}</div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <NumberPair title="耐久">
+            {rows.number("durability", "現在")}
+            {rows.number("durabilityMax", "最大")}
+          </NumberPair>
+          <NumberPair title="質">
+            {rows.number("quality", "現在")}
+            {rows.number("qualityMax", "最大")}
+          </NumberPair>
+        </div>
+      </Section>
+
+      <Section title="銘・魅力" defaultOpen={sectionsOpen}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            {rows.title}
+            {weapon && !weapon.title.problem && (
+              <EffectBox>
+                {title ? (
+                  <>
+                    <p className="flex gap-2">
+                      <EffectIcon icon={titleIcon(weapon.title.value ?? -1)} />
+                      {title.effect}
+                    </p>
+                    {title.note && <p className="text-muted-foreground text-xs">{title.note}</p>}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {weapon.title.value === null ? "銘なし" : "効果は不明"}
+                  </p>
+                )}
+              </EffectBox>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium">魅力</span>
+            <InfoTip offset={`${formatOffset(base + WEAPON_FIELDS.charms)} から 4 B × 3組`}>
+              同じ魅力は1組にまとめて個数で書きます
+            </InfoTip>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">{[0, 1, 2].map(rows.charm)}</div>
+          {weapon && !charms?.problem && (
+            <EffectBox>
+              {effects.length === 0 ? (
+                <p className="text-muted-foreground">魅力なし</p>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {effects.map((e) => (
+                    <li key={e.id} className="flex gap-2">
+                      <EffectIcon icon={charmIcon(e.id)} />
+                      <span>
+                        <span className="font-medium">
+                          {e.label} ×{e.count}
+                        </span>
+                        ：{e.summary}
+                        {e.amount && <span className="font-medium">（{e.amount}）</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </EffectBox>
+          )}
+        </div>
+      </Section>
+
+      <Section title="斬殺数・つま斬り数" defaultOpen={sectionsOpen}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {rows.number("kills")}
+          {rows.number("tsumaKills")}
+        </div>
+      </Section>
+
+      <Section title="耐久回復の累積値・手に持っていた時間" defaultOpen={sectionsOpen}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {rows.number("durabilityRecovery")}
+          {rows.number("heldTime")}
+        </div>
+      </Section>
+    </div>
+  );
+}

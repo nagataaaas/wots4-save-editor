@@ -1,11 +1,16 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
+import type { WeaponView } from "@/save/weapon";
 import { formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
@@ -15,7 +20,10 @@ import {
   WEAPON_CHEST_CAPACITY,
   WEAPON_CHEST_COUNT,
   WEAPON_CHEST_OFFSET,
+  WEAPON_CHEST_SLOTS,
   readWeaponChest,
+  readWeaponChestWeapons,
+  weaponChestOffset,
   validateWeaponChestCapacity,
   writeWeaponChestCapacity,
   writeWeaponChestCountToFilled,
@@ -24,19 +32,24 @@ import {
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-/** 武器箪笥（刀箪笥）の本数と容量。個々の武器の編集はまだない */
+/** 武器箪笥（刀箪笥）の本数と容量、個々の武器（帯刀と同じ欄を細い一覧で） */
 export function WeaponChestPage() {
   const { save, update } = useSave();
   const [error, setError] = useState<string | null>(null);
+  const [showEmpty, setShowEmpty] = useState(false);
+  const showEmptyId = useId();
 
-  const result = useMemo((): { view: WeaponChestView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readWeaponChest(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
+  const result = useMemo(
+    (): { view: WeaponChestView; weapons: WeaponView[] } | { error: string } | null => {
+      if (!save) return null;
+      try {
+        return { view: readWeaponChest(save.working), weapons: readWeaponChestWeapons(save.working) };
+      } catch (e) {
+        return { error: errorMessage(e) };
+      }
+    },
+    [save],
+  );
 
   if (result && "error" in result) {
     return (
@@ -48,7 +61,11 @@ export function WeaponChestPage() {
   }
 
   const view = result?.view ?? null;
+  const weapons = result?.weapons ?? null;
   const problem = view?.problem ?? null;
+  // 容量の値が想定外なら、容量の枠は 0 として扱う（武器のある枠はすべて出す）
+  const slots = view && !problem ? view.capacity * CAPACITY_UNIT : 0;
+  const indices = weapons?.flatMap((w, i) => (!w.empty || (showEmpty && i < slots) ? [i] : []));
 
   // 容量は 10 本単位。今の武器が収まらない容量は選べない
   const capacityOptions: SelectOption[] = [];
@@ -134,8 +151,42 @@ export function WeaponChestPage() {
         </CardContent>
       </Card>
 
+      {view && weapons && (
+        <Card className="gap-2">
+          <CardHeader>
+            <CardTitle className="flex flex-wrap items-center gap-2">
+              刀箪笥の武器
+              <span className="text-muted-foreground text-sm font-normal">
+                {view.filled.length} 本
+              </span>
+              <InfoTip offset={`${formatOffset(WEAPON_CHEST_OFFSET)} から 0xA0 B × ${WEAPON_CHEST_SLOTS}`} />
+              <div className="ml-auto flex items-center gap-2 text-sm font-normal">
+                <Switch id={showEmptyId} checked={showEmpty} onCheckedChange={setShowEmpty} />
+                <Label htmlFor={showEmptyId}>空き枠も表示</Label>
+              </div>
+            </CardTitle>
+            <CardDescription>
+              行を押すと編集欄を開きます。{showEmpty ? `容量の枠（${slots} 枠）と、その外で武器が入っている枠を表示しています。` : "武器が入っている枠だけを表示しています。"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CompactWeaponList
+              key={save?.loadId ?? 0}
+              weapons={weapons}
+              indices={indices}
+              update={(i) => (mutate) => update((b) => mutate(b, weaponChestOffset(i)))}
+              badges={(i) =>
+                // 🟢 ゲームは先頭から容量の枠までだけを使う
+                i >= slots && !weapons[i].empty ? <Badge variant="outline">容量の外</Badge> : null
+              }
+            />
+          </CardContent>
+        </Card>
+      )}
+
       <p className="text-muted-foreground text-xs">
-        刀箪笥の個々の武器の編集はまだありません。武器を直接書き換えるときは、本数を武器が入っている枠の数に合わせてください。
+        各フィールドのバイトだけを書き換えます。空き枠は編集できず、武器を作る・消す機能はないので、武器の欄を書き換えても本数は変わりません。
+        武器を生データで直接増やす・減らすときは、本数を武器が入っている枠の数に合わせてください。
       </p>
     </div>
   );

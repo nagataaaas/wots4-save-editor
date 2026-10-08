@@ -10,7 +10,7 @@
 // 書き込みの反映は要ゲーム内確認。
 import { readI16, readU8, writeI16, writeU8 } from './binary'
 import { checkLayout } from './hero'
-import { WEAPON_RECORD_BYTES, isEmptyWeapon } from './weapon'
+import { WEAPON_RECORD_BYTES, isEmptyWeapon, readWeapon, type WeaponView } from './weapon'
 
 export const WEAPON_CHEST_OFFSET = 0xacf4
 export const WEAPON_CHEST_SLOTS = 200
@@ -56,6 +56,13 @@ export function readWeaponChest(bytes: Uint8Array): WeaponChestView {
   const countWarning =
     count === filled.length ? null : `本数（${count}）が、武器が入っている枠の数（${filled.length}）と合いません`
   return { layoutProblem, count, capacity, filled, problem: layoutProblem ?? problem, countWarning }
+}
+
+/** 200枠すべての武器（容量の外の枠も含む）。各武器の書き込みは weapon.ts の関数に weaponChestOffset(i) を渡す */
+export function readWeaponChestWeapons(bytes: Uint8Array): WeaponView[] {
+  if (bytes.byteLength < WEAPON_CHEST_COUNT) throw new RangeError('ファイルが小さすぎて武器箪笥を読めません')
+  const layoutProblem = checkLayout(bytes)
+  return Array.from({ length: WEAPON_CHEST_SLOTS }, (_, i) => readWeapon(bytes, weaponChestOffset(i), layoutProblem))
 }
 
 /** 容量の値（÷10）を検証する。武器が入っている枠と本数が、新しい容量に収まること */

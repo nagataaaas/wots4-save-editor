@@ -292,6 +292,19 @@
     box-shadow: 0 1px 5px #0002;
 }
 
+/* 武器袋・刀箪笥の細い一覧の行に置く小さい画像。部品が一致しないときは薄い枠だけ */
+.weapon-thumb {
+    aspect-ratio: 10 / 3;
+    width: 6.5rem;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.weapon-thumb-empty {
+    border: 1px dashed var(--border);
+    border-radius: 0.25rem;
+}
+
 @container (min-width: 25rem) {
     .weapon-preview-stats {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);

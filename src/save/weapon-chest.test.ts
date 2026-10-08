@@ -1,11 +1,13 @@
 // 武器箪笥の本数と容量（🟢）。合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
 import { TS_SAVE_SIZE } from './hero'
+import { writeWeaponNumber } from './weapon'
 import {
   WEAPON_CHEST_CAPACITY,
   WEAPON_CHEST_COUNT,
   WEAPON_CHEST_SLOTS,
   readWeaponChest,
+  readWeaponChestWeapons,
   weaponChestOffset,
   writeWeaponChestCapacity,
   writeWeaponChestCountToFilled,
@@ -64,6 +66,25 @@ describe('🟢 武器箪笥の本数と容量', () => {
     writeWeaponChestCountToFilled(b)
     expect(diff(before, b)).toEqual([WEAPON_CHEST_COUNT])
     expect(readWeaponChest(b)).toMatchObject({ count: 2, countWarning: null })
+  })
+
+  it('200枠すべての武器を読む（容量の外の枠も）。武器の欄を書くとそのレコードの中だけが変わり、本数・容量は変わらない', () => {
+    const before = makeSave([0, 150], 2, 2)
+    // 魅力なし（ID FFFF × 3 組）にして、編集できるレコードにする
+    for (const i of [0, 150]) before.set([0xff, 0xff, 0, 0, 0xff, 0xff, 0, 0, 0xff, 0xff, 0, 0], weaponChestOffset(i) + 0x1e)
+    const weapons = readWeaponChestWeapons(before)
+    expect(weapons).toHaveLength(WEAPON_CHEST_SLOTS)
+    expect(weapons.filter((w) => !w.empty).map((w) => w.offset)).toEqual([weaponChestOffset(0), weaponChestOffset(150)])
+    const b = before.slice()
+    const o = weaponChestOffset(150)
+    writeWeaponNumber(b, o, 'attack', 123)
+    const changed = diff(before, b)
+    expect(changed.length).toBeGreaterThan(0)
+    expect(changed.every((i) => i >= o && i < o + 0xa0)).toBe(true)
+    expect(readWeaponChestWeapons(b)[150].numbers.attack.value).toBe(123)
+    // 読み出し→書き戻しで元に戻る
+    writeWeaponNumber(b, o, 'attack', 0)
+    expect(diff(before, b)).toEqual([])
   })
 
   it('ファイルサイズが違えば読み取り専用（U-1）', () => {

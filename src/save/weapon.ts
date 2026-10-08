@@ -35,6 +35,7 @@ import {
   type WeaponIdOption,
 } from "./weapon-ids";
 import { formatHex4 } from "@/lib/format";
+import { checkLayout } from "./hero";
 
 export const WEAPON_RECORD_BYTES = 0xa0;
 
@@ -565,7 +566,8 @@ export function readWeapon(
 // 不正な値は例外にして、バイト列を変えない。
 
 function assertEditable(bytes: Uint8Array, offset: number): void {
-  const view = readWeapon(bytes, offset);
+  // ❓ U-1：ファイルサイズが想定と違えば位置がずれているおそれがあるので書かない
+  const view = readWeapon(bytes, offset, checkLayout(bytes));
   if (view.problem) throw new RangeError(view.problem);
 }
 
