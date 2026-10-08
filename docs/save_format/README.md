@@ -126,15 +126,18 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x003838`      | `0x0038FF`   | [event-chart](chunks/event-chart/README.md)       | イベントの記録 B（周回をまたぐ）               | ✅                            |
 | `0x003900`      | `0x003901`   | [hint](chunks/hint/README.md)                     | 次のイベントのヒント（最後に進めたイベントのノード番号） | ✅位置 ／ 🟢値 ／ ❓文との対応 |
 | `0x003902`      | `0x00399F`   | [accessories](chunks/accessories/README.md)       | 装飾品の所持フラグ（ID 0〜157 の順に 1 B ずつ） | ✅                            |
+| `0x0048CC`      | `0x0058BD`   | [sect-scrolls](chunks/sect-scrolls/README.md)     | 流派の書（持ち歩き 20 枠・道場の箪笥 150 枠・箪笥の件数） | 🟢                            |
 | `0x0058C0`      | `0x005BDF`   | [items](chunks/items/README.md)                   | 箪笥・手持ち・貴重品のアイテム                 | ✅                            |
 | `0x005C3C`      | `0x006197`   | [memory-garbage](chunks/memory-garbage/README.md) | アドレス風の値（0x7C 刻み12か所）              | 🔶                            |
 | `0x00A4C8`      | `0x0129F6`   | [weapon-record](chunks/weapon-record/README.md)   | 帯刀中・武器袋・武器箪笥の武器（0xA0 × 213件）と武器箪笥の本数・容量 | ✅ ／ 🟢境界・本数と容量 |
 | `0x00A6A8`      | `0x00A6AF`   | [belt-state](chunks/belt-state/README.md)         | 帯刀の状態（本数・選択中・二刀流・峰打）       | ✅読み ／ 🟢読み込み ／ ❓書き込み |
 | `0x0137EC`      | `0x014037`   | [night-visit](chunks/night-visit/README.md)       | 夜這いの回数・記録（100件）・段階・相手ごとの回数 | 一部 ✅ ／ 🟢                 |
 | `0x014038`      | `0x014063`   | [night-visit](chunks/night-visit/README.md)       | 夜の約束の枠                                   | 一部 ✅                       |
-| `0x018A0C`      | `0x0190ED`   | [styles](chunks/styles/README.md)                 | 流派ごとの修練度・段（16 B × 件数）            | 🟢 ／ 一部 ❓                 |
-| `0x019200` 付近 | ❓            | [custom-style](chunks/custom-style/README.md)     | 俺流                                           | ✅位置 ／ ❓構造（U-6）        |
-| `0x01A610`      | `0x01AD7B`   | [belt-copy](chunks/belt-copy/README.md)           | 0x408 B の記録の配列（帯刀と同じ並びを含む）   | 🟢件数・周期 ／ 🔶中身         |
+| `0x01417C`      | `0x0189FB`   | [skill-states](chunks/skill-states/README.md)     | 技の覚え状況（技の表ごと 128 枠・構えごと 13 × 128） | 🟢                            |
+| `0x0189FC`      | `0x01920D`   | [styles](chunks/styles/README.md)                 | 習得技数・腕前点・構えの組ごとの装備・流派ごとの修練度・段・倒した数（16 B × 128 枠） | 🟢                            |
+| `0x01920E`      | `0x01A60F`   | [custom-style](chunks/custom-style/README.md)     | 俺流（件数・80 B × 64 枠）                     | 🟢                            |
+| `0x01A610`      | `0x03AA11`   | [belt-copy](chunks/belt-copy/README.md)           | 俺流の技の表（件数・0x408 B × 128 枠。後半はゲームの状態ではない値） | 🟢                            |
+| `0x03AA12`      | `0x03AAD1`   | [skill-kills](chunks/skill-kills/README.md)       | 技ごとの斬殺数（6 B × 32 枠。俺流に組み込む条件）    | 🟢                            |
 | `0x03AAD4`      | `0x03AB5B`   | [appearance](chunks/appearance/README.md)         | 主人公の見た目（人物・肌色・性別・体型・身長・部品の番号） | ✅肌色・体型・身長 ／ 🟢部品 ／ 一部 ❓ |
 | `0x03AB5C`      | `0x03AB7A`   | [appearance](chunks/appearance/README.md)         | 容姿の解放ビット（服の番号 0〜241 ごとに1ビット） | ✅位置 ／ 🟢服の対応          |
 | `0x043318`      | `0x043381`   | [unlocks](chunks/unlocks/README.md)               | 特典解除の状態（確認したセーブ、1 B × 106）    | 先頭16件・101 ✅ [U]／ほか 🔶 U-17 |
@@ -161,7 +164,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | 項目                     | 仕様                                                                                                                                                                 |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 外見                     | 現在の体型 `0x3AADD`・身長 `0x3AAE0`（float32 LE）・肌色 `0x3AAD8` は ✅ [U]（U-18、[appearance](chunks/appearance/README.md)）。人物の番号 `0x3AAD4`、顔・髪型・服の部品の番号 `0x3AAE4`〜（12 B × 10）は 🟢（顔・髪型の書き込みは ✅ [U]）。髪の色 `0x3AADA` は位置 ✅ [U]・値 ❓（U-19） |
-| 斬殺数（全体）           | 流派ごとの斬殺数は存在する。[stats](chunks/stats/README.md) の 0x0BC8・0x0BCC が候補                                                                                 |
+| 斬殺数（全体）           | 流派ごとの斬殺数は [styles](chunks/styles/README.md) の +0x06 🟢。全体は [stats](chunks/stats/README.md) の 0x0BC8・0x0BCC が候補                                    |
 | エンディング記録・周回数 | 周回数は [stats](chunks/stats/README.md) の `0x0B8C` 🟢。難易度ごとのクリア回数・立ち去った回数は [date-location](chunks/date-location/README.md)。エンディングごとの記録は ❓ |
 | 特典（PC版）             | ❓（PS3版は §4）                                                                                                                                                      |
 | 座標                     | ロード時は決まった地点から始まるので、保存されていない可能性が高い 🔶                                                                                                 |
