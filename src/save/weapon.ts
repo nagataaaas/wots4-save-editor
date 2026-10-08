@@ -1,13 +1,13 @@
 // 武器レコード（0xA0 B 固定長）。帯刀・武器袋・武器箪笥で共通の構造。
-// 出典：docs/save_format/chunks/weapon-record（[TS][I-2][I-3]）の魅力・銘（[U][TS][I-3]）、パーツ（U-3：読みは [TS] の 3 B 値で照合、書きは 2 B×4。刃は ID と X、鍔・柄は ID だけ。ユーザー指摘 2026-10-05）、
-// docs/save_format/chunks/belt-state（[U] 2026-10-05 の差分）。
+// 出典：docs/save_format/chunks/weapon-record（[TS][I-2][I-3]）の魅力・銘（[U][TS][I-3]）、パーツ（U-3：読みは [TS] の 3 B 値で照合、書きは 2 B×4。刃は ID と X、鍔・柄は ID だけ。ユーザー指摘 2026-10-05）。
+//
+// 🟢 レコードの先頭は完成武器ID の位置（[TS] の配置の +0x06）。このファイルの位置はすべて本当の先頭からの位置で、
+// [TS] の配置での位置は +0x06 を足したもの（chunks/weapon-record の表の [TS] 列）。
 //
 // 書き込みは各フィールドのバイトだけを上書きする。次の領域は書き換えない：
-//   - +0x00〜+0x05：❓ 用途不明。武器袋[0] ではここが帯刀の状態（峰打など）と重なる（chunks/belt-state）
-//   - +0x1F、+0x70、+0x76〜+0x8D、+0x94、+0x99〜+0x9B：❓ 用途不明
-//   - +0x10〜+0x15（固有武器の6バイト）、+0x20、+0x22、+0x72、+0x74：完成武器ごとに決まる値。指定武器に変更する（writeCompleteWeapon）ときだけ書く
-//   - 耐久回復の累積（+0x8E ✅）：編集機能は持たない
-// 0x1A78C 付近などにある帯刀武器のコピー（🔶 chunks/belt-copy）は書き換えない（[TS] も 0xA4C2 側だけを書き換えて動く。I-3）。
+//   - +0x70〜+0x7F（🟢 半角 16 文字の文字列）、+0x8E、+0x94、+0x9A〜+0x9F：❓ 意味が分からない。編集機能は持たない
+//   - +0x0A〜+0x0F（固有武器の6バイト）、+0x1A、+0x1C、+0x6C〜+0x6F：完成武器ごとに決まる値。指定武器に変更する（writeCompleteWeapon）ときだけ書く
+// 0x1A6B2 付近の帯刀と同じ並び（chunks/belt-copy。🟢 帯刀のコピーではなく別の記録）は書き換えない。
 import {
   readI16,
   readU16,
@@ -16,6 +16,7 @@ import {
   readUtf16Fixed,
   writeI16,
   writeU16,
+  writeU32,
   writeU8,
   writeUtf16Fixed,
 } from "./binary";
@@ -39,29 +40,40 @@ export const WEAPON_RECORD_BYTES = 0xa0;
 
 /** レコード内の位置（chunks/weapon-record の構造） */
 export const WEAPON_FIELDS = {
-  weaponId: 0x06, // u16 ✅ 完成武器ID。0xFFFF は自作
-  blade: 0x08, // 3 B ✅（[TS] の値）で読む。書くのは ID（u16）と X（+0x0A の u16）
-  guard: 0x0b, // 3 B ✅（[TS] の値）で読む。書くのは ID（+0x0C の u16）だけ
+  weaponId: 0x00, // u16 ✅ 完成武器ID。0xFFFF は自作
+  blade: 0x02, // 3 B ✅（[TS] の値）で読む。書くのは ID（u16）と X（+0x04 の u16）
+  guard: 0x05, // 3 B ✅（[TS] の値）で読む。書くのは ID（+0x06 の u16）だけ
   /** u16 ✅ 鞘の ID（chunks/weapon-record のパーツの X。[U] 2026-10-05 鞘だけを書き換えてゲーム内で反映を確認）。下位バイトは刃の 3 B、上位バイトは鍔の 3 B にも含まれる */
-  sheath: 0x0a,
-  grip: 0x0e, // 2 B ✅
-  attack: 0x16, // i16 ✅（符号付き。ユーザー確認 2026-10-05）
-  durabilityMax: 0x18, // i16 ✅ 最大耐久（符号付き。ユーザー確認 2026-10-05）
-  quality: 0x1a, // i16 ✅（符号付き。ユーザー確認 2026-10-05）
+  sheath: 0x04,
+  grip: 0x08, // 2 B ✅
+  attack: 0x10, // i16 ✅（符号付き。ユーザー確認 2026-10-05）
+  durabilityMax: 0x12, // i16 ✅ 最大耐久（符号付き。ユーザー確認 2026-10-05）
+  quality: 0x14, // i16 ✅（符号付き。ユーザー確認 2026-10-05）
   /**
-   * u8 武器種（U-8 解決、[U] 2026-10-05）。sample/S4-DATA_02 copy 2 の帯刀に刀・槍・拳銃を置くと 0・1・3。
-   * 全サンプルの武器で、槍（藤奈美・立奈美）は 1、ほかの刀は 0。+0x1F は常に 0（書き換えない）
+   * 武器種（U-8 解決、[U] 2026-10-05）。帯刀に刀・槍・拳銃を置くと 0・1・3。
+   * 🟢 幅は u16（[TS] の配置で +0x1E〜+0x1F。上位バイトは常に 0）
    */
-  weaponType: 0x1e,
-  qualityMax: 0x1c, // i16 ✅（符号付き。ユーザー確認 2026-10-05）
-  charms: 0x24, // 4 B × 3組 ✅
-  name: 0x30, // UTF-16LE 64 B ✅位置 ／ ✅最大17文字（U-5）
-  /** u32 🔶 手に持っていた時間（秒。メニュー画面は数えない）。+0x8A と常に同じ値（chunks/weapon-record、[U] 2026-10-05）。表示だけ */
-  heldTime: 0x86,
-  durability: 0x92, // i16 ✅ 現在の耐久（符号付き。ユーザー確認 2026-10-05）
-  title: 0x96, // 3 B ✅
-  kills: 0x9c, // u16 ✅ 斬殺数（65535 から1人斬ると 0 に戻った。[U] 2026-10-05）
-  tsumaKills: 0x9e, // ✅位置 ／ 🔶 u16 つま斬り数（斬殺数と同じ型と推測）
+  weaponType: 0x18,
+  qualityMax: 0x16, // i16 ✅（符号付き。ユーザー確認 2026-10-05）
+  charms: 0x1e, // 4 B × 3組 ✅
+  name: 0x2a, // UTF-16LE ✅位置 ／ 🟢 66 B ／ ✅最大17文字（U-5）
+  /**
+   * 🟢 i32 完成武器の名前の番号（complete.csv の name_no。自作は −1）。[TS] の配置の +0x72〜+0x75 で、
+   * これまで「自作かどうか」としていた +0x74 はこの値の上位 16 bit。0 以上なら完成武器の名前が表示され、name は使われない
+   */
+  nameNo: 0x6c,
+  /** u32 🔶 手に持っていた時間（秒。メニュー画面は数えない）。+0x84 と常に同じ値（chunks/weapon-record、[U] 2026-10-05）。書くときは +0x84 にも同じ値を書く */
+  heldTime: 0x80,
+  /** u32 🔶 +0x80 と同じ値（heldTime の写し） */
+  heldTime2: 0x84,
+  /** u32 ✅ 耐久回復の累積値 */
+  durabilityRecovery: 0x88,
+  durability: 0x8c, // i16 ✅ 現在の耐久（符号付き。ユーザー確認 2026-10-05）。🟢 0 以下ならロード時に折れた武器になる
+  title: 0x90, // 3 B ✅
+  /** u8 🟢 1 以上なら武器名が「*****」と表示される（要ゲーム内確認） */
+  nameHidden: 0x93,
+  kills: 0x96, // u16 ✅ 斬殺数（65535 から1人斬ると 0 に戻った。[U] 2026-10-05）
+  tsumaKills: 0x98, // ✅位置 ／ 🟢 u16 つま斬り数
 } as const;
 
 export type PartKind = "blade" | "guard" | "grip";
@@ -73,7 +85,8 @@ const PART_LISTS: Record<PartKind, readonly PartOption[]> = {
 };
 const PART_NOUNS: Record<PartKind, string> = { blade: "刃", guard: "鍔", grip: "柄" };
 
-export const WEAPON_NAME_BYTES = 64;
+/** 🟢 武器名の欄は 66 B（ゲームは 18 文字まで保存し、残りを 0 で埋める） */
+export const WEAPON_NAME_BYTES = 66;
 /** ✅ 17文字まで（U-5 案A で確定、[U] 2026-10-05。[TS] 作者の注記「ゲーム内では17文字まで」） */
 export const WEAPON_NAME_MAX_CHARS = 17;
 
@@ -84,26 +97,35 @@ export type NumberKey =
   | "quality"
   | "qualityMax"
   | "kills"
-  | "tsumaKills";
+  | "tsumaKills"
+  | "durabilityRecovery"
+  | "heldTime";
 
 export type NumberRange = { min: number; max: number };
+
+/** u32 で読み書きする数値（ほかは 2 B） */
+const U32_NUMBERS: ReadonlySet<NumberKey> = new Set(["durabilityRecovery", "heldTime"]);
 
 /**
  * 数値の範囲。game はゲーム上の正規の範囲（chunks/weapon-record の値の範囲）、system はセーブの型で書ける範囲。
  * AGENTS.md：game を超える値は通常モードでは拒否し、上級者モードを明示したときだけ system まで許可する。
  * - 攻撃力・耐久（現在・最大）・質（現在・最大）は ✅ int16（ユーザー確認 2026-10-05）
  * - 斬殺数は ✅ uint16（65535 から1人斬ると 0 に戻った。ユーザー確認 2026-10-05）
- * - つま斬り数は 🔶 uint16（斬殺数と同じ型と推測。未確認）
+ * - つま斬り数は 🟢 uint16
  * - 斬殺数・つま斬り数は 4万を超えると表示が崩れるという報告がある（🔶 chunks/weapon-record の値の範囲）ので、ゲーム上の上限を 40,000 にする
  */
 export const WEAPON_NUMBER_RANGES: Record<NumberKey, { game: NumberRange; system: NumberRange }> = {
   attack: { game: { min: 0, max: 500 }, system: { min: -0x8000, max: 0x7fff } },
   durabilityMax: { game: { min: 0, max: 2000 }, system: { min: -0x8000, max: 0x7fff } },
   durability: { game: { min: 0, max: 2000 }, system: { min: -0x8000, max: 0x7fff } },
-  quality: { game: { min: 0, max: 21 }, system: { min: -0x8000, max: 0x7fff } },
+  // 現在の質には上限を設けない（ユーザー判断 2026-10-08）。質の最大値を超えてもよい
+  quality: { game: { min: 0, max: 0x7fff }, system: { min: -0x8000, max: 0x7fff } },
   qualityMax: { game: { min: 0, max: 21 }, system: { min: -0x8000, max: 0x7fff } },
   kills: { game: { min: 0, max: 40_000 }, system: { min: 0, max: 0xffff } },
   tsumaKills: { game: { min: 0, max: 40_000 }, system: { min: 0, max: 0xffff } },
+  // ✅ 耐久回復の累積値・🔶 手に持っていた時間は u32。ゲーム上の上限は分からないので、型で書ける範囲と同じにする
+  durabilityRecovery: { game: { min: 0, max: 0xffffffff }, system: { min: 0, max: 0xffffffff } },
+  heldTime: { game: { min: 0, max: 0xffffffff }, system: { min: 0, max: 0xffffffff } },
 };
 
 /** 符号付き（int16）で読み書きする数値 */
@@ -124,7 +146,15 @@ export const NUMBER_KEYS: readonly NumberKey[] = [
   "qualityMax",
   "kills",
   "tsumaKills",
+  "durabilityRecovery",
+  "heldTime",
 ];
+
+function readNumber(bytes: Uint8Array, offset: number, key: NumberKey): number {
+  const at = offset + WEAPON_FIELDS[key];
+  if (U32_NUMBERS.has(key)) return readU32(bytes, at);
+  return SIGNED_NUMBERS.has(key) ? readI16(bytes, at) : readU16(bytes, at);
+}
 
 // ---- 武器種（U-8） ----
 
@@ -210,11 +240,15 @@ export type PartView = {
 export type WeaponView = {
   /** レコードの先頭位置 */
   offset: number;
-  /** 空き枠（完成武器ID 0x0000、刃 0xFFFFFF）。編集しない */
+  /** 🟢 空き枠（刃・X・鍔・柄がすべて 0xFFFF）。編集しない */
   empty: boolean;
   /** レコード全体の妥当性検証に落ちた理由。null なら通過 */
   problem: string | null;
   name: Field<string>;
+  /** 🟢 完成武器の名前の番号（i32）。0 以上なら name は表示されない */
+  nameNo: number;
+  /** 🟢 1 以上なら武器名が「*****」と表示される（+0x93 の u8）。raw は読んだ値 */
+  nameHidden: Field<boolean> & { raw: number };
   weaponId: Field<number> & { label: string | null };
   /** 特殊武器（刃の3バイト目が 0xFF。D-15） */
   special: boolean;
@@ -226,7 +260,6 @@ export type WeaponView = {
   charms: Field<(number | null)[]>;
   /** 銘の番号。null は銘なし。label が null なら未知のバイト列 */
   title: Field<number | null> & { label: string | null; raw: number };
-  heldTime: number;
   /** 鞘（X）。label は同じ鞘を使う刃の名前。表にない X は null */
   sheath: Field<number> & { label: string | null };
   /** 武器種（U-8）。label は WEAPON_TYPES の名前、未知の値は null */
@@ -257,7 +290,7 @@ export function partId(kind: PartKind, raw: number, source: PartOption["source"]
 
 /**
  * 読んだ値に一致する選択肢を探す。[TS] の値と完全一致するものを優先し、なければ ID（u16）が一致するものを使う。
- * X（鞘）が標準と違うかは、刃の bladeX と +0x0A〜+0x0B の 2 B を比べて別に判定する
+ * X（鞘）が標準と違うかは、刃の bladeX と +0x04〜+0x05 の 2 B を比べて別に判定する
  */
 function findPart(
   kind: PartKind,
@@ -360,6 +393,12 @@ function readCharms(bytes: Uint8Array, base: number): Field<(number | null)[]> {
   return { value, problem };
 }
 
+/** 🟢 空き枠：刃・X・鍔・柄（+0x02〜+0x09 の u16 × 4）がすべて 0xFFFF。ゲームはこのレコードから武器を作らない */
+export function isEmptyWeapon(bytes: Uint8Array, offset: number): boolean {
+  for (let i = 0; i < 4; i++) if (readU16(bytes, offset + WEAPON_FIELDS.blade + i * 2) !== 0xffff) return false;
+  return true;
+}
+
 export function readWeapon(
   bytes: Uint8Array,
   offset: number,
@@ -371,7 +410,7 @@ export function readWeapon(
 
   const weaponId = readU16(bytes, at("weaponId"));
   const bladeValue = readU24(bytes, at("blade"));
-  const empty = weaponId === 0 && bladeValue === 0xffffff;
+  const empty = isEmptyWeapon(bytes, offset);
   const special = isSpecialBlade(bladeValue);
 
   const nameRaw = readUtf16Fixed(bytes, at("name"), WEAPON_NAME_BYTES);
@@ -399,7 +438,7 @@ export function readWeapon(
 
   const numbers = {} as Record<NumberKey, Field<number>>;
   for (const key of NUMBER_KEYS) {
-    const v = SIGNED_NUMBERS.has(key) ? readI16(bytes, at(key)) : readU16(bytes, at(key));
+    const v = readNumber(bytes, offset, key);
     const { game } = WEAPON_NUMBER_RANGES[key];
     numbers[key] = f(
       v,
@@ -412,8 +451,9 @@ export function readWeapon(
   if (!numbers.durability.warning && numbers.durability.value > numbers.durabilityMax.value) {
     numbers.durability.warning = "最大耐久より大きい値です";
   }
-  if (!numbers.quality.warning && numbers.quality.value > numbers.qualityMax.value) {
-    numbers.quality.warning = "質の最大値より大きい値です";
+  const heldTime2 = readU32(bytes, at("heldTime2"));
+  if (heldTime2 !== numbers.heldTime.value) {
+    numbers.heldTime.warning = `写し（+0x84）の値（${heldTime2.toLocaleString()}）と違います。書き込むと両方を同じ値にします`;
   }
 
   const titleRaw = readU24(bytes, at("title"));
@@ -428,9 +468,11 @@ export function readWeapon(
   const sheathValue = readU16(bytes, at("sheath"));
   const sheath = SHEATHS.find((x) => x.id === sheathValue);
   const sheathLabel = sheath ? sheathName(sheath) : null;
-  const typeValue = readU8(bytes, at("weaponType"));
+  const typeValue = readU16(bytes, at("weaponType"));
   const typeLabel = WEAPON_TYPES.find((t) => t.id === typeValue)?.label ?? null;
 
+  const nameNo = readU32(bytes, at("nameNo")) | 0;
+  const hiddenRaw = readU8(bytes, at("nameHidden"));
   const nameLength = nameRaw.text.length;
   const specialProblem = special ? "特殊武器の鍔・柄は変更できません" : null;
   const part = (kind: PartKind, raw: number): Field<PartView> => {
@@ -445,7 +487,7 @@ export function readWeapon(
       key: hit ? partKey(hit.option) : null,
     };
     const noun = PART_NOUNS[kind];
-    // 刃は、X（+0x0A〜+0x0B の 2 B）がその刃の標準の鞘（bladeX）と違えば警告する
+    // 刃は、X（+0x04〜+0x05 の 2 B）がその刃の標準の鞘（bladeX）と違えば警告する
     const standardX = hit && kind === "blade" ? bladeX(hit.option) : null;
     const xDiffers = standardX !== null && standardX !== sheathValue;
     const warning = !hit
@@ -457,7 +499,7 @@ export function readWeapon(
         : xDiffers
           ? `鞘（X ${formatHex4(sheathValue)}）がこの刃の標準の鞘（${formatHex4(standardX)}）と違います。刃を選び直すと標準の鞘に戻ります`
           : isXUnknown(kind, hit.option)
-            ? `この刃の X（鞘、+0x0A〜）は不明で、元の値のままです（U-3 案B）。ゲーム内で分解→組み立てると正しい X になります`
+            ? `この刃の X（鞘）は不明で、元の値のままです（U-3 案B）。ゲーム内で分解→組み立てると正しい X になります`
             : hit.option.xExtended
               ? `X は規則を確かめた範囲の外に延ばして計算した値です（U-3）。ゲーム内の名前・外観を確認してください`
               : null;
@@ -473,8 +515,12 @@ export function readWeapon(
       null,
       nameLength > WEAPON_NAME_MAX_CHARS
         ? `${WEAPON_NAME_MAX_CHARS}文字を超えています（${nameLength}文字）`
-        : null,
+        : nameNo >= 0
+          ? `完成武器の名前の番号（${nameNo}）が入っているので、ゲームでは完成武器の名前が表示され、この名前は使われません（🟢）`
+          : null,
     ),
+    nameNo,
+    nameHidden: { ...f(hiddenRaw !== 0), raw: hiddenRaw },
     weaponId: {
       ...f(
         weaponId,
@@ -500,19 +546,12 @@ export function readWeapon(
       label: titleLabel,
       raw: titleRaw,
     },
-    heldTime: readU32(bytes, at("heldTime")),
     sheath: {
       ...f(sheathValue, null, sheathLabel ? null : `表にない鞘です（${formatHex4(sheathValue)}）`),
       label: sheathLabel,
     },
     weaponType: {
-      ...f(
-        typeValue,
-        bytes[at("weaponType") + 1] !== 0
-          ? `武器種の次のバイト（+0x1F）が 0 ではありません（${bytes[at("weaponType") + 1]}）`
-          : null,
-        typeLabel ? null : `未知の武器種です（${typeValue}）`,
-      ),
+      ...f(typeValue, null, typeLabel ? null : `未知の武器種です（${typeValue}）`),
       label: typeLabel,
     },
     matchesComplete: matchesCompleteWeapon(bytes, offset, weaponId),
@@ -544,11 +583,15 @@ export function writeWeaponNumber(
   const problem = validateWeaponNumber(key, value, options);
   if (problem) throw new RangeError(problem);
   assertEditable(bytes, offset);
-  if (SIGNED_NUMBERS.has(key)) writeI16(bytes, offset + WEAPON_FIELDS[key], value);
+  if (U32_NUMBERS.has(key)) {
+    writeU32(bytes, offset + WEAPON_FIELDS[key], value);
+    // 🔶 手に持っていた時間は +0x84 にも同じ値がある。両方をそろえる
+    if (key === "heldTime") writeU32(bytes, offset + WEAPON_FIELDS.heldTime2, value);
+  } else if (SIGNED_NUMBERS.has(key)) writeI16(bytes, offset + WEAPON_FIELDS[key], value);
   else writeU16(bytes, offset + WEAPON_FIELDS[key], value);
 }
 
-/** 完成武器ID（+0x06 の 2 B）だけを書く。名前・パーツは変えない */
+/** 完成武器ID（+0x00 の 2 B）だけを書く。名前・パーツは変えない */
 export function writeWeaponId(bytes: Uint8Array, offset: number, id: number): void {
   if (!weaponIdLabel(id)) throw new RangeError(`未知の完成武器ID です（${formatHex4(id)}）`);
   assertEditable(bytes, offset);
@@ -561,31 +604,33 @@ export const COMPLETE_WEAPONS: readonly (WeaponIdOption & { build: WeaponBuild }
 
 /**
  * 完成武器のレコードで、その完成武器ごとに決まる値（✅ reserch/2026-10-07_special-weapons.md：サンプルの14種で全一致。値は 🟢 complete.csv）。
- * 位置 → u16。+0x1E（武器種）だけは u8 で、+0x1F は書かない
+ * 位置 → u16（位置は本当の先頭から。[TS] の配置では +0x06）
  */
 function completeWeaponWords(id: number, build: WeaponBuild): [number, number][] {
   const special = build.kind === "special";
   const unique = build.unique ?? [0xffff, 0xffff, 0xffff];
   return [
-    [0x06, id],
-    [0x08, build.blade],
-    [0x0a, special ? 0xffff : build.sheath],
-    [0x0c, special ? 0xffff : build.guard],
-    [0x0e, special ? 0xffff : build.grip],
-    [0x10, unique[0]],
-    [0x12, unique[1]],
-    [0x14, unique[2]],
-    [0x20, special ? build.nameNo : 0xffff],
-    [0x22, build.flag22],
-    [0x72, build.nameNo],
-    [0x74, 0x0000],
+    [0x00, id],
+    [0x02, build.blade],
+    [0x04, special ? 0xffff : build.sheath],
+    [0x06, special ? 0xffff : build.guard],
+    [0x08, special ? 0xffff : build.grip],
+    [0x0a, unique[0]],
+    [0x0c, unique[1]],
+    [0x0e, unique[2]],
+    [WEAPON_FIELDS.weaponType, build.type],
+    [0x1a, special ? build.nameNo : 0xffff],
+    [0x1c, build.flag22],
+    // 🟢 名前の番号は i32（上位 16 bit は 0）
+    [WEAPON_FIELDS.nameNo, build.nameNo],
+    [WEAPON_FIELDS.nameNo + 2, 0x0000],
   ];
 }
 
 /**
- * 指定武器に変更する：その完成武器のレコードに入る値（completeWeaponWords と +0x1E の武器種）をすべて書く。
- * - 書く位置：+0x06 完成武器ID、+0x08〜+0x0F 部品（特殊武器は刃のあと FFFF × 3）、+0x10〜+0x15 固有武器の6バイト（U-9）、
- *   +0x1E 武器種、+0x20（特殊武器は名前の番号、通常は FFFF）、+0x22、+0x72 名前の番号、+0x74（完成武器は 0）
+ * 指定武器に変更する：その完成武器のレコードに入る値（completeWeaponWords）をすべて書く。
+ * - 書く位置：+0x00 完成武器ID、+0x02〜+0x09 部品（特殊武器は刃のあと FFFF × 3）、+0x0A〜+0x0F 固有武器の6バイト（U-9）、
+ *   +0x18 武器種（u16）、+0x1A（特殊武器は名前の番号、通常は FFFF）、+0x1C、+0x6C 名前の番号（i32）
  * - 名前・攻撃力・耐久・質・魅力・銘・斬殺数などは変えない（ユーザー判断 2026-10-07）
  * - 通常の武器と特殊武器の間でも変更できる。書いた値はゲームが書く値と同じ（✅ 読み）だが、ゲーム内で読めるかは要ゲーム内確認
  */
@@ -594,16 +639,13 @@ export function writeCompleteWeapon(bytes: Uint8Array, offset: number, id: numbe
   if (!option) throw new RangeError(`構成が分からない完成武器です（${formatHex4(id)}）`);
   const view = readWeapon(bytes, offset);
   if (view.problem) throw new RangeError(view.problem);
-  if (view.weaponType.problem) throw new RangeError(view.weaponType.problem);
   for (const [at, value] of completeWeaponWords(option.id, option.build)) writeU16(bytes, offset + at, value);
-  writeU8(bytes, offset + WEAPON_FIELDS.weaponType, option.build.type);
 }
 
 /** レコードの値が、その完成武器のレコードに入る値（writeCompleteWeapon で書く値）とすべて一致するか */
 export function matchesCompleteWeapon(bytes: Uint8Array, offset: number, id: number): boolean {
   const option = COMPLETE_WEAPONS.find((w) => w.id === id);
   if (!option) return false;
-  if (readU8(bytes, offset + WEAPON_FIELDS.weaponType) !== option.build.type) return false;
   return completeWeaponWords(option.id, option.build).every(
     ([at, value]) => readU16(bytes, offset + at) === value,
   );
@@ -638,13 +680,13 @@ export function bladeX(option: PartOption): number | null {
 }
 
 /**
- * パーツを書く。key は partKey の値。+0x08〜+0x0F を 2 B×4（刃の ID、X、鍔の ID、柄の ID）として書く（U-3）。
+ * パーツを書く。key は partKey の値。+0x02〜+0x09 を 2 B×4（刃の ID、X、鍔の ID、柄の ID）として書く（U-3）。
  * ✅ X は鞘の ID で刃によって決まる（[U] 2026-10-05）ので、刃を選んだときだけ X を書き、鍔を選んだときは X を変えない。
- * [TS] の 3 B 値のまま書くと、X の上位バイト（+0x0B、鍔の 3 B の先頭）が前の武器のまま残り、表にない鞘になった（[U] 2026-10-05、
+ * [TS] の 3 B 値のまま書くと、X の上位バイト（+0x05、鍔の 3 B の先頭）が前の武器のまま残り、表にない鞘になった（[U] 2026-10-05、
  * 和泉守兼定 X 0x162 の上に柾重を書くと X 0x1CD）。
- * - 刃：ID（+0x08）と bladeX（+0x0A〜+0x0B）。[CT] の X は 🔶 規則で計算したものと ✅ 実測のものがある（U-3 案C）。
+ * - 刃：ID（+0x02）と bladeX（+0x04〜+0x05）。[CT] の X は 🔶 規則で計算したものと ✅ 実測のものがある（U-3 案C）。
  *   規則外の刃（isXUnknown）は ID だけを書き、X は元の値のまま残す（❓ U-3 案B、ユーザー判断 2026-10-05）
- * - 鍔：ID（+0x0C）だけ。柄：ID（+0x0E）
+ * - 鍔：ID（+0x06）だけ。柄：ID（+0x08）
  */
 export function writeWeaponPart(
   bytes: Uint8Array,
@@ -668,7 +710,7 @@ export function writeWeaponPart(
 
 /**
  * 魅力を書く（D-7）。同じ ID は1組にまとめて個数で表し、使う組を前に詰める。空いた組は `FF FF 00 00`。
- * 直前の +0x22（❓ 実例では常に `01 00`）は変えない。
+ * 直前の +0x1C（❓ 完成武器ごとに決まる値）は変えない。
  */
 export function writeWeaponCharms(
   bytes: Uint8Array,
@@ -693,7 +735,7 @@ export function writeWeaponCharms(
   }
 }
 
-/** 銘（+0x96 の 3 B）だけを書く。null は銘なし */
+/** 銘（+0x90 の 3 B）だけを書く。null は銘なし */
 export function writeWeaponTitle(bytes: Uint8Array, offset: number, no: number | null): void {
   const raw = encodeTitle(no);
   assertEditable(bytes, offset);
@@ -701,7 +743,7 @@ export function writeWeaponTitle(bytes: Uint8Array, offset: number, no: number |
 }
 
 /**
- * ✅ 鞘（X、+0x0A〜+0x0B の u16）を書く。上級者モード専用（AdvancedOptions）。
+ * ✅ 鞘（X、+0x04〜+0x05 の u16）を書く。上級者モード専用（AdvancedOptions）。
  * 表にある鞘だけを書ける（表にない X ではロード時にエラーが出て鞘が表示されなかった。[U] 2026-10-05）
  */
 export function writeWeaponSheath(
@@ -716,7 +758,7 @@ export function writeWeaponSheath(
   writeU16(bytes, offset + WEAPON_FIELDS.sheath, x);
 }
 
-/** 武器種（+0x1E の1バイト）を書く。上級者モード専用（AdvancedOptions）。パーツは変えない */
+/** 武器種（+0x18 の u16 🟢）を書く。上級者モード専用（AdvancedOptions）。パーツは変えない */
 export function writeWeaponType(
   bytes: Uint8Array,
   offset: number,
@@ -725,7 +767,12 @@ export function writeWeaponType(
 ): void {
   if (!options.advanced) throw new RangeError("武器種は上級者モードでだけ変更できます");
   if (!WEAPON_TYPES.some((t) => t.id === type)) throw new RangeError(`未知の武器種です（${type}）`);
-  const view = readWeapon(bytes, offset);
-  if (view.weaponType.problem) throw new RangeError(view.weaponType.problem);
-  writeU8(bytes, offset + WEAPON_FIELDS.weaponType, type);
+  assertEditable(bytes, offset);
+  writeU16(bytes, offset + WEAPON_FIELDS.weaponType, type);
+}
+
+/** 🟢 名前を隠す（+0x93 の u8）を書く。オンは 1、オフは 0。1 以上だと武器名が「*****」と表示される（要ゲーム内確認） */
+export function writeWeaponNameHidden(bytes: Uint8Array, offset: number, hidden: boolean): void {
+  assertEditable(bytes, offset);
+  writeU8(bytes, offset + WEAPON_FIELDS.nameHidden, hidden ? 1 : 0);
 }

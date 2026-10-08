@@ -30,7 +30,6 @@ import {
   beltOffset,
   readBelt,
   writeBeltDual,
-  writeBeltMineuchi,
   writeBeltRight,
   type BeltState,
   type BeltView,
@@ -54,6 +53,7 @@ import {
   writeWeaponCharms,
   writeWeaponId,
   writeWeaponName,
+  writeWeaponNameHidden,
   writeWeaponNumber,
   writeWeaponPart,
   writeWeaponSheath,
@@ -83,7 +83,7 @@ import {
 } from "@/save/weapon-ids";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
-/** 帯刀の状態：[U] の差分で読みは確認したが、書き込みはゲーム内で未確認 */
+/** 帯刀の状態：位置は [U] の差分、読み込みでの扱いは 🟢。書き込みの反映はゲーム内で未確認 */
 const stateBadge = <CertaintyBadge mark="🔶" text="差分で確認・書き込み未検証" />;
 
 /** 効果の行の先頭に付けるアイコン */
@@ -159,14 +159,18 @@ const NUMBER_LABELS: Record<NumberKey, string> = {
   qualityMax: "質の最大値",
   kills: "斬殺数",
   tsumaKills: "つま斬り数",
+  durabilityRecovery: "耐久回復の累積値",
+  heldTime: "手に持っていた時間（秒）",
 };
 
 const NUMBER_NOTES: Partial<Record<NumberKey, string>> = {
   attack: "銘を付けても500を超えない",
-  quality: "上限は武器ごとに異なる",
+  quality: "上限なし（質の最大値を超えてもよい）",
   qualityMax: "上限は武器ごとに異なる",
   kills: "🔶 4万を超えると表示が崩れる報告あり",
   tsumaKills: "🔶 斬殺数と同じ上限にしている",
+  durabilityRecovery: "✅ 位置。ゲーム上の上限は分からない。書き換えの効果は要ゲーム内確認",
+  heldTime: "🔶 メニュー画面は数えない。同じ値の写し（+0x84）も一緒に書く。書き換えの効果は要ゲーム内確認",
 };
 
 const PART_LABELS: Record<PartKind, string> = { blade: "刃", guard: "鍔", grip: "柄" };
@@ -271,7 +275,6 @@ export function BeltPage() {
         view={view}
         onRight={(i) => update((b) => writeBeltRight(b, i))}
         onDual={(left) => update((b) => writeBeltDual(b, left))}
-        onMineuchi={(on) => update((b) => writeBeltMineuchi(b, on))}
       />
 
       {Array.from({ length: BELT_COUNT }, (_, i) => (
@@ -285,36 +288,35 @@ export function BeltPage() {
       ))}
 
       <p className="text-muted-foreground text-xs">
-        各フィールドのバイトだけを書き換えます。レコードの +0x00〜+0x05
-        など用途不明（❓）の領域は変えません（武器袋の1本目の先頭は帯刀の状態と重なるため。chunks/belt-state）。
-        0x1A78C
-        付近にある帯刀武器のコピー（🔶）は書き換えません。ゲームが本体（0xA4C2〜）のほうを読むことは、既存エディタ（[TS]）の実績から推測しています。
+        各フィールドのバイトだけを書き換えます。用途不明（❓）の領域は変えません。レコードの位置は、完成武器ID
+        の位置を先頭として表示します（🟢。既存エディタ [TS] の位置より 6 B 後ろ）。0x1A6B2
+        付近にある帯刀と同じ並び（🟢 帯刀のコピーではない別の記録）は書き換えません。ゲームは帯刀を
+        0xA4C8〜 と帯刀の状態から読みます（🟢）。
       </p>
     </div>
   );
 }
 
-/** 帯刀の状態（右手・二刀流の左手・峰打）。view が null ならセーブ未読み込み */
+/** 帯刀の状態（右手・二刀流の左手）。view が null ならセーブ未読み込み */
 function StateCard({
   view,
   onRight,
   onDual,
-  onMineuchi,
 }: {
   view: BeltView | null;
   onRight: (index: number | null) => void;
   onDual: (left: number | null) => void;
-  onMineuchi: (on: boolean) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const state = view?.state ?? null;
   const problem = state?.problem ?? null;
   const disabled = state === null || problem !== null;
 
+  // 🟢 手に持てるのは、帯刀の本数の内側にある空きでない武器
   const usable = (exclude: number | null): SelectOption[] =>
     (view?.weapons ?? [])
       .map((w, i) => ({ w, i }))
-      .filter(({ w, i }) => !w.empty && i !== exclude)
+      .filter(({ w, i }) => !w.empty && i !== exclude && i < (state?.count ?? 0))
       .map(({ w, i }) => ({ value: String(i), label: weaponTitle(w, i) }));
 
   function run(action: () => void) {
@@ -340,15 +342,11 @@ function StateCard({
         <CardTitle className="flex flex-wrap items-center gap-2">
           帯刀の状態
           <InfoTip offset={`${formatOffset(BELT_STATE.count)}〜0xA6AF`}>
-            差分で位置を確かめた値で、書き換えたときのゲーム内の反映は未確認です（要ゲーム内確認）。帯刀の本数は
-            🔶 {formatOffset(BELT_STATE.count)}
+            位置は差分で確かめた値、ロード時の扱いは 🟢 です。書き換えたときのゲーム内の反映は未確認です（要ゲーム内確認）。
           </InfoTip>
           {stateBadge}
         </CardTitle>
-        <CardDescription>
-          どの武器を手に持つか、二刀流、峰打。
-          {state && <> 帯刀の本数：{state.count}</>}
-        </CardDescription>
+        <CardDescription>どの武器を手に持つか、二刀流。</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-wrap items-center gap-6 sm:col-span-2">
@@ -358,13 +356,6 @@ function StateCard({
             checked={state?.left != null}
             disabled={disabled}
             onChange={toggleDual}
-          />
-          <SwitchRow
-            label="峰打"
-            offset={BELT_STATE.mineuchi}
-            checked={state?.mineuchi ?? false}
-            disabled={disabled}
-            onChange={(on) => run(() => onMineuchi(on))}
           />
         </div>
         <SelectRow
@@ -386,10 +377,16 @@ function StateCard({
             value={String(state.left)}
             options={usable(state.right)}
             problem={problem}
-            note="🔶 二刀流にできる武器の組み合わせ（種類の制限）は未確認です"
+            note="🟢 左手に持てない武器ならロード時に二刀流が解除されます。🔶 どの組み合わせで持てるか（種類の制限）は未確認です"
             onChange={(v) => onDual(Number(v))}
           />
         )}
+        {!problem &&
+          state?.warnings.map((w) => (
+            <p key={w} className="text-xs text-amber-600 sm:col-span-2 dark:text-amber-400">
+              {w}
+            </p>
+          ))}
         {problem ? (
           <p className="text-muted-foreground text-xs sm:col-span-2">読み取り専用：{problem}</p>
         ) : (
@@ -659,7 +656,10 @@ function WeaponCard({
             {roles.map((r) => (
               <Badge key={r}>{r}</Badge>
             ))}
-            {state?.mineuchi && state.right === index && <Badge variant="outline">峰打</Badge>}
+            {weapon && state && index >= state.count && (
+              <Badge variant="outline">帯刀の本数より後ろ（読まれない 🟢）</Badge>
+            )}
+            {weapon?.nameHidden.value && <Badge variant="outline">名前を隠す</Badge>}
           </CardTitle>
           {weapon && (
             <CardDescription>
@@ -686,6 +686,7 @@ function WeaponCard({
                 parse={parseName}
                 apply={(v) => update((b, o) => writeWeaponName(b, o, v))}
                 hint={`最大${WEAPON_NAME_MAX_CHARS}文字`}
+                note={`🟢 完成武器の名前の番号（${formatOffset(base + WEAPON_FIELDS.nameNo)}）が −1 のときだけ、この名前が表示されます（自作の武器）`}
               />
               <SelectRow
                 label="完成武器"
@@ -713,6 +714,18 @@ function WeaponCard({
                   update((b, o) => writeWeaponType(b, o, Number(v), { advanced: true }))
                 }
               />
+              <div className="flex flex-col gap-1 sm:col-span-3">
+                <SwitchRow
+                  label="名前を隠す（「*****」と表示）"
+                  offset={base + WEAPON_FIELDS.nameHidden}
+                  checked={weapon?.nameHidden.value ?? false}
+                  disabled={!weapon || weapon.nameHidden.problem !== null}
+                  onChange={(on) => update((b, o) => writeWeaponNameHidden(b, o, on))}
+                />
+                <p className="text-muted-foreground text-xs">
+                  🟢 オンにすると武器名の代わりに「*****」が表示されます（要ゲーム内確認）
+                </p>
+              </div>
             </div>
 
             <SearchSelectRow
@@ -724,7 +737,7 @@ function WeaponCard({
               options={completeOptions}
               problem={weapon?.problem ?? weapon?.weaponType.problem ?? null}
               hint="完成武器・武器種・刃・鞘・鍔・柄（固有武器の秘伝を含む）をその武器のものに置き換えます。名前・攻撃力・耐久・質・魅力・銘は変わりません"
-              note="ゲームがその完成武器のレコードに書く値（+0x06〜+0x15、+0x1E、+0x20〜+0x23、+0x72〜+0x75）をそのまま書きます。特殊武器との間でも変更できます（ゲーム内での読み込みは要確認）"
+              note="ゲームがその完成武器のレコードに書く値（+0x00〜+0x0F、+0x18〜+0x1D、+0x6C〜+0x6F）をそのまま書きます。特殊武器との間でも変更できます（ゲーム内での読み込みは要確認）"
               onChange={(v) => update((b, o) => writeCompleteWeapon(b, o, Number(v)))}
             />
 
@@ -852,6 +865,13 @@ function WeaponCard({
               <div className="grid gap-4 sm:grid-cols-2">
                 {numberRow("kills")}
                 {numberRow("tsumaKills")}
+              </div>
+            </Section>
+
+            <Section title="耐久回復の累積値・手に持っていた時間">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {numberRow("durabilityRecovery")}
+                {numberRow("heldTime")}
               </div>
             </Section>
           </CardContent>

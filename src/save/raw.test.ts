@@ -53,9 +53,10 @@ describe('領域の一覧（docs/save_format/README.md §3）', () => {
   })
 
   it('武器レコード（0xA0）とアイテム（8 B）は「#n +0xNN」で位置を表す', () => {
-    const chest = innermostRegion(0xacee + 0xa0 * 12 + 0x22)
+    // 🟢 武器箪笥の本当の先頭は 0xACF4
+    const chest = innermostRegion(0xacf4 + 0xa0 * 12 + 0x1c)
     expect(chest?.label).toBe('武器箪笥')
-    expect(positionInRegion(chest!, 0xacee + 0xa0 * 12 + 0x22)).toBe('#12 +0x22')
+    expect(positionInRegion(chest!, 0xacf4 + 0xa0 * 12 + 0x1c)).toBe('#12 +0x1C')
     const carried = innermostRegion(0x5b40 + 8 * 3 + 2)
     expect(positionInRegion(carried!, 0x5b40 + 8 * 3 + 2)).toBe('#3 +0x02')
     const name = innermostRegion(0xdc + 0x10)

@@ -138,7 +138,7 @@ export function sheathName(sheath: SheathOption, lang: Lang = "ja"): string {
 }
 
 /**
- * 完成武器ID（+0x06 の u16。datatable/weapon/complete.csv）。name が null は自作武器（0xFFFF）。
+ * 完成武器ID（レコードの先頭 +0x00 の u16。datatable/weapon/complete.csv）。name が null は自作武器（0xFFFF）。
  * 2〜116 の全件 🟢（2026-10-07）。[TS] の表は 31 と 94 以降がずれていたので使わない（check-diff §0.2）。鬼ヶ島 106 は [U]、陸奥守吉行 110 はサンプルのセーブとも一致。
  * 0・1 は部品が中道刀と同じ試作用らしい行なので載せない（ユーザー判断 2026-10-07）
  * build はその完成武器のレコードに入る値（complete.csv の weapon_type・blade・sheath_x・guard・grip・unique_bytes・name_no・flag_22）。🟢。

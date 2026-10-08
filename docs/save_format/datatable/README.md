@@ -18,13 +18,13 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 
 | ファイル                      | 内容               | ID空間                   | 保存形式                     | 空き・なし   | 参照元                                                    |
 | ----------------------------- | ------------------ | ------------------------ | ---------------------------- | ------------ | --------------------------------------------------------- |
-| `weapon/blade.csv`            | 刃（刀・槍）       | 通常パーツ               | u16 LE。直後に鞘 X（u16 LE） | `FFFF`       | [weapon-record](../chunks/weapon-record/README.md) +0x08  |
-| `weapon/blade-special.csv`    | 刃（特殊武器）     | 特殊武器の刃             | ID u16 LE＋X `FF FF`         |              | [weapon-record](../chunks/weapon-record/README.md) +0x08  |
-| `weapon/guard.csv`            | 鍔                 | 通常パーツ               | u16 LE                       | `FFFF`       | [weapon-record](../chunks/weapon-record/README.md) +0x0C  |
-| `weapon/grip.csv`             | 柄                 | 通常パーツ               | u16 LE                       |              | [weapon-record](../chunks/weapon-record/README.md) +0x0E  |
-| `weapon/title.csv`            | 銘                 | このリストのみ（362〜381）| 3 B。`<銘ID下位> 01 <番号>`  | `FF FF FF`   | [weapon-record](../chunks/weapon-record/README.md) +0x96  |
-| `weapon/charm.csv`            | 魅力               | このリストのみ（0〜9）   | u16 LE。個数 u16 と組で 4 B  | `FFFF`       | [weapon-record](../chunks/weapon-record/README.md) +0x24  |
-| `weapon/complete.csv`         | 完成武器（2〜116） | このリストのみ           | u16 LE                       | `FFFF`＝自作 | [weapon-record](../chunks/weapon-record/README.md) +0x06  |
+| `weapon/blade.csv`            | 刃（刀・槍）       | 通常パーツ               | u16 LE。直後に鞘 X（u16 LE） | `FFFF`       | [weapon-record](../chunks/weapon-record/README.md) +0x02  |
+| `weapon/blade-special.csv`    | 刃（特殊武器）     | 特殊武器の刃             | ID u16 LE＋X `FF FF`         |              | [weapon-record](../chunks/weapon-record/README.md) +0x02  |
+| `weapon/guard.csv`            | 鍔                 | 通常パーツ               | u16 LE                       | `FFFF`       | [weapon-record](../chunks/weapon-record/README.md) +0x06  |
+| `weapon/grip.csv`             | 柄                 | 通常パーツ               | u16 LE                       |              | [weapon-record](../chunks/weapon-record/README.md) +0x08  |
+| `weapon/title.csv`            | 銘                 | このリストのみ（362〜381）| 3 B。`<銘ID下位> 01 <番号>`  | `FF FF FF`   | [weapon-record](../chunks/weapon-record/README.md) +0x90  |
+| `weapon/charm.csv`            | 魅力               | このリストのみ（0〜9）   | u16 LE。個数 u16 と組で 4 B  | `FFFF`       | [weapon-record](../chunks/weapon-record/README.md) +0x1E  |
+| `weapon/complete.csv`         | 完成武器（2〜116） | このリストのみ           | u16 LE                       | `FFFF`＝自作 | [weapon-record](../chunks/weapon-record/README.md) +0x00  |
 | `item/item.csv`               | 通常アイテム       | アイテム                 | u16 LE                       | `FFFF`       | [items](../chunks/items/README.md)                        |
 | `item/valuable.csv`           | 貴重品             | アイテム                 | u16 LE                       | `FFFF`       | [items](../chunks/items/README.md)                        |
 | `accessory/accessory.csv`     | 装飾品（0〜157）   | このリストのみ           | 所持フラグの添字（u8 × 158） |              | [accessories](../chunks/accessories/README.md)            |
@@ -52,9 +52,9 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
   エディタはこの値をそのまま書く。空欄の行は ID だけが分かっている行で、ID（と刃は `sheath_x`）から書く値を組み立てる（[weapon-record](../chunks/weapon-record/README.md) のパーツ、U-3）
 - `weapon/complete.csv` の `reading`：名前の読み（ひらがな）。武器の名前を五十音順に並べるのに使う（刃の読みは 🟢 に合わせた。ユーザー判断 2026-10-07）。特殊武器は ID 順に並べるので空欄
 - `weapon/complete.csv` の `blade`・`sheath_x`・`guard`・`grip`：その完成武器の部品の ID 🟢。特殊武器は `blade` が特殊武器の刃の ID（`weapon/blade-special.csv`）で、ほかは空欄。
-  `weapon_type` はその完成武器の武器種（[weapon-record](../chunks/weapon-record/README.md) +0x1E。0＝刀 1＝槍 2＝爪 3＝拳銃 4＝ライフル）🟢
+  `weapon_type` はその完成武器の武器種（[weapon-record](../chunks/weapon-record/README.md) +0x18。0＝刀 1＝槍 2＝爪 3＝拳銃 4＝ライフル）🟢
 - `weapon/complete.csv` の `unique_bytes`・`name_no`・`flag_22`：その完成武器のレコードに入る値 🟢。[weapon-record](../chunks/weapon-record/README.md) の
-  +0x10〜+0x15（固有武器の6バイト。空欄は `FF` × 6）、+0x72（名前の番号。特殊武器は +0x20 にも入る）、+0x22
+  +0x0A〜+0x0F（固有武器の6バイト。空欄は `FF` × 6）、+0x6C（名前の番号。特殊武器は +0x1A にも入る）、+0x1C（列の名前の 22 は [TS] の配置での位置）
 - `weapon/blade-special.csv`・`weapon/complete.csv` の `name_en`：英語版のゲーム内の表記 🟢
 - `place/night-visit-place.csv` の `name_ja`：約束の画面に出る場所の名前（✅ [U]）。
   `layout`：その場所で正しく表示される「人と布団の配置」（約束の枠 +0x0A）。実データで見た組と 🟢 の組を書く。複数あるときは `;` で区切る。どれが実データで見た組かは `備考` に書く。

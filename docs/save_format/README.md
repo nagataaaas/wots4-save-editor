@@ -128,13 +128,13 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x003902`      | `0x00399F`   | [accessories](chunks/accessories/README.md)       | 装飾品の所持フラグ（ID 0〜157 の順に 1 B ずつ） | ✅                            |
 | `0x0058C0`      | `0x005BDF`   | [items](chunks/items/README.md)                   | 箪笥・手持ち・貴重品のアイテム                 | ✅                            |
 | `0x005C3C`      | `0x006197`   | [memory-garbage](chunks/memory-garbage/README.md) | アドレス風の値（0x7C 刻み12か所）              | 🔶                            |
-| `0x00A4C2`      | `0x0129ED`   | [weapon-record](chunks/weapon-record/README.md)   | 帯刀中・武器袋・武器箪笥の武器（0xA0 × 213件） | ✅                            |
-| `0x00A6A8`      | `0x00A6AF`   | [belt-state](chunks/belt-state/README.md)         | 帯刀の状態（選択中・二刀流・峰打）             | ✅読み ／ ❓書き込み           |
+| `0x00A4C8`      | `0x0129F6`   | [weapon-record](chunks/weapon-record/README.md)   | 帯刀中・武器袋・武器箪笥の武器（0xA0 × 213件）と武器箪笥の本数・容量 | ✅ ／ 🟢境界・本数と容量 |
+| `0x00A6A8`      | `0x00A6AF`   | [belt-state](chunks/belt-state/README.md)         | 帯刀の状態（本数・選択中・二刀流・峰打）       | ✅読み ／ 🟢読み込み ／ ❓書き込み |
 | `0x0137EC`      | `0x013C2F`   | [night-visit](chunks/night-visit/README.md)       | 夜這いの記録                                   | 一部 ✅                       |
 | `0x014038`      | `0x014063`   | [night-visit](chunks/night-visit/README.md)       | 夜の約束の枠                                   | 一部 ✅                       |
 | `0x018BC0` 付近 | ❓            | [styles](chunks/styles/README.md)                 | 通常流派                                       | 🔶                            |
 | `0x019200` 付近 | ❓            | [custom-style](chunks/custom-style/README.md)     | 俺流                                           | ✅位置 ／ ❓構造（U-6）        |
-| `0x01A6B2`      | `0x01AD7B`   | [belt-copy](chunks/belt-copy/README.md)           | 帯刀武器のコピー                               | 🔶                            |
+| `0x01A610`      | `0x01AD7B`   | [belt-copy](chunks/belt-copy/README.md)           | 0x408 B の記録の配列（帯刀と同じ並びを含む）   | 🟢件数・周期 ／ 🔶中身         |
 | `0x03AAD4`      | `0x03AB5B`   | [appearance](chunks/appearance/README.md)         | 主人公の見た目（人物・肌色・性別・体型・身長・部品の番号） | ✅肌色・体型・身長 ／ 🟢部品 ／ 一部 ❓ |
 | `0x03AB5C`      | `0x03AB7A`   | [appearance](chunks/appearance/README.md)         | 容姿の解放ビット（服の番号 0〜241 ごとに1ビット） | ✅位置 ／ 🟢服の対応          |
 | `0x043318`      | `0x043381`   | [unlocks](chunks/unlocks/README.md)               | 特典解除の状態（確認したセーブ、1 B × 106）    | 先頭16件・101 ✅ [U]／ほか 🔶 U-17 |
@@ -223,7 +223,7 @@ DLC の影響を調べるときは、DLC を無効化するより「DLC アイ�
 - 同じスロットで、操作の直前と直後にセーブする
 - テストのたびにゲームを完全に終了する
 - 同じ操作を2回行い、両方で再現した差分だけを採用する
-- 時間で進む値（[stats](chunks/stats/README.md) のプレイ時間・0x0BC0、[vitals](chunks/vitals/README.md) の活力、武器レコードの +0x86/+0x8A）、[memory-garbage](chunks/memory-garbage/README.md)、[belt-copy](chunks/belt-copy/README.md) は差分から除いて読む
+- 時間で進む値（[stats](chunks/stats/README.md) のプレイ時間・0x0BC0、[vitals](chunks/vitals/README.md) の活力、武器レコードの +0x80/+0x84）、[memory-garbage](chunks/memory-garbage/README.md)、[belt-copy](chunks/belt-copy/README.md) は差分から除いて読む
 
 2案以上ある項目で「正しく編集できた」と判定する基準は `../check-diff.md` §0.3。
 
@@ -231,7 +231,7 @@ DLC の影響を調べるときは、DLC を無効化するより「DLC アイ�
 
 | タスク                                              | 差分を取るゲーム内操作                           | 関連 |
 | --------------------------------------------------- | ------------------------------------------------ | ---- |
-| 武器レコード内の未解析領域（+0x22・+0x94 の意味など） | 帯刀中の武器のダンプとゲーム内の表示値を照合する |      |
+| 武器レコード内の未解析領域（+0x1C・+0x8E の意味など） | 帯刀中の武器のダンプとゲーム内の表示値を照合する |      |
 | 流通中の刀の1件あたりのバイト数と件数               | 0x440D0 以降で繰り返しの周期を探す               | U-11 |
 | 治安 `0x0015` の初期値（1日目のセーブで 0 の例がある）（[date-location](chunks/date-location/README.md)） | 新しい周回を始めて1日目にセーブし、ゲーム内の治安と照合する |      |
 | エンディング記録と周回数、エンディングで初期化される範囲（[date-location](chunks/date-location/README.md)） | 同じ周回のエンディングの直前と直後のセーブを比べる |      |
@@ -240,7 +240,7 @@ DLC の影響を調べるときは、DLC を無効化するより「DLC アイ�
 | 特典解除（PC版）                                    | 特典を1つ解除する前後                            |      |
 | 外見                                                | 理髪屋で髪型だけ変える前後                       |      |
 | DLC によるずれ                                      | DLC アイテムを受け取る前後                       | U-1  |
-| 爪・拳銃・ライフルのパーツID                        | 該当武器を帯刀したセーブの +0x08〜+0x0F を読む   |      |
+| 爪・拳銃・ライフルのパーツID                        | 該当武器を帯刀したセーブの +0x02〜+0x09 を読む   |      |
 
 ## 8. 参考資料
 
