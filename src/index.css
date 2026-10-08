@@ -43,6 +43,12 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    --color-wots-frame: var(--wots-frame);
+    --color-wots-panel: var(--wots-panel);
+    --color-wots-panel-to: var(--wots-panel-to);
+    --color-wots-ink: var(--wots-ink);
+    --color-wots-label: var(--wots-label);
+    --color-wots-slot: var(--wots-slot);
 }
 
 :root {
@@ -78,6 +84,13 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+    --wots-frame: oklch(0.79 0.025 105);
+    --wots-stat: oklch(0.3 0.09 285);
+    --wots-panel: oklch(0.985 0.02 110);
+    --wots-panel-to: oklch(0.94 0.05 115);
+    --wots-ink: oklch(0.32 0.05 190);
+    --wots-label: oklch(0.46 0.035 105);
+    --wots-slot: oklch(1 0 0 / 85%);
 }
 
 .dark {
@@ -112,6 +125,183 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+    --wots-frame: oklch(0.48 0.025 105);
+    --wots-stat: oklch(0.85 0.07 285);
+    --wots-panel: oklch(0.26 0.03 115);
+    --wots-panel-to: oklch(0.22 0.04 120);
+    --wots-ink: oklch(0.92 0.04 100);
+    --wots-label: oklch(0.72 0.03 80);
+    --wots-slot: oklch(1 0 0 / 8%);
+}
+
+/* 武器の概要だけを和紙風にし、編集欄は通常の UI のまま保つ。 */
+.weapon-preview {
+    container-type: inline-size;
+    position: relative;
+    max-width: 54rem;
+    margin-top: 0.5rem;
+    padding: 0.65rem 0.85rem 0.65rem 2rem;
+    isolation: isolate;
+}
+
+/* 背景だけを切り欠く。L 字の線幅と本体との隙間はともに 2px。 */
+.weapon-preview::before,
+.weapon-preview::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.weapon-preview::before {
+    z-index: -1;
+    background: linear-gradient(115deg, var(--wots-panel-to), var(--wots-panel));
+    clip-path: polygon(25px 0, 100% 0, 100% 100%, 25px 100%, 25px calc(100% - 20px), 0 calc(100% - 20px), 0 20px, 25px 20px);
+}
+
+.weapon-preview::after {
+    background:
+        linear-gradient(var(--wots-panel-to) 0 0) left 21px top / 2px 18px no-repeat,
+        linear-gradient(var(--wots-panel-to) 0 0) left top 16px / 23px 2px no-repeat,
+        linear-gradient(var(--wots-panel-to) 0 0) left 21px bottom / 2px 18px no-repeat,
+        linear-gradient(var(--wots-panel-to) 0 0) left bottom 16px / 23px 2px no-repeat;
+}
+
+.weapon-preview-layout {
+    display: grid;
+    gap: 1rem;
+    align-items: center;
+}
+
+.weapon-preview-details {
+    min-width: 0;
+    font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif;
+}
+
+.weapon-preview-name {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--wots-ink);
+    font-size: clamp(1.1rem, 2.5cqi, 1.35rem);
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.weapon-preview-rule {
+    display: flex;
+    align-items: center;
+    margin: 0.3rem 0 0.4rem;
+    color: var(--wots-frame);
+}
+
+.weapon-preview-rule span {
+    height: 2px;
+    flex: 1;
+    background: currentColor;
+}
+
+.weapon-preview-rule::before,
+.weapon-preview-rule::after {
+    content: "";
+    width: 0.6rem;
+    height: 0.6rem;
+    background: currentColor;
+    clip-path: polygon(0 35%, 35% 35%, 50% 0, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 50% 100%, 35% 65%, 0 65%);
+}
+
+.weapon-preview-stats {
+    display: grid;
+    gap: 0.15rem 0.8rem;
+    font-size: clamp(0.875rem, 2cqi, 1.05rem);
+    line-height: 1.5;
+}
+
+.weapon-preview-stat {
+    display: grid;
+    grid-template-columns: 4.5em minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.weapon-preview-stat dt {
+    color: var(--wots-label);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+}
+
+.weapon-preview-stat dd {
+    color: var(--wots-stat);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.weapon-preview-pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: baseline;
+}
+
+.weapon-preview-charms {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin-top: 0.5rem;
+    list-style: none;
+}
+
+.weapon-preview-charms li {
+    padding: 3px;
+    background: var(--wots-frame);
+    display: flex;
+}
+
+.weapon-preview-charms li > span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 1.5rem;
+    padding: 0.1rem 0.35rem;
+    background: var(--wots-panel);
+    color: var(--wots-stat);
+    font-size: clamp(0.875rem, 2cqi, 1.05rem);
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+}
+
+.weapon-preview-image {
+    aspect-ratio: 10 / 3;
+    width: 100%;
+    max-height: 7.25rem;
+    overflow: hidden;
+}
+
+.weapon-preview-image-empty {
+    border: 4px solid #fff;
+    background: var(--wots-panel-to);
+    box-shadow: 0 1px 5px #0002;
+}
+
+@container (min-width: 25rem) {
+    .weapon-preview-stats {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    }
+}
+
+@container (min-width: 44rem) {
+    .weapon-preview-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
 }
 
 @layer base {

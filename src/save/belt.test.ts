@@ -18,6 +18,7 @@ import {
   COMPLETE_WEAPONS,
   WEAPON_FIELDS,
   WEAPON_NAME_MAX_CHARS,
+  completeWeaponByParts,
   matchesCompleteWeapon,
   writeCompleteWeapon,
   decodeTitle,
@@ -649,6 +650,22 @@ describe('指定武器に変更する（完成武器の構成で置き換える�
       }
       expect(matchesCompleteWeapon(b, o, w.id)).toBe(true)
     }
+  })
+
+  it('部品が一致する完成武器を探す（完成武器ID は比べない）', () => {
+    for (const w of COMPLETE_WEAPONS) {
+      const b = makeSave()
+      const o = beltOffset(0)
+      writeCompleteWeapon(b, o, w.id)
+      writeWeaponId(b, o, 0xffff)
+      expect(completeWeaponByParts(b, o), w.name ?? '').toBe(w.id)
+      expect(readWeapon(b, o).completeByParts, w.name ?? '').toBe(w.id)
+    }
+    const b = makeSave()
+    const o = beltOffset(0)
+    writeCompleteWeapon(b, o, 0x0002) // 中道刀
+    b[o + 0x06] ^= 0x01 // 鍔だけ変える
+    expect(completeWeaponByParts(b, o)).toBeNull()
   })
 
   // ✅ ゲームが書いたレコードのバイト列（reserch/2026-10-07_special-weapons.md の実セーブの武器から読んだ値）。

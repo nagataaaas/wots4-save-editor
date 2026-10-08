@@ -49,6 +49,8 @@ import {
   partOptions,
   validateWeaponName,
   validateWeaponNumber,
+  charmLabel,
+  weaponIdLabel,
   writeCompleteWeapon,
   writeWeaponCharms,
   writeWeaponId,
@@ -66,6 +68,7 @@ import {
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import type { LucideIcon } from "lucide-react";
 import { charmIcon, titleIcon } from "./effect-icons";
+import { weaponImageUrl } from "@/save/master/weapon-images";
 import {
   WEAPON_KIND_LABELS,
   compareWeaponNames,
@@ -468,6 +471,79 @@ function OverrideRow({
   );
 }
 
+/** 部品がすべて一致する完成武器の画像（10:3）。画像がない・読み込めないときは枠だけ出す */
+function WeaponImage({ id }: { id: number | null }) {
+  const url = id === null ? null : weaponImageUrl(id);
+  const [failed, setFailed] = useState(false);
+  const hasImage = Boolean(url && !failed);
+  return (
+    <div className={hasImage ? "weapon-preview-image" : "weapon-preview-image weapon-preview-image-empty"}>
+      {hasImage && url ? (
+        <img
+          src={url}
+          alt={id === null ? "" : (weaponIdLabel(id) ?? "")}
+          loading="lazy"
+          onError={() => setFailed(true)}
+          className="size-full object-contain"
+        />
+      ) : (
+        <div className="text-wots-label flex size-full items-center justify-center p-2 text-center font-serif text-xs">
+          {url ? "画像を読み込めません" : "完成武器と部品が一致しないため画像なし"}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 帯刀の一覧（閉じていても見える部分）の能力値と画像。ゲームの武器の画面に寄せた見た目 */
+export function WeaponPanel({ weapon }: { weapon: WeaponView }) {
+  // ゲームと同じく桁区切りなし。耐久・質は現在値 / 最大値で並べる。
+  const num = (key: NumberKey) => String(weapon.numbers[key].value);
+  const pair = (current: NumberKey, maximum: NumberKey) => (
+    <span className="weapon-preview-pair" aria-label={`${num(current)}/${num(maximum)}`}>
+      <span>{num(current)}</span><span>/</span><span>{num(maximum)}</span>
+    </span>
+  );
+  const stat = (label: string, value: ReactNode) => (
+    <div className="weapon-preview-stat">
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+  const charms = [0, 1, 2].map((slot) => weapon.charms.value[slot] ?? null);
+  return (
+    <div className="weapon-preview">
+      <div className="weapon-preview-layout">
+        <div className="weapon-preview-details">
+          <div className="weapon-preview-name">
+            {weapon.title.value !== null && weapon.title.label && (
+              <span>{weapon.title.label}</span>
+            )}
+            <span>{weapon.nameHidden.value ? "*****" : weapon.name.value || "（名前なし）"}</span>
+          </div>
+          <div className="weapon-preview-rule" aria-hidden="true">
+            <span />
+          </div>
+          <dl className="weapon-preview-stats">
+            {stat("攻撃力", num("attack"))}
+            {stat("耐久度", pair("durability", "durabilityMax"))}
+            {stat("斬殺数", num("kills"))}
+            {stat("質", pair("quality", "qualityMax"))}
+          </dl>
+          <ul className="weapon-preview-charms" aria-label="魅力">
+            {charms.map((id, slot) => (
+              <li key={slot} aria-label={`魅力 ${slot + 1}：${id === null ? "なし" : charmLabel(id)}`}>
+                <span>{id === null ? "---" : charmLabel(id)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <WeaponImage key={weapon.completeByParts} id={weapon.completeByParts} />
+      </div>
+    </div>
+  );
+}
+
 /** 帯刀1本分。weapon が null ならセーブ未読み込み */
 function WeaponCard({
   index,
@@ -600,7 +676,6 @@ function WeaponCard({
   const charms = weapon?.charms ?? null;
   const effects = charms ? charmEffects(charms.value) : [];
   const title = titleEffect(weapon?.title.value ?? null);
-  const num = (key: NumberKey) => weapon?.numbers[key].value.toLocaleString() ?? "—";
   const charmRow = (slot: number) => (
     <SelectRow
       key={slot}
@@ -644,13 +719,9 @@ function WeaponCard({
             <CollapsibleTrigger className="group flex flex-wrap items-center gap-2 text-left hover:underline">
               {chevron}
               {`${index + 1}本目`}
-              {weapon && (
-                <span className="flex flex-wrap items-center gap-2">
-                  ：{/* 銘は武器名の左にラベルとして付ける（ユーザー判断 2026-10-05） */}
-                  {weapon.title.label && <Badge variant="secondary">{weapon.title.label}</Badge>}
-                  {weapon.name.value || "（名前なし）"}
-                </span>
-              )}
+              <span className="text-muted-foreground text-xs font-normal">
+                {open ? "編集を閉じる" : "編集する"}
+              </span>
             </CollapsibleTrigger>
             <InfoTip offset={`${formatOffset(base)} から 0xA0 B`} />
             {roles.map((r) => (
@@ -661,12 +732,7 @@ function WeaponCard({
             )}
             {weapon?.nameHidden.value && <Badge variant="outline">名前を隠す</Badge>}
           </CardTitle>
-          {weapon && (
-            <CardDescription>
-              攻撃力 {num("attack")}・耐久 {num("durability")}/{num("durabilityMax")}・質{" "}
-              {num("quality")}/{num("qualityMax")}
-            </CardDescription>
-          )}
+          {weapon && <WeaponPanel weapon={weapon} />}
           {recordProblem && (
             <CardDescription className="text-destructive">
               読み取り専用：{recordProblem}

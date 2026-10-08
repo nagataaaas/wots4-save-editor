@@ -266,6 +266,8 @@ export type WeaponView = {
   weaponType: Field<number> & { label: string | null };
   /** 完成武器ID・武器種・部品が、その完成武器の構成とすべて一致する（matchesCompleteWeapon） */
   matchesComplete: boolean;
+  /** 刃・鞘・鍔・柄がすべて一致する完成武器の ID（completeWeaponByParts）。なければ null */
+  completeByParts: number | null;
 };
 
 export function readU24(bytes: Uint8Array, offset: number): number {
@@ -555,6 +557,7 @@ export function readWeapon(
       label: typeLabel,
     },
     matchesComplete: matchesCompleteWeapon(bytes, offset, weaponId),
+    completeByParts: completeWeaponByParts(bytes, offset),
   };
 }
 
@@ -649,6 +652,19 @@ export function matchesCompleteWeapon(bytes: Uint8Array, offset: number, id: num
   return completeWeaponWords(option.id, option.build).every(
     ([at, value]) => readU16(bytes, offset + at) === value,
   );
+}
+
+/**
+ * 部品（+0x02〜+0x09 の刃・鞘・鍔・柄）がすべて一致する完成武器の ID。なければ null。
+ * 完成武器ID・名前の番号などは比べない
+ */
+export function completeWeaponByParts(bytes: Uint8Array, offset: number): number | null {
+  const match = COMPLETE_WEAPONS.find((w) =>
+    completeWeaponWords(w.id, w.build)
+      .filter(([at]) => at >= 0x02 && at <= 0x08)
+      .every(([at, value]) => readU16(bytes, offset + at) === value),
+  );
+  return match?.id ?? null;
 }
 
 /**
