@@ -4,7 +4,7 @@
 // - 0〜118 の番号で、イベントの通し番号（chunks/event-chart）とは別 🟢
 // - 1つのイベントが複数のノードを持つことがある（大老暗殺計画は7つ、大老 鬼怒川怨仙は4つ、小公女倒れる（通し番号 34）は町の薬師を含めて3つ）🟢
 // - イベントに当たらないノード（0・1・53・113・114・118）は通し番号が null 🟢
-// - ノードの名前は、ふつうはイベントの名前（event.csv）と同じ。違うノード（町の薬師・闇討ち ～小暮捜索）だけ
+// - ノードの名前は、ふつうはイベントの名前（event.csv）と同じ。違うノード（町の薬師・闇討ち ～小暮捜索、空白だけが違う大老 鬼怒川怨仙）だけ
 //   CHART_NODE_OWN_LABELS に chart-node.csv の名前を持つ。表示は labels.ts の chartNodeLabel で引く
 import { CHART_NODE_TABLE } from "./dataset/chart-node";
 import { EVENT_LABELS } from "./event-names";

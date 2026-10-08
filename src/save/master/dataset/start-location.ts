@@ -20,7 +20,7 @@ export const START_LOCATION_TABLE = {
   17: { "id_dec": 17, "save_bytes_le": "11", "name_ja": "大通り・釜茹で会場", "name_en": null, "crash": null, "warning_ja": "", "備考": "" },
   18: { "id_dec": 18, "save_bytes_le": "12", "name_ja": "代官所・門の外", "name_en": null, "crash": null, "warning_ja": "", "備考": "" },
   19: { "id_dec": 19, "save_bytes_le": "13", "name_ja": "", "name_en": null, "crash": 1, "warning_ja": "", "備考": "⚠ クラッシュ" },
-  20: { "id_dec": 20, "save_bytes_le": "14", "name_ja": "代官所・牢屋", "name_en": null, "crash": null, "warning_ja": "ここでセーブしたデータはラスボス戦の後に落ちる", "備考": "⚠ ここでセーブするとラスボス戦の後に落ちる" },
+  20: { "id_dec": 20, "save_bytes_le": "14", "name_ja": "代官所・牢屋", "name_en": null, "crash": null, "warning_ja": "ここでセーブするとラスボス戦の後に落ちる", "備考": "⚠ ここでセーブするとラスボス戦の後に落ちる" },
   21: { "id_dec": 21, "save_bytes_le": "15", "name_ja": "墓場", "name_en": null, "crash": null, "warning_ja": "", "備考": "" },
   22: { "id_dec": 22, "save_bytes_le": "16", "name_ja": "港・寿司屋", "name_en": null, "crash": null, "warning_ja": "", "備考": "" },
   23: { "id_dec": 23, "save_bytes_le": "17", "name_ja": "港・カジノ", "name_en": null, "crash": null, "warning_ja": "", "備考": "潰した後でも入れる" },

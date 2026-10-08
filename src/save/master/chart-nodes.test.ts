@@ -32,7 +32,8 @@ describe("🟢 チャートのノード datatable/event/chart-node.csv", () => {
   });
 
   it("名前はイベントの名前を使う。違う名前のノードだけ、ノードの名前を持つ", () => {
-    expect([...CHART_NODE_OWN_LABELS.keys()]).toEqual([30, 39]);
+    // 73・74・86・115 は空白だけが違う（ノードの表は全角、イベントの表は半角）。どちらも CSV のまま表示する
+    expect([...CHART_NODE_OWN_LABELS.keys()]).toEqual([30, 39, 73, 74, 86, 115]);
     expect(name(30)).toBe("闇討ち ～小暮捜索");
     expect(name(39)).toBe("町の薬師");
     expect(chartNode(39)?.eventId).toBe(34);

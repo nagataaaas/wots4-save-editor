@@ -28,7 +28,7 @@ export const EVENT_TABLE = {
   25: { "id_dec": 25, "save_bytes_le": null, "name_ja": "カジノ再建を急げ", "name_en": "Hurrying to Rebuild the Casino", "備考": "" },
   26: { "id_dec": 26, "save_bytes_le": null, "name_ja": "カジノを破壊せよ", "name_en": "Destroy the Casino", "備考": "" },
   27: { "id_dec": 27, "save_bytes_le": null, "name_ja": "カジノ再建断固阻止", "name_en": "Put an End to the Casino's Reconstruction", "備考": "" },
-  28: { "id_dec": 28, "save_bytes_le": null, "name_ja": "大老　鬼怒川怨仙", "name_en": "Chief Minister Onsen Kinugawa", "備考": "" },
+  28: { "id_dec": 28, "save_bytes_le": null, "name_ja": "大老 鬼怒川怨仙", "name_en": "Chief Minister Onsen Kinugawa", "備考": "" },
   29: { "id_dec": 29, "save_bytes_le": null, "name_ja": "魔鱗組の力", "name_en": "The Might of the Demonscales", "備考": "" },
   30: { "id_dec": 30, "save_bytes_le": null, "name_ja": "小公女と大老", "name_en": "The Little Public Servant & The Big Minister", "備考": "" },
   31: { "id_dec": 31, "save_bytes_le": null, "name_ja": "血で血を洗う戦い", "name_en": "Washing Blood With Blood", "備考": "" },

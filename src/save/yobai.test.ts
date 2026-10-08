@@ -65,13 +65,13 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
       age: 24,
       blood: 3,
     })
-    expect(PLACES[promise.place]).toBe('町　長屋　稲荷前')
+    expect(PLACES[promise.place]).toBe('町 長屋 稲荷前')
   })
 
   it('✅ [U] 場所は 0x00〜0x22 の35件', () => {
     expect(PLACES).toHaveLength(0x23)
-    expect(PLACES[0x10]).toBe('町　お屋敷')
-    expect(PLACES[0x22]).toBe('領事館　一階左の部屋')
+    expect(PLACES[0x10]).toBe('町 お屋敷')
+    expect(PLACES[0x22]).toBe('領事館 一階左の部屋')
   })
 
   it('+0x04 が FFFFFFFF なら約束なし。空の枠には書かない', () => {

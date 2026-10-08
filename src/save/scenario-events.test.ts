@@ -180,7 +180,7 @@ describe('一括設定（デバッグ用）', () => {
   it('一覧の添字は、どれもイベントの表（event.csv）に名前がある', () => {
     expect(namedIndices().filter((i) => eventNameOf(i) === null)).toEqual([])
     expect(eventNameOf(6)).toBe('志士との出会い')
-    expect(eventNameOf(28)).toBe('大老　鬼怒川怨仙')
+    expect(eventNameOf(28)).toBe('大老 鬼怒川怨仙')
     expect(eventNameOf(84)).toBeNull()
   })
 

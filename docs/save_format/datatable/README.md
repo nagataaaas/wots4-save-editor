@@ -56,7 +56,7 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 - `weapon/complete.csv` の `unique_bytes`・`name_no`・`flag_22`：その完成武器のレコードに入る値 🟢。[weapon-record](../chunks/weapon-record/README.md) の
   +0x10〜+0x15（固有武器の6バイト。空欄は `FF` × 6）、+0x72（名前の番号。特殊武器は +0x20 にも入る）、+0x22
 - `weapon/blade-special.csv`・`weapon/complete.csv` の `name_en`：英語版のゲーム内の表記 🟢
-- `place/night-visit-place.csv` の `name_ja`：約束の画面に出る場所の名前（✅ [U]。区切りはゲーム内の表記どおり全角の空白）。
+- `place/night-visit-place.csv` の `name_ja`：約束の画面に出る場所の名前（✅ [U]）。
   `layout`：その場所で正しく表示される「人と布団の配置」（約束の枠 +0x0A）。実データで見た組と 🟢 の組を書く。複数あるときは `;` で区切る。どれが実データで見た組かは `備考` に書く。
   🟢 の組は町の人の約束と特別な相手（さよ・先生・ローラ・メリンダ・三姉妹など）の約束で使われる組（全72組）。実データで見た組はすべてこの中にある
 - `event/event.csv` の `name_en`：英語版のゲーム内の表記

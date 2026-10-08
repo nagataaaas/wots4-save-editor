@@ -26,7 +26,7 @@ describe("共通ラベル", () => {
   it("イベントの LabelId は通し番号（0x36A8 + n の n）", () => {
     expect(eventLabel(eventLabelId(6))).toBe("志士との出会い");
     expect(eventLabel(eventLabelId(0))).toBe("船上の侍");
-    expect(eventLabel(eventLabelId(28))).toBe("大老　鬼怒川怨仙");
+    expect(eventLabel(eventLabelId(28))).toBe("大老 鬼怒川怨仙");
   });
 
   it("読みを持つラベルは検索用の reading も共通ラベルに載せる", () => {
