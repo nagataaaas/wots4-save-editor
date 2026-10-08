@@ -111,8 +111,8 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x0000DC`      | `0x00011B`   | [player-name](chunks/player-name/README.md)       | 主人公名                                       | ✅                            |
 | `0x00011C`      | `0x0005FF` ❓ | [townsfolk](chunks/townsfolk/README.md)           | なりわいのフラグ（`0x011C`〜、連続なりわい・鍛冶屋など）と町の人（店主など）の状態 | 🟢開始 ／ 一部 ✅             |
 | `0x000B3C`      | ❓            | [stats](chunks/stats/README.md)                   | 侍点・プレイ時間・斬殺数・経過日数などの記録   | 一部 ✅                       |
-| `0x000C84`      | ❓            | [kill-counts](chunks/kill-counts/README.md)       | 敵の種類ごとの斬殺数（周回中）                 | 🔶                            |
-| `0x001C24`      | ❓            | [kill-counts](chunks/kill-counts/README.md)       | 敵の種類ごとの斬殺数（累計）                   | 🔶                            |
+| `0x000C64`      | `0x001C03`   | [kill-counts](chunks/kill-counts/README.md)       | 敵の種類ごとの斬殺数（周回中）                 | 🟢範囲 ／ 🔶中身               |
+| `0x001C04`      | `0x002BA3` 🔶 | [kill-counts](chunks/kill-counts/README.md)       | 敵の種類ごとの斬殺数（累計）                   | 🔶                            |
 | `0x0033A4`      | `0x0035A3`   | [occupation](chunks/occupation/README.md)         | なりわいの状態の表                             | ✅                            |
 | `0x0035A4`      | `0x0035B3`   | [vitals](chunks/vitals/README.md)                 | HP・活力                                       | 一部 ✅（U-4）                |
 | `0x00363C`      | `0x0036A3`   | [memory-garbage](chunks/memory-garbage/README.md) | ゲームの状態ではない値（未初期化・アドレス）   | 🔶                            |

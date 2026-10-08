@@ -3,7 +3,7 @@ import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
-import { startNewCycle } from "@/save/new-cycle";
+import { startNewCycle, type CycleEnd, type NewCycleReport } from "@/save/new-cycle";
 import type { SelectOption } from "@/components/select-options";
 import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
@@ -327,17 +327,44 @@ const difficultyOptions: SelectOption[] = DIFFICULTIES.map((d) => ({
   label: d.certainty === "✅" ? d.label : `${d.label}（🔶 推測）`,
 }));
 
+const CYCLE_END_LABELS: Record<CycleEnd, string> = {
+  clear: "クリアとして終える",
+  gone: "立ち去りとして終える",
+};
+
+function cycleReportText(r: NewCycleReport): string {
+  const parts = [
+    r.end === "clear" ? "クリア回数を1つ増やしました" : "立ち去った回数を1つ増やしました",
+    `金庫に ${r.vaultAdded.toLocaleString()} 両`,
+    `武器箪笥へ ${r.weaponsMoved} 本`,
+    `道具の箪笥へ ${r.itemsMoved} 枠`,
+    `部品の箪笥へ ${r.partsMoved} 個`,
+    `取り除いた貴重品 ${r.valuablesRemoved} 枠`,
+  ];
+  const left = [
+    r.weaponsLeft && `武器袋に ${r.weaponsLeft} 本`,
+    r.itemsLeft && `手持ちに ${r.itemsLeft} 枠`,
+    r.partsLeft && `部品 ${r.partsLeft} 個`,
+  ].filter(Boolean);
+  return `${parts.join("、")}。${left.length ? `箪笥に入りきらず残ったもの：${left.join("、")}。` : ""}`;
+}
+
 /** 難易度（0x0000）と、新しい周回を始める書き込み（new-cycle.ts）。view が null ならセーブ未読み込み */
 function CycleCard({ view }: { view: DifficultyView | null }) {
   const { update } = useSave();
-  const [armed, setArmed] = useState(false);
+  const [armed, setArmed] = useState<CycleEnd | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [report, setReport] = useState<string | null>(null);
 
-  const start = () => {
-    if (!armed) return setArmed(true);
-    setArmed(false);
+  const start = (end: CycleEnd) => {
+    if (armed !== end) return setArmed(end);
+    setArmed(null);
     try {
-      update(startNewCycle);
+      const box: { result?: NewCycleReport } = {};
+      update((b) => {
+        box.result = startNewCycle(b, end);
+      });
+      setReport(box.result ? cycleReportText(box.result) : null);
       setError(null);
     } catch (e) {
       setError(errorMessage(e));
@@ -350,8 +377,8 @@ function CycleCard({ view }: { view: DifficultyView | null }) {
         <CardTitle>難易度・周回</CardTitle>
         <CardDescription>
           難易度は 0x0000 の値です。易しい＝0・超難しい＝3 は、スロット一覧の表示と一致しました。書き換えはゲーム内の難易度に反映されます（確認済み）。
-          「新しい周回を始める」は、周回ごとに初期化されるとみられる値（日付・イベントの状態・シナリオのフラグ・周回中の記録など）を、エンディング後のセーブの値にそろえます。
-          次のロードの「続きから」で難易度と主人公の設定に進み、序章のイベント（船上の侍）から新しい周回として遊べます（確認済み）。
+          「新しい周回」は、物語を終えたときにゲームが行う引き継ぎと初期化を、同じ順序で行います。終わり方はクリア（結末を見た）か立ち去り（町を立ち去った）を選びます。
+          次のロードの「続きから」で難易度と主人公の設定に進み、序章のイベント（船上の侍）から新しい周回として遊べます（以前の版で確認済み）。
           段階だけを 0 にして主人公の設定だけをやり直すときは、「主人公」画面のボタンを使います。
           {view && ` 生の値：${view.value}`}
         </CardDescription>
@@ -373,23 +400,31 @@ function CycleCard({ view }: { view: DifficultyView | null }) {
           <div className="flex flex-wrap items-center gap-2">
             <Label>新しい周回</Label>
             <InfoTip offset={DATE_OFFSETS.dayTime}>
-              書く値はすべてエンディング後のセーブの値です：段階 0x0010＝0、保留量 0x0012・時間帯 0x0014＝0、現在地 0x0013＝0x27（港（騒乱／希望の光用））、
-              周回中のプレイ時間 0x0B90・0x0BC0・周回中の斬殺数 0x0BC8・0x0BD0・経過日数 0x0BD8＝0、敵の種類ごとの斬殺数（周回中）0x0C84〜0x1C23＝0、
-              イベントの状態 A 0x36A8〜0x374D（00／FF の並び）、シナリオのフラグ 0x374E〜0x3837＝0（施設と堂島の職 0x3799 は変えない）、ヒント 0x3900＝FFFF。
-              難易度・記録 B・所持品・特典・町の人・なりわい・夜這い・治安・累計の記録は変えません。元に戻す操作はないので、書き換える前のセーブを残してください
+              引き継ぎ：クリアなら難易度ごとのクリア回数 0x43398〜、立ち去りなら立ち去った回数 0x46340 を1つ増やします。
+              記録 B 0x3838〜 を状態 A から更新し（B が 04 の番号は残す）、なりわいのフラグ 4〜14・18・19・23〜31 を 0 にします。
+              武器袋の武器は武器箪笥へ（本数 0x129F4 も増やす）、所持金は金庫へ、手持ちの道具は道具の箪笥へ、持っている刃・鍔・柄は部品の箪笥へ移します。箪笥に入りきらないものは元の場所に残ります。帯刀はそのまま次の主人公が持ちます。
+              初期化：難易度 0x0000＝1（普通）、段階 0x0010＝0、現在地 0x0013＝0x27、時間帯・保留量・所持金＝0、周回中の記録と敵の種類ごとの斬殺数 0x0C64〜0x1C03＝0、
+              HP・活力＝1000、イベントの状態 A は FF 以外を 00、シナリオのフラグ 0x374E〜0x3837＝0（0x375D〜0x3760・0x3799・0x379A は残す）、ヒント 0x3900＝FFFF、
+              貴重品は鉄4種だけを残す、夜這いの記録・約束を消す（回数は残す）、町の人 0x015C〜0x0B33 ほか一部の範囲を初期化。
+              ゲームが流通の武器を確率で消したり変えたりする処理は行いません。元に戻す操作はないので、書き換える前のセーブを残してください
             </InfoTip>
-            <CertaintyBadge mark="🔶" text="初期化の範囲はエンディング後のセーブ1件から推定" />
           </div>
-          <Button
-            variant={armed ? "destructive" : "outline"}
-            size="sm"
-            className="w-fit"
-            disabled={!view || view.problem !== null}
-            onClick={start}
-            onBlur={() => setArmed(false)}
-          >
-            {armed ? "もう一度押すと書き込みます" : "新しい周回を始める"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(CYCLE_END_LABELS) as CycleEnd[]).map((end) => (
+              <Button
+                key={end}
+                variant={armed === end ? "destructive" : "outline"}
+                size="sm"
+                className="w-fit"
+                disabled={!view || view.problem !== null}
+                onClick={() => start(end)}
+                onBlur={() => setArmed(null)}
+              >
+                {armed === end ? "もう一度押すと書き込みます" : CYCLE_END_LABELS[end]}
+              </Button>
+            ))}
+          </div>
+          {report && <p className="text-muted-foreground text-xs">{report}</p>}
           {error && <p className="text-destructive text-xs">{error}</p>}
         </div>
       </CardContent>
