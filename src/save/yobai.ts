@@ -33,7 +33,7 @@
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
-import { labelOf } from "./master/labels";
+import { labelOf, nameOf } from "./master/labels";
 import { npcName } from "./master/npc-names";
 
 export const PROMISE_OFFSET = 0x14038;
@@ -188,28 +188,29 @@ export type KnownValue = { value: number; label: string };
  * 実セーブで見た人物の値（さよ・かえで・はるな・先生・メリンダ・三姉妹）。通常モードではこれだけを書ける。
  * 朱美 442 は 🟢（約束の実データはない。朱美は約束のあとセーブできない [U]）。ローラ 454 は 🟢 の値を [U] 2026-10-07 の実データで確認
  */
+// label は人物の名前の表（npc-name.csv）から引く。値（型・見た目）は人物の ID とは別
 export const KNOWN_TYPES: readonly KnownValue[] = [
   { value: 0x031b, label: "さよ（台詞は「・・・」。体力・攻撃力が高い）" },
-  { value: 0x25, label: "かえで" },
-  { value: 0x49, label: "はるな" },
-  { value: 0x0250, label: "先生" },
-  { value: 0x0314, label: "メリンダ" },
-  { value: 0x01c0, label: "万由" },
-  { value: 0x01c1, label: "千佳" },
-  { value: 0x01c2, label: "百合" },
-  { value: 0x01ba, label: "朱美" },
-  { value: 0x01c6, label: "ローラ" },
+  { value: 0x25, label: nameOf.npc(7077) }, // かえで
+  { value: 0x49, label: nameOf.npc(7017) }, // はるな
+  { value: 0x0250, label: nameOf.npc(15) }, // 先生
+  { value: 0x0314, label: nameOf.npc(13) }, // メリンダ
+  { value: 0x01c0, label: nameOf.npc(6) }, // 万由
+  { value: 0x01c1, label: nameOf.npc(7) }, // 千佳
+  { value: 0x01c2, label: nameOf.npc(8) }, // 百合
+  { value: 0x01ba, label: nameOf.npc(3) }, // 朱美
+  { value: 0x01c6, label: nameOf.npc(11) }, // ローラ
 ];
 export const KNOWN_LOOKS: readonly KnownValue[] = [
-  { value: 0xf5, label: "さよ" },
-  { value: 0x1c, label: "かえで" },
-  { value: 0x5d, label: "はるな" },
-  { value: 0x57, label: "先生" },
-  { value: 0x42, label: "メリンダ" },
-  { value: 0x58, label: "万由" },
-  { value: 0x04, label: "千佳" },
-  { value: 0x06, label: "百合" },
-  { value: 0x1d, label: "ローラ" },
+  { value: 0xf5, label: nameOf.npc(215) }, // さよ
+  { value: 0x1c, label: nameOf.npc(7077) }, // かえで
+  { value: 0x5d, label: nameOf.npc(7017) }, // はるな
+  { value: 0x57, label: nameOf.npc(15) }, // 先生
+  { value: 0x42, label: nameOf.npc(13) }, // メリンダ
+  { value: 0x58, label: nameOf.npc(6) }, // 万由
+  { value: 0x04, label: nameOf.npc(7) }, // 千佳
+  { value: 0x06, label: nameOf.npc(8) }, // 百合
+  { value: 0x1d, label: nameOf.npc(11) }, // ローラ
 ];
 
 /** 名前の表示。🟢 名前の表（npc-names）にない ID は 16進数 */

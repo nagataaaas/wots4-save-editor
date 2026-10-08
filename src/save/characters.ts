@@ -27,6 +27,7 @@
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
+import { nameOf } from "./master/labels";
 
 export const CHARACTER_START = 0x374e;
 export const CHARACTER_END = 0x375c;
@@ -38,31 +39,31 @@ export const CHARACTER_NORMAL_MAX = 5;
 /** 人物と、値の説明 */
 export const CHARACTER_NOTES: Readonly<Record<number, { name?: string; note: string }>> = {
   0x374e: {
-    name: "赤城",
+    name: nameOf.npc(1),
     note: "🟢 0＝生存、1＝死亡、3＝病院に運ばれて助かった（再起の望みの成功）。将の器は 3、怒りの矛先は 1 で起きる",
   },
   0x374f: {
-    name: "小暮",
+    name: nameOf.npc(2),
     note: "🟢 0＝生存、1＝死亡。願い虚しくは 0 のとき小暮本人が敵になる",
   },
   0x3750: {
-    name: "朱美",
+    name: nameOf.npc(3),
     note: "🟢 真実でまだら（朱美）に勝つと 1。1 を書くと朱美が消えた（確認済み）",
   },
-  0x3751: { name: "琴吹", note: "🟢 1 になる場面はない（武人 琴吹光で死んでも変わらない）" },
+  0x3751: { name: nameOf.npc(4), note: "🟢 1 になる場面はない（武人 琴吹光で死んでも変わらない）" },
   0x3752: {
-    name: "茂呂",
+    name: nameOf.npc(5),
     note: "🟢 0＝生存、1＝死亡。1 だと剣術大会の準備で建築現場にいない。大寄せで幕府ルートに入るには 1 でないことが要る",
   },
-  0x3753: { name: "万由", note: "0＝生存、1＝死亡" },
-  0x3754: { name: "千佳", note: "0＝生存、1＝死亡" },
-  0x3755: { name: "百合", note: "0＝生存、1＝死亡" },
+  0x3753: { name: nameOf.npc(6), note: "0＝生存、1＝死亡" },
+  0x3754: { name: nameOf.npc(7), note: "0＝生存、1＝死亡" },
+  0x3755: { name: nameOf.npc(8), note: "0＝生存、1＝死亡" },
   0x3756: {
     name: "鬼怒川怨仙",
     note: "🟢 船上の侍（周回の始め）で 2、大老暗殺計画で倒すと 0。1 になる場面はない",
   },
   0x3757: {
-    name: "ローラ",
+    name: nameOf.npc(11),
     note: "🟢 1＝死亡（鬼怒川の魔手）。2＝ローラの決意の導入を見た（🔶 意味）",
   },
   0x3758: {
@@ -70,14 +71,14 @@ export const CHARACTER_NOTES: Readonly<Record<number, { name?: string; note: str
     note: "🟢 1＝死亡、3＝伯爵救出の成功（🔶 療養中）、4＝打ち解けた、5＝逮捕された（刺激が欲しいの成功）。ローラ奪還で 0",
   },
   0x3759: {
-    name: "メリンダ",
+    name: nameOf.npc(13),
     note: "🟢 0＝生存、1＝死亡（講師ご到着・祝 病院開業・傷心の帰国船の戦闘、魔鱗組として）",
   },
   0x375a: {
-    name: "堂島",
+    name: nameOf.npc(14),
     note: "🟢 表彰式でほかの優勝者として並ぶと 1（🔶 釜茹で）。町の人の状態の「堂島の死亡」とは別のバイト",
   },
-  0x375b: { name: "先生", note: "🟢 通常のプレイで変わる場面はない" },
+  0x375b: { name: nameOf.npc(15), note: "🟢 通常のプレイで変わる場面はない" },
   0x375c: {
     name: "薬屋",
     note: "🟢 変わる場面はない。小公女倒れるで 0 でないと町に入った時点で失敗",

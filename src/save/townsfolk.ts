@@ -26,6 +26,8 @@
 // ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
+import { nameOf, occupationGroupLabel } from "./master/labels";
+import { occupationGroupByKey } from "./master/occupation-names";
 
 /** 🟢 主人公名（〜0x011B）の直後 */
 export const TOWNSFOLK_START = 0x011c;
@@ -95,7 +97,11 @@ const SHIRUBE_RESULT_VALUES: readonly TownsfolkValue[] = [
   { value: 2, label: "失敗を成功扱いにしてもらった（報酬なし）" },
 ];
 
-export const SHIRUBE_JOBS = ["今宵の虎徹は", "薬売り", "食い逃げ外国人", "おにぎり屋の用心棒"] as const;
+/** 汁部（DLC）のなりわい 209〜212 の名前 */
+export const SHIRUBE_JOBS: readonly string[] = [209, 210, 211, 212].map(nameOf.occupation);
+
+/** なりわいのまとまりの見出し（【岡っ引き】野戸仏 など）。なりわいの画面の絞り込みと同じ */
+const groupTitle = (key: string): string => occupationGroupLabel(occupationGroupByKey(key)!);
 
 /**
  * なりわいのフラグのうち、なりわいの画面で扱う番号の説明（chunks/townsfolk「なりわいのフラグ」）。
@@ -103,22 +109,22 @@ export const SHIRUBE_JOBS = ["今宵の虎徹は", "薬売り", "食い逃げ外
  */
 export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(4)]: {
-    name: "【岡っ引き】野戸仏",
+    name: groupTitle("police"),
     note: "代官所の同心 野戸仏新太郎の連続なりわい 171〜178。書き換えると野戸仏の次の依頼が変わる（確認済み：20 で2件目「督促状」から、100 で完了）",
     values: SERIES_VALUES,
   },
-  [occupationFlagOffset(5)]: { name: "【極道】小鳩", note: "🟢 町の極道者 小鳩戒の連続なりわい 179〜186", values: SERIES_VALUES },
-  [occupationFlagOffset(6)]: { name: "【泥棒】泥棒さん", note: "🟢 港の泥棒さんの連続なりわい 187〜194", values: SERIES_VALUES },
-  [occupationFlagOffset(7)]: { name: "【宿無し】おっつぁん", note: "🟢 居留地のおっつぁんの連続なりわい 195〜206", values: SERIES_VALUES },
+  [occupationFlagOffset(5)]: { name: groupTitle("gangster"), note: "🟢 町の極道者 小鳩戒の連続なりわい 179〜186", values: SERIES_VALUES },
+  [occupationFlagOffset(6)]: { name: groupTitle("thief"), note: "🟢 港の泥棒さんの連続なりわい 187〜194", values: SERIES_VALUES },
+  [occupationFlagOffset(7)]: { name: groupTitle("homeless"), note: "🟢 居留地のおっつぁんの連続なりわい 195〜206", values: SERIES_VALUES },
   [occupationFlagOffset(8)]: {
-    name: "【同心頭】佐古津",
+    name: groupTitle("sakotsu"),
     note:
       "🟢 代官所の同心頭 佐古津上武之介の治安なりわい 163〜166（賭場を偵察・訪問・襲撃・殲滅）。" +
       "連続ではなく、そのときの治安で受けられるなりわいが変わり、何回でも受けられる（[U] 2026-10-07）。各値の意味は ❓",
     values: stepValues([0, 10, 20, 30]),
   },
   [occupationFlagOffset(9)]: {
-    name: "【賭場】女将",
+    name: groupTitle("okami"),
     note:
       "🟢 賭場の女将の治安なりわい 167〜170（代官所を偵察・訪問・襲撃・殲滅）。" +
       "連続ではなく、そのときの治安で受けられるなりわいが変わり、何回でも受けられる（[U] 2026-10-07）。" +
