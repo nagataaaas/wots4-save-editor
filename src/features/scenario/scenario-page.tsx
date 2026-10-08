@@ -4,6 +4,16 @@ import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
 import { startNewCycle, type CycleEnd, type NewCycleReport } from "@/save/new-cycle";
+import {
+  PLAY_COUNT_MAX,
+  PLAY_COUNT_OFFSET,
+  PLAY_COUNT_REVEALS_BEST_ROUTE,
+  countFinishedCycle,
+  readCycleCounts,
+  validatePlayCount,
+  writePlayCount,
+  type CycleCountsView,
+} from "@/save/cycle-counts";
 import type { SelectOption } from "@/components/select-options";
 import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
@@ -164,6 +174,7 @@ const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e)
 
 type Views = {
   difficulty: DifficultyView;
+  cycle: CycleCountsView;
   date: DateView;
   events: EventsView;
   factions: FactionsView;
@@ -228,7 +239,7 @@ export function WorldPage() {
     >
       {(views, k) => (
         <>
-          <CycleCard key={`${k}-cycle`} view={views?.difficulty ?? null} />
+          <CycleCard key={`${k}-cycle`} view={views?.difficulty ?? null} counts={views?.cycle ?? null} />
           <DateCard key={`${k}-date`} view={views?.date ?? null} />
           <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />
           <FactionCard
@@ -261,6 +272,7 @@ function ViewsPage({
       return {
         views: {
           difficulty: readDifficulty(b),
+          cycle: readCycleCounts(b),
           date: readDate(b),
           events: readEvents(b),
           factions: readFactions(b),
@@ -334,7 +346,7 @@ const CYCLE_END_LABELS: Record<CycleEnd, string> = {
 
 function cycleReportText(r: NewCycleReport): string {
   const parts = [
-    r.end === "clear" ? "クリア回数を1つ増やしました" : "立ち去った回数を1つ増やしました",
+    r.end === "clear" ? "周回数とクリア回数を1つ増やしました" : "周回数と立ち去った回数を1つ増やしました",
     `金庫に ${r.vaultAdded.toLocaleString()} 両`,
     `武器箪笥へ ${r.weaponsMoved} 本`,
     `道具の箪笥へ ${r.itemsMoved} 枠`,
@@ -349,9 +361,10 @@ function cycleReportText(r: NewCycleReport): string {
   return `${parts.join("、")}。${left.length ? `箪笥に入りきらず残ったもの：${left.join("、")}。` : ""}`;
 }
 
-/** 難易度（0x0000）と、新しい周回を始める書き込み（new-cycle.ts）。view が null ならセーブ未読み込み */
-function CycleCard({ view }: { view: DifficultyView | null }) {
+/** 難易度（0x0000）、周回数（0x0B8C）と、新しい周回を始める書き込み（new-cycle.ts）。view が null ならセーブ未読み込み */
+function CycleCard({ view, counts }: { view: DifficultyView | null; counts: CycleCountsView | null }) {
   const { update } = useSave();
+  const { advanced } = useAdvancedMode();
   const [armed, setArmed] = useState<CycleEnd | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<string | null>(null);
@@ -363,6 +376,8 @@ function CycleCard({ view }: { view: DifficultyView | null }) {
       const box: { result?: NewCycleReport } = {};
       update((b) => {
         box.result = startNewCycle(b, end);
+        // 🟢 ゲームは周回を終えるたびに周回数 0x0B8C を +1 する（クリア・立ち去りのどちらでも）
+        countFinishedCycle(b);
       });
       setReport(box.result ? cycleReportText(box.result) : null);
       setError(null);
@@ -381,6 +396,8 @@ function CycleCard({ view }: { view: DifficultyView | null }) {
           次のロードの「続きから」で難易度と主人公の設定に進み、序章のイベント（船上の侍）から新しい周回として遊べます（以前の版で確認済み）。
           段階だけを 0 にして主人公の設定だけをやり直すときは、「主人公」画面のボタンを使います。
           {view && ` 生の値：${view.value}`}
+          {counts &&
+            `　クリア回数（0x43398〜、難易度ごと）：${counts.clears.join("・")}、立ち去った回数（0x46340）：${counts.goneCount}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -395,6 +412,19 @@ function CycleCard({ view }: { view: DifficultyView | null }) {
           warning={view?.warning}
           note="0x0000 の1バイトだけを書きます。普通＝1・難しい＝2 は 0 と 3 の間を埋めた推測です（🔶）。幅は u8 とみています（0x0001〜0x0007 は見たセーブではすべて 0）"
           onChange={(v) => update((b) => writeDifficulty(b, Number(v)))}
+        />
+        <FieldRow
+          label="周回数"
+          offset={PLAY_COUNT_OFFSET}
+          value={counts?.playCount ?? null}
+          problem={counts?.problem ?? null}
+          warning={counts?.warning}
+          format={String}
+          parse={(input) => parseInteger(input, (v) => validatePlayCount(v, { advanced }))}
+          apply={(n) => update((b) => writePlayCount(b, n, { advanced }))}
+          inputMode="numeric"
+          hint={advanced ? "0〜4,294,967,295" : `0〜${PLAY_COUNT_MAX.toLocaleString()}`}
+          note={`0x0B8C（u32）の4バイトだけを書きます。終えた周回の数で、クリアでも立ち去りでも物語を終えるたびにゲームが1つ増やします（${PLAY_COUNT_MAX.toLocaleString()} まで）。新しい周回の初期化では 0 になりません。${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上だと、イベントチャートに真ルートの枠と線が全部出ます（要ゲーム内確認）。死亡で増えるかは未確認です`}
         />
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
