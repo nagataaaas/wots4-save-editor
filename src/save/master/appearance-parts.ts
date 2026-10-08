@@ -26,13 +26,24 @@ import { UPPER_TABLE } from "./dataset/upper";
  * 部品の組（セーブの 0x3AAE4 + 12k）の並び。k＝0 上半身 … 9 合羽。
  * 上半身・下半身・顔・髪型・足元 🟢、手甲・脚絆・前掛け・合羽 ✅ [U] 2026-10-08、k＝4 は手 🟢（J.J の手の書き込みの反映 ✅ [U] 2026-10-08）
  */
-export const PART_KINDS = ["upper", "lower", "face", "hair", "body", "feet", "gauntlet", "leggings", "apron", "cape"] as const;
+export const PART_KINDS = [
+  "upper",
+  "lower",
+  "face",
+  "hair",
+  "body",
+  "feet",
+  "gauntlet",
+  "leggings",
+  "apron",
+  "cape",
+] as const;
 export type PartKind = (typeof PART_KINDS)[number];
 
 export const PART_KIND_LABELS: Record<PartKind, string> = {
   upper: "上半身",
   lower: "下半身",
-  face: "顔",
+  face: "顔・声",
   hair: "髪型",
   body: "手",
   feet: "足元",
@@ -109,12 +120,14 @@ type PartRow = {
   crash?: number | null;
 };
 
-const optNum = (v: number | string | null | undefined) => (v === undefined || v === null || v === "" ? null : Number(v));
+const optNum = (v: number | string | null | undefined) =>
+  v === undefined || v === null || v === "" ? null : Number(v);
 
 /** "46 01 FF FF …" → [326, -1, …] */
 function parseModels(text: string, file: string, id: number): PartEntry["models"] {
   const b = text.split(" ").map((x) => parseInt(x, 16));
-  if (b.length !== 8 || b.some((x) => !Number.isInteger(x))) throw new Error(`${file} の ${id} の save_models が読めません`);
+  if (b.length !== 8 || b.some((x) => !Number.isInteger(x)))
+    throw new Error(`${file} の ${id} の save_models が読めません`);
   const v = [0, 1, 2, 3].map((i) => {
     const u = b[i * 2] | (b[i * 2 + 1] << 8);
     return u === 0xffff ? -1 : u;
@@ -123,20 +136,31 @@ function parseModels(text: string, file: string, id: number): PartEntry["models"
 }
 
 /** layer_meshes "足（浪人）|小物1（浪人）||" と layer_textures "299 300|309||" → 層4つ */
-function parseLayers(meshes: string, textures: string, file: string, id: number): PartEntry["layers"] {
+function parseLayers(
+  meshes: string,
+  textures: string,
+  file: string,
+  id: number,
+): PartEntry["layers"] {
   const m = meshes.split("|");
   const t = textures.split("|");
-  if (m.length !== 4 || t.length !== 4) throw new Error(`${file} の ${id} の layer_meshes・layer_textures が読めません`);
+  if (m.length !== 4 || t.length !== 4)
+    throw new Error(`${file} の ${id} の layer_meshes・layer_textures が読めません`);
   const layers = m.map((mesh, i): PartLayer | null => {
     if (mesh === "") return null;
     const values = t[i].split(" ").map(Number);
-    if (values.length === 0 || values.some((v) => !Number.isInteger(v))) throw new Error(`${file} の ${id} の layer_textures が読めません`);
+    if (values.length === 0 || values.some((v) => !Number.isInteger(v)))
+      throw new Error(`${file} の ${id} の layer_textures が読めません`);
     return { mesh, textures: values };
   });
   return [layers[0], layers[1], layers[2], layers[3]];
 }
 
-function loadParts(table: Readonly<Record<number, PartRow>>, file: string, kind?: string): PartEntry[] {
+function loadParts(
+  table: Readonly<Record<number, PartRow>>,
+  file: string,
+  kind?: string,
+): PartEntry[] {
   return Object.values(table)
     .filter((r) => kind === undefined || r.kind === kind)
     .map((r) => {
@@ -221,7 +245,10 @@ export function findPerson(id: number): PersonEntry | undefined {
 export type PartGroup = "男" | "女" | "共通" | "セット用" | "未使用";
 
 const usedByPerson: Record<PartKind, Set<number>> = Object.fromEntries(
-  PART_KINDS.map((k) => [k, new Set(PERSONS.flatMap((p) => (p.parts[k] === null ? [] : [p.parts[k]])))]),
+  PART_KINDS.map((k) => [
+    k,
+    new Set(PERSONS.flatMap((p) => (p.parts[k] === null ? [] : [p.parts[k]]))),
+  ]),
 ) as Record<PartKind, Set<number>>;
 
 /**
@@ -230,5 +257,7 @@ const usedByPerson: Record<PartKind, Set<number>> = Object.fromEntries(
  */
 export function partGroup(kind: PartKind, part: PartEntry): PartGroup {
   if (part.ja !== "") return part.gender ?? "共通";
-  return usedByPerson[kind].has(part.id) || part.unlockId !== null || part.clothId !== null ? "セット用" : "未使用";
+  return usedByPerson[kind].has(part.id) || part.unlockId !== null || part.clothId !== null
+    ? "セット用"
+    : "未使用";
 }
