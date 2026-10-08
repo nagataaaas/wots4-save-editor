@@ -16,6 +16,8 @@ import {
   findSect,
   findSkillSheet,
   findStance,
+  findStanceSkill,
+  sheetSkillRows,
   skillName,
   type Sect,
 } from "@/save/master/sect-data";
@@ -226,6 +228,7 @@ function SectCard({
           </Button>
           <span className="text-muted-foreground text-xs">
             派生先を覚えた技は「派生先あり」（2）になります。段 5（極）にはならないので、必要なら下の段を 5 にしてください。
+            技は派生元の下に字下げして並べます（「← A の派生」は A から派生する技、「← A の次」は A に続けて出す技）。
           </span>
         </div>
 
@@ -268,11 +271,25 @@ function SectCard({
               {findStance(sheet.stance)?.nameJa}の技（技の表 {sheet.id}）
             </h3>
             <ul className="divide-y text-sm">
-              {sheet.skills.map((s) => {
+              {sheetSkillRows(sheet).map(({ skill: s, depth, parent, prev }) => {
                 const state = states[s.skillNo];
+                const name = (no: number) =>
+                  skillName(sheet.skills.find((x) => x.skillNo === no) ?? findStanceSkill(sheet.stance, no) ?? { nameJa: `技 ${no}` });
                 return (
                   <li key={s.skillNo} className="flex flex-wrap items-center gap-2 py-1">
-                    <span className="min-w-32">{skillName(s)}</span>
+                    <span className="flex min-w-44 flex-col" style={{ paddingLeft: `${depth * 1.25}rem` }}>
+                      <span>
+                        {depth > 0 && <span className="text-muted-foreground mr-1">└</span>}
+                        {skillName(s)}
+                      </span>
+                      {(parent !== null || prev.length > 0) && (
+                        <span className="text-muted-foreground text-xs">
+                          {parent !== null && `← ${name(parent)} の派生`}
+                          {parent !== null && prev.length > 0 && "・"}
+                          {prev.length > 0 && `← ${prev.map(name).join("・")} の次`}
+                        </span>
+                      )}
+                    </span>
                     <StateBadge state={state} />
                     <SkillMeta skillId={s.skillId} />
                     {isSpecialCond(s.cond) && (
