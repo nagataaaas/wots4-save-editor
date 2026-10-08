@@ -74,6 +74,34 @@ describe('🟢 流通中の武器・道具・部品', () => {
     expect(view.others[0].filled).toBe(1)
   })
 
+  it('道具：ID・名前・個数（✅ +0x02）・経過の数（🟢 +0x08）と、残りのバイト（❓）を読む', () => {
+    const b = makeSave()
+    const item = MARKET_OTHERS[0]
+    b.set([0x05, 0x00, 0x03, 0x00, 0x06, 0x00, 0x00, 0x00, 0x02, 0x00, 0xaa, 0xbb], item.offset + 4 * item.bytes)
+    const [entry] = readMarket(b).others[0].entries
+    expect(entry).toMatchObject({ index: 4, offset: item.offset + 4 * 0x0c, id: 5, label: 'ひよこういろう', count: 3, elapsed: 2 })
+    expect([...entry.rest]).toEqual([0x06, 0x00, 0x00, 0x00, 0xaa, 0xbb])
+  })
+
+  it('刃・鍔・柄：部品 ID と名前・経過の数（🟢 刃 +0x12、鍔・柄 +0x0C）を読む。表にない ID は名前なし', () => {
+    const b = makeSave()
+    const [, blade, guard, grip] = MARKET_OTHERS
+    b.set([0x06, 0x00], blade.offset)
+    b.set([0x01, 0x00], blade.offset + 0x12)
+    b.set([0x0d, 0x00], guard.offset + 99 * guard.bytes)
+    b.set([0x03, 0x00], guard.offset + 99 * guard.bytes + 0x0c)
+    b.set([0x0c, 0x00], grip.offset + grip.bytes)
+    b.set([0xfe, 0x7f], grip.offset + 2 * grip.bytes) // 表にない ID
+    const others = readMarket(b).others
+    expect(others[1].entries.map((e) => [e.index, e.id, e.label, e.count, e.elapsed, e.rest.length])).toEqual([[0, 6, '中道刀', null, 1, 0x10]])
+    expect(others[2].entries.map((e) => [e.index, e.label, e.elapsed, e.rest.length])).toEqual([[99, '中道刀', 3, 0x0c]])
+    expect(others[3].entries.map((e) => [e.index, e.label])).toEqual([
+      [1, '中道刀'],
+      [2, null],
+    ])
+    expect(others.map((o) => o.filled)).toEqual([0, 1, 1, 2])
+  })
+
   it('読むだけで、バイト列を変えない', () => {
     const b = makeSave()
     putWeapon(b, 0, 5, 7)
