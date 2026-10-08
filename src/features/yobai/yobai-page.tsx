@@ -22,8 +22,8 @@ import {
   PROMISE_LAYOUT_REL,
   PROMISE_OFFSET,
   PROMISE_PLACE_REL,
+  PARTNER_COUNTS_OFFSET,
   RECORD_CAPACITY,
-  RECORD_COUNT_OFFSET,
   RECORDS_OFFSET,
   RECORD_BUILDING_REL,
   promiseFieldOffset,
@@ -402,8 +402,8 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
           <CertaintyBadge mark="🔶" text="書き換えの反映は未確認" />
         </CardTitle>
         <CardDescription>
-          {formatOffset(RECORDS_OFFSET)} から 16 B × {RECORD_CAPACITY} 件。夜這いのたびに1件足されます。
-          件数は {formatOffset(RECORD_COUNT_OFFSET)}（{view ? `${view.count} 件` : "未読み込み"}）。
+          {formatOffset(RECORDS_OFFSET)} から 16 B × {RECORD_CAPACITY} 件。夜這いのたびに、最初の空いている件に書かれます
+          （{view ? `今は ${view.count} 件` : "未読み込み"}。周回を始めると全部消えます）。
           今ある記録の項目だけを書き換えます（記録を足したり消したりする機能はありません）。
           見た目と声は記録に残りません。+0x08 の入った建物の番号は表示だけです。
         </CardDescription>
@@ -465,21 +465,35 @@ function CountersCard({ view }: { view: YobaiView | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          夜這いの回数（表示だけ）
-          
-        </CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2">夜這いの回数（表示だけ）</CardTitle>
         <CardDescription>
-          夜這いのたびに増えたカウンタです。約束の画面の「夜這い回数」は 0x137EC でした（確認済み）。記録の件数は 0x13E34 とみられ、0x137EC とずれることがあります。
+          夜這いが終わるたびに増える値です。約束の画面の「夜這い回数」は {formatOffset(0x137ec)}（確認済み）。
+          夜這い回数と相手ごとの回数は周回で消えず、記録・段階・愛の証の回数は周回で消えるので、記録の数と合わないことがあります。
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-2 text-sm sm:grid-cols-3">
-        {view?.counters.map((c) => (
-          <p key={c.offset}>
-            <span className="font-mono">{formatOffset(c.offset)}</span>：{c.value}
-            <span className="text-muted-foreground ml-2 text-xs">{c.note}</span>
+      <CardContent className="flex flex-col gap-4 text-sm">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {view?.counters.map((c) => (
+            <p key={c.offset}>
+              {c.label}（<span className="font-mono">{formatOffset(c.offset)}</span>）：{c.value}
+              <span className="text-muted-foreground ml-2 text-xs">{c.note}</span>
+            </p>
+          ))}
+        </div>
+        <div>
+          <p className="mb-2">
+            相手ごとの夜這い回数（{formatOffset(PARTNER_COUNTS_OFFSET)}〜、u32）
+            <span className="text-muted-foreground ml-2 text-xs">特別な相手14人。さよと町の人は数えない</span>
           </p>
-        ))}
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+            {view?.partners.map((p) => (
+              <p key={p.offset}>
+                {p.label}：{p.value}
+                <span className="text-muted-foreground ml-1 font-mono text-xs">{formatOffset(p.offset)}</span>
+              </p>
+            ))}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -540,7 +554,7 @@ export function YobaiPage() {
       <CountersCard view={view} />
 
       <p className="text-muted-foreground text-xs">
-        約束の枠の +0x00・+0x0C〜+0x1B・+0x26〜+0x2B は意味が分かっていないので書き換えません（❓）。
+        約束の枠の +0x00（約束したときの段階）・+0x0C〜+0x1B（意味は未確認）・+0x26〜+0x2B（初めての説明を見たかのビットなど）は書き換えません。
         {` `}記録の +0x08（入った建物）は {formatOffset(RECORDS_OFFSET + RECORD_BUILDING_REL)} から 16 B 刻みです。
       </p>
     </div>

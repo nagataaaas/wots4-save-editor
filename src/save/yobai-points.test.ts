@@ -1,7 +1,7 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 位置と意味は 🟢（docs/save_format/chunks/best-route）。書き換えの反映は未確認（要ゲーム内確認）。
 // 🔶 POINT_NORMAL_MAX（20）はしきい値 10・攻略手順どおりの 11 より上に取った値で、ゲームの上限ではない。
-// ❓ メリンダの峰打ちの点数（0x3797）で約束できる値は未確認。
+// 🟢 しきい値はどれも 10（メリンダは 5日目以降）。
 // ❓ U-1 判定待ちのため、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { describe, expect, it } from "vitest";
 import { writeU8 } from "./binary";
@@ -41,9 +41,19 @@ describe("夜這いに関わる好感度・ポイント chunks/best-route", () =
     });
   });
 
-  it("🟢 ローラ・朱美・三姉妹のしきい値は 10。メリンダ（❓）は持たない", () => {
+  it("🟢 ローラ・朱美・三姉妹・メリンダのしきい値は 10。推定のバッジは出さない", () => {
     const t = Object.fromEntries(YOBAI_POINTS.map((p) => [p.offset, p.threshold]));
-    expect(t).toEqual({ 0x3792: 10, 0x3793: 10, 0x3794: 10, 0x3795: 10, 0x3796: 10, 0x3797: null });
+    expect(t).toEqual({ 0x3792: 10, 0x3793: 10, 0x3794: 10, 0x3795: 10, 0x3796: 10, 0x3797: 10 });
+    expect(YOBAI_POINTS.every((p) => p.pending === undefined)).toBe(true);
+  });
+
+  it("🟢 朱美は魚、三姉妹は治安と拷問の点数のことを説明に書く", () => {
+    const note = (o: number) => YOBAI_POINTS.find((p) => p.offset === o)!.note;
+    expect(note(0x3793)).toContain("魚");
+    expect(note(0x3794)).toContain("治安 70 以上");
+    expect(note(0x3795)).toContain("治安 29 以下");
+    expect(note(0x3796)).toContain("治安 30〜69");
+    expect(note(0x3797)).toContain("5日目以降");
   });
 
   it("🟢 ローラの好感度は推定のバッジを出さず、謎の鍵と千両箱のことを説明に書く", () => {
