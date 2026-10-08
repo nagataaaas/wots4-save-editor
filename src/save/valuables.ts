@@ -18,7 +18,8 @@ import {
   type ItemSlot,
 } from './item-slot'
 import { formatHex4 } from '@/lib/format'
-import { nameOf } from './master/labels'
+import { itemLabel, nameOf } from './master/labels'
+import { itemLabelId } from './master/label-types'
 
 /** アイテムの表（item.csv）の名前。表の名前どおりに表示するものはここから引く */
 const item = nameOf.item
@@ -86,7 +87,8 @@ const U12_LABELS: Record<number, string> = {
  * 表示だけに使い選択肢には出さない（ID調査モードでは書ける）。
  * 見た名前がアイテムの表の名前と同じものは表から引く（itemsByIds）。注記を付けたものだけ文字列で書く。
  */
-const itemsByIds = (...ids: number[]): Record<number, string> => Object.fromEntries(ids.map((id) => [id, item(id)]))
+const itemsByIds = (...ids: number[]): Record<number, string> =>
+  Object.fromEntries(ids.map((id) => [id, itemLabel(itemLabelId(id))]))
 const itemRange = (first: number, last: number): number[] => Array.from({ length: last - first + 1 }, (_, i) => first + i)
 
 const PROBED_LABELS: Record<number, string> = {

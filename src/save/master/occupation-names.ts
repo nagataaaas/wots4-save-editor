@@ -1,4 +1,4 @@
-// なりわいのマスターデータ。docs/save_format/datatable/occupation/occupation.csv をビルド時に読み込む（表を二重に持たない）。
+// なりわいのマスターデータ。docs/save_format/datatable/occupation/occupation.csv から生成した dataset/occupation.ts を使う（表を二重に持たない）。
 //
 // 🟢 ID 3〜212 のうち170件。ID がそのままセーブの状態の表の添字（chunks/occupation）。
 // ✅ 209〜212 は受注・クリアの差分で添字と受注中の ID が一致した。
@@ -8,8 +8,7 @@
 // - alignment：善良・悪質・空（ふつう）
 // - reward・bonus：成功報酬・追加報酬（文）
 // - deadlineDays：期限（日）。空は期限なし（null）
-import occupationCsv from "../../../docs/save_format/datatable/occupation/occupation.csv?raw";
-import { parseCsv } from "./item-names";
+import { OCCUPATION_TABLE } from "./dataset/occupation";
 import {
   npcLabelId,
   occupationId,
@@ -32,55 +31,25 @@ export type OccupationEntry = {
   noteJa: string;
 };
 
-function loadOccupations(text: string): {
-  entries: OccupationEntry[];
-  labels: Map<OccupationLabelId, LocalizedLabel>;
-} {
-  const [header, ...rows] = parseCsv(text.replace(/^﻿/, ""));
-  const col = (name: string) => {
-    const i = header.indexOf(name);
-    if (i < 0) throw new Error(`occupation.csv に ${name} 列がありません`);
-    return i;
-  };
-  const c = {
-    id: col("id_dec"),
-    ja: col("name_ja"),
-    en: col("name_en"),
-    client: col("client_ja"),
-    type: col("type"),
-    alignment: col("alignment"),
-    reward: col("reward"),
-    bonus: col("bonus"),
-    deadline: col("deadline_days"),
-    note: col("備考"),
-  };
-  const entries: OccupationEntry[] = [];
-  const labels = new Map<OccupationLabelId, LocalizedLabel>();
-  for (const r of rows.filter((r) => r.length > 1)) {
-    const id = Number(r[c.id]);
-    entries.push({
-      id: occupationId(id),
-      labelId: occupationLabelId(id),
-      client: r[c.client],
-      type: r[c.type],
-      alignment: r[c.alignment],
-      reward: Number(r[c.reward]),
-      bonus: Number(r[c.bonus]),
-      deadlineDays: r[c.deadline] === "" ? null : Number(r[c.deadline]),
-      noteJa: r[c.note] ?? "",
-    });
-    labels.set(occupationLabelId(id), { ja: r[c.ja], en: r[c.en] });
-  }
-  return { entries, labels };
-}
-
-const loaded = loadOccupations(occupationCsv);
+const ROWS = Object.values(OCCUPATION_TABLE);
 
 /** ID 順 */
-export const OCCUPATIONS: readonly OccupationEntry[] = loaded.entries;
+export const OCCUPATIONS: readonly OccupationEntry[] = ROWS.map((r) => ({
+  id: occupationId(r.id_dec),
+  labelId: occupationLabelId(r.id_dec),
+  client: r.client_ja,
+  type: r.type,
+  alignment: r.alignment,
+  reward: Number(r.reward),
+  bonus: Number(r.bonus),
+  deadlineDays: r.deadline_days,
+  noteJa: r.備考,
+}));
 
 /** なりわいの表示名（日本語・英語） */
-export const OCCUPATION_LABELS: ReadonlyMap<OccupationLabelId, LocalizedLabel> = loaded.labels;
+export const OCCUPATION_LABELS: ReadonlyMap<OccupationLabelId, LocalizedLabel> = new Map(
+  ROWS.map((r) => [occupationLabelId(r.id_dec), { ja: r.name_ja, en: r.name_en }]),
+);
 
 const BY_ID = new Map<number, OccupationEntry>(OCCUPATIONS.map((o) => [o.id, o]));
 

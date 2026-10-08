@@ -2,22 +2,22 @@
 // 名前の文字列はマスター（datatable の CSV）にだけ持ち、画面やほかのモジュールは種別ごとの LabelId で参照する。
 // マスターのモジュール（*-names.ts・chart-nodes.ts）はこのモジュールを読み込まない（循環させない）。
 import { CHART_NODE_OWN_LABELS, type ChartNodeEntry } from "./chart-nodes";
+import { EVENT_TABLE } from "./dataset/event";
+import { ITEM_TABLE } from "./dataset/item";
+import { NPC_NAME_TABLE } from "./dataset/npc-name";
+import { OCCUPATION_TABLE } from "./dataset/occupation";
 import { EVENT_LABELS } from "./event-names";
 import { ITEM_LABELS } from "./item-names";
 import { NPC_LABELS } from "./npc-names";
 import { OCCUPATION_LABELS, type OccupationGroup } from "./occupation-names";
-import {
-  eventLabelId,
-  itemLabelId,
-  npcLabelId,
-  occupationLabelId,
-  type EventLabelId,
-  type ItemLabelId,
-  type LabelRef,
-  type Language,
-  type LocalizedLabel,
-  type NpcLabelId,
-  type OccupationLabelId,
+import type {
+  EventLabelId,
+  ItemLabelId,
+  LabelRef,
+  Language,
+  LocalizedLabel,
+  NpcLabelId,
+  OccupationLabelId,
 } from "./label-types";
 
 export function findLabel(ref: LabelRef): LocalizedLabel | undefined {
@@ -55,21 +55,25 @@ export const npcLabel = (id: NpcLabelId, lang: Language = "ja"): string => label
 export const occupationLabel = (id: OccupationLabelId, lang: Language = "ja"): string =>
   labelOf({ kind: "occupation", id }, lang);
 
-function strictLabel(ref: LabelRef): string {
-  if (!findLabel(ref)) throw new Error(`表にない ID です: ${ref.kind}:${Number(ref.id)}`);
-  return labelOf(ref);
+type NameTable = Readonly<Record<number, { readonly name_ja: string }>>;
+/** 名前のある ID（名前が空の行は除く） */
+type NamedId<T extends NameTable> = { [K in keyof T]: T[K] extends { name_ja: "" } ? never : K }[keyof T];
+type NameAt<T extends NameTable, I extends keyof T> = T[I] extends { name_ja: infer N } ? N : never;
+
+function nameFrom<T extends NameTable>(table: T) {
+  return <const I extends NamedId<T>>(id: I): NameAt<T, I> => (table[id] as { name_ja: string }).name_ja as NameAt<T, I>;
 }
 
 /**
- * 説明文・注記の中で名前を引くための短い形。引数は各表の ID（数値リテラル）で、表にない ID は例外にする
- * （モジュールの読み込み時に気づけるように）。例：`${nameOf.event(38)}で${nameOf.npc(10)}に勝つと 1`
- * 値がデータから来るときは、型で区別できる npcLabel(NpcLabelId) などを使う。
+ * コードに ID を直接書いて名前を引く形。引数は各表の ID の数値リテラルで、表にない ID・名前のない ID は型エラーになる。
+ * 返り値の型は名前の文字列そのもの（nameOf.npc(40) にカーソルを当てると "野戸仏"）。
+ * 値がデータから来るとき（number）は、型で区別できる npcLabel(NpcLabelId) などを使う。
  */
 export const nameOf = {
-  item: (id: number): string => strictLabel({ kind: "item", id: itemLabelId(id) }),
-  event: (id: number): string => strictLabel({ kind: "event", id: eventLabelId(id) }),
-  npc: (id: number): string => strictLabel({ kind: "npc", id: npcLabelId(id) }),
-  occupation: (id: number): string => strictLabel({ kind: "occupation", id: occupationLabelId(id) }),
+  item: nameFrom(ITEM_TABLE),
+  event: nameFrom(EVENT_TABLE),
+  npc: nameFrom(NPC_NAME_TABLE),
+  occupation: nameFrom(OCCUPATION_TABLE),
 } as const;
 
 /** ノードの名前。イベントの名前と違う名前を持つノード（町の薬師 など）はその名前 */

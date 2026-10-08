@@ -98,7 +98,12 @@ const SHIRUBE_RESULT_VALUES: readonly TownsfolkValue[] = [
 ];
 
 /** 汁部（DLC）のなりわい 209〜212 の名前 */
-export const SHIRUBE_JOBS: readonly string[] = [209, 210, 211, 212].map(nameOf.occupation);
+export const SHIRUBE_JOBS = [
+  nameOf.occupation(209),
+  nameOf.occupation(210),
+  nameOf.occupation(211),
+  nameOf.occupation(212),
+] as const;
 
 /** なりわいのまとまりの見出し（【岡っ引き】野戸仏 など）。なりわいの画面の絞り込みと同じ */
 const groupTitle = (key: string): string => occupationGroupLabel(occupationGroupByKey(key)!);

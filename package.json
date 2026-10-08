@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
+    "gen:dataset": "node scripts/gen-dataset.ts",
     "preview": "vite preview"
   },
   "dependencies": {

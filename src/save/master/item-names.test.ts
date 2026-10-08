@@ -1,6 +1,6 @@
 // アイテムの表（datatable/item/item.csv、全行 🟢）と同じ内容かを、要所の行で確かめる。
 import { describe, expect, it } from "vitest";
-import { ITEMS, ITEM_LABELS, findItem, parseCsv } from "./item-names";
+import { ITEMS, ITEM_LABELS, findItem } from "./item-names";
 import { itemLabelId } from "./label-types";
 import { itemLabel } from "./labels";
 
@@ -60,13 +60,6 @@ describe("🟢 アイテム datatable/item/item.csv", () => {
     expect(findItem(0x02)?.descJa).toBe("貴重なお米携帯食料。作ってくれた人の気持ちが伝わる。活力300回復。");
     expect(findItem(0x01)?.descEn).toContain('"sooshee.');
     expect(ITEMS.every((it) => it.descJa !== "")).toBe(true);
-  });
-
-  it("parseCsv：引用符の中のカンマ・改行・二重引用符", () => {
-    expect(parseCsv('a,"b,c","d""e"\r\n1,"x\ny",\n')).toEqual([
-      ["a", "b,c", 'd"e'],
-      ["1", "x\ny", ""],
-    ]);
   });
 
   it("表示名はゲーム内の表記のまま。同じ名前の ID にも ID を添えない（ユーザー判断 2026-10-07）", () => {

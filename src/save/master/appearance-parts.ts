@@ -1,4 +1,4 @@
-// 主人公の見た目の部品と人物（容姿）のマスターデータ。docs/save_format/datatable/appearance/*.csv をビルド時に読み込む（表を二重に持たない）。
+// 主人公の見た目の部品と人物（容姿）のマスターデータ。docs/save_format/datatable/appearance/*.csv から生成した dataset/*.ts を使う（表を二重に持たない）。
 //
 // 部品（face・hair・upper・lower・body・feet・extra.csv、全行 🟢。body.csv は部品の種類が ❓）：
 // - id：部品の番号。部品の種類ごとに別の空間（セーブの部品の組の先頭 u16）
@@ -12,15 +12,14 @@
 // - bodyKind：体の種類（0x3AADC）、secondId：0x3AAD6 に入る値 🔶（null＝FFFF）、hairColor：髪の色（0x3AADA）
 // - selectable：主人公設定の一覧に出る人物。出ないローラ・男の子・女の子（✅ [U] 2026-10-08）は上級者モードだけ
 // - parts：その人物の部品の番号（null＝なし）
-import bodyCsv from "../../../docs/save_format/datatable/appearance/body.csv?raw";
-import extraCsv from "../../../docs/save_format/datatable/appearance/extra.csv?raw";
-import faceCsv from "../../../docs/save_format/datatable/appearance/face.csv?raw";
-import feetCsv from "../../../docs/save_format/datatable/appearance/feet.csv?raw";
-import hairCsv from "../../../docs/save_format/datatable/appearance/hair.csv?raw";
-import lowerCsv from "../../../docs/save_format/datatable/appearance/lower.csv?raw";
-import personCsv from "../../../docs/save_format/datatable/appearance/person.csv?raw";
-import upperCsv from "../../../docs/save_format/datatable/appearance/upper.csv?raw";
-import { parseCsv } from "./item-names";
+import { BODY_TABLE } from "./dataset/body";
+import { EXTRA_TABLE } from "./dataset/extra";
+import { FACE_TABLE } from "./dataset/face";
+import { FEET_TABLE } from "./dataset/feet";
+import { HAIR_TABLE } from "./dataset/hair";
+import { LOWER_TABLE } from "./dataset/lower";
+import { PERSON_TABLE } from "./dataset/person";
+import { UPPER_TABLE } from "./dataset/upper";
 
 /**
  * 部品の組（セーブの 0x3AAE4 + 12k）の並び。k＝0 上半身 … 9 合羽。
@@ -79,19 +78,22 @@ export type PersonEntry = {
 /** 0x3AADC の値の名前。0＝男・1＝女 🔶、2＝ローラ・3＝子供・4＝動物 🟢（U-19） */
 export const BODY_KINDS = ["男", "女", "ローラ", "子供", "動物"] as const;
 
-function table(text: string, file: string): { col: (name: string) => number; rows: string[][] } {
-  const [header, ...rows] = parseCsv(text.replace(/^﻿/, ""));
-  return {
-    col: (name) => {
-      const i = header.indexOf(name);
-      if (i < 0) throw new Error(`${file} に ${name} 列がありません`);
-      return i;
-    },
-    rows: rows.filter((r) => r.length > 1),
-  };
-}
+/** 部品の CSV（face・hair・upper・lower・body・feet・extra）の行。列は CSV ごとに少しずつ違う */
+type PartRow = {
+  id_dec: number;
+  name_ja: string | null;
+  name_en: string | null;
+  gender: string | null;
+  save_models: string;
+  unlock_id?: number | null;
+  cloth_id?: number | null;
+  dlc?: number | string | null;
+  kind?: string;
+  alias_ja?: string | null;
+  crash?: number | null;
+};
 
-const optNum = (s: string | undefined) => (s === undefined || s === "" ? null : Number(s));
+const optNum = (v: number | string | null | undefined) => (v === undefined || v === null || v === "" ? null : Number(v));
 
 /** "46 01 FF FF …" → [326, -1, …] */
 function parseModels(text: string, file: string, id: number): PartEntry["models"] {
@@ -104,44 +106,22 @@ function parseModels(text: string, file: string, id: number): PartEntry["models"
   return [v[0], v[1], v[2], v[3]];
 }
 
-function loadParts(text: string, file: string, kind?: string): PartEntry[] {
-  const { col, rows } = table(text, file);
-  const has = (name: string) => {
-    try {
-      return col(name);
-    } catch {
-      return -1;
-    }
-  };
-  const c = {
-    id: col("id_dec"),
-    ja: col("name_ja"),
-    en: col("name_en"),
-    gender: col("gender"),
-    models: col("save_models"),
-    unlock: has("unlock_id"),
-    cloth: has("cloth_id"),
-    dlc: has("dlc"),
-    kind: has("kind"),
-    alias: has("alias_ja"),
-    crash: has("crash"),
-  };
-  return rows
-    .filter((r) => kind === undefined || r[c.kind] === kind)
+function loadParts(table: Readonly<Record<number, PartRow>>, file: string, kind?: string): PartEntry[] {
+  return Object.values(table)
+    .filter((r) => kind === undefined || r.kind === kind)
     .map((r) => {
-      const id = Number(r[c.id]);
-      const g = r[c.gender];
+      const g = r.gender;
       return {
-        id,
-        ja: r[c.ja],
-        en: r[c.en],
+        id: r.id_dec,
+        ja: r.name_ja ?? "",
+        en: r.name_en ?? "",
         gender: g === "男" || g === "女" ? g : null,
-        models: parseModels(r[c.models], file, id),
-        unlockId: c.unlock < 0 ? null : optNum(r[c.unlock]),
-        clothId: c.cloth < 0 ? null : optNum(r[c.cloth]),
-        dlc: c.dlc < 0 ? null : optNum(r[c.dlc]),
-        alias: c.alias < 0 ? "" : r[c.alias],
-        crash: c.crash >= 0 && r[c.crash] === "1",
+        models: parseModels(r.save_models, file, r.id_dec),
+        unlockId: optNum(r.unlock_id),
+        clothId: optNum(r.cloth_id),
+        dlc: optNum(r.dlc),
+        alias: r.alias_ja ?? "",
+        crash: r.crash === 1,
       };
     });
 }
@@ -159,55 +139,44 @@ const PERSON_PART_COLUMNS: Record<PartKind, string> = {
   cape: "cape",
 };
 
-function loadPersons(text: string): PersonEntry[] {
-  const { col, rows } = table(text, "person.csv");
-  const c = {
-    id: col("id_dec"),
-    ja: col("name_ja"),
-    en: col("name_en"),
-    dlc: col("dlc"),
-    height: col("height"),
-    bodyKind: col("body_kind"),
-    secondId: col("second_id"),
-    hairColor: col("hair_color"),
-    selectable: col("selectable"),
-  };
-  return rows.map((r) => {
+function loadPersons(): PersonEntry[] {
+  return Object.values(PERSON_TABLE).map((r) => {
+    const row: Readonly<Record<string, unknown>> = r;
     const parts = {} as Record<PartKind, number | null>;
-    for (const k of PART_KINDS) parts[k] = optNum(r[col(PERSON_PART_COLUMNS[k])]);
-    const bodyKind = BODY_KINDS.indexOf(r[c.bodyKind] as (typeof BODY_KINDS)[number]);
-    if (bodyKind < 0) throw new Error(`person.csv の ${r[c.id]} の body_kind が読めません`);
+    for (const k of PART_KINDS) parts[k] = optNum(row[PERSON_PART_COLUMNS[k]] as number | null);
+    const bodyKind = BODY_KINDS.indexOf(r.body_kind);
+    if (bodyKind < 0) throw new Error(`person.csv の ${r.id_dec} の body_kind が読めません`);
     return {
-      id: Number(r[c.id]),
-      ja: r[c.ja],
-      en: r[c.en],
-      dlc: optNum(r[c.dlc]),
-      height: Number(r[c.height]),
+      id: r.id_dec,
+      ja: r.name_ja,
+      en: r.name_en,
+      dlc: optNum(r.dlc),
+      height: r.height,
       bodyKind,
-      secondId: optNum(r[c.secondId]),
-      hairColor: Number(r[c.hairColor]),
+      secondId: optNum(r.second_id),
+      hairColor: r.hair_color,
       parts,
-      selectable: r[c.selectable] === "1",
+      selectable: r.selectable === 1,
     };
   });
 }
 
 /** 部品の種類ごとの表（番号順） */
 export const PARTS: Readonly<Record<PartKind, readonly PartEntry[]>> = {
-  upper: loadParts(upperCsv, "upper.csv"),
-  lower: loadParts(lowerCsv, "lower.csv"),
-  face: loadParts(faceCsv, "face.csv"),
-  hair: loadParts(hairCsv, "hair.csv"),
-  body: loadParts(bodyCsv, "body.csv"),
-  feet: loadParts(feetCsv, "feet.csv"),
-  gauntlet: loadParts(extraCsv, "extra.csv", "手甲"),
-  leggings: loadParts(extraCsv, "extra.csv", "脚絆"),
-  apron: loadParts(extraCsv, "extra.csv", "前掛け"),
-  cape: loadParts(extraCsv, "extra.csv", "合羽"),
+  upper: loadParts(UPPER_TABLE, "upper.csv"),
+  lower: loadParts(LOWER_TABLE, "lower.csv"),
+  face: loadParts(FACE_TABLE, "face.csv"),
+  hair: loadParts(HAIR_TABLE, "hair.csv"),
+  body: loadParts(BODY_TABLE, "body.csv"),
+  feet: loadParts(FEET_TABLE, "feet.csv"),
+  gauntlet: loadParts(EXTRA_TABLE, "extra.csv", "手甲"),
+  leggings: loadParts(EXTRA_TABLE, "extra.csv", "脚絆"),
+  apron: loadParts(EXTRA_TABLE, "extra.csv", "前掛け"),
+  cape: loadParts(EXTRA_TABLE, "extra.csv", "合羽"),
 };
 
 /** 人物の番号順 */
-export const PERSONS: readonly PersonEntry[] = loadPersons(personCsv);
+export const PERSONS: readonly PersonEntry[] = loadPersons();
 
 export function findPart(kind: PartKind, id: number): PartEntry | undefined {
   return PARTS[kind].find((p) => p.id === id);

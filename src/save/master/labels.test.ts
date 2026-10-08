@@ -40,13 +40,19 @@ describe("共通ラベル", () => {
     expect(labelKeywords({ kind: "npc", id: npcLabelId(9999) })).toEqual([]);
   });
 
-  it("nameOf：文中で数値の ID から名前を引く。表にない ID は例外", () => {
-    expect(nameOf.npc(40)).toBe("野戸仏");
+  it("nameOf：ID のリテラルから名前を引く。返り値の型は名前の文字列そのもの", () => {
+    const nodobotoke: "野戸仏" = nameOf.npc(40);
+    expect(nodobotoke).toBe("野戸仏");
     expect(nameOf.event(38)).toBe("真実");
     expect(nameOf.item(0x02)).toBe("おにぎり");
     expect(nameOf.occupation(172)).toBe("督促状");
-    expect(() => nameOf.npc(9999)).toThrow("npc:9999");
-    expect(() => nameOf.event(84)).toThrow("event:84");
+  });
+
+  it("nameOf：表にない ID・名前のない ID は型エラー", () => {
+    // @ts-expect-error 9999 は人物の表にない
+    expect(() => nameOf.npc(9999)).toThrow();
+    // @ts-expect-error 通し番号 84 は名前がない
+    expect(nameOf.event(84)).toBe("");
   });
 
   it("なりわいのまとまりの見出しは、依頼主の名前を人物の表から引く", () => {
