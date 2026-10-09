@@ -723,6 +723,15 @@ const flagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
   ],
 };
 
+// 🟢 閉鎖条件の0は、初期開放・ルート・イベントによる閉鎖を打ち消さない。
+const worldFlagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
+  close: [
+    { value: "0", label: "0 閉鎖指定なし" },
+    { value: "1", label: "1 閉じる" },
+  ],
+  open: flagOptions.open,
+};
+
 const factionExitOptions: SelectOption[] = [
   { value: "0", label: "0 町にいる" },
   { value: "1", label: "1 退場した" },
@@ -775,15 +784,18 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
       <CardHeader>
         <CardTitle>門・柵のフラグ</CardTitle>
         <CardDescription>
-          ルート分岐を書き換えても、門が閉じたままだとそのルートに進めません。
-          代官所の表門（0x37FA）・居留地（0x3764）の門と神社入口の柵（0x37C3）は、1 → 0
-          の書き換えで開くことを確認済みです。
-          代官所の裏門（0x37FB）は表門と同じ場面で同じ値になるので、表門とそろえてください（裏門が開くかは要ゲーム内確認）。
-          この4つは大寄せで、ルートに入れなかった勢力の門が閉じます（それより前の門には関係しません）。
-          居留地の門と神社入口の柵は、大寄せのあとのイベントでも閉じることがあります。
-          大寄せ前の代官所（0x377D）・居留地（0x377E）・神社（0x377F）の門は、値が逆で 1
-          が開いている状態です（書き換えで反映を確認済み）。
+          神社は「入口の柵」と「洞窟内の柵」が別々の閉鎖フラグです。
+          洞窟内の柵（0x3761）は、1 で降りて通行を塞ぐことを確認済みです。
+          0 に戻したときの上昇・通行の回復は要ゲーム内確認です。
+          代官所の表門（0x37FA）・居留地の外門（0x3764）・神社入口の柵（0x37C3）は、
+          1 → 0 で開くことを確認済みです。裏門（0x37FB）の反映は要ゲーム内確認です。
+          🟢 閉鎖フラグは大寄せ前にも有効で、0 は閉鎖の指定を解除する値です。
+          初日昼勧誘フラグ（0x377D〜0x377F）は序章〜1日目昼（段階 ≤100）の開放判定に使われ、1 で開きます。
+          ルートやイベントの条件によっても閉じるため、0 にするだけで必ず開くとは限りません。
         </CardDescription>
+        <p className="text-sm text-muted-foreground">
+          🟢 注意：大老の大寄せ以降は、該当ルートに入れなくなった時点で閉まる。
+        </p>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
         {WORLD_FLAGS.map((flag, i) => (
@@ -793,7 +805,7 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
             offset={flag.offset}
             value={view ? String(view.values[i]) : null}
             currentLabel={view ? `${view.values[i]} 不明` : undefined}
-            options={flagOptions[flag.meaning]}
+            options={worldFlagOptions[flag.meaning]}
             problem={view?.problem ?? null}
             note={flag.note}
             onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}

@@ -20,11 +20,12 @@ import {
  * WORLD_FLAGS の順。大寄せ以降の4つは 04 copy 11（根無し草、大寄せのあと。3つの門がすべて閉じている）、
  * 大寄せ前の3つは S4-DATA_01（阿弥浜港争乱の直後、居留地だけが開いている）の値
  */
-const NO_ROUTE = [1, 1, 1, 1, 0, 1, 0]
+// 洞窟内の柵は合成値1を追加（✅ 1で下降・通行不可、0での回復は未確認）。
+const NO_ROUTE = [1, 1, 1, 1, 0, 1, 0, 1]
 
 function makeSave(values: number[], size = TS_SAVE_SIZE): Uint8Array {
   const b = new Uint8Array(size)
-  WORLD_FLAGS.forEach((f, i) => writeU8(b, f.offset, values[i]))
+  WORLD_FLAGS.forEach((f, i) => writeU8(b, f.offset, values[i] ?? 0))
   // 意味の分からないバイト（UI に出さない）も置き、書き込みで変わらないことを見る
   writeU8(b, 0x37a2, 2)
   writeU8(b, 0x377c, 1)
@@ -39,18 +40,43 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 
 describe('門・柵のフラグ chunks/gates', () => {
   it('大寄せ以降と大寄せ前の、代官所・居留地・神社の門を読む', () => {
-    expect(WORLD_FLAGS.map((f) => f.offset)).toEqual([0x37fa, 0x37fb, 0x3764, 0x37c3, 0x377d, 0x377e, 0x377f])
+    expect(WORLD_FLAGS.map((f) => f.offset)).toEqual([0x37fa, 0x37fb, 0x3764, 0x37c3, 0x377d, 0x377e, 0x377f, 0x3761])
     expect(readWorldFlags(makeSave(NO_ROUTE))).toEqual({ values: NO_ROUTE, problem: null })
   })
 
   it('✅ [U] 大寄せ以降の門は 1 で閉じ、大寄せ前の門は 1 で開く（0x37FB の 1＝閉じるは 🔶）', () => {
-    expect(WORLD_FLAGS.map((f) => f.meaning)).toEqual(['close', 'close', 'close', 'close', 'open', 'open', 'open'])
+    expect(WORLD_FLAGS.map((f) => f.meaning)).toEqual(['close', 'close', 'close', 'close', 'open', 'open', 'open', 'close'])
+  })
+
+  it('UIの名称は閉鎖フラグ・初日昼勧誘フラグで統一する', () => {
+    expect(WORLD_FLAGS.map((f) => f.label)).toEqual([
+      '代官所の表門（閉鎖フラグ）',
+      '代官所の裏門（閉鎖フラグ）',
+      '居留地の外門（閉鎖フラグ）',
+      '神社入口の柵（閉鎖フラグ）',
+      '代官所の門（初日昼勧誘フラグ）',
+      '居留地の門（初日昼勧誘フラグ）',
+      '神社入口の柵（初日昼勧誘フラグ）',
+      '神社の洞窟内の柵（閉鎖フラグ）',
+    ])
+  })
+
+  it('神社は入口の柵と洞窟内の柵を区別し、門とは表示しない', () => {
+    expect(WORLD_FLAGS.find((f) => f.offset === 0x37c3)?.label).toContain('神社入口の柵')
+    expect(WORLD_FLAGS.find((f) => f.offset === 0x377f)?.label).toContain('神社入口の柵')
+    const cave = WORLD_FLAGS.find((f) => f.offset === 0x3761)!
+    expect(cave.label).toContain('神社の洞窟内の柵')
+    expect(cave.note).toContain('✅ 1 で柵が降り')
+    expect(cave.note).toContain('0 に戻したときの上昇・通行の回復は要ゲーム内確認')
+    expect(WORLD_FLAGS.filter((f) => f.label.includes('神社')).every((f) => !f.label.includes('門'))).toBe(true)
+    expect(SCENARIO_FLAGS.some((f) => f.offset === 0x3761)).toBe(false)
   })
 
   it('0・1 以外なら読み取り専用にする', () => {
     expect(readWorldFlags(makeSave([2, 1, 1, 1, 0, 1, 0])).problem).not.toBeNull()
     expect(readWorldFlags(makeSave([1, 2, 1, 1, 0, 1, 0])).problem).not.toBeNull()
     expect(readWorldFlags(makeSave([1, 1, 1, 1, 0, 1, 2])).problem).not.toBeNull()
+    expect(readWorldFlags(makeSave([1, 1, 1, 1, 0, 1, 0, 2])).problem).not.toBeNull()
   })
 
   it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
@@ -87,10 +113,10 @@ describe('門・柵のフラグ chunks/gates', () => {
 // ほかは 1 のとき何が変わるかが ❓。
 describe('そのほかのフラグ chunks/scenario-flags', () => {
   /**
-   * SCENARIO_FLAGS の順。大寄せで外国・攘夷のルートに入れず（0x3761・0x37C6 が 1）、
+   * SCENARIO_FLAGS の順。大寄せで外国ルートに入れず（0x37C6 が 1）、
    * 大老と三姉妹の前（0x3762・0x3763 が 1）、剣術大会で2試合勝ち抜いたところ、という合成の値
    */
-  const VALUES = [1, 1, 1, 1, 0, 2, 0, 0, 0]
+  const VALUES = [1, 1, 1, 0, 2, 0, 0, 0]
 
   function makeOther(values: number[], size = TS_SAVE_SIZE): Uint8Array {
     const b = new Uint8Array(size)
@@ -104,10 +130,10 @@ describe('そのほかのフラグ chunks/scenario-flags', () => {
 
   it('位置と候補の値', () => {
     expect(SCENARIO_FLAGS.map((f) => f.offset)).toEqual([
-      0x3761, 0x37c6, 0x3762, 0x3763, 0x3760, 0x37ab, 0x37f7, 0x37f8, 0x37c0,
+      0x37c6, 0x3762, 0x3763, 0x3760, 0x37ab, 0x37f7, 0x37f8, 0x37c0,
     ])
     // 🟢 剣術大会で勝ち抜いた試合数は 0〜3
-    expect(SCENARIO_FLAGS[5].values.map((v) => v.value)).toEqual([0, 1, 2, 3])
+    expect(SCENARIO_FLAGS[4].values.map((v) => v.value)).toEqual([0, 1, 2, 3])
     // 🔶 意味に推測が入るのは 0x3762・0x3763・0x37C0。ほかは ❓
     expect(SCENARIO_FLAGS.filter((f) => f.certainty === '🔶').map((f) => f.offset)).toEqual([0x3762, 0x3763, 0x37c0])
     // 門と重ならない
@@ -140,13 +166,13 @@ describe('そのほかのフラグ chunks/scenario-flags', () => {
   it('通常モードは候補の値だけ。上級者モードでは任意の u8', () => {
     const b = makeOther(VALUES)
     expect(() => writeScenarioFlag(b, 0, 2, { advanced: false })).toThrow(RangeError)
-    expect(() => writeScenarioFlag(b, 5, 4, { advanced: false })).toThrow(RangeError)
+    expect(() => writeScenarioFlag(b, 4, 4, { advanced: false })).toThrow(RangeError)
     expect(() => writeScenarioFlag(b, SCENARIO_FLAGS.length, 0, { advanced: false })).toThrow(RangeError)
     expect(() => writeScenarioFlag(b, 0, 0x100, { advanced: true })).toThrow(RangeError)
-    writeScenarioFlag(b, 5, 3, { advanced: false })
+    writeScenarioFlag(b, 4, 3, { advanced: false })
     expect(b[0x37ab]).toBe(3)
     writeScenarioFlag(b, 0, 2, { advanced: true })
-    expect(b[0x3761]).toBe(2)
+    expect(b[0x37c6]).toBe(2)
   })
 
   it('読み出し→書き戻しでバイト列が一致する', () => {
