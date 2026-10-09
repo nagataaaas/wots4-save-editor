@@ -5,7 +5,7 @@
 //   +0x00 u16  🟢 約束したときの段階（0x13E30）。特別な相手は FFFF。書き換えない
 //   +0x02 u16  ✅ [U] 2026-10-07 日付ではない（1日目に町の人と約束して 1、5日目に先生と約束して 0）。
 //              🟢 町の人の種類ごとのまとまり（特別な相手は 0、町の人は 1〜3）。書き換えの効果は未確認なので上級者モードだけ（group）
-//   +0x04 u32  ✅ [U] しゃべり方と戦闘力の型（はるなを 0x031B にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった）。
+//   +0x04 u32  ✅ [U] セリフと戦闘力の型（はるなを 0x031B にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった）。
 //              FFFFFFFF なら約束なし（空の枠）
 //   +0x08 u16  ✅ [U] 約束の場所（夜這いに入る扉と、その先のマップ）。0x00〜0x22 の名前を書き換えで確認。0x23 以降は名前が空
 //   +0x0A u16  ✅ [U] 位置 ／ 🟢 意味：行き先の家の種類・家の人・布団と、その座標の組（datatable/place/night-visit-layout.csv）。
@@ -233,25 +233,29 @@ export type KnownValue = { value: number; label: string };
 export type TypeKind = "名前のある相手" | "町の人（女性）" | "町の人（男性）";
 
 /**
- * 🟢 しゃべり方と戦闘力の型（+0x04、町の人の種類）。約束できる相手の種類（datatable/npc/night-visit-partner.csv）。
+ * 🟢 セリフと戦闘力の型（+0x04、町の人の種類）。約束できる相手の種類（datatable/npc/night-visit-partner.csv）。
  * 通常モードではこれだけを書ける。名前・見た目とは別々に効く（✅ [U]）
  */
-export const KNOWN_TYPES: readonly (KnownValue & { kind: TypeKind })[] = Object.values(NIGHT_VISIT_PARTNER_TABLE).map((p) => ({
+export const KNOWN_TYPES: readonly (KnownValue & { kind: TypeKind })[] = Object.values(
+  NIGHT_VISIT_PARTNER_TABLE,
+).map((p) => ({
   value: p.id_dec,
   label: p.備考 ? `${p.name_ja}（${p.備考}）` : p.name_ja,
-  kind: p.kind === "special" ? "名前のある相手" : p.sex === "f" ? "町の人（女性）" : "町の人（男性）",
+  kind:
+    p.kind === "special" ? "名前のある相手" : p.sex === "f" ? "町の人（女性）" : "町の人（男性）",
 }));
 
 /**
  * 🟢 見た目（モデル）と声（+0x20）。datatable/npc/npc-look.csv の222件。番号は人物（容姿、appearance/person.csv）と同じ。
  * 通常モードではこれだけを書ける。型・名前とは別々に効く（✅ [U]）。usedBy はその見た目を使う町の人の種類
  */
-export const KNOWN_LOOKS: readonly (KnownValue & { sex: "f" | "m"; usedBy: string })[] = Object.values(NPC_LOOK_TABLE).map((l) => ({
-  value: l.id_dec,
-  label: l.name_ja,
-  sex: l.sex === "f" ? "f" : "m",
-  usedBy: l.used_by,
-}));
+export const KNOWN_LOOKS: readonly (KnownValue & { sex: "f" | "m"; usedBy: string })[] =
+  Object.values(NPC_LOOK_TABLE).map((l) => ({
+    value: l.id_dec,
+    label: l.name_ja,
+    sex: l.sex === "f" ? "f" : "m",
+    usedBy: l.used_by,
+  }));
 
 /** 名前の表示。🟢 名前の表（npc-names）にない ID は 16進数 */
 export function nameLabel(id: number): string {
