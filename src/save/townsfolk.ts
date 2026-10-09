@@ -74,16 +74,117 @@ export function occupationFlagOffset(n: number): number {
  * 連続なりわい（番号 4〜7）の値。十の位が何件目か、一の位が 0＝依頼前・1＝依頼済み。100 で完了。
  * 「連続なりわい」は Wiki での呼び方（ゲーム内の文には呼び方がなく、開発用のメニューだけ「組合ミッション」）。
  * ✅ 番号 4（野戸仏）は 20＝2件目から始まる・100＝完了を書き換えで確認（2026-10-07）。番号 5〜7 は 🟢。
- * 90・91・97・99 の細かい違いは ❓
+ * 8件目のあとの値（90 番台・100〜102）は依頼主ごとに違う 🟢。ラベルはその値になる会話の内容
  */
-export const SERIES_VALUES: readonly TownsfolkValue[] = [
+const SERIES_STEPS: readonly TownsfolkValue[] = [
   { value: 0, label: "依頼主に会う前" },
   ...Array.from({ length: 8 }, (_, i) => [
     { value: (i + 1) * 10, label: `${i + 1}件目を依頼する前`, group: `${i + 1}件目` },
     { value: (i + 1) * 10 + 1, label: `${i + 1}件目を依頼済み`, group: `${i + 1}件目` },
   ]).flat(),
-  ...[90, 91, 97, 99].map((value) => ({ value, label: "最後の件の前後", group: "最後の件" })),
-  { value: 100, label: "連続なりわいを終えた" },
+];
+
+const SERIES_DONE = "すべて終えた";
+const afterLast = (name: string) => `「${name}」のあと`;
+
+/** 🟢 野戸仏（番号 4） */
+export const POLICE_SERIES_VALUES: readonly TownsfolkValue[] = [
+  ...SERIES_STEPS,
+  {
+    value: 90,
+    label: `「${nameOf.occupation(178)}」を果たした（${nameOf.npc(48)}に逃げられ、浪人は馬小屋のまま）`,
+    group: afterLast(nameOf.occupation(178)),
+  },
+  { value: 91, label: `浪人の身代わりに${nameOf.npc(37)}が馬小屋に入った`, group: afterLast(nameOf.occupation(178)) },
+  {
+    value: 97,
+    label: `出された浪人（${nameOf.npc(68)}）に礼を言われた（${nameOf.npc(40)}の話はまだ）`,
+    group: afterLast(nameOf.occupation(178)),
+  },
+  {
+    value: 99,
+    label: `${nameOf.npc(40)}に「丸くおさまった」と言われた（${nameOf.npc(68)}の礼はまだ）`,
+    group: afterLast(nameOf.occupation(178)),
+  },
+  {
+    value: 100,
+    label: `${nameOf.npc(40)}の話も${nameOf.npc(68)}の礼も済み、岡っ引きの仕事をやり遂げた`,
+    group: SERIES_DONE,
+  },
+  {
+    value: 101,
+    label: `${nameOf.npc(68)}に合言葉「根の葉の根」を伝えた（侍四天王の招集）。最終決戦のあとにもなる`,
+    group: SERIES_DONE,
+  },
+  { value: 102, label: `${nameOf.npc(73)}が亡くなった`, group: SERIES_DONE },
+];
+
+/** 🟢 小鳩（番号 5） */
+export const GANGSTER_SERIES_VALUES: readonly TownsfolkValue[] = [
+  ...SERIES_STEPS,
+  {
+    value: 90,
+    label: `「${nameOf.occupation(186)}」を果たした（${nameOf.npc(45)}の礼はまだ）`,
+    group: afterLast(nameOf.occupation(186)),
+  },
+  {
+    value: 91,
+    label: "「ひとりで菩殺会を片付けた」と礼を言われた（会話の途中。続きを聞くと 100）",
+    group: afterLast(nameOf.occupation(186)),
+  },
+  {
+    value: 100,
+    label: "親分や四人組に引き合わせると言われ、極道の仕事をやり遂げた",
+    group: SERIES_DONE,
+  },
+  {
+    value: 101,
+    label: `${nameOf.npc(44)}に「${nameOf.npc(188)}から余計な事を聞かなかったか」と口止めされた`,
+    group: SERIES_DONE,
+  },
+];
+
+/** 🟢 泥棒さん（番号 6） */
+export const THIEF_SERIES_VALUES: readonly TownsfolkValue[] = [
+  ...SERIES_STEPS,
+  {
+    value: 90,
+    label: `「${nameOf.occupation(194)}」を果たした（お宝はまだ渡していない）`,
+    group: afterLast(nameOf.occupation(194)),
+  },
+  { value: 91, label: "最後のお宝を渡した（会話の途中。続きを聞くと 92）", group: afterLast(nameOf.occupation(194)) },
+  {
+    value: 92,
+    label: "「四天王の証」を見て記憶が戻り、身投げは自殺だったと知った",
+    group: afterLast(nameOf.occupation(194)),
+  },
+  {
+    value: 100,
+    label: `${nameOf.npc(69)}以蔵と名乗られ、泥棒の仕事をやり遂げた`,
+    group: SERIES_DONE,
+  },
+  {
+    value: 101,
+    label: `合言葉「根の葉の根」を伝え、${nameOf.npc(61)}の待つ街道へ行かせた（侍四天王の招集）`,
+    group: SERIES_DONE,
+  },
+  { value: 102, label: `${nameOf.npc(73)}が亡くなった`, group: SERIES_DONE },
+];
+
+/** 🟢 おっつぁん（番号 7） */
+export const HOMELESS_SERIES_VALUES: readonly TownsfolkValue[] = [
+  ...SERIES_STEPS,
+  {
+    value: 90,
+    label: "「くさい物にふた」を果たした（高架下は守られた）",
+    group: "「くさい物にふた」のあと",
+  },
+  {
+    value: 91,
+    label: "「よく助けに戻ってくれた」と礼を言われた（会話の途中。続きを聞くと 100）",
+    group: "「くさい物にふた」のあと",
+  },
+  { value: 100, label: "「さぶらう」の教えを受け、宿無しの仕事をやり遂げた", group: SERIES_DONE },
 ];
 
 /** 0／1 のフラグの値 */
@@ -118,22 +219,22 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(4)]: {
     name: groupTitle("police"),
     note: `代官所の同心 ${nameOf.npc(40)}新太郎の連続なりわい 171〜178。書き換えると${nameOf.npc(40)}の次の依頼が変わる（確認済み：20 で2件目「督促状」から、100 で完了）`,
-    values: SERIES_VALUES,
+    values: POLICE_SERIES_VALUES,
   },
   [occupationFlagOffset(5)]: {
     name: groupTitle("gangster"),
     note: `🟢 町の極道者 ${nameOf.npc(45)}戒の連続なりわい 179〜186`,
-    values: SERIES_VALUES,
+    values: GANGSTER_SERIES_VALUES,
   },
   [occupationFlagOffset(6)]: {
     name: groupTitle("thief"),
     note: `🟢 港の${nameOf.npc(169)}の連続なりわい 187〜194`,
-    values: SERIES_VALUES,
+    values: THIEF_SERIES_VALUES,
   },
   [occupationFlagOffset(7)]: {
     name: groupTitle("homeless"),
     note: `🟢 居留地の${nameOf.npc(76)}の連続なりわい 195〜206`,
-    values: SERIES_VALUES,
+    values: HOMELESS_SERIES_VALUES,
   },
   [occupationFlagOffset(8)]: {
     name: groupTitle("sakotsu"),
@@ -163,13 +264,48 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   },
   [occupationFlagOffset(25)]: {
     name: "四天王の話",
-    note: `🟢 連続なりわい4つ（${nameOf.npc(40)}・${nameOf.npc(45)}・${nameOf.npc(169)}・${nameOf.npc(76)}）のどれかを終えたとき、ほかの3つがすべて 100 なら 1 になる`,
+    note:
+      `🟢 連続なりわい4つ（${nameOf.npc(40)}・${nameOf.npc(45)}・${nameOf.npc(169)}・${nameOf.npc(76)}）のどれかを終えたとき、ほかの3つがすべて 100 なら 1 になり、街道に${nameOf.npc(61)}が現れる。` +
+      `侍四天王（${nameOf.npc(61)}・${nameOf.npc(68)}・${nameOf.npc(69)}・${nameOf.npc(73)}）を集める話。9 を書く場面はない`,
     values: [
-      { value: 0, label: "始まる前" },
-      { value: 1, label: "連続なりわい4つを全部終えた" },
-      { value: 8, label: "「四天王の証」を受け取った" },
-      { value: 99, label: "段階 99" },
-      { value: 100, label: "段階 100" },
+      { value: 0, label: "始まる前（連続なりわい4つがまだ終わっていない）" },
+      { value: 1, label: `連続なりわい4つを終え、街道に${nameOf.npc(61)}が現れた`, group: `${nameOf.npc(61)}との話` },
+      { value: 2, label: `${nameOf.npc(61)}の身の上話に「ふ～ん」と返し、「さらばだ」と去られた`, group: `${nameOf.npc(61)}との話` },
+      { value: 3, label: `${nameOf.npc(61)}が侍四天王の${nameOf.npc(61)}善鬼だと名乗った`, group: `${nameOf.npc(61)}との話` },
+      { value: 4, label: `${nameOf.npc(61)}に「侍の名が泣くぞ」と迫った`, group: `${nameOf.npc(61)}との話` },
+      { value: 5, label: `${nameOf.npc(61)}が「逃げるのはもうやめだ」と戦う決意をした`, group: `${nameOf.npc(61)}との話` },
+      { value: 6, label: `${nameOf.npc(61)}に「残りの四天王を探してくれ」と頼まれた`, group: `${nameOf.npc(61)}との話` },
+      { value: 7, label: `${nameOf.npc(61)}から合言葉「根の葉の根」を教わった`, group: `${nameOf.npc(61)}との話` },
+      { value: 8, label: `${nameOf.npc(68)}と${nameOf.npc(69)}の両方に合言葉を伝えた（${nameOf.npc(73)}が寝込む）`, group: "四天王を集める" },
+      {
+        value: 10,
+        label: `${nameOf.npc(73)}十兵衛から「四天王の証」を受け取り、後を継いだ`,
+        group: "四天王を集める",
+      },
+      { value: 11, label: `${nameOf.npc(61)}たちに、${nameOf.npc(73)}は前から病気だったと伝えた`, group: "四天王を集める" },
+      { value: 12, label: `三人が${nameOf.npc(73)}に気づいてやれなかったことを悔やんだ`, group: "四天王を集める" },
+      { value: 13, label: "「四天王の証」を見せ、新たな侍四天王と認められた", group: "四天王を集める" },
+      {
+        value: 14,
+        label: `墓場での四人組との戦を持ちかけられた（「${nameOf.occupation(207)}」）`,
+        group: "四天王を集める",
+      },
+      {
+        value: 50,
+        label: `「${nameOf.occupation(207)}」で四人組を4人とも倒した（${nameOf.npc(44)}は来ない）`,
+        group: "四人組との戦",
+      },
+      {
+        value: 60,
+        label: `墓場の戦に${nameOf.npc(44)}が乱入した（${nameOf.npc(73)}を治療した場合）`,
+        group: "四人組との戦",
+      },
+      { value: 99, label: "四天王の誰かを斬り殺したか、何度も斬りつけて敵に回した", group: "終わったあと" },
+      {
+        value: 100,
+        label: `${nameOf.npc(73)}が息を引き取った（50・99 のあと）か、「${nameOf.occupation(208)}」を終えた`,
+        group: "終わったあと",
+      },
     ],
   },
   [occupationFlagOffset(26)]: {
@@ -180,18 +316,46 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
       "99 以上で、連続なりわいを終えた依頼主から8件を選び直せる（99 未満だと新しい依頼が出ないことは確認済み）。" +
       "治療すると 12 以降に進み、四天王対四人組（207）から阿弥浜八人衆（208）に発展する。治療しないと 207 で終わる（🔶）",
     values: [
-      { value: 0, label: "始まる前" },
-      { value: 1, label: `${nameOf.npc(73)}が寝込んだ`, group: `${nameOf.npc(73)}の病気` },
-      { value: 2, label: "医者に「薬代を出す金持ちを探せ」と言われた", group: `${nameOf.npc(73)}の病気` },
-      { value: 10, label: `${nameOf.npc(44)}が薬代を出した（治療）`, group: `${nameOf.npc(73)}の病気` },
-      { value: 11, label: "薬を投与した", group: `${nameOf.npc(73)}の病気` },
-      { value: 12, label: "外国の軍団の話を聞いた（四天王の話も 60）", group: "阿弥浜八人衆" },
-      { value: 15, label: "四人組が街道で迎え撃つ", group: "阿弥浜八人衆" },
-      { value: 20, label: "阿弥浜八人衆を受注した", group: "阿弥浜八人衆" },
-      { value: 99, label: "連続なりわいを選び直せる", group: "終わったあと" },
+      { value: 0, label: `始まる前（${nameOf.npc(73)}はまだ病院に運ばれていない）` },
+      { value: 1, label: `${nameOf.npc(73)}が病に倒れ、病院に担ぎ込まれた`, group: `${nameOf.npc(73)}の病気` },
+      {
+        value: 2,
+        label: "医者に「祖国の薬がある。薬代を出す金持ちを探せ」と言われた",
+        group: `${nameOf.npc(73)}の病気`,
+      },
+      {
+        value: 10,
+        label: `${nameOf.npc(44)}に${nameOf.npc(73)}のことを話し、薬代を引き受けてもらった`,
+        group: `${nameOf.npc(73)}の病気`,
+      },
+      {
+        value: 11,
+        label: `墓場で四人組と向き合った（${nameOf.npc(44)}が薬を医者に届け、投与された）`,
+        group: `${nameOf.npc(73)}の病気`,
+      },
+      {
+        value: 12,
+        label: `墓場の戦に${nameOf.npc(44)}（鳥葬会の親分）が現れた（四天王の話も 60）`,
+        group: nameOf.occupation(208),
+      },
+      {
+        value: 15,
+        label: `${nameOf.npc(44)}から「外国人の軍団が来る。四人組は街道で迎え撃つ」と聞いた`,
+        group: nameOf.occupation(208),
+      },
+      {
+        value: 20,
+        label: `${nameOf.npc(44)}から「${nameOf.occupation(208)}」を受けた（「侍四天王、いざ出陣！」）`,
+        group: nameOf.occupation(208),
+      },
+      {
+        value: 99,
+        label: `四人組・四天王・${nameOf.npc(73)}を何度も斬りつけて敵に回した（連続なりわいを選び直せる）`,
+        group: "終わったあと",
+      },
       {
         value: 100,
-        label: "阿弥浜八人衆を終えた（連続なりわいを選び直せる）",
+        label: `「${nameOf.occupation(208)}」で侵略者の指揮官を倒した（連続なりわいを選び直せる）`,
         group: "終わったあと",
       },
     ],

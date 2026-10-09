@@ -317,8 +317,8 @@ type FlagCardProps = {
   write: (m: (b: Uint8Array) => void) => void;
 };
 
-/** 連続なりわい（番号 4〜7）、最終なりわい（26）、四天王の話（25） */
-const SERIES_CARD_FLAGS = [4, 5, 6, 7, 26, 25] as const;
+/** 連続なりわい（番号 4〜7）、四天王の話（25）、最終なりわい（26） */
+const SERIES_CARD_FLAGS = [4, 5, 6, 7, 25, 26] as const;
 /** 治安なりわい（番号 8・9） */
 const SECURITY_CARD_FLAGS = [8, 9] as const;
 

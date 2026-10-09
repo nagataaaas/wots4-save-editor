@@ -12,7 +12,10 @@ import {
   OCCUPATION_FLAG_START,
   PERSON_COUNT,
   PERSON_RECORDS_START,
-  SERIES_VALUES,
+  GANGSTER_SERIES_VALUES,
+  HOMELESS_SERIES_VALUES,
+  POLICE_SERIES_VALUES,
+  THIEF_SERIES_VALUES,
   TOWNSFOLK_PEOPLE,
   UNUSED_OCCUPATION_FLAGS,
   personName,
@@ -201,11 +204,15 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
     expect(() => writeTownsfolk(b, 0x0120, 12, { advanced: false })).toThrow(RangeError)
   })
 
-  it('🟢 連続なりわいの値は 0・n0・n1（n＝1〜8）・90・91・97・99・100。❓ 90 番台の違いは未確認', () => {
-    expect(SERIES_VALUES.map((v) => v.value)).toEqual([
-      0, 10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 60, 61, 70, 71, 80, 81, 90, 91, 97, 99, 100,
-    ])
-    for (const n of [4, 5, 6, 7]) expect(TOWNSFOLK_NOTES[occupationFlagOffset(n)].values).toBe(SERIES_VALUES)
+  it('🟢 連続なりわいの値は依頼主ごと。0・n0・n1 と、8件目のあとの値（野戸仏 90・91・97・99・101・102、小鳩 90・91・101、泥棒さん 90〜92・101・102、おっつぁん 90・91）と 100', () => {
+    const steps = (last: number) => [0, ...Array.from({ length: last }, (_, i) => [(i + 1) * 10, (i + 1) * 10 + 1]).flat()]
+    expect(POLICE_SERIES_VALUES.map((v) => v.value)).toEqual([...steps(8), 90, 91, 97, 99, 100, 101, 102])
+    expect(GANGSTER_SERIES_VALUES.map((v) => v.value)).toEqual([...steps(8), 90, 91, 100, 101])
+    expect(THIEF_SERIES_VALUES.map((v) => v.value)).toEqual([...steps(8), 90, 91, 92, 100, 101, 102])
+    expect(HOMELESS_SERIES_VALUES.map((v) => v.value)).toEqual([...steps(8), 90, 91, 100])
+    const tables = [POLICE_SERIES_VALUES, GANGSTER_SERIES_VALUES, THIEF_SERIES_VALUES, HOMELESS_SERIES_VALUES]
+    tables.forEach((table, i) => expect(TOWNSFOLK_NOTES[occupationFlagOffset(4 + i)].values).toBe(table))
+    expect(POLICE_SERIES_VALUES.find((v) => v.value === 97)?.label).toBe('出された浪人（虎鉄）に礼を言われた（野戸仏の話はまだ）')
   })
 
   it('🟢 なりわいの画面で扱う番号は 4〜9・25〜31。鍛冶屋（11）・堂島（22）は含めない', () => {
@@ -218,12 +225,13 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
       '受注前', '成功', '成功……？（失敗を成功扱いにしてもらった）',
     ])
     expect(TOWNSFOLK_NOTES[0x0137].values?.map((v) => v.value)).toEqual([0, 1])
-    expect(TOWNSFOLK_NOTES[0x0135].values?.find((v) => v.value === 8)?.label).toBe('「四天王の証」を受け取った')
+    expect(TOWNSFOLK_NOTES[0x0135].values?.map((v) => v.value)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 50, 60, 99, 100])
+    expect(TOWNSFOLK_NOTES[0x0135].values?.find((v) => v.value === 10)?.label).toBe('熊神十兵衛から「四天王の証」を受け取り、後を継いだ')
   })
 
   it('🟢 番号 26（0x0136）は最終なりわいと熊神の病気。10＝治療、20＝阿弥浜八人衆を受注。🔶 治療すると 207 から 208 に発展', () => {
     expect(TOWNSFOLK_NOTES[0x0136].values?.map((v) => v.value)).toEqual([0, 1, 2, 10, 11, 12, 15, 20, 99, 100])
-    expect(TOWNSFOLK_NOTES[0x0136].values?.find((v) => v.value === 10)?.label).toBe('女将が薬代を出した（治療）')
+    expect(TOWNSFOLK_NOTES[0x0136].values?.find((v) => v.value === 10)?.label).toBe('女将に熊神のことを話し、薬代を引き受けてもらった')
     const b = makeSave()
     writeTownsfolk(b, 0x0136, 2, { advanced: false })
     expect(b[0x0136]).toBe(2)
