@@ -34,8 +34,6 @@ import { findLocation, selectableLocations } from "@/save/locations";
 import { enableCharacterSetup } from "@/save/new-cycle";
 import { DATE_OFFSETS } from "@/save/scenario-date";
 import { Button } from "@/components/ui/button";
-import { AppearanceCurrentCard } from "./appearance-current-card";
-import { AppearancePartsCard } from "./appearance-parts-card";
 
 function parseAmount(key: U32Key, input: string): ParseResult<number> {
   if (!/^\d+$/.test(input.trim())) return { ok: false, error: "0以上の整数を入力してください" };
@@ -186,10 +184,6 @@ export function HeroPage() {
           {gaugeRow("vitalityMax", "最大活力")}
         </CardContent>
       </Card>
-
-      <AppearanceCurrentCard />
-
-      <AppearancePartsCard />
 
       <LocationCard
         key={`${k}-location`}

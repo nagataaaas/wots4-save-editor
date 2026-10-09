@@ -8,6 +8,7 @@ import { ACCESSORY_EQUIPMENT_BASES } from '@/save/accessory-equipment'
 import { pages } from '@/features/pages'
 import { sectionGroups, sections } from '@/features/sections'
 import { AccessoryEquipmentPage } from './accessory-equipment-page'
+import { HeroAppearancePage } from '@/features/hero/hero-appearance-page'
 
 function render(bytes: Uint8Array | null, advanced = false) {
   const ctx: SaveContextValue = {
@@ -20,13 +21,15 @@ function render(bytes: Uint8Array | null, advanced = false) {
 }
 
 describe('装飾品の装着画面', () => {
-  it('主人公の直下に独立した装飾品を登録し、既存の所持画面は維持', () => {
+  it('装着は主人公グループの容姿にまとめ、既存の所持画面は維持', () => {
     const items = sectionGroups[0].items
-    expect(items[0]).toMatchObject({ id: 'hero' })
-    expect(items[1]).toMatchObject({ id: 'accessory-equipment', label: '装飾品' })
-    expect(sections.filter(s => s.label === '装飾品')).toHaveLength(2)
+    expect(items[0]).toMatchObject({ label: '主人公', sections: [
+      { id: 'hero', label: '基本情報' },
+      { id: 'hero-appearance', label: '容姿' },
+    ] })
+    expect(sections.filter(s => s.label === '装飾品')).toHaveLength(1)
     expect(new Set(sections.map(s => s.id)).size).toBe(sections.length)
-    expect(pages['accessory-equipment']).toBe(AccessoryEquipmentPage)
+    expect(pages['hero-appearance']).toBe(HeroAppearancePage)
     expect(pages.accessories).toBeDefined()
   })
   it('上級者モードでは拡張範囲を表示し、通常範囲外の値を編集可能にする', () => {
@@ -51,14 +54,16 @@ describe('装飾品の装着画面', () => {
     expect(list?.match(/aria-pressed="true"/g)).toHaveLength(1)
     for (let i = 1; i <= 10; i++) expect(list).toContain(`${i}枠目：未読み込み`)
   })
-  it('装飾品選択と枠リストを同じカード内で5:2に並べ、境界線で区切る', () => {
+  it('内側にBoxを作らず、選択と枠リストを5:2に並べ、調整は区切り線と小見出しで整理する', () => {
     const html = render(null)
-    const firstCard = html.split('<div data-slot="card"')[1]
-    expect(firstCard).toContain('編集する枠')
-    expect(firstCard).toContain('装飾品を変更すると')
-    expect(firstCard).toContain('sm:grid-cols-[minmax(0,5fr)_minmax(0,2fr)]')
-    expect(firstCard).toContain('border-t')
-    expect(firstCard).toContain('sm:border-l')
+    expect(html).not.toContain('data-slot="card"')
+    expect(html).toContain('編集する枠')
+    expect(html).toContain('装飾品を変更すると')
+    expect(html).toContain('sm:grid-cols-[minmax(0,5fr)_minmax(0,2fr)]')
+    expect(html).toContain('border-t')
+    expect(html).toContain('sm:border-l')
+    expect(html).toMatch(/<h3[^>]*>納刀の調整 🟢<\/h3>/)
+    expect(html.indexOf('標準設定に戻す')).toBeGreaterThan(html.indexOf('調整する構え'))
   })
   it('未読み込みでも入力欄と調整モードを表示', () => {
     const html = render(null)

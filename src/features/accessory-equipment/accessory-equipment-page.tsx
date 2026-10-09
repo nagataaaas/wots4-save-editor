@@ -2,7 +2,6 @@ import { useState } from "react";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { SelectRow } from "@/components/select-row";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -86,18 +85,17 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
 
   return (
     <>
-      <Card>
-        <div className="grid gap-6 sm:grid-cols-[minmax(0,5fr)_minmax(0,2fr)] sm:gap-0">
-          <div className="min-w-0 space-y-6">
-        <CardHeader>
-          <CardTitle>
+      <div className="grid gap-6 sm:grid-cols-[minmax(0,5fr)_minmax(0,2fr)] sm:gap-0">
+        <section className="min-w-0 space-y-4 sm:pr-6">
+          <div className="space-y-2">
+          <h3 className="text-sm font-semibold">
             {slot + 1}枠目：{selected?.ja ?? (current?.id === -1 ? "空き" : "装飾品")}
-          </CardTitle>
-          <CardDescription>
+          </h3>
+          <p className="text-muted-foreground text-sm">
             装飾品を変更すると、新しい装飾品の標準部位に取り付け、納刀・抜刀の補正を0へ戻します。所持フラグ・未知のバイトは変更しません。
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+          </div>
+          <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectRow
               label="装飾品"
@@ -141,34 +139,23 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
               <p>標準位置・回転は装飾品固有の値です。下の欄で編集するのは標準からの補正です。</p>
             </div>
           )}
-          <Button
-            variant="outline"
-            disabled={disabled}
-            onClick={() => {
-              setError(null);
-              setPending("reset");
-            }}
-          >
-            標準設定に戻す
-          </Button>
           <p className="text-muted-foreground text-sm">
             「なし」にすると外れます。位置・回転・大きさ・未知のバイトは残します。
           </p>
-        </CardContent>
           </div>
-          <div className="min-w-0 border-t px-6 pt-6 sm:border-t-0 sm:border-l sm:pt-0">
+        </section>
+          <div className="min-w-0 border-t pt-6 sm:border-t-0 sm:border-l sm:pl-6 sm:pt-0">
             <AccessorySlotList group={group} slot={slot} onSelectSlot={onSelectSlot} />
           </div>
-        </div>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>{MODE_LABELS[mode]}の調整 🟢</CardTitle>
-          <CardDescription>
+      </div>
+      <section className="space-y-4 border-t pt-6">
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">{MODE_LABELS[mode]}の調整 🟢</h3>
+          <p className="text-muted-foreground text-sm">
             位置・回転は標準からの補正。大きさは1.0で標準（保存補正0.0）です。共通を選ぶと納刀の調整で抜刀を上書きします。
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+        <div className="space-y-4">
           <div className="flex flex-wrap gap-2" role="group" aria-label="調整する構え">
             {(["A", "B", "common"] as const).map((value) => (
               <Button
@@ -223,8 +210,20 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
               );
             })}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
+      <div className="border-t pt-6">
+        <Button
+          variant="outline"
+          disabled={disabled}
+          onClick={() => {
+            setError(null);
+            setPending("reset");
+          }}
+        >
+          標準設定に戻す
+        </Button>
+      </div>
       <Dialog
         open={pending !== null}
         onOpenChange={(open) => {
