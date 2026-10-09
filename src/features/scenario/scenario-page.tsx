@@ -43,6 +43,12 @@ import {
   type WorldFlagsView,
 } from "@/save/world-flags";
 import {
+  FACTION_EXIT_FLAGS,
+  readFactionExit,
+  writeFactionExit,
+  type FactionExitView,
+} from "@/save/faction-exit";
+import {
   FACILITY_FLAGS,
   facilitiesReadyForLightOfHope,
   facilitySlotEvent,
@@ -179,6 +185,7 @@ type Views = {
   events: EventsView;
   factions: FactionsView;
   route: RouteJudgeView;
+  factionExit: FactionExitView;
   flags: WorldFlagsView;
   facilities: FacilityFlagsView;
   characters: CharactersView;
@@ -232,8 +239,8 @@ export function WorldPage() {
       note={
         <>
           この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
-          difficulty・date-location・factions・gates・facilities）。 難易度、新しい周回を始める書き込み、日数・時間帯、治安、勢力の友好度
-          +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+          difficulty・date-location・factions・gates・facilities・best-route）。 難易度、新しい周回を始める書き込み、日数・時間帯、治安、勢力の友好度
+          +・−・敵対状態、勢力の退場は書き換えの反映を確認済みです。そのほかの値は確かめていません。
         </>
       }
     >
@@ -247,6 +254,7 @@ export function WorldPage() {
             view={views?.factions ?? null}
             route={views?.route ?? null}
           />
+          <FactionExitCard key={`${k}-faction-exit`} view={views?.factionExit ?? null} />
           <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
           <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
         </>
@@ -277,6 +285,7 @@ function ViewsPage({
           events: readEvents(b),
           factions: readFactions(b),
           route: readRouteJudge(b),
+          factionExit: readFactionExit(b),
           flags: readWorldFlags(b),
           facilities: readFacilityFlags(b),
           characters: readCharacters(b),
@@ -713,6 +722,48 @@ const flagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
     { value: "1", label: "1 開いている" },
   ],
 };
+
+const factionExitOptions: SelectOption[] = [
+  { value: "0", label: "0 町にいる" },
+  { value: "1", label: "1 退場した" },
+];
+
+/** 勢力の退場（0x378F〜0x3791）。view が null ならセーブ未読み込み */
+function FactionExitCard({ view }: { view: FactionExitView | null }) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>勢力の退場</CardTitle>
+        <CardDescription>
+          1 にすると、その勢力の人物が町から出なくなります。
+          3つとも書き換えで確認済みです。
+          外国・攘夷は物語の中でも 1 になります（ローラの死・帰国、般若党の壊滅など）。幕府が 1 になる場面はありません。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3">
+        {FACTION_EXIT_FLAGS.map((flag, i) => (
+          <SelectRow
+            key={flag.offset}
+            label={flag.label}
+            offset={flag.offset}
+            badges={
+              flag.confirmed ? undefined : <CertaintyBadge mark="❓" text="書き換えの反映は未確認" />
+            }
+            value={view ? String(view.values[i]) : null}
+            currentLabel={view ? `${view.values[i]} 不明` : undefined}
+            options={factionExitOptions}
+            problem={view?.problem ?? null}
+            note={flag.note}
+            onChange={(v) => update((b) => writeFactionExit(b, i, Number(v), { advanced }))}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
 
 /** 門・柵のフラグ。view が null ならセーブ未読み込み */
 function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {

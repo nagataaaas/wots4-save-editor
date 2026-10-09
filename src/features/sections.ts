@@ -95,7 +95,7 @@ export const sectionGroups: SectionGroup[] = [
           { id: 'unlocks', label: '特典解除', note: 'unlocks 🔶 特典の状態（U-17）' },
         ],
       },
-      { id: 'world', label: '世界', icon: Globe, note: 'difficulty・date-location・factions・gates・facilities 🔶 難易度・周回、日数・時間帯、治安、勢力、門・柵、施設' },
+      { id: 'world', label: '世界', icon: Globe, note: 'difficulty・date-location・factions・gates・facilities・best-route 🔶 難易度・周回、日数・時間帯、治安、勢力、勢力の退場、門・柵、施設' },
       { id: 'scenario', label: 'シナリオ', icon: Flag, note: 'event-chart・scenario-flags・characters・best-route 🔶 イベントの状態、フラグ、人物、真ルート' },
       { id: 'event-chart', label: 'イベントチャート', icon: Workflow, note: 'event-chart イベントの状態とチャート表示の記録', wide: true },
       { id: 'occupation', label: 'なりわい', icon: ClipboardList, note: 'occupation・townsfolk（なりわいのフラグ）状態の表・クリア数・連続なりわいの進み具合' },
