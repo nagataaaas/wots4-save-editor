@@ -1,14 +1,13 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { InfoTip } from "@/components/info-tip";
-import { LazySelect } from "@/components/lazy-select";
+import { ItemInformation, OwnershipStateButton, UnlockStateButton } from "./unlock-ui";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatHex2, formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
@@ -18,6 +17,7 @@ import {
   ACCESSORY_PART_LABELS,
   CLOTHES,
   UNLOCKS,
+  appearanceUnlockInformation,
   type UnlockEntry,
 } from "@/save/master/accessory-names";
 import {
@@ -115,18 +115,20 @@ export function AccessoriesPage() {
   const { view, readOnly, write, banner } = usePageState(readAccessoryFlags);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<AccessoryFilter>("all");
+  const [part, setPart] = useState("all");
 
   const rows = useMemo(
     () =>
       [...ACCESSORIES]
         .sort((a, b) => a.menuOrder - b.menuOrder)
         .filter((a) => matches(query, a.ja, a.en, a.descJa))
+        .filter((a) => part === "all" || a.part === part)
         .filter((a) => {
           if (filter === "all" || !view) return true;
           const owned = view.values[a.id] !== 0;
           return filter === "owned" ? owned : !owned;
         }),
-    [query, filter, view],
+    [query, filter, part, view],
   );
   const ownedCount = view ? view.values.filter((v) => v !== 0).length : 0;
 
@@ -156,16 +158,29 @@ export function AccessoriesPage() {
             />
             <Select
               value={filter}
-              items={{ all: "すべて", owned: "所持", missing: "未所持" }}
+              items={{ all: "すべての所有状態", owned: "所持", missing: "未所持" }}
               onValueChange={(v) => v !== null && setFilter(v as AccessoryFilter)}
             >
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-44" aria-label="装飾品の所有状態">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">すべて</SelectItem>
+                <SelectItem value="all">すべての所有状態</SelectItem>
                 <SelectItem value="owned">所持</SelectItem>
                 <SelectItem value="missing">未所持</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={part}
+              items={{ all: "すべての部位", ...ACCESSORY_PART_LABELS }}
+              onValueChange={(v) => v !== null && setPart(v)}
+            >
+              <SelectTrigger className="w-40" aria-label="装飾品の部位"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">すべての部位</SelectItem>
+                {Object.entries(ACCESSORY_PART_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Button
@@ -190,21 +205,21 @@ export function AccessoriesPage() {
               const value = view?.values[a.id] ?? 0;
               return (
                 <div key={a.id} className="flex items-center gap-3 py-1.5">
-                  <Switch
-                    checked={value !== 0}
+                  <OwnershipStateButton
+                    owned={value !== 0}
+                    name={a.ja}
+                    labels={["未所持", "所持"]}
                     disabled={readOnly || (value > 1 && !advanced)}
-                    onCheckedChange={(on: boolean) => write((b) => writeAccessoryFlag(b, a.id, on ? 1 : 0, { advanced }))}
-                    aria-label={a.ja}
+                    onChange={(on) => write((b) => writeAccessoryFlag(b, a.id, on ? 1 : 0, { advanced }))}
                   />
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-sm">{a.ja}</span>
-                      <InfoTip offset={ACCESSORY_FLAGS_OFFSET + a.id}>
-                        ID {a.id}。{a.descJa}
-                      </InfoTip>
-                      <Badge variant="secondary" className="font-normal">
-                        {ACCESSORY_PART_LABELS[a.part] ?? a.part}
-                      </Badge>
+                  <ItemInformation
+                    id={a.id}
+                    name={a.ja}
+                    category={ACCESSORY_PART_LABELS[a.part] ?? a.part}
+                    description={a.descJa}
+                    offset={ACCESSORY_FLAGS_OFFSET + a.id}
+                    condition={a.shop ? "店で購入" : a.dlc !== null ? ACCESSORY_DLC_LABELS[a.dlc] : "特典解除"}
+                  >
                       {a.dlc !== null && (
                         <Badge variant="outline" className="font-normal">
                           {ACCESSORY_DLC_LABELS[a.dlc] ?? `DLC ${a.dlc}`}
@@ -215,8 +230,7 @@ export function AccessoriesPage() {
                           特典
                         </Badge>
                       )}
-                    </div>
-                  </div>
+                  </ItemInformation>
                   {value > 1 && <span className="text-destructive font-mono text-xs">{formatHex2(value)}</span>}
                 </div>
               );
@@ -237,17 +251,16 @@ export function AccessoriesPage() {
 // 🔶 U-17: 顔・髪型などの特典は容姿の服のビットとは別の状態列を使う。
 const APPEARANCE_UNLOCK_CATEGORIES = ["肌の色", "髪の色", "体型", "顔", "髪型", "服"] as const;
 
-const unlockStateLabel = (v: number) => UNLOCK_STATE_LABELS[v] ?? `${formatHex2(v)} 不明`;
-
-/** 「すべて」と種類の名前の選択肢（Base UI の Select の items） */
-const categoryItems = (categories: readonly string[]) => [
-  { value: "all", label: "すべて" },
+/** 種類の名前の選択肢（Base UI の Select の items） */
+const categoryItems = (categories: readonly string[], allLabel = "すべての種別") => [
+  { value: "all", label: allLabel },
   ...categories.map((c) => ({ value: c, label: c })),
 ];
 
 function UnlockStateRows({
-  rows, view, readOnly, advanced, write,
+  rows, view, readOnly, advanced, write, appearance = false,
 }: {
+  appearance?: boolean;
   rows: readonly UnlockEntry[];
   view: UnlockStatesView | null;
   readOnly: boolean;
@@ -258,35 +271,27 @@ function UnlockStateRows({
     <div className="flex flex-col divide-y">
       {rows.map((u) => {
         const value = view?.values[u.id] ?? 0;
-        const options = [0, 1, 2];
-        if (!options.includes(value)) options.push(value);
+        const info = appearance ? appearanceUnlockInformation(u) : { ja: u.ja, en: u.en, descriptionJa: u.effectJa };
+
         return (
           <div key={u.id} className="flex flex-wrap items-center gap-3 py-1.5">
-            <LazySelect
-              value={String(value)}
-              items={Object.fromEntries(options.map((o) => [String(o), unlockStateLabel(o)]))}
+            <UnlockStateButton
+              value={value}
+              name={info.ja}
               disabled={readOnly || (value > 2 && !advanced)}
-              className="w-32"
-              aria-label={u.ja}
-              onValueChange={(v) => write((b) => writeUnlockState(b, u.id, Number(v), { advanced }))}
+              onChange={(v) => write((b) => writeUnlockState(b, u.id, v, { advanced }))}
+            />
+            <ItemInformation
+              id={u.id}
+              name={info.ja}
+              category={u.category}
+              description={info.descriptionJa}
+              offset={UNLOCK_STATES_OFFSET + u.id}
+              condition={u.conditionJa}
             >
-              {options.map((o) => (
-                <SelectItem key={o} value={String(o)}>
-                  {unlockStateLabel(o)}
-                </SelectItem>
-              ))}
-            </LazySelect>
-            <div className="flex min-w-0 flex-1 flex-col">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-muted-foreground font-mono text-xs">{u.id}</span>
-                <span className="text-sm">{u.ja}</span>
                 {UNLOCK_READ_CONFIRMED.has(u.id) && <Badge variant="outline" className="font-normal">✅ 解除前後の差分で対応を確認。書き込みは要ゲーム内確認</Badge>}
                 {UNLOCK_WRITE_CONFIRMED.has(u.id) && <Badge variant="outline" className="font-normal">✅ 取得済みへの変更を確認済み</Badge>}
-                <InfoTip offset={UNLOCK_STATES_OFFSET + u.id}>{u.effectJa}</InfoTip>
-                <Badge variant="secondary" className="font-normal">{u.category}</Badge>
-              </div>
-              <span className="text-muted-foreground text-xs">条件：{u.conditionJa}</span>
-            </div>
+            </ItemInformation>
           </div>
         );
       })}
@@ -301,7 +306,10 @@ function AppearanceUnlocksCard() {
   const [category, setCategory] = useState("all");
   const rows = UNLOCKS.filter((u) => APPEARANCE_UNLOCK_CATEGORIES.some((c) => c === u.category))
     .filter((u) => category === "all" || u.category === category)
-    .filter((u) => matches(query, u.ja, u.en, u.conditionJa, u.effectJa));
+    .filter((u) => {
+      const info = appearanceUnlockInformation(u);
+      return matches(query, info.ja, info.en, info.descriptionJa, u.ja, u.conditionJa);
+    });
 
   return (
     <>
@@ -327,14 +335,14 @@ function AppearanceUnlocksCard() {
               items={categoryItems(APPEARANCE_UNLOCK_CATEGORIES)}
               onValueChange={(v) => v !== null && setCategory(v)}
             >
-              <SelectTrigger className="w-32" aria-label="特典の種類"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-40" aria-label="特典の種別"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">すべて</SelectItem>
+                <SelectItem value="all">すべての種別</SelectItem>
                 {APPEARANCE_UNLOCK_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <UnlockStateRows rows={rows} view={view} readOnly={readOnly} advanced={advanced} write={write} />
+          <UnlockStateRows rows={rows} view={view} readOnly={readOnly} advanced={advanced} write={write} appearance />
         </CardContent>
       </Card>
     </>
@@ -351,7 +359,7 @@ export function AppearancePage() {
   const categories = useMemo(() => [...new Set(CLOTHES.flatMap((c) => c.category.split("・")))], []);
 
   const rows = CLOTHES.filter((c) => category === "all" || c.category.split("・").includes(category))
-    .filter((c) => matches(query, c.ja, c.en))
+    .filter((c) => matches(query, c.ja, c.en, c.descJa))
     .filter((c) => {
       if (filter === "all" || !view) return true;
       return isAppearanceBitSet(view, c.id) === (filter === "on");
@@ -377,13 +385,13 @@ export function AppearancePage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Input className="w-56" placeholder="名前で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <Select value={category} items={categoryItems(categories)} onValueChange={(v) => v !== null && setCategory(v)}>
-              <SelectTrigger className="w-32">
+            <Input className="w-56" placeholder="名前・説明で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Select value={category} items={categoryItems(categories, "すべての部位")} onValueChange={(v) => v !== null && setCategory(v)}>
+              <SelectTrigger className="w-40" aria-label="服の部位">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">すべて</SelectItem>
+                <SelectItem value="all">すべての部位</SelectItem>
                 {categories.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}
@@ -393,14 +401,14 @@ export function AppearancePage() {
             </Select>
             <Select
               value={filter}
-              items={{ all: "すべて", on: "解放済み", off: "未解放" }}
+              items={{ all: "すべての所有状態", on: "解放済み", off: "未解放" }}
               onValueChange={(v) => v !== null && setFilter(v as ClothFilter)}
             >
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-44" aria-label="服の所有状態">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">すべて</SelectItem>
+                <SelectItem value="all">すべての所有状態</SelectItem>
                 <SelectItem value="on">解放済み</SelectItem>
                 <SelectItem value="off">未解放</SelectItem>
               </SelectContent>
@@ -417,28 +425,28 @@ export function AppearancePage() {
               const { offset, mask } = appearanceBitPosition(c.id);
               return (
                 <div key={c.id} className="flex items-center gap-3 py-1.5">
-                  <Switch
-                    checked={view ? isAppearanceBitSet(view, c.id) : false}
+                  <OwnershipStateButton
+                    owned={view ? isAppearanceBitSet(view, c.id) : false}
+                    name={c.ja}
+                    labels={["未解放", "解放済み"]}
                     disabled={readOnly}
-                    onCheckedChange={(on: boolean) => write((b) => writeAppearanceBit(b, c.id, on))}
-                    aria-label={c.ja}
+                    onChange={(on) => write((b) => writeAppearanceBit(b, c.id, on))}
                   />
-                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-                    <span className="text-muted-foreground font-mono text-xs">{c.id}</span>
-                    <span className="text-sm">{c.ja}</span>
-                    <InfoTip offset={`${formatOffset(offset)} bit${Math.log2(mask)}`}>
-                      {APPEARANCE_REWARDS[c.id] ?? c.en}
-                    </InfoTip>
-                    <Badge variant="secondary" className="font-normal">
-                      {c.category}
-                    </Badge>
+                  <ItemInformation
+                    id={c.id}
+                    name={c.ja}
+                    category={c.category}
+                    description={c.descJa || "説明なし"}
+                    offset={`${formatOffset(offset)} bit${Math.log2(mask)}`}
+                    condition={APPEARANCE_REWARDS[c.id]}
+                  >
                     {c.dlc !== null && (
                       <Badge variant="outline" className="font-normal">
                         {ACCESSORY_DLC_LABELS[c.dlc] ?? `DLC ${c.dlc}`}
                       </Badge>
                     )}
                     {APPEARANCE_CONFIRMED.has(c.id) && <span className="text-xs">✅</span>}
-                  </div>
+                  </ItemInformation>
                 </div>
               );
             })}
@@ -488,11 +496,11 @@ export function UnlocksPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Input className="w-56" placeholder="名前・条件で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
             <Select value={category} items={categoryItems(categories)} onValueChange={(v) => v !== null && setCategory(v)}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-40" aria-label="特典の種別">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">すべて</SelectItem>
+                <SelectItem value="all">すべての種別</SelectItem>
                 {categories.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}

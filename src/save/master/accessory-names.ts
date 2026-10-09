@@ -15,6 +15,7 @@
 // 32〜46・238〜241 はゲーム内で確認（✅ [U] 2026-10-07）
 import { ACCESSORY_TABLE } from "./dataset/accessory";
 import { CLOTH_TABLE } from "./dataset/cloth";
+import { OUTFIT_TABLE } from "./dataset/outfit";
 import { UNLOCK_TABLE } from "./dataset/unlock";
 
 export type AccessoryEntry = {
@@ -74,6 +75,8 @@ export type ClothEntry = {
   id: number;
   ja: string;
   en: string;
+  /** 🟢 説明。複数部品の異なる説明は「 / 」で区切る。説明がない番号は空文字。 */
+  descJa: string;
   /** 上半身・下半身・足元・小物（複数の部品が入る番号は「・」でつなぐ） */
   category: string;
   dlc: number | null;
@@ -84,9 +87,24 @@ function loadClothes(): ClothEntry[] {
     id: r.id_dec,
     ja: r.name_ja,
     en: r.name_en,
+    descJa: r.description_ja,
     category: r.category,
     dlc: r.dlc,
   }));
+}
+
+/** 🟢 全身の服の表示名・説明。特典の番号と保存位置との対応は 🔶 U-17 のまま。 */
+export function appearanceUnlockInformation(entry: UnlockEntry): { ja: string; en: string; descriptionJa: string } {
+  const outfits = Object.values(OUTFIT_TABLE).filter((r) => r.unlock_id === entry.id);
+  if (entry.category !== "服" || outfits.length === 0) {
+    return { ja: entry.ja, en: entry.en, descriptionJa: entry.effectJa };
+  }
+  const joinUnique = (values: string[]) => [...new Set(values)].join(" / ");
+  return {
+    ja: joinUnique(outfits.map((r) => r.name_ja)),
+    en: joinUnique(outfits.map((r) => r.name_en)),
+    descriptionJa: joinUnique(outfits.map((r) => r.description_ja)),
+  };
 }
 
 /** 番号順 */
