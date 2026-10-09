@@ -142,6 +142,7 @@ function ItemBoxPage({
                 slot={slot}
                 groups={groups}
                 noun={title}
+                searchPlaceholder="道具を検索"
                 countMaxFor={(id) => itemCountMax(area, id, { advanced })}
                 normalCountMaxFor={(id) => itemNormalCountMax(area, id)}
                 onChange={(id, count) => update((b) => writeItemBoxSlot(b, area, i, id, count, { advanced }))}

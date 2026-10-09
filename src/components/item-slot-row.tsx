@@ -43,6 +43,7 @@ export function ItemSlotRow({
   slot,
   groups,
   noun,
+  searchPlaceholder,
   investigate = false,
   showCount = true,
   countMaxFor,
@@ -56,6 +57,8 @@ export function ItemSlotRow({
   groups: readonly ItemOptionGroup[]
   /** 読み上げ用の名前（例：重要品、道具） */
   noun: string
+  /** 検索欄のプレースホルダー。なければ「（noun）を検索（名前・読み・英語名・ID）」 */
+  searchPlaceholder?: string
   /** ID を16進で直接入れる欄を出す（上級者モード） */
   investigate?: boolean
   /** 個数の欄を出す */
@@ -139,8 +142,14 @@ export function ItemSlotRow({
     if (count !== slot.count) run(() => onChange(slot.id, count))
   }
 
+  // 説明文でも検索できるよう、keywords に入れる
   const item = (id: number, label: string, keywords: readonly string[] = [], description?: string) => (
-    <CommandItem key={id} value={String(id)} keywords={[label, ...keywords]} onSelect={() => choose(id)}>
+    <CommandItem
+      key={id}
+      value={String(id)}
+      keywords={description ? [label, ...keywords, description] : [label, ...keywords]}
+      onSelect={() => choose(id)}
+    >
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className="flex items-center gap-2">
           <ItemCategoryIcon id={id} />
@@ -194,7 +203,7 @@ export function ItemSlotRow({
           </PopoverTrigger>
           <PopoverContent className="w-(--anchor-width) min-w-64 p-0" align="start">
             <Command filter={substringFilter} defaultValue={slot ? String(slot.id) : undefined}>
-              <CommandInput placeholder={`${noun}を検索（名前・読み・英語名・ID）`} />
+              <CommandInput placeholder={searchPlaceholder ?? `${noun}を検索（名前・読み・英語名・ID）`} />
               <CommandList>
                 <CommandEmpty>見つかりません</CommandEmpty>
                 <CommandGroup>{item(EMPTY_ID, 'なし', ['FFFF'])}</CommandGroup>
