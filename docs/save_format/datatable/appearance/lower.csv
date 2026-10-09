@@ -59,10 +59,10 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,alias_ja,crash,gender,cloth_id,unloc
 57,0x39,39 00,魔鱗組着物,Demonscale Kimono (Bottom),,,男,,79,,D4 00 FF FF FF FF FF FF,下半身（浪人）|||,212|||,
 58,0x3A,3A 00,紺色のズボン,Navy Blue Pants,,,男,96,,,E4 00 FF FF FF FF FF FF,下半身（外国人男性）|||,227 228 229|||,
 59,0x3B,3B 00,白色のズボン,White Pants,,,男,97,,,E5 00 FF FF FF FF FF FF,下半身（外国人男性）|||,227 228 229|||,
-60,0x3C,3C 00,さらし,Wrappings (Bottom),,,女,,,,EA 00 15 01 FF FF FF FF,下半身（女）|小物2（女）||,234 235|276 277 278||,
-61,0x3D,3D 00,さらし,Wrappings (Bottom),,,女,,,,EB 00 16 01 FF FF FF FF,下半身（女）|小物2（女）||,234 235|276 277 278||,
-62,0x3E,3E 00,コルセット,Corset (Bottom),,,女,,,,EA 00 12 01 FF FF FF FF,下半身（女）|小物2（ダンサー）||,234 235|273 274 275||,
-63,0x3F,3F 00,コルセット,Corset (Bottom),,,女,,,,EB 00 13 01 FF FF FF FF,下半身（女）|小物2（ダンサー）||,234 235|273 274 275||,
+60,0x3C,3C 00,さらし,Wrappings (Bottom),黒色のさらし,,女,,,,EA 00 15 01 FF FF FF FF,下半身（女）|小物2（女）||,234 235|276 277 278||,✅ [U] 2026-10-10 ゲーム内で確認した見た目
+61,0x3D,3D 00,さらし,Wrappings (Bottom),紫色のさらし,,女,,,,EB 00 16 01 FF FF FF FF,下半身（女）|小物2（女）||,234 235|276 277 278||,✅ [U] 2026-10-10 ゲーム内で確認した見た目
+62,0x3E,3E 00,コルセット,Corset (Bottom),黒色のコルセット,,女,,,,EA 00 12 01 FF FF FF FF,下半身（女）|小物2（ダンサー）||,234 235|273 274 275||,✅ [U] 2026-10-10 ゲーム内で確認した見た目
+63,0x3F,3F 00,コルセット,Corset (Bottom),紫色のコルセット,,女,,,,EB 00 13 01 FF FF FF FF,下半身（女）|小物2（ダンサー）||,234 235|273 274 275||,✅ [U] 2026-10-10 ゲーム内で確認した見た目
 64,0x40,40 00,黒色のビキニ,Black Bikini (Bottom),,,女,147,,,ED 00 FF FF FF FF FF FF,下半身（女2）|||,236 237 238|||,
 65,0x41,41 00,紫色のビキニ,Purple Bikini (Bottom),,,女,148,,,EE 00 FF FF FF FF FF FF,下半身（女2）|||,236 237 238|||,
 66,0x42,42 00,黄緑色の着物,Light Green Kimono (Bottom),,,女,150,,,F0 00 FF FF FF FF FF FF,下半身（女中）|||,239 240|||,

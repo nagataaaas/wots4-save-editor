@@ -52,7 +52,10 @@ const PERSON_HIDDEN_GROUP = "主人公設定に出ない人物";
 
 function partLabel(p: PartEntry): string {
   const tags = [p.dlc !== null ? "DLC" : null, p.unlockId !== null ? "特典" : null].filter(Boolean);
-  const name = p.ja || (p.alias ? `名前なし：${p.alias}` : "名前なし");
+  // 同じ名前の色違い（下半身のさらしなど）は、見た目の別名を添えて区別する
+  const name = p.ja
+    ? p.alias ? `${p.ja}：${p.alias}` : p.ja
+    : p.alias ? `名前なし：${p.alias}` : "名前なし";
   return `${name}（${p.id}）${tags.length ? ` [${tags.join("・")}]` : ""}`;
 }
 

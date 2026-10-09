@@ -424,6 +424,9 @@ describe('見た目の部品と人物の datatable（🟢）', () => {
     expect(PARTS.upper.find(p => p.id === 6)).toMatchObject({ ja: '', alias: 'ローラ', crash: false })
     expect(PARTS.face.find(p => p.id === 27)!.alias).toBe('男の子')
     expect(PARTS.upper.find(p => p.id === 53)!.crash).toBe(true)
+    // 同じ名前の色違い（✅ [U] 2026-10-10）
+    expect(PARTS.lower.find(p => p.id === 60)).toMatchObject({ ja: 'さらし', alias: '黒色のさらし' })
+    expect(PARTS.lower.find(p => p.id === 63)).toMatchObject({ ja: 'コルセット', alias: '紫色のコルセット' })
     // 名前がなければ、見た目が分かっても上級者モードの組のまま
     expect(partGroup('upper', PARTS.upper.find(p => p.id === 6)!)).not.toMatch(/^(男|女|共通)$/)
   })
