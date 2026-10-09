@@ -31,8 +31,10 @@ import {
   readYobai,
   recordFieldOffset,
   recordOffset,
+  layoutHeadcount,
+  layoutLabel,
+  layoutsForPlace,
   validatePersonField,
-  validatePlaceLayout,
   writePromiseField,
   writePromisePlace,
   writeRecordField,
@@ -55,7 +57,7 @@ import {
   partnerDeathWarning,
   promisePartner,
   randomSpec,
-  rowLabel,
+  PROMISE_ROWS,
   rowsFor,
   validateSpec,
   type PromiseSpec,
@@ -88,23 +90,25 @@ function parseNumber(input: string, validate: (v: number) => string | null): Par
 
 const placeLabel = (place: number) => PLACES[place] ?? "名前なし";
 
-/** 地区（「港」「町」など、場所の名前の最初の語）ごとにまとめる。実データで見た組は相手の名前を添える */
-const placeLayoutOptions: SelectOption[] = PLACE_LAYOUTS.map((p) => ({
-  value: `${p.place}:${p.layout}`,
-  label: `${formatHex2(p.place)} ${placeLabel(p.place)}（配置 ${formatHex2(p.layout)}${p.note ? `・${p.note}` : ""}）`,
-  group: placeLabel(p.place).split("　")[0],
-  keywords: [
-    placeLabel(p.place),
-    formatHex2(p.place),
-    formatHex2(p.layout),
-    ...(p.note ? [p.note] : []),
-  ],
-}));
+/** 場所の選択肢1つ。地区（「港」「町」など、場所の名前の最初の語）ごとにまとめる */
+const placeOption = (place: number): SelectOption => ({
+  value: String(place),
+  label: `${formatHex2(place)} ${placeLabel(place)}`,
+  group: placeLabel(place).split(/[ 　]/)[0],
+});
 
-const placeOptions: SelectOption[] = PLACES.map((name, i) => ({
-  value: String(i),
-  label: `${formatHex2(i)} ${name}`,
-}));
+/** 🟢 約束で使われる場所（00〜22 の全部） */
+const placeOptions: SelectOption[] = [...new Set(PLACE_LAYOUTS.map((p) => p.place))].map(placeOption);
+
+/** 配置の選択肢1つ。家の中の人数で表示し、実データで見た組は相手を添える */
+function layoutOption(place: number, layout: number, extra?: string): SelectOption {
+  const seen = PLACE_LAYOUTS.find((p) => p.place === place && p.layout === layout)?.note;
+  const tail = [extra, seen && `実データ：${seen}`].filter(Boolean).join("・");
+  return {
+    value: String(layout),
+    label: `${layoutLabel(layout)}（配置 ${formatHex2(layout)}${tail ? `・${tail}` : ""}）`,
+  };
+}
 
 const knownOptions = (known: readonly KnownValue[]): SelectOption[] =>
   known.map((k) => ({ value: String(k.value), label: `${k.label}（${hex(k.value)}）` }));
@@ -139,7 +143,7 @@ const nameOptions: SelectOption[] = NPC_NAMES.map((n) => ({
 }));
 
 const PERSON_FIELDS: Record<
-  PersonField,
+  EditableField,
   {
     label: string;
     options: readonly SelectOption[] | null;
@@ -158,13 +162,13 @@ const PERSON_FIELDS: Record<
     label: "見た目と声",
     options: lookOptions,
     search: true,
-    note: "見た目（モデル）と声。町の人の約束では、町で出会った相手の見た目が入る。はるなをさよの値にすると、見た目と声がさよになった。台詞・強さ・名前は変わらない（確認済み）。番号は主人公設定の人物と同じ",
+    note: "見た目（モデル）と声。町の人の約束では、町で出会った相手の見た目が入る。はるなをさよの値にすると、見た目と声がさよになった。台詞・強さ・名前は変わらない（確認済み）。番号は主人公設定の人物と同じ。声は見た目の顔で決まり、多くの見た目が同じ声を使う。ただし相手の種類が万由・千佳・百合のときは、声は種類のまま 🟢",
   },
   type: {
-    label: "しゃべり方と戦闘力",
+    label: "相手の種類（しゃべり方と戦闘力）",
     options: typeOptions,
     search: true,
-    note: "はるなをさよの値にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった。見た目・声・名前は変わらない（確認済み）",
+    note: "町の人の種類。台詞と強さが決まる（はるなをさよの値にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった。見た目・声・名前は変わらない。確認済み）。多くの種類が同じ会話を使い、強さは種類ごとに違う。名前のある相手の種類にすると、夜這いのあとその人の夜這い回数が増える 🟢",
   },
   age: {
     label: "年齢",
@@ -177,31 +181,23 @@ const PERSON_FIELDS: Record<
     note: "1＝A、2＝B、3＝O、4＝AB（確認済み）。5 は「？」（さよ）",
   },
   day: {
-    label: "約束した日",
+    label: "夜這いした日",
     options: null,
-    badge: { mark: "🔶", text: "推定。書き換えの効果は未確認" },
-    note: "約束の +0x28・記録の +0x0C。経過日数（1日目＝0）。約束は9人とも約束したセーブの日付と一致し、記録の +0x0C も約束の +0x28 と同じ値だった。画面では「N日目」で表示する",
-  },
-  group: {
-    label: "相手の種類（生の値）",
-    options: null,
-    badge: { mark: "❓", text: "意味は未確認" },
-    note: "日付ではない（1日目に町の人と約束して 1 だった。確認済み）。さよ・先生は 0、町の人は 1〜3",
+    note: "記録の +0x0C。経過日数（1日目＝0）。🟢 約束した日と同じ日になる。画面では「N日目」で表示する",
   },
 };
 
-function hintFor(field: PersonField, advanced: boolean): string {
+function hintFor(field: EditableField, advanced: boolean): string | undefined {
   if (field === "age")
     return advanced ? "0〜255（255＝？）" : `0〜${AGE_NORMAL_MAX}、または 255（？）`;
-  if (field === "group") return "0〜0xFFFF";
   if (field === "day") return advanced ? "1〜65536日目" : `1〜${DAY_NORMAL_MAX + 1}日目`;
-  return advanced ? "10進数か 0x 付きの16進数" : "表にある値";
+  return undefined;
 }
 
-/**
- * 人物の1項目。確認済みの値がある項目は選択肢から選び、上級者モードでは生の値の欄も出す。
- * 年齢は数値で入力する。相手の種類（❓）は上級者モードでだけ書ける
- */
+/** 画面で編集する人物の項目（+0x02 のまとまりは書かない） */
+type EditableField = Exclude<PersonField, "group">;
+
+/** 人物の1項目。名前・見た目と声・相手の種類・血液型は表から選び、年齢と夜這いした日は数で入力する */
 function PersonFieldEditor({
   field,
   offset,
@@ -209,7 +205,7 @@ function PersonFieldEditor({
   problem,
   write,
 }: {
-  field: PersonField;
+  field: EditableField;
   offset: number;
   current: number | null;
   problem: string | null;
@@ -246,26 +242,6 @@ function PersonFieldEditor({
       />
     );
 
-  if (field === "group")
-    return (
-      <FieldRow
-        // 上級者モードを切り替えたときに入力欄を作り直す
-        key={String(advanced)}
-        label={spec.label}
-        offset={offset}
-        badges={badges}
-        value={current}
-        problem={
-          problem ?? (advanced ? null : "意味が分かっていない値です（上級者モードで書けます）")
-        }
-        format={hex}
-        parse={(input) => parseNumber(input, validate)}
-        apply={apply}
-        hint={hintFor(field, advanced)}
-        note={spec.note}
-      />
-    );
-
   if (!spec.options)
     return (
       <FieldRow
@@ -284,9 +260,7 @@ function PersonFieldEditor({
       />
     );
 
-  return (
-    <div className="flex flex-col gap-2">
-      {spec.search ? (
+  return spec.search ? (
         <SearchSelectRow
           label={spec.label}
           offset={offset}
@@ -311,89 +285,122 @@ function PersonFieldEditor({
           note={spec.note}
           onChange={(v) => apply(Number(v))}
         />
-      )}
-      {advanced && !problem && (
-        <FieldRow
-          // 選択肢で値を変えたときに入力欄を作り直す
-          key={current}
-          label={`${spec.label}（生の値）`}
-          offset={offset}
-          value={current}
-          problem={problem}
-          format={hex}
-          parse={(input) => parseNumber(input, validate)}
-          apply={apply}
-          hint={hintFor(field, advanced)}
-        />
-      )}
-    </div>
-  );
+      );
 }
 
-function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
+/**
+ * 場所（+0x08）と配置（+0x0A）。配置はその場所で使える配置（🟢 PLACE_LAYOUTS）だけを、家の中の人数で選ぶ。
+ * 場所を変えると、今の配置がその場所で使えなければ、家の中の人がいちばん少ない配置にする
+ */
+function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
-  const offset = PROMISE_OFFSET + PROMISE_PLACE_REL;
-  const current = { place: promise.place, layout: promise.layout };
-  const pairValue = `${promise.place}:${promise.layout}`;
-  const known = PLACE_LAYOUTS.some((p) => `${p.place}:${p.layout}` === pairValue);
+  const layouts = layoutsForPlace(promise.place);
+  const valid = layouts.includes(promise.layout);
 
   return (
-    <div className="flex flex-col gap-2 sm:col-span-2">
-      <SearchSelectRow
-        label="場所と配置"
-        offset={offset}
-        value={pairValue}
-        currentLabel={`${formatHex2(promise.place)} ${placeLabel(promise.place)}（配置 ${formatHex2(promise.layout)}。未確認の組）`}
-        options={placeLayoutOptions}
+    <>
+      <SelectRow
+        label="場所"
+        offset={PROMISE_OFFSET + PROMISE_PLACE_REL}
+        value={String(promise.place)}
+        currentLabel={`${formatHex2(promise.place)} 名前なし`}
+        options={placeOptions}
         problem={problem}
-        warning={
-          known ? null : "確認済みの組ではありません。布団の位置がおかしくなることがあります"
-        }
-        hint="正しい組だけを選べます"
-        searchPlaceholder="場所・配置・相手の名前で検索"
-        note="+0x08 は夜這いに入る扉と、その先のマップ。+0x0A はその先での人と布団の配置。場所だけを変えると、布団が宙に浮いたり壁にめり込んだりした（確認済み）。組は約束で使われる72組（相手の名前があるものは実データで見た組）"
+        note="+0x08。夜這いに入る扉と、その先のマップ（確認済み）。場所を変えると、配置もその場所で使えるものに合わせる"
         onChange={(v) => {
-          const [place, layout] = v.split(":").map(Number);
+          const place = Number(v);
+          const next = layoutsForPlace(place);
+          const layout = next.includes(promise.layout) ? promise.layout : next[0];
           update((b) => writePromisePlace(b, place, layout, { advanced }));
         }}
       />
-      {advanced && !problem && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <SelectRow
-            label="場所だけ（+0x08）"
-            offset={offset}
-            value={String(promise.place)}
-            currentLabel={`${formatHex2(promise.place)} 名前なし`}
-            options={placeOptions}
-            problem={problem}
-            note="配置（+0x0A）は変えません"
-            onChange={(v) =>
-              update((b) => writePromisePlace(b, Number(v), promise.layout, { advanced }))
-            }
-          />
-          <FieldRow
-            key={promise.layout}
-            label="配置だけ（+0x0A）"
-            offset={PROMISE_OFFSET + PROMISE_LAYOUT_REL}
-            value={promise.layout}
-            problem={problem}
-            format={hex}
-            parse={(input) =>
-              parseNumber(input, (v) =>
-                validatePlaceLayout(promise.place, v, current, { advanced }),
-              )
-            }
-            apply={(v) => update((b) => writePromisePlace(b, promise.place, v, { advanced }))}
-            hint="0〜0xFFFF"
-          />
+      <SelectRow
+        label="配置（家の中の人）"
+        offset={PROMISE_OFFSET + PROMISE_LAYOUT_REL}
+        value={String(promise.layout)}
+        currentLabel={`${layoutLabel(promise.layout)}（配置 ${formatHex2(promise.layout)}。この場所では使われない配置）`}
+        options={layouts.map((l) => layoutOption(promise.place, l))}
+        problem={problem}
+        warning={valid ? null : "この場所で使われる配置ではありません。布団の位置がおかしくなることがあります"}
+        hint={layouts.length <= 1 ? "この場所で使える配置は1つだけです" : `この場所で使える ${layouts.length} 通り`}
+        note="+0x0A。夜這いの場の同心・岡っ引きの人数と、人と布団の座標の組 🟢。場所ごとに使える配置が決まっていて、ほかの配置にすると布団が宙に浮いたり壁にめり込んだりした（確認済み）"
+        onChange={(v) => update((b) => writePromisePlace(b, promise.place, Number(v), { advanced }))}
+      />
+    </>
+  );
+}
+
+/**
+ * 相手の種類（+0x04）。名前のある相手の種類にしたとき、場所と配置がその相手のもの（組の表の行）と違えば、合わせるボタンを出す
+ */
+function TypeEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
+  const { save, update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const partner = promisePartner(promise.type);
+  const death = save ? partnerDeathWarning(save.working, promise.type) : null;
+  const home = partner?.row != null ? PROMISE_ROWS.find((r) => r.index === partner.row) : undefined;
+  const away = home && (home.place !== promise.place || home.layout !== promise.layout) ? home : undefined;
+
+  return (
+    <div className="flex flex-col gap-2 sm:col-span-3">
+      <SearchSelectRow
+        label={PERSON_FIELDS.type.label}
+        offset={promiseFieldOffset("type")}
+        value={String(promise.type)}
+        currentLabel={`${hex(promise.type)} 約束できる相手の表にない種類`}
+        options={typeOptions}
+        problem={problem}
+        warning={death}
+        note={PERSON_FIELDS.type.note}
+        searchPlaceholder="名前・町の人の種類・ID で検索"
+        onChange={(v) => update((b) => writePromiseField(b, "type", Number(v), { advanced }))}
+      />
+      {!problem && away && (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-muted-foreground text-xs">
+            ゲームではこの相手とは {placeLabel(away.place)}（{layoutLabel(away.layout)}）で約束します。
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => update((b) => writePromisePlace(b, away.place, away.layout, { advanced }))}
+          >
+            場所と配置をこの相手のものにする
+          </Button>
         </div>
       )}
     </div>
   );
 }
 
-const PROMISE_ORDER: PersonField[] = ["name", "look", "type", "age", "blood", "day", "group"];
+/**
+ * 約束した日（+0x28）。🟢 場面が変わるたびに今日の経過日数と比べ、違えばすっぽかしで消える。
+ * 意味のある値は今日だけなので、今日にするかどうかだけを選ぶ
+ */
+function DayEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
+  const { save, update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const today = save ? readU16(save.working, DAY_INDEX_OFFSET) : promise.day;
+  const isToday = promise.day === today;
+
+  return (
+    <SelectRow
+      label="約束した日"
+      offset={promiseFieldOffset("day")}
+      value={String(promise.day)}
+      currentLabel={`${promise.day + 1}日目`}
+      options={[{ value: String(today), label: `${today + 1}日目（今日）` }]}
+      problem={problem}
+      warning={isToday ? null : `今日（${today + 1}日目）ではないので、次に場面が変わるとすっぽかしで消えます 🟢`}
+      hint={isToday ? "今日の夜に、場所の扉から夜這いに入れます" : "今日にすると、今夜の約束になります"}
+      note="+0x28。約束した日の経過日数（1日目＝0）。🟢 場面が変わるたびに今日と比べ、違えば「夜這いの約束をすっぽかしてしまった…」で約束が消える。今日のほかに選ぶ意味のある値はない"
+      onChange={(v) => update((b) => writePromiseField(b, "day", Number(v), { advanced }))}
+    />
+  );
+}
+
+const PROMISE_ORDER = ["name", "look", "age", "blood"] as const;
 const RECORD_ORDER = ["name", "type", "day", "age", "blood"] as const;
 
 /** 名前のある相手ごとの注意（約束の外で変わる値など） */
@@ -446,10 +453,20 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
     setSpec((s) => ({ ...s, ...patch }));
   };
 
-  const rowOptions: SelectOption[] = rowsFor(partner, stage, { advanced }).map((r) => ({
-    value: String(r.index),
-    label: `${rowLabel(r)}${r.checked ? "・確かめた組" : ""}`,
-  }));
+  // 組（+0x00〜+0x1B）は場所と配置で選ぶ。町の人は、まとまりの組のうち段階が今以下のもの（上級者モードは全部）
+  const rows = rowsFor(partner, stage, { advanced });
+  const row = rows.find((r) => r.index === spec.row) ?? rows[0];
+  const rowPlaceOptions = [...new Set(rows.map((r) => r.place))].sort((a, b) => a - b).map(placeOption);
+  const rowLayoutOptions = rows
+    .filter((r) => r.place === row.place)
+    .sort((a, b) => layoutHeadcount(a.layout) - layoutHeadcount(b.layout) || a.layout - b.layout)
+    .map((r) => ({
+      ...layoutOption(r.place, r.layout, [r.stage === null ? "" : `段階 ${r.stage}`, r.checked ? "確かめた組" : ""].filter(Boolean).join("・")),
+      value: String(r.index),
+    }));
+  /** その場所の組のうち、今の段階にいちばん近いもの */
+  const rowAt = (place: number) =>
+    rows.filter((r) => r.place === place).sort((a, b) => Math.abs((a.stage ?? 0) - stage) - Math.abs((b.stage ?? 0) - stage))[0];
   const names = nameCandidates(partner);
 
   return (
@@ -483,22 +500,33 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
             </p>
           )}
         </div>
-        <div className="sm:col-span-3">
+        <SelectRow
+          label="場所"
+          offset={PROMISE_OFFSET + PROMISE_PLACE_REL}
+          value={String(row.place)}
+          options={rowPlaceOptions}
+          problem={blocked}
+          disabled={rowPlaceOptions.length <= 1}
+          hint={
+            partner.kind === "town"
+              ? advanced
+                ? "この種類で約束できる全部の場所"
+                : `この種類で、いまの段階（${stage}）以下の組がある場所`
+              : "名前のある相手は場所が決まっています"
+          }
+          note="+0x08。夜這いに入る扉と、その先のマップ"
+          onChange={(v) => set({ row: rowAt(Number(v)).index })}
+        />
+        <div className="sm:col-span-2">
           <SelectRow
-            label="場所と配置"
-            offset={PROMISE_OFFSET}
-            value={String(spec.row)}
-            options={rowOptions}
+            label="配置（家の中の人）"
+            offset={PROMISE_OFFSET + PROMISE_LAYOUT_REL}
+            value={String(row.index)}
+            options={rowLayoutOptions}
             problem={blocked}
-            disabled={rowOptions.length <= 1}
-            hint={
-              partner.kind === "town"
-                ? advanced
-                  ? `まとまり ${partner.group} の全部の組`
-                  : `まとまり ${partner.group} の組のうち、いまの段階（${stage}）以下のもの`
-                : undefined
-            }
-            note="約束の枠の +0x00〜+0x1B に写す組。段階が高い組ほど、家の中の人（家の者・用心棒）が多い。ゲームはいまの段階の組を 70% で選び、30% で1段下げる"
+            disabled={rowLayoutOptions.length <= 1}
+            hint={rowLayoutOptions.length <= 1 ? "この場所の組は1つだけです" : `この場所の ${rowLayoutOptions.length} 通り`}
+            note="+0x0A と、約束の枠の +0x00〜+0x1B に写す組。段階が高い組ほど、家の中の同心・岡っ引きが多い 🟢。ゲームはいまの段階の組を 70% で選び、30% で1段下げる"
             onChange={(v) => set({ row: Number(v) })}
           />
         </div>
@@ -586,12 +614,11 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           夜の約束
-          <CertaintyBadge mark="🔶" text="配置の意味は推定" />
         </CardTitle>
         <CardDescription>
           {formatOffset(PROMISE_OFFSET)} から 0x2C
-          B。約束中の相手の名前・見た目・年齢などを書き換えます。
-          名前・見た目と声・しゃべり方と戦闘力は別々に決まるので、組み合わせを変えられます。
+          B。約束中の相手の種類・場所・名前・見た目・年齢などを書き換えます。
+          相手の種類（しゃべり方と戦闘力）・名前・見た目と声は別々に決まるので、組み合わせを変えられます。
           約束がないとき（+0x04 が 0xFFFFFFFF）は、新しく約束を作れます。
         </CardDescription>
       </CardHeader>
@@ -600,7 +627,13 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
           <CreatePromiseForm problem={problem} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-3">
-            {promise && <PlaceEditor promise={promise} problem={problem} />}
+            {promise && (
+              <>
+                <TypeEditor promise={promise} problem={problem} />
+                <PlaceLayoutEditor promise={promise} problem={problem} />
+                <DayEditor promise={promise} problem={problem} />
+              </>
+            )}
             {PROMISE_ORDER.map((field) => (
               <PersonFieldEditor
                 key={field}
@@ -834,7 +867,7 @@ export function YobaiPage() {
 
       <p className="text-muted-foreground text-xs">
         約束の枠の
-        +0x00（約束したときの段階）・+0x0C〜+0x1B（意味は未確認）・+0x26〜+0x2B（初めての説明を見たかのビットなど）は書き換えません。
+        +0x00（約束したときの段階）・+0x02（まとまり）・+0x0C〜+0x1B（意味は未確認）・+0x26〜+0x2B（初めての説明を見たかのビットなど）は、約束を作るとき以外は書き換えません。
         {` `}記録の +0x08（入った建物）は {formatOffset(RECORDS_OFFSET + RECORD_BUILDING_REL)} から
         16 B 刻みです。
       </p>

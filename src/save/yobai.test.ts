@@ -18,6 +18,9 @@ import {
   writePromiseField,
   writePromisePlace,
   writeRecordField,
+  layoutLabel,
+  layoutPeople,
+  layoutsForPlace,
 } from './yobai'
 
 const hex = (s: string) => Uint8Array.from(s.match(/../g)!.map((h) => Number.parseInt(h, 16)))
@@ -244,5 +247,20 @@ describe('🟢 夜這いの記録 0x137F0〜0x13E2F（16 B × 100件、最初の
     for (const r of view.records)
       for (const f of ['day', 'type', 'name', 'age', 'blood'] as const) writeRecordField(after, r.index, f, r[f], { advanced: false })
     expect(diffOffsets(before, after)).toEqual([])
+  })
+})
+
+describe('配置の家の中の人 datatable/place/night-visit-layout.csv（🟢）', () => {
+  it('配置ごとの同心・岡っ引きの人数', () => {
+    expect(layoutPeople(0x06)).toEqual({ doshin: 0, okappiki: 1 }) // 稲荷前（女中・娘の実データ）
+    expect(layoutPeople(0x3d)).toEqual({ doshin: 1, okappiki: 5 }) // お屋敷（さよ）
+    expect(layoutLabel(0x20)).toBe('同心1人・岡っ引き4人') // 提灯の掛かった家（先生）
+    expect(layoutLabel(0x99)).toBe('配置 0x99') // 表にない
+  })
+
+  it('場所ごとに使える配置だけを、家の中の人が少ない順に返す', () => {
+    // 提灯の掛かった家 0x11：0x0A・0x0B・0x35（3人）、0x20（5人）
+    expect(layoutsForPlace(0x11)).toEqual([0x0a, 0x0b, 0x35, 0x20])
+    expect(layoutsForPlace(0x0c)).toEqual([0x06])
   })
 })

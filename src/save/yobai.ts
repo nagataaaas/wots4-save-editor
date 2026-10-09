@@ -8,13 +8,16 @@
 //   +0x04 u32  ✅ [U] しゃべり方と戦闘力の型（はるなを 0x031B にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった）。
 //              FFFFFFFF なら約束なし（空の枠）
 //   +0x08 u16  ✅ [U] 約束の場所（夜這いに入る扉と、その先のマップ）。0x00〜0x22 の名前を書き換えで確認。0x23 以降は名前が空
-//   +0x0A u16  ✅ [U] 位置 ／ 🔶 意味：行き先での人と布団の配置。場所と組で正しい値がある（0C＋07 は布団がおかしく、0C＋06 は正常）
+//   +0x0A u16  ✅ [U] 位置 ／ 🟢 意味：行き先での同心・岡っ引きの人数と、人と布団の座標の組（datatable/place/night-visit-layout.csv）。
+//              場所ごとに使える配置が決まっている（0C＋07 は布団がおかしく、0C＋06 は正常 [U]）
 //   +0x1C u32  ✅ [U] 名前（または NPC の ID）。はるなを 0xD7 にすると、名前がさよになった
 //   +0x20 u32  ✅ [U] 見た目（モデル）と声。はるなを 0xF5 にすると、見た目と声がさよになった
 //   +0x24 u8   ✅ [U] 年齢（0x30 で48歳）。FF は「？」（さよ）
 //   +0x25 u8   ✅ [U] 血液型。1＝A、2＝B、3＝O、4＝AB（書き換えで確認）、5＝「？」（さよ）
 //   +0x28 u16  🟢 約束した日（経過日数 0x0BD8、1日目＝0）。8人（さよ・かえで・はるな・先生・メリンダ・三姉妹）の約束で一致。
-//              日付が変わったときにこの値と違うと「すっぽかし」で枠が消える。空の枠では FFFF（要ゲーム内確認）
+//              🟢 場面が変わるたびに今日の経過日数と比べ、違うと「すっぽかし」で枠が消える。空の枠では FFFF。
+//              画面では今日にするかどうかだけを選ぶ（ほかの値を書く意味はない）
+//   +0x02 は画面では書かない（夜這いの場では読まれない 🟢）
 //   +0x2A u8   🟢 初めての説明を見たかのビット（bit0〜2 夜這い、bit3〜5 拷問）。空の枠でも残る。書き換えない
 //   +0x26 は使われていない（🟢）。+0x0C〜+0x1B はいつも 0A 0B 0E 0F 0C 0D 1D 01（🟢、意味は ❓）。どれも書き換えない
 // 名前 +0x1C の ID は master/npc-names.ts（datatable/npc/npc-name.csv、🟢）。
@@ -40,6 +43,7 @@
 import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
+import { NIGHT_VISIT_LAYOUT_TABLE } from "./master/dataset/night-visit-layout";
 import { NIGHT_VISIT_PLACE_TABLE } from "./master/dataset/night-visit-place";
 import { NPC_LOOK_TABLE } from "./master/dataset/npc-look";
 import { labelOf, nameOf } from "./master/labels";
@@ -167,6 +171,31 @@ export const PLACE_LAYOUTS: readonly {
     return { place, layout, seen: seen !== undefined, note: seen?.note };
   })
   .sort((a, b) => a.place - b.place || a.layout - b.layout);
+
+/** 🟢 配置ごとの家の中の人数（datatable/place/night-visit-layout.csv。同心・岡っ引き） */
+export function layoutPeople(layout: number): { doshin: number; okappiki: number } | null {
+  const r = NIGHT_VISIT_LAYOUT_TABLE[layout as keyof typeof NIGHT_VISIT_LAYOUT_TABLE];
+  return r ? { doshin: r.doshin, okappiki: r.okappiki } : null;
+}
+
+/** 配置の表示（「同心1人・岡っ引き2人」）。表にない値は 16進数 */
+export function layoutLabel(layout: number): string {
+  const r = NIGHT_VISIT_LAYOUT_TABLE[layout as keyof typeof NIGHT_VISIT_LAYOUT_TABLE];
+  return r ? r.name_ja : `配置 0x${layout.toString(16).toUpperCase()}`;
+}
+
+/** 家の中の人の合計（並べ替え用） */
+export function layoutHeadcount(layout: number): number {
+  const p = layoutPeople(layout);
+  return p ? p.doshin + p.okappiki : Number.POSITIVE_INFINITY;
+}
+
+/** その場所で正しい配置（PLACE_LAYOUTS）。家の中の人が少ない順 */
+export function layoutsForPlace(place: number): number[] {
+  return PLACE_LAYOUTS.filter((p) => p.place === place)
+    .map((p) => p.layout)
+    .sort((a, b) => layoutHeadcount(a) - layoutHeadcount(b) || a - b);
+}
 
 export type KnownValue = { value: number; label: string };
 

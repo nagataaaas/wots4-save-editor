@@ -25,7 +25,7 @@ import { checkLayout } from "./hero";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_ROW_TABLE } from "./master/dataset/night-visit-row";
 import { NPC_NAMES } from "./master/npc-names";
-import { PLACES, PROMISE_EMPTY, PROMISE_OFFSET, validatePersonField } from "./yobai";
+import { PROMISE_EMPTY, PROMISE_OFFSET, validatePersonField } from "./yobai";
 
 /** 書くバイト数（+0x00〜+0x29） */
 export const PROMISE_WRITE_LENGTH = 0x2a;
@@ -196,12 +196,6 @@ export function randomSpec(partner: PromisePartner, stage: number, rand: () => n
     age: pick(ageCandidates(partner)),
     blood: pick(bloodCandidates(partner)),
   };
-}
-
-export function rowLabel(row: PromiseRow): string {
-  const hex = (v: number) => v.toString(16).toUpperCase().padStart(2, "0");
-  const stage = row.stage === null ? "" : `段階 ${row.stage}・`;
-  return `${hex(row.place)} ${PLACES[row.place] ?? "名前なし"}（${stage}配置 ${hex(row.layout)}）`;
 }
 
 /** 約束の枠の検証。約束を作れるなら null */
