@@ -219,6 +219,7 @@ function SectCard({
     const sheet = findSkillSheet(id)!;
     return { sheet: { ...sheet, skills: sectSheetSkills(sect, sheet) }, states: sheetStates(view, id) };
   });
+  const hasUnique = sheets.some((s) => s.sheet.skills.some(isUniqueSkill));
   const total = sheets.reduce((n, s) => n + s.sheet.skills.length, 0);
   const learned = sheets.reduce((n, s) => n + s.sheet.skills.filter((x) => s.states[x.skillNo] !== 0).length, 0);
   const valueProblem = readOnly ? "検証に落ちています" : rec ? null : "流派の表にこの流派がありません";
@@ -229,7 +230,21 @@ function SectCard({
       title={
         // 流派名・構え・段・修練度・技の数は、流派のカードどうしで縦に揃うように幅を決めておく
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="w-[9em] shrink-0">{sect.nameJa}</span>
+          <span className="flex w-[10.5em] shrink-0 items-center gap-1.5">
+            {/* 固有技のある流派の印。ない流派も同じ幅を空けて、流派名の左端を揃える */}
+            <span className="w-5 shrink-0">
+              {hasUnique && (
+                <span
+                  className="text-muted-foreground rounded border px-1 text-xs leading-4 font-normal"
+                  title="固有技がある流派です"
+                  aria-label="固有技がある流派です"
+                >
+                  固
+                </span>
+              )}
+            </span>
+            {sect.nameJa}
+          </span>
           <span className="text-muted-foreground flex items-center gap-x-3 text-xs font-normal">
             <span className="w-[9em] shrink-0">
               {sect.sheets.map((id) => findStance(findSkillSheet(id)!.stance)?.nameJa).join("・")}
