@@ -88,14 +88,31 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
     expect(view.bestProblem).toBeNull()
   })
 
-  it('🟢 0x378D・0x379F・0x37A1・0x37AA などに名前と説明がある。❓ 0x37A2 は名前なし', () => {
+  it('🟢 生の値の欄に出すバイトは、どれも名前と説明がある', () => {
+    for (const o of RAW_ROUTE_OFFSETS) {
+      expect(ROUTE_CANDIDATE_NOTES[o]?.name, `0x${o.toString(16)}`).toBeTruthy()
+      expect(ROUTE_CANDIDATE_NOTES[o]?.note, `0x${o.toString(16)}`).toBeTruthy()
+    }
     expect(ROUTE_CANDIDATE_NOTES[0x378d].name).toBe('序章のあとの道筋')
     expect(ROUTE_CANDIDATE_NOTES[0x379f].name).toBe('序章の大砲')
     expect(ROUTE_CANDIDATE_NOTES[0x37a1].name).toBe('小公女の薬')
     expect(ROUTE_CANDIDATE_NOTES[0x37aa].name).toBe('チュートリアルの進み方')
-    expect(ROUTE_CANDIDATE_NOTES[0x37a2].name).toBeUndefined()
-    expect(ROUTE_CANDIDATE_NOTES[0x37a3].name).toContain('推定')
-    expect(ROUTE_CANDIDATE_NOTES[0x37a4].name).toContain('推定')
+  })
+
+  it('🟢 堂島・先生のなりわい、会談の手紙、黒船、最後通告。🔶 0x37A2 の 1 の意味', () => {
+    expect(ROUTE_CANDIDATE_NOTES[0x3799].name).toBe('堂島が鍛冶屋に戻った')
+    expect(ROUTE_CANDIDATE_NOTES[0x379a].name).toBe('先生が道場の師範代')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a2].name).toBe('般若党の離散')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a2].note).toContain('推定')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a3].name).toBe('会談の手紙')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a4].name).toBe('黒船')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a8].name).toBe('最後通告に逆らった')
+  })
+
+  it('🟢 0x37A9 は周回数ではなく未使用。0x3798・0x379C〜0x379E・0x37A5〜0x37A7 も未使用', () => {
+    for (const o of [0x3798, 0x379c, 0x379d, 0x379e, 0x37a5, 0x37a6, 0x37a7, 0x37a9])
+      expect(ROUTE_CANDIDATE_NOTES[o].name).toBe('未使用')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a9].note).toContain('周回数ではない')
   })
 
   it('🔶 好感度・ポイント（0x3792〜0x3797）は通常モードで 0〜20。ほかは 0〜2', () => {
