@@ -47,18 +47,16 @@ import {
 import { readU16 } from "@/save/binary";
 import {
   DAY_INDEX_OFFSET,
-  ageCandidates,
-  bloodCandidates,
   createPromise,
   createProblem,
   currentStage,
   defaultSpec,
-  nameCandidates,
   partnerDeathWarning,
   promisePartner,
   randomSpec,
   PROMISE_ROWS,
   rowsFor,
+  specPlace,
   validateSpec,
   type PromiseSpec,
 } from "@/save/yobai-create";
@@ -376,10 +374,6 @@ function TypeEditor({ promise, problem }: { promise: PromiseView; problem: strin
       />
       {!problem && away && (
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-muted-foreground text-xs">
-            ゲームではこの相手とは {placeLabel(away.place)}（{layoutLabel(away.layout)}
-            ）で約束します。
-          </p>
           <Button
             size="sm"
             variant="outline"
@@ -438,10 +432,6 @@ const PARTNER_NOTES: Readonly<Record<number, string>> = {
   454: "読み込み直すとローラの印が消えるので、褒美が「掘り出し物」にならないことがあります",
 };
 
-const lookLabel = (v: number) => {
-  const known = KNOWN_LOOKS.find((k) => k.value === v);
-  return known ? `${known.label}（${hex(v)}）` : hex(v);
-};
 const ageLabel = (v: number) => (v === AGE_UNKNOWN ? "？" : `${v}歳`);
 
 /** 年齢の選択肢（通常モードの範囲 0〜99 と「？」） */
@@ -452,14 +442,6 @@ const ageOptions: SelectOption[] = [
   })),
   { value: String(AGE_UNKNOWN), label: ageLabel(AGE_UNKNOWN) },
 ];
-
-/** ゲームが選ぶ候補の説明（名前のある相手は1つに決まる） */
-function candidateHint(values: readonly number[], label: (v: number) => string): string {
-  if (values.length === 1) return `ゲームでは ${label(values[0])}`;
-  if (values.length > 5)
-    return `ゲームでは ${label(values[0])}〜${label(values[values.length - 1])} から選ばれる`;
-  return `ゲームでは ${values.map(label).join("・")} から選ばれる`;
-}
 
 /**
  * 空の約束の枠に約束を作る。相手の種類（しゃべり方と戦闘力）が組を決める。
@@ -484,23 +466,33 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
 
   // 組（+0x00〜+0x1B）は場所と配置で選ぶ。町の人は、まとまりの組のうち段階が今以下のもの（上級者モードは全部）
   const rows = rowsFor(partner, stage, { advanced });
-  const row = rows.find((r) => r.index === spec.row) ?? rows[0];
-  const rowPlaceOptions = [...new Set(rows.map((r) => r.place))]
-    .sort((a, b) => a - b)
-    .map(placeOption);
-  const rowLayoutOptions = rows
-    .filter((r) => r.place === row.place)
-    .sort((a, b) => layoutHeadcount(a.layout) - layoutHeadcount(b.layout) || a.layout - b.layout)
-    .map((r) => ({
-      ...layoutOption(r.layout, r.stage === null ? undefined : `段階 ${r.stage}`),
-      value: String(r.index),
-    }));
-  /** その場所の組のうち、今の段階にいちばん近いもの */
-  const rowAt = (place: number) =>
-    rows
-      .filter((r) => r.place === place)
+  // 場所と配置：通常モードはこの相手の組の場所・配置だけ。上級者モードは全部の場所と、その場所で使える配置
+  // （この相手の組にない組を選ぶと、組はそのままで場所と配置だけを上書きする）
+  const { place, layout } = specPlace(spec);
+  const rowPlaces = [...new Set(rows.map((r) => r.place))].sort((a, b) => a - b);
+  const placeChoices = advanced ? placeOptions : rowPlaces.map(placeOption);
+  const rowFor = (p: number, l: number) => rows.find((r) => r.place === p && r.layout === l);
+  const layoutChoices = (
+    advanced ? layoutsForPlace(place) : rows.filter((r) => r.place === place).map((r) => r.layout)
+  )
+    .sort((a, b) => layoutHeadcount(a) - layoutHeadcount(b) || a - b)
+    .map((l) => {
+      const r = rowFor(place, l);
+      return layoutOption(l, r?.stage != null ? `段階 ${r.stage}` : undefined);
+    });
+  /** 場所と配置を選ぶ。この相手の組にあればその組、なければ今の組のまま上書き */
+  const choose = (p: number, l: number) => {
+    const r = rowFor(p, l);
+    set(r ? { row: r.index, place: undefined, layout: undefined } : { place: p, layout: l });
+  };
+  /** その場所の組のうち、今の段階にいちばん近いもの。なければ家の人がいちばん少ない配置 */
+  const chooseAt = (p: number) => {
+    const r = rows
+      .filter((x) => x.place === p)
       .sort((a, b) => Math.abs((a.stage ?? 0) - stage) - Math.abs((b.stage ?? 0) - stage))[0];
-  const names = nameCandidates(partner);
+    if (r) choose(r.place, r.layout);
+    else choose(p, layoutsForPlace(p)[0]);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -526,46 +518,44 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
             }}
           />
           {!blocked && (!partner.status.startsWith("✅") || PARTNER_NOTES[spec.type]) && (
-            <p className="text-muted-foreground text-xs">
-              {partner.status.startsWith("✅")
-                ? ""
-                : "🟢 この相手との夜這いはまだゲームで確かめていません（要ゲーム内確認）。"}
-              {PARTNER_NOTES[spec.type] ?? ""}
-            </p>
+            <p className="text-muted-foreground text-xs">{PARTNER_NOTES[spec.type] ?? ""}</p>
           )}
         </div>
         <SelectRow
           label="場所"
           offset={PROMISE_OFFSET + PROMISE_PLACE_REL}
-          value={String(row.place)}
-          options={rowPlaceOptions}
+          value={String(place)}
+          options={placeChoices}
           problem={blocked}
-          disabled={rowPlaceOptions.length <= 1}
+          disabled={placeChoices.length <= 1}
+          warning={
+            rowFor(place, layout) ? null : "この相手がゲームで約束する場所・配置ではありません"
+          }
           hint={
-            partner.kind === "town"
-              ? advanced
-                ? "この種類で約束できる全部の場所"
-                : `この種類で、いまの段階（${stage}）以下の組がある場所`
-              : "名前のある相手は場所が決まっています"
+            advanced
+              ? "全部の場所から選べます（上級者モード）"
+              : partner.kind === "town"
+                ? `この種類で、いまの段階（${stage}）以下の組がある場所`
+                : "名前のある相手は場所が決まっています（上級者モードで変えられます）"
           }
           note="+0x08。夜這いに入る扉と、その先のマップ"
-          onChange={(v) => set({ row: rowAt(Number(v)).index })}
+          onChange={(v) => chooseAt(Number(v))}
         />
         <div className="sm:col-span-2">
           <SelectRow
             label="配置（家の中の人）"
             offset={PROMISE_OFFSET + PROMISE_LAYOUT_REL}
-            value={String(row.index)}
-            options={rowLayoutOptions}
+            value={String(layout)}
+            options={layoutChoices}
             problem={blocked}
-            disabled={rowLayoutOptions.length <= 1}
+            disabled={layoutChoices.length <= 1}
             hint={
-              rowLayoutOptions.length <= 1
-                ? "この場所の組は1つだけです"
-                : `この場所の ${rowLayoutOptions.length} 通り`
+              layoutChoices.length <= 1
+                ? "この場所で選べる配置は1つだけです"
+                : `この場所で選べる ${layoutChoices.length} 通り`
             }
-            note={`${LAYOUT_NOTE}。約束の枠の +0x00〜+0x1B に写す組でもある。段階が高い組ほど家の人が多い。ゲームはいまの段階の組を 70% で選び、30% で1段下げる`}
-            onChange={(v) => set({ row: Number(v) })}
+            note={`${LAYOUT_NOTE}。段階が高い組ほど家の人が多い。ゲームはいまの段階の組を 70% で選び、30% で1段下げる`}
+            onChange={(v) => choose(place, Number(v))}
           />
         </div>
         <SearchSelectRow
@@ -574,11 +564,6 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
           value={String(spec.name)}
           options={nameOptions}
           problem={blocked}
-          hint={
-            partner.kind === "town"
-              ? `ゲームでは町の人の名前（${partner.sex === "f" ? "女性" : "男性"}、${names[0]}〜${names[names.length - 1]}）から選ばれる`
-              : candidateHint(names, nameLabel)
-          }
           searchPlaceholder="名前・英語名・ID で検索"
           onChange={(v) => set({ name: Number(v) })}
         />
@@ -588,7 +573,6 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
           value={String(spec.look)}
           options={lookOptions}
           problem={blocked}
-          hint={candidateHint(partner.looks, lookLabel)}
           searchPlaceholder="名前・町の人の種類・ID で検索"
           onChange={(v) => set({ look: Number(v) })}
         />
@@ -598,7 +582,6 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
           value={String(spec.age)}
           options={ageOptions}
           problem={blocked}
-          hint={candidateHint(ageCandidates(partner), ageLabel)}
           onChange={(v) => set({ age: Number(v) })}
         />
         <SelectRow
@@ -607,10 +590,6 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
           value={String(spec.blood)}
           options={knownOptions(BLOOD_TYPES)}
           problem={blocked}
-          hint={candidateHint(
-            bloodCandidates(partner),
-            (v) => BLOOD_TYPES.find((b) => b.value === v)?.label ?? String(v),
-          )}
           onChange={(v) => set({ blood: Number(v) })}
         />
       </div>

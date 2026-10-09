@@ -146,6 +146,21 @@ describe("夜の約束を作る chunks/night-visit「約束の作り方」", () 
       }
   });
 
+  it("上級者モードでは、名前のある相手でも場所と配置を、場所で使える配置の組に上書きできる", () => {
+    // 朱美を稲荷前 0C・配置 06 に（組 2 の +0x00〜+0x1B のうち、+0x08・+0x0A だけが変わる）
+    const moved: PromiseSpec = { ...AKEMI, place: 0x0c, layout: 0x06 };
+    expect(validateSpec(moved, 0, { advanced: false })).toMatch(/上級者モード/);
+    expect(validateSpec(moved, 0, { advanced: true })).toBeNull();
+    const bytes = buildPromiseBytes(moved, 1);
+    const expected = PROMISE_AKEMI.slice();
+    expected.set([0x0c, 0x00, 0x06, 0x00], 0x08);
+    expect(bytes).toEqual(expected);
+    // その場所で使えない配置は上級者モードでも書かない
+    expect(validateSpec({ ...AKEMI, place: 0x0c, layout: 0x07 }, 0, { advanced: true })).not.toBeNull();
+    // 組と同じ場所・配置を指定するのは通常モードでもよい
+    expect(validateSpec({ ...AKEMI, place: 0x1f, layout: 0x16 }, 0, { advanced: false })).toBeNull();
+  });
+
   it("名前のある相手は表の行・名前・見た目が決まっている（🟢 男性7人は要ゲーム内確認）", () => {
     const akagi = promisePartner(46)!;
     expect(akagi.kind).toBe("special");

@@ -15,6 +15,8 @@
 //    名前のある男性7人は 🟢 だけで、ゲーム内では確かめていない（要ゲーム内確認）。
 // 🟢 町の人の組は、相手のまとまり（1・2）の行から、段階 0x13E30 の行（30% ずつ1段下がる）が選ばれる。
 //    通常モードでは段階 0x13E30 以下の行だけ、上級者モードではまとまりの全行を選べる。
+//    上級者モードでは、名前のある相手も含めて、場所と配置（+0x08・+0x0A）を場所で使える配置の組に上書きできる
+//    （🟢 夜這いの場は場所と配置だけで作られ、相手は枠の値から作り直される）。
 // 名前・見た目・年齢・血液型は、ゲームが選ぶ候補（defaultSpec・randomSpec）とは別に、約束の編集欄と同じ範囲で選べる
 //    （✅ [U] 型・名前・見た目は別々に効く。見た目は datatable/npc/npc-look.csv の表）。
 // 🟢 名前のある相手が死んでいても、約束を止める判定はない。エディタでは警告だけ出す。
@@ -25,7 +27,7 @@ import { checkLayout } from "./hero";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_ROW_TABLE } from "./master/dataset/night-visit-row";
 import { NPC_NAMES } from "./master/npc-names";
-import { PROMISE_EMPTY, PROMISE_OFFSET, validatePersonField } from "./yobai";
+import { PLACE_LAYOUTS, PROMISE_EMPTY, PROMISE_OFFSET, validatePersonField } from "./yobai";
 
 /** 書くバイト数（+0x00〜+0x29） */
 export const PROMISE_WRITE_LENGTH = 0x2a;
@@ -157,7 +159,26 @@ export function bloodCandidates(partner: PromisePartner): number[] {
   return partner.blood === 0 ? [1, 2, 3, 4] : [partner.blood];
 }
 
-export type PromiseSpec = { type: number; row: number; name: number; look: number; age: number; blood: number };
+/**
+ * row は +0x00〜+0x1B に写す組。place・layout は場所（+0x08）・配置（+0x0A）の上書きで、省くと組の値。
+ * 上書きは上級者モードでだけ、場所で使える配置の組（PLACE_LAYOUTS）にできる（名前のある相手を別の場所にするときなど）
+ */
+export type PromiseSpec = {
+  type: number;
+  row: number;
+  place?: number;
+  layout?: number;
+  name: number;
+  look: number;
+  age: number;
+  blood: number;
+};
+
+/** 実際に書く場所と配置（上書きがなければ組の値） */
+export function specPlace(spec: PromiseSpec): { place: number; layout: number } {
+  const row = PROMISE_ROWS.find((r) => r.index === spec.row);
+  return { place: spec.place ?? row?.place ?? 0, layout: spec.layout ?? row?.layout ?? 0 };
+}
 
 /** 候補の先頭で作る（町の人の組は、いまの段階の行の先頭） */
 export function defaultSpec(partner: PromisePartner, stage: number): PromiseSpec {
@@ -218,6 +239,13 @@ export function validateSpec(spec: PromiseSpec, stage: number, opts: { advanced:
     return opts.advanced || partner.row !== null
       ? `この相手には使えない組です: ${spec.row}`
       : `いまの段階（${stage}）より上の組です（上級者モードで選べます）: ${spec.row}`;
+  const row = PROMISE_ROWS.find((r) => r.index === spec.row)!;
+  const { place, layout } = specPlace(spec);
+  if (place !== row.place || layout !== row.layout) {
+    if (!opts.advanced) return "この相手の組と違う場所・配置は、上級者モードでだけ選べます";
+    if (!PLACE_LAYOUTS.some((p) => p.place === place && p.layout === layout))
+      return `その場所で使える配置ではありません: 0x${place.toString(16)}・0x${layout.toString(16)}`;
+  }
   // 名前・見た目と声・年齢・血液型は種類とは別々に効く（✅ [U]）ので、約束の編集欄と同じ範囲で選べる。NaN は書き戻しの扱いをしないため
   for (const field of ["name", "look", "age", "blood"] as const) {
     const error = validatePersonField(field, spec[field], Number.NaN, opts);
@@ -233,6 +261,9 @@ export function buildPromiseBytes(spec: PromiseSpec, day: number): Uint8Array {
   const out = new Uint8Array(PROMISE_WRITE_LENGTH);
   out.set(row.bytes, 0);
   writeU32(out, 0x04, spec.type);
+  const { place, layout } = specPlace(spec);
+  writeU16(out, 0x08, place);
+  writeU16(out, 0x0a, layout);
   writeU32(out, 0x1c, spec.name);
   writeU32(out, 0x20, spec.look);
   writeU8(out, 0x24, spec.age);
