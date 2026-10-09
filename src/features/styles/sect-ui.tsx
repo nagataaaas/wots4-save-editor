@@ -182,6 +182,8 @@ export function SkillPicker({
             </div>
             <SkillTreeRows
               groups={shown.groups}
+              // チェック欄（size-4）と欄の間（gap-x-3）の分、帯を名前の欄へずらす
+              barStart="1.75rem"
               renderRow={(ctx) => {
                 const s = ctx.node.skill;
                 const ok = usable(s.skillNo);
@@ -313,22 +315,25 @@ export function SkillTreeRows({
   groups,
   renderRow,
   depth = 0,
+  barStart = "0rem",
 }: {
   groups: readonly SkillTreeGroup[];
   renderRow: (ctx: SkillTreeRowContext) => ReactNode;
   depth?: number;
+  /** 名前の欄より左に欄があるとき、その幅（帯をずらす） */
+  barStart?: string;
 }) {
   return groups.map((group) => {
     const grouped = group.members.length > 1;
     return (
       <div key={group.key} className="relative col-span-full grid grid-cols-subgrid">
         {grouped && (
-          <span aria-hidden className="bg-primary/30 absolute inset-y-1 w-0.5 rounded" style={{ left: `${depth * INDENT_REM}rem` }} />
+          <span aria-hidden className="bg-primary/30 absolute inset-y-1 w-0.5 rounded" style={{ left: `calc(${barStart} + ${depth * INDENT_REM}rem)` }} />
         )}
         {group.members.map((node, i) => (
           <div key={node.key} className="col-span-full grid grid-cols-subgrid">
             {renderRow({ node, depth, first: i === 0, grouped })}
-            <SkillTreeRows groups={node.next} renderRow={renderRow} depth={depth + 1} />
+            <SkillTreeRows groups={node.next} renderRow={renderRow} depth={depth + 1} barStart={barStart} />
           </div>
         ))}
       </div>
