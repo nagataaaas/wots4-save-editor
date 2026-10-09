@@ -27,7 +27,6 @@ import {
   I16_MAX,
   LEARNED_COUNT_OFFSET,
   MASTERY_MAX,
-  RANK_MAX,
   SKILL_POINTS_OFFSET,
   forgetSheetSkill,
   learnSectSkills,
@@ -40,7 +39,7 @@ import {
   type SectsView,
 } from "@/save/sects";
 import { errorMessage } from "./sect-format";
-import { IntField, SkillAttrs, SkillCommandCells, StateBadge } from "./sect-ui";
+import { IntField, RankField, SkillAttrs, SkillCommandCells, StateBadge } from "./sect-ui";
 
 /** その流派がどこにあるか（装備・持ち歩き・箪笥） */
 function placesOf(view: SectsView, id: number): string[] {
@@ -251,13 +250,10 @@ function SectCard({
             apply={(m) => values && onValues({ ...values, mastery: m, rank: Math.max(values.rank, rankForMastery(sect, m)) })}
             note={`しきい値：${sect.thresholds.join("・")}。修練度に合わせて段も上げます（🟢 要ゲーム内確認）`}
           />
-          <IntField
-            label="段（0 初段〜4 伍段、5 極）"
+          <RankField
             offset={rec?.offset ? rec.offset + 4 : 0}
             value={values?.rank ?? null}
             problem={valueProblem}
-            min={0}
-            max={RANK_MAX}
             apply={(r) => values && onValues({ ...values, rank: r })}
             note="🟢 要ゲーム内確認"
           />

@@ -169,7 +169,7 @@ export const findSkillInfo = (skillId: number): SkillInfo | undefined => SKILL_B
 /** 技の名前。名前のない技は「（名前なし）」 */
 export const skillName = (s: { nameJa: string }): string => s.nameJa || '（名前なし）'
 
-/** 段の呼び名（0 初段 … 4 伍段、5 極）🔶 値と画面の対応 */
+/** 段の呼び名（0 初段 … 4 伍段、5 極）。値と呼び名の対応はユーザー指定（2026-10-09） */
 export const RANK_LABELS = ['初段', '弐段', '参段', '四段', '伍段', '極'] as const
 
 /** 技の表の技 1 つ。next はこの技に続けて出す技 */

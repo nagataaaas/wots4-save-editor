@@ -39,9 +39,9 @@ import {
   type CustomStylesView,
 } from "@/save/custom-style";
 import { RANK_LABELS, SLOT_LABELS, STANCES, findStance, findStanceSkill } from "@/save/master/sect-data";
-import { I16_MAX, MASTERY_MAX, RANK_MAX } from "@/save/sects";
+import { I16_MAX, MASTERY_MAX } from "@/save/sects";
 import { errorMessage } from "./sect-format";
-import { IntField, SkillPicker } from "./sect-ui";
+import { IntField, RankField, SkillPicker } from "./sect-ui";
 
 type Message = { error: boolean; text: string } | null;
 
@@ -217,13 +217,10 @@ function StyleCard({
             max={MASTERY_MAX}
             apply={(m) => update((b) => writeCustomValues(b, style.id, { ...values, mastery: m }))}
           />
-          <IntField
-            label="段（0 初段〜4 伍段、5 極）"
+          <RankField
             offset={style.offset + 4}
             value={values.rank}
             problem={lockReason}
-            min={0}
-            max={RANK_MAX}
             apply={(r) => update((b) => writeCustomValues(b, style.id, { ...values, rank: r }))}
             note="俺流は段のしきい値が 0 なので、修練度が増えるとすぐ伍段になります"
           />

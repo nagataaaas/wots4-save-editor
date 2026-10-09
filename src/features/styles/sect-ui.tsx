@@ -1,11 +1,12 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { FieldRow } from "@/components/field-row";
 import { LazyTip } from "@/components/lazy-tip";
+import { SelectRow } from "@/components/select-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { findSkillConflicts, pickWithoutConflicts } from "@/save/custom-style";
-import { findSkillInfo, findStanceSkill, skillName, stanceSkills } from "@/save/master/sect-data";
+import { RANK_LABELS, findSkillInfo, findStanceSkill, skillName, stanceSkills } from "@/save/master/sect-data";
 import { uniqueWeaponsForSkill } from "@/save/unique-weapons";
 import { STATE_LABELS, parseInteger } from "./sect-format";
 
@@ -49,6 +50,36 @@ export function IntField({
       inputMode="numeric"
       hint={`${min}〜${max}`}
       note={note}
+    />
+  );
+}
+
+const RANK_OPTIONS = RANK_LABELS.map((label, v) => ({ value: String(v), label }));
+
+/** 段の選択欄（0 初段〜5 極） */
+export function RankField({
+  offset,
+  value,
+  problem,
+  apply,
+  note,
+}: {
+  offset: number;
+  value: number | null;
+  problem: string | null;
+  apply: (v: number) => void;
+  note?: string;
+}) {
+  return (
+    <SelectRow
+      label="段"
+      offset={offset}
+      value={value === null ? null : String(value)}
+      currentLabel={value === null ? undefined : `不明（${value}）`}
+      options={RANK_OPTIONS}
+      problem={problem}
+      note={note}
+      onChange={(v) => apply(Number(v))}
     />
   );
 }
