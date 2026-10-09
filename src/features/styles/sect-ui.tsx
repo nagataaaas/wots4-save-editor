@@ -183,39 +183,56 @@ function AttrTag({ label, tip }: { label: string; tip: ReactNode }) {
   );
 }
 
-/** 技のコマンド・攻撃力・属性・防御技の表示 🟢（datatable/sect/skill.csv） */
-export function SkillMeta({ skillId }: { skillId: number }) {
+/**
+ * 技のコマンドと攻撃力 🟢（datatable/sect/skill.csv）。防御技は「防御技」だけ。
+ * Fragment で返すので、親が grid なら 2 つの欄（コマンド・攻撃力）に入る（防御技は 2 欄にまたがる）
+ */
+export function SkillCommandCells({ skillId }: { skillId: number }) {
   const info = findSkillInfo(skillId);
-  if (!info) return null;
-  return (
-    <span className="flex flex-wrap items-center gap-1.5 text-xs">
-      {info.defenseGroup !== null ? (
+  if (!info) return <span className="col-span-2" />;
+  if (info.defenseGroup !== null) {
+    return (
+      <span className="col-span-2 text-xs">
         <Badge variant="secondary" className="font-normal">
           防御技
         </Badge>
-      ) : (
-        <>
-          <span className="font-mono">{info.commandJa || "—"}</span>
-          <span className="text-muted-foreground">攻 {info.attack}</span>
-        </>
-      )}
-      {info.attrs.map((a) =>
+      </span>
+    );
+  }
+  return (
+    <>
+      <span className="font-mono text-xs">{info.commandJa || "—"}</span>
+      <span className="text-muted-foreground text-xs">攻 {info.attack}</span>
+    </>
+  );
+}
+
+/** 技の属性の略称 🟢（datatable/sect/skill.csv）。固有武器はホバーで武器名を出す（✅ [U] 2026-10-09） */
+export function SkillAttrs({ skillId }: { skillId: number }) {
+  const info = findSkillInfo(skillId);
+  return (
+    <span className="flex flex-wrap items-center gap-1 text-xs">
+      {info?.attrs.map((a) =>
         a === UNIQUE_WEAPON_ATTR ? (
           <AttrTag
             key={a}
             label="固有武器"
-            tip={
-              <>
-                {a}：{uniqueWeaponsForSkill(skillId).join("・") || "（武器が見つかりません）"}
-                <br />
-                🔶 対象の武器は推定
-              </>
-            }
+            tip={`${a}：${uniqueWeaponsForSkill(skillId).join("・") || "（武器が見つかりません）"}`}
           />
         ) : (
           <AttrTag key={a} label={ATTR_SHORT[a] ?? a} tip={a} />
         ),
       )}
+    </span>
+  );
+}
+
+/** 技のコマンド・攻撃力・属性・防御技を 1 か所にまとめた表示（俺流の技選び用） */
+export function SkillMeta({ skillId }: { skillId: number }) {
+  return (
+    <span className="flex flex-wrap items-center gap-1.5">
+      <SkillCommandCells skillId={skillId} />
+      <SkillAttrs skillId={skillId} />
     </span>
   );
 }

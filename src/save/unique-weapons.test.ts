@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { SKILL_SHEETS, findSkillInfo } from './master/sect-data'
 import { uniqueWeaponsForSkill } from './unique-weapons'
 
-// 🔶 固有武器の6バイトの +0 を技の ID とみなした対応（unique-weapons.ts）
-describe('uniqueWeaponsForSkill 🔶', () => {
+// 固有武器の6バイトの +0 を技の ID とした対応（unique-weapons.ts。✅ [U] 2026-10-09）
+describe('uniqueWeaponsForSkill ✅', () => {
   it('固有武器の秘伝の技から武器を引く（chunks/weapon-record の表と同じ）', () => {
     expect(uniqueWeaponsForSkill(88)).toEqual(['大黒生', '大樽生']) // 秘伝黒生
     expect(uniqueWeaponsForSkill(89)).toEqual(['大黒生', '大樽生']) // 秘伝黒生の続きの ID

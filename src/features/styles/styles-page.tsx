@@ -40,7 +40,7 @@ import {
   type SectsView,
 } from "@/save/sects";
 import { errorMessage } from "./sect-format";
-import { IntField, SkillMeta, StateBadge } from "./sect-ui";
+import { IntField, SkillAttrs, SkillCommandCells, StateBadge } from "./sect-ui";
 
 /** その流派がどこにあるか（装備・持ち歩き・箪笥） */
 function placesOf(view: SectsView, id: number): string[] {
@@ -266,12 +266,13 @@ function SectCard({
           />
         </div>
 
-        {sheets.map(({ sheet, states }) => (
-          <div key={sheet.id} className="flex flex-col gap-1">
-            <h3 className="text-sm font-medium">
-              {findStance(sheet.stance)?.nameJa}の技（技の表 {sheet.id}）
-            </h3>
-            <div className="text-sm">
+        {/* 技の名前・状態・コマンド・攻撃力・属性・習得条件・ボタンの欄を、流派の中のすべての技の表で揃える（行は subgrid） */}
+        <div className="grid grid-cols-[auto_auto_auto_auto_auto_minmax(0,1fr)_auto] gap-x-3 text-sm">
+          {sheets.map(({ sheet, states }, i) => (
+            <div key={sheet.id} className="col-span-full grid grid-cols-subgrid">
+              <h3 className={`col-span-full pb-1 text-sm font-medium ${i > 0 ? "pt-4" : ""}`}>
+                {findStance(sheet.stance)?.nameJa}の技（技の表 {sheet.id}）
+              </h3>
               {sheetSkillTree(sheet).map((g) => (
                 <SkillGroupView
                   key={g.key}
@@ -286,8 +287,8 @@ function SectCard({
                 />
               ))}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </CollapsibleCard>
   );
@@ -313,7 +314,7 @@ const INDENT_REM = 1.25;
 function SkillGroupView({ group, ...props }: SkillRowProps & { group: SkillTreeGroup }) {
   const grouped = group.members.length > 1;
   return (
-    <div className="relative">
+    <div className="relative col-span-full grid grid-cols-subgrid">
       {grouped && (
         <span
           aria-hidden
@@ -322,7 +323,7 @@ function SkillGroupView({ group, ...props }: SkillRowProps & { group: SkillTreeG
         />
       )}
       {group.members.map((node, i) => (
-        <div key={node.key}>
+        <div key={node.key} className="col-span-full grid grid-cols-subgrid">
           <SkillRow node={node} first={i === 0} grouped={grouped} {...props} />
           {node.next.map((g) => (
             <SkillGroupView key={g.key} group={g} {...props} depth={props.depth + 1} />
@@ -349,30 +350,36 @@ function SkillRow({
   const state = states[s.skillNo];
   const upgradeOf = node.upgradeOf === null ? null : sheet.skills.find((x) => x.skillNo === node.upgradeOf);
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b py-1">
-      <span className="flex min-w-44 flex-col" style={{ paddingLeft: `${depth * INDENT_REM + (grouped ? 0.625 : 0)}rem` }}>
+    <div className="col-span-full grid min-h-9 grid-cols-subgrid items-center border-b py-1">
+      <span className="flex min-w-40 flex-col" style={{ paddingLeft: `${depth * INDENT_REM + (grouped ? 0.625 : 0)}rem` }}>
         <span>
           {depth > 0 && first && <span className="text-muted-foreground mr-1">└</span>}
           {skillName(s)}
         </span>
         {upgradeOf && <span className="text-muted-foreground text-xs">⇧ {skillName(upgradeOf)}の上位</span>}
       </span>
-      <StateBadge state={state} />
-      <SkillMeta skillId={s.skillId} />
-      <span className="text-muted-foreground flex-1 text-xs">
-        {s.rank >= 0 ? `${RANK_LABELS[s.rank]}以上` : ""}
-        {s.condJa ? `：${s.condJa}` : s.cond === 0 ? "：流派を装備すると覚える" : ""}
+      <span>
+        <StateBadge state={state} />
       </span>
-      {(state === 0 || state === 3) && (
-        <Button size="sm" variant="outline" disabled={readOnly} onClick={() => onLearn(sheet.id, s.skillNo)}>
-          覚えさせる
-        </Button>
-      )}
-      {advanced && state !== 0 && (
-        <Button size="sm" variant="ghost" disabled={readOnly} onClick={() => onForget(sheet.id, s.skillNo)}>
-          忘れさせる
-        </Button>
-      )}
+      <SkillCommandCells skillId={s.skillId} />
+      <SkillAttrs skillId={s.skillId} />
+      <span className="text-muted-foreground text-xs">
+        {[s.rank >= 0 ? `${RANK_LABELS[s.rank]}以上` : "", s.condJa || (s.cond === 0 ? "流派を装備すると覚える" : "")]
+          .filter(Boolean)
+          .join("：")}
+      </span>
+      <span className="flex justify-end gap-1">
+        {(state === 0 || state === 3) && (
+          <Button size="sm" variant="outline" disabled={readOnly} onClick={() => onLearn(sheet.id, s.skillNo)}>
+            覚えさせる
+          </Button>
+        )}
+        {advanced && state !== 0 && (
+          <Button size="sm" variant="ghost" disabled={readOnly} onClick={() => onForget(sheet.id, s.skillNo)}>
+            忘れさせる
+          </Button>
+        )}
+      </span>
     </div>
   );
 }
