@@ -238,7 +238,7 @@ export function SkillCommandCells({ skillId }: { skillId: number }) {
   );
 }
 
-/** 技の属性の略称 🟢（datatable/sect/skill.csv）。固有武器はホバーで武器名を出す（✅ [U] 2026-10-09） */
+/** 技の属性の略称 🟢（datatable/sect/skill.csv）。固有技はホバーで対応する武器の名前を出す（✅ [U] 2026-10-09） */
 export function SkillAttrs({ skillId }: { skillId: number }) {
   const info = findSkillInfo(skillId);
   return (
@@ -247,7 +247,7 @@ export function SkillAttrs({ skillId }: { skillId: number }) {
         a === UNIQUE_WEAPON_ATTR ? (
           <AttrTag
             key={a}
-            label="固有武器"
+            label="固有技"
             tip={`${a}：${uniqueWeaponsForSkill(skillId).join("・") || "（武器が見つかりません）"}`}
           />
         ) : (

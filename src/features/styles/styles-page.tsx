@@ -144,11 +144,13 @@ export function StylesPage() {
               <Label>持っていない流派も表示する</Label>
             </label>
             <label className="flex items-center gap-2">
-              <Switch checked={includeSpecial} onCheckedChange={setIncludeSpecial} aria-label="特別な技も習得する" />
+              <Switch checked={includeSpecial} onCheckedChange={setIncludeSpecial} aria-label="固有技も習得する" />
               <Label>
-                特別な技も習得する
+                固有技も習得する
                 <InfoTip>
-                  「今 装備している武器で100人惨殺する」などで覚える技（秘伝黒生・くるひかぶきなど）。習得した状態は 1（俺流に組み込める）にします（🟢）
+                  固有技は、対応する武器で「今 装備している武器で100人惨殺する」などの条件を満たして覚える技（秘伝黒生・乾坤一擲・くるひかぶきなど）。
+                  オンにすると「技を全部習得する」で固有技も習得します。状態は 1（俺流に組み込める）にします。
+                  同じ構えのほかの流派は、ゲームでその流派を装備したときに習得済みになります（🟢）
                 </InfoTip>
               </Label>
             </label>
