@@ -214,7 +214,11 @@ export function WeaponPanel({ weapon }: { weapon: WeaponView }) {
       <dd>{value}</dd>
     </div>
   );
-  const charms = [0, 1, 2].map((slot) => weapon.charms.value[slot] ?? null);
+  const charmIds = weapon.charms.value.filter((id): id is number => id !== null);
+  const charms: string[] = charmIds.length > 3
+    ? [...new Set(charmIds)].map((id) => `${charmLabel(id)} ×${charmIds.filter((value) => value === id).length}`)
+    : charmIds.map((id) => charmLabel(id) ?? `?${id}`);
+  while (charms.length < 3) charms.push("---");
   return (
     <div className="weapon-preview">
       <div className="weapon-preview-layout">
@@ -235,9 +239,9 @@ export function WeaponPanel({ weapon }: { weapon: WeaponView }) {
             {stat("質", pair("quality", "qualityMax"))}
           </dl>
           <ul className="weapon-preview-charms" aria-label="魅力">
-            {charms.map((id, slot) => (
-              <li key={slot} aria-label={`魅力 ${slot + 1}：${id === null ? "なし" : charmLabel(id)}`}>
-                <span>{id === null ? "---" : charmLabel(id)}</span>
+            {charms.map((label, slot) => (
+              <li key={slot} aria-label={`魅力 ${slot + 1}：${label === "---" ? "なし" : label}`}>
+                <span>{label}</span>
               </li>
             ))}
           </ul>

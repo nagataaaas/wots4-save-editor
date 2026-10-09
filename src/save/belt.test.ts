@@ -117,12 +117,54 @@ describe('武器レコード（合成）', () => {
     expect(readWeapon(b, o).charms).toMatchObject({ value: [0, 0, 6], problem: null })
   })
 
-  it('魅力の個数の合計が3を超えるレコードは読み取り専用', () => {
+  it('🟢 1組の魅力の個数4は読み取り専用（合計だけが4以上の場合とは区別する）', () => {
     const b = makeSave()
     const o = beltOffset(0)
     b.set([0x09, 0x00, 0x04, 0x00], o + 0x1e)
     expect(readWeapon(b, o).problem).not.toBeNull()
     expect(() => writeWeaponNumber(b, o, 'attack', 1)).toThrow()
+  })
+
+  it('🟢 上級者モードは異なる魅力×3を3種類保存し、12 B以外を変えず往復する', () => {
+    const b = makeSave()
+    const o = beltOffset(0)
+    const before = b.slice()
+    const charms = [9, 9, 9, 4, 4, 4, 6, 6, 6]
+    expect(() => writeWeaponCharms(b, o, charms)).toThrow()
+    expect(b).toEqual(before)
+    writeWeaponCharms(b, o, charms, { advanced: true })
+    expect(onlyChanged(before, b, o + WEAPON_FIELDS.charms, 12)).toBe(true)
+    expect(b.length).toBe(before.length)
+    const weapon = readWeapon(b, o)
+    expect(weapon.problem).toBeNull()
+    expect(weapon.charms.value).toEqual(charms)
+    expect(weapon.charms.warning).toContain('要ゲーム内確認')
+    const saved = b.slice()
+    writeWeaponCharms(b, o, weapon.charms.value, { advanced: true })
+    expect(b).toEqual(saved)
+    expect([...b.subarray(o + 0x1e, o + 0x2a)]).toEqual([9, 0, 3, 0, 4, 0, 3, 0, 6, 0, 3, 0])
+  })
+
+  it('🟢 上級者モードでも合算後の同じ魅力4・5、4種類以上、未知IDは拒否しバイト不変', () => {
+    const b = makeSave()
+    const o = beltOffset(0)
+    const before = b.slice()
+    for (const values of [[9, 9, 9, 9], [9, 9, 9, 9, 9], [1, 2, 3, 4], [10]]) {
+      expect(() => writeWeaponCharms(b, o, values, { advanced: true })).toThrow()
+      expect(b).toEqual(before)
+    }
+  })
+
+  it('上級者設定を通常の個数へ戻せる。無効な個数は引き続き読み取り専用', () => {
+    const b = makeSave()
+    const o = beltOffset(0)
+    writeWeaponCharms(b, o, [9, 9, 9, 4], { advanced: true })
+    writeWeaponCharms(b, o, [9, 4, null])
+    expect(readWeapon(b, o).charms.value).toEqual([9, 4, null])
+    for (const count of [0, 4, 5, 65535]) {
+      new DataView(b.buffer).setUint16(o + WEAPON_FIELDS.charms + 2, count, true)
+      expect(readWeapon(b, o).problem).not.toBeNull()
+    }
   })
 
   it('✅ chunks/weapon-record 銘：<0x6A+番号> 01 <番号>。なしは FF FF FF。✅ U-2 人斬りは案A（6A 01 00）', () => {

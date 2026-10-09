@@ -137,7 +137,8 @@ const SIGNED_NUMBERS: ReadonlySet<NumberKey> = new Set(
 );
 
 const inRange = (v: number, r: NumberRange) => v >= r.min && v <= r.max;
-export const formatRange = (r: NumberRange) => `${r.min.toLocaleString()}〜${r.max.toLocaleString()}`;
+export const formatRange = (r: NumberRange) =>
+  `${r.min.toLocaleString()}〜${r.max.toLocaleString()}`;
 
 export const NUMBER_KEYS: readonly NumberKey[] = [
   "attack",
@@ -257,7 +258,7 @@ export type WeaponView = {
   guard: Field<PartView>;
   grip: Field<PartView>;
   numbers: Record<NumberKey, Field<number>>;
-  /** 魅力を最大3つまで並べたもの（同じ ID が複数あれば個数分並べる）。空きは null */
+  /** 魅力を個数分に展開したもの。通常は3枠、上級者設定では最大9個。空きは null */
   charms: Field<(number | null)[]>;
   /** 銘の番号。null は銘なし。label が null なら未知のバイト列 */
   title: Field<number | null> & { label: string | null; raw: number };
@@ -365,12 +366,25 @@ export function validateWeaponNumber(
   return null;
 }
 
-/** 魅力の並び（最大3つ、空きは null）を検証する */
-export function validateCharms(charms: readonly (number | null)[]): string | null {
-  if (charms.length > CHARM_SLOTS) return `魅力は${CHARM_SLOTS}つまでです`;
-  for (const c of charms) if (c !== null && !charmLabel(c)) return `未知の魅力です（${c}）`;
-  if (charms.filter((c) => c !== null).length > CHARM_TOTAL_MAX)
-    return `魅力の個数の合計は${CHARM_TOTAL_MAX}までです`;
+/** 同じIDは保存時に合算する。🟢 1組の個数は1〜3、異なるIDは最大3種類 */
+export function validateCharms(
+  charms: readonly (number | null)[],
+  options: AdvancedOptions = {},
+): string | null {
+  if (!options.advanced && charms.length > CHARM_SLOTS) return `魅力は${CHARM_SLOTS}つまでです`;
+  const counts = new Map<number, number>();
+  for (const c of charms) {
+    if (c === null) continue;
+    if (!charmLabel(c)) return `未知の魅力です（${c}）`;
+    counts.set(c, (counts.get(c) ?? 0) + 1);
+  }
+  if (counts.size > CHARM_SLOTS) return `魅力は${CHARM_SLOTS}種類までです`;
+  // 🟢 合算して4以上を1組に書くと範囲外になるため、上級者モードでも拒否する。
+  for (const count of counts.values()) {
+    if (count > CHARM_TOTAL_MAX) return `同じ魅力の個数は合算して${CHARM_TOTAL_MAX}までです`;
+  }
+  if (!options.advanced && charms.filter((c) => c !== null).length > CHARM_TOTAL_MAX)
+    return `魅力の個数の合計は${CHARM_TOTAL_MAX}までです（超えるには上級者モードをオンにします）`;
   return null;
 }
 
@@ -389,16 +403,15 @@ function readCharms(bytes: Uint8Array, base: number): Field<(number | null)[]> {
     else if (count === 0 || count > CHARM_TOTAL_MAX) problem = `魅力の個数が範囲外です（${count}）`;
     else for (let n = 0; n < count; n++) list.push(id);
   }
-  if (!problem && list.length > CHARM_TOTAL_MAX)
-    problem = `魅力の個数の合計が${CHARM_TOTAL_MAX}を超えています（${list.length}）`;
-  const value: (number | null)[] = [...list.slice(0, CHARM_SLOTS)];
+  const value: (number | null)[] = [...list];
   while (value.length < CHARM_SLOTS) value.push(null);
   return { value, problem };
 }
 
 /** 🟢 空き枠：刃・X・鍔・柄（+0x02〜+0x09 の u16 × 4）がすべて 0xFFFF。ゲームはこのレコードから武器を作らない */
 export function isEmptyWeapon(bytes: Uint8Array, offset: number): boolean {
-  for (let i = 0; i < 4; i++) if (readU16(bytes, offset + WEAPON_FIELDS.blade + i * 2) !== 0xffff) return false;
+  for (let i = 0; i < 4; i++)
+    if (readU16(bytes, offset + WEAPON_FIELDS.blade + i * 2) !== 0xffff) return false;
   return true;
 }
 
@@ -644,7 +657,8 @@ export function writeCompleteWeapon(bytes: Uint8Array, offset: number, id: numbe
   if (!option) throw new RangeError(`構成が分からない完成武器です（${formatHex4(id)}）`);
   const view = readWeapon(bytes, offset);
   if (view.problem) throw new RangeError(view.problem);
-  for (const [at, value] of completeWeaponWords(option.id, option.build)) writeU16(bytes, offset + at, value);
+  for (const [at, value] of completeWeaponWords(option.id, option.build))
+    writeU16(bytes, offset + at, value);
 }
 
 /** レコードの値が、その完成武器のレコードに入る値（writeCompleteWeapon で書く値）とすべて一致するか */
@@ -685,9 +699,9 @@ export function completeWeaponsUsingPart(kind: PartKind, option: PartOption): nu
 
 /** その鞘（X）を使う完成武器の ID（完成武器ID の順）。🟢 complete.csv の sheath_x で引く。特殊武器は鞘がないので含まない */
 export function completeWeaponsUsingSheath(sheath: number): number[] {
-  return COMPLETE_WEAPONS.filter(({ build }) => build.kind === "normal" && build.sheath === sheath).map(
-    (w) => w.id,
-  );
+  return COMPLETE_WEAPONS.filter(
+    ({ build }) => build.kind === "normal" && build.sheath === sheath,
+  ).map((w) => w.id);
 }
 
 /**
@@ -755,8 +769,9 @@ export function writeWeaponCharms(
   bytes: Uint8Array,
   offset: number,
   charms: readonly (number | null)[],
+  options: AdvancedOptions = {},
 ): void {
-  const problem = validateCharms(charms);
+  const problem = validateCharms(charms, options);
   if (problem) throw new RangeError(problem);
   assertEditable(bytes, offset);
   const groups: { id: number; count: number }[] = [];

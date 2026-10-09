@@ -6,7 +6,6 @@ import { formatOffset } from "@/lib/format";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { usePartOrder } from "@/lib/part-order-context";
 import {
-  CHARMS,
   TITLES,
   COMPLETE_WEAPONS,
   completeWeaponsUsingPart,
@@ -23,7 +22,6 @@ import {
   validateWeaponName,
   validateWeaponNumber,
   writeCompleteWeapon,
-  writeWeaponCharms,
   writeWeaponId,
   writeWeaponName,
   writeWeaponNameHidden,
@@ -36,7 +34,7 @@ import {
   type PartKind,
   type WeaponView,
 } from "@/save/weapon";
-import { charmIcon, titleIcon } from "./effect-icons";
+import { titleIcon } from "./effect-icons";
 import { PartImageTip } from "./part-image-tip";
 import {
   WEAPON_KIND_LABELS,
@@ -87,10 +85,6 @@ const WEAPON_ID_OPTIONS: SelectOption[] = WEAPON_IDS.map((w) => ({
   value: String(w.id),
   label: `${weaponIdName(w)}（${hex(w.id, 4)}）`,
 }));
-const CHARM_OPTIONS: SelectOption[] = [
-  { value: NONE, label: "なし" },
-  ...CHARMS.map((c) => ({ value: String(c.id), label: c.label, icon: charmIcon(c.id) })),
-];
 const TYPE_OPTIONS: SelectOption[] = WEAPON_TYPES.map((t) => ({
   value: String(t.id),
   label: `${t.label}（${t.id}）`,
@@ -245,29 +239,9 @@ export function useWeaponRows({
       };
     });
 
-  const charms = weapon?.charms ?? null;
-  const charm = (slot: number) => (
-    <SelectRow
-      key={`charm-${slot}`}
-      label={`魅力 ${slot + 1}`}
-      offset={base + WEAPON_FIELDS.charms}
-      value={charms ? (charms.value[slot] === null ? NONE : String(charms.value[slot])) : null}
-      options={CHARM_OPTIONS}
-      problem={charms?.problem ?? null}
-      onChange={(v) =>
-        update((b, o) => {
-          const next = [...(charms?.value ?? [])];
-          next[slot] = v === NONE ? null : Number(v);
-          writeWeaponCharms(b, o, next);
-        })
-      }
-    />
-  );
-
   return {
     number,
     part,
-    charm,
     name: (
       <FieldRow
         key="name"

@@ -79,6 +79,15 @@ describe("武器のゲーム風プレビュー", () => {
     expect(html).toContain('aria-label="魅力 1：なし"');
   });
 
+  it("🟢 合計9個の魅力も3種類の個数を欠落なく表示する（要ゲーム内確認）", () => {
+    const bytes = fixture();
+    bytes.set([9, 0, 3, 0, 4, 0, 3, 0, 6, 0, 3, 0], WEAPON_FIELDS.charms);
+    const html = render(bytes);
+    expect(html).toContain("重撃 ×3");
+    expect(html).toContain("活復 ×3");
+    expect(html).toContain("背水 ×3");
+  });
+
   it("🟢 名前を隠す値が 1 の武器は ***** と表示する", () => {
     const bytes = fixture();
     bytes[WEAPON_FIELDS.nameHidden] = 1;

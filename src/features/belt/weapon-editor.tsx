@@ -7,6 +7,7 @@ import { WEAPON_FIELDS, type WeaponView } from "@/save/weapon";
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import { charmIcon, titleIcon } from "./effect-icons";
 import { useWeaponRows } from "./use-weapon-rows";
+import { CharmEditor } from "./charm-editor";
 import { Chevron } from "./weapon-rows";
 import { COLLAPSIBLE_ANIMATION, type WeaponUpdate } from "./weapon-ui";
 
@@ -149,7 +150,7 @@ export function WeaponEditor({
               同じ魅力は1組にまとめて個数で書きます
             </InfoTip>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">{[0, 1, 2].map(rows.charm)}</div>
+          <CharmEditor weapon={weapon} base={base} update={update} />
           {weapon && !charms?.problem && (
             <EffectBox>
               {effects.length === 0 ? (
