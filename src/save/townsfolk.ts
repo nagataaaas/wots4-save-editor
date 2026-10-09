@@ -224,17 +224,17 @@ export const OCCUPATION_FLAG_OFFSETS: readonly number[] =
 const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(13)]: {
     name: `${nameOf.npc(32)}との話の段階`,
-    note: `🟢 道場主（${nameOf.npc(32)}）との話の段階。0 でないときだけ${nameOf.npc(157)}が来る。20〜60 は段が上がるたびの会話。周回の終わりに 0（🔶 100 を読む分岐はあるが、書く場面はない）`,
+    note: `🟢 道場の師範への任命と、東急流剣術の上達に応じて聞いた話の記録。値は会話を聞いたあとの状態で、流派の段そのものではない。0 でないときだけ${nameOf.npc(157)}が来る。この欄だけを変えても目録の入手や技の習得は反映されない。周回の終わりに 0（🔶 100 は通常の会話をしない値だが、使われる場面は未確認）`,
     values: [
       { value: 0, label: "師範でない" },
       { value: 1, label: "師範に任命された" },
-      { value: 10, label: "目録" },
-      ...[20, 30, 40, 50, 60].map((value) => ({
-        value,
-        label: `段の会話 ${value}`,
-        group: "段が上がるたび",
-      })),
-      { value: 70, label: "段階 70" },
+      { value: 10, label: "東急流剣術の目録を受け取った" },
+      { value: 20, label: "道場破りを倒すと技を覚える話を聞いた", group: "東急流剣術の上達後の会話" },
+      { value: 30, label: "東急流の由来（天奈の伝説の侍とその末裔）を聞いた", group: "東急流剣術の上達後の会話" },
+      { value: 40, label: "道場破りに見知った者がいる話を聞いた", group: "東急流剣術の上達後の会話" },
+      { value: 50, label: "かつて大勢いた門下生がいなくなった話を聞いた", group: "東急流剣術の上達後の会話" },
+      { value: 60, label: "東急流を究め、道場破りが元弟子だったと聞いた", group: "東急流剣術の上達後の会話" },
+      { value: 70, label: "皆伝後に「まだ弟子はいる、油断するな」と言われた", group: "東急流剣術の上達後の会話" },
     ],
   },
   [occupationFlagOffset(16)]: {

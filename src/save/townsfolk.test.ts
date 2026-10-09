@@ -125,6 +125,38 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
     expect(UNUSED_OCCUPATION_FLAGS).toHaveLength(35)
   })
 
+  it('🟢 ぢぢい（番号 13）の値は、東急流の段ではなく聞いた話を表示する', () => {
+    const note = TOWNSFOLK_NOTES[0x0129]
+    expect(note.values?.map(({ value, label }) => [value, label])).toEqual([
+      [0, '師範でない'],
+      [1, '師範に任命された'],
+      [10, '東急流剣術の目録を受け取った'],
+      [20, '道場破りを倒すと技を覚える話を聞いた'],
+      [30, '東急流の由来（天奈の伝説の侍とその末裔）を聞いた'],
+      [40, '道場破りに見知った者がいる話を聞いた'],
+      [50, 'かつて大勢いた門下生がいなくなった話を聞いた'],
+      [60, '東急流を究め、道場破りが元弟子だったと聞いた'],
+      [70, '皆伝後に「まだ弟子はいる、油断するな」と言われた'],
+    ])
+    expect(note.note).toContain('流派の段そのものではない')
+    expect(note.note).toContain('目録の入手や技の習得は反映されない')
+    // 🔶 100 の使われる場面は未確認なので、通常モードには出さない。
+    expect(note.note).toContain('🔶 100')
+    expect(() => writeTownsfolk(makeSave(), 0x0129, 100, { advanced: false })).toThrow(RangeError)
+    for (const { value } of note.values!) {
+      const b = makeSave()
+      b[0x0128] = 0xa5
+      b[0x0129] = value
+      b[0x012a] = 0x5a
+      const original = b.slice()
+      const view = readTownsfolk(b)
+      writeTownsfolk(b, 0x0129, view.values[0x0129 - TOWNSFOLK_START], { advanced: false })
+      expect(diffOffsets(original, b)).toEqual([])
+      writeTownsfolk(b, 0x0129, value === 0 ? 1 : 0, { advanced: false })
+      expect(diffOffsets(original, b)).toEqual([0x0129])
+    }
+  })
+
   it('✅ [U] 0x0132 は堂島が鍛冶屋を継いだフラグ（0／1 を表から選ぶ）', () => {
     expect(TOWNSFOLK_NOTES[0x0132].name).toBe('堂島が鍛冶屋を継いだ')
     expect(TOWNSFOLK_NOTES[0x0132].values?.map((v) => v.value)).toEqual([0, 1])
