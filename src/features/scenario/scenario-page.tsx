@@ -793,24 +793,42 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
           初日昼勧誘フラグ（0x377D〜0x377F）は序章〜1日目昼（段階 ≤100）の開放判定に使われ、1 で開きます。
           ルートやイベントの条件によっても閉じるため、0 にするだけで必ず開くとは限りません。
         </CardDescription>
-        <p className="text-sm text-muted-foreground">
-          🟢 注意：大老の大寄せ以降は、該当ルートに入れなくなった時点で閉まる。
-        </p>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        {WORLD_FLAGS.map((flag, i) => (
-          <SelectRow
-            key={flag.offset}
-            label={flag.label}
-            offset={flag.offset}
-            value={view ? String(view.values[i]) : null}
-            currentLabel={view ? `${view.values[i]} 不明` : undefined}
-            options={worldFlagOptions[flag.meaning]}
-            problem={view?.problem ?? null}
-            note={flag.note}
-            onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
-          />
+      <CardContent className="flex flex-col gap-6">
+        {([
+          { meaning: "open", title: "初日勧誘（1日目昼のみ影響）" },
+          { meaning: "close", title: "閉鎖（1日目夕～大老の大寄せまで）" },
+        ] as const).map((group) => (
+          <section key={group.meaning} className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium">{group.title}</h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {WORLD_FLAGS.map((flag, i) => flag.meaning === group.meaning ? (
+                <SelectRow
+                  key={flag.offset}
+                  label={flag.label}
+                  offset={flag.offset}
+                  value={view ? String(view.values[i]) : null}
+                  currentLabel={view ? `${view.values[i]} 不明` : undefined}
+                  options={worldFlagOptions[flag.meaning]}
+                  problem={view?.problem ?? null}
+                  note={flag.note}
+                  onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
+                />
+              ) : null)}
+            </div>
+          </section>
         ))}
+        <section className="flex flex-col gap-2">
+          <h3 className="text-sm font-medium">大老の大寄せ以降</h3>
+          <p className="text-sm text-muted-foreground">
+            🟢 <a href="#post-tournament-route" className="text-primary underline underline-offset-4">剣術大会以後のルート分岐</a>
+            が 02 になった段階で、対応する勢力の門・柵が閉じます。
+          </p>
+          <p className="text-sm text-muted-foreground">
+            グループ名は進行時期の目安です。初日勧誘は序章にも影響し、閉鎖フラグは初日昼以前・大寄せ以降にも有効です。
+            大寄せ以降は閉鎖フラグを 0 にしても、ルート分岐が 02 なら閉じます。
+          </p>
+        </section>
       </CardContent>
     </Card>
   );
@@ -1246,7 +1264,7 @@ function RouteJudgeRows({
   const current = (v: number) => `${formatHex2(v)} 不明`;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div id="post-tournament-route" className="flex scroll-mt-4 flex-col gap-2">
       <p className="text-sm font-medium">剣術大会以後のルート分岐</p>
       <div className="grid gap-4 sm:grid-cols-4">
         {FACTIONS.map((faction, c) => (

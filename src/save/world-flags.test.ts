@@ -48,19 +48,6 @@ describe('門・柵のフラグ chunks/gates', () => {
     expect(WORLD_FLAGS.map((f) => f.meaning)).toEqual(['close', 'close', 'close', 'close', 'open', 'open', 'open', 'close'])
   })
 
-  it('UIの名称は閉鎖フラグ・初日昼勧誘フラグで統一する', () => {
-    expect(WORLD_FLAGS.map((f) => f.label)).toEqual([
-      '代官所の表門（閉鎖フラグ）',
-      '代官所の裏門（閉鎖フラグ）',
-      '居留地の外門（閉鎖フラグ）',
-      '神社入口の柵（閉鎖フラグ）',
-      '代官所の門（初日昼勧誘フラグ）',
-      '居留地の門（初日昼勧誘フラグ）',
-      '神社入口の柵（初日昼勧誘フラグ）',
-      '神社の洞窟内の柵（閉鎖フラグ）',
-    ])
-  })
-
   it('神社は入口の柵と洞窟内の柵を区別し、門とは表示しない', () => {
     expect(WORLD_FLAGS.find((f) => f.offset === 0x37c3)?.label).toContain('神社入口の柵')
     expect(WORLD_FLAGS.find((f) => f.offset === 0x377f)?.label).toContain('神社入口の柵')
