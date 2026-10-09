@@ -30,7 +30,7 @@ export const RAW_REGIONS: readonly RawRegion[] = [
   { start: 0x002ba4, end: 0x002fa3, chunk: 'item-uses', label: '道具の使用回数（周回中）', certainty: '🟢', recordSize: 4 },
   { start: 0x002fa4, end: 0x0033a3, chunk: 'item-uses', label: '道具の使用回数（累計）', certainty: '🟢', recordSize: 4 },
   { start: 0x0033a4, end: 0x0035a3, chunk: 'occupation', label: 'なりわいの状態の表', certainty: '✅' },
-  { start: 0x0035a4, end: 0x0035b3, chunk: 'vitals', label: 'HP・活力', certainty: '一部 ✅（U-4）' },
+  { start: 0x0035a4, end: 0x0035bf, chunk: 'vitals', label: 'HP・活力・つま斬りゲージ', certainty: '一部 ✅ ／ 🟢' },
   { start: 0x00363c, end: 0x0036a3, chunk: 'memory-garbage', label: 'ゲームの状態ではない値', certainty: '🔶' },
   { start: 0x0036a8, end: 0x00374d, chunk: 'event-chart', label: 'イベントの状態 A（周回中）', certainty: '✅' },
   { start: 0x00374e, end: 0x003837, chunk: 'scenario-flags', label: 'シナリオのフラグ列', certainty: '🟢範囲 ／ 一部 ✅' },

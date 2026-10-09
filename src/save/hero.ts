@@ -18,12 +18,18 @@ export const HERO_OFFSETS = {
   location: 0x13,
   name: 0xdc, // UTF-16LE 64 B、最大31文字 ✅ [I-1]
   samuraiPoint: 0xb3c, // u32 ✅
-  // 0x35A4（❓ [TS] では活力、PS3版の並びでは現在HP）と 0x35AC（❓ 活力の現在値の関連値）は
-  // 意味が確定しないため扱わない（ユーザー判断、2026-10-04）。chunks/vitals・U-4 を参照
+  /** float32。現在HP 🟢（U-4 案A。0 以下のときはゲームが 1.0 で保存する）。ゲーム内の反映は要確認 */
+  hpCurrent: 0x35a4,
   /** float32。最大HP ✅ [U]（2026-10-04 ユーザー確認） */
-  hp: 0x35a8,
+  hpMax: 0x35a8,
+  /** float32。活力の現在値 ✅ [U]（時間とともに減る。chunks/vitals） */
+  vitalityCurrent: 0x35ac,
   /** float32。活力の最大値 ✅ [U]（2026-10-04 ユーザー確認） */
   vitalityMax: 0x35b0,
+  /** float32。つま斬りゲージの現在値 🟢。ゲーム内の反映は要確認 */
+  tsumaCurrent: 0x35b4,
+  /** float32。つま斬りゲージの最大値 🟢。ゲーム内の反映は要確認 */
+  tsumaMax: 0x35b8,
 } as const
 
 export const NAME_BYTES = 64
@@ -47,13 +53,33 @@ export const AMOUNT_LIMITS: Record<U32Key, number> = {
 }
 
 /**
- * 最大HP・活力の最大値の上限。入力の上限と、読み込み時の妥当性の上限を兼ねる。
+ * HP・活力・つま斬りゲージ（現在値・最大値とも）の上限。入力の上限と、読み込み時の妥当性の上限を兼ねる。
  * ユーザー指定の暫定値（2026-10-04）。ゲーム内の上限は未確認。
  */
 export const GAUGE_MAX = 99_999
 
 export type U32Key = 'money' | 'cashbox' | 'samuraiPoint'
-export type F32Key = 'hp' | 'vitalityMax'
+export type GaugeKind = 'hp' | 'vitality' | 'tsuma'
+export type MaxKey = 'hpMax' | 'vitalityMax' | 'tsumaMax'
+export type CurrentKey = 'hpCurrent' | 'vitalityCurrent' | 'tsumaCurrent'
+export type F32Key = MaxKey | CurrentKey
+
+/** ゲージごとの現在値・最大値の組 */
+export const GAUGES: Record<GaugeKind, { current: CurrentKey; max: MaxKey }> = {
+  hp: { current: 'hpCurrent', max: 'hpMax' },
+  vitality: { current: 'vitalityCurrent', max: 'vitalityMax' },
+  tsuma: { current: 'tsumaCurrent', max: 'tsumaMax' },
+}
+
+const MAX_OF: Record<CurrentKey, MaxKey> = {
+  hpCurrent: 'hpMax',
+  vitalityCurrent: 'vitalityMax',
+  tsumaCurrent: 'tsumaMax',
+}
+
+function isCurrentKey(key: F32Key): key is CurrentKey {
+  return key in MAX_OF
+}
 
 export type Field<T> = {
   value: T
@@ -70,8 +96,12 @@ export type HeroView = {
   money: Field<number>
   cashbox: Field<number>
   samuraiPoint: Field<number>
-  hp: Field<number>
+  hpCurrent: Field<number>
+  hpMax: Field<number>
+  vitalityCurrent: Field<number>
   vitalityMax: Field<number>
+  tsumaCurrent: Field<number>
+  tsumaMax: Field<number>
   location: Field<number>
 }
 
@@ -108,6 +138,17 @@ export function validateGauge(value: number): string | null {
   return null
 }
 
+/**
+ * 現在値の検証。最大値を超える値は正規範囲外として、上級者モードのときだけ受け付ける。
+ * 🟢 ゲームはロード時に現在値を最大値で頭打ちにする（chunks/vitals「編集時の注意」）。
+ */
+export function validateCurrent(value: number, max: number, allowOverMax = false): string | null {
+  const base = validateGauge(value)
+  if (base) return base
+  if (!allowOverMax && value > max) return `最大値（${Number(max.toPrecision(7)).toLocaleString()}）以下で入力してください`
+  return null
+}
+
 export function validateLocation(value: number): string | null {
   const loc = findLocation(value)
   if (!loc) return `未調査の値です（${formatHex2(value)}）`
@@ -122,7 +163,7 @@ function field<T>(layoutProblem: string | null, value: T, problem: string | null
 export function readHero(bytes: Uint8Array): HeroView {
   const layoutProblem = checkLayout(bytes)
   // サイズが違うファイルでも、範囲内なら値は表示する（読み取り専用）
-  const canRead = bytes.byteLength >= HERO_OFFSETS.vitalityMax + 4
+  const canRead = bytes.byteLength >= HERO_OFFSETS.tsumaMax + 4
   if (!canRead) throw new RangeError('ファイルが小さすぎて主人公の情報を読めません')
 
   const name = readUtf16Fixed(bytes, HERO_OFFSETS.name, NAME_BYTES)
@@ -139,9 +180,15 @@ export function readHero(bytes: Uint8Array): HeroView {
       v > AMOUNT_LIMITS[key] ? `現在の値（${v.toLocaleString()}）は正規の上限（${AMOUNT_LIMITS[key].toLocaleString()}）を超えています` : null
     return { ...field(layoutProblem, v, implausible), warning: outOfRange }
   }
-  const f32 = (key: F32Key) => {
+  const f32 = (key: MaxKey) => {
     const v = readF32(bytes, HERO_OFFSETS[key])
     return field(layoutProblem, v, validateGauge(v))
+  }
+  const current = (key: CurrentKey) => {
+    const v = readF32(bytes, HERO_OFFSETS[key])
+    const max = readF32(bytes, HERO_OFFSETS[MAX_OF[key]])
+    const overMax = v > max ? `現在値が最大値（${Number(max.toPrecision(7)).toLocaleString()}）を超えています` : null
+    return { ...field(layoutProblem, v, validateGauge(v)), warning: overMax }
   }
   const location = readU8(bytes, HERO_OFFSETS.location)
 
@@ -151,8 +198,12 @@ export function readHero(bytes: Uint8Array): HeroView {
     money: u32('money'),
     cashbox: u32('cashbox'),
     samuraiPoint: u32('samuraiPoint'),
-    hp: f32('hp'),
+    hpCurrent: current('hpCurrent'),
+    hpMax: f32('hpMax'),
+    vitalityCurrent: current('vitalityCurrent'),
     vitalityMax: f32('vitalityMax'),
+    tsumaCurrent: current('tsumaCurrent'),
+    tsumaMax: f32('tsumaMax'),
     location: field(layoutProblem, location, validateLocation(location)),
   }
 }
@@ -173,9 +224,13 @@ export function writeAmount(bytes: Uint8Array, key: U32Key, value: number): void
 }
 
 /**
- * 最大HP（0x35A8）・活力の最大値（0x35B0 ✅ [U]）の4バイトだけを書く。 */
-export function writeGauge(bytes: Uint8Array, key: F32Key, value: number): void {
-  const problem = validateGauge(value)
+ * HP・活力・つま斬りゲージの現在値・最大値（0x35A4〜0x35BB の float32）のうち、1つの4バイトだけを書く。
+ * 現在値は最大値（セーブ上の値）以下に限る。allowOverMax（上級者モード）のときだけ超えてよい。
+ */
+export function writeGauge(bytes: Uint8Array, key: F32Key, value: number, allowOverMax = false): void {
+  const problem = isCurrentKey(key)
+    ? validateCurrent(value, readF32(bytes, HERO_OFFSETS[MAX_OF[key]]), allowOverMax)
+    : validateGauge(value)
   if (problem) throw new RangeError(problem)
   writeF32(bytes, HERO_OFFSETS[key], value)
 }

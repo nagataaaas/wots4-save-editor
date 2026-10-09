@@ -19,8 +19,12 @@ function makeSave(size = TS_SAVE_SIZE): Uint8Array {
   writeU32(b, HERO_OFFSETS.cashbox, 5678)
   writeU32(b, HERO_OFFSETS.samuraiPoint, 42)
   writeUtf16Fixed(b, HERO_OFFSETS.name, NAME_BYTES, '侍')
-  writeF32(b, HERO_OFFSETS.hp, 250.5)
+  writeF32(b, HERO_OFFSETS.hpCurrent, 200)
+  writeF32(b, HERO_OFFSETS.hpMax, 250.5)
+  writeF32(b, HERO_OFFSETS.vitalityCurrent, 991)
   writeF32(b, HERO_OFFSETS.vitalityMax, 1000)
+  writeF32(b, HERO_OFFSETS.tsumaCurrent, 81)
+  writeF32(b, HERO_OFFSETS.tsumaMax, 1000)
   writeU8(b, HERO_OFFSETS.location, 0x06)
   return b
 }
@@ -44,8 +48,24 @@ describe('readHero', () => {
 
   it('✅ [U] 最大HP（0x35A8）と最大活力（0x35B0）を読む', () => {
     const v = readHero(makeSave())
-    expect(v.hp).toEqual({ value: 250.5, problem: null })
+    expect(v.hpMax).toEqual({ value: 250.5, problem: null })
     expect(v.vitalityMax).toEqual({ value: 1000, problem: null })
+  })
+
+  it('🟢 現在HP（0x35A4、U-4 案A）・✅ 活力の現在値（0x35AC）・🟢 つま斬りゲージ（0x35B4・0x35B8）を読む', () => {
+    const v = readHero(makeSave())
+    expect(v.hpCurrent).toEqual({ value: 200, problem: null, warning: null })
+    expect(v.vitalityCurrent).toEqual({ value: 991, problem: null, warning: null })
+    expect(v.tsumaCurrent).toEqual({ value: 81, problem: null, warning: null })
+    expect(v.tsumaMax).toEqual({ value: 1000, problem: null })
+  })
+
+  it('現在値が最大値を超えていれば、編集可能のまま警告を出す', () => {
+    const b = makeSave()
+    writeF32(b, HERO_OFFSETS.hpCurrent, 300)
+    const v = readHero(b)
+    expect(v.hpCurrent.problem).toBeNull()
+    expect(v.hpCurrent.warning).not.toBeNull()
   })
 
   it('✅ U-7：開始地点を 0x13 の u8 として読む', () => {
@@ -65,10 +85,12 @@ describe('readHero', () => {
   it('🔶 妥当性の上限（推測）を超える値は読み取り専用にする', () => {
     const b = makeSave()
     writeU32(b, HERO_OFFSETS.money, AMOUNT_PLAUSIBLE_MAX + 1)
-    writeF32(b, HERO_OFFSETS.hp, Number.NaN)
+    writeF32(b, HERO_OFFSETS.hpMax, Number.NaN)
+    writeF32(b, HERO_OFFSETS.tsumaCurrent, Number.NaN)
     const v = readHero(b)
     expect(v.money.problem).not.toBeNull()
-    expect(v.hp.problem).not.toBeNull()
+    expect(v.hpMax.problem).not.toBeNull()
+    expect(v.tsumaCurrent.problem).not.toBeNull()
     expect(v.cashbox.problem).toBeNull()
   })
 
@@ -138,13 +160,13 @@ describe('書き込み', () => {
   it('✅ [U] 最大HP の書き込みは 0x35A8〜0x35AB だけを変える', () => {
     const before = makeSave()
     const after = before.slice()
-    writeGauge(after, 'hp', 300)
+    writeGauge(after, 'hpMax', 300)
     for (const i of diffOffsets(before, after)) {
       expect(i).toBeGreaterThanOrEqual(0x35a8)
       expect(i).toBeLessThan(0x35ac)
     }
-    expect(readHero(after).hp.value).toBe(300)
-    expect(() => writeGauge(after, 'hp', -1)).toThrow(RangeError)
+    expect(readHero(after).hpMax.value).toBe(300)
+    expect(() => writeGauge(after, 'hpMax', -1)).toThrow(RangeError)
   })
 
   it('✅ [U] 最大活力の書き込みは 0x35B0〜0x35B3 だけを変える', () => {
@@ -158,23 +180,44 @@ describe('書き込み', () => {
     expect(readHero(after).vitalityMax.value).toBe(120)
   })
 
-  it('0x35A4・0x35AC（意味未確定）は扱わず、書き換えない', () => {
-    const before = makeSave()
-    before.fill(0x11, 0x35a4, 0x35a8)
-    before.fill(0x22, 0x35ac, 0x35b0)
-    const after = before.slice()
-    writeGauge(after, 'hp', 1)
-    writeGauge(after, 'vitalityMax', 1)
-    expect([...after.slice(0x35a4, 0x35a8)]).toEqual([...before.slice(0x35a4, 0x35a8)])
-    expect([...after.slice(0x35ac, 0x35b0)]).toEqual([...before.slice(0x35ac, 0x35b0)])
+  it('🟢 現在値・つま斬りゲージの書き込みは、その4バイトだけを変える（読み出し→書き戻しで一致）', () => {
+    const cases = [
+      ['hpCurrent', 0x35a4, 100],
+      ['vitalityCurrent', 0x35ac, 500],
+      ['tsumaCurrent', 0x35b4, 500],
+      ['tsumaMax', 0x35b8, 2000],
+    ] as const
+    for (const [key, offset, value] of cases) {
+      const before = makeSave()
+      const after = before.slice()
+      writeGauge(after, key, value)
+      for (const i of diffOffsets(before, after)) {
+        expect(i).toBeGreaterThanOrEqual(offset)
+        expect(i).toBeLessThan(offset + 4)
+      }
+      expect(readHero(after)[key].value).toBe(value)
+      // 同じ値を書き戻すとバイト列が元に戻る
+      writeGauge(after, key, readHero(before)[key].value)
+      expect(after).toEqual(before)
+    }
   })
 
-  it('最大HP・最大活力は 99,999 まで（ユーザー指定の暫定上限）', () => {
+  it('現在値は最大値以下に限り、上級者モード（allowOverMax）のときだけ超えてよい', () => {
     const b = makeSave()
-    expect(() => writeGauge(b, 'hp', 99_999)).not.toThrow()
-    expect(() => writeGauge(b, 'vitalityMax', 99_999)).not.toThrow()
-    expect(() => writeGauge(b, 'hp', 100_000)).toThrow(RangeError)
-    expect(() => writeGauge(b, 'vitalityMax', 100_000)).toThrow(RangeError)
+    expect(() => writeGauge(b, 'hpCurrent', 250.5)).not.toThrow()
+    expect(() => writeGauge(b, 'hpCurrent', 251)).toThrow(RangeError)
+    expect(() => writeGauge(b, 'tsumaCurrent', 1001)).toThrow(RangeError)
+    expect(() => writeGauge(b, 'tsumaCurrent', 1001, true)).not.toThrow()
+    expect(readHero(b).tsumaCurrent.value).toBe(1001)
+    expect(() => writeGauge(b, 'hpCurrent', 100_000, true)).toThrow(RangeError)
+  })
+
+  it('最大値は 99,999 まで（ユーザー指定の暫定上限）', () => {
+    const b = makeSave()
+    for (const key of ['hpMax', 'vitalityMax', 'tsumaMax'] as const) {
+      expect(() => writeGauge(b, key, 99_999)).not.toThrow()
+      expect(() => writeGauge(b, key, 100_000)).toThrow(RangeError)
+    }
   })
 
   it('✅ U-7：開始地点は 0x13 の1バイトだけを書き、クラッシュ値・未調査の値は拒否する', () => {

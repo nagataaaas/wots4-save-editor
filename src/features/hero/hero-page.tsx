@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { formatHex2 as hex2 } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
+import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import {
   AMOUNT_LIMITS,
   GAUGE_MAX,
@@ -26,7 +27,9 @@ import {
   writeGauge,
   writeLocation,
   writeName,
+  GAUGES,
   type F32Key,
+  type GaugeKind,
   type HeroView,
   type U32Key,
 } from "@/save/hero";
@@ -67,8 +70,22 @@ const formatAmount = (v: number) => String(v);
 const formatGauge = (v: number) => String(Number(v.toPrecision(7)));
 const formatName = (v: string) => v;
 
+const GAUGE_LABELS: Record<GaugeKind, string> = {
+  hp: "HP",
+  vitality: "活力",
+  tsuma: "つま斬りゲージ",
+};
+
+/** 現在値の備考。現在HP・つま斬りゲージは 🟢（ゲーム内の反映は未確認）、活力の現在値は ✅ [U] */
+const GAUGE_CURRENT_NOTES: Record<GaugeKind, string> = {
+  hp: "0 以下はゲームが 1 として保存します。書き換えたときのゲーム内の反映は未確認です",
+  vitality: "時間とともに減ります",
+  tsuma: "最大値の半分以上たまっていると発動できます。書き換えたときのゲーム内の反映は未確認です",
+};
+
 export function HeroPage() {
   const { save, update } = useSave();
+  const { advanced } = useAdvancedMode();
 
   const result = useMemo((): { view: HeroView } | { error: string } | null => {
     if (!save) return null;
@@ -109,21 +126,39 @@ export function HeroPage() {
     />
   );
 
-  const gaugeRow = (key: F32Key, label: string) => (
+  const gaugeRow = (key: F32Key, label: string, hint: string, note: string) => (
     <FieldRow
       key={`${k}-${key}`}
       label={label}
       offset={HERO_OFFSETS[key]}
       value={view?.[key].value ?? null}
       problem={view?.[key].problem ?? null}
+      warning={view?.[key].warning ?? null}
       format={formatGauge}
       parse={parseGauge}
-      apply={(v) => update((b) => writeGauge(b, key, v))}
+      apply={(v) => update((b) => writeGauge(b, key, v, advanced))}
       inputMode="decimal"
-      hint={`0〜${GAUGE_MAX.toLocaleString()}`}
-      note="上限は暫定"
+      hint={hint}
+      note={note}
     />
   );
+
+  const gaugeGroup = (kind: GaugeKind) => {
+    const { current, max } = GAUGES[kind];
+    const name = GAUGE_LABELS[kind];
+    const currentHint = advanced
+      ? `0〜${GAUGE_MAX.toLocaleString()}（上級者モード）`
+      : `0〜最大値`;
+    return (
+      <section key={kind} className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium">{name}</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {gaugeRow(current, "現在", currentHint, GAUGE_CURRENT_NOTES[kind])}
+          {gaugeRow(max, "最大", `0〜${GAUGE_MAX.toLocaleString()}`, "上限は暫定")}
+        </div>
+      </section>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -177,11 +212,15 @@ export function HeroPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>HP・活力</CardTitle>
+          <CardTitle>HP・活力・つま斬り</CardTitle>
+          <CardDescription>
+            現在値は最大値以下で入力します（上級者モードでは超えられます）。ロード時、現在値は最大値で頭打ちになります。
+          </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          {gaugeRow("hp", "最大HP")}
-          {gaugeRow("vitalityMax", "最大活力")}
+        <CardContent className="flex flex-col gap-6">
+          {gaugeGroup("hp")}
+          {gaugeGroup("vitality")}
+          {gaugeGroup("tsuma")}
         </CardContent>
       </Card>
 
