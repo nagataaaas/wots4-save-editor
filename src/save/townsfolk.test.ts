@@ -2,12 +2,24 @@
 // 値は docs/save_format/chunks/townsfolk（[U] 2026-10-06）で見たもの。
 // ✅ [U] 2026-10-06：0x02C4＝寿司屋の店主、0x0444＝鍛冶屋のおやじ（どちらも 1＝死亡。0 に戻すと生き返った）。
 // ✅ [U] 2026-10-06：0x0127＝鍛冶屋の後継者イベント・鍛冶屋の状態（値の表は書き換えで確認）、0x0264＝堂島の死亡。
+// 🟢 なりわいのフラグ 64 件と、町の人 12 B × 210 件（+0x00 bit0＝死亡）の並び。フラグ 23 の値と場面の割り当ては 🔶。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import {
+  OCCUPATION_FLAG_COUNT,
   OCCUPATION_FLAG_OFFSETS,
+  OCCUPATION_FLAG_START,
+  PERSON_COUNT,
+  PERSON_RECORDS_START,
   SERIES_VALUES,
+  TOWNSFOLK_PEOPLE,
+  UNUSED_OCCUPATION_FLAGS,
+  personName,
+  personOffset,
+  readPeople,
+  reviveNote,
+  writePersonDead,
   SMITH_STATES,
   SMITH_STATE_OFFSET,
   TOWNSFOLK_END,
@@ -20,15 +32,15 @@ import {
   writeTownsfolk,
 } from './townsfolk'
 
-/** 🔶 sample/S4-DATA_02 copy 5（踏み倒し・鍛冶屋のおやじと寿司屋の店主の殺害のあと）で 0 以外だったバイト */
+/** 実セーブ（踏み倒し・鍛冶屋のおやじと寿司屋の店主の殺害のあと）で 0 以外だったバイト。0x0258 はメリンダの死亡 🟢 */
 const COPY5: Record<number, number> = { 0x0127: 0x6e, 0x012c: 1, 0x0258: 1, 0x02c4: 1, 0x0444: 1 }
 
 function makeSave(size = TS_SAVE_SIZE): Uint8Array {
   const b = new Uint8Array(size)
   for (const [offset, value] of Object.entries(COPY5)) writeU8(b, Number(offset), value)
-  // 前後のバイト（主人公名の最後 0x011B・0x0600）も置き、書き込みで変わらないことを見る
+  // 前後のバイト（主人公名の最後 0x011B・侍評価の先頭 0x0B34）も置き、書き込みで変わらないことを見る
   writeU8(b, 0x011b, 7)
-  writeU8(b, 0x0600, 7)
+  writeU8(b, 0x0b34, 7)
   return b
 }
 
@@ -38,29 +50,79 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out
 }
 
-describe('🔶 町の人の状態の候補 0x011C〜0x05FF chunks/townsfolk', () => {
-  it('🔶 0x011C〜0x05FF の1,252バイトを読む（🟢 始まりは主人公名の直後。終わりの位置は未確定）', () => {
+describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
+  it('🟢 0x011C〜0x0B33 の2,584バイトを読む（なりわいのフラグ 64 B ＋ 町の人 12 B × 210）', () => {
     expect(TOWNSFOLK_START).toBe(0x011c)
-    expect(TOWNSFOLK_LENGTH).toBe(1252)
+    expect(TOWNSFOLK_LENGTH).toBe(2584)
+    expect(OCCUPATION_FLAG_START + OCCUPATION_FLAG_COUNT).toBe(PERSON_RECORDS_START)
+    expect(personOffset(PERSON_COUNT) - 1).toBe(TOWNSFOLK_END)
     const view = readTownsfolk(makeSave())
     expect(view.problem).toBeNull()
-    expect(view.values).toHaveLength(1252)
+    expect(view.values).toHaveLength(2584)
     expect(view.values[0x02c4 - TOWNSFOLK_START]).toBe(1)
     expect(view.values[0x0127 - TOWNSFOLK_START]).toBe(0x6e)
   })
 
-  it('✅ [U] 0x02C4 は寿司屋の店主、0x0444 は鍛冶屋のおやじ、0x0264 は堂島（1＝死亡）', () => {
-    expect(TOWNSFOLK_NOTES[0x02c4].name).toBe('寿司屋の店主')
-    expect(TOWNSFOLK_NOTES[0x0444].name).toBe('鍛冶屋のおやじ')
-    expect(TOWNSFOLK_NOTES[0x0264].name).toBe('堂島')
+  it('✅ [U] 死亡の位置：堂島 0x0264・寿司屋 0x02C4・鍛冶屋のおやじ 0x0444。🟢 同じ表で小暮 0x01E0・メリンダ 0x0258・さよ 0x0528', () => {
+    const at = (p: number) => personOffset(p)
+    expect([at(22), at(30), at(62)]).toEqual([0x0264, 0x02c4, 0x0444])
+    expect([at(11), at(21), at(81)]).toEqual([0x01e0, 0x0258, 0x0528])
+    expect([22, 30, 62].map(personName)).toEqual(['堂島', '寿司屋', '鍛冶屋（おやじ）'])
+    expect(TOWNSFOLK_PEOPLE.filter((x) => x.certainty === '✅').map((x) => x.p)).toEqual([22, 30, 62])
+    expect(TOWNSFOLK_PEOPLE).toHaveLength(56)
+    expect(personName(0)).toBe('人物 0（空き）')
   })
 
-  it('🔶 0x0528 はさよ（DLC）の死亡フラグ（[U] 2026-10-06 の判断。差分1回、生き返りは未確認）。0／1 を書ける', () => {
-    expect(TOWNSFOLK_NOTES[0x0528].name).toBe('さよ（DLC）')
+  it('🟢 死亡のビットを読む（実セーブの踏み倒し・殺害のあとで見た並び）', () => {
+    const dead = readPeople(makeSave())
+      .filter((x) => x.dead)
+      .map((x) => x.p)
+    expect(dead).toEqual([21, 30, 62])
+  })
+
+  it('🟢 死亡のビットだけを書く。ほかのビットは変えない。名前のない番号（0〜209）にも書ける', () => {
+    const before = makeSave()
+    const after = before.slice()
+    writePersonDead(after, 81, true)
+    expect(diffOffsets(before, after)).toEqual([0x0528])
+    expect(after[0x0528]).toBe(1)
+    writePersonDead(after, 30, false)
+    expect(after[0x02c4]).toBe(0)
+    after[0x0444] = 0x81
+    writePersonDead(after, 62, false)
+    expect(after[0x0444]).toBe(0x80)
+    expect(readPeople(after).find((x) => x.p === 62)?.unusedBitsSet).toBe(true)
+    writePersonDead(after, 209, true)
+    expect(after[personOffset(209)]).toBe(1)
+    expect(() => writePersonDead(after, 210, true)).toThrow(RangeError)
+    expect(() => writePersonDead(after, -1, true)).toThrow(RangeError)
+  })
+
+  it('🟢 ビットを外すだけでは生き返らない人物（重要人物・寿司屋・薬屋）には一緒に戻す値を示す（要ゲーム内確認）', () => {
+    expect(reviveNote(11)).toMatch(/0x374F/)
+    expect(reviveNote(22)).toMatch(/0x3799/)
+    expect(reviveNote(23)).toMatch(/0x379A/)
+    expect(reviveNote(30)).toMatch(/0x37F9/)
+    expect(reviveNote(55)).toMatch(/0x375C/)
+    expect(reviveNote(62)).toBeNull()
+    expect(reviveNote(81)).toBeNull()
+  })
+
+  it('🟢 佐古津（番号 8）・女将（番号 9）との話の段階', () => {
+    expect(TOWNSFOLK_NOTES[occupationFlagOffset(8)].values?.map((v) => v.value)).toEqual([0, 10, 20, 30])
+    expect(TOWNSFOLK_NOTES[occupationFlagOffset(9)].values?.map((v) => v.value)).toEqual([0, 1, 10, 20, 21])
+  })
+
+  it('🟢 意味の分かったなりわいのフラグは値の表。エリア移動・ロードで消えるもの（1〜3・15）は載せない', () => {
     const b = makeSave()
-    writeTownsfolk(b, 0x0528, 1, { advanced: false })
-    expect(b[0x0528]).toBe(1)
-    expect(() => writeTownsfolk(b, 0x0528, 2, { advanced: false })).toThrow(RangeError)
+    for (const n of [1, 2, 3, 15]) expect(TOWNSFOLK_NOTES[occupationFlagOffset(n)]).toBeUndefined()
+    expect(() => writeTownsfolk(b, occupationFlagOffset(1), 5, { advanced: false })).toThrow(RangeError)
+    expect(TOWNSFOLK_NOTES[occupationFlagOffset(13)].values?.map((v) => v.value)).toEqual([0, 1, 10, 20, 30, 40, 50, 60, 70])
+    expect(TOWNSFOLK_NOTES[occupationFlagOffset(23)].note).toMatch(/🔶/)
+    expect(() => writeTownsfolk(b, occupationFlagOffset(21), 3, { advanced: false })).toThrow(RangeError)
+    writeTownsfolk(b, occupationFlagOffset(21), 2, { advanced: false })
+    expect(b[0x0131]).toBe(2)
+    expect(UNUSED_OCCUPATION_FLAGS).toHaveLength(35)
   })
 
   it('✅ [U] 0x0132 は堂島が鍛冶屋を継いだフラグ（0／1 を表から選ぶ）', () => {
