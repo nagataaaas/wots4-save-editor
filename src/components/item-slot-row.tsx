@@ -1,6 +1,7 @@
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import { InfoTip } from '@/components/info-tip'
+import { ItemCategoryIcon } from '@/components/item-category-icon'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -141,7 +142,10 @@ export function ItemSlotRow({
   const item = (id: number, label: string, keywords: readonly string[] = [], description?: string) => (
     <CommandItem key={id} value={String(id)} keywords={[label, ...keywords]} onSelect={() => choose(id)}>
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span>{label}</span>
+        <span className="flex items-center gap-2">
+          <ItemCategoryIcon id={id} />
+          <span>{label}</span>
+        </span>
         {description && <span className="text-muted-foreground text-xs leading-snug">{description}</span>}
       </span>
       <Check className={cn('ml-auto shrink-0', slot?.id === id ? 'opacity-100' : 'opacity-0')} />
@@ -157,16 +161,16 @@ export function ItemSlotRow({
     showCount && normalMax !== undefined ? (overLimitAllowed ? `最大 ${normalMax}（超過可）` : `最大 ${normalMax}`) : null
 
   return (
-    <div className="flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-medium">{index + 1}件目</span>
+    <div className="grid grid-cols-[3.5rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1 py-1.5 first:pt-0 last:pb-0">
+      <div className="flex h-8 items-center gap-1 text-xs">
+        <span className="text-muted-foreground tabular-nums">{index + 1}</span>
         <InfoTip offset={offset} />
       </div>
       <div
         className={cn(
-          'grid items-start gap-2',
-          investigate && showCount && 'grid-cols-[1fr_5.5rem_5.5rem]',
-          investigate !== showCount && (investigate ? 'grid-cols-[1fr_5.5rem]' : 'grid-cols-[1fr_7rem]'),
+          'grid min-w-0 items-center gap-2',
+          investigate && showCount && 'grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,1fr)_5rem_auto]',
+          investigate !== showCount && (investigate ? 'grid-cols-[minmax(0,1fr)_5rem]' : 'grid-cols-[minmax(0,1fr)_auto]'),
         )}
       >
         <Popover open={open} onOpenChange={setOpen}>
@@ -178,11 +182,14 @@ export function ItemSlotRow({
                 aria-expanded={open}
                 aria-label={`${index + 1}件目の${noun}`}
                 disabled={readOnly}
-                className="w-full min-w-0 justify-between font-normal"
+                className="h-8 w-full min-w-0 justify-between px-2 text-sm font-normal"
               />
             }
           >
-            <span className={cn('truncate', slot === null && 'text-muted-foreground')}>{triggerText}</span>
+            <span className="flex min-w-0 items-center gap-2">
+              <ItemCategoryIcon id={slot?.id ?? EMPTY_ID} />
+              <span className={cn('truncate', slot === null && 'text-muted-foreground')}>{triggerText}</span>
+            </span>
             <ChevronsUpDown className="opacity-50" />
           </PopoverTrigger>
           <PopoverContent className="w-(--anchor-width) min-w-64 p-0" align="start">
@@ -209,7 +216,7 @@ export function ItemSlotRow({
             disabled={slot === null}
             readOnly={readOnly}
             placeholder="ID"
-            className="font-mono"
+            className={cn('h-8 font-mono', showCount && 'col-start-1 row-start-2 sm:col-auto sm:row-auto')}
             aria-label={`${index + 1}件目の ID（16進）`}
             onChange={(e) => handleId(e.target.value)}
             onBlur={() => {
@@ -221,8 +228,9 @@ export function ItemSlotRow({
           />
         )}
         {showCount && (
-          <div className="flex min-w-0 flex-col gap-1">
+          <div className={cn('flex items-center gap-2', investigate && 'col-start-2 row-start-1 sm:col-auto sm:row-auto')}>
             <Input
+              className="h-8 w-18 px-2 tabular-nums"
               value={slot === null || isEmpty ? '' : countLocked ? String(slot.count) : draft}
               disabled={slot === null || isEmpty}
               readOnly={countLocked}
@@ -242,18 +250,18 @@ export function ItemSlotRow({
                 }
               }}
             />
-            {countLimitText && !slot?.problem && (
-              <p className="text-muted-foreground text-xs">{countLimitText}</p>
-            )}
+            <span className="text-muted-foreground w-14 text-xs leading-tight tabular-nums">
+              {!slot?.problem && countLimitText}
+            </span>
           </div>
         )}
       </div>
       {slot?.problem ? (
-        <p className="text-muted-foreground text-xs">読み取り専用：{slot.problem}</p>
+        <p className="text-muted-foreground col-start-2 text-xs">読み取り専用：{slot.problem}</p>
       ) : error ? (
-        <p className="text-destructive text-xs">{error}</p>
+        <p className="text-destructive col-start-2 text-xs">{error}</p>
       ) : (
-        slot?.warning && <p className="text-xs text-amber-600 dark:text-amber-400">⚠ {slot.warning}</p>
+        slot?.warning && <p className="col-start-2 text-xs text-amber-600 dark:text-amber-400">⚠ {slot.warning}</p>
       )}
     </div>
   )

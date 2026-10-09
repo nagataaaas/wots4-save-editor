@@ -1,244 +1,244 @@
-id_dec,id_hex,save_bytes_le,name_ja,name_en,reading,kind,max_stack,description_ja,description_en,source,備考
-0,0x0000,,会談の手紙,Meeting Invitation,,0,1,ローラが赤城へ書いた手紙。ローラの想いが込められている。,A heartfelt letter from Laura to Akagi.,TS;U,重要品。セーブ可否・イベントでの使用は要ゲーム内確認。ゲーム内の読みの欄は「長靴」で仮の値のため空欄
-1,0x0001,,伯爵の寿司,The Count's Sushi,はくしゃくのすし,0,1,伯爵が握った寿司。スーシーといった方が正しいかもしれない。,"A sushi roll made by the count. Might be more apropos to slur the word and call it ""sooshee.""",TS;U,
-2,0x0002,,おにぎり,Onigiri,おにぎり,0,1,貴重なお米携帯食料。作ってくれた人の気持ちが伝わる。活力300回復。,A highly portable snack food made of rice and dried seaweed. Overflowing with the passion of its maker. Restores 300 vitality.,TS,
-3,0x0003,,腐ったおにぎり,Rotten Onigiri,くさったおにぎり,0,1,いつもと違った色のお米携帯食料。活力100～200回復するが活力の持ちが悪くなる。,"A portable snack food that looks...a little discolored. Restores 100-200 vitality, but makes it easier for you to lose vitality afterward.",TS,
-4,0x0004,,干物,Dried Fish,ひもの,0,1,開いた魚を立塩漬にして干した物。保存食として重宝される一品。活力500回復。,A flayed fish pickled in salt and thoroughly dried. Could practically last forever! Restores 500 vitality.,TS,
-5,0x0005,,ひよこういろう,Steamed Cake,ひよこういろう,0,1,ひよこの形をしたういろう。非常に甘く 高級品。活力1000回復。,A cute rice cake in the shape of a chicky. Very sweet item beloved by the upper class. Restores 1000 vitality.,TS,
-6,0x0006,,きのこ,Mushroom,きのこ,0,1,どこにでも生えている食用きのこ。つま斬りゲージ150上昇。,"A common, ordinary mushroom. Increases the Spring Harvest gauge by 150.",TS,
-7,0x0007,,毒きのこ,Poison Mushroom,どくきのこ,0,1,何やら怪しい色をしているきのこ。つま斬りゲージが上昇するが30秒間 つま斬りゲージがたまらない。,"A suspiciously-colored mushroom. Increases the Spring Harvest gauge, but caps it for 30 seconds, disallowing any further increase.",TS,
-8,0x0008,,阿修羅きのこ,Asura Mushroom,あしゅらきのこ,0,1,きのこの頂点に立つとされる究極のきのこ。つま斬りゲージ500上昇。さらに30秒間 つま斬りゲージがたまりやすくなる。,"The fungus to end all fungi. Increases the Spring Harvest gauge by 500, and also makes it go up more quickly for 30 seconds.",TS,PS3版の一覧とも一致
-9,0x0009,,秘薬,Medicine,ひやく,0,1,薬師が長年の研究の末調合した薬。命が0になると自動で命1000回復。,A secret medicine resulting from years of study by the Healing Buddha. Restores 1000 life automatically if your life drops to 0.,TS,PS3版の一覧とも一致
-10,0x000A,,技ノ書,Moves Scroll,わざのしょ,0,1,剣術の先生が生徒に教えるために書いた書物。初歩的な技を一つ覚える。,A collection of information designed to help teach the way of the sword. Reading it can teach one basic sword move.,TS,
-11,0x000B,,奥義ノ書,Special Moves Scroll,おうぎのしょ,0,1,侍が修行の末に体得した剣術。高等な技を一つ覚える。,A secret technique passed down from a learned samurai. Reading it can teach one advanced sword move.,TS,
-12,0x000C,,秘奥義ノ書,Legendary Moves Scroll,ひおうぎのしょ,0,1,ある流派に伝わる封じられた書物。秘伝の技を一つ覚える。,The stuff of fairytales. The writings in here were long thought to have been lost to the ages. Teaches one legendary sword move.,TS,PS3版の一覧とも一致
-13,0x000D,,部品箱,Parts Box (Blade),ぶひんばこ（は）,0,1,使用すると部品が手に入る。,Use to obtain parts.,TS;U,
-14,0x000E,,部品箱,Parts Box (Guard),ぶひんばこ（つば）,0,1,使用すると部品が手に入る。,Use to obtain parts.,TS;U,
-15,0x000F,,部品箱,Parts Box (Grip),ぶひんばこ（つか）,0,1,使用すると部品が手に入る。,Use to obtain parts.,TS;U,
-16,0x0010,,砥石,Whetting Stone,といし,0,1,非常に質の高い砥石。武器の耐久度400回復。,A high-quality whetting stone. Ups a weapon's durability by 400.,TS,
-17,0x0011,,打ち粉,Polishing Powder,うちこ,0,1,備水砥を使用した微粒の打ち粉。刀の手入れには欠かせない。5分間 武器の耐久度が減りづらくなる。,"An extremely fine powder made of rare materials. Helps enhance a weapon's durability, making it decrease much slower for 5 minutes.",TS,
-18,0x0012,,お酒,Sake,おさけ,0,1,まろやかな地酒。30秒間 攻撃力が倍になる代わりに 防御力が半分になる。,"A mild sake. Doubles attack strength for 30 seconds, but halves defensive ability in the process.",TS,
-19,0x0013,,刀油,Blade Oil,かたなあぶら,0,1,丁子（ちょうじ）油による刀油。錆びにくくなる。5分間 武器の耐久度が減らなくなる。,"Made from clove oil. Helps prevent rust. For 5 minutes, your weapon's durability won't decrease at all.",TS,
-20,0x0014,,お金袋小,Money Bag (S),おかね　しょう,0,1,使うことでお金を手に入れることができる。,Use to obtain money.,TS;U,
-21,0x0015,,お金袋中,Money Bag (M),おかね　ちゅう,0,1,使うことでお金を手に入れることができる。,Use to obtain money.,TS;U,
-22,0x0016,,お金袋大,Money Bag (L),おかね　だい,0,1,使うことでお金を手に入れることができる。,Use to obtain money.,TS;U,
-23,0x0017,,お金袋特大,Money Bag (XL),おかね　とくだい,0,1,使うことでお金を手に入れることができる。,Use to obtain money.,TS;U,
-24,0x0018,,がらくた,Junk,おとしもの,0,10,盗みの仕事中に拾った物。いらないので港の泥棒さんに引き取ってもらおう。,"Materials ""obtained"" through ""legitimate business."" You don't need them, so why not try to pawn them off on the unsavories down at the harbor?",TS;U,
-25,0x0019,,お宝,Treasure,にもつ,0,5,港の泥棒さんがほしがっているお宝。価値はさっぱりわからない。,"That shady guy hanging out at the harbor really wanted this, but its actual value is unknown.",TS;U,
-26,0x001A,,大根,White Radish,だいこん,0,1,まろやかな味が特徴の大根。活力150回復。,"A white ""daikon"" radish with a mild taste. Restores 150 vitality.",TS,
-27,0x001B,,百両箱,100 Ryo Box,ひゃくりょうばこ,0,1,お金が大量に入っている箱。これさえあれば一生遊んで暮らせる？,An unassuming box with a whoooole lot of money in it. You could be a playboy for life with this much ryo!,TS;U,
-28,0x001C,,茶器,Tea Set,ちゃ,0,1,茶の湯道具。お茶をする人にとっては重要だが一介の侍には無用の物だ。売ってしまおう。,"A set designed for tea ceremony. Tea enthusiasts would love it, but you're a samurai! What do you care about tea?! Just sell the thing!",TS;U,0x73・0x75〜0xC3 はこの茶器の複製
-29,0x001D,,人参,Carrot,にんじん,0,1,朝鮮半島より持ち込まれた多年草。とても高価。30秒間 防御力が２倍になる。,A high-priced vegetable that made its way into Japan from the Korean peninsula. Doubles defense for 30 seconds.,TS,
-30,0x001E,,鬼辛子,Red Pepper,おにがらし,0,1,非常に辛味が強い。食べると般若の形相で刀を振り回す。30秒間 攻撃力が2倍になり 命300回復。,"Super-duper spicy. If you eat it, you'll be so fired up that you'll look like a Prajna berserker! Doubles strength for 30 seconds and restores 300 life.",TS,
-31,0x001F,,たまご,Egg,たまご,0,1,鶏が産んだ卵。とてもおいしい。活力150回復。2分間 活力の持ちが良くなる。,An egg laid by a chicken. Incredible and edible! Restores 150 vitality and makes your vitality decrease more slowly for 2 minutes.,TS,
-32,0x0020,,プリセット目録,Preset Book,もくろく,0,1,技の流派が書かれている書物。,A book containing combat moves.,TS;U,
-33,0x0021,,オレ流目録,Style Book,おれりゅうもくろく,0,1,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,
-34,0x0022,,白紙目録,Blank Book,はくしもくろく,0,1,まだ何も書かれていない技の書物。道場のぢぢいに持っていこう。,"A book with absolutely nothing written in it (yet). Oh, the possibilities! The old man at the dojo should know what to do with it.",TS,PS3版の一覧とも一致
-35,0x0023,,うめぼし（大）,Umeboshi (L),うめぼし（だい）,0,1,大きい梅ぼし。すっぱくておいしい。西洋人はあまり好まない。3分間 活力の持ちが良くなる。,"A really big, sour Japanese plum. Westerners don't tend to like them much. Increases vitality retention for 3 minutes.",TS,
-36,0x0024,,うめぼし,Umeboshi,うめぼし,0,1,ウメの果実を塩漬けした後に日干しにしたもの。1分間 活力の持ちが良くなる。,A Japanese plum pickled in salt and sun-dried. Increases vitality retention for 1 minute.,TS,
-37,0x0025,,梅酒,Plum Wine,うめしゅ,0,1,梅の実を砂糖とともに酒に漬けて作られる。活力200回復。つま斬りゲージ 300上昇。,Sake made with Japanese sour plums and sugar. Restores 200 vitality and increases the Spring Harvest gauge by 300.,TS,
-38,0x0026,,チョコレート,Chocolate,ちょこれーと,0,1,カカオマスを主原料とし 練り固めたもの。活力50回復。3分間 つま斬りゲージがたまりやすい。,Packed with pure cocoa goodness. Restores 50 vitality and makes the Spring Harvest gauge rise more quickly for 3 minutes.,TS,
-39,0x0027,,空き瓶,Glass Bottle,あきびん,0,1,空になった瓶。投げつけると相手にダメージ。,An empty bottle. Try lobbing it at someone's head for some quick damage.,TS,
-40,0x0028,,ワイン,Wine Bottle,わいんびん,0,1,ブドウの果汁を発酵させた飲料である。3分間 攻撃力2倍になり つま斬りゲージ300上昇。,Alcohol made from grapes. Doubles attack for 3 minutes and increases the Spring Harvest gauge by 300.,TS,
-41,0x0029,,くず鉄,Scrap Metal,くずてつ,0,999,くず鉄が寄せ集まったもの。鍛冶屋に持っていこう。,Just some ordinary scrap metal. Best to take it to the smithy.,TS,
-42,0x002A,,卸し鉄(おろしがね),Ground Metal,おろしがね,0,999,少し質のよい鉄が集まったもの。卸し金に使えなくもないところが名の由来。鍛冶屋に持っていこう。,High-quality scrap metal. Best to take it to the smithy.,TS,
-43,0x002B,,堂島鋼(どうじまはがね),Dojima Steel,どうじまはがね,0,999,かなり上質な鉄が集まったもの。堂島が生成に成功したのが名の由来とか。鍛冶屋に持っていこう。,"Super high-quality metal, named after the best metalsmith in Amihama. Definitely take this to the smithy.",TS,
-44,0x002C,,緋緋色金(ひひいろかね),Hihiirokane,ひひいろかね,0,999,生成された姿が緋色に強く輝く。生成される事が奇跡に近い。鍛冶屋に持っていこう。,A miraculously perfect metal that shouldn't even be able to exist...but here it is! You'd be crazy not to take this to the smithy.,TS,
-45,0x002D,,チップ,Casino Chip,ちっぷ,0,1,カジノ　ライジングサンで遊ぶのに必要。,Used to play games at the Sunrise Casino.,SE-BBS,❓ U-12。Steam版で書くとセーブできなくなる（[U] 2026-10-04）
-46,0x002E,,木札,Wooden Tag,きふだ,0,1,賭場で遊ぶ時に使用する。,Used to play games at the gambling den.,SE-BBS,❓ U-12。Steam版で書くとセーブできなくなる（[U] 2026-10-04）
-47,0x002F,,チラシ,Flyer,ちらし,0,1,人手を探しているようだ。,"Help wanted, eh?",U,
-48,0x0030,,うなぎ丼,Eel Bowl,うなぎどん,1,1,うなぎの蒲焼をご飯の上にのせたもの。タレのしみ込んだご飯がたまらない。活力400回復。活力の持ちが良くなる。,Eel marinated in a soy-based sauce and served over a bed of rice. Love that flavor combo! Restores 400 vitality and increases vitality retention.,U,
-49,0x0031,,天丼,Tempura Bowl,てんどん,1,1,エビやアナゴや野菜のてんぷらをご飯の上に盛り付けたもの。活力500回復。活力の持ちが良くなる。,"Shrimp, salt water eel and tempura-fried vegetables, served over a bed of rice. Heavenly! Restores 500 vitality and increases vitality retention.",U,
-50,0x0032,,鉄火丼,Tuna Bowl,てっかどん,1,1,まぐろの刺身をタレに付け込み ご飯の上に盛り付けたもの。活力300回復。活力の持ちが良くなる。,Raw tuna marinated in sauce and served over a bed of rice. Tunalicious! Restores 300 vitality and increases vitality retention.,U,
-51,0x0033,,熱燗,Hot Sake,あつかん,1,1,燗徳利に入れて加熱した醸造酒。2分間 攻撃力2倍。防御力半分。,Liquor warmed in a special bottle. Doubles strength and halves defense for 2 minutes.,U,
-52,0x0034,,ししゃも,Willow Leaf Fish,ししゃも,1,1,産卵のために川を溯上する回遊魚。オスの方が味がよいとされる。活力100回復。しばらくすると防御力上昇。,"A migratory fish that swims upstream to lay its eggs. The males are particularly delicious. Restores 100 vitality, and boosts defense after a short time has passed.",U,
-53,0x0035,,野沢菜,Turnip,のざわな,1,1,信越地方で栽培される野菜。漬物が一般的。これはお浸し。活力120回復。しばらくすると防御力上昇。,"A vegetable grown on the eastern side of Japan. Often pickled and served as a side dish. Restores 120 vitality, and boosts defense after a short time has passed.",U,
-54,0x0036,,里芋のにっころがし,Stewed Taro,さといものにっころがし,1,1,里芋を出汁と醤油で煮たもの。活力250回復。3分間 活力の持ちがよくなる。,The tuber of a root vegetable boiled in fish stock and soy sauce. Restores 250 vitality and increases vitality retention for 3 minutes.,U,
-55,0x0037,,刺身の盛り合わせ,Sashimi Assortment,さしみのもりあわせ,1,1,活きのよい刺身を一皿に盛り合わせたもの。活力250回復。しばらくすると防御力上昇。,"A plate of sashimi so fresh it's practically still squirming. Restores 250 vitality, and boosts defense after a short time has passed.",U,
-56,0x0038,,マグロ,Tuna,まぐろ,1,1,寿司と言えばマグロ。大きいものは3メートルを超える。活力300回復。しばらくすると防御力上昇。,"The definitive sushi. Big tuna can actually surpass 3 meters in size. Restores 300 vitality, and boosts defense after a short time has passed.",U,
-57,0x0039,,アナゴ,Sea Eel,あなご,1,1,寿司の定番の一つに含まれる。その美味しさの虜になるものは多い。活力400回復。しばらくすると防御力上昇。,"A sushi standard, known for captivating all who eat it with its amazing flavor. Restores 400 vitality, and boosts defense after a short time has passed.",U,
-58,0x003A,,海老,Shrimp,えび,1,1,みんなに愛される寿司の一つ。煮てある海老は寿司海老と称される。活力500回復。しばらくすると防御力上昇。,"Everyone loves shrimp sushi! Boiled shrimp has even come to be known as ""sushi shrimp."" Restores 500 vitality, and boosts defense after a short time has passed.",U,
-59,0x003B,,玉子,Cooked Egg,たまご,1,1,玉子をのせた寿司。強火で焦げないように焼くのがコツ。活力150回復。しばらくすると防御力上昇。,"You can tell the quality of a sushi-ya by the quality of its egg sushi. Restores 150 vitality, and boosts defense after a short time has passed.",U,
-60,0x003C,,三色団子,3 Flavor Dango,さんしょくだんご,1,1,赤 白 緑の三色団子。お花見のお供。花より団子のことわざは有名。活力100回復。3分間活力の持ちがよくなる。,"Red, white and green Japanese dumplings, often eaten during (and proving more popular than) cherry blossom viewing. Restores 100 vitality and increases vitality retention for 3 minutes.",U,
-61,0x003D,,あんころもち,Sweet Bean Mochi,あんころもち,1,1,餡子で包まれた団子。活力100回復。3分間活力の持ちがよくなる。,Dumplings wrapped in bean jam. Restores 100 vitality and increases vitality retention for 3 minutes.,U,
-62,0x003E,,ビッグステーキ,Big Steak,ビッグステーキ,1,1,厚めの肉を鉄板の上で焼いたもの。好みの焼き具合でいただくのがツウ。活力800回復。しばらくすると攻撃力上昇。,"A thick cut of meat grilled to order. Restores 800 vitality, and boosts strength after a short time has passed.",U,
-63,0x003F,,骨付き肉,Haunch of Meat,ほねつきにく,1,1,骨の付いたお肉。みんなの憧れ。むゃぶりつきたい。活力1000回復。6分間 活力の持ちがよくなる。,Meat roasted right on the bone. Primal and scrumptious! Restores 1000 vitality and increases vitality retention for 6 minutes.,U,
-64,0x0040,,ソーダ水,Soda Water,そーだすい,0,1,炭酸ガスが含まれた水。活力200回復。3分間活力の持ちが悪くなる。,Bubbly CO2 water. Restores 200 vitality and increases vitality retention for 3 minutes.,TS,
-65,0x0041,,鮎の塩焼き,Grilled Sweetfish,あゆのしおやき,1,1,鮎を塩焼きにしたもの。活力500回復。3分間活力の持ちがよくなる。,Sweetfish grilled with salt. Restores 500 vitality and increases vitality retention for 3 minutes.,U,
-66,0x0042,,南蛮炒め蕎麦,Spicy Stir-fried Soba,なんばんいためそば,1,1,天原という地方のお祭りで提供された食事。活力500回復。5分間活力の持ちがよくなる。,"A food item popularly offered in a regional festival known as ""Tengen."" Restores 500 vitality and increases vitality retention for 5 minutes.",U,
-67,0x0043,,かけそば,Hot Soba,かけそば,1,1,茹でたそばを丼にもり 汁をぶっかけたもの。活力150回復。,Boiled soba noodles served in a special broth. Restores 150 vitality.,U,
-68,0x0044,,きつねそば,Kitsune Soba,きつねそば,1,1,かけそばに甘く煮た油揚げをのせたもの。活力200回復。しばらくすると攻撃力上昇。,"Traditional soba soup served with sweet fried tofu. Restores 200 vitality, and boosts strength after a short time has passed.",U,
-69,0x0045,,たぬきそば,Tanuki Soba,たぬきそば,1,1,かけそばに揚げ玉をのせたもの。動物のたぬきが入ったものではない。活力180回復。しばらくすると攻撃力上昇。,"Traditional soba soup served with bits of fried tempura batter. No tanuki were harmed in the making of this soba! Restores 180 vitality, and boosts strength after a short time has passed.",U,
-70,0x0046,,月見そば,Egg Soba,つきみそば,1,1,卵を落とすことで月見に見立てたそば。活力150回復。しばらくすると攻撃力上昇。,"Traditional soba soup with an egg dropped on top. Kind of looks like a moon in the night sky! Restores 150 vitality, and boosts strength after a short time has passed.",U,
-71,0x0047,,お茶づけ,Tea Rice,おちゃづけ,1,1,ご飯に熱いお茶や出汁をかけたもの。無性に食べたくなる時がある。活力300回復。,Rice with hot green tea or fish stock poured over it. Habit-forming! Restores 300 vitality.,U,
-72,0x0048,,冷や,Cold Sake,ひやく,1,1,常温で飲む醸造酒。冷蔵したものは冷やとは呼ばない。2分間 防御力2倍。攻撃力半分。,"Sake served at room temperature (not refrigerated, as you might expect it to be!). Doubles defense and halves strength for 2 minutes.",U,
-73,0x0049,,丼,Rice Bowl,どん,3,1,ご飯や汁を盛り付ける器。丼と聞くだけでお腹がすいてくる。,A popular dish in which rice or soup is typically served. Just seeing it calls to mind all the yummy things that may soon lie within!,U,説明・画像が別のアイテムのもの（[U]）
-74,0x004A,,かけうどん,Hot Udon,かけうどん,1,1,茹でたうどんを 汁でいただくもの。活力160回復。,Boiled udon noodles served in a special broth. Restores 160 vitality.,U,
-75,0x004B,,きつねうどん,Kitsune Udon,きつねうどん,1,1,甘く煮た油揚げがのったうどん。活力220回復。しばらくすると防御力上昇。,"Traditional udon soup served with sweet fried tofu. Restores 220 vitality, and boosts defense after a short time has passed.",U,
-76,0x004C,,たぬきうどん,Tanuki Udon,たぬきうどん,1,1,かけうどんに揚げ玉をのせたもの。動物のたぬきは入っていない。活力200回復。しばらくすると防御力上昇。,"Traditional udon soup served with bits of fried tempura batter. No tanuki were harmed in the making of this udon! Restores 200 vitality, and boosts defense after a short time has passed.",U,
-77,0x004D,,月見うどん,Egg Udon,つきみうどん,1,1,卵を落とすことで月見に見立てたうどん。活力160回復。しばらくすると防御力上昇。,"Traditional udon soup with an egg dropped on top. Kind of looks like a moon in the night sky! Restores 160 vitality, and boosts defense after a short time has passed.",U,
-78,0x004E,,饅頭,Steamed Bun Cake,まんじゅう,1,1,小麦粉の生地で餡子を包んだもの。活力200回復。1分間活力の持ちがよくなる。,Bean jam served inside a fluffy pastry-like wheat flour enclosure. Restores 200 vitality and increases vitality retention for 1 minute.,U,
-79,0x004F,,箸,Chopsticks,はし,3,1,二本で一つの棒状の道具。片手で持ち 食事の際に用いる。豆などを一粒うまくつまめるとうれしい。,"Two sticks used harmoniously as one eating implement. Held in one hand, a true chopstick master can pick up a single bean without struggle.",U,
-80,0x0050,,シロギス,Whiting,しろぎす,0,1,体は淡い褐色で投げ釣りの対象として有名で食用としても人気が高い。,A pale brown fish popular amongst fishermen and flavor enthusiasts alike.,TS,
-81,0x0051,,アナゴ,Sea Eel,あなご,0,1,うなぎによく似た細長い体形をしている。食用として好まれ うなぎよりあっさりとしている。,"Resembles a freshwater eel with its long, thin body. Beloved as a seafood delicacy, even more so than its freshwater cousin.",TS;U,料理の 0x39 アナゴとは別の魚
-82,0x0052,,ボラ,Mullet,ぼら,0,1,身近な魚の一つ。とどのつまりのとどはボラが成長した魚を指す。,"A particularly familiar fish to the Japanese, though the name conjures up images of banjos and moonshine to some Westerners.",TS,
-83,0x0053,,マサバ,Mackerel,まさば,0,1,前後に細長く成魚は全長50cmほどになる。秋から冬が旬。,Sometimes grows as big as 50cm in length. In season during autumn and winter.,TS,
-84,0x0054,,コイ,Koi,こい,0,1,川や池に生息する淡水魚。観賞用として有名で食する時は生食は避けた方がいい。,A freshwater fish found in rivers and ponds. Admired for their beauty. Best not to eat raw.,TS;U,
-85,0x0055,,カツオ,Bonito,かつお,0,1,タタキや刺身が有名で日本の食文化とは古くから結び付く。,A classic item in Japanese food culture. Served both grilled and as sashimi.,TS,
-86,0x0056,,ハゼ,Goby,はぜ,0,1,あらゆる環境に生息している魚のひとつ。食用としては佃煮 唐揚げなどが有名。,A fish that can survive in almost any environment. Most often eaten fried or preserved in soy.,TS;U,
-87,0x0057,,メバル,Rock Fish,めばる,0,1,岩礁域に多く棲息する。名は大きく張り出した眼に由来する。,"Generally found near reefs. Famous for its big, protruding eyes.",TS,
-88,0x0058,,カサゴ,Scorpion Fish,かさご,0,1,沿岸の岩礁や海中林に生息する。縁起の良い魚の一つであった。,Generally found near coral reefs or mixed in with underwater flora. Regarded as a good omen.,TS,
-89,0x0059,,アジ,Horse Mackerel,あじ,0,1,日本では馴染み深い魚。名の由来は味が良いことと云われる。様々な加工品や料理が作られる。,"A very popular fish amongst the Japanese. Its Japanese name is a homonym for ""flavor.""",TS,
-90,0x005A,,ヤマメ,Japanese Salmon,やまめ,0,1,川の上流などに生息し一生を河川で過ごす。唐揚げ 酢漬け 塩焼きで食されるが生では食べない方が安全。,"Lives upstream in rivers. Served fried, pickled or boiled in brine. Unsafe to eat raw.",TS,
-91,0x005B,,マダイ,Red Sea Bream,まだい,0,1,鯛といえば マダイを指すことが多い。日本では古くから めでたい魚と考えられた。,"Very popular in Japan. Often thought of as a festive fish, to be eaten on special occasions.",TS,
-92,0x005C,,タコ,Octopus,たこ,0,1,海洋棲の軟体動物。8本の足が特徴。黒い墨を吐き 姿をくらます。,An ocean-dwelling creature with 8 tentacles. Spits black ink to conceal itself when in danger.,TS,
-93,0x005D,,ニホンザリガニ,Japanese Crayfish,にほんざりがに,0,1,川の上流域や山間の湖沼の冷たくきれいな水に生息する。巣穴の中にひそみ 落葉を食べる。,Dwells upstream in rivers or in mountain lakes and marshes. Is known to nest in specific areas and eat fallen leaves.,TS,
-94,0x005E,,アカヒトデ,Red Starfish,あかひとで,0,1,五本の腕のあるいわゆる星形の体をもつ。真っ二つになっても再生するがその場合には2匹になる。,"A peculiar creature shaped like a star. If cut in half, it will regenerate into two unique starfish.",TS,
-95,0x005F,,伝説の魚,Legendary Fish,でんせつのさかな,0,1,金色に輝く伝説の魚。稚魚だが 価値は十分で高値で扱われる。,"A legendary fish that shines like gold. Although young, it should still fetch a handsome price.",TS,
-96,0x0060,,伝説の魚,Legendary Fish,でんせつのさかな,0,1,金色に輝く伝説の魚。大きく成長した姿は見るものの心を奪う。とても高値で取引される。,A legendary fish that shines like gold. Guaranteed to capture any fisherman's heart. Should fetch a high price.,U,[U] 売却用（中）
-97,0x0061,,伝説の魚,Legendary Fish,でんせつのさかな,0,1,金色に輝く伝説の魚。タイを彷彿とさせる姿はめでたさの象徴。とても希少で高値で取引される。,A legendary fish that shines like gold. Looks kind of like a sea bream. Very rare and very valuable.,U,[U] 売却用（大）
-98,0x0062,,空き缶,Tin Can,あきかん,0,1,まだ錆びていない缶。そのうち錆びてしまうだろう。錆びないうちに売ってしまおう。,"It's not rusted yet, but it probably won't be long before it is. Best to sell it while it's still in decent shape.",U,
-99,0x0063,,錆びた空き缶,Rusty Tin Can,さびたあきかん,0,1,錆びてしまった缶。フタも取れてしまった。,A rusted can missing its lid.,TS,
-100,0x0064,,長靴,Rubber Boots,ながぐつ,0,1,誰が捨てたか 長い靴。もしかしたらまだ履けるかも？と思ってはいけない。,"A boot someone discarded. ""I wonder if it's still wearable?""...is something you should never, ever think when finding an item like this.",TS,
-101,0x0065,,藁人形,Straw Doll,わらにんぎょう,0,1,呪って殺す。投げつけると相手にダメージ。,"It'll curse you, and it'll kill you. Throw it at other people -- let it hurt them instead!",TS,
-102,0x0066,,ウニ,Sea Urchin,うに,0,1,全身に刺を持つ。雲丹とも表記される。投げつけるとダメージを与える。売ると高価。,"A sea creature with spikes all over its body. Would hurt quite a bit if you threw it at someone, and would fetch a nice price if sold.",TS;U,
-103,0x0067,,おにぎり（梅）,Onigiri (Sour Plum),おにぎり（うめ）,0,1,お米携帯食料に梅干しを入れたもの。梅によって旨さが増している。活力320～370回復。,A portable rice-based snack food with sour plum in the middle. Its taste varies based on the quality of the plums used. Restores 320-370 vitality.,TS,
-104,0x0068,,おにぎり（鮭）,Onigiri (Salmon),おにぎり（しゃけ）,0,1,お米携帯食料に焼き鮭がたくさん入っている。活力350～420回復。,A portable rice-based snack food packed with grilled salmon. Restores 350-420 vitality.,TS,
-105,0x0069,,おにぎり（高菜）,Onigiri (Takana Pickles),おにぎり（たかな）,0,1,お米携帯食料に高菜を入れたもの。一工夫でおいしさが倍増。活力370～400回復。,A portable rice-based snack food with takana pickles in the middle. An acquired taste. Restores 370-400 vitality.,TS,
-106,0x006A,,おにぎり（昆布）,Onigiri (Dried Seaweed),おにぎり（こんぶ）,0,1,お米携帯食料に昆布を入れたもの。活力350～380回復。,A portable rice-based snack food with dried seaweed in the middle. Restores 350-380 vitality.,TS;U,
-107,0x006B,,朱美のにっころがし,Akemi's Stewed Potatoes,あけみのにっころがし,1,1,朱美 手作りのにっころがし。旨さが口の中に広がる。活力500回復。5分間活力の持ちがよくなる。,"Akemi's homemade stewed potatoes. A party in your mouth, and everyone's invited! Restores 500 vitality and increases vitality retention for 5 minutes.",TS;U,
-108,0x006C,,秘蔵の熱燗,Special Hot Sake,ひぞうのあつかん,1,1,普段はお品書きにはない 秘蔵の醸造酒。活力100回復。5分間つま斬りゲージがたまりやすくなる。,A special hot sake not on any menu. Restores 100 vitality and makes the Spring Harvest gauge increase more quickly for 5 minutes.,TS;U,
-109,0x006D,,極上ワイン,High Grade Wine,ごくじょうわいん,0,1,なかなかお目にかかれないワイン。香りを楽しんでから 頂こう。3分間 攻撃力2倍。命200回復。,"A very rare wine. Savor the aroma first, then drink. Doubles strength for 3 minutes and restores 200 life.",TS,
-110,0x006E,,ビンテージワイン,Vintage Wine,びんてーじわいん,0,1,時の流れが生み出した貴重なワイン。価値をわかったふりをするのがたしなみ。命500回復。活力500回復。,A wine that's aged to perfection. Just pretend you know how valuable it is and people will be impressed. Restores 500 life and 500 vitality.,TS,
-111,0x006F,,梅の間,Ume Room,うめのま,2,0,狭く 片づけられていない。まるで倉庫のような部屋。命500 活力500回復。,A storehouse-like room that's dirty and cramped. Restores 500 life and 500 vitality.,TS;U,
-112,0x0070,,竹の間,Take Room,たけのま,2,0,くつろぐにはちょうどいい広さと佇まい。命750 活力750回復。,"A fairly nice, homey room that's quite conducive to relaxation. Restores 750 life and 750 vitality.",U,
-113,0x0071,,松の間,Matsu Room,まつのま,2,0,豪華な調度品が落ち着かない。こういう部屋でも落ち着きを持ち続けたい。命1000 活力1000回復。,Swanky to the Nth degree. You feel like you could live out the rest of your days in this gorgeous room! Restores 1000 life and 1000 vitality.,U,
-114,0x0072,,入院,Hospitalized,にゅういん,2,0,看護師の看護や西洋文明の治療を受けることができる。命750 活力750回復。,A place where you can receive all the benefits of western medicine and hot nurses. Restores 750 life and 750 vitality.,U,
-115,0x0073,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-116,0x0074,,コイン,Prize Chip,こいん,0,9999,カジノでお金の代わりに使われる。,Used in place of money at the casino.,TS,PS3版の一覧とも一致
-117,0x0075,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-118,0x0076,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-119,0x0077,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-120,0x0078,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-121,0x0079,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-122,0x007A,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-123,0x007B,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-124,0x007C,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-125,0x007D,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-126,0x007E,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-127,0x007F,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-128,0x0080,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-129,0x0081,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-130,0x0082,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-131,0x0083,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-132,0x0084,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-133,0x0085,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-134,0x0086,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-135,0x0087,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-136,0x0088,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-137,0x0089,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-138,0x008A,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-139,0x008B,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-140,0x008C,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-141,0x008D,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-142,0x008E,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-143,0x008F,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-144,0x0090,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-145,0x0091,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-146,0x0092,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-147,0x0093,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-148,0x0094,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-149,0x0095,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-150,0x0096,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-151,0x0097,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-152,0x0098,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-153,0x0099,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-154,0x009A,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-155,0x009B,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-156,0x009C,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-157,0x009D,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-158,0x009E,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-159,0x009F,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-160,0x00A0,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-161,0x00A1,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-162,0x00A2,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-163,0x00A3,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-164,0x00A4,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-165,0x00A5,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-166,0x00A6,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-167,0x00A7,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-168,0x00A8,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-169,0x00A9,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-170,0x00AA,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-171,0x00AB,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-172,0x00AC,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-173,0x00AD,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-174,0x00AE,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-175,0x00AF,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-176,0x00B0,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-177,0x00B1,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-178,0x00B2,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-179,0x00B3,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-180,0x00B4,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-181,0x00B5,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-182,0x00B6,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-183,0x00B7,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-184,0x00B8,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-185,0x00B9,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-186,0x00BA,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-187,0x00BB,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-188,0x00BC,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-189,0x00BD,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-190,0x00BE,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
-191,0x00BF,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
-192,0x00C0,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,0x1C の茶器の複製
-193,0x00C1,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,0x1C の茶器の複製
-194,0x00C2,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,0x1C の茶器の複製
-195,0x00C3,,茶器,Tea Set,茶器,3,1,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,0x1C の茶器の複製
-196,0x00C4,,ミミズ,Earthworms,みみず,0,10,釣りのエサ。水場の近くで釣りを始めることができる。扱いやすく 川魚に有効。,"Fishing bait. Allows you to fish when near any body of water. Easy to use, and effective in catching freshwater fish.",TS,
-197,0x00C5,,ゴカイ,Sandworms,ごかい,0,10,釣りのエサ。水場の近くで釣りを始めることができる。幅広い海魚に有効な虫エサ。,Fishing bait. Allows you to fish when near any body of water. Great for catching virtually any kind of saltwater fish.,TS,
-198,0x00C6,,オキアミ,Krill,おきあみ,0,10,釣りのエサ。水場の近くで釣りを始めることができる。海魚を中心に珍しい物がかかる。,Fishing bait. Allows you to fish when near any body of water. A rare type that works extremely well for catching saltwater fish.,TS,
-199,0x00C7,,エビ,Shrimp,えび,0,10,釣りのエサ。水場の近くで釣りを始めることができる。扱いの難しい大物狙いのエサ。,"Fishing bait. Allows you to fish when near any body of water. A bit hard to use, but works wonders for catching large-scale fish.",TS,
-200,0x00C8,,小魚,Minnow,こざかな,0,10,釣りのエサ。水場の近くで釣りを始めることができる。扱いの難しい大物狙いのエサ。,"Fishing bait. Allows you to fish when near any body of water. A bit hard to use, but works wonders for catching large-scale fish.",TS,
-201,0x00C9,,疑似餌,Lure,ぎじえ,0,10,本物に似せた釣りのエサ。水場の近くで釣りを始めることができる。効果は平均的。,"Fishing bait. Allows you to fish when near any body of water. Designed to mimic the real deal, but is only average at best.",TS,
-202,0x00CA,,ねりエサ,Organic Bait,ねりえさ,0,10,釣りのエサ。水場の近くで釣りを始めることができる。川魚に有効だが扱いが難しい。,"Fishing bait. Allows you to fish when near any body of water. Works great for catching freshwater fish, but is a bit hard to use.",TS,
-203,0x00CB,,もち,Mochi,もち,0,10,釣りのエサ。水場の近くで釣りを始めることができる。魚以外の物がくっつきやすい。,Fishing bait. Allows you to fish when near any body of water. Works surprisingly well for catching things other than fish.,TS,
-204,0x00CC,,力ミミズ,Super Earthworms,ちからみみず,0,10,釣りのエサ。水場の近くで釣りを始めることができる。ミミズよりも扱いづらい分 魅力は高い。,"Fishing bait. Allows you to fish when near any body of water. Harder to handle than an ordinary earthworm, but fish seem to be enthralled by it.",TS,
-205,0x00CD,,疲労に効く薬,Energy Medicine,ひろうにきくくすり,3,1,これを飲めばどんな疲れもいっぺんに吹き飛ぶこと請合い。,Guaranteed to remove all trace of fatigue from your body with a single dose!,U,
-206,0x00CE,,熱燗,Hot Sake,熱燗,3,1,熱燗（お猪口）,Hot Sake (Cup),U,[U] お猪口
-207,0x00CF,,熱燗,Hot Sake,熱燗,3,1,熱燗（徳利）,Hot Sake (Bottle),U,[U] 徳利
-208,0x00D0,,熱燗,Hot Sake,熱燗,3,1,熱燗（セット）,Hot Sake (Set),U,[U] セット
-209,0x00D1,,三色団子,3 Flavor Dango,三色団子,3,1,三色団子(1串),3 Flavor Dango (1 Stick),U,[U] 1串
-210,0x00D2,,三色団子,3 Flavor Dango,三色団子,3,1,三色団子(皿）,3 Flavor Dango (Dish),U,[U] 皿
-211,0x00D3,,三色団子,3 Flavor Dango,三色団子,3,1,三色団子(セット),3 Flavor Dango (Set),U,[U] セット
-212,0x00D4,,あんころもち,Sweet Bean Mochi,あんころもち,3,1,あんころもち（１串）,Sweet Bean Mochi (1 Stick),U,[U] 1串
-213,0x00D5,,あんころもち,Sweet Bean Mochi,あんころもち,3,1,あんころもち（皿）,Sweet Bean Mochi (Dish),U,[U] 皿
-214,0x00D6,,あんころもち,Sweet Bean Mochi,あんころもち,3,1,あんころもち（セット）,Sweet Bean Mochi (Set),U,[U] セット
-215,0x00D7,,鮎の塩焼き,Grilled Sweetfish,鮎の塩焼き,3,1,鮎の塩焼き(鮎),Grilled Sweetfish (1 Stick),,0x41 と同じ名前
-216,0x00D8,,鮎の塩焼き,Grilled Sweetfish,鮎の塩焼き,3,1,鮎の塩焼き（皿）,Grilled Sweetfish (Dish),,0x41 と同じ名前
-217,0x00D9,,鮎の塩焼き,Grilled Sweetfish,鮎の塩焼き,3,1,鮎の塩焼き（セット）,Grilled Sweetfish (Set),,0x41 と同じ名前
-218,0x00DA,,冷や,Cold Sake,冷や,3,1,冷や（お猪口）,Cold Sake (Cup),,0x48 と同じ名前
-219,0x00DB,,冷や,Cold Sake,冷や,3,1,冷や（徳利）,Cold Sake (Bottle),,0x48 と同じ名前
-220,0x00DC,,冷や,Cold Sake,冷や,3,1,冷や（セット）,Cold Sake (Set),,0x48 と同じ名前
-221,0x00DD,,マグロ,Tuna,マグロ,3,1,マグロ（２個）,Tuna (2 Pcs),,0x38 と同じ名前
-222,0x00DE,,アナゴ,Sea Eel,アナゴ,3,1,アナゴ（２個）,Sea Eel (2 Pcs),,0x39 と同じ名前
-223,0x00DF,,海老,Shrimp,海老,3,1,海老（２個）,Shrimp (2 Pcs),,0x3A と同じ名前
-224,0x00E0,,玉子,Cooked Egg,玉子,3,1,卵（２個）,Egg (2 Pcs),,0x3B と同じ名前
-225,0x00E1,,玉子,Cooked Egg,玉子,3,1,餌（ミミズ）,Bait (Earthworm),,0x3B と同じ名前
-226,0x00E2,,玉子,Cooked Egg,玉子,3,1,餌（海老）,Bait (Shrimp),,0x3B と同じ名前
-227,0x00E3,,玉子,Cooked Egg,玉子,3,1,餌（小魚）,Bait (Minnow),,0x3B と同じ名前
-228,0x00E4,,ビッグステーキ,Big Steak,ビッグステーキ,3,1,厚めの肉を鉄板の上で焼いたもの。好みの焼き具合でいただくのがツウ。活力800回復。しばらくすると攻撃力上昇。,"A thick cut of meat grilled to order. Restores 800 vitality, and boosts strength after a short time has passed.",,0x3E と同じ名前
-229,0x00E5,,ビッグステーキ,Big Steak,ビッグステーキ,3,1,厚めの肉を鉄板の上で焼いたもの。好みの焼き具合でいただくのがツウ。活力800回復。しばらくすると攻撃力上昇。,"A thick cut of meat grilled to order. Restores 800 vitality, and boosts strength after a short time has passed.",,0x3E と同じ名前
-230,0x00E6,,ビッグステーキ,Big Steak,ビッグステーキ,3,1,厚めの肉を鉄板の上で焼いたもの。好みの焼き具合でいただくのがツウ。活力800回復。しばらくすると攻撃力上昇。,"A thick cut of meat grilled to order. Restores 800 vitality, and boosts strength after a short time has passed.",,0x3E と同じ名前
-231,0x00E7,,花束,Flower Bouquet,,3,1,ここで亡くなった人のために誰かが手向けてくれた花束。,A flower bouquet presented as an offering to a deceased loved one.,,ゲーム内の読みの欄は「……」のため空欄
-232,0x00E8,,花束,Flower Bouquet,はなたば,0,1,ここで亡くなった人のために誰かが手向けてくれた花束。,A flower bouquet presented as an offering to a deceased loved one.,,0xE7 と同じ名前
-233,0x00E9,,マグロ,Tuna,マグロ,3,1,マグロ（２個）,Tuna (2 Pcs),,0x38 と同じ名前
-234,0x00EA,,アナゴ,Sea Eel,アナゴ,3,1,アナゴ（２個）,Sea Eel (2 Pcs),,0x39 と同じ名前
-235,0x00EB,,海老,Shrimp,海老,3,1,海老（２個）,Shrimp (2 Pcs),,0x3A と同じ名前
-236,0x00EC,,玉子,Cooked Egg,玉子,3,1,卵（２個）,Egg (2 Pcs),,0x3B と同じ名前
-237,0x00ED,,拷問部屋の鍵,Torture Chamber Key,ごうもんべやのかぎ,0,1,代官所の拷問部屋を開けることができる。,Unlocks the torture chamber in the magistrate's office.,,ゲーム内での表示・使用は要ゲーム内確認（U-14）
-238,0x00EE,,謎の鍵,Mysterious Key,なぞのかぎ,0,1,誰かが落とした謎の鍵。持ち主に届けてあげよう。,A mysterious key someone dropped. Let's try to find its rightful owner!,,ゲーム内での表示・使用は要ゲーム内確認（U-14）
-239,0x00EF,,お金袋特大,Money Bag (XL),お金袋特大,0,1,使うことでお金を手に入れることができる。,Use to obtain money.,,0x17 と同じ名前
-240,0x00F0,,西洋医学の水,Western Medicine Water,せいよういがくのみず,3,1,西洋医学の結晶。命が200回復するがつま斬りゲージが減少する。,"The pinnacle of Western medicine! Restores 200 life, but decreases the Spring Harvest gauge.",,
-241,0x00F1,,疲無人参,Stamina Carrot,つかれないにんじん,3,1,疲れなくなる人参。２分間活力が減らなくなるが しばらくすると攻撃力が減少する。,"A carrot that chases away exhaustion for some reason. Freezes your vitality so it won't decrease at all for 2 minutes, but lowers your strength after a short time has passed.",,
-65535,0xFFFF,,なし,,,,,,,TS,
+id_dec,id_hex,save_bytes_le,name_ja,name_en,reading,kind,max_stack,use_action,description_ja,description_en,source,備考
+0,0x0000,,会談の手紙,Meeting Invitation,,0,1,0xFFFF,ローラが赤城へ書いた手紙。ローラの想いが込められている。,A heartfelt letter from Laura to Akagi.,TS;U,重要品。セーブ可否・イベントでの使用は要ゲーム内確認。ゲーム内の読みの欄は「長靴」で仮の値のため空欄
+1,0x0001,,伯爵の寿司,The Count's Sushi,はくしゃくのすし,0,1,0x00D5,伯爵が握った寿司。スーシーといった方が正しいかもしれない。,"A sushi roll made by the count. Might be more apropos to slur the word and call it ""sooshee.""",TS;U,
+2,0x0002,,おにぎり,Onigiri,おにぎり,0,1,0x00D5,貴重なお米携帯食料。作ってくれた人の気持ちが伝わる。活力300回復。,A highly portable snack food made of rice and dried seaweed. Overflowing with the passion of its maker. Restores 300 vitality.,TS,
+3,0x0003,,腐ったおにぎり,Rotten Onigiri,くさったおにぎり,0,1,0x00D5,いつもと違った色のお米携帯食料。活力100～200回復するが活力の持ちが悪くなる。,"A portable snack food that looks...a little discolored. Restores 100-200 vitality, but makes it easier for you to lose vitality afterward.",TS,
+4,0x0004,,干物,Dried Fish,ひもの,0,1,0x00D5,開いた魚を立塩漬にして干した物。保存食として重宝される一品。活力500回復。,A flayed fish pickled in salt and thoroughly dried. Could practically last forever! Restores 500 vitality.,TS,
+5,0x0005,,ひよこういろう,Steamed Cake,ひよこういろう,0,1,0x00D5,ひよこの形をしたういろう。非常に甘く 高級品。活力1000回復。,A cute rice cake in the shape of a chicky. Very sweet item beloved by the upper class. Restores 1000 vitality.,TS,
+6,0x0006,,きのこ,Mushroom,きのこ,0,1,0x00D5,どこにでも生えている食用きのこ。つま斬りゲージ150上昇。,"A common, ordinary mushroom. Increases the Spring Harvest gauge by 150.",TS,
+7,0x0007,,毒きのこ,Poison Mushroom,どくきのこ,0,1,0x00D5,何やら怪しい色をしているきのこ。つま斬りゲージが上昇するが30秒間 つま斬りゲージがたまらない。,"A suspiciously-colored mushroom. Increases the Spring Harvest gauge, but caps it for 30 seconds, disallowing any further increase.",TS,
+8,0x0008,,阿修羅きのこ,Asura Mushroom,あしゅらきのこ,0,1,0x00D5,きのこの頂点に立つとされる究極のきのこ。つま斬りゲージ500上昇。さらに30秒間 つま斬りゲージがたまりやすくなる。,"The fungus to end all fungi. Increases the Spring Harvest gauge by 500, and also makes it go up more quickly for 30 seconds.",TS,PS3版の一覧とも一致
+9,0x0009,,秘薬,Medicine,ひやく,0,1,0x00D5,薬師が長年の研究の末調合した薬。命が0になると自動で命1000回復。,A secret medicine resulting from years of study by the Healing Buddha. Restores 1000 life automatically if your life drops to 0.,TS,PS3版の一覧とも一致
+10,0x000A,,技ノ書,Moves Scroll,わざのしょ,0,1,0x00D9,剣術の先生が生徒に教えるために書いた書物。初歩的な技を一つ覚える。,A collection of information designed to help teach the way of the sword. Reading it can teach one basic sword move.,TS,
+11,0x000B,,奥義ノ書,Special Moves Scroll,おうぎのしょ,0,1,0x00D9,侍が修行の末に体得した剣術。高等な技を一つ覚える。,A secret technique passed down from a learned samurai. Reading it can teach one advanced sword move.,TS,
+12,0x000C,,秘奥義ノ書,Legendary Moves Scroll,ひおうぎのしょ,0,1,0x00D9,ある流派に伝わる封じられた書物。秘伝の技を一つ覚える。,The stuff of fairytales. The writings in here were long thought to have been lost to the ages. Teaches one legendary sword move.,TS,PS3版の一覧とも一致
+13,0x000D,,部品箱,Parts Box (Blade),ぶひんばこ（は）,0,1,0xFFFF,使用すると部品が手に入る。,Use to obtain parts.,TS;U,
+14,0x000E,,部品箱,Parts Box (Guard),ぶひんばこ（つば）,0,1,0xFFFF,使用すると部品が手に入る。,Use to obtain parts.,TS;U,
+15,0x000F,,部品箱,Parts Box (Grip),ぶひんばこ（つか）,0,1,0xFFFF,使用すると部品が手に入る。,Use to obtain parts.,TS;U,
+16,0x0010,,砥石,Whetting Stone,といし,0,1,0x00F8,非常に質の高い砥石。武器の耐久度400回復。,A high-quality whetting stone. Ups a weapon's durability by 400.,TS,
+17,0x0011,,打ち粉,Polishing Powder,うちこ,0,1,0x00F7,備水砥を使用した微粒の打ち粉。刀の手入れには欠かせない。5分間 武器の耐久度が減りづらくなる。,"An extremely fine powder made of rare materials. Helps enhance a weapon's durability, making it decrease much slower for 5 minutes.",TS,
+18,0x0012,,お酒,Sake,おさけ,0,1,0x00D8,まろやかな地酒。30秒間 攻撃力が倍になる代わりに 防御力が半分になる。,"A mild sake. Doubles attack strength for 30 seconds, but halves defensive ability in the process.",TS,
+19,0x0013,,刀油,Blade Oil,かたなあぶら,0,1,0x00F7,丁子（ちょうじ）油による刀油。錆びにくくなる。5分間 武器の耐久度が減らなくなる。,"Made from clove oil. Helps prevent rust. For 5 minutes, your weapon's durability won't decrease at all.",TS,
+20,0x0014,,お金袋小,Money Bag (S),おかね　しょう,0,1,0xFFFF,使うことでお金を手に入れることができる。,Use to obtain money.,TS;U,
+21,0x0015,,お金袋中,Money Bag (M),おかね　ちゅう,0,1,0xFFFF,使うことでお金を手に入れることができる。,Use to obtain money.,TS;U,
+22,0x0016,,お金袋大,Money Bag (L),おかね　だい,0,1,0xFFFF,使うことでお金を手に入れることができる。,Use to obtain money.,TS;U,
+23,0x0017,,お金袋特大,Money Bag (XL),おかね　とくだい,0,1,0xFFFF,使うことでお金を手に入れることができる。,Use to obtain money.,TS;U,
+24,0x0018,,がらくた,Junk,おとしもの,0,10,0xFFFF,盗みの仕事中に拾った物。いらないので港の泥棒さんに引き取ってもらおう。,"Materials ""obtained"" through ""legitimate business."" You don't need them, so why not try to pawn them off on the unsavories down at the harbor?",TS;U,
+25,0x0019,,お宝,Treasure,にもつ,0,5,0xFFFF,港の泥棒さんがほしがっているお宝。価値はさっぱりわからない。,"That shady guy hanging out at the harbor really wanted this, but its actual value is unknown.",TS;U,
+26,0x001A,,大根,White Radish,だいこん,0,1,0x00D5,まろやかな味が特徴の大根。活力150回復。,"A white ""daikon"" radish with a mild taste. Restores 150 vitality.",TS,
+27,0x001B,,百両箱,100 Ryo Box,ひゃくりょうばこ,0,1,0xFFFF,お金が大量に入っている箱。これさえあれば一生遊んで暮らせる？,An unassuming box with a whoooole lot of money in it. You could be a playboy for life with this much ryo!,TS;U,
+28,0x001C,,茶器,Tea Set,ちゃ,0,1,0xFFFF,茶の湯道具。お茶をする人にとっては重要だが一介の侍には無用の物だ。売ってしまおう。,"A set designed for tea ceremony. Tea enthusiasts would love it, but you're a samurai! What do you care about tea?! Just sell the thing!",TS;U,0x73・0x75〜0xC3 はこの茶器の複製
+29,0x001D,,人参,Carrot,にんじん,0,1,0x00D5,朝鮮半島より持ち込まれた多年草。とても高価。30秒間 防御力が２倍になる。,A high-priced vegetable that made its way into Japan from the Korean peninsula. Doubles defense for 30 seconds.,TS,
+30,0x001E,,鬼辛子,Red Pepper,おにがらし,0,1,0x00D5,非常に辛味が強い。食べると般若の形相で刀を振り回す。30秒間 攻撃力が2倍になり 命300回復。,"Super-duper spicy. If you eat it, you'll be so fired up that you'll look like a Prajna berserker! Doubles strength for 30 seconds and restores 300 life.",TS,
+31,0x001F,,たまご,Egg,たまご,0,1,0x00D5,鶏が産んだ卵。とてもおいしい。活力150回復。2分間 活力の持ちが良くなる。,An egg laid by a chicken. Incredible and edible! Restores 150 vitality and makes your vitality decrease more slowly for 2 minutes.,TS,
+32,0x0020,,プリセット目録,Preset Book,もくろく,0,1,0xFFFF,技の流派が書かれている書物。,A book containing combat moves.,TS;U,
+33,0x0021,,オレ流目録,Style Book,おれりゅうもくろく,0,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,
+34,0x0022,,白紙目録,Blank Book,はくしもくろく,0,1,0xFFFF,まだ何も書かれていない技の書物。道場のぢぢいに持っていこう。,"A book with absolutely nothing written in it (yet). Oh, the possibilities! The old man at the dojo should know what to do with it.",TS,PS3版の一覧とも一致
+35,0x0023,,うめぼし（大）,Umeboshi (L),うめぼし（だい）,0,1,0x00D5,大きい梅ぼし。すっぱくておいしい。西洋人はあまり好まない。3分間 活力の持ちが良くなる。,"A really big, sour Japanese plum. Westerners don't tend to like them much. Increases vitality retention for 3 minutes.",TS,
+36,0x0024,,うめぼし,Umeboshi,うめぼし,0,1,0x00D5,ウメの果実を塩漬けした後に日干しにしたもの。1分間 活力の持ちが良くなる。,A Japanese plum pickled in salt and sun-dried. Increases vitality retention for 1 minute.,TS,
+37,0x0025,,梅酒,Plum Wine,うめしゅ,0,1,0x00D8,梅の実を砂糖とともに酒に漬けて作られる。活力200回復。つま斬りゲージ 300上昇。,Sake made with Japanese sour plums and sugar. Restores 200 vitality and increases the Spring Harvest gauge by 300.,TS,
+38,0x0026,,チョコレート,Chocolate,ちょこれーと,0,1,0x00D5,カカオマスを主原料とし 練り固めたもの。活力50回復。3分間 つま斬りゲージがたまりやすい。,Packed with pure cocoa goodness. Restores 50 vitality and makes the Spring Harvest gauge rise more quickly for 3 minutes.,TS,
+39,0x0027,,空き瓶,Glass Bottle,あきびん,0,1,0x003F,空になった瓶。投げつけると相手にダメージ。,An empty bottle. Try lobbing it at someone's head for some quick damage.,TS,
+40,0x0028,,ワイン,Wine Bottle,わいんびん,0,1,0x00D8,ブドウの果汁を発酵させた飲料である。3分間 攻撃力2倍になり つま斬りゲージ300上昇。,Alcohol made from grapes. Doubles attack for 3 minutes and increases the Spring Harvest gauge by 300.,TS,
+41,0x0029,,くず鉄,Scrap Metal,くずてつ,0,999,0xFFFF,くず鉄が寄せ集まったもの。鍛冶屋に持っていこう。,Just some ordinary scrap metal. Best to take it to the smithy.,TS,
+42,0x002A,,卸し鉄(おろしがね),Ground Metal,おろしがね,0,999,0xFFFF,少し質のよい鉄が集まったもの。卸し金に使えなくもないところが名の由来。鍛冶屋に持っていこう。,High-quality scrap metal. Best to take it to the smithy.,TS,
+43,0x002B,,堂島鋼(どうじまはがね),Dojima Steel,どうじまはがね,0,999,0xFFFF,かなり上質な鉄が集まったもの。堂島が生成に成功したのが名の由来とか。鍛冶屋に持っていこう。,"Super high-quality metal, named after the best metalsmith in Amihama. Definitely take this to the smithy.",TS,
+44,0x002C,,緋緋色金(ひひいろかね),Hihiirokane,ひひいろかね,0,999,0xFFFF,生成された姿が緋色に強く輝く。生成される事が奇跡に近い。鍛冶屋に持っていこう。,A miraculously perfect metal that shouldn't even be able to exist...but here it is! You'd be crazy not to take this to the smithy.,TS,
+45,0x002D,,チップ,Casino Chip,ちっぷ,0,1,0xFFFF,カジノ　ライジングサンで遊ぶのに必要。,Used to play games at the Sunrise Casino.,SE-BBS,❓ U-12。Steam版で書くとセーブできなくなる（[U] 2026-10-04）
+46,0x002E,,木札,Wooden Tag,きふだ,0,1,0xFFFF,賭場で遊ぶ時に使用する。,Used to play games at the gambling den.,SE-BBS,❓ U-12。Steam版で書くとセーブできなくなる（[U] 2026-10-04）
+47,0x002F,,チラシ,Flyer,ちらし,0,1,0xFFFF,人手を探しているようだ。,"Help wanted, eh?",U,
+48,0x0030,,うなぎ丼,Eel Bowl,うなぎどん,1,1,0x0001,うなぎの蒲焼をご飯の上にのせたもの。タレのしみ込んだご飯がたまらない。活力400回復。活力の持ちが良くなる。,Eel marinated in a soy-based sauce and served over a bed of rice. Love that flavor combo! Restores 400 vitality and increases vitality retention.,U,
+49,0x0031,,天丼,Tempura Bowl,てんどん,1,1,0x0001,エビやアナゴや野菜のてんぷらをご飯の上に盛り付けたもの。活力500回復。活力の持ちが良くなる。,"Shrimp, salt water eel and tempura-fried vegetables, served over a bed of rice. Heavenly! Restores 500 vitality and increases vitality retention.",U,
+50,0x0032,,鉄火丼,Tuna Bowl,てっかどん,1,1,0x0001,まぐろの刺身をタレに付け込み ご飯の上に盛り付けたもの。活力300回復。活力の持ちが良くなる。,Raw tuna marinated in sauce and served over a bed of rice. Tunalicious! Restores 300 vitality and increases vitality retention.,U,
+51,0x0033,,熱燗,Hot Sake,あつかん,1,1,0x0006,燗徳利に入れて加熱した醸造酒。2分間 攻撃力2倍。防御力半分。,Liquor warmed in a special bottle. Doubles strength and halves defense for 2 minutes.,U,
+52,0x0034,,ししゃも,Willow Leaf Fish,ししゃも,1,1,0x0004,産卵のために川を溯上する回遊魚。オスの方が味がよいとされる。活力100回復。しばらくすると防御力上昇。,"A migratory fish that swims upstream to lay its eggs. The males are particularly delicious. Restores 100 vitality, and boosts defense after a short time has passed.",U,
+53,0x0035,,野沢菜,Turnip,のざわな,1,1,0x0004,信越地方で栽培される野菜。漬物が一般的。これはお浸し。活力120回復。しばらくすると防御力上昇。,"A vegetable grown on the eastern side of Japan. Often pickled and served as a side dish. Restores 120 vitality, and boosts defense after a short time has passed.",U,
+54,0x0036,,里芋のにっころがし,Stewed Taro,さといものにっころがし,1,1,0x0004,里芋を出汁と醤油で煮たもの。活力250回復。3分間 活力の持ちがよくなる。,The tuber of a root vegetable boiled in fish stock and soy sauce. Restores 250 vitality and increases vitality retention for 3 minutes.,U,
+55,0x0037,,刺身の盛り合わせ,Sashimi Assortment,さしみのもりあわせ,1,1,0x0004,活きのよい刺身を一皿に盛り合わせたもの。活力250回復。しばらくすると防御力上昇。,"A plate of sashimi so fresh it's practically still squirming. Restores 250 vitality, and boosts defense after a short time has passed.",U,
+56,0x0038,,マグロ,Tuna,まぐろ,1,1,0x0000,寿司と言えばマグロ。大きいものは3メートルを超える。活力300回復。しばらくすると防御力上昇。,"The definitive sushi. Big tuna can actually surpass 3 meters in size. Restores 300 vitality, and boosts defense after a short time has passed.",U,
+57,0x0039,,アナゴ,Sea Eel,あなご,1,1,0x0000,寿司の定番の一つに含まれる。その美味しさの虜になるものは多い。活力400回復。しばらくすると防御力上昇。,"A sushi standard, known for captivating all who eat it with its amazing flavor. Restores 400 vitality, and boosts defense after a short time has passed.",U,
+58,0x003A,,海老,Shrimp,えび,1,1,0x0000,みんなに愛される寿司の一つ。煮てある海老は寿司海老と称される。活力500回復。しばらくすると防御力上昇。,"Everyone loves shrimp sushi! Boiled shrimp has even come to be known as ""sushi shrimp."" Restores 500 vitality, and boosts defense after a short time has passed.",U,
+59,0x003B,,玉子,Cooked Egg,たまご,1,1,0x0000,玉子をのせた寿司。強火で焦げないように焼くのがコツ。活力150回復。しばらくすると防御力上昇。,"You can tell the quality of a sushi-ya by the quality of its egg sushi. Restores 150 vitality, and boosts defense after a short time has passed.",U,
+60,0x003C,,三色団子,3 Flavor Dango,さんしょくだんご,1,1,0x0005,赤 白 緑の三色団子。お花見のお供。花より団子のことわざは有名。活力100回復。3分間活力の持ちがよくなる。,"Red, white and green Japanese dumplings, often eaten during (and proving more popular than) cherry blossom viewing. Restores 100 vitality and increases vitality retention for 3 minutes.",U,
+61,0x003D,,あんころもち,Sweet Bean Mochi,あんころもち,1,1,0x0005,餡子で包まれた団子。活力100回復。3分間活力の持ちがよくなる。,Dumplings wrapped in bean jam. Restores 100 vitality and increases vitality retention for 3 minutes.,U,
+62,0x003E,,ビッグステーキ,Big Steak,ビッグステーキ,1,1,0x0004,厚めの肉を鉄板の上で焼いたもの。好みの焼き具合でいただくのがツウ。活力800回復。しばらくすると攻撃力上昇。,"A thick cut of meat grilled to order. Restores 800 vitality, and boosts strength after a short time has passed.",U,
+63,0x003F,,骨付き肉,Haunch of Meat,ほねつきにく,1,1,0x0005,骨の付いたお肉。みんなの憧れ。むゃぶりつきたい。活力1000回復。6分間 活力の持ちがよくなる。,Meat roasted right on the bone. Primal and scrumptious! Restores 1000 vitality and increases vitality retention for 6 minutes.,U,
+64,0x0040,,ソーダ水,Soda Water,そーだすい,0,1,0x00D8,炭酸ガスが含まれた水。活力200回復。3分間活力の持ちが悪くなる。,Bubbly CO2 water. Restores 200 vitality and increases vitality retention for 3 minutes.,TS,
+65,0x0041,,鮎の塩焼き,Grilled Sweetfish,あゆのしおやき,1,1,0x0008,鮎を塩焼きにしたもの。活力500回復。3分間活力の持ちがよくなる。,Sweetfish grilled with salt. Restores 500 vitality and increases vitality retention for 3 minutes.,U,
+66,0x0042,,南蛮炒め蕎麦,Spicy Stir-fried Soba,なんばんいためそば,1,1,0x0007,天原という地方のお祭りで提供された食事。活力500回復。5分間活力の持ちがよくなる。,"A food item popularly offered in a regional festival known as ""Tengen."" Restores 500 vitality and increases vitality retention for 5 minutes.",U,
+67,0x0043,,かけそば,Hot Soba,かけそば,1,1,0x0002,茹でたそばを丼にもり 汁をぶっかけたもの。活力150回復。,Boiled soba noodles served in a special broth. Restores 150 vitality.,U,
+68,0x0044,,きつねそば,Kitsune Soba,きつねそば,1,1,0x0002,かけそばに甘く煮た油揚げをのせたもの。活力200回復。しばらくすると攻撃力上昇。,"Traditional soba soup served with sweet fried tofu. Restores 200 vitality, and boosts strength after a short time has passed.",U,
+69,0x0045,,たぬきそば,Tanuki Soba,たぬきそば,1,1,0x0002,かけそばに揚げ玉をのせたもの。動物のたぬきが入ったものではない。活力180回復。しばらくすると攻撃力上昇。,"Traditional soba soup served with bits of fried tempura batter. No tanuki were harmed in the making of this soba! Restores 180 vitality, and boosts strength after a short time has passed.",U,
+70,0x0046,,月見そば,Egg Soba,つきみそば,1,1,0x0002,卵を落とすことで月見に見立てたそば。活力150回復。しばらくすると攻撃力上昇。,"Traditional soba soup with an egg dropped on top. Kind of looks like a moon in the night sky! Restores 150 vitality, and boosts strength after a short time has passed.",U,
+71,0x0047,,お茶づけ,Tea Rice,おちゃづけ,1,1,0x0002,ご飯に熱いお茶や出汁をかけたもの。無性に食べたくなる時がある。活力300回復。,Rice with hot green tea or fish stock poured over it. Habit-forming! Restores 300 vitality.,U,
+72,0x0048,,冷や,Cold Sake,ひやく,1,1,0x0006,常温で飲む醸造酒。冷蔵したものは冷やとは呼ばない。2分間 防御力2倍。攻撃力半分。,"Sake served at room temperature (not refrigerated, as you might expect it to be!). Doubles defense and halves strength for 2 minutes.",U,
+73,0x0049,,丼,Rice Bowl,どん,3,1,0xFFFF,ご飯や汁を盛り付ける器。丼と聞くだけでお腹がすいてくる。,A popular dish in which rice or soup is typically served. Just seeing it calls to mind all the yummy things that may soon lie within!,U,説明・画像が別のアイテムのもの（[U]）
+74,0x004A,,かけうどん,Hot Udon,かけうどん,1,1,0x0002,茹でたうどんを 汁でいただくもの。活力160回復。,Boiled udon noodles served in a special broth. Restores 160 vitality.,U,
+75,0x004B,,きつねうどん,Kitsune Udon,きつねうどん,1,1,0x0002,甘く煮た油揚げがのったうどん。活力220回復。しばらくすると防御力上昇。,"Traditional udon soup served with sweet fried tofu. Restores 220 vitality, and boosts defense after a short time has passed.",U,
+76,0x004C,,たぬきうどん,Tanuki Udon,たぬきうどん,1,1,0x0002,かけうどんに揚げ玉をのせたもの。動物のたぬきは入っていない。活力200回復。しばらくすると防御力上昇。,"Traditional udon soup served with bits of fried tempura batter. No tanuki were harmed in the making of this udon! Restores 200 vitality, and boosts defense after a short time has passed.",U,
+77,0x004D,,月見うどん,Egg Udon,つきみうどん,1,1,0x0002,卵を落とすことで月見に見立てたうどん。活力160回復。しばらくすると防御力上昇。,"Traditional udon soup with an egg dropped on top. Kind of looks like a moon in the night sky! Restores 160 vitality, and boosts defense after a short time has passed.",U,
+78,0x004E,,饅頭,Steamed Bun Cake,まんじゅう,1,1,0x0008,小麦粉の生地で餡子を包んだもの。活力200回復。1分間活力の持ちがよくなる。,Bean jam served inside a fluffy pastry-like wheat flour enclosure. Restores 200 vitality and increases vitality retention for 1 minute.,U,
+79,0x004F,,箸,Chopsticks,はし,3,1,0xFFFF,二本で一つの棒状の道具。片手で持ち 食事の際に用いる。豆などを一粒うまくつまめるとうれしい。,"Two sticks used harmoniously as one eating implement. Held in one hand, a true chopstick master can pick up a single bean without struggle.",U,
+80,0x0050,,シロギス,Whiting,しろぎす,0,1,0xFFFF,体は淡い褐色で投げ釣りの対象として有名で食用としても人気が高い。,A pale brown fish popular amongst fishermen and flavor enthusiasts alike.,TS,
+81,0x0051,,アナゴ,Sea Eel,あなご,0,1,0xFFFF,うなぎによく似た細長い体形をしている。食用として好まれ うなぎよりあっさりとしている。,"Resembles a freshwater eel with its long, thin body. Beloved as a seafood delicacy, even more so than its freshwater cousin.",TS;U,料理の 0x39 アナゴとは別の魚
+82,0x0052,,ボラ,Mullet,ぼら,0,1,0x00D5,身近な魚の一つ。とどのつまりのとどはボラが成長した魚を指す。,"A particularly familiar fish to the Japanese, though the name conjures up images of banjos and moonshine to some Westerners.",TS,
+83,0x0053,,マサバ,Mackerel,まさば,0,1,0x00D5,前後に細長く成魚は全長50cmほどになる。秋から冬が旬。,Sometimes grows as big as 50cm in length. In season during autumn and winter.,TS,
+84,0x0054,,コイ,Koi,こい,0,1,0xFFFF,川や池に生息する淡水魚。観賞用として有名で食する時は生食は避けた方がいい。,A freshwater fish found in rivers and ponds. Admired for their beauty. Best not to eat raw.,TS;U,
+85,0x0055,,カツオ,Bonito,かつお,0,1,0x00D5,タタキや刺身が有名で日本の食文化とは古くから結び付く。,A classic item in Japanese food culture. Served both grilled and as sashimi.,TS,
+86,0x0056,,ハゼ,Goby,はぜ,0,1,0x00D5,あらゆる環境に生息している魚のひとつ。食用としては佃煮 唐揚げなどが有名。,A fish that can survive in almost any environment. Most often eaten fried or preserved in soy.,TS;U,
+87,0x0057,,メバル,Rock Fish,めばる,0,1,0x00D5,岩礁域に多く棲息する。名は大きく張り出した眼に由来する。,"Generally found near reefs. Famous for its big, protruding eyes.",TS,
+88,0x0058,,カサゴ,Scorpion Fish,かさご,0,1,0x00D5,沿岸の岩礁や海中林に生息する。縁起の良い魚の一つであった。,Generally found near coral reefs or mixed in with underwater flora. Regarded as a good omen.,TS,
+89,0x0059,,アジ,Horse Mackerel,あじ,0,1,0x00D5,日本では馴染み深い魚。名の由来は味が良いことと云われる。様々な加工品や料理が作られる。,"A very popular fish amongst the Japanese. Its Japanese name is a homonym for ""flavor.""",TS,
+90,0x005A,,ヤマメ,Japanese Salmon,やまめ,0,1,0xFFFF,川の上流などに生息し一生を河川で過ごす。唐揚げ 酢漬け 塩焼きで食されるが生では食べない方が安全。,"Lives upstream in rivers. Served fried, pickled or boiled in brine. Unsafe to eat raw.",TS,
+91,0x005B,,マダイ,Red Sea Bream,まだい,0,1,0x00D5,鯛といえば マダイを指すことが多い。日本では古くから めでたい魚と考えられた。,"Very popular in Japan. Often thought of as a festive fish, to be eaten on special occasions.",TS,
+92,0x005C,,タコ,Octopus,たこ,0,1,0x00D5,海洋棲の軟体動物。8本の足が特徴。黒い墨を吐き 姿をくらます。,An ocean-dwelling creature with 8 tentacles. Spits black ink to conceal itself when in danger.,TS,
+93,0x005D,,ニホンザリガニ,Japanese Crayfish,にほんざりがに,0,1,0x00D5,川の上流域や山間の湖沼の冷たくきれいな水に生息する。巣穴の中にひそみ 落葉を食べる。,Dwells upstream in rivers or in mountain lakes and marshes. Is known to nest in specific areas and eat fallen leaves.,TS,
+94,0x005E,,アカヒトデ,Red Starfish,あかひとで,0,1,0xFFFF,五本の腕のあるいわゆる星形の体をもつ。真っ二つになっても再生するがその場合には2匹になる。,"A peculiar creature shaped like a star. If cut in half, it will regenerate into two unique starfish.",TS,
+95,0x005F,,伝説の魚,Legendary Fish,でんせつのさかな,0,1,0xFFFF,金色に輝く伝説の魚。稚魚だが 価値は十分で高値で扱われる。,"A legendary fish that shines like gold. Although young, it should still fetch a handsome price.",TS,
+96,0x0060,,伝説の魚,Legendary Fish,でんせつのさかな,0,1,0xFFFF,金色に輝く伝説の魚。大きく成長した姿は見るものの心を奪う。とても高値で取引される。,A legendary fish that shines like gold. Guaranteed to capture any fisherman's heart. Should fetch a high price.,U,[U] 売却用（中）
+97,0x0061,,伝説の魚,Legendary Fish,でんせつのさかな,0,1,0xFFFF,金色に輝く伝説の魚。タイを彷彿とさせる姿はめでたさの象徴。とても希少で高値で取引される。,A legendary fish that shines like gold. Looks kind of like a sea bream. Very rare and very valuable.,U,[U] 売却用（大）
+98,0x0062,,空き缶,Tin Can,あきかん,0,1,0x003F,まだ錆びていない缶。そのうち錆びてしまうだろう。錆びないうちに売ってしまおう。,"It's not rusted yet, but it probably won't be long before it is. Best to sell it while it's still in decent shape.",U,
+99,0x0063,,錆びた空き缶,Rusty Tin Can,さびたあきかん,0,1,0x003F,錆びてしまった缶。フタも取れてしまった。,A rusted can missing its lid.,TS,
+100,0x0064,,長靴,Rubber Boots,ながぐつ,0,1,0x003F,誰が捨てたか 長い靴。もしかしたらまだ履けるかも？と思ってはいけない。,"A boot someone discarded. ""I wonder if it's still wearable?""...is something you should never, ever think when finding an item like this.",TS,
+101,0x0065,,藁人形,Straw Doll,わらにんぎょう,0,1,0x003F,呪って殺す。投げつけると相手にダメージ。,"It'll curse you, and it'll kill you. Throw it at other people -- let it hurt them instead!",TS,
+102,0x0066,,ウニ,Sea Urchin,うに,0,1,0x003F,全身に刺を持つ。雲丹とも表記される。投げつけるとダメージを与える。売ると高価。,"A sea creature with spikes all over its body. Would hurt quite a bit if you threw it at someone, and would fetch a nice price if sold.",TS;U,
+103,0x0067,,おにぎり（梅）,Onigiri (Sour Plum),おにぎり（うめ）,0,1,0x00D5,お米携帯食料に梅干しを入れたもの。梅によって旨さが増している。活力320～370回復。,A portable rice-based snack food with sour plum in the middle. Its taste varies based on the quality of the plums used. Restores 320-370 vitality.,TS,
+104,0x0068,,おにぎり（鮭）,Onigiri (Salmon),おにぎり（しゃけ）,0,1,0x00D5,お米携帯食料に焼き鮭がたくさん入っている。活力350～420回復。,A portable rice-based snack food packed with grilled salmon. Restores 350-420 vitality.,TS,
+105,0x0069,,おにぎり（高菜）,Onigiri (Takana Pickles),おにぎり（たかな）,0,1,0x00D5,お米携帯食料に高菜を入れたもの。一工夫でおいしさが倍増。活力370～400回復。,A portable rice-based snack food with takana pickles in the middle. An acquired taste. Restores 370-400 vitality.,TS,
+106,0x006A,,おにぎり（昆布）,Onigiri (Dried Seaweed),おにぎり（こんぶ）,0,1,0x00D5,お米携帯食料に昆布を入れたもの。活力350～380回復。,A portable rice-based snack food with dried seaweed in the middle. Restores 350-380 vitality.,TS;U,
+107,0x006B,,朱美のにっころがし,Akemi's Stewed Potatoes,あけみのにっころがし,1,1,0x0004,朱美 手作りのにっころがし。旨さが口の中に広がる。活力500回復。5分間活力の持ちがよくなる。,"Akemi's homemade stewed potatoes. A party in your mouth, and everyone's invited! Restores 500 vitality and increases vitality retention for 5 minutes.",TS;U,
+108,0x006C,,秘蔵の熱燗,Special Hot Sake,ひぞうのあつかん,1,1,0x0006,普段はお品書きにはない 秘蔵の醸造酒。活力100回復。5分間つま斬りゲージがたまりやすくなる。,A special hot sake not on any menu. Restores 100 vitality and makes the Spring Harvest gauge increase more quickly for 5 minutes.,TS;U,
+109,0x006D,,極上ワイン,High Grade Wine,ごくじょうわいん,0,1,0x00D8,なかなかお目にかかれないワイン。香りを楽しんでから 頂こう。3分間 攻撃力2倍。命200回復。,"A very rare wine. Savor the aroma first, then drink. Doubles strength for 3 minutes and restores 200 life.",TS,
+110,0x006E,,ビンテージワイン,Vintage Wine,びんてーじわいん,0,1,0x00D8,時の流れが生み出した貴重なワイン。価値をわかったふりをするのがたしなみ。命500回復。活力500回復。,A wine that's aged to perfection. Just pretend you know how valuable it is and people will be impressed. Restores 500 life and 500 vitality.,TS,
+111,0x006F,,梅の間,Ume Room,うめのま,2,0,0x000A,狭く 片づけられていない。まるで倉庫のような部屋。命500 活力500回復。,A storehouse-like room that's dirty and cramped. Restores 500 life and 500 vitality.,TS;U,
+112,0x0070,,竹の間,Take Room,たけのま,2,0,0x000B,くつろぐにはちょうどいい広さと佇まい。命750 活力750回復。,"A fairly nice, homey room that's quite conducive to relaxation. Restores 750 life and 750 vitality.",U,
+113,0x0071,,松の間,Matsu Room,まつのま,2,0,0x000C,豪華な調度品が落ち着かない。こういう部屋でも落ち着きを持ち続けたい。命1000 活力1000回復。,Swanky to the Nth degree. You feel like you could live out the rest of your days in this gorgeous room! Restores 1000 life and 1000 vitality.,U,
+114,0x0072,,入院,Hospitalized,にゅういん,2,0,0x000D,看護師の看護や西洋文明の治療を受けることができる。命750 活力750回復。,A place where you can receive all the benefits of western medicine and hot nurses. Restores 750 life and 750 vitality.,U,
+115,0x0073,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+116,0x0074,,コイン,Prize Chip,こいん,0,9999,0xFFFF,カジノでお金の代わりに使われる。,Used in place of money at the casino.,TS,PS3版の一覧とも一致
+117,0x0075,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+118,0x0076,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+119,0x0077,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+120,0x0078,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+121,0x0079,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+122,0x007A,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+123,0x007B,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+124,0x007C,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+125,0x007D,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+126,0x007E,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+127,0x007F,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+128,0x0080,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+129,0x0081,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+130,0x0082,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+131,0x0083,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+132,0x0084,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+133,0x0085,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+134,0x0086,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+135,0x0087,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+136,0x0088,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+137,0x0089,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+138,0x008A,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+139,0x008B,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+140,0x008C,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+141,0x008D,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+142,0x008E,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+143,0x008F,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+144,0x0090,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+145,0x0091,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+146,0x0092,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+147,0x0093,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+148,0x0094,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+149,0x0095,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+150,0x0096,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+151,0x0097,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+152,0x0098,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+153,0x0099,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+154,0x009A,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+155,0x009B,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+156,0x009C,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+157,0x009D,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+158,0x009E,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+159,0x009F,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+160,0x00A0,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+161,0x00A1,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+162,0x00A2,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+163,0x00A3,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+164,0x00A4,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+165,0x00A5,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+166,0x00A6,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+167,0x00A7,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+168,0x00A8,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+169,0x00A9,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+170,0x00AA,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+171,0x00AB,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+172,0x00AC,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+173,0x00AD,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+174,0x00AE,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+175,0x00AF,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+176,0x00B0,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+177,0x00B1,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+178,0x00B2,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+179,0x00B3,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+180,0x00B4,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+181,0x00B5,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+182,0x00B6,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+183,0x00B7,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+184,0x00B8,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+185,0x00B9,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+186,0x00BA,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+187,0x00BB,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+188,0x00BC,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+189,0x00BD,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+190,0x00BE,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,,0x1C の茶器の複製
+191,0x00BF,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,U,0x1C の茶器の複製
+192,0x00C0,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,0x1C の茶器の複製
+193,0x00C1,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,0x1C の茶器の複製
+194,0x00C2,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,0x1C の茶器の複製
+195,0x00C3,,茶器,Tea Set,茶器,3,1,0xFFFF,我流の流派が書かれている書物。,A book containing self-taught moves.,TS;U,0x1C の茶器の複製
+196,0x00C4,,ミミズ,Earthworms,みみず,0,10,0x003F,釣りのエサ。水場の近くで釣りを始めることができる。扱いやすく 川魚に有効。,"Fishing bait. Allows you to fish when near any body of water. Easy to use, and effective in catching freshwater fish.",TS,
+197,0x00C5,,ゴカイ,Sandworms,ごかい,0,10,0x003F,釣りのエサ。水場の近くで釣りを始めることができる。幅広い海魚に有効な虫エサ。,Fishing bait. Allows you to fish when near any body of water. Great for catching virtually any kind of saltwater fish.,TS,
+198,0x00C6,,オキアミ,Krill,おきあみ,0,10,0x003F,釣りのエサ。水場の近くで釣りを始めることができる。海魚を中心に珍しい物がかかる。,Fishing bait. Allows you to fish when near any body of water. A rare type that works extremely well for catching saltwater fish.,TS,
+199,0x00C7,,エビ,Shrimp,えび,0,10,0x003F,釣りのエサ。水場の近くで釣りを始めることができる。扱いの難しい大物狙いのエサ。,"Fishing bait. Allows you to fish when near any body of water. A bit hard to use, but works wonders for catching large-scale fish.",TS,
+200,0x00C8,,小魚,Minnow,こざかな,0,10,0x003F,釣りのエサ。水場の近くで釣りを始めることができる。扱いの難しい大物狙いのエサ。,"Fishing bait. Allows you to fish when near any body of water. A bit hard to use, but works wonders for catching large-scale fish.",TS,
+201,0x00C9,,疑似餌,Lure,ぎじえ,0,10,0x003F,本物に似せた釣りのエサ。水場の近くで釣りを始めることができる。効果は平均的。,"Fishing bait. Allows you to fish when near any body of water. Designed to mimic the real deal, but is only average at best.",TS,
+202,0x00CA,,ねりエサ,Organic Bait,ねりえさ,0,10,0x003F,釣りのエサ。水場の近くで釣りを始めることができる。川魚に有効だが扱いが難しい。,"Fishing bait. Allows you to fish when near any body of water. Works great for catching freshwater fish, but is a bit hard to use.",TS,
+203,0x00CB,,もち,Mochi,もち,0,10,0x003F,釣りのエサ。水場の近くで釣りを始めることができる。魚以外の物がくっつきやすい。,Fishing bait. Allows you to fish when near any body of water. Works surprisingly well for catching things other than fish.,TS,
+204,0x00CC,,力ミミズ,Super Earthworms,ちからみみず,0,10,0x003F,釣りのエサ。水場の近くで釣りを始めることができる。ミミズよりも扱いづらい分 魅力は高い。,"Fishing bait. Allows you to fish when near any body of water. Harder to handle than an ordinary earthworm, but fish seem to be enthralled by it.",TS,
+205,0x00CD,,疲労に効く薬,Energy Medicine,ひろうにきくくすり,3,1,0xFFFF,これを飲めばどんな疲れもいっぺんに吹き飛ぶこと請合い。,Guaranteed to remove all trace of fatigue from your body with a single dose!,U,
+206,0x00CE,,熱燗,Hot Sake,熱燗,3,1,0x0006,熱燗（お猪口）,Hot Sake (Cup),U,[U] お猪口
+207,0x00CF,,熱燗,Hot Sake,熱燗,3,1,0x0006,熱燗（徳利）,Hot Sake (Bottle),U,[U] 徳利
+208,0x00D0,,熱燗,Hot Sake,熱燗,3,1,0x0006,熱燗（セット）,Hot Sake (Set),U,[U] セット
+209,0x00D1,,三色団子,3 Flavor Dango,三色団子,3,1,0x0005,三色団子(1串),3 Flavor Dango (1 Stick),U,[U] 1串
+210,0x00D2,,三色団子,3 Flavor Dango,三色団子,3,1,0x0005,三色団子(皿）,3 Flavor Dango (Dish),U,[U] 皿
+211,0x00D3,,三色団子,3 Flavor Dango,三色団子,3,1,0x0005,三色団子(セット),3 Flavor Dango (Set),U,[U] セット
+212,0x00D4,,あんころもち,Sweet Bean Mochi,あんころもち,3,1,0x0005,あんころもち（１串）,Sweet Bean Mochi (1 Stick),U,[U] 1串
+213,0x00D5,,あんころもち,Sweet Bean Mochi,あんころもち,3,1,0x0005,あんころもち（皿）,Sweet Bean Mochi (Dish),U,[U] 皿
+214,0x00D6,,あんころもち,Sweet Bean Mochi,あんころもち,3,1,0x0005,あんころもち（セット）,Sweet Bean Mochi (Set),U,[U] セット
+215,0x00D7,,鮎の塩焼き,Grilled Sweetfish,鮎の塩焼き,3,1,0x0008,鮎の塩焼き(鮎),Grilled Sweetfish (1 Stick),,0x41 と同じ名前
+216,0x00D8,,鮎の塩焼き,Grilled Sweetfish,鮎の塩焼き,3,1,0x0008,鮎の塩焼き（皿）,Grilled Sweetfish (Dish),,0x41 と同じ名前
+217,0x00D9,,鮎の塩焼き,Grilled Sweetfish,鮎の塩焼き,3,1,0x0008,鮎の塩焼き（セット）,Grilled Sweetfish (Set),,0x41 と同じ名前
+218,0x00DA,,冷や,Cold Sake,冷や,3,1,0x0006,冷や（お猪口）,Cold Sake (Cup),,0x48 と同じ名前
+219,0x00DB,,冷や,Cold Sake,冷や,3,1,0x0006,冷や（徳利）,Cold Sake (Bottle),,0x48 と同じ名前
+220,0x00DC,,冷や,Cold Sake,冷や,3,1,0x0006,冷や（セット）,Cold Sake (Set),,0x48 と同じ名前
+221,0x00DD,,マグロ,Tuna,マグロ,3,1,0x0000,マグロ（２個）,Tuna (2 Pcs),,0x38 と同じ名前
+222,0x00DE,,アナゴ,Sea Eel,アナゴ,3,1,0x0000,アナゴ（２個）,Sea Eel (2 Pcs),,0x39 と同じ名前
+223,0x00DF,,海老,Shrimp,海老,3,1,0x0000,海老（２個）,Shrimp (2 Pcs),,0x3A と同じ名前
+224,0x00E0,,玉子,Cooked Egg,玉子,3,1,0x0000,卵（２個）,Egg (2 Pcs),,0x3B と同じ名前
+225,0x00E1,,玉子,Cooked Egg,玉子,3,1,0x0000,餌（ミミズ）,Bait (Earthworm),,0x3B と同じ名前
+226,0x00E2,,玉子,Cooked Egg,玉子,3,1,0x0000,餌（海老）,Bait (Shrimp),,0x3B と同じ名前
+227,0x00E3,,玉子,Cooked Egg,玉子,3,1,0x0000,餌（小魚）,Bait (Minnow),,0x3B と同じ名前
+228,0x00E4,,ビッグステーキ,Big Steak,ビッグステーキ,3,1,0x0004,厚めの肉を鉄板の上で焼いたもの。好みの焼き具合でいただくのがツウ。活力800回復。しばらくすると攻撃力上昇。,"A thick cut of meat grilled to order. Restores 800 vitality, and boosts strength after a short time has passed.",,0x3E と同じ名前
+229,0x00E5,,ビッグステーキ,Big Steak,ビッグステーキ,3,1,0x0004,厚めの肉を鉄板の上で焼いたもの。好みの焼き具合でいただくのがツウ。活力800回復。しばらくすると攻撃力上昇。,"A thick cut of meat grilled to order. Restores 800 vitality, and boosts strength after a short time has passed.",,0x3E と同じ名前
+230,0x00E6,,ビッグステーキ,Big Steak,ビッグステーキ,3,1,0x0004,厚めの肉を鉄板の上で焼いたもの。好みの焼き具合でいただくのがツウ。活力800回復。しばらくすると攻撃力上昇。,"A thick cut of meat grilled to order. Restores 800 vitality, and boosts strength after a short time has passed.",,0x3E と同じ名前
+231,0x00E7,,花束,Flower Bouquet,,3,1,0x003F,ここで亡くなった人のために誰かが手向けてくれた花束。,A flower bouquet presented as an offering to a deceased loved one.,,ゲーム内の読みの欄は「……」のため空欄
+232,0x00E8,,花束,Flower Bouquet,はなたば,0,1,0x00D5,ここで亡くなった人のために誰かが手向けてくれた花束。,A flower bouquet presented as an offering to a deceased loved one.,,0xE7 と同じ名前
+233,0x00E9,,マグロ,Tuna,マグロ,3,1,0x0000,マグロ（２個）,Tuna (2 Pcs),,0x38 と同じ名前
+234,0x00EA,,アナゴ,Sea Eel,アナゴ,3,1,0x0000,アナゴ（２個）,Sea Eel (2 Pcs),,0x39 と同じ名前
+235,0x00EB,,海老,Shrimp,海老,3,1,0x0000,海老（２個）,Shrimp (2 Pcs),,0x3A と同じ名前
+236,0x00EC,,玉子,Cooked Egg,玉子,3,1,0x0000,卵（２個）,Egg (2 Pcs),,0x3B と同じ名前
+237,0x00ED,,拷問部屋の鍵,Torture Chamber Key,ごうもんべやのかぎ,0,1,0xFFFF,代官所の拷問部屋を開けることができる。,Unlocks the torture chamber in the magistrate's office.,,ゲーム内での表示・使用は要ゲーム内確認（U-14）
+238,0x00EE,,謎の鍵,Mysterious Key,なぞのかぎ,0,1,0xFFFF,誰かが落とした謎の鍵。持ち主に届けてあげよう。,A mysterious key someone dropped. Let's try to find its rightful owner!,,ゲーム内での表示・使用は要ゲーム内確認（U-14）
+239,0x00EF,,お金袋特大,Money Bag (XL),お金袋特大,0,1,0xFFFF,使うことでお金を手に入れることができる。,Use to obtain money.,,0x17 と同じ名前
+240,0x00F0,,西洋医学の水,Western Medicine Water,せいよういがくのみず,3,1,0x00D8,西洋医学の結晶。命が200回復するがつま斬りゲージが減少する。,"The pinnacle of Western medicine! Restores 200 life, but decreases the Spring Harvest gauge.",,
+241,0x00F1,,疲無人参,Stamina Carrot,つかれないにんじん,3,1,0x00D5,疲れなくなる人参。２分間活力が減らなくなるが しばらくすると攻撃力が減少する。,"A carrot that chases away exhaustion for some reason. Freezes your vitality so it won't decrease at all for 2 minutes, but lowers your strength after a short time has passed.",,
+65535,0xFFFF,,なし,,,,,,,,TS,

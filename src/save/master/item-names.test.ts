@@ -56,6 +56,15 @@ describe("🟢 アイテム datatable/item/item.csv", () => {
     expect(findItem(0xc4)?.maxStack).toBe(10);
   });
 
+  it("🔶 useAction：CSV の使用時の分類候補を持つ（datatable/item/README.md）", () => {
+    expect(findItem(0x02)?.useAction).toBe(0xd5);
+    expect(findItem(0x12)?.useAction).toBe(0xd8);
+    expect(findItem(0x0a)?.useAction).toBe(0xd9);
+    expect(findItem(0x13)?.useAction).toBe(0xf7);
+    expect(findItem(0x10)?.useAction).toBe(0xf8);
+    expect(findItem(0x20)?.useAction).toBe(0xffff);
+  });
+
   it("説明文（日本語・英語）を持つ。カンマ・引用符を含む行も読める", () => {
     expect(findItem(0x02)?.descJa).toBe("貴重なお米携帯食料。作ってくれた人の気持ちが伝わる。活力300回復。");
     expect(findItem(0x01)?.descEn).toContain('"sooshee.');

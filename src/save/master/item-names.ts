@@ -7,6 +7,7 @@
 //   - 読み（ひらがな）🟢 ゲーム内の表記のまま。空欄は仮の値だったもの（item.csv の備考）。検索に使う
 // - descJa・descEn：説明文 🟢 ゲーム内の表記のまま
 // - kind：種別 🟢。0＝道具、1＝料理（料理屋でその場で食べる）、2＝宿（梅・竹・松の間、入院）、3＝なし（手に入る経路がない。未使用とみられる）
+// - useAction：使用時の分類候補 🔶（datatable/item/README.md）。表示だけに使い、編集可否には使わない
 // - maxStack：手持ちの1枠にまとめて持てる最大数 🟢。ほとんど 1。箪笥はこの上限を超えて入る（[U] sample）
 import { ITEM_TABLE } from "./dataset/item";
 import { itemId, itemLabelId, type ItemId, type ItemLabelId, type LocalizedLabel } from "./label-types";
@@ -21,6 +22,8 @@ export type ItemEntry = {
   descEn: string;
   kind: ItemKind;
   maxStack: number;
+  /** 🔶 使用時の分類候補。意味が不明な値は分類しない（datatable/item/README.md） */
+  useAction: number | null;
 };
 
 /** 種別の見出し。3 は「なし」だと選択肢の「なし」（空き枠）と紛らわしいので補足をつける */
@@ -47,6 +50,7 @@ export const ITEMS: readonly ItemEntry[] = ROWS.map((r) => ({
   descEn: r.description_en,
   kind: itemKind(r),
   maxStack: r.max_stack,
+  useAction: r.use_action,
 }));
 
 /** アイテムの表示名（日本語・英語・読み） */

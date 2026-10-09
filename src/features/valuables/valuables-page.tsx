@@ -117,6 +117,8 @@ export function ValuablesPage() {
                 groups={VALUABLE_GROUPS}
                 noun="重要品"
                 investigate={investigate}
+                // 🔶 個数の上限は推測（chunks/items）。既存の検証と同じ上限を右側に表示する。
+                countMaxFor={() => VALUABLE_COUNT_MAX}
                 onChange={(id, count) =>
                   update((b) => writeValuable(b, i, id, count, { investigate }))
                 }
