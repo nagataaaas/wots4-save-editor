@@ -145,11 +145,11 @@ export function StylesPage() {
               <Label>持っていない流派も表示する</Label>
             </label>
             <label className="flex items-center gap-2">
-              <Switch checked={includeSpecial} onCheckedChange={setIncludeSpecial} aria-label="特別な技も覚えさせる" />
+              <Switch checked={includeSpecial} onCheckedChange={setIncludeSpecial} aria-label="特別な技も習得する" />
               <Label>
-                特別な技も覚えさせる
+                特別な技も習得する
                 <InfoTip>
-                  「今 装備している武器で100人惨殺する」などで覚える技（秘伝黒生・くるひかぶきなど）。覚えさせた状態は 1（俺流に組み込める）にします（🟢）
+                  「今 装備している武器で100人惨殺する」などで覚える技（秘伝黒生・くるひかぶきなど）。習得した状態は 1（俺流に組み込める）にします（🟢）
                 </InfoTip>
               </Label>
             </label>
@@ -166,9 +166,9 @@ export function StylesPage() {
           readOnly={readOnly}
           advanced={advanced}
           onLearnAll={() =>
-            run(`${sect.nameJa} の技を覚えさせました`, (b) => learnSectSkills(b, sect.id, { includeSpecial }))
+            run(`${sect.nameJa} の技を習得しました`, (b) => learnSectSkills(b, sect.id, { includeSpecial }))
           }
-          onLearn={(sheet, no) => run("技を覚えさせました", (b) => learnSheetSkills(b, sheet, [no], { includeSpecial: true }))}
+          onLearn={(sheet, no) => run("技を習得しました", (b) => learnSheetSkills(b, sheet, [no], { includeSpecial: true }))}
           onForget={(sheet, no) => run("技を忘れさせました", (b) => forgetSheetSkill(b, sheet, no))}
           onValues={(v) => update((b) => writeSectValues(b, sect.id, v))}
         />
@@ -208,11 +208,18 @@ function SectCard({
   return (
     <CollapsibleCard
       title={
-        <span className="flex flex-wrap items-center gap-2">
-          {sect.nameJa}
-          <span className="text-muted-foreground text-xs font-normal">
-            {sect.sheets.map((id) => findStance(findSkillSheet(id)!.stance)?.nameJa).join("・")}
-            ／{rec ? `${RANK_LABELS[rec.rank] ?? rec.rank}・修練度 ${rec.mastery}` : "—"}／技 {learned}/{total}
+        // 流派名・構え・段・修練度・技の数は、流派のカードどうしで縦に揃うように幅を決めておく
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="w-[9em] shrink-0">{sect.nameJa}</span>
+          <span className="text-muted-foreground flex items-center gap-x-3 text-xs font-normal">
+            <span className="w-[9em] shrink-0">
+              {sect.sheets.map((id) => findStance(findSkillSheet(id)!.stance)?.nameJa).join("・")}
+            </span>
+            <span className="w-[2.5em] shrink-0">{rec ? (RANK_LABELS[rec.rank] ?? rec.rank) : "—"}</span>
+            <span className="w-[7.5em] shrink-0 tabular-nums">修練度 {rec ? rec.mastery : "—"}</span>
+            <span className="w-[5em] shrink-0 tabular-nums">
+              技 {learned}/{total}
+            </span>
           </span>
         </span>
       }
@@ -225,7 +232,7 @@ function SectCard({
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={onLearnAll} disabled={readOnly || learned === total}>
-            技を全部覚えさせる
+            技を全部習得する
           </Button>
           <span className="text-muted-foreground text-xs">
             段 5（極）にはならないので、必要なら下の段を 5 にしてください。
@@ -371,7 +378,7 @@ function SkillRow({
       <span className="flex justify-end gap-1">
         {(state === 0 || state === 3) && (
           <Button size="sm" variant="outline" disabled={readOnly} onClick={() => onLearn(sheet.id, s.skillNo)}>
-            覚えさせる
+            習得する
           </Button>
         )}
         {advanced && state !== 0 && (
