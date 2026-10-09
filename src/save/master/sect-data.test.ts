@@ -1,11 +1,30 @@
 import { describe, expect, it } from 'vitest'
-import { findSkillSheet, sheetSkillRows, type SkillSheet } from './sect-data'
+import { findSkillSheet, sheetSkillTree, type SkillSheet, type SkillTreeGroup } from './sect-data'
 
-const summary = (sheet: SkillSheet) =>
-  sheetSkillRows(sheet).map((r) => `${'  '.repeat(r.depth)}${r.skill.skillNo}`)
+/** 木を 1 行ずつにする。字下げは続けて出す技、[ ] は上位技のまとまり、^n は n の上位技 */
+const summary = (sheet: SkillSheet) => {
+  const lines: string[] = []
+  const walk = (groups: SkillTreeGroup[], depth: number) => {
+    for (const g of groups) {
+      const grouped = g.members.length > 1
+      for (const m of g.members) {
+        const up = m.upgradeOf === null ? '' : `^${m.upgradeOf}`
+        lines.push(`${'  '.repeat(depth)}${grouped ? '[' : ''}${m.skill.skillNo}${up}`)
+        walk(m.next, depth + 1)
+      }
+    }
+  }
+  walk(sheetSkillTree(sheet), 0)
+  return lines
+}
 
-describe('sheetSkillRows 🟢', () => {
-  it('技の表 0：派生元（前に出す技・parent）の下に派生先を並べ、派生元が複数ある技は繰り返す', () => {
+const keys = (groups: SkillTreeGroup[]): string[] =>
+  groups.flatMap((g) => g.members.flatMap((m) => [m.key, ...keys(m.next)]))
+const skillNos = (groups: SkillTreeGroup[]): number[] =>
+  groups.flatMap((g) => g.members.flatMap((m) => [m.skill.skillNo, ...skillNos(m.next)]))
+
+describe('sheetSkillTree 🟢', () => {
+  it('技の表 0：続けて出す技を字下げし、上位技は元の技のまとまりに入れる', () => {
     const sheet = findSkillSheet(0)!
     expect(summary(sheet)).toEqual([
       '0',
@@ -17,28 +36,41 @@ describe('sheetSkillRows 🟢', () => {
       '16',
       '  19',
       '25',
-      '36',
-      // 昇雷閃（37）は昇雲閃（36）の派生
-      '  37',
-      // 追昇閃（54）は 36・37 の次なので、どちらの下にも出す（続く斬馬一閃 58 も）
-      '    54',
-      '      58',
+      // 昇雷閃（37）は昇雲閃（36）の上位技。追昇閃（54）は 36・37 の次なので、どちらの下にも出す（続く斬馬一閃 58 も）
+      '[36',
+      '  54',
+      '    58',
+      '[37^36',
       '  54',
       '    58',
       '38',
       '52',
       '  53',
       '85',
-      '88',
-      // 丸食い（89）は早食い（88）の派生
-      '  89',
+      // 丸食い（89）は早食い（88）の上位技
+      '[88',
+      '[89^88',
     ])
-    const rows = sheetSkillRows(sheet)
-    expect(new Set(rows.map((r) => r.key)).size).toBe(rows.length)
-    expect(new Set(rows.map((r) => r.skill.skillNo))).toEqual(new Set(sheet.skills.map((s) => s.skillNo)))
+    const tree = sheetSkillTree(sheet)
+    expect(new Set(keys(tree)).size).toBe(keys(tree).length)
+    expect(new Set(skillNos(tree))).toEqual(new Set(sheet.skills.map((s) => s.skillNo)))
   })
 
-  it('派生元が輪になっても全部の技を出し、輪はたどらない', () => {
+  it('上位技の上位技も同じまとまりに続ける', () => {
+    const base = findSkillSheet(0)!
+    const skill = base.skills[0]
+    const sheet: SkillSheet = {
+      ...base,
+      skills: [
+        { ...skill, skillNo: 85, parent: null },
+        { ...skill, skillNo: 86, parent: 85 },
+        { ...skill, skillNo: 87, parent: 86 },
+      ],
+    }
+    expect(summary(sheet)).toEqual(['[85', '[86^85', '[87^86'])
+  })
+
+  it('つながりが輪になっても全部の技を出し、輪はたどらない', () => {
     const base = findSkillSheet(0)!
     const sheet: SkillSheet = {
       ...base,
@@ -47,6 +79,6 @@ describe('sheetSkillRows 🟢', () => {
         { ...base.skills[0], skillNo: 101, parent: 100 },
       ],
     }
-    expect(summary(sheet)).toEqual(['100', '  101'])
+    expect(summary(sheet)).toEqual(['[100', '[101^100'])
   })
 })

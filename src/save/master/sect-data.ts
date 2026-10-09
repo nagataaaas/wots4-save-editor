@@ -170,46 +170,66 @@ export const skillName = (s: { nameJa: string }): string => s.nameJa || '（名�
 /** 段の呼び名（0 初段 … 4 伍段、5 極）🔶 値と画面の対応 */
 export const RANK_LABELS = ['初段', '弐段', '参段', '四段', '伍段', '極'] as const
 
-/** 技の表の 1 行。派生元の下に派生先を並べたときの深さ */
-export type SheetSkillRow = {
-  /** 行の識別子（根からの技の番号の並び）。同じ技が複数の派生元の下に出るので技の番号だけでは重なる */
+/** 技の表の技 1 つ。next はこの技に続けて出す技 */
+export type SkillTreeNode = {
+  /** 識別子（根からの技の番号の並び）。同じ技が複数の技の下に出るので技の番号だけでは重なる */
   key: string
   skill: SheetSkill
-  /** 木の深さ（0＝根） */
-  depth: number
+  /** 上位技のとき、元の技（parent）の番号 */
+  upgradeOf: number | null
+  next: SkillTreeGroup[]
 }
 
+/** 元の技と、その上位技（parent でつながる技。覚えると元の技の状態が 2 になる）のまとまり。上位技がなければ 1 つだけ */
+export type SkillTreeGroup = { key: string; members: SkillTreeNode[] }
+
 /**
- * 技の表の技を、派生元の下に派生先が来る順に並べる 🟢（datatable/sect）。
- * 派生元は parent（覚えると派生元の状態が 2 になる）と、同じ技の表にある前に出す技（stance-skill.csv の prev）。
- * 派生元が複数ある技は、それぞれの派生元の下に出す（派生先も一緒に繰り返す）。派生元のない技は技の番号順に根として並べる。
+ * 技の表の技を、続けて出す技（同じ技の表にある stance-skill.csv の prev）の木に並べる 🟢（datatable/sect）。
+ * 上位技（parent）は元の技と同じまとまりに、元の技のすぐ後ろに入れる（上位技の上位技も続ける）。
+ * 前に出す技が複数ある技は、それぞれの技の下に出す（続く技も一緒に繰り返す）。
+ * 前に出す技も元の技もない技は、技の番号順に根として並べる。
  */
-export function sheetSkillRows(sheet: SkillSheet): SheetSkillRow[] {
+export function sheetSkillTree(sheet: SkillSheet): SkillTreeGroup[] {
   const nos = new Set(sheet.skills.map((s) => s.skillNo))
-  const sources = new Map(
-    sheet.skills.map((s) => {
-      const prev = findStanceSkill(sheet.stance, s.skillNo)?.prev ?? []
-      const all = [...new Set([...(s.parent === null ? [] : [s.parent]), ...prev])]
-      return [s.skillNo, all.filter((p) => nos.has(p) && p !== s.skillNo)]
-    }),
+  const prevOf = new Map(
+    sheet.skills.map((s) => [
+      s.skillNo,
+      (findStanceSkill(sheet.stance, s.skillNo)?.prev ?? []).filter((p) => nos.has(p) && p !== s.skillNo),
+    ]),
   )
-  const children = new Map<number, SheetSkill[]>()
-  for (const s of sheet.skills) {
-    for (const p of sources.get(s.skillNo)!) children.set(p, [...(children.get(p) ?? []), s])
+  const parentOf = (s: SheetSkill) => (s.parent !== null && s.parent !== s.skillNo && nos.has(s.parent) ? s.parent : null)
+  const upgrades = (no: number) => sheet.skills.filter((s) => parentOf(s) === no)
+  const followers = (no: number) => sheet.skills.filter((s) => prevOf.get(s.skillNo)!.includes(no))
+
+  const shown = new Set<number>()
+  // path は根からの技の番号。輪になるつながり（データにはないが念のため）はたどらない
+  const node = (s: SheetSkill, path: number[], upgradeOf: number | null): SkillTreeNode => {
+    shown.add(s.skillNo)
+    const p = [...path, s.skillNo]
+    return {
+      key: p.join('-'),
+      skill: s,
+      upgradeOf,
+      next: followers(s.skillNo)
+        .filter((c) => !p.includes(c.skillNo))
+        .map((c) => group(c, p)),
+    }
+  }
+  const group = (s: SheetSkill, path: number[]): SkillTreeGroup => {
+    const members: SkillTreeNode[] = []
+    const add = (m: SheetSkill, upgradeOf: number | null, seen: number[]) => {
+      members.push(node(m, path, upgradeOf))
+      for (const u of upgrades(m.skillNo)) if (!seen.includes(u.skillNo)) add(u, m.skillNo, [...seen, u.skillNo])
+    }
+    add(s, null, [...path, s.skillNo])
+    return { key: [...path, s.skillNo].join('-'), members }
   }
 
-  const rows: SheetSkillRow[] = []
-  const shown = new Set<number>()
-  // path は根からこの技までの技の番号。輪になる派生元（データにはないが念のため）はたどらない
-  const visit = (s: SheetSkill, path: number[]) => {
-    if (path.includes(s.skillNo)) return
-    const next = [...path, s.skillNo]
-    shown.add(s.skillNo)
-    rows.push({ key: next.join('-'), skill: s, depth: path.length })
-    for (const c of children.get(s.skillNo) ?? []) visit(c, next)
+  const roots: SkillTreeGroup[] = []
+  for (const s of sheet.skills) {
+    if (parentOf(s) === null && prevOf.get(s.skillNo)!.length === 0) roots.push(group(s, []))
   }
-  for (const s of sheet.skills) if (sources.get(s.skillNo)!.length === 0) visit(s, [])
-  // 派生元をたどると輪になって根に届かない技は根として足す
-  for (const s of sheet.skills) if (!shown.has(s.skillNo)) visit(s, [])
-  return rows
+  // つながりをたどると輪になって根に届かない技は根として足す
+  for (const s of sheet.skills) if (!shown.has(s.skillNo)) roots.push(group(s, []))
+  return roots
 }
