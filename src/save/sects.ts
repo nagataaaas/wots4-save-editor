@@ -239,7 +239,7 @@ function writeSheetStates(bytes: Uint8Array, slot: SheetStateSlot, states: numbe
 }
 
 export type LearnOptions = {
-  /** 武器・技の斬殺数で覚える特別な技（習得条件 51〜56）も覚えさせる */
+  /** 固有技（習得条件 51・52 など）も状態 3 にする（learnSectSkills。🟢 要ゲーム内確認） */
   includeSpecial?: boolean
 }
 
@@ -295,6 +295,26 @@ export function learnSheetSkills(
 }
 
 /**
+ * 固有技を「習得済（俺流には未組み込み）」（状態 3）にする。ゲームが武器の斬殺数の条件で書く値と同じ 🟢（要ゲーム内確認）。
+ * 技の表ごとの状態と構えごとの状態の両方に、ゲームの規則（nextState）で書く。すでに 1・2・3 の技は変えない。
+ * 「俺流で表示」（状態 1）にするときは learnSheetSkills を使う（3 → 1）
+ */
+export function learnUniqueSkills(bytes: Uint8Array, sheetId: number, skillNos: readonly number[]): void {
+  const sheet = findSkillSheet(sheetId)
+  if (!sheet) throw new RangeError(`知らない技の表です（${sheetId}）`)
+  const view = assertWritable(bytes)
+  const targets = skillNos.filter((no) => sheet.skills.some((s) => s.skillNo === no))
+  if (targets.length === 0) return
+  const states = [...sheetStates(view, sheetId)]
+  for (const no of targets) states[no] = nextState(states[no], 3)
+  writeSheetStates(bytes, ensureSheetSlot(bytes, view, sheetId), states)
+  for (const no of targets) {
+    const at = STANCE_STATES_OFFSET + sheet.stance * SKILL_NO_COUNT + no
+    writeU8(bytes, at, nextState(bytes[at], 3))
+  }
+}
+
+/**
  * その流派の画面に出す技の表の技。固有技（習得条件 51・52）は、覚えられる流派（固有武器の流派 🟢）でだけ出す。
  * ほかの流派の技の表にも同じ固有技が入っているが、そこでは覚えられず、覚えられる流派で覚えたものが装備したときに写る 🟢（chunks/skill-states「固有技」）
  */
@@ -302,20 +322,24 @@ export function sectSheetSkills(sect: Sect, sheet: SkillSheet): SheetSkill[] {
   return sheet.skills.filter((s) => !isUniqueSkill(s) || uniqueSkillSects(s.skillId).includes(sect.id))
 }
 
-const isUniqueSkill = (s: SheetSkill) => isSpecialCond(s.cond) || uniqueSkillSects(s.skillId).length > 0
+/** 固有技か（習得条件 51・52 など、または固有武器の秘伝の技） */
+export const isUniqueSkill = (s: SheetSkill) => isSpecialCond(s.cond) || uniqueSkillSects(s.skillId).length > 0
 
-/** 流派のすべての技の表の技を覚えた状態にする。覚えるのは sectSheetSkills の技だけ（固有技は includeSpecial のとき） */
+/**
+ * 流派のすべての技の表の技を覚えた状態にする。覚えるのは sectSheetSkills の技だけ。
+ * 固有技は includeSpecial のときだけ、状態 3（習得済・俺流には未組み込み。learnUniqueSkills）にする
+ */
 export function learnSectSkills(bytes: Uint8Array, sectId: number, options: LearnOptions = {}): void {
   const sect = findSect(sectId)
   if (!sect) throw new RangeError(`知らない流派です（${sectId}）`)
   for (const id of sect.sheets) {
     const sheet = findSkillSheet(id)
     if (!sheet) continue
-    const nos = sectSheetSkills(sect, sheet)
-      .filter((s) => options.includeSpecial || !isUniqueSkill(s))
-      .map((s) => s.skillNo)
+    const skills = sectSheetSkills(sect, sheet)
+    const normal = skills.filter((s) => !isUniqueSkill(s)).map((s) => s.skillNo)
     // 覚える技がないのに技の表の枠だけを割り当てない
-    if (nos.length > 0) learnSheetSkills(bytes, id, nos)
+    if (normal.length > 0) learnSheetSkills(bytes, id, normal)
+    if (options.includeSpecial) learnUniqueSkills(bytes, id, skills.filter(isUniqueSkill).map((s) => s.skillNo))
   }
 }
 

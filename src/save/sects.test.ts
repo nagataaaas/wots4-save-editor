@@ -16,6 +16,7 @@ import {
   forgetSheetSkill,
   learnSectSkills,
   learnSheetSkills,
+  learnUniqueSkills,
   nextState,
   ownedSectIds,
   rankForMastery,
@@ -171,9 +172,27 @@ describe('learnSheetSkills', () => {
     expect(b[sheetStateOffset(0) + 4 + 21]).toBe(0)
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(0)
 
+    // 🟢 要ゲーム内確認：固有技は状態 3（習得済・俺流には未組み込み）にする
     learnSectSkills(b, 49, { includeSpecial: true })
     const slot = readSects(b).sheetSlots.find((s) => s.sheetId === own.sheets[0])!
-    expect(slot.states[21]).toBe(1)
+    expect(slot.states[21]).toBe(3)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(3)
+  })
+
+  it('🟢 固有技の習得は 3（要ゲーム内確認）、俺流で表示は 3 → 1。習得済みの 1 は 3 に戻さない', () => {
+    const sheet = findSect(49)!.sheets[0]
+    const b = makeSave()
+    learnUniqueSkills(b, sheet, [21])
+    const state = () => readSects(b).sheetSlots.find((s) => s.sheetId === sheet)!.states[21]
+    expect(state()).toBe(3)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(3)
+
+    learnSheetSkills(b, sheet, [21])
+    expect(state()).toBe(1)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(1)
+
+    learnUniqueSkills(b, sheet, [21])
+    expect(state()).toBe(1)
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(1)
   })
 

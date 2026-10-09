@@ -19,6 +19,7 @@ import {
   sheetSkillTree,
   skillName,
   type Sect,
+  type SheetSkill,
   type SkillSheet,
   type SkillTreeGroup,
   type SkillTreeNode,
@@ -30,7 +31,9 @@ import {
   SKILL_POINTS_OFFSET,
   forgetSheetSkill,
   learnSectSkills,
+  isUniqueSkill,
   learnSheetSkills,
+  learnUniqueSkills,
   ownedSectIds,
   rankForMastery,
   readSects,
@@ -151,7 +154,9 @@ export function StylesPage() {
                 <InfoTip>
                   固有技は、対応する武器で「今 装備している武器で100人惨殺する」などの条件を満たして覚える技（秘伝黒生・乾坤一擲・くるひかぶきなど）。
                   固有技は、それを覚えられる流派（乾坤一擲なら武業流剣術）の技の一覧にだけ出します。
-                  オンにすると「技を全部習得する」で固有技も習得します。状態は 1（俺流に組み込める）にします。
+                  オンにすると「技を全部習得する」で固有技も習得します。
+                  固有技の「習得する」は、ゲームで武器の条件を満たしたときと同じ「習得済（俺流には未組み込み）」（状態 3）にします（🟢 要ゲーム内確認）。
+                  そのあとの「俺流で表示」で、俺流に組み込める状態（1）にします。
                   同じ構えのほかの流派は、ゲームでその流派を装備したときに習得済みになります（🟢）
                 </InfoTip>
               </Label>
@@ -171,7 +176,12 @@ export function StylesPage() {
           onLearnAll={() =>
             run(`${sect.nameJa} の技を習得しました`, (b) => learnSectSkills(b, sect.id, { includeSpecial }))
           }
-          onLearn={(sheet, no) => run("技を習得しました", (b) => learnSheetSkills(b, sheet, [no], { includeSpecial: true }))}
+          onLearn={(sheet, skill) =>
+            run("技を習得しました", (b) =>
+              isUniqueSkill(skill) ? learnUniqueSkills(b, sheet, [skill.skillNo]) : learnSheetSkills(b, sheet, [skill.skillNo]),
+            )
+          }
+          onShowInOreRyu={(sheet, no) => run("俺流に組み込めるようにしました", (b) => learnSheetSkills(b, sheet, [no]))}
           onForget={(sheet, no) => run("技を忘れさせました", (b) => forgetSheetSkill(b, sheet, no))}
           onValues={(v) => update((b) => writeSectValues(b, sect.id, v))}
         />
@@ -188,6 +198,7 @@ function SectCard({
   advanced,
   onLearnAll,
   onLearn,
+  onShowInOreRyu,
   onForget,
   onValues,
 }: {
@@ -196,7 +207,8 @@ function SectCard({
   readOnly: boolean;
   advanced: boolean;
   onLearnAll: () => void;
-  onLearn: (sheet: number, no: number) => void;
+  onLearn: (sheet: number, skill: SheetSkill) => void;
+  onShowInOreRyu: (sheet: number, no: number) => void;
   onForget: (sheet: number, no: number) => void;
   onValues: (v: { mastery: number; rank: number; kills: number }) => void;
 }) {
@@ -294,6 +306,7 @@ function SectCard({
                   readOnly={readOnly}
                   advanced={advanced}
                   onLearn={onLearn}
+                  onShowInOreRyu={onShowInOreRyu}
                   onForget={onForget}
                 />
               ))}
@@ -311,7 +324,8 @@ type SkillRowProps = {
   states: readonly number[];
   readOnly: boolean;
   advanced: boolean;
-  onLearn: (sheet: number, no: number) => void;
+  onLearn: (sheet: number, skill: SheetSkill) => void;
+  onShowInOreRyu: (sheet: number, no: number) => void;
   onForget: (sheet: number, no: number) => void;
 };
 
@@ -355,6 +369,7 @@ function SkillRow({
   readOnly,
   advanced,
   onLearn,
+  onShowInOreRyu,
   onForget,
 }: SkillRowProps & { node: SkillTreeNode; first: boolean; grouped: boolean }) {
   const s = node.skill;
@@ -380,10 +395,17 @@ function SkillRow({
           .join("：")}
       </span>
       <span className="flex justify-end gap-1">
-        {(state === 0 || state === 3) && (
-          <Button size="sm" variant="outline" disabled={readOnly} onClick={() => onLearn(sheet.id, s.skillNo)}>
-            習得する
+        {/* 固有技は 0 →「習得する」（3）→「俺流で表示」（1）の 2 段階。ほかの技は 0・3 から「習得する」（1） */}
+        {state === 3 && isUniqueSkill(s) ? (
+          <Button size="sm" variant="outline" disabled={readOnly} onClick={() => onShowInOreRyu(sheet.id, s.skillNo)}>
+            俺流で表示
           </Button>
+        ) : (
+          (state === 0 || state === 3) && (
+            <Button size="sm" variant="outline" disabled={readOnly} onClick={() => onLearn(sheet.id, s)}>
+              習得する
+            </Button>
+          )
         )}
         {advanced && state !== 0 && (
           <Button size="sm" variant="ghost" disabled={readOnly} onClick={() => onForget(sheet.id, s.skillNo)}>
