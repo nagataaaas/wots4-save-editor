@@ -43,6 +43,7 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 | `event/chart-cell.csv`        | イベントチャートの升（枠と線、335件） | このリストのみ | セーブにない（チャートの並び） |        | [event-chart](../chunks/event-chart/README.md)            |
 | `place/start-location.csv`    | 開始地点（現在地） | このリストのみ           | u8                           |              | [date-location](../chunks/date-location/README.md) 0x0013 |
 | `place/night-visit-place.csv` | 夜の約束の場所     | このリストのみ           | u16 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x08      |
+| `place/night-visit-layout.csv` | 夜の約束の配置（0〜61） | このリストのみ        | u16 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x0A      |
 | `place/night-visit-row.csv`   | 夜の約束の組（0〜74） | このリストのみ        | 約束の枠の +0x00〜+0x1B（28 B） |           | [night-visit](../chunks/night-visit/README.md) +0x00〜+0x1B |
 | `npc/night-visit-partner.csv` | 約束できる相手の種類 | 町の人の種類（0〜796）のうち約束できるもの | u32 LE        | `FFFFFFFF`＝約束なし | [night-visit](../chunks/night-visit/README.md) +0x04 |
 | `npc/npc-look.csv`            | 人物の見た目と声（1〜245） | 人物（容姿）と同じ番号 | u32 LE                 | `FFFFFFFF`＝約束なし | [night-visit](../chunks/night-visit/README.md) +0x20 |
@@ -130,6 +131,8 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 - `npc/npc-name.csv`：全行 🟢。`sex` は m＝男、f＝女。`group` は unique＝固有の名前（1〜215）、placeholder＝勢力ごとの仮の名前（1001〜6002）、
   town＝町の人の名前の候補（7001〜7150・8001〜8200）。約束の相手の町の人の名前は town のうち、相手の性別（`sex`）が同じものから選ばれる 🟢。
   7000 台は日本人（女性 7001〜7100、男性 7101〜7150）、8000 台は外国人（女性 8001〜8104、男性 8105〜8200）
+- `place/night-visit-layout.csv`：全行 🟢。配置ごとの家の中の人数（`doshin`＝同心、`okappiki`＝岡っ引き）。`name_ja` はその人数の表記。
+  人数が同じ配置でも、人と布団の座標は配置ごとに違い、場所（マップ）と合う配置は `night-visit-place.csv` の `layout` 列のものだけ
 - `place/night-visit-row.csv`：全行 🟢。約束すると、この表の1行（28 B、`save_bytes_le`）が約束の枠の +0x00〜+0x1B に写され、+0x04 だけが相手の種類で上書きされる。
   `stage` は段階（空欄＝特別な相手）、`group` はまとまり（0＝特別な相手、1・2＝町の人。3 の行を選ぶ相手はいない）、`partner` は特別な相手の番号（`name_ja` がその相手）、
   `place`・`layout` は場所と配置（`night-visit-place.csv`）。`備考` の「確かめた組」は実データか書き込みでゲームの反映を確かめた組
