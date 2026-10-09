@@ -11,6 +11,7 @@ import {
   SCROLL_STORED_SLOTS,
   SECT_COUNT_OFFSET,
   SECT_RECORDS_OFFSET,
+  SKILL_POINTS_OFFSET,
   SHEET_STATE_SLOTS,
   STANCE_STATES_OFFSET,
   forgetSheetSkill,
@@ -25,6 +26,7 @@ import {
   sectSheetSkills,
   sheetStateOffset,
   writeSectValues,
+  writeSkillPoints,
 } from './sects'
 import { findSect, findSkillSheet } from './master/sect-data'
 
@@ -200,6 +202,21 @@ describe('learnSheetSkills', () => {
   it('🟢 固有技を覚えられる流派は固有武器の流派だけ', () => {
     expect(sectHasUniqueSkill(findSect(49)!)).toBe(true) // 武業流剣術（乾坤一擲）
     expect(sectHasUniqueSkill(findSect(51)!)).toBe(false) // 鬼怒川流剣術（乾坤一擲が技の表にあるが覚えられない）
+  })
+
+  it('🟢 腕前点は 0x189FE の u16。通常は 9999 まで、上級者モードは 65535 まで。ほかのバイトは変えない', () => {
+    const b = makeSave()
+    const before = b.slice()
+    writeSkillPoints(b, 9999)
+    expect(readU16(b, SKILL_POINTS_OFFSET)).toBe(9999)
+    expect(readSects(b).skillPoints).toBe(9999)
+    expect(() => writeSkillPoints(b, 10000)).toThrow()
+    expect(() => writeSkillPoints(b, -1)).toThrow()
+    writeSkillPoints(b, 65535, { advanced: true })
+    expect(readU16(b, SKILL_POINTS_OFFSET)).toBe(65535)
+    expect(() => writeSkillPoints(b, 65536, { advanced: true })).toThrow()
+    writeSkillPoints(b, 0)
+    expect(b).toEqual(before)
   })
 
   it('同じ操作を 2 回しても変わらない', () => {

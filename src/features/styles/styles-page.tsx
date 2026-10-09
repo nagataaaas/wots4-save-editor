@@ -32,6 +32,7 @@ import {
   I16_MAX,
   LEARNED_COUNT_OFFSET,
   MASTERY_MAX,
+  SKILL_POINTS_MAX,
   SKILL_POINTS_OFFSET,
   forgetSheetSkill,
   learnSectSkills,
@@ -45,6 +46,7 @@ import {
   sectSheetSkills,
   sheetStates,
   writeSectValues,
+  writeSkillPoints,
   type SectsView,
 } from "@/save/sects";
 import { errorMessage } from "./sect-format";
@@ -158,18 +160,24 @@ export function StylesPage() {
             </InfoTip>
           </CardTitle>
           <CardDescription>
-            流派ごとに技を覚えた状態にできます（ゲームで反映を確認済み）。修練度・段・倒した数の書き換えはゲーム内で未確認です（🟢）。
+            流派ごとに技を覚えた状態にできます（ゲームで反映を確認済み）。腕前点・修練度・段・倒した数の書き換えはゲーム内で未確認です（🟢）。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-sm">
-          <div className="flex flex-wrap gap-x-6 gap-y-1">
-            <span>
+          <div className="grid items-start gap-4 sm:grid-cols-3">
+            <IntField
+              label="腕前点"
+              offset={SKILL_POINTS_OFFSET}
+              value={view.skillPoints}
+              problem={readOnly ? "検証に落ちています" : null}
+              min={0}
+              max={advanced ? 0xffff : SKILL_POINTS_MAX}
+              apply={(v) => update((b) => writeSkillPoints(b, v, { advanced }))}
+              note={`俺流を作るとき、選んだ技の腕前点の合計がこれ以下である必要があります。ゲームでは ${SKILL_POINTS_MAX} で止まります（上級者モードでは 65535 まで）。🟢 要ゲーム内確認`}
+            />
+            <span className="sm:pt-7">
               習得技数：{view.learnedCount}
               <InfoTip offset={LEARNED_COUNT_OFFSET}>戦闘中に閃いて覚えた数。ここでの書き換えでは増やしません</InfoTip>
-            </span>
-            <span>
-              腕前点：{view.skillPoints}
-              <InfoTip offset={SKILL_POINTS_OFFSET}>俺流を作るとき、選んだ技の腕前点の合計がこれ以下である必要があります</InfoTip>
             </span>
           </div>
           <div className="flex flex-wrap gap-2">

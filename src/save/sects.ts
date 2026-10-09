@@ -385,6 +385,21 @@ export function writeSectValues(bytes: Uint8Array, sectId: number, v: SectValues
   writeI16(bytes, rec.offset + 6, v.kills)
 }
 
+/** 腕前点のゲーム上の上限 🟢（chunks/styles。9999 で止まる） */
+export const SKILL_POINTS_MAX = 9999
+const U16_MAX = 0xffff
+
+/**
+ * 腕前点（0x189FE、u16）を書く 🟢（要ゲーム内確認）。通常は 0〜9999、上級者モードでは u16 の範囲（0〜65535）まで。
+ * 俺流を作る画面は、開いたときにこの値を写して使う（技の腕前点の合計がこれ以下である必要がある）
+ */
+export function writeSkillPoints(bytes: Uint8Array, value: number, options: { advanced?: boolean } = {}): void {
+  const max = options.advanced ? U16_MAX : SKILL_POINTS_MAX
+  if (!Number.isInteger(value) || value < 0 || value > max) throw new RangeError(`腕前点は 0〜${max} です`)
+  assertWritable(bytes)
+  writeU16(bytes, SKILL_POINTS_OFFSET, value)
+}
+
 /** 修練度に見合う段（しきい値から求める。極にはしない）🟢 */
 export function rankForMastery(sect: Sect, mastery: number): number {
   let rank = 0
