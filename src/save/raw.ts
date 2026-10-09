@@ -18,14 +18,17 @@ export type RawRegion = {
 }
 
 export const RAW_REGIONS: readonly RawRegion[] = [
-  { start: 0x000000, end: 0x000000, chunk: 'difficulty', label: '難易度', certainty: '✅位置 ／ 一部 🔶' },
+  { start: 0x000000, end: 0x000000, chunk: 'difficulty', label: '難易度', certainty: '✅ 0・3 ／ 🟢 1・2' },
   { start: 0x000008, end: 0x00000f, chunk: 'money', label: '所持金・金庫', certainty: '✅' },
-  { start: 0x000010, end: 0x000018, chunk: 'date-location', label: 'シナリオの段階・時間帯・現在地・治安', certainty: '✅位置 ／ 一部 🔶❓' },
+  { start: 0x000010, end: 0x0000db, chunk: 'date-location', label: 'シナリオの段階・時間帯・現在地・治安・踏み倒した店（0x001C〜 は予約）', certainty: '✅位置 ／ 🟢 ／ 一部 🔶❓' },
   { start: 0x0000dc, end: 0x00011b, chunk: 'player-name', label: '主人公名', certainty: '✅' },
-  { start: 0x00011c, end: 0x0005ff, chunk: 'townsfolk', label: 'なりわいのフラグと町の人の状態', certainty: '🟢開始 ／ 終了 ❓ ／ 一部 ✅' },
-  { start: 0x000b3c, end: null, chunk: 'stats', label: '侍点・プレイ時間・斬殺数・経過日数などの記録', certainty: '一部 ✅' },
-  { start: 0x000c84, end: null, chunk: 'kill-counts', label: '敵の種類ごとの斬殺数（周回中）', certainty: '🔶' },
-  { start: 0x001c24, end: null, chunk: 'kill-counts', label: '敵の種類ごとの斬殺数（累計）', certainty: '🔶' },
+  { start: 0x00011c, end: 0x00015b, chunk: 'townsfolk', label: 'なりわいのフラグ', certainty: '🟢 ／ 一部 ✅' },
+  { start: 0x00015c, end: 0x000b33, chunk: 'townsfolk', label: '町の人のレコード（死亡のビット）', certainty: '🟢 ／ 一部 ✅', recordSize: 12 },
+  { start: 0x000b34, end: 0x000c63, chunk: 'stats', label: '侍評価・プレイ時間・移動距離・斬殺数・経過日数・人物ごとの痛手', certainty: '🟢 ／ 一部 ✅' },
+  { start: 0x000c64, end: 0x001c03, chunk: 'kill-counts', label: '技ごとの斬殺数（周回中）', certainty: '🟢', recordSize: 4 },
+  { start: 0x001c04, end: 0x002ba3, chunk: 'kill-counts', label: '技ごとの斬殺数（累計）', certainty: '🟢', recordSize: 4 },
+  { start: 0x002ba4, end: 0x002fa3, chunk: 'item-uses', label: '道具の使用回数（周回中）', certainty: '🟢', recordSize: 4 },
+  { start: 0x002fa4, end: 0x0033a3, chunk: 'item-uses', label: '道具の使用回数（累計）', certainty: '🟢', recordSize: 4 },
   { start: 0x0033a4, end: 0x0035a3, chunk: 'occupation', label: 'なりわいの状態の表', certainty: '✅' },
   { start: 0x0035a4, end: 0x0035b3, chunk: 'vitals', label: 'HP・活力', certainty: '一部 ✅（U-4）' },
   { start: 0x00363c, end: 0x0036a3, chunk: 'memory-garbage', label: 'ゲームの状態ではない値', certainty: '🔶' },

@@ -48,8 +48,11 @@ describe('領域の一覧（docs/save_format/README.md §3）', () => {
   it('どこにも入らない位置と、終了が ❓ の領域だけの位置は null', () => {
     expect(innermostRegion(0x0000)?.chunk).toBe('difficulty')
     expect(innermostRegion(0x0001)).toBeNull()
-    // 0x0B3C（stats）は終了が ❓ なので色分けに使わない
-    expect(innermostRegion(0x0b3c)).toBeNull()
+    // 🟢 先頭付近は 0x0010〜0x2BA3 まで切れ目なく領域が続く
+    expect(innermostRegion(0x0b3c)?.chunk).toBe('stats')
+    expect(innermostRegion(0x0c64)?.label).toBe('技ごとの斬殺数（周回中）')
+    expect(innermostRegion(0x01e0)?.label).toBe('町の人のレコード（死亡のビット）')
+    expect(positionInRegion(innermostRegion(0x01e0)!, 0x01e0)).toBe('#11 +0x00')
   })
 
   it('武器レコード（0xA0）とアイテム（8 B）は「#n +0xNN」で位置を表す', () => {

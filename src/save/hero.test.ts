@@ -116,10 +116,10 @@ describe('書き込み', () => {
     expect(readHero(b).cashbox.value).toBe(999_999)
   })
 
-  it('侍点は 9,999,999 まで（ユーザー指定の上限）', () => {
+  it('🟢 侍点は 999,999 まで（ゲームが足すときの上限）', () => {
     const b = makeSave()
-    expect(() => writeAmount(b, 'samuraiPoint', 9_999_999)).not.toThrow()
-    expect(() => writeAmount(b, 'samuraiPoint', 10_000_000)).toThrow(RangeError)
+    expect(() => writeAmount(b, 'samuraiPoint', 999_999)).not.toThrow()
+    expect(() => writeAmount(b, 'samuraiPoint', 1_000_000)).toThrow(RangeError)
   })
 
   it('✅ 名前は 64 B の範囲だけを変え、31文字まで受け付ける [I-1]', () => {

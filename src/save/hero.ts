@@ -38,12 +38,12 @@ export const AMOUNT_PLAUSIBLE_MAX = 99_999_999
 /**
  * 入力を受け付ける正規の上限（AGENTS.md：正規範囲を超える値は通常モードでは拒否する）。
  * 所持金・金庫はゲーム内の上限 [U]（ユーザー確認、2026-10-04）。
- * 侍点はユーザー指定の上限（2026-10-04）。ゲーム内の上限ではなく、これ以上あっても意味がないため。
+ * 侍点は、ゲームが評価の結果画面で足すときの上限 🟢（chunks/stats）。
  */
 export const AMOUNT_LIMITS: Record<U32Key, number> = {
   money: 99_999,
   cashbox: 999_999,
-  samuraiPoint: 9_999_999,
+  samuraiPoint: 999_999,
 }
 
 /**

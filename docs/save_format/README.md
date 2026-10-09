@@ -99,14 +99,15 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 
 | 開始            | 終了（含む） | まとまり                                          | 内容                                           | 確度                         |
 | --------------- | ------------ | ------------------------------------------------- | ---------------------------------------------- | ---------------------------- |
-| `0x000000`      | `0x000000` 🔶 | [difficulty](chunks/difficulty/README.md)         | 難易度                                         | ✅ 0・3 ／ 🔶 1・2             |
+| `0x000000`      | `0x000000`   | [difficulty](chunks/difficulty/README.md)         | 難易度（`0x0001`〜`0x0007` は詰め物）          | ✅ 0・3 ／ 🟢 1・2             |
 | `0x000008`      | `0x00000F`   | [money](chunks/money/README.md)                   | 所持金・金庫                                   | ✅                            |
-| `0x000010`      | `0x000018`   | [date-location](chunks/date-location/README.md)   | シナリオの段階・時間帯・現在地（開始地点）・治安 | ✅位置 ／ 一部 🔶❓             |
+| `0x000010`      | `0x0000DB`   | [date-location](chunks/date-location/README.md)   | シナリオの段階・時間帯・現在地（開始地点）・治安・踏み倒した店（`0x001C`〜 は予約） | ✅位置 ／ 🟢 ／ 一部 🔶❓       |
 | `0x0000DC`      | `0x00011B`   | [player-name](chunks/player-name/README.md)       | 主人公名                                       | ✅                            |
-| `0x00011C`      | `0x0005FF` ❓ | [townsfolk](chunks/townsfolk/README.md)           | なりわいのフラグ（`0x011C`〜、連続なりわい・鍛冶屋など）と町の人（店主など）の状態 | 🟢開始 ／ 一部 ✅             |
-| `0x000B3C`      | ❓            | [stats](chunks/stats/README.md)                   | 侍点・プレイ時間・斬殺数・経過日数などの記録   | 一部 ✅                       |
-| `0x000C64`      | `0x001C03`   | [kill-counts](chunks/kill-counts/README.md)       | 敵の種類ごとの斬殺数（周回中）                 | 🟢範囲 ／ 🔶中身               |
-| `0x001C04`      | `0x002BA3` 🔶 | [kill-counts](chunks/kill-counts/README.md)       | 敵の種類ごとの斬殺数（累計）                   | 🔶                            |
+| `0x00011C`      | `0x000B33`   | [townsfolk](chunks/townsfolk/README.md)           | なりわいのフラグ（64 B）と町の人ごとのレコード（12 B × 210、死亡のビット） | 🟢 ／ 一部 ✅                 |
+| `0x000B34`      | `0x000C63`   | [stats](chunks/stats/README.md)                   | 侍評価（侍度・称号・侍点）・プレイ時間・移動距離・斬殺数・経過日数・人物ごとの痛手 | 🟢 ／ 一部 ✅                 |
+| `0x000C64`      | `0x001C03`   | [kill-counts](chunks/kill-counts/README.md)       | 技ごとの斬殺数（周回中）                       | 🟢                            |
+| `0x001C04`      | `0x002BA3`   | [kill-counts](chunks/kill-counts/README.md)       | 技ごとの斬殺数（累計）                         | 🟢                            |
+| `0x002BA4`      | `0x0033A3`   | [item-uses](chunks/item-uses/README.md)           | 道具ごとの使用回数（周回中・累計）             | 🟢                            |
 | `0x0033A4`      | `0x0035A3`   | [occupation](chunks/occupation/README.md)         | なりわいの状態の表                             | ✅                            |
 | `0x0035A4`      | `0x0035B3`   | [vitals](chunks/vitals/README.md)                 | HP・活力                                       | 一部 ✅（U-4）                |
 | `0x00363C`      | `0x0036A3`   | [memory-garbage](chunks/memory-garbage/README.md) | ゲームの状態ではない値（未初期化・アドレス）   | 🔶                            |
@@ -158,7 +159,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | 項目                     | 仕様                                                                                                                                                                 |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 外見                     | 現在の体型 `0x3AADD`・身長 `0x3AAE0`（float32 LE）・肌色 `0x3AAD8` は ✅ [U]（U-18、[appearance](chunks/appearance/README.md)）。人物の番号 `0x3AAD4`、顔・髪型・服の部品の番号 `0x3AAE4`〜（12 B × 10）は 🟢（顔・髪型の書き込みは ✅ [U]）。髪の色 `0x3AADA` は位置 ✅ [U]・値 ❓（U-19） |
-| 斬殺数（全体）           | 流派ごとの斬殺数は [styles](chunks/styles/README.md) の +0x06 🟢。全体は [stats](chunks/stats/README.md) の 0x0BC8・0x0BCC が候補                                    |
+| 斬殺数（全体）           | 流派ごとの斬殺数は [styles](chunks/styles/README.md) の +0x06 🟢。全体は [stats](chunks/stats/README.md) の 0x0BC8・0x0BCC 🟢。技ごとは [kill-counts](chunks/kill-counts/README.md) 🟢                                    |
 | エンディング記録・周回数 | 周回数は [stats](chunks/stats/README.md) の `0x0B8C` 🟢。難易度ごとのクリア回数・立ち去った回数は [date-location](chunks/date-location/README.md)。エンディングごとの記録は ❓ |
 | 特典（PC版）             | ❓（PS3版は §4）                                                                                                                                                      |
 | 座標                     | ロード時は決まった地点から始まるので、保存されていない可能性が高い 🔶                                                                                                 |
@@ -220,7 +221,6 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | 武器レコード内の未解析領域（+0x1C・+0x8E の意味など） | 帯刀中の武器のダンプとゲーム内の表示値を照合する |      |
 | 治安 `0x0015` の初期値（1日目のセーブで 0 の例がある）（[date-location](chunks/date-location/README.md)） | 新しい周回を始めて1日目にセーブし、ゲーム内の治安と照合する |      |
 | エンディング記録と周回数、エンディングで初期化される範囲（[date-location](chunks/date-location/README.md)） | 同じ周回のエンディングの直前と直後のセーブを比べる |      |
-| 難易度の 1・2（[difficulty](chunks/difficulty/README.md)） | 普通・難しいで始めた周回のセーブの `0x0000` を読む |      |
 | なりわいの失敗の値                                  | なりわいに失敗する前後                           |      |
 | 特典解除（PC版）                                    | 特典を1つ解除する前後                            |      |
 | 外見                                                | 理髪屋で髪型だけ変える前後                       |      |

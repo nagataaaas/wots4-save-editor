@@ -6,6 +6,7 @@ import { Binary, ClipboardList, Flag, Globe, Moon, Package, ScrollText, Shirt, S
 export type SectionId =
   | 'hero'
   | 'hero-appearance'
+  | 'records'
   | 'belt'
   | 'weapon-bag'
   | 'weapon-chest'
@@ -66,6 +67,7 @@ export const sectionGroups: SectionGroup[] = [
         sections: [
           { id: 'hero', label: '基本情報', note: 'money・player-name・stats・vitals（所持金・侍点・名前・活力・HP）、date-location（現在地・難易度・主人公設定のやり直し）' },
           { id: 'hero-appearance', label: '容姿', note: 'appearance（現在の見た目・人物・顔・髪型・服）、accessories（装着10枠・位置・回転・大きさ・俺のおしゃれ 🟢 要ゲーム内確認）' },
+          { id: 'records', label: '侍評価・記録', note: 'stats 🟢 侍評価・行動の回数・称号の回数・プレイ時間・移動距離・斬殺数・人物ごとの痛手（要ゲーム内確認）' },
         ],
       },
       {

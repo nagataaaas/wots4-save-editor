@@ -1,7 +1,7 @@
 // 日数・時間帯・シナリオの段階。出典：docs/save_format/chunks/date-location（[U] 2026-10-05 のシナリオ差分とゲーム内での書き込み確認）。
 //
 // 役割の分担（[U] 2026-10-08 の整理）：
-//   0x0BD8 u32  経過日数（1日目＝0）。ゲーム内の日数の表示はこれで決まる。
+//   0x0BD8 u16  経過日数（1日目＝0）🟢 幅。直後の 0x0BDA〜0x0BDB は詰め物で書かない。ゲーム内の日数の表示はこれで決まる。
 //               ✅ [U] 03 copy 5（1日目夕）を 2日目に書き換えると、ゲームでも2日目になった（2026-10-05。0x0010・0x0014 と同時に書いた）。
 //               ✅ [U] 0x0010 の日の部分だけを書き換えても日数は変わらなかった（2026-10-05）
 //               ✅ [U] 04 copy 3・4（2026-10-08）は 0x0BD8＝4 で、ゲーム内の表示は5日目
@@ -21,7 +21,7 @@
 //   ✅ [U] 03 copy 5（1日目夕）を 5日目に書き換える（0x0010＝400）と、大老 鬼怒川怨仙が発生した（2026-10-05）
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
-import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from './binary'
+import { readU16, readU8, writeU16, writeU8 } from './binary'
 import { checkLayout } from './hero'
 
 export const DATE_OFFSETS = {
@@ -31,7 +31,7 @@ export const DATE_OFFSETS = {
   pending: 0x12,
   /** u8 ✅ [U] 時間帯 */
   slot: 0x14,
-  /** u32 ✅ [U] 経過日数（1日目＝0） */
+  /** u16 ✅ [U] 経過日数（1日目＝0）。🟢 幅は u16 */
   dayIndex: 0xbd8,
 } as const
 
@@ -116,7 +116,7 @@ export function readDate(bytes: Uint8Array): DateView {
   const stage = readU16(bytes, DATE_OFFSETS.dayTime)
   const slot = readU8(bytes, DATE_OFFSETS.slot)
   const pending = readU8(bytes, DATE_OFFSETS.pending)
-  const dayIndex = readU32(bytes, DATE_OFFSETS.dayIndex)
+  const dayIndex = readU16(bytes, DATE_OFFSETS.dayIndex)
   const day = dayIndex + 1
   const linked = stage === linkedStage(day, slot)
 
@@ -159,7 +159,7 @@ function editable(bytes: Uint8Array): DateView {
 }
 
 /**
- * 日数と時間帯を書く。0x0BD8（u32）・0x0014（u8）を書き、段階が連動しているときだけ 0x0010（u16）も書く。保留量（0x0012）は変えない。
+ * 日数と時間帯を書く。0x0BD8（u16）・0x0014（u8）を書き、段階が連動しているときだけ 0x0010（u16）も書く。保留量（0x0012）は変えない。
  * 時間帯・日数とも ✅ [U] ゲーム内で反映を確認。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示される。
  * 4日目以降は 0x0010 に 400 を書く（✅ [U] 5日目への書き換えで大老 鬼怒川怨仙が発生）
  */
@@ -170,7 +170,7 @@ export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts:
   if (!Number.isInteger(slot) || slot < 0 || slot >= TIME_SLOTS.length) throw new RangeError(`時間帯が範囲外です: ${slot}`)
   if (view.linked) writeU16(bytes, DATE_OFFSETS.dayTime, linkedStage(day, slot))
   writeU8(bytes, DATE_OFFSETS.slot, slot)
-  writeU32(bytes, DATE_OFFSETS.dayIndex, day - 1)
+  writeU16(bytes, DATE_OFFSETS.dayIndex, day - 1)
 }
 
 /**

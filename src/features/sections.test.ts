@@ -5,7 +5,7 @@ import { HeroPage } from './hero/hero-page'
 import { HeroAppearancePage } from './hero/hero-appearance-page'
 
 describe('主人公の画面構成', () => {
-  it('主人公グループに基本情報・容姿を並べ、独立した装着画面を置かない', () => {
+  it('主人公グループに基本情報・容姿・侍評価と記録を並べ、独立した装着画面を置かない', () => {
     const items = sectionGroups[0].items
     const hero = items[0]
     expect(isFolder(hero)).toBe(true)
@@ -14,6 +14,7 @@ describe('主人公の画面構成', () => {
     expect(hero.sections.map(({ id, label }) => ({ id, label }))).toEqual([
       { id: 'hero', label: '基本情報' },
       { id: 'hero-appearance', label: '容姿' },
+      { id: 'records', label: '侍評価・記録' },
     ])
     expect(sections.some((section) => String(section.id) === 'accessory-equipment')).toBe(false)
     expect(sections.find((section) => section.id === 'hero-appearance')?.folder).toBe('主人公')

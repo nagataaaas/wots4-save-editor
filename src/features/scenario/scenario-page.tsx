@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
@@ -68,14 +68,19 @@ import {
 } from "@/save/characters";
 import {
   OCCUPATION_FLAG_OFFSETS,
-  TOWNSFOLK_LENGTH,
+  PERSON_RECORD_SIZE,
   TOWNSFOLK_NOTES,
+  TOWNSFOLK_PEOPLE,
   TOWNSFOLK_START,
+  personOffset,
   readTownsfolk,
-  validateTownsfolk,
+  reviveNote,
+  writePersonDead,
   writeTownsfolk,
   type TownsfolkView,
 } from "@/save/townsfolk";
+import { Checkbox } from "@/components/ui/checkbox";
+import { WarningTip } from "@/components/warning-tip";
 import {
   BEST_ROUTE_EVENT_INDEX,
   BEST_ROUTE_OFFSET,
@@ -218,6 +223,7 @@ export function ScenarioPage() {
         <>
           <ScenarioFlagsCard key={`${k}-scenario-flags`} />
           <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
+          <PeopleCard key={`${k}-people`} view={views?.townsfolk ?? null} />
           <TownsfolkCard key={`${k}-townsfolk`} view={views?.townsfolk ?? null} />
           <RouteCandidatesCard
             key={`${k}-route-candidates`}
@@ -248,8 +254,7 @@ export function WorldPage() {
         <>
           <CycleCard key={`${k}-cycle`} view={views?.difficulty ?? null} counts={views?.cycle ?? null} />
           <DateCard key={`${k}-date`} view={views?.date ?? null} />
-          <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />
-          <FactionCard
+          <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />          <FactionCard
             key={`${k}-factions`}
             view={views?.factions ?? null}
             route={views?.route ?? null}
@@ -345,7 +350,7 @@ function ViewsPage({
 
 const difficultyOptions: SelectOption[] = DIFFICULTIES.map((d) => ({
   value: String(d.value),
-  label: d.certainty === "✅" ? d.label : `${d.label}（🔶 推測）`,
+  label: d.certainty === "✅" ? d.label : `${d.label}（🟢）`,
 }));
 
 const CYCLE_END_LABELS: Record<CycleEnd, string> = {
@@ -442,7 +447,7 @@ function CycleCard({ view, counts }: { view: DifficultyView | null; counts: Cycl
               引き継ぎ：クリアなら難易度ごとのクリア回数 0x43398〜、立ち去りなら立ち去った回数 0x46340 を1つ増やします。
               記録 B 0x3838〜 を状態 A から更新し（B が 04 の番号は残す）、なりわいのフラグ 4〜14・18・19・23〜31 を 0 にします。
               武器袋の武器は武器箪笥へ（本数 0x129F4 も増やす）、所持金は金庫へ、手持ちの道具は道具の箪笥へ、持っている刃・鍔・柄は部品の箪笥へ移します。箪笥に入りきらないものは元の場所に残ります。帯刀はそのまま次の主人公が持ちます。
-              初期化：難易度 0x0000＝1（普通）、段階 0x0010＝0、現在地 0x0013＝0x27、時間帯・保留量・所持金＝0、周回中の記録と敵の種類ごとの斬殺数 0x0C64〜0x1C03＝0、
+              初期化：難易度 0x0000＝1（普通）、段階 0x0010＝0、現在地 0x0013＝0x27、時間帯・保留量・所持金＝0、周回中の記録・技ごとの斬殺数・道具の使用回数＝0、
               HP・活力＝1000、イベントの状態 A は FF 以外を 00、シナリオのフラグ 0x374E〜0x3837＝0（0x375D〜0x3760・0x3799・0x379A は残す）、ヒント 0x3900＝FFFF、
               貴重品は鉄4種だけを残す、夜這いの記録・約束を消す（回数は残す）、町の人 0x015C〜0x0B33 ほか一部の範囲を初期化。
               ゲームが流通の武器を確率で消したり変えたりする処理は行いません。元に戻す操作はないので、書き換える前のセーブを残してください
@@ -521,7 +526,7 @@ function DateCard({ view }: { view: DateView | null }) {
           apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
           inputMode="numeric"
           hint={`${range.min}〜${range.max}日目`}
-          note="0x0BD8（u32、経過日数）と 0x0014（u8）を書き、段階が連動しているときは 0x0010（u16）も書きます。ゲーム内で反映を確認済み。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示されます（セーブ上の状態は変わりません）"
+          note="0x0BD8（u16、経過日数）と 0x0014（u8）を書き、段階が連動しているときは 0x0010（u16）も書きます。ゲーム内で反映を確認済み。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示されます（セーブ上の状態は変わりません）"
         />
         <SelectRow
           label="時間帯"
@@ -981,173 +986,116 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
   );
 }
 
-const TOWNSFOLK_ROW = 16;
-/** 表の行は 16 バイト境界から始める。範囲の始まり（0x011C）より前のマスは空けておく */
-const TOWNSFOLK_FIRST_ROW = TOWNSFOLK_START - (TOWNSFOLK_START % TOWNSFOLK_ROW);
-
-/**
- * 1バイト分の入力欄。町の人の状態（0x011C〜0x05FF）用。
- * 値の表があるバイト（0x0127・0x0132）は表から選ぶ。raw なら数値で入力する（表にない値を上級者モードで書くため）
- */
-function TownsfolkField({
-  offset,
-  view,
-  raw = false,
-}: {
-  offset: number;
-  view: TownsfolkView | null;
-  raw?: boolean;
-}) {
+/** 意味の分かったなりわいのフラグ1つ分の欄。値の表から選ぶ（表にない値は上級者モードで書ける） */
+function TownsfolkField({ offset, view }: { offset: number; view: TownsfolkView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const info = TOWNSFOLK_NOTES[offset];
-  const hex = formatOffset(offset);
   const current = view?.values[offset - TOWNSFOLK_START] ?? null;
-  const label = info?.name ? `${hex}（${info.name}）` : hex;
-
-  if (info?.values && !raw)
-    return (
-      <SelectRow
-        label={label}
-        offset={offset}
-        value={current === null ? null : String(current)}
-        currentLabel={current === null ? undefined : `${current} 不明`}
-        options={info.values.map((s) => ({
-          value: String(s.value),
-          label: `${s.value} ${s.label}`,
-          group: s.group,
-        }))}
-        problem={view?.problem ?? null}
-        note={info?.note}
-        onChange={(v) => update((b) => writeTownsfolk(b, offset, Number(v), { advanced }))}
-      />
-    );
 
   return (
-    <FieldRow
-      label={label}
+    <SelectRow
+      label={info.name ?? formatOffset(offset)}
       offset={offset}
-      value={current}
+      value={current === null ? null : String(current)}
+      currentLabel={current === null ? undefined : `${current} 不明`}
+      options={(info.values ?? []).map((s) => ({
+        value: String(s.value),
+        label: `${s.value} ${s.label}`,
+        group: s.group,
+      }))}
       problem={view?.problem ?? null}
-      format={String}
-      parse={(input) =>
-        parseInteger(input, (v) => validateTownsfolk(offset, v, current ?? 0, { advanced }))
-      }
-      apply={(v) => update((b) => writeTownsfolk(b, offset, v, { advanced }))}
-      inputMode="numeric"
-      hint={advanced ? "0〜255" : info?.values ? "表の値" : "0・1"}
-      note={info?.note}
+      note={info.note}
+      onChange={(v) => update((b) => writeTownsfolk(b, offset, Number(v), { advanced }))}
     />
   );
 }
 
-/** 🔶 町の人（店主など）の状態の候補（0x011C〜0x05FF）の生の値。view が null ならセーブ未読み込み */
-function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
-  const [selected, setSelected] = useState<number | null>(null);
-  // なりわいのフラグ（連続なりわいなど）はなりわいの画面で編集する
-  const named = Object.keys(TOWNSFOLK_NOTES)
-    .map(Number)
-    .filter((o) => TOWNSFOLK_NOTES[o].name && !OCCUPATION_FLAG_OFFSETS.includes(o));
+/** 🟢 町の人（人物番号 p）の死亡のビット（0x015C + 12 × p の bit0）。view が null ならセーブ未読み込み */
+function PeopleCard({ view }: { view: TownsfolkView | null }) {
+  const { update } = useSave();
+  const groups = [...new Set(TOWNSFOLK_PEOPLE.map((x) => x.group))];
+  const deadOf = (p: number) => {
+    const v = view?.values[personOffset(p) - TOWNSFOLK_START];
+    return v === undefined ? null : (v & 1) === 1;
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          町の人の状態（候補・生の値）
-          <CertaintyBadge mark="🔶" text="並び方と書き換えの効果は未確認" />
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          町の人の生死
+          <InfoTip offset={`0x015C + ${PERSON_RECORD_SIZE} × 人物番号（+0x00 の bit0）`}>
+            町の人ごとの 12 バイトのレコードの先頭のビット。ほかのビットとバイトは使われていません
+          </InfoTip>
         </CardTitle>
         <CardDescription>
-          0x011C〜0x05FF の1,252バイトです（終わりの位置は未確定。直前の 0x00DC〜0x011B
-          は主人公名）。ほとんど 0
-          で、町の人（店主など）ごとの状態やイベントの進み具合の表と推定しています。
-          先頭の 0x011C〜 はなりわいのフラグで、連続なりわいの進み具合などは「なりわい」の画面で値の表から選べます。
-          鍛冶屋の後継者イベント・鍛冶屋の状態（0x0127）、堂島が鍛冶屋を継いだか（0x0132。周回後に誰が鍛冶屋になるかを決める）、堂島の死亡（0x0264）は、書き換えで確認済みです。
-          寿司屋の店主（0x02C4）と鍛冶屋のおやじ（0x0444）は 1 で死亡です。0
-          に戻すと生き返ることを確認済みです。 さよ（DLC、0x0528）も 1
-          で死亡と見ていますが、差分1回だけで、0 に戻して生き返るかは未確認です。
-          下の表のマスを押すと、そのバイトを書き換えられます。0
-          以外のマスは色を付け、説明のあるマスには下線を引いています。
+          チェックの付いた人は死亡した（または引退などで町からいなくなった）人で、町に出てきません。周回の終わりに全員が生き返ります。
+          堂島・寿司屋・鍛冶屋のおやじは死亡の位置を差分で確認済みで、寿司屋と鍛冶屋のおやじは外すと生き返ることを確認済みです。
+          重要人物・寿司屋・薬屋は、外すだけでは生き返りません（警告のアイコンに一緒に戻す値を書いています）。
+          ほかの人は外せば町に出てくるはずですが、要ゲーム内確認です。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {named.map((offset) => (
-            <TownsfolkField key={offset} offset={offset} view={view} />
-          ))}
-          {selected !== null && (!named.includes(selected) || TOWNSFOLK_NOTES[selected].values) && (
-            <TownsfolkField key={`raw-${selected}`} offset={selected} view={view} raw />
-          )}
-        </div>
-        <TownsfolkTable values={view?.values ?? null} selected={selected} onSelect={setSelected} />
+        {groups.map((g) => (
+          <div key={g} className="flex flex-col gap-2">
+            <p className="text-sm font-medium">{g}</p>
+            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {TOWNSFOLK_PEOPLE.filter((x) => x.group === g).map((x) => {
+                const dead = deadOf(x.p);
+                const revive = reviveNote(x.p);
+                return (
+                  <div key={x.p} className="flex items-center gap-1">
+                    <Label className="flex items-center gap-2 font-normal">
+                      <Checkbox
+                        checked={dead ?? false}
+                        disabled={dead === null || view?.problem != null}
+                        onCheckedChange={(on) => update((b) => writePersonDead(b, x.p, on))}
+                      />
+                      <span>
+                        {x.name}
+                        <span className="text-muted-foreground ml-1 font-mono text-xs">
+                          {formatOffset(personOffset(x.p))}
+                        </span>
+                      </span>
+                    </Label>
+                    {revive && <WarningTip warning={`外すだけでは生き返りません：${revive}`} />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
 }
 
-const TOWNSFOLK_ROWS = Array.from(
-  { length: Math.ceil((TOWNSFOLK_START + TOWNSFOLK_LENGTH - TOWNSFOLK_FIRST_ROW) / TOWNSFOLK_ROW) },
-  (_, r) => TOWNSFOLK_FIRST_ROW + r * TOWNSFOLK_ROW,
-);
+/** 🟢 なりわいの画面で扱わない、意味の分かったなりわいのフラグ。view が null ならセーブ未読み込み */
+function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
+  // なりわいのフラグ（連続なりわいなど）はなりわいの画面で編集する
+  const named = Object.keys(TOWNSFOLK_NOTES)
+    .map(Number)
+    .filter((o) => !OCCUPATION_FLAG_OFFSETS.includes(o));
 
-/**
- * 町の人の状態の16進表（1,252マス）。マスが多いので、クリックは表で1つだけ受けて data-offset から位置を引き、
- * 値と選択が変わらなければ描き直さない。values が null ならセーブ未読み込み
- */
-const TownsfolkTable = memo(function TownsfolkTable({
-  values,
-  selected,
-  onSelect,
-}: {
-  values: ArrayLike<number> | null;
-  selected: number | null;
-  onSelect: (offset: number) => void;
-}) {
   return (
-    <div className="overflow-x-auto">
-      <table
-        className="font-mono text-[11px] leading-none"
-        onClick={(e) => {
-          const cell = (e.target as Element).closest<HTMLElement>("button[data-offset]");
-          if (cell) onSelect(Number(cell.dataset.offset));
-        }}
-      >
-        <tbody>
-          {TOWNSFOLK_ROWS.map((rowStart) => (
-            <tr key={rowStart}>
-              <th className="text-muted-foreground pr-2 text-right font-normal">
-                {rowStart.toString(16).toUpperCase().padStart(4, "0")}
-              </th>
-              {Array.from({ length: TOWNSFOLK_ROW }, (_, c) => {
-                const offset = rowStart + c;
-                if (offset < TOWNSFOLK_START) return <td key={c} className="p-0" />;
-                const v = values?.[offset - TOWNSFOLK_START] ?? null;
-                const info = TOWNSFOLK_NOTES[offset];
-                return (
-                  <td key={c} className="p-0">
-                    <button
-                      type="button"
-                      data-offset={offset}
-                      disabled={values === null}
-                      title={`${formatOffset(offset)}${info ? `：${info.note}` : ""}`}
-                      className={[
-                        "h-5 w-6 rounded-sm",
-                        v ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                        info ? "underline" : "",
-                        offset === selected ? "ring-ring ring-2" : "",
-                      ].join(" ")}
-                    >
-                      {v === null ? "··" : v.toString(16).toUpperCase().padStart(2, "0")}
-                    </button>
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">なりわいのフラグ（道場・鍛冶屋など）</CardTitle>
+        <CardDescription>
+          0x011C〜0x015B のなりわいのフラグのうち、意味の分かったものです。連続なりわいの進み具合などは「なりわい」の画面で編集します。
+          鍛冶屋の後継者イベント・鍛冶屋の状態と、堂島が鍛冶屋を継いだか（周回後に誰が鍛冶屋になるかを決める）は、書き換えで確認済みです。
+          そのほかのフラグの書き換えの効果は要ゲーム内確認です。エリア移動・ロードで消えるフラグは載せていません。
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-3">
+        {named.map((offset) => (
+          <TownsfolkField key={offset} offset={offset} view={view} />
+        ))}
+      </CardContent>
+    </Card>
   );
-});
+}
 
 const bestRouteOptions: SelectOption[] = BEST_ROUTE_VALUES.map((v) => ({
   value: String(v.value),

@@ -9,6 +9,7 @@ import { OreRyuPage } from '@/features/styles/ore-ryu-page'
 import { SkillsPage } from '@/features/styles/skills-page'
 import { StylesPage } from '@/features/styles/styles-page'
 import { ScenarioPage, WorldPage } from '@/features/scenario/scenario-page'
+import { StatsPage } from '@/features/stats/stats-page'
 import { ChestPage, ToolsPage } from '@/features/tools/tools-page'
 import { AccessoriesPage, AppearancePage, UnlocksPage } from '@/features/unlocks/unlocks-page'
 import { RawPage } from '@/features/raw/raw-page'
@@ -22,6 +23,7 @@ import type { SectionId } from '@/features/sections'
 export const pages: Partial<Record<SectionId, ComponentType>> = {
   hero: HeroPage,
   'hero-appearance': HeroAppearancePage,
+  records: StatsPage,
   belt: BeltPage,
   'weapon-bag': WeaponBagPage,
   'weapon-chest': WeaponChestPage,

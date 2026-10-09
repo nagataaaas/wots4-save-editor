@@ -26,6 +26,7 @@ describe('装飾品の装着画面', () => {
     expect(items[0]).toMatchObject({ label: '主人公', sections: [
       { id: 'hero', label: '基本情報' },
       { id: 'hero-appearance', label: '容姿' },
+      { id: 'records', label: '侍評価・記録' },
     ] })
     expect(sections.filter(s => s.label === '装飾品')).toHaveLength(1)
     expect(new Set(sections.map(s => s.id)).size).toBe(sections.length)

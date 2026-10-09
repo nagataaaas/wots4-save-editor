@@ -1,6 +1,6 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 値は docs/save_format/chunks/difficulty の調査記録（[U] 2026-10-08）で見たもの。
-// 難易度 0x0000：易しい＝0・超難しい＝3 は ✅ [U]。普通＝1・難しい＝2 は 🔶 推測。書き換えの反映は ✅ [U]。
+// 難易度 0x0000：易しい＝0・超難しい＝3 は ✅ [U]。普通＝1・難しい＝2 は 🟢。書き換えの反映は ✅ [U]。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { DIFFICULTIES, DIFFICULTY_OFFSET, readDifficulty, writeDifficulty } from './difficulty'
@@ -32,23 +32,25 @@ describe('難易度 0x0000', () => {
     expect(readDifficulty(makeSave(SEEN.harakiri))).toEqual({ value: 3, label: '超難しい', warning: null, problem: null })
   })
 
-  it('🔶 普通＝1・難しい＝2 は推測（確度を残す）', () => {
+  it('🟢 普通＝1・難しい＝2（確度を残す）', () => {
     expect(DIFFICULTIES.map((d) => [d.value, d.label, d.certainty])).toEqual([
       [0, '易しい', '✅'],
-      [1, '普通', '🔶'],
-      [2, '難しい', '🔶'],
+      [1, '普通', '🟢'],
+      [2, '難しい', '🟢'],
       [3, '超難しい', '✅'],
     ])
   })
 
-  it('0〜3 の外の値や、0x0001〜0x0003 が 0 でないときは警告する（🔶 幅は u8 と推定）', () => {
+  it('0〜3 の外の値や、詰め物の 0x0001〜0x0007 が 0 でないときは警告する（🟢 幅は u8）', () => {
     const b = makeSave(SEEN.easy)
     writeU8(b, DIFFICULTY_OFFSET, 4)
     expect(readDifficulty(b)).toMatchObject({ label: null, problem: null })
     expect(readDifficulty(b).warning).toMatch(/0〜3/)
-    const c = makeSave(SEEN.easy)
-    writeU8(c, 2, 1)
-    expect(readDifficulty(c).warning).toMatch(/0x0001〜0x0003/)
+    for (const offset of [1, 2, 7]) {
+      const c = makeSave(SEEN.easy)
+      writeU8(c, offset, 1)
+      expect(readDifficulty(c).warning).toMatch(/0x0001〜0x0007/)
+    }
   })
 
   it('✅ [U] 書き換えはゲームに反映される：0x0000 の1バイトだけを変える', () => {
