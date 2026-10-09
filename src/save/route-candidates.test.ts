@@ -57,8 +57,14 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
   it('✅ [U] 真ルートは 0x378E。三姉妹見参（添字70）と組で効く。生の値の欄には出さない', () => {
     expect(BEST_ROUTE_OFFSET).toBe(0x378e)
     expect(BEST_ROUTE_EVENT_INDEX).toBe(70)
-    expect(RAW_ROUTE_OFFSETS).toHaveLength(29)
+    expect(RAW_ROUTE_OFFSETS).toHaveLength(20)
     expect(RAW_ROUTE_OFFSETS).not.toContain(0x378e)
+  })
+
+  it('勢力の退場（0x378F〜0x3791）と好感度・ポイント（0x3792〜0x3797）はほかの画面で編集するので、生の値の欄に出さない', () => {
+    for (let o = 0x378f; o <= 0x3797; o++) expect(RAW_ROUTE_OFFSETS).not.toContain(o)
+    expect(RAW_ROUTE_OFFSETS).toContain(0x378d)
+    expect(RAW_ROUTE_OFFSETS).toContain(0x3798)
   })
 
   it('真ルートのフラグは 1バイトだけ書く。通常モードは 0〜2 だけ', () => {

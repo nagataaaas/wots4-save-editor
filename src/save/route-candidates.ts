@@ -25,6 +25,7 @@
 // 🟢 0x37A8  最後通告に逆らうと 1。0x37A9 周回数か（🔶 chunks/scenario-flags）
 // 🟢 0x37AA  チュートリアルの進み方。1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）
 // 範囲の中には、真ルートに関係しないバイト（好感度・職など）も入っている（範囲は差分から取ったもの）。
+// 0x378F〜0x3797 はほかの画面（勢力の退場・夜這い）で編集するので、生の値の欄には出さない。
 // 0x378E 以外は、書き換えたときのゲーム内の反映を確かめていないので、生の値の欄として出す（AGENTS.md「未確認データの扱い」）。
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
@@ -60,11 +61,15 @@ export function routeCandidateNormalMax(offset: number): number {
   return POINT_OFFSETS.has(offset) ? POINT_NORMAL_MAX : ROUTE_CANDIDATE_NORMAL_MAX;
 }
 
-/** 生の値で出すオフセット（真ルートのフラグを除く） */
+/** ほかの画面で編集するバイト：勢力の退場 0x378F〜0x3791（faction-exit.ts）、好感度・ポイント 0x3792〜0x3797（yobai-points.ts） */
+export const ELSEWHERE_ROUTE_START = 0x378f;
+export const ELSEWHERE_ROUTE_END = 0x3797;
+
+/** 生の値で出すオフセット（真ルートのフラグと、ほかの画面で編集するバイトを除く） */
 export const RAW_ROUTE_OFFSETS: readonly number[] = Array.from(
   { length: ROUTE_CANDIDATE_LENGTH },
   (_, i) => ROUTE_CANDIDATE_START + i,
-).filter((o) => o !== BEST_ROUTE_OFFSET);
+).filter((o) => o !== BEST_ROUTE_OFFSET && (o < ELSEWHERE_ROUTE_START || o > ELSEWHERE_ROUTE_END));
 
 /** 意味や場面が分かっているバイトの名前と説明。ないバイトは意味不明（❓） */
 export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; note: string }>> = {
@@ -74,24 +79,6 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; not
     note:
       "1＝通常の1〜3日目（序章の終わりで 1。通常の勢力イベントはどれも 1 が条件）、2＝真ルートに入った（三姉妹見参の成功で 2。周回中は戻らない）。" +
       "書き換えてもルートは変わらず、チャートの真ルートの枠も出なかった",
-  },
-  // 🟢 0x3792〜0x3797 は夜這いのページ（yobai-points.ts）でも 0〜20 まで書ける。書き換えの反映は未確認
-  0x3792: {
-    name: "ローラの好感度",
-    note: "外国のイベントの成功で +1〜+3、失敗で −1。祝 病院開業で千両箱を奪うと 0。10 以上で夜這いの約束（夜這いのページでも編集できる）",
-  },
-  0x3793: {
-    name: "朱美の好感度",
-    note:
-      "居酒屋で魚を渡すと 1匹 +1、海兵隊の横暴の成功で +1・失敗で −1、真実・夜の墓場でで朱美を送ると +1。" +
-      "10 以上で夜這いの約束（夜這いのページでも編集できる）",
-  },
-  0x3794: { name: "万由の拷問のポイント", note: "治安 70 以上の拷問で +1〜+4。10 以上で夜這いの約束（夜這いのページでも編集できる）" },
-  0x3795: { name: "千佳の拷問のポイント", note: "治安 29 以下の拷問で +1〜+4。10 以上で夜這いの約束（夜這いのページでも編集できる）" },
-  0x3796: { name: "百合の拷問のポイント", note: "治安 30〜69 の拷問で +1〜+4。10 以上で夜這いの約束（夜這いのページでも編集できる）" },
-  0x3797: {
-    name: "メリンダの峰打ちの点数",
-    note: "峰打ちで倒すと +2、剣術大会（攘夷）の3回戦で +5。5日目以降に 10 以上で夜這いの約束（夜這いのページでも編集できる）",
   },
   0x3799: { name: "堂島の職", note: "値の意味は未確認。書き換えてもルートは変わらなかった" },
   0x379a: { name: "先生の職", note: "値の意味は未確認" },
