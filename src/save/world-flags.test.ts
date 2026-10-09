@@ -66,7 +66,7 @@ describe('門・柵のフラグ chunks/gates', () => {
     expect(readWorldFlags(makeSave([1, 1, 1, 1, 0, 1, 0, 2])).problem).not.toBeNull()
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     expect(readWorldFlags(makeSave(NO_ROUTE, TS_SAVE_SIZE + 4)).problem).not.toBeNull()
   })
 
@@ -135,7 +135,7 @@ describe('そのほかのフラグ chunks/scenario-flags', () => {
     expect(readScenarioFlags(makeOther(odd))).toEqual({ values: odd, problem: null })
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeOther(VALUES, TS_SAVE_SIZE + 4)
     expect(readScenarioFlags(b).problem).not.toBeNull()
     expect(() => writeScenarioFlag(b, 0, 0, { advanced: true })).toThrow(RangeError)

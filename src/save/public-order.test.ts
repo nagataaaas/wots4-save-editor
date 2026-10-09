@@ -49,7 +49,7 @@ describe('✅ [U] 治安 0x0015', () => {
     expect(view.problem).toBeNull()
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeSave(BEFORE_RUNOFF, TS_SAVE_SIZE + 4)
     expect(readPublicOrder(b).problem).not.toBeNull()
     expect(() => writePublicOrder(b, 50, { advanced: false })).toThrow(RangeError)

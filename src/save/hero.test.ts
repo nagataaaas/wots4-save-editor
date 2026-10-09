@@ -53,7 +53,7 @@ describe('readHero', () => {
     expect(v.location).toEqual({ value: 0x06, problem: null })
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ全フィールドを読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ全フィールドを読み取り専用にする', () => {
     const v = readHero(makeSave(TS_SAVE_SIZE + 4))
     expect(v.layoutProblem).not.toBeNull()
     expect(v.money.value).toBe(1234)

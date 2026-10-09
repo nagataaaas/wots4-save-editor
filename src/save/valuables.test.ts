@@ -49,7 +49,7 @@ describe('readValuables', () => {
     expect(v.slots.map((s) => s.tsEdited)).toEqual([true, true, true, true, false, false, false, false, false, false])
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ全枠を読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ全枠を読み取り専用にする', () => {
     const v = readValuables(makeSave(TS_SAVE_SIZE + 8))
     expect(v.layoutProblem).not.toBeNull()
     expect(v.slots[0].count).toBe(5)
@@ -231,7 +231,7 @@ describe('❓ U-14：ID調査モード', () => {
     expect(() => fillEmptySlotsWithProbes(makeSave(), 0x02)).toThrow()
   })
 
-  it('U-1：サイズが違うファイルには書かない', () => {
+  it('サイズが違うファイルには書かない', () => {
     const b = makeSave(TS_SAVE_SIZE + 8)
     expect(() => fillEmptySlotsWithProbes(b, 0xd7)).toThrow()
   })

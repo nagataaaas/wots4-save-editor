@@ -1,5 +1,5 @@
 // 流通中の武器・道具・部品（🟢、読み取り専用）。合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
-// ❓ U-1 位置は固定オフセット（サイズ 0x48BB0 のセーブでの値）。
+// 位置は固定オフセット（サイズ 0x48BB0）。
 import { describe, expect, it } from 'vitest'
 import { TS_SAVE_SIZE } from './hero'
 import {
@@ -110,7 +110,7 @@ describe('🟢 流通中の武器・道具・部品', () => {
     expect(b).toEqual(before)
   })
 
-  it('サイズが違うファイルは、値を読んだうえで問題として示す（U-1）', () => {
+  it('サイズが違うファイルは、値を読んだうえで問題として示す', () => {
     const b = new Uint8Array(TS_SAVE_SIZE + 2)
     b.set(makeSave())
     expect(readMarket(b).layoutProblem).not.toBeNull()

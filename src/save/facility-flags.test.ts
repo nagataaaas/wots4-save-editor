@@ -51,7 +51,7 @@ describe('施設のフラグ chunks/facilities', () => {
     expect(readFacilityFlags(makeSave([0, 2, 0])).problem).not.toBeNull()
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     expect(readFacilityFlags(makeSave(INITIAL, TS_SAVE_SIZE + 4)).problem).not.toBeNull()
   })
 

@@ -23,7 +23,7 @@
 //   ほかに 0x012C・0x0130・0x0131・0x01E0・0x0258 で 1 を見た（意味は ❓）
 // 意味が分かるまで生の値の欄として出す（AGENTS.md「未確認データの扱い」）。0x0127 だけは値の表から選べる。
 //
-// ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
 import { nameOf, occupationGroupLabel } from "./master/labels";

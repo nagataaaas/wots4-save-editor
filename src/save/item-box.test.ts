@@ -77,7 +77,7 @@ describe('readItemBox', () => {
     expect(c.slots[0]).toMatchObject({ id: 0x13, count: 13, label: '刀油', problem: null, warning: null })
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ全枠を読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ全枠を読み取り専用にする', () => {
     const v = readItemBox(makeSave(TS_SAVE_SIZE + 8), TOOLS_AREA)
     expect(v.layoutProblem).not.toBeNull()
     expect(v.slots.every((s) => s.problem !== null)).toBe(true)
@@ -241,7 +241,7 @@ describe('[U] 2026-10-05：+0x04 が 0x06 でない枠', () => {
     expect(slotsMissingMark(after, TOOLS_AREA)).toEqual([])
   })
 
-  it('U-1：サイズが違うファイルは修復しない', () => {
+  it('サイズが違うファイルは修復しない', () => {
     expect(() => repairItemMarks(makeSave(TS_SAVE_SIZE + 8), TOOLS_AREA)).toThrow()
   })
 })

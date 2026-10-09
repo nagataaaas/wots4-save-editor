@@ -38,7 +38,7 @@ describe('勢力の退場 chunks/best-route', () => {
     expect(readFactionExit(makeSave([7, 0, 0])).values).toEqual([7, 0, 0])
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeSave(undefined, TS_SAVE_SIZE + 4)
     expect(readFactionExit(b).problem).not.toBeNull()
     expect(() => writeFactionExit(b, 0, 1, { advanced: false })).toThrow(RangeError)

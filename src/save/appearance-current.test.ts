@@ -1,4 +1,4 @@
-// ✅ [U] 体型・身長・肌色、🟢 身長の選択肢、❓ U-1：差分で観測した値を固定位置に合成する。sample/ のファイルは読まない。
+// ✅ [U] 体型・身長・肌色、🟢 身長の選択肢、差分で観測した値を固定位置に合成する。sample/ のファイルは読まない。
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU32, writeUtf16Fixed } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -15,7 +15,7 @@ function makeSave(header = 0x3aad4, relatedHeader = 0x46334) {
   return bytes
 }
 
-describe('現在の見た目（❓ U-1 固定位置）', () => {
+describe('現在の見た目（固定位置）', () => {
   it('✅ 体型・身長の反映を確認。タイプ（男→女）変更後も固定位置を読み、編集後も保持する', () => {
     const bytes = makeSave()
     // copy 5 の観測値を合成。容姿ID、タイプ側の値、現在・関連領域の身長が変わる。
@@ -47,7 +47,7 @@ describe('現在の見た目（❓ U-1 固定位置）', () => {
     expect(bytes[0x3db88 + 9]).toBe(0)
   })
 
-  it('❓ U-1・周辺のID・区切り・名前の並びに依存せず固定位置を読む', () => {
+  it('周辺のID・区切り・名前の並びに依存せず固定位置を読む', () => {
     const bytes = makeSave()
     bytes.fill(0xaa, 0x3aad4, 0x3aad8)
     bytes.fill(0xbb, 0x3aad9, 0x3aadd)
@@ -138,9 +138,9 @@ describe('現在の見た目（❓ U-1 固定位置）', () => {
     expect(() => writeAppearanceCurrent(bytes, 'height', NaN, true)).toThrow()
   })
 
-  it('❓ U-1 サイズ違い・短いファイルと、有限でない身長では書き込まない', () => {
+  it('サイズ違い・短いファイルと、有限でない身長では書き込まない', () => {
     const wrongSize = makeSave().slice(0, -1)
-    expect(readAppearanceCurrent(wrongSize).body.problem).toMatch(/U-1/)
+    expect(readAppearanceCurrent(wrongSize).body.problem).toMatch(/ファイルサイズ/)
     expect(() => writeAppearanceCurrent(wrongSize, 'body', 1)).toThrow()
     const short = new Uint8Array(16)
     expect(readAppearanceCurrent(short).body.value).toBeNull()

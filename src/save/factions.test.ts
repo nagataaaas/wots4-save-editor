@@ -57,7 +57,7 @@ describe('readFactions 🔶 chunks/factions', () => {
     expect(readFactions(b).problem).not.toBeNull()
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     expect(readFactions(makeSave(AFTER_SNEAK, TS_SAVE_SIZE + 4)).problem).not.toBeNull()
   })
 })

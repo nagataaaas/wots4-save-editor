@@ -436,7 +436,7 @@ describe('武器レコード（合成）', () => {
     expect(() => writeWeaponPart(b, o, 'grip', ts(0x000c))).toThrow()
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用', () => {
     const b = new Uint8Array(TS_SAVE_SIZE + 8)
     b.set(makeSave())
     const v = readBelt(b)

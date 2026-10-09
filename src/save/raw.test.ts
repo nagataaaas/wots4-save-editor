@@ -1,6 +1,6 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 領域の一覧は docs/save_format/README.md §3 の写し。確度（🟢🔶❓、U-n）は表の欄のまま持つ。
-// ❓ U-1 位置は固定オフセット（サイズ 0x48BB0 のセーブでの値）。
+// 位置は固定オフセット（サイズ 0x48BB0）。
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU16, writeU32 } from './binary'
 import { TS_SAVE_SIZE } from './hero'

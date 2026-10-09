@@ -60,7 +60,7 @@ describe('readEvents 🔶 chunks/event-chart', () => {
     expect(readEvents(b).problem).toMatch(/添字20/)
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     expect(readEvents(makeSave(A_START, B_START, TS_SAVE_SIZE + 4)).problem).not.toBeNull()
   })
 })

@@ -76,7 +76,7 @@ describe('装飾品の装着画面', () => {
     expect(html).not.toContain('アンサンブル')
     expect(html).toContain('disabled')
   })
-  it('🟢 合成した装着とサイズ1.0を表示。❓ U-1 サイズ不一致は読み取り専用', () => {
+  it('🟢 合成した装着とサイズ1.0を表示。サイズ不一致は読み取り専用', () => {
     const bytes = new Uint8Array(TS_SAVE_SIZE)
     const view = new DataView(bytes.buffer)
     for (const base of ACCESSORY_EQUIPMENT_BASES) for (let i = 0; i < 10; i++) view.setInt16(base + i * 64 + 62, -1, true)

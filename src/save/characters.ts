@@ -24,7 +24,7 @@
 // 直後の 0x375D〜0x375F は施設（facility-flags.ts）。
 // 選択 UI にはせず、生の値の欄として出す（AGENTS.md「未確認データの扱い」。書き換えの効果は人物ごとに要ゲーム内確認）。
 //
-// ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
 import { nameOf } from "./master/labels";

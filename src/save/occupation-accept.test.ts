@@ -3,7 +3,7 @@
 //   ✅ 0x45F4E ID・0x45F52 受注した日（経過日数）・0x45F54 受注した時間帯（1日目昼・2日目昼・2日目夜の「今宵の虎徹は」の受注の差分 2026-10-07）
 //   🔶 0x45F55 受注中だけ FF。✅ FFFF の状態は受注で 0 になる（受注の差分 2026-10-06）
 // 受注で書くなりわいのフラグは 🟢（✅ 野戸仏の1件目 171 で番号 4＝11、汁部 209 で番号 27＝1）。外すときの値は 🔶。
-// ❓ U-1：固定オフセットで読む。書き込みの反映は要ゲーム内確認。
+// 固定オフセットで読む。書き込みの反映は要ゲーム内確認。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32, writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -119,7 +119,7 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     expect(readAccepted(b)).toMatchObject({ id: 0, day: 0, slot: 0, active: 0 })
   })
 
-  it('表にない ID、日付が読めないセーブ、U-1 に落ちるセーブには書かない', () => {
+  it('表にない ID、日付が読めないセーブ、ファイルサイズが違うセーブには書かない', () => {
     expect(() => acceptOccupation(makeSave(), 7)).toThrow(RangeError)
     const badDate = makeSave()
     // 時間帯（0x0014）が 0〜2 の外

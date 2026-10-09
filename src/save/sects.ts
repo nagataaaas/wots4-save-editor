@@ -5,7 +5,7 @@
 // 反映されることを確かめた（✅ [U] 2026-10-09。docs/save_format/chunks/skill-states/reserch）。
 // 修練度・段・倒した数の書き込みは 🟢（要ゲーム内確認）。
 //
-// ❓ U-1：固定オフセットを使い、ファイルサイズと各値の範囲を検証する。検証に落ちたら読み取り専用。
+// 固定オフセットを使い、ファイルサイズと各値の範囲を検証する。検証に落ちたら読み取り専用。
 import { readI16, readU16, writeI16, writeU16, writeU8 } from './binary'
 import { checkLayout } from './hero'
 import {

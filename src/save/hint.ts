@@ -8,7 +8,7 @@
 //   ヒントの文はノードごとに1つ 🟢。1日目のノード 2〜10 の文だけ分かっている（🔶。6 だけ ✅ 書き込みで確認）。それ以外は ❓
 //   🔶 ノードの時間帯と現在の時間帯が合わないと、既定の文「さて どうしたものか」になる（2日目昼に 7・13・18・83・89 を書くと既定の文 ✅）
 //
-// ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, writeU16 } from "./binary";
 import { checkLayout } from "./hero";
 import { CHART_NODE_MAX, chartNode, type ChartNodeEntry } from "./master/chart-nodes";

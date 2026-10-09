@@ -10,7 +10,7 @@ function syntheticSave() {
   return bytes
 }
 
-describe('装飾品の装着 🟢（❓ U-1 固定位置、未知バイトの意味は未確認）', () => {
+describe('装飾品の装着 🟢（固定位置、未知バイトの意味は未確認）', () => {
   it('上級者モードのユーザー指定範囲：位置−100〜100、表示サイズ0〜100', () => {
     const b = syntheticSave()
     for (const key of ['positionAX', 'positionAY', 'positionAZ', 'positionBX', 'positionBY', 'positionBZ'] as const) {
@@ -209,7 +209,7 @@ describe('装飾品の装着 🟢（❓ U-1 固定位置、未知バイトの意
     expect(b).toEqual(original)
   })
 
-  it('❓ U-1: サイズ・境界・既存値の検証失敗では読み取り専用', () => {
+  it('サイズ・境界・既存値の検証失敗では読み取り専用', () => {
     for (const b of [syntheticSave().subarray(0, 100), new Uint8Array(TS_SAVE_SIZE + 1)]) {
       expect(readAccessorySlot(b, 0, 0).problem).not.toBeNull()
       expect(() => writeAccessoryField(b, 0, 0, 'id', 1)).toThrow()

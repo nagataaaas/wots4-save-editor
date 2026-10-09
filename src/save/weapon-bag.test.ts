@@ -64,7 +64,7 @@ describe('武器袋', () => {
     expect(() => writeWeaponNumber(b, weaponBagOffset(1), 'attack', 1)).toThrow()
   })
 
-  it('ファイルサイズが違えば読み取り専用（U-1）', () => {
+  it('ファイルサイズが違えば読み取り専用', () => {
     const b = new Uint8Array(TS_SAVE_SIZE + 4)
     b.set(makeSave([0]))
     const v = readWeaponBag(b)

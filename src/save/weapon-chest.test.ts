@@ -87,7 +87,7 @@ describe('🟢 武器箪笥の本数と容量', () => {
     expect(diff(before, b)).toEqual([])
   })
 
-  it('ファイルサイズが違えば読み取り専用（U-1）', () => {
+  it('ファイルサイズが違えば読み取り専用', () => {
     const b = new Uint8Array(TS_SAVE_SIZE + 4)
     b.set(makeSave([]))
     expect(readWeaponChest(b).problem).not.toBeNull()

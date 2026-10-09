@@ -102,7 +102,7 @@ describe('readDate chunks/date-location', () => {
     expect(readDate(b).problem).toMatch(/0x0012/)
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     expect(readDate(makeSave(SEEN.day1Evening, TS_SAVE_SIZE + 4)).problem).not.toBeNull()
   })
 })

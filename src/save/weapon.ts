@@ -566,7 +566,7 @@ export function readWeapon(
 // 不正な値は例外にして、バイト列を変えない。
 
 function assertEditable(bytes: Uint8Array, offset: number): void {
-  // ❓ U-1：ファイルサイズが想定と違えば位置がずれているおそれがあるので書かない
+  // ファイルサイズが想定と違えば書かない
   const view = readWeapon(bytes, offset, checkLayout(bytes));
   if (view.problem) throw new RangeError(view.problem);
 }

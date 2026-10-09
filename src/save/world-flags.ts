@@ -28,7 +28,7 @@
 //   0x377C  ❓ 神社の柵の候補だったが、初期開放条件は 0x377F だった。3件とも 0
 //   0x37A2  🟢 大寄せで攘夷ルートに入れないと 2（chunks/best-route の範囲。route-candidates.ts で生の値を出す）
 //
-// ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
 

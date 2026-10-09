@@ -86,7 +86,7 @@ describe("✅ 装飾品の所持フラグ chunks/accessories", () => {
     expect(() => writeAccessoryFlag(b, 158, 1, { advanced: true })).toThrow();
   });
 
-  it("ファイルサイズが違うと読み取り専用（U-1）", () => {
+  it("ファイルサイズが違うと読み取り専用", () => {
     const b = makeSave(TS_SAVE_SIZE + 4);
     expect(readAccessoryFlags(b).layoutProblem === null).toBe(false);
     expect(() => writeAccessoryFlag(b, 1, 1, { advanced: false })).toThrow();
@@ -137,7 +137,7 @@ describe("容姿の解放ビット chunks/appearance（U-16 決着）", () => {
 });
 
 describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
-  it("✅ [U] ライフルの免許（101）を取得済みの2にする。❓ U-1 固定位置", () => {
+  it("✅ [U] ライフルの免許（101）を取得済みの2にする。固定位置", () => {
     const orig = makeSave();
     orig[0x4337d] = 1;
     const b = orig.slice();
@@ -170,7 +170,7 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     expect(UNLOCK_WRITE_CONFIRMED.has(31)).toBe(false);
   });
 
-  it("❓ U-1・🔶 U-17 周囲の並びや別位置の状態列に依存せず固定位置を使う", () => {
+  it("🔶 U-17 周囲の並びや別位置の状態列に依存せず固定位置を使う", () => {
     const shifted = makeSave(TS_SAVE_SIZE, 0x43418);
     expect(readUnlockStates(shifted).offset).toBe(0x43318);
     expect(readUnlockStates(shifted).values.every(v => v === 0)).toBe(true);
@@ -185,7 +185,7 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     expect(diffOffsets(before, ambiguous)).toEqual([0x4331b]);
   });
 
-  it("❓ U-1・🔶 U-17 サイズ・境界・状態値の検証に落ちたら書き込まない", () => {
+  it("🔶 U-17 サイズ・境界・状態値の検証に落ちたら書き込まない", () => {
     for (const bytes of [new Uint8Array(16), makeSave(TS_SAVE_SIZE + 4)]) {
       const before = bytes.slice();
       expect(readUnlockStates(bytes).layoutProblem).not.toBeNull();

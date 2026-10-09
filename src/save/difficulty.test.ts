@@ -73,7 +73,7 @@ describe('難易度 0x0000', () => {
     }
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeSave(SEEN.easy, TS_SAVE_SIZE + 4)
     expect(readDifficulty(b).problem).not.toBeNull()
     expect(() => writeDifficulty(b, 3)).toThrow(RangeError)

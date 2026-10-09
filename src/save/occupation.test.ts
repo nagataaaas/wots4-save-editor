@@ -133,7 +133,7 @@ describe("なりわいの状態の表 0x33A4〜 chunks/occupation", () => {
     expect(() => syncClearCount(b)).toThrow(RangeError);
   });
 
-  it("❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする", () => {
+  it("サイズが 0x48BB0 でなければ読み取り専用にする", () => {
     const b = makeSave(TS_SAVE_SIZE + 4);
     expect(readOccupations(b).layoutProblem).not.toBeNull();
     expect(() => writeOccupationState(b, 209, 2, { advanced: true })).toThrow(RangeError);

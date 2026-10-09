@@ -1,7 +1,7 @@
 // 流通中の武器・道具・部品（読み取り専用）。
 // 出典：docs/save_format/chunks/market-weapons（位置・並び・意味はすべて 🟢）。
 //
-// ❓ U-1 判定待ちのため、固定オフセット（案A）を使う。ファイルサイズが 0x48BB0 でなければ表示だけにとどめ、問題として示す。
+// 固定オフセットを使う。ファイルサイズが 0x48BB0 でなければ表示だけにとどめ、問題として示す。
 //
 //   0x440D8 + n * 0xA4（n = 0〜14）  🟢 武器。+0x00〜+0x9F は武器レコード、+0x94 i16 流通の経過の数、+0xA0 i32 持っている町の人の番号（−1 ＝ なし）
 //   0x44A74 + n * 0x0C（n = 0〜9）   🟢 道具。+0x00〜+0x07 は手持ちの道具の枠の写し（+0x00 アイテム ID、負なら空き。+0x02 個数 ✅ items）、+0x08 i16 経過の数
@@ -115,7 +115,7 @@ function readOther(bytes: Uint8Array, o: (typeof MARKET_OTHERS)[number], index: 
 }
 
 export type MarketView = {
-  /** ファイルサイズが想定と違う（U-1）。値は表示するが位置がずれている可能性がある */
+  /** ファイルサイズが想定と違う。値は表示するが位置がずれている可能性がある */
   layoutProblem: string | null
   /** 空きでない武器 */
   weapons: MarketWeaponEntry[]

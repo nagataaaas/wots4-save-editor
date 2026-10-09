@@ -159,7 +159,7 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
     expect(PLACE_LAYOUTS.every((p) => p.place <= 0x22)).toBe(true)
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeSave({ size: TS_SAVE_SIZE + 4 })
     const view = readYobai(b)
     expect(view.promiseProblem).not.toBeNull()

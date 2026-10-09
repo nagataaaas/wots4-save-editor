@@ -13,7 +13,7 @@
 //
 // 連続なりわいの進み具合は状態の表ではなく、なりわいのフラグ（0x011C + 番号、townsfolk.ts）にある。
 //
-// ❓ U-1 判定待ちのため固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, writeU16 } from "./binary";
 import { checkLayout } from "./hero";
 import { occupationById } from "./master/occupation-names";

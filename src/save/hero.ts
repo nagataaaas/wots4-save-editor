@@ -1,14 +1,14 @@
 // 主人公の基本情報。出典：docs/save_format/chunks/money・player-name・stats・vitals（[TS][I-1][I-3]）、chunks/date-location と datatable/place/start-location.csv（[W-PC]）。
 //
-// ❓ U-1（固定オフセットで扱えるか）が判定待ちのため、[TS] の固定オフセット（案A）を使い、
-// 次の2段階の妥当性検証を通ったフィールドだけを編集可能にする（check-diff.md U-1「採用までの扱い」）。
-//   1. ファイルサイズが [TS] の構造体サイズ 0x48BB0 と一致する（案A の条件）
+// [TS] の固定オフセットを使い、
+// 次の2段階の妥当性検証を通ったフィールドだけを編集可能にする。
+//   1. ファイルサイズが [TS] の構造体サイズ 0x48BB0 と一致する
 //   2. 各フィールドの値が妥当な範囲にある
 import { readF32, readU32, readU8, readUtf16Fixed, writeF32, writeU32, writeU8, writeUtf16Fixed } from './binary'
 import { formatHex2 } from '@/lib/format'
 import { findLocation } from './locations'
 
-/** [TS] が扱うファイルサイズ（docs/save_format/README.md §2）。❓ U-1：全セーブ共通とは限らない */
+/** [TS] が扱うファイルサイズ（docs/save_format/README.md §2） */
 export const TS_SAVE_SIZE = 0x48bb0
 
 export const HERO_OFFSETS = {
@@ -77,7 +77,7 @@ export type HeroView = {
 
 export function checkLayout(bytes: Uint8Array): string | null {
   if (bytes.byteLength !== TS_SAVE_SIZE) {
-    return `ファイルサイズが想定（${TS_SAVE_SIZE.toLocaleString()} B）と異なります（${bytes.byteLength.toLocaleString()} B）。位置がずれている可能性があるため読み取り専用にしています（U-1）。`
+    return `ファイルサイズが想定（${TS_SAVE_SIZE.toLocaleString()} B）と異なります（${bytes.byteLength.toLocaleString()} B）。読み取り専用にしています。`
   }
   return null
 }

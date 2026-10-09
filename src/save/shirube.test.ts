@@ -1,7 +1,7 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 🟢 なりわいのフラグ 27〜31（0x0137〜0x013B）。
 // ✅ 209 の受注の差分（2026-10-07）：27 が 0 → 1、0x45F4E が 0 → 209、0x45F55 が 0 → FF、28〜31 は 0 のまま。
-// 受注の書き込みは occupation-accept.ts と同じ。❓ U-1：固定オフセットで読む。
+// 受注の書き込みは occupation-accept.ts と同じ。固定オフセットで読む。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32, writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -85,7 +85,7 @@ describe('🟢 汁部（DLC）のなりわい なりわいのフラグ 27〜31 �
     expect(() => writeShirubeState(makeSave(), 'x')).toThrow(RangeError)
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeSave(TS_SAVE_SIZE + 4)
     expect(readShirube(b).problem).not.toBeNull()
     expect(() => writeShirubeState(b, 'none')).toThrow(RangeError)

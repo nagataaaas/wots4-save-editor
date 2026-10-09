@@ -35,7 +35,7 @@
 //    0x13E38〜0x13E6F 特別な相手14人ごとの夜這い回数（u32）、0x37C8 褒美の順番（1〜50）。どれも表示だけ
 //
 // 新しい約束や記録を作る・消す機能は持たない（❓ の領域を書かずに済ませるため）。
-// ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
 import { NIGHT_VISIT_PLACE_TABLE } from "./master/dataset/night-visit-place";

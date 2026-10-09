@@ -2,7 +2,7 @@
 // 値は docs/save_format/chunks/hint（調査記録 2026-10-06_hint.md・2026-10-07_hint-node.md）で見たもの。
 // 🟢 0x3900 は最後に状態を進めたイベントのチャート上のノード番号（0〜118）。
 // 🔶 0xFFFF＝なし。🔶 1日目のノード 2〜10 のヒントの文（6 だけ ✅）。ほかのノードの文は ❓。
-// ❓ U-1 固定オフセット。
+// 固定オフセット。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
@@ -90,7 +90,7 @@ describe('次のイベントのヒント 0x3900（🟢 チャートのノード�
     expect(view.problem).toBeNull()
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeSave(COPY6_HINT, TS_SAVE_SIZE + 4)
     expect(readHint(b).problem).not.toBeNull()
     expect(() => writeHint(b, 3, { advanced: false })).toThrow(RangeError)

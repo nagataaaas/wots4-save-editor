@@ -384,10 +384,10 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes).toEqual(before)
   })
 
-  it('❓ U-1 サイズ違いのファイルには書き込まない', () => {
+  it('サイズ違いのファイルには書き込まない', () => {
     const bytes = makeSave().slice(0, -1)
     const before = bytes.slice()
-    expect(readAppearanceParts(bytes)!.problem).toMatch(/U-1/)
+    expect(readAppearanceParts(bytes)!.problem).toMatch(/ファイルサイズ/)
     expect(() => writePart(bytes, 'face', 0)).toThrow()
     expect(() => writePerson(bytes, 20)).toThrow()
     expect(() => writeHairColor(bytes, 3)).toThrow()

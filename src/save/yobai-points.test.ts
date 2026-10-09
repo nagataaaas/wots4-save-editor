@@ -2,7 +2,7 @@
 // 位置と意味は 🟢（docs/save_format/chunks/best-route）。書き換えの反映は未確認（要ゲーム内確認）。
 // 🔶 POINT_NORMAL_MAX（20）はしきい値 10・攻略手順どおりの 11 より上に取った値で、ゲームの上限ではない。
 // 🟢 しきい値はどれも 10（メリンダは 5日目以降）。
-// ❓ U-1 判定待ちのため、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { describe, expect, it } from "vitest";
 import { writeU8 } from "./binary";
 import { TS_SAVE_SIZE } from "./hero";
@@ -99,7 +99,7 @@ describe("夜這いに関わる好感度・ポイント chunks/best-route", () =
     expect(b[0x3798]).toBe(0xbb);
   });
 
-  it("❓ U-1：ファイルサイズが 0x48BB0 でなければ読み取り専用", () => {
+  it("ファイルサイズが 0x48BB0 でなければ読み取り専用", () => {
     const b = makeSave(TS_SAVE_SIZE + 4);
     expect(readYobaiPoints(b).problem).not.toBeNull();
     expect(() => writeYobaiPoint(b, 0x3793, 2, { advanced: false })).toThrow();

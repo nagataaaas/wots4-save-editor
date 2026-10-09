@@ -97,7 +97,7 @@ describe('readSects', () => {
     }
   })
 
-  it('❓ U-1：サイズが違えば読み取り専用', () => {
+  it('サイズが違えば読み取り専用', () => {
     const b = new Uint8Array(TS_SAVE_SIZE + 2)
     b.set(makeSave())
     expect(readSects(b).problem).not.toBeNull()

@@ -90,7 +90,7 @@ describe('重要人物の状態 0x374E〜0x375C chunks/characters', () => {
     expect(view.problem).toBeNull()
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     expect(readCharacters(makeSave(BOTH_DEAD, TS_SAVE_SIZE + 4)).problem).not.toBeNull()
   })
 

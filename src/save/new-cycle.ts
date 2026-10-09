@@ -25,7 +25,7 @@
 //
 //    共通の初期化 🟢（下の resetCycle の表）
 //
-// ❓ U-1 判定待ちのため固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readI16, readU16, readU32, readU8, writeF32, writeU16, writeU32, writeU8 } from './binary'
 import { HERO_OFFSETS, checkLayout } from './hero'
 import { findItem } from './master/item-names'

@@ -27,7 +27,7 @@
 // 範囲の中には、真ルートに関係しないバイト（好感度・職など）も入っている（範囲は差分から取ったもの）。
 // 0x378E 以外は、書き換えたときのゲーム内の反映を確かめていないので、生の値の欄として出す（AGENTS.md「未確認データの扱い」）。
 //
-// ❓ U-1 判定待ちのため [TS] の固定オフセット（案A）の位置で読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
 import { POINT_NORMAL_MAX, YOBAI_POINTS } from "./yobai-points";

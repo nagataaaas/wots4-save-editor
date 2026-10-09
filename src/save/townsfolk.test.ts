@@ -132,7 +132,7 @@ describe('🔶 町の人の状態の候補 0x011C〜0x05FF chunks/townsfolk', ()
     expect(() => writeTownsfolk(b, 0x0136, 43, { advanced: false })).toThrow(RangeError)
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeSave(TS_SAVE_SIZE + 4)
     expect(readTownsfolk(b).problem).not.toBeNull()
     expect(() => writeTownsfolk(b, 0x0444, 0, { advanced: true })).toThrow(RangeError)

@@ -116,7 +116,7 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
     expect(view.problem).toBeNull()
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ読み取り専用にする', () => {
+  it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     expect(readRouteCandidates(makeSave(BEST, TS_SAVE_SIZE + 4)).problem).not.toBeNull()
   })
 

@@ -16,7 +16,7 @@
 //   ✅ [U] 2026-10-07 番号 0〜15 はゲーム内表示と一致。101（ライフルの免許）は 2 の書き込みで取得可能になった。
 //   それ以外の並び・書き込みは 🔶 U-17。固定位置を採用（ユーザー判断 2026-10-07）。
 //
-// ❓ U-1 判定待ちのため固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
 
@@ -128,7 +128,7 @@ export function writeAppearanceBits(bytes: Uint8Array, bits: readonly number[], 
 // ---------------------------------------------------------------- 特典解除
 
 export const UNLOCK_COUNT = 106;
-/** ❓ U-1・🔶 U-17：固定位置を採用。差分：01 copy 5→6（番号31）。 */
+/** 🔶 U-17：固定位置。差分：01 copy 5→6（番号31）。 */
 export const UNLOCK_STATES_OFFSET = 0x43318;
 /** ✅ [U] 2026-10-07 番号31「J.J. の顔」はゲーム内で解除した前後の差分で対応を確認。書き込みの反映は 🔶 U-17。 */
 export const UNLOCK_READ_CONFIRMED: ReadonlySet<number> = new Set([31]);

@@ -75,7 +75,7 @@ describe('enableCharacterSetup：難易度と主人公設定を行えるよう�
     expect(readDate(after).stage).toBe(0)
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ書かない', () => {
+  it('サイズが 0x48BB0 でなければ書かない', () => {
     expect(() => enableCharacterSetup(makeMidCycleSave(TS_SAVE_SIZE + 4))).toThrow(RangeError)
   })
 })
@@ -167,7 +167,7 @@ describe('startNewCycle：共通の初期化（🟢）', () => {
     }
   })
 
-  it('❓ U-1：サイズが 0x48BB0 でなければ書かない', () => {
+  it('サイズが 0x48BB0 でなければ書かない', () => {
     const b = makeMidCycleSave(TS_SAVE_SIZE + 4)
     const copy = b.slice()
     expect(() => startNewCycle(b)).toThrow(RangeError)

@@ -16,7 +16,7 @@
 //
 // 受注の書き込み・外す書き込みは、この1か所にまとめる（受注中の欄、連続なりわいの欄、汁部の欄はここを呼ぶ）。
 // 書き込みの反映は要ゲーム内確認。
-// ❓ U-1 判定待ちのため固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+// 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU8, writeU16, writeU8 } from "./binary";
 import { occupationById } from "./master/occupation-names";
 import { OCCUPATION_NOT_APPEARED, occupationStateOffset, readOccupations } from "./occupation";
