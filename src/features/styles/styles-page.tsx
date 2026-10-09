@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -345,30 +346,42 @@ function SectCard({
           />
         </div>
 
-        {/* 技の名前・状態・コマンド・攻撃力・属性・習得条件・ボタンの欄を、流派の中のすべての技の表で揃える（行は subgrid） */}
-        <div className="grid grid-cols-[auto_auto_auto_auto_auto_minmax(0,1fr)_auto] gap-x-3 text-sm">
-          {sheets.map(({ sheet, states }, i) => (
-            <div key={sheet.id} className="col-span-full grid grid-cols-subgrid">
-              <h3 className={`col-span-full pb-1 text-sm font-medium ${i > 0 ? "pt-4" : ""}`}>
-                {findStance(sheet.stance)?.nameJa}の技（技の表 {sheet.id}）
-              </h3>
-              {sheetSkillTree(sheet).map((g) => (
-                <SkillGroupView
-                  key={g.key}
-                  group={g}
-                  depth={0}
-                  sheet={sheet}
-                  states={states}
-                  readOnly={readOnly}
-                  advanced={advanced}
-                  onLearn={onLearn}
-                  onShowInOreRyu={onShowInOreRyu}
-                  onForget={onForget}
-                />
+        {/* 構え（技の表）ごとにタブで切り替える。技の表が 1 つならタブは出さない */}
+        <Tabs defaultValue={String(sheets[0]?.sheet.id)}>
+          {sheets.length > 1 && (
+            <TabsList>
+              {sheets.map(({ sheet, states }) => (
+                <TabsTrigger key={sheet.id} value={String(sheet.id)}>
+                  {findStance(sheet.stance)?.nameJa}
+                  <span className="text-muted-foreground text-xs font-normal tabular-nums">
+                    {sheet.skills.filter((x) => states[x.skillNo] !== 0).length}/{sheet.skills.length}
+                  </span>
+                </TabsTrigger>
               ))}
-            </div>
+            </TabsList>
+          )}
+          {sheets.map(({ sheet, states }) => (
+            <TabsContent key={sheet.id} value={String(sheet.id)}>
+              {/* 技の名前・状態・コマンド・攻撃力・属性・習得条件・ボタンの欄を揃える（行は subgrid） */}
+              <div className="grid grid-cols-[auto_auto_auto_auto_auto_minmax(0,1fr)_auto] gap-x-3 text-sm">
+                {sheetSkillTree(sheet).map((g) => (
+                  <SkillGroupView
+                    key={g.key}
+                    group={g}
+                    depth={0}
+                    sheet={sheet}
+                    states={states}
+                    readOnly={readOnly}
+                    advanced={advanced}
+                    onLearn={onLearn}
+                    onShowInOreRyu={onShowInOreRyu}
+                    onForget={onForget}
+                  />
+                ))}
+              </div>
+            </TabsContent>
           ))}
-        </div>
+        </Tabs>
       </div>
     </CollapsibleCard>
   );
