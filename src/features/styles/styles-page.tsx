@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
 import { matchesSearch } from "@/lib/search";
@@ -94,7 +93,6 @@ export function StylesPage() {
   const [query, setQuery] = useState("");
   const [placeFilter, setPlaceFilter] = useState<PlaceFilter>("owned");
   const [uniqueOnly, setUniqueOnly] = useState(false);
-  const [includeSpecial, setIncludeSpecial] = useState(false);
   const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
 
   const result = useMemo((): { view: SectsView } | { error: string } | null => {
@@ -204,22 +202,6 @@ export function StylesPage() {
             </Label>
             <span className="text-muted-foreground text-xs">{sects.length} 件</span>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="flex items-center gap-2">
-              <Switch checked={includeSpecial} onCheckedChange={setIncludeSpecial} aria-label="固有技も習得する" />
-              <Label>
-                固有技も習得する
-                <InfoTip>
-                  固有技は、対応する武器で「今 装備している武器で100人惨殺する」などの条件を満たして覚える技（秘伝黒生・乾坤一擲・くるひかぶきなど）。
-                  固有技は、それを覚えられる流派（乾坤一擲なら武業流剣術）の技の一覧にだけ出します。
-                  オンにすると「技を全部習得する」で固有技も習得します。
-                  固有技の「習得する」は、ゲームで武器の条件を満たしたときと同じ「習得済（俺流には未組み込み）」（状態 3）にします（🟢 要ゲーム内確認）。
-                  そのあとの「俺流で表示」で、俺流に組み込める状態（1）にします。
-                  同じ構えのほかの流派は、ゲームでその流派を装備したときに習得済みになります（🟢）
-                </InfoTip>
-              </Label>
-            </label>
-          </div>
           {message && <p className={message.error ? "text-destructive text-xs" : "text-muted-foreground text-xs"}>{message.text}</p>}
         </CardContent>
       </Card>
@@ -232,7 +214,7 @@ export function StylesPage() {
           readOnly={readOnly}
           advanced={advanced}
           onLearnAll={() =>
-            run(`${sect.nameJa} の技を習得しました`, (b) => learnSectSkills(b, sect.id, { includeSpecial }))
+            run(`${sect.nameJa} の技を習得しました`, (b) => learnSectSkills(b, sect.id))
           }
           onLearn={(sheet, skill) =>
             run("技を習得しました", (b) =>
@@ -328,6 +310,7 @@ function SectCard({
           </Button>
           <span className="text-muted-foreground text-xs">
             段 5（極）にはならないので、必要なら下の段を 5 にしてください。
+            固有技は「習得する」で習得済（俺流には未組み込み）（🟢 要ゲーム内確認）、「俺流で表示」で俺流に組み込める状態にします。
             続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
           </span>
         </div>

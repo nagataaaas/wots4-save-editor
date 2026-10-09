@@ -120,10 +120,10 @@ describe('learnSheetSkills', () => {
     }
   })
 
-  it('🟢 特別な技（習得条件 51〜56）は includeSpecial のときだけ覚えさせる', () => {
+  it('🟢 技の表の全部の技を覚えさせても、固有技（技の番号 21 乾坤一擲）は覚えさせない', () => {
     const b = makeSave()
-    learnSheetSkills(b, SHEET, undefined, { includeSpecial: true })
-    expect(b[sheetStateOffset(0) + 4 + 21]).toBe(1)
+    learnSheetSkills(b, SHEET)
+    expect(b[sheetStateOffset(0) + 4 + 21]).toBe(0)
   })
 
   it('🟢 派生先だけを指定すると派生元も覚え、派生元は 2 になる', () => {
@@ -160,7 +160,7 @@ describe('learnSheetSkills', () => {
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 0]).toBe(1)
   })
 
-  it('🟢 固有技は覚えられる流派でだけ出し、ほかの流派では固有技も習得するにしても書かない', () => {
+  it('🟢 固有技は覚えられる流派でだけ出し、ほかの流派では技を全部習得しても書かない', () => {
     // 乾坤一擲（技の番号 21）は脇の技の表に入っているが、覚えられるのは武業流剣術（49）だけ
     const sheet = findSkillSheet(SHEET)!
     expect(sheet.skills.some((s) => s.skillNo === 21)).toBe(true)
@@ -169,12 +169,12 @@ describe('learnSheetSkills', () => {
     expect(sectSheetSkills(own, findSkillSheet(own.sheets[0])!).some((s) => s.skillNo === 21)).toBe(true)
 
     const b = makeSave()
-    learnSectSkills(b, 51, { includeSpecial: true })
+    learnSectSkills(b, 51)
     expect(b[sheetStateOffset(0) + 4 + 21]).toBe(0)
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(0)
 
     // 🟢 要ゲーム内確認：固有技は状態 3（習得済・俺流には未組み込み）にする
-    learnSectSkills(b, 49, { includeSpecial: true })
+    learnSectSkills(b, 49)
     const slot = readSects(b).sheetSlots.find((s) => s.sheetId === own.sheets[0])!
     expect(slot.states[21]).toBe(3)
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(3)

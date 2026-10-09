@@ -238,27 +238,17 @@ function writeSheetStates(bytes: Uint8Array, slot: SheetStateSlot, states: numbe
   writeU16(bytes, slot.offset + 2, states.filter((v) => v !== 0).length)
 }
 
-export type LearnOptions = {
-  /** 固有技（習得条件 51・52 など）も状態 3 にする（learnSectSkills。🟢 要ゲーム内確認） */
-  includeSpecial?: boolean
-}
-
 /**
- * 技の表の技を覚えた状態にする。skillNos を省くと、その技の表の全部の技（特別な技は includeSpecial のときだけ）。
+ * 技の表の技を覚えた状態にする。skillNos を省くと、その技の表の固有技以外の全部の技（固有技は learnUniqueSkills）。
  * 覚えた技は 1、派生先を覚えた派生元は 2 にする（ゲームと同じ）。状態 3 の技を対象にすると 1 にする。
  * 構えごとの状態にも同じ値をゲームの規則で書く。覚えた技の数を返す（新しく覚えた数ではない）。
  */
-export function learnSheetSkills(
-  bytes: Uint8Array,
-  sheetId: number,
-  skillNos?: readonly number[],
-  options: LearnOptions = {},
-): number {
+export function learnSheetSkills(bytes: Uint8Array, sheetId: number, skillNos?: readonly number[]): number {
   const sheet = findSkillSheet(sheetId)
   if (!sheet) throw new RangeError(`知らない技の表です（${sheetId}）`)
   const view = assertWritable(bytes)
   const targets = new Set<number>(
-    (skillNos ?? sheet.skills.filter((s) => options.includeSpecial || !isSpecialCond(s.cond)).map((s) => s.skillNo)).filter(
+    (skillNos ?? sheet.skills.filter((s) => !isUniqueSkill(s)).map((s) => s.skillNo)).filter(
       (no) => sheet.skills.some((s) => s.skillNo === no),
     ),
   )
@@ -335,9 +325,9 @@ export const isUniqueSkill = (s: SheetSkill) => isSpecialCond(s.cond) || uniqueS
 
 /**
  * 流派のすべての技の表の技を覚えた状態にする。覚えるのは sectSheetSkills の技だけ。
- * 固有技は includeSpecial のときだけ、状態 3（習得済・俺流には未組み込み。learnUniqueSkills）にする
+ * 固有技（覚えられる流派でだけ残る）は、状態 3（習得済・俺流には未組み込み。learnUniqueSkills）にする
  */
-export function learnSectSkills(bytes: Uint8Array, sectId: number, options: LearnOptions = {}): void {
+export function learnSectSkills(bytes: Uint8Array, sectId: number): void {
   const sect = findSect(sectId)
   if (!sect) throw new RangeError(`知らない流派です（${sectId}）`)
   for (const id of sect.sheets) {
@@ -347,7 +337,7 @@ export function learnSectSkills(bytes: Uint8Array, sectId: number, options: Lear
     const normal = skills.filter((s) => !isUniqueSkill(s)).map((s) => s.skillNo)
     // 覚える技がないのに技の表の枠だけを割り当てない
     if (normal.length > 0) learnSheetSkills(bytes, id, normal)
-    if (options.includeSpecial) learnUniqueSkills(bytes, id, skills.filter(isUniqueSkill).map((s) => s.skillNo))
+    learnUniqueSkills(bytes, id, skills.filter(isUniqueSkill).map((s) => s.skillNo))
   }
 }
 
