@@ -110,7 +110,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x002BA4`      | `0x0033A3`   | [item-uses](chunks/item-uses/README.md)           | 道具ごとの使用回数（周回中・累計）             | 🟢                            |
 | `0x0033A4`      | `0x0035A3`   | [occupation](chunks/occupation/README.md)         | なりわいの状態の表                             | ✅                            |
 | `0x0035A4`      | `0x0035B3`   | [vitals](chunks/vitals/README.md)                 | HP・活力                                       | 一部 ✅（U-4）                |
-| `0x00363C`      | `0x0036A3`   | [memory-garbage](chunks/memory-garbage/README.md) | ゲームの状態ではない値（未初期化・アドレス）   | 🔶                            |
+| `0x003634`      | `0x0036A7`   | [item-effects](chunks/item-effects/README.md)     | 時間で切れる道具の効果（残り時間・倍率。読み込みでは使われない） | 🟢                            |
 | `0x0036A8`      | `0x00374D`   | [event-chart](chunks/event-chart/README.md)       | イベントの状態 A（周回中）                     | ✅                            |
 | `0x00374E`      | `0x003837`   | [scenario-flags](chunks/scenario-flags/README.md) | シナリオのフラグ列（下の5つを含む）            | 🟢範囲 ／ 一部 ✅              |
 | `0x00374E`      | `0x00375C`   | [characters](chunks/characters/README.md)         | 重要人物の状態                                 | 🟢人物 ／ 一部 ✅              |
@@ -210,7 +210,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 - 同じスロットで、操作の直前と直後にセーブする
 - テストのたびにゲームを完全に終了する
 - 同じ操作を2回行い、両方で再現した差分だけを採用する
-- 時間で進む値（[stats](chunks/stats/README.md) のプレイ時間・0x0BC0、[vitals](chunks/vitals/README.md) の活力、武器レコードの +0x80/+0x84）、[memory-garbage](chunks/memory-garbage/README.md)、[belt-copy](chunks/belt-copy/README.md) は差分から除いて読む
+- 時間で進む値（[stats](chunks/stats/README.md) のプレイ時間・0x0BC0、[vitals](chunks/vitals/README.md) の活力、武器レコードの +0x80/+0x84）、[memory-garbage](chunks/memory-garbage/README.md)、[item-effects](chunks/item-effects/README.md) の枠の +0x08〜+0x0F、[belt-copy](chunks/belt-copy/README.md) は差分から除いて読む
 
 2案以上ある項目で「正しく編集できた」と判定する基準は `../check-diff.md` §0.3。
 
