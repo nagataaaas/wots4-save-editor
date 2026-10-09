@@ -12,7 +12,7 @@ export const NIGHT_VISIT_PLACE_TABLE = {
   9: { "id_dec": 9, "save_bytes_le": "09 00", "name_ja": "町 長屋", "name_en": null, "layout": "0x21", "備考": "実データで見た組：0x21" },
   10: { "id_dec": 10, "save_bytes_le": "0A 00", "name_ja": "町 長屋", "name_en": null, "layout": "0x05;0x24;0x32", "備考": "実データで見た組：0x05。🟢 0x24・0x32 は実データなし" },
   11: { "id_dec": 11, "save_bytes_le": "0B 00", "name_ja": "町 長屋", "name_en": null, "layout": "0x04;0x22", "備考": "実データで見た組：0x22。🟢 0x04 は実データなし" },
-  12: { "id_dec": 12, "save_bytes_le": "0C 00", "name_ja": "町 長屋 稲荷前", "name_en": null, "layout": "0x06", "備考": "実データで見た組：0x06（かえで・はるな）" },
+  12: { "id_dec": 12, "save_bytes_le": "0C 00", "name_ja": "町 長屋 稲荷前", "name_en": null, "layout": "0x06", "備考": "実データで見た組：0x06（女中・娘の町の人）" },
   13: { "id_dec": 13, "save_bytes_le": "0D 00", "name_ja": "町 長屋 稲荷前", "name_en": null, "layout": "0x03", "備考": "🟢 実データで見た組はない" },
   14: { "id_dec": 14, "save_bytes_le": "0E 00", "name_ja": "町 長屋 稲荷前", "name_en": null, "layout": "0x06;0x23;0x3B", "備考": "実データで見た組：0x23。🟢 0x06・0x3B は実データなし" },
   15: { "id_dec": 15, "save_bytes_le": "0F 00", "name_ja": "町 長屋 稲荷前", "name_en": null, "layout": "0x04", "備考": "🟢 実データで見た組はない" },

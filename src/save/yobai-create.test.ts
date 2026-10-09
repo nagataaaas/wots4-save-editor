@@ -117,16 +117,23 @@ describe("夜の約束を作る chunks/night-visit「約束の作り方」", () 
     expect(male.at(-1)).toBe(7150);
     expect(nameCandidates(promisePartner(0x23)!)[0]).toBe(8001); // 貴婦人
     expect(nameCandidates(promisePartner(0x10)!)[0]).toBe(8105); // 外国人（男性）
-    expect(validateSpec({ ...KAEDE, name: 7101 }, 0, { advanced: false })).not.toBeNull();
-    expect(validateSpec({ ...KAEDE, name: 7101 }, 0, { advanced: true })).toBeNull();
   });
 
-  it("見た目・年齢・血液型は候補だけ", () => {
-    expect(validateSpec({ ...KAEDE, look: 0x3a }, 0, { advanced: true })).not.toBeNull();
-    expect(validateSpec({ ...KAEDE, age: 30 }, 0, { advanced: false })).not.toBeNull();
-    expect(validateSpec({ ...KAEDE, age: 29 }, 0, { advanced: false })).toBeNull();
-    expect(validateSpec({ ...AKEMI, blood: 2 }, 0, { advanced: true })).not.toBeNull();
-    expect(validateSpec({ ...KAEDE, type: 91 }, 0, { advanced: true })).toMatch(/種類/); // 坂本は表にない
+  it("名前・見た目・年齢・血液型は種類とは別に、約束の編集欄と同じ範囲で選べる（✅ [U] 別々に効く）", () => {
+    // 名前：名前の表にある ID なら、性別や種類の候補と違っても通常モードで書ける
+    expect(validateSpec({ ...KAEDE, name: 7101 }, 0, { advanced: false })).toBeNull();
+    expect(validateSpec({ ...KAEDE, name: 9999 }, 0, { advanced: false })).not.toBeNull();
+    expect(validateSpec({ ...KAEDE, name: 9999 }, 0, { advanced: true })).toBeNull();
+    // 見た目：🟢 見た目の表（222件）にある値。町人の見た目 0x3A を女中に
+    expect(validateSpec({ ...KAEDE, look: 0x3a }, 0, { advanced: false })).toBeNull();
+    expect(validateSpec({ ...KAEDE, look: 0x14 }, 0, { advanced: false })).not.toBeNull(); // 表にない
+    // 年齢：0〜99 か 255（？）。血液型：1〜5
+    expect(validateSpec({ ...KAEDE, age: 99 }, 0, { advanced: false })).toBeNull();
+    expect(validateSpec({ ...KAEDE, age: 100 }, 0, { advanced: false })).not.toBeNull();
+    expect(validateSpec({ ...AKEMI, blood: 2 }, 0, { advanced: false })).toBeNull();
+    expect(validateSpec({ ...AKEMI, blood: 6 }, 0, { advanced: false })).not.toBeNull();
+    // 種類は約束できる相手の表にあるものだけ。坂本（91）は表にない
+    expect(validateSpec({ ...KAEDE, type: 91 }, 0, { advanced: true })).toMatch(/種類/);
   });
 
   it("くじで選んだ値はどれも検証を通る", () => {

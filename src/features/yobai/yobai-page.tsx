@@ -45,7 +45,6 @@ import {
 import { readU16 } from "@/save/binary";
 import {
   DAY_INDEX_OFFSET,
-  PROMISE_PARTNERS,
   ageCandidates,
   bloodCandidates,
   createPromise,
@@ -59,7 +58,6 @@ import {
   rowLabel,
   rowsFor,
   validateSpec,
-  type PromisePartner,
   type PromiseSpec,
 } from "@/save/yobai-create";
 import { labelKeywords, npcLabel } from "@/save/master/labels";
@@ -111,6 +109,27 @@ const placeOptions: SelectOption[] = PLACES.map((name, i) => ({
 const knownOptions = (known: readonly KnownValue[]): SelectOption[] =>
   known.map((k) => ({ value: String(k.value), label: `${k.label}（${hex(k.value)}）` }));
 
+/** 🟢 しゃべり方と戦闘力：約束できる相手の種類。名前のある相手 → 町の女性 → 町の男性の順 */
+const TYPE_KINDS = ["名前のある相手", "町の人（女性）", "町の人（男性）"] as const;
+const typeOptions: SelectOption[] = TYPE_KINDS.flatMap((kind) =>
+  KNOWN_TYPES.filter((t) => t.kind === kind).map((t) => ({
+    value: String(t.value),
+    label: `${t.label}（${hex(t.value)}）`,
+    group: kind,
+    keywords: [t.label, hex(t.value), String(t.value)],
+  })),
+);
+
+/** 🟢 見た目と声：見た目の表の全件。女性・男性に分け、その見た目を使う町の人の種類でも検索できるようにする */
+const lookOptions: SelectOption[] = (["f", "m"] as const).flatMap((sex) =>
+  KNOWN_LOOKS.filter((l) => l.sex === sex).map((l) => ({
+    value: String(l.value),
+    label: `${l.label}（${hex(l.value)}）`,
+    group: sex === "f" ? "女性" : "男性",
+    keywords: [l.label, l.usedBy, hex(l.value), String(l.value)],
+  })),
+);
+
 /** 🟢 名前の表の全件。区分ごとにまとめ、英語名でも検索できるようにする */
 const nameOptions: SelectOption[] = NPC_NAMES.map((n) => ({
   value: String(n.id),
@@ -137,12 +156,14 @@ const PERSON_FIELDS: Record<
   },
   look: {
     label: "見た目と声",
-    options: knownOptions(KNOWN_LOOKS),
-    note: "見た目（モデル）と声。はるなをさよの値にすると、見た目と声がさよになった。台詞・強さ・名前は変わらない（確認済み）",
+    options: lookOptions,
+    search: true,
+    note: "見た目（モデル）と声。町の人の約束では、町で出会った相手の見た目が入る。はるなをさよの値にすると、見た目と声がさよになった。台詞・強さ・名前は変わらない（確認済み）。番号は主人公設定の人物と同じ",
   },
   type: {
     label: "しゃべり方と戦闘力",
-    options: knownOptions(KNOWN_TYPES),
+    options: typeOptions,
+    search: true,
     note: "はるなをさよの値にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった。見た目・声・名前は変わらない（確認済み）",
   },
   age: {
@@ -174,7 +195,7 @@ function hintFor(field: PersonField, advanced: boolean): string {
     return advanced ? "0〜255（255＝？）" : `0〜${AGE_NORMAL_MAX}、または 255（？）`;
   if (field === "group") return "0〜0xFFFF";
   if (field === "day") return advanced ? "1〜65536日目" : `1〜${DAY_NORMAL_MAX + 1}日目`;
-  return advanced ? "10進数か 0x 付きの16進数" : "確認済みの値";
+  return advanced ? "10進数か 0x 付きの16進数" : "表にある値";
 }
 
 /**
@@ -275,7 +296,7 @@ function PersonFieldEditor({
           options={spec.options}
           problem={problem}
           note={spec.note}
-          searchPlaceholder="名前・英語名・ID で検索"
+          searchPlaceholder={field === "name" ? "名前・英語名・ID で検索" : "名前・町の人の種類・ID で検索"}
           onChange={(v) => apply(Number(v))}
         />
       ) : (
@@ -375,19 +396,6 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
 const PROMISE_ORDER: PersonField[] = ["name", "look", "type", "age", "blood", "day", "group"];
 const RECORD_ORDER = ["name", "type", "day", "age", "blood"] as const;
 
-const PARTNER_GROUPS = ["名前のある相手", "町の人（女性）", "町の人（男性）"] as const;
-const partnerGroup = (p: PromisePartner) => (p.kind === "special" ? PARTNER_GROUPS[0] : p.sex === "f" ? PARTNER_GROUPS[1] : PARTNER_GROUPS[2]);
-
-/** 相手の選択肢。名前のある相手 → 町の女性 → 町の男性の順 */
-const partnerOptions: SelectOption[] = PARTNER_GROUPS.flatMap((g) =>
-  PROMISE_PARTNERS.filter((p) => partnerGroup(p) === g).map((p) => ({
-    value: String(p.type),
-    label: `${p.label}（${hex(p.type)}）${p.note ? `・${p.note}` : ""}`,
-    group: g,
-    keywords: [p.label, hex(p.type), String(p.type), p.note],
-  })),
-);
-
 /** 名前のある相手ごとの注意（約束の外で変わる値など） */
 const PARTNER_NOTES: Readonly<Record<number, string>> = {
   442: "ゲームでは約束のあとの場面の移動で必ず翌朝になり、すっぽかしになる相手です（書き込みで作った約束では夜這いできた。確認済み）",
@@ -401,12 +409,27 @@ const PARTNER_NOTES: Readonly<Record<number, string>> = {
 
 const lookLabel = (v: number) => {
   const known = KNOWN_LOOKS.find((k) => k.value === v);
-  return known ? `${hex(v)}（${known.label}の見た目）` : hex(v);
+  return known ? `${known.label}（${hex(v)}）` : hex(v);
 };
 const ageLabel = (v: number) => (v === AGE_UNKNOWN ? "？" : `${v}歳`);
-const bloodLabel = (v: number) => BLOOD_TYPES.find((b) => b.value === v)?.label ?? String(v);
 
-/** 空の約束の枠に約束を作る。値は相手の候補から選ぶ（ゲームが約束するときと同じ候補） */
+/** 年齢の選択肢（通常モードの範囲 0〜99 と「？」） */
+const ageOptions: SelectOption[] = [
+  ...Array.from({ length: AGE_NORMAL_MAX + 1 }, (_, v) => ({ value: String(v), label: ageLabel(v) })),
+  { value: String(AGE_UNKNOWN), label: ageLabel(AGE_UNKNOWN) },
+];
+
+/** ゲームが選ぶ候補の説明（名前のある相手は1つに決まる） */
+function candidateHint(values: readonly number[], label: (v: number) => string): string {
+  if (values.length === 1) return `ゲームでは ${label(values[0])}`;
+  if (values.length > 5) return `ゲームでは ${label(values[0])}〜${label(values[values.length - 1])} から選ばれる`;
+  return `ゲームでは ${values.map(label).join("・")} から選ばれる`;
+}
+
+/**
+ * 空の約束の枠に約束を作る。相手の種類（しゃべり方と戦闘力）が組を決める。
+ * 名前・見た目と声・年齢・血液型は種類とは別々に効くので、約束の編集欄と同じ範囲で自由に選べる（初めはゲームが選ぶ候補の値）
+ */
 function CreatePromiseForm({ problem }: { problem: string | null }) {
   const { save, update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -427,8 +450,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
     value: String(r.index),
     label: `${rowLabel(r)}${r.checked ? "・確かめた組" : ""}`,
   }));
-  const names = advanced && partner.kind === "town" ? NPC_NAMES.map((n) => n.id) : nameCandidates(partner);
-  const nameChoices: SelectOption[] = names.map((id) => ({ value: String(id), label: `${nameLabel(id)}（${id}）`, keywords: [String(id), hex(id)] }));
+  const names = nameCandidates(partner);
 
   return (
     <div className="flex flex-col gap-4">
@@ -439,14 +461,14 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="flex flex-col gap-1.5 sm:col-span-3">
           <SearchSelectRow
-            label="相手"
+            label="相手の種類（しゃべり方と戦闘力）"
             offset={promiseFieldOffset("type")}
             value={String(spec.type)}
-            options={partnerOptions}
+            options={typeOptions}
             problem={blocked}
             warning={death}
-            searchPlaceholder="相手の名前・種類・ID で検索"
-            note="約束の枠の +0x04（しゃべり方と戦闘力の型）。名前のある相手は、組・名前・見た目・年齢・血液型が1つに決まっています。町の人は種類ごとの候補から選びます"
+            searchPlaceholder="名前・町の人の種類・ID で検索"
+            note="約束の枠の +0x04。場所と配置の組はこれで決まる。選ぶと、名前・見た目と声・年齢・血液型は、ゲームがその種類で選ぶ候補の値になる（そのあと別々に変えられる）"
             onChange={(v) => {
               setError(null);
               setSpec(defaultSpec(promisePartner(Number(v))!, stage));
@@ -484,38 +506,42 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
           label="名前"
           offset={promiseFieldOffset("name")}
           value={String(spec.name)}
-          options={nameChoices}
+          options={nameOptions}
           problem={blocked}
-          disabled={nameChoices.length <= 1}
-          hint={partner.kind === "town" && !advanced ? `町の人の名前（${partner.sex === "f" ? "女性" : "男性"}）から` : undefined}
-          searchPlaceholder="名前・ID で検索"
+          hint={
+            partner.kind === "town"
+              ? `ゲームでは町の人の名前（${partner.sex === "f" ? "女性" : "男性"}、${names[0]}〜${names[names.length - 1]}）から選ばれる`
+              : candidateHint(names, nameLabel)
+          }
+          searchPlaceholder="名前・英語名・ID で検索"
           onChange={(v) => set({ name: Number(v) })}
         />
-        <SelectRow
+        <SearchSelectRow
           label="見た目と声"
           offset={promiseFieldOffset("look")}
           value={String(spec.look)}
-          options={partner.looks.map((v) => ({ value: String(v), label: lookLabel(v) }))}
+          options={lookOptions}
           problem={blocked}
-          disabled={partner.looks.length <= 1}
+          hint={candidateHint(partner.looks, lookLabel)}
+          searchPlaceholder="名前・町の人の種類・ID で検索"
           onChange={(v) => set({ look: Number(v) })}
         />
         <SelectRow
           label="年齢"
           offset={promiseFieldOffset("age")}
           value={String(spec.age)}
-          options={ageCandidates(partner).map((v) => ({ value: String(v), label: ageLabel(v) }))}
+          options={ageOptions}
           problem={blocked}
-          disabled={!partner.ageRandom}
+          hint={candidateHint(ageCandidates(partner), ageLabel)}
           onChange={(v) => set({ age: Number(v) })}
         />
         <SelectRow
           label="血液型"
           offset={promiseFieldOffset("blood")}
           value={String(spec.blood)}
-          options={bloodCandidates(partner).map((v) => ({ value: String(v), label: bloodLabel(v) }))}
+          options={knownOptions(BLOOD_TYPES)}
           problem={blocked}
-          disabled={partner.blood !== 0}
+          hint={candidateHint(bloodCandidates(partner), (v) => BLOOD_TYPES.find((b) => b.value === v)?.label ?? String(v))}
           onChange={(v) => set({ blood: Number(v) })}
         />
       </div>
@@ -524,13 +550,12 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
           <Button
             size="sm"
             variant="outline"
-            disabled={partner.kind === "special"}
             onClick={() => {
               setError(null);
               setSpec(randomSpec(partner, stage));
             }}
           >
-            くじで選び直す
+            ゲームと同じくじで選ぶ
           </Button>
           <Button
             size="sm"

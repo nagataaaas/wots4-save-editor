@@ -45,6 +45,7 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 | `place/night-visit-place.csv` | 夜の約束の場所     | このリストのみ           | u16 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x08      |
 | `place/night-visit-row.csv`   | 夜の約束の組（0〜74） | このリストのみ        | 約束の枠の +0x00〜+0x1B（28 B） |           | [night-visit](../chunks/night-visit/README.md) +0x00〜+0x1B |
 | `npc/night-visit-partner.csv` | 約束できる相手の種類 | 町の人の種類（0〜796）のうち約束できるもの | u32 LE        | `FFFFFFFF`＝約束なし | [night-visit](../chunks/night-visit/README.md) +0x04 |
+| `npc/npc-look.csv`            | 人物の見た目と声（1〜245） | 人物（容姿）と同じ番号 | u32 LE                 | `FFFFFFFF`＝約束なし | [night-visit](../chunks/night-visit/README.md) +0x20 |
 | `occupation/occupation.csv`   | なりわい（3〜212） | このリストのみ（0〜255） | 状態の表の添字・u16 LE       |              | [occupation](../chunks/occupation/README.md)              |
 | `npc/npc-name.csv`            | 人物の名前         | このリストのみ（1〜8200）| u32 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x1C・記録 +0x04 |
 | `sect/sect.csv`               | 流派（0〜112）     | このリストのみ           | i16 LE                       |              | [styles](../chunks/styles/README.md)、[sect-scrolls](../chunks/sect-scrolls/README.md) |
@@ -138,6 +139,8 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
   `blood` は血液型（0＝1〜4 から選ぶ）、`group` は町の人が使う `night-visit-row.csv` のまとまり、`row` は名前のある相手が使う行。
   `status` は 🟢 か、ゲームの反映を確かめたもの（✅ 実データ＝ゲームが作った約束を見た、✅ 書き込みで確認＝この表の値を書いて夜這いできた）。
   町の人は、女児・男児（「惚れた」の会話がない）と、約束すると枠が壊れる坂本を入れていない
+- `npc/npc-look.csv`：全行 🟢。町の人の種類が使う見た目（モデル）と声の222件。番号は `appearance/person.csv`（人物）と同じで、`person` が 1 の行は人物の表にもある（`name_ja` は人物の名前）。
+  `person` が 0 の行の `name_ja` は、その見た目を使う町の人の種類の名前。`used_by` はその見た目を使う町の人の種類（`・` 区切り）、`sex` は見た目の性別
 - `place/start-location.csv`：開始地点（現在地、位置 0x13 の u8）。`crash` は 1＝クラッシュが報告されている値（選択肢に出さない）。
   `warning_ja` は選べるが注意が必要な値の注意書き（画面にそのまま出す）。0xC5 以降は未調査で表にない
 - `source`（パーツ・銘・魅力・完成武器・アイテム）：出典。`CT`＝Cheat Engine テーブル、`TS`＝[TS] の定義、`U`＝ユーザーのゲーム内確認、`SE-BBS`＝PS3版の掲示板。複数あるときは `;` で区切る

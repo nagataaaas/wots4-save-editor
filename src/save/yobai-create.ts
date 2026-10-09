@@ -15,6 +15,8 @@
 //    名前のある男性7人は 🟢 だけで、ゲーム内では確かめていない（要ゲーム内確認）。
 // 🟢 町の人の組は、相手のまとまり（1・2）の行から、段階 0x13E30 の行（30% ずつ1段下がる）が選ばれる。
 //    通常モードでは段階 0x13E30 以下の行だけ、上級者モードではまとまりの全行を選べる。
+// 名前・見た目・年齢・血液型は、ゲームが選ぶ候補（defaultSpec・randomSpec）とは別に、約束の編集欄と同じ範囲で選べる
+//    （✅ [U] 型・名前・見た目は別々に効く。見た目は datatable/npc/npc-look.csv の表）。
 // 🟢 名前のある相手が死んでいても、約束を止める判定はない。エディタでは警告だけ出す。
 //
 // 書くのは +0x04 が FFFFFFFF（約束なし）の枠だけ。ファイルサイズが 0x48BB0 のときだけ書く。
@@ -22,8 +24,8 @@ import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary"
 import { checkLayout } from "./hero";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_ROW_TABLE } from "./master/dataset/night-visit-row";
-import { NPC_NAMES, npcName } from "./master/npc-names";
-import { PLACES, PROMISE_EMPTY, PROMISE_OFFSET } from "./yobai";
+import { NPC_NAMES } from "./master/npc-names";
+import { PLACES, PROMISE_EMPTY, PROMISE_OFFSET, validatePersonField } from "./yobai";
 
 /** 書くバイト数（+0x00〜+0x29） */
 export const PROMISE_WRITE_LENGTH = 0x2a;
@@ -212,7 +214,8 @@ export function createProblem(bytes: Uint8Array): string | null {
 
 /**
  * 約束の中身の検証。問題がなければ null。
- * 通常モード：相手の候補にある値だけ（組は段階 0x13E30 以下）。上級者モード：組はまとまりの全行、名前は名前の表の全件
+ * 組：通常モードは段階 0x13E30 以下、上級者モードはまとまりの全行。
+ * 名前・見た目・年齢・血液型：validatePersonField と同じ（通常モードは表にある値、上級者モードは型の範囲で任意）
  */
 export function validateSpec(spec: PromiseSpec, stage: number, opts: { advanced: boolean }): string | null {
   const partner = promisePartner(spec.type);
@@ -221,11 +224,11 @@ export function validateSpec(spec: PromiseSpec, stage: number, opts: { advanced:
     return opts.advanced || partner.row !== null
       ? `この相手には使えない組です: ${spec.row}`
       : `いまの段階（${stage}）より上の組です（上級者モードで選べます）: ${spec.row}`;
-  const nameOk = opts.advanced && partner.kind === "town" ? npcName(spec.name) !== undefined : nameCandidates(partner).includes(spec.name);
-  if (!nameOk) return `この相手の名前の候補ではありません: ${spec.name}`;
-  if (!partner.looks.includes(spec.look)) return `この相手の見た目の候補ではありません: 0x${spec.look.toString(16)}`;
-  if (!ageCandidates(partner).includes(spec.age)) return `この相手の年齢の候補ではありません: ${spec.age}`;
-  if (!bloodCandidates(partner).includes(spec.blood)) return `この相手の血液型の候補ではありません: ${spec.blood}`;
+  // 名前・見た目と声・年齢・血液型は種類とは別々に効く（✅ [U]）ので、約束の編集欄と同じ範囲で選べる。NaN は書き戻しの扱いをしないため
+  for (const field of ["name", "look", "age", "blood"] as const) {
+    const error = validatePersonField(field, spec[field], Number.NaN, opts);
+    if (error) return error;
+  }
   return null;
 }
 
