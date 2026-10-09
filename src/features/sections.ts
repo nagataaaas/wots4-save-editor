@@ -105,7 +105,7 @@ export const sectionGroups: SectionGroup[] = [
         icon: ScrollText,
         sections: [
           { id: 'skills', label: '技一覧', note: 'skill-states（構えごとの技の一覧と覚え状況 ✅ [U]、固有技の状態 3 は 🟢）' },
-          { id: 'styles', label: '流派', note: 'styles・skill-states・sect-scrolls（技の覚え状況 ✅ [U]、修練度・段 🟢）' },
+          { id: 'styles', label: '流派一覧', note: 'styles・skill-states・sect-scrolls（技の覚え状況 ✅ [U]、修練度・段 🟢）' },
           { id: 'ore-ryu', label: '俺流', note: 'custom-style・belt-copy（俺流の技の表）🟢 要ゲーム内確認' },
         ],
       },
