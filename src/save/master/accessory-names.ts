@@ -26,6 +26,11 @@ export type AccessoryEntry = {
   dlc: number | null;
   shop: boolean;
   menuOrder: number;
+  /** 🟢 装着時の標準部位・位置・回転（度）・一様サイズ。セーブには補正を保存する。 */
+  defaultAttachment: number;
+  defaultPosition: readonly [number, number, number];
+  defaultRotation: readonly [number, number, number];
+  defaultSize: number;
 };
 
 export type UnlockEntry = {
@@ -47,6 +52,10 @@ function loadAccessories(): AccessoryEntry[] {
     dlc: r.dlc,
     shop: r.shop === 1,
     menuOrder: r.menu_order,
+    defaultAttachment: r.default_attachment_id,
+    defaultPosition: [r.default_position_x, r.default_position_y, r.default_position_z],
+    defaultRotation: [r.default_rotation_x, r.default_rotation_y, r.default_rotation_z],
+    defaultSize: r.default_size,
   }));
 }
 

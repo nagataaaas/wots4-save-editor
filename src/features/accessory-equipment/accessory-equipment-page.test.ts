@@ -1,0 +1,90 @@
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { describe, expect, it } from 'vitest'
+import { SaveContext, type SaveContextValue } from '@/lib/save-context'
+import { AdvancedModeContext } from '@/lib/advanced-mode-context'
+import { TS_SAVE_SIZE } from '@/save/hero'
+import { ACCESSORY_EQUIPMENT_BASES } from '@/save/accessory-equipment'
+import { pages } from '@/features/pages'
+import { sectionGroups, sections } from '@/features/sections'
+import { AccessoryEquipmentPage } from './accessory-equipment-page'
+
+function render(bytes: Uint8Array | null, advanced = false) {
+  const ctx: SaveContextValue = {
+    save: bytes ? { name: 'synthetic', original: bytes.slice(), working: bytes, saved: bytes.slice(), loadId: 1 } : null,
+    error: null, changedBytes: 0, unsavedBytes: 0,
+    load: async () => {}, update: () => {}, downloadBackup: () => {}, downloadEdited: () => {},
+  }
+  return renderToStaticMarkup(createElement(SaveContext.Provider, { value: ctx },
+    createElement(AdvancedModeContext.Provider, { value: { advanced, setAdvanced: () => {} } }, createElement(AccessoryEquipmentPage))))
+}
+
+describe('装飾品の装着画面', () => {
+  it('主人公の直下に独立した装飾品を登録し、既存の所持画面は維持', () => {
+    const items = sectionGroups[0].items
+    expect(items[0]).toMatchObject({ id: 'hero' })
+    expect(items[1]).toMatchObject({ id: 'accessory-equipment', label: '装飾品' })
+    expect(sections.filter(s => s.label === '装飾品')).toHaveLength(2)
+    expect(new Set(sections.map(s => s.id)).size).toBe(sections.length)
+    expect(pages['accessory-equipment']).toBe(AccessoryEquipmentPage)
+    expect(pages.accessories).toBeDefined()
+  })
+  it('上級者モードでは拡張範囲を表示し、通常範囲外の値を編集可能にする', () => {
+    const bytes = new Uint8Array(TS_SAVE_SIZE)
+    const view = new DataView(bytes.buffer)
+    view.setFloat32(0x39d0, 100, true)
+    view.setFloat32(0x3a00, 99, true) // 表示サイズ100
+    const normal = render(bytes)
+    expect(normal).toContain('読み取り専用')
+    const advanced = render(bytes, true)
+    expect(advanced).toContain('-100〜100')
+    expect(advanced).toContain('0〜100')
+    expect(advanced).not.toContain('読み取り専用')
+  })
+  it('編集する枠は全10枠を常時表示し、選択中の枠を示す', () => {
+    const html = render(null)
+    const list = html.match(/<fieldset\b[^>]*>[\s\S]*?<\/fieldset>/)?.[0]
+    expect(list).toBeDefined()
+    expect(list).toContain('編集する枠')
+    expect(list).not.toContain('<select')
+    expect(list?.match(/<button\b/g)).toHaveLength(10)
+    expect(list?.match(/aria-pressed="true"/g)).toHaveLength(1)
+    for (let i = 1; i <= 10; i++) expect(list).toContain(`${i}枠目：未読み込み`)
+  })
+  it('装飾品選択と枠リストを同じカード内で5:2に並べ、境界線で区切る', () => {
+    const html = render(null)
+    const firstCard = html.split('<div data-slot="card"')[1]
+    expect(firstCard).toContain('編集する枠')
+    expect(firstCard).toContain('装飾品を変更すると')
+    expect(firstCard).toContain('sm:grid-cols-[minmax(0,5fr)_minmax(0,2fr)]')
+    expect(firstCard).toContain('border-t')
+    expect(firstCard).toContain('sm:border-l')
+  })
+  it('未読み込みでも入力欄と調整モードを表示', () => {
+    const html = render(null)
+    expect(html).toContain('納刀の調整')
+    expect(html).toContain('調整する構え')
+    expect(html).toContain('抜刀')
+    expect(html).toContain('共通')
+    expect(html).toContain('俺のおしゃれ1')
+    expect(html).toContain('俺のおしゃれ5')
+    expect(html).not.toContain('アンサンブル')
+    expect(html).toContain('disabled')
+  })
+  it('🟢 合成した装着とサイズ1.0を表示。❓ U-1 サイズ不一致は読み取り専用', () => {
+    const bytes = new Uint8Array(TS_SAVE_SIZE)
+    const view = new DataView(bytes.buffer)
+    for (const base of ACCESSORY_EQUIPMENT_BASES) for (let i = 0; i < 10; i++) view.setInt16(base + i * 64 + 62, -1, true)
+    view.setInt16(0x3a0a, 157, true)
+    bytes[0x3a08] = 1
+    const html = render(bytes)
+    expect(html).toContain('おんぶさよ人形')
+    expect(html).toContain('標準の取り付け先：胸・背中')
+    expect(html).toContain('標準位置：')
+    expect(html).toContain('標準設定に戻す')
+    expect(html).toContain('value="1"')
+    const wrongSize = new Uint8Array(TS_SAVE_SIZE + 1)
+    wrongSize.set(bytes)
+    expect(render(wrongSize)).toContain('読み取り専用')
+  })
+})

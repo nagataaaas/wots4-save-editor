@@ -5,6 +5,7 @@ import { Binary, ClipboardList, Flag, Globe, Moon, Package, ScrollText, Shirt, S
 
 export type SectionId =
   | 'hero'
+  | 'accessory-equipment'
   | 'belt'
   | 'weapon-bag'
   | 'weapon-chest'
@@ -59,6 +60,7 @@ export const sectionGroups: SectionGroup[] = [
     label: '編集',
     items: [
       { id: 'hero', label: '主人公', icon: User, note: 'money・player-name・stats・vitals（所持金・侍点・名前・活力・HP）、date-location（難易度・主人公設定のやり直し）' },
+      { id: 'accessory-equipment', label: '装飾品', icon: Shirt, note: 'accessories（装着10枠・位置・回転・大きさ・俺のおしゃれ 🟢 要ゲーム内確認）' },
       {
         label: '武器',
         icon: Sword,

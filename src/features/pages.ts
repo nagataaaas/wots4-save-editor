@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { AccessoryEquipmentPage } from '@/features/accessory-equipment/accessory-equipment-page'
 import { BeltPage } from '@/features/belt/belt-page'
 import { EventChartPage } from '@/features/event-chart/event-chart-page'
 import { HeroPage } from '@/features/hero/hero-page'
@@ -19,6 +20,7 @@ import type { SectionId } from '@/features/sections'
 /** 実装済みの画面。ここにない項目は仮表示になる */
 export const pages: Partial<Record<SectionId, ComponentType>> = {
   hero: HeroPage,
+  'accessory-equipment': AccessoryEquipmentPage,
   belt: BeltPage,
   'weapon-bag': WeaponBagPage,
   'weapon-chest': WeaponChestPage,
