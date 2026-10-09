@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { LazyTip } from "@/components/lazy-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
-import { SECTS, STANCES, sheetSkillTree, stanceSkillSheet, stanceSkills, type Sect, type SkillSheet } from "@/save/master/sect-data";
+import { SECTS, SLOT_LABELS, STANCES, sheetSkillTree, stanceSkillSheet, stanceSkills, type Sect, type SkillSheet } from "@/save/master/sect-data";
 import {
   forgetStanceSkill,
   isUniqueStanceSkill,
@@ -43,6 +43,12 @@ const ATTR_LABELS: Record<string, string> = {
   [ANY]: "すべての効果",
   ...Object.fromEntries(ATTR_OPTIONS.map((a) => [a, attrLabel(a)])),
 };
+
+/** タブの段：刀の構え（構えの組 0）と、それ以外（構えの組の順 🟢：槍・無手・拳銃・ライフル・二刀） */
+const STANCE_ROWS = [
+  { label: SLOT_LABELS[0], stances: STANCES.filter((s) => s.slot === 0) },
+  { label: `${SLOT_LABELS[0]}以外`, stances: STANCES.filter((s) => s.slot !== 0).toSorted((a, b) => a.slot - b.slot || a.id - b.id) },
+];
 
 /** 構えの技 1 つが入っている技の表・流派 */
 type Row = {
@@ -85,6 +91,8 @@ export function SkillsPage() {
       }),
     [],
   );
+  const shownByStance = useMemo(() => trees.map((t) => filterSortTree(t.groups, filter, sort)), [trees, filter, sort]);
+  const filtering = JSON.stringify(filter) !== JSON.stringify(EMPTY_FILTER);
 
   const result = useMemo((): { view: SectsView } | { error: string } | null => {
     if (!save) return null;
@@ -148,38 +156,42 @@ export function SkillsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            <Input className="w-48" placeholder="技の名前で絞り込み" value={filter.query} onChange={(e) => set({ query: e.target.value })} />
-            <Select value={filter.command} items={COMMAND_LABELS} onValueChange={(v) => v !== null && set({ command: v })}>
-              <SelectTrigger className="w-44" aria-label="入力で絞り込み">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[ANY, ...COMMAND_OPTIONS].map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {COMMAND_LABELS[c]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filter.kind} items={SKILL_KIND_LABELS} onValueChange={(v) => v !== null && set({ kind: v as SkillKind })}>
-              <SelectTrigger className="w-32" aria-label="技の種類で絞り込み">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(SKILL_KIND_LABELS) as SkillKind[]).map((k) => (
-                  <SelectItem key={k} value={k}>
-                    {SKILL_KIND_LABELS[k]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <label className="flex items-center gap-1.5">
-              攻撃力
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4 lg:grid-cols-[repeat(6,minmax(0,1fr))_auto]">
+            <FilterField label="技の名前">
+              <Input placeholder="名前で絞り込み" value={filter.query} onChange={(e) => set({ query: e.target.value })} />
+            </FilterField>
+            <FilterField label="入力">
+              <Select value={filter.command} items={COMMAND_LABELS} onValueChange={(v) => v !== null && set({ command: v })}>
+                <SelectTrigger className="w-full" aria-label="入力で絞り込み">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[ANY, ...COMMAND_OPTIONS].map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {COMMAND_LABELS[c]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label="種類">
+              <Select value={filter.kind} items={SKILL_KIND_LABELS} onValueChange={(v) => v !== null && set({ kind: v as SkillKind })}>
+                <SelectTrigger className="w-full" aria-label="技の種類で絞り込み">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(SKILL_KIND_LABELS) as SkillKind[]).map((k) => (
+                    <SelectItem key={k} value={k}>
+                      {SKILL_KIND_LABELS[k]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label="攻撃力（以上）">
               <Input
-                className="w-20"
                 inputMode="numeric"
-                placeholder="0"
+                placeholder="指定なし"
                 value={minAttackText}
                 onChange={(e) => {
                   const t = e.target.value;
@@ -189,38 +201,43 @@ export function SkillsPage() {
                 }}
                 aria-label="攻撃力の下限"
               />
-              以上
-            </label>
-            <Select value={filter.attr} items={ATTR_LABELS} onValueChange={(v) => v !== null && set({ attr: v })}>
-              <SelectTrigger className="w-44" aria-label="効果で絞り込み">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[ANY, ...ATTR_OPTIONS].map((a) => (
-                  <SelectItem key={a} value={a}>
-                    {ATTR_LABELS[a]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sort} items={SKILL_SORT_LABELS} onValueChange={(v) => v !== null && setSort(v as SkillSort)}>
-              <SelectTrigger className="w-48" aria-label="並べ替え">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(SKILL_SORT_LABELS) as SkillSort[]).map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {SKILL_SORT_LABELS[s]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            </FilterField>
+            <FilterField label="効果">
+              <Select value={filter.attr} items={ATTR_LABELS} onValueChange={(v) => v !== null && set({ attr: v })}>
+                <SelectTrigger className="w-full" aria-label="効果で絞り込み">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[ANY, ...ATTR_OPTIONS].map((a) => (
+                    <SelectItem key={a} value={a}>
+                      {ATTR_LABELS[a]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label="並べ替え">
+              <Select value={sort} items={SKILL_SORT_LABELS} onValueChange={(v) => v !== null && setSort(v as SkillSort)}>
+                <SelectTrigger className="w-full" aria-label="並べ替え">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(SKILL_SORT_LABELS) as SkillSort[]).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {SKILL_SORT_LABELS[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
             <Button
-              variant="ghost"
-              size="sm"
+              variant="outline"
+              className="self-end"
+              disabled={!filtering && sort === "id-asc"}
               onClick={() => {
                 setFilter(EMPTY_FILTER);
                 setMinAttackText("");
+                setSort("id-asc");
               }}
             >
               条件を戻す
@@ -230,27 +247,42 @@ export function SkillsPage() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="0">
-        <TabsList className="flex-wrap group-data-horizontal/tabs:h-auto">
-          {STANCES.map((stance) => {
-            const states = view.stanceStates[stance.id];
-            const nos = [...rowsByStance[stance.id].keys()];
-            return (
-              <TabsTrigger key={stance.id} value={String(stance.id)} className="flex-none">
-                {stance.nameJa}
-                <span className="text-muted-foreground text-xs font-normal tabular-nums">
-                  {nos.filter((no) => states[no] !== 0).length}/{nos.length}
-                </span>
-              </TabsTrigger>
-            );
-          })}
+      <Tabs defaultValue="0" className="bg-card rounded-xl border p-3 shadow-xs">
+        {/* 構えは「刀」と「刀以外」の 2 段に、同じ幅の枠で並べる。数は 習得済/技の数、絞り込み中は条件に合う技の数 */}
+        <TabsList className="h-auto w-full flex-col items-stretch gap-1.5 p-2 group-data-horizontal/tabs:h-auto">
+          {STANCE_ROWS.map((row) => (
+            <div key={row.label} className="flex items-center gap-2">
+              <span className="text-muted-foreground w-12 shrink-0 pl-1 text-xs font-medium">{row.label}</span>
+              <div className="grid flex-1 grid-cols-3 gap-1 sm:grid-cols-4 lg:grid-cols-7">
+                {row.stances.map((stance) => {
+                  const states = view.stanceStates[stance.id];
+                  const nos = [...rowsByStance[stance.id].keys()];
+                  const hits = shownByStance[stance.id].skillNos.size;
+                  return (
+                    <TabsTrigger
+                      key={stance.id}
+                      value={String(stance.id)}
+                      // 押せる枠に見えるように、選んでいない構えも枠と背景を付け、選んだ構えは塗りつぶす
+                      className="border-border bg-background text-foreground not-data-active:hover:border-foreground/40 not-data-active:hover:bg-accent data-active:border-primary data-active:bg-primary data-active:text-primary-foreground data-active:hover:text-primary-foreground dark:data-active:border-primary dark:data-active:bg-primary dark:data-active:text-primary-foreground h-8 w-full cursor-pointer justify-between px-2.5 shadow-xs"
+                      disabled={filtering && hits === 0}
+                    >
+                      {stance.nameJa}
+                      <span className="text-xs font-normal tabular-nums opacity-70">
+                        {filtering ? `${hits}件` : `${nos.filter((no) => states[no] !== 0).length}/${nos.length}`}
+                      </span>
+                    </TabsTrigger>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </TabsList>
         {STANCES.map((stance) => (
           <TabsContent key={stance.id} value={String(stance.id)}>
             <StanceSkillTable
               stance={stance.id}
               sheet={trees[stance.id].sheet}
-              shown={filterSortTree(trees[stance.id].groups, filter, sort)}
+              shown={shownByStance[stance.id]}
               rows={rowsByStance[stance.id]}
               states={view.stanceStates[stance.id]}
               readOnly={readOnly}
@@ -261,6 +293,15 @@ export function SkillsPage() {
         ))}
       </Tabs>
     </div>
+  );
+}
+
+function FilterField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="flex min-w-0 flex-col gap-1">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      {children}
+    </label>
   );
 }
 
