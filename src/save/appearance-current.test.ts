@@ -16,9 +16,9 @@ function makeSave(header = 0x3aad4, relatedHeader = 0x46334) {
 }
 
 describe('現在の見た目（❓ U-1 固定位置）', () => {
-  it('✅ 体型・身長の反映を確認。性別変更後も固定位置を読み、編集後も保持する', () => {
+  it('✅ 体型・身長の反映を確認。タイプ（男→女）変更後も固定位置を読み、編集後も保持する', () => {
     const bytes = makeSave()
-    // copy 5 の観測値を合成。容姿ID、性別側の値、現在・関連領域の身長が変わる。
+    // copy 5 の観測値を合成。容姿ID、タイプ側の値、現在・関連領域の身長が変わる。
     bytes.set([0xee, 0, 0xff, 0xff, 0, 0, 3, 0, 0, 0, 0, 0], 0x3aad4)
     writeF32(bytes, 0x3aae0, 175)
     writeF32(bytes, 0x46338, 175)

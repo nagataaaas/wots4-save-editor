@@ -1,4 +1,4 @@
-// 主人公の見た目のレコード（人物・髪の色・性別・部品）。sample/ のファイルは読まず、実セーブで観測した値を合成する。
+// 主人公の見た目のレコード（人物・髪の色・タイプ・部品）。sample/ のファイルは読まず、実セーブで観測した値を合成する。
 // 部品の番号・モデルの値 🟢、顔・髪型・小物・人物選択の書き込みは ✅ [U] 2026-10-08（U-19）。
 // 手（k＝4）・足元の層を外す書き込みは ✅ [U] 2026-10-08。層を別の部品の値にする組み合わせは 🔶（上級者モードだけ）。
 // 上半身・下半身・足元の部品の書き込み、髪の色の 3 以外（🔶）は U-19 の判定待ち。
@@ -12,7 +12,8 @@ import {
   writeNude,
   readAppearanceParts,
   validatePart,
-  writeGender,
+  bodyKindName,
+  writeBodyKind,
   writeHairColor,
   writePart,
   writePerson,
@@ -51,7 +52,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
   it('🟢 幕末の志士の観測値を読む', () => {
     const view = readAppearanceParts(makeSave())!
     expect(view.problem).toBeNull()
-    expect([view.person, view.secondId, view.hairColor, view.gender]).toEqual([238, 0xffff, 3, 0])
+    expect([view.person, view.secondId, view.hairColor, view.bodyKind]).toEqual([238, 0xffff, 3, 0])
     expect(view.parts.upper).toMatchObject({ offset: 0x3aae4, id: 70, models: [190, -1, -1, -1] })
     expect(view.parts.lower).toMatchObject({ id: 95, models: [213, 279, 213, -1] })
     expect(view.parts.face).toMatchObject({ offset: 0x3aafc, id: 43, models: [42, -1, -1, -1] })
@@ -78,7 +79,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes).toEqual(before)
   })
 
-  it('✅ [U] H1・H2：人物の番号・0x3AAD6（🔶）・性別・身長・髪の色・部品をその人物の値で書く', () => {
+  it('✅ [U] H1・H2：人物の番号・0x3AAD6（🔶）・タイプ・身長・髪の色・部品をその人物の値で書く', () => {
     const bytes = makeSave()
     writePerson(bytes, 245)
     expect(Array.from(bytes.subarray(0x3aad4, 0x3aad8))).toEqual([0xf5, 0, 0xf5, 0])
@@ -94,12 +95,9 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(readF32(bytes, 0x3aae0)).toBe(175)
   })
 
-  it('✅ [U] ローラ（体の種類 2）・男の子・女の子（体の種類 3）は上級者モードだけで選べる', () => {
+  it('✅ [U] ローラ（タイプ 2）・男の子・女の子（タイプ 3）も通常モードで選べる（ユーザー判断 2026-10-09）', () => {
     const bytes = makeSave()
-    const before = bytes.slice()
-    expect(() => writePerson(bytes, 29)).toThrow(/上級者/)
-    expect(bytes).toEqual(before)
-    writePerson(bytes, 29, true)
+    writePerson(bytes, 29)
     // ユーザーが貼り付けて表示を確認したバイト列（2026-10-08）
     expect(bytes.subarray(0x3aad4, 0x3aad8)).toEqual(hex('1D 00 1D 00'))
     expect([bytes[0x3aada], bytes[0x3aadc]]).toEqual([0, 2])
@@ -112,7 +110,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(findPerson(153)!.parts.feet).toBe(19)
     for (const [id, kind] of [[153, 3], [155, 3]] as const) {
       expect(findPerson(id)).toMatchObject({ bodyKind: kind, selectable: false })
-      writePerson(bytes, id, true)
+      writePerson(bytes, id)
       expect(bytes[0x3aadc]).toBe(kind)
     }
   })
@@ -269,11 +267,21 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes.subarray(0x3ab30, 0x3ab38)).toEqual(hex('FF FF FF FF FF FF FF FF'))
   })
 
-  it('通常モードは主人公と同じ性別の名前のある部品だけ。上級者モードでは表にある部品なら許可する（ユーザー判断 2026-10-08）', () => {
+  it('通常モードは主人公のタイプに合う名前のある部品だけ。上級者モードでは表にある部品なら許可する（ユーザー判断 2026-10-08）', () => {
     const female = PARTS.face.find(p => p.gender === '女' && p.ja !== '')!
+    const male = PARTS.face.find(p => p.gender === '男' && p.ja !== '')!
     const unnamed = PARTS.upper.find(p => p.ja === '')!
     expect(validatePart('face', female.id, 0, false)).not.toBeNull()
     expect(validatePart('face', female.id, 1, false)).toBeNull()
+    // ローラ（2）・子供（3）は男用・女用の部品を選べない
+    for (const bodyKind of [2, 3]) {
+      expect(validatePart('face', female.id, bodyKind, false)).not.toBeNull()
+      expect(validatePart('face', male.id, bodyKind, false)).not.toBeNull()
+      expect(validatePart('face', female.id, bodyKind, true)).toBeNull()
+    }
+    // 男・女のときはローラ・子供用の部品（名前なし）を選べない
+    expect(validatePart('face', 5, 0, false)).not.toBeNull()
+    expect(validatePart('upper', 41, 1, false)).not.toBeNull()
     expect(validatePart('upper', unnamed.id, 0, false)).not.toBeNull()
     expect(validatePart('body', 7, 0, false)).not.toBeNull()
     expect(validatePart('face', 999, 0, true)).not.toBeNull()
@@ -288,6 +296,32 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes).toEqual(before)
     writePart(bytes, 'face', female.id, true)
     expect(bytes[0x3aafc]).toBe(female.id)
+  })
+
+  it('通常モードでも、タイプがローラ・子供ならそのタイプ用の部品を選べる（ユーザー判断 2026-10-09。上半身・足元の反映は U-19）', () => {
+    const allowed = (bodyKind: number) =>
+      Object.fromEntries(
+        PART_KINDS.map(k => [k, PARTS[k].filter(p => validatePart(k, p.id, bodyKind, false) === null).map(p => p.id)]),
+      )
+    // 見た目 ✅ [U] 2026-10-08、層の形がそのタイプのもの 🟢
+    expect(allowed(2)).toEqual({
+      upper: [6], lower: [], face: [5], hair: [5], body: [], feet: [4],
+      gauntlet: [], leggings: [], apron: [], cape: [],
+    })
+    expect(allowed(3)).toEqual({
+      upper: [41, 75, 76, 77], lower: [], face: [27, 36], hair: [27, 28], body: [], feet: [19, 23],
+      gauntlet: [], leggings: [], apron: [], cape: [],
+    })
+    // 4（動物）など表にないタイプは何も選べない
+    expect(PART_KINDS.every(k => PARTS[k].every(p => validatePart(k, p.id, 4, false) !== null))).toBe(true)
+    // 人物の部品と矛盾しない：ローラ・男の子・女の子を選んだあと、部品をその値のまま書き直せる
+    for (const personId of [29, 153, 155]) {
+      const bytes = makeSave()
+      writePerson(bytes, personId)
+      const person = findPerson(personId)!
+      for (const kind of ['upper', 'face', 'hair', 'feet'] as const) writePart(bytes, kind, person.parts[kind]!)
+      expect(readAppearanceParts(bytes)!.parts.face.id).toBe(person.parts.face)
+    }
   })
 
   it('✅ [U] 髪の色は 0x3AADA に書き、人物の番号を FFFF にする。通常モードは一覧にある 1〜9（5〜9 の名前は 🔶）', () => {
@@ -324,15 +358,30 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(readAppearanceParts(bytes)!.parts.lower.id).toBe(-1)
   })
 
-  it('🔶 性別の単独の書き込みは上級者モードだけ', () => {
+  it('🔶 0＝男・1＝女、🟢 2＝ローラ・3＝子供・4＝動物（U-19）。範囲外は null', () => {
+    expect([0, 1, 2, 3, 4, 5].map(bodyKindName)).toEqual(['男', '女', 'ローラ', '子供', '動物', null])
+  })
+
+  it('🔶 タイプの単独の書き込みは上級者モードだけ', () => {
     const bytes = makeSave()
-    expect(() => writeGender(bytes, 1, false)).toThrow()
-    writeGender(bytes, 1, true)
+    expect(() => writeBodyKind(bytes, 1, false)).toThrow()
+    writeBodyKind(bytes, 1, true)
     expect(bytes[0x3aadc]).toBe(1)
-    // ✅ [U] 2026-10-08 体の種類 4（動物）はクラッシュするので上級者モードでも拒否する
-    expect(() => writeGender(bytes, 4, true)).toThrow(/クラッシュ/)
-    expect(bytes[0x3aadc]).toBe(1)
+    // ✅ [U] 2026-10-08 ローラ・子供は人物として表示を確認
+    writeBodyKind(bytes, 3, true)
+    expect(readAppearanceParts(bytes)!.bodyKind).toBe(3)
+    // ✅ [U] 2026-10-08 タイプ 4（動物）はクラッシュするので上級者モードでも拒否する
+    expect(() => writeBodyKind(bytes, 4, true)).toThrow(/クラッシュ/)
+    expect(bytes[0x3aadc]).toBe(3)
     expect(bytes[0x3aad4]).toBe(0xee)
+  })
+
+  it('✅ [U] 裸はタイプが男・女のときだけ', () => {
+    const bytes = makeSave()
+    writeBodyKind(bytes, 2, true)
+    const before = bytes.slice()
+    expect(() => writeNude(bytes, 'upper')).toThrow(/男・女/)
+    expect(bytes).toEqual(before)
   })
 
   it('❓ U-1 サイズ違いのファイルには書き込まない', () => {

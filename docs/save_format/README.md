@@ -138,7 +138,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x01920E`      | `0x01A60F`   | [custom-style](chunks/custom-style/README.md)     | 俺流（件数・80 B × 64 枠）                     | 🟢                            |
 | `0x01A610`      | `0x03AA11`   | [belt-copy](chunks/belt-copy/README.md)           | 俺流の技の表（件数・0x408 B × 128 枠。後半はゲームの状態ではない値） | 🟢                            |
 | `0x03AA12`      | `0x03AAD1`   | [skill-kills](chunks/skill-kills/README.md)       | 技ごとの斬殺数（6 B × 32 枠。俺流に組み込む条件）    | 🟢                            |
-| `0x03AAD4`      | `0x03AB5B`   | [appearance](chunks/appearance/README.md)         | 主人公の見た目（人物・肌色・性別・体型・身長・部品の番号） | ✅肌色・体型・身長 ／ 🟢部品 ／ 一部 ❓ |
+| `0x03AAD4`      | `0x03AB5B`   | [appearance](chunks/appearance/README.md)         | 主人公の見た目（人物・肌色・タイプ・体型・身長・部品の番号） | ✅肌色・体型・身長 ／ 🟢部品 ／ 一部 ❓ |
 | `0x03AB5C`      | `0x03AB7A`   | [appearance](chunks/appearance/README.md)         | 容姿の解放ビット（服の番号 0〜241 ごとに1ビット） | ✅位置 ／ 🟢服の対応          |
 | `0x043318`      | `0x043381`   | [unlocks](chunks/unlocks/README.md)               | 特典解除の状態（確認したセーブ、1 B × 106）    | 先頭16件・101 ✅ [U]／ほか 🔶 U-17 |
 | `0x0433A6`      | `0x0433A7`   | [occupation](chunks/occupation/README.md)         | クリアしたなりわいの数                         | 🔶                            |

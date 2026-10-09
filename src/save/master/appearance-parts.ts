@@ -11,7 +11,7 @@
 // 人物（person.csv、全行 🟢。主人公設定の一覧に全部出るかは 🔶）：
 // - id：人物の番号（セーブの 0x3AAD4）。連番ではない
 // - bodyKind：体の種類（0x3AADC）、secondId：0x3AAD6 に入る値 🔶（null＝FFFF）、hairColor：髪の色（0x3AADA）
-// - selectable：主人公設定の一覧に出る人物。出ないローラ・男の子・女の子（✅ [U] 2026-10-08）は上級者モードだけ
+// - selectable：主人公設定の一覧に出る人物。出ないローラ・男の子・女の子（✅ [U] 2026-10-08）は、エディタでは別の組に分けて出す
 // - parts：その人物の部品の番号（null＝なし）
 import { BODY_TABLE } from "./dataset/body";
 import { EXTRA_TABLE } from "./dataset/extra";
@@ -53,6 +53,7 @@ export const PART_KIND_LABELS: Record<PartKind, string> = {
   cape: "合羽",
 };
 
+/** 部品の性別（CSV の gender）。部品は男用・女用・どちらでもない（null）のどれか。主人公のタイプ（BodyKind）とは別 */
 export type Gender = "男" | "女";
 
 export type PartEntry = {
@@ -90,18 +91,19 @@ export type PersonEntry = {
   en: string;
   dlc: number | null;
   height: number;
-  /** 体の種類（0x3AADC）。BODY_KINDS の添字：0＝男、1＝女、2＝ローラ、3＝子供 */
+  /** タイプ（体の種類、0x3AADC）。BODY_KINDS の添字：0＝男、1＝女、2＝ローラ、3＝子供（4＝動物の人物は表にない） */
   bodyKind: number;
   /** null は FFFF */
   secondId: number | null;
   hairColor: number;
   parts: Record<PartKind, number | null>;
-  /** 主人公設定の一覧に出る人物（🔶）。false は上級者モードだけで選べる見た目の組（ローラ・男の子・女の子 ✅ [U]） */
+  /** 主人公設定の一覧に出る人物（🔶）。false は主人公設定に出ない見た目の組（ローラ・男の子・女の子 ✅ [U]） */
   selectable: boolean;
 };
 
-/** 0x3AADC の値の名前。0＝男・1＝女 🔶、2＝ローラ・3＝子供・4＝動物 🟢（U-19） */
+/** タイプ（体の種類、0x3AADC）の値の名前。添字が値。0＝男・1＝女 🔶、2＝ローラ・3＝子供・4＝動物 🟢（U-19） */
 export const BODY_KINDS = ["男", "女", "ローラ", "子供", "動物"] as const;
+export type BodyKind = (typeof BODY_KINDS)[number];
 
 /** 部品の CSV（face・hair・upper・lower・body・feet・extra）の行。列は CSV ごとに少しずつ違う */
 type PartRow = {
