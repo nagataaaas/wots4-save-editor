@@ -104,7 +104,8 @@ export function readWorldFlags(bytes: Uint8Array): WorldFlagsView {
   const layoutProblem = checkLayout(bytes);
   const values = WORLD_FLAGS.map((f) => readU8(bytes, f.offset));
   const bad = values.findIndex((v) => v > 1);
-  const problem = bad >= 0 ? `${WORLD_FLAGS[bad].label} の値が 0・1 以外です（${values[bad]}）` : null;
+  const problem =
+    bad >= 0 ? `${WORLD_FLAGS[bad].label} の値が 0・1 以外です（${values[bad]}）` : null;
   return { values, problem: layoutProblem ?? problem };
 }
 
@@ -131,7 +132,9 @@ export function writeWorldFlag(
 // 未確認データの扱い（AGENTS.md）に従い「生の値＋候補」で出す。通常モードは候補の値だけ、上級者モードは任意の u8。
 //   0x3761 は ✅ 神社の洞窟内の柵として WORLD_FLAGS に移した。
 //   0x37C6  🟢 大寄せで外国ルートに入れないと 1（居留地の門 0x3764 と一緒）。小公女倒れるで般若党と戦うときも 1。何が変わるかは ❓
-//   0x3762・0x3763  🟢 周回の始めに 1、大老と三姉妹の成功（拷問塔に入る場面）で 0。🔶 代官所の奥・拷問塔への立ち入りを塞ぐ
+//   0x3762・0x3763  🟢 代官所の拷問塔の扉を閉じる（1 以上で閉）。0x3762 が拷問部屋の扉、0x3763 が屋内から拷問塔の区画へ入る扉。
+//              周回の始めに 1、大老と三姉妹の成功で 0 になり、通常のプレイでは2つは同じ値なので1つの欄にまとめて両方へ書く。
+//              0 でも、1日目夕以降かつ大老と三姉妹（0x36C9）= 4 でなければ閉じたまま。扉の見た目は要ゲーム内確認
 //   0x3760  🟢 1 だと士魂は屈せずでまだらに助け出され、鬼怒川を追えでまだらが味方につく。剣術大会の準備で 0 に戻る。
 //              1 になる場面は見つかっていない（❓）
 //   0x37AB  🟢 剣術大会で勝ち抜いた試合数（各試合に勝つと 1 → 2 → 3）
@@ -143,12 +146,16 @@ export type ScenarioFlagValue = { value: number; label: string };
 
 export type ScenarioFlag = {
   offset: number;
+  /** 同じ値を一緒に書くバイト。通常のプレイで offset と必ず同じ値になるもの */
+  pairedOffset?: number;
   label: string;
   note: string;
+  /** 欄の下に常に出す注意 */
+  hint?: string;
   /** 通常モードで選べる値。🟢 の場面で現れる値だけ */
   values: readonly ScenarioFlagValue[];
-  /** 意味に推測が入るもの（🔶）か、何が変わるか分からないもの（❓） */
-  certainty: "🔶" | "❓";
+  /** 意味の分かったもの（🟢）、推測が入るもの（🔶）、何が変わるか分からないもの（❓） */
+  certainty: "🟢" | "🔶" | "❓";
 };
 
 const OFF_ON = (on: string): readonly ScenarioFlagValue[] => [
@@ -166,23 +173,15 @@ export const SCENARIO_FLAGS: readonly ScenarioFlag[] = [
   },
   {
     offset: 0x3762,
-    label: "代官所の奥の立ち入り（1）",
-    note: "🟢 周回の始めに 1、大老と三姉妹の成功（拷問塔に入る場面）で 0。🔶 代官所の奥・拷問塔への立ち入りを塞ぐフラグとみられる。要ゲーム内確認",
+    pairedOffset: 0x3763,
+    label: "代官所 拷問部屋の扉",
+    note: "🟢 1 以上で閉じる。0x3762 は拷問部屋の扉、0x3763 は屋内から拷問塔の区画へ入る扉で、両方に同じ値を書く。周回の始めに 1、大老と三姉妹の成功で 0。扉の見た目は要ゲーム内確認",
+    hint: "1日目昼または「大老と三姉妹」が成功していない場合はフラグに関わらず閉じます",
     values: [
-      { value: 0, label: "0 大老と三姉妹のあと" },
-      { value: 1, label: "1 周回の始め" },
+      { value: 0, label: "0 開く" },
+      { value: 1, label: "1 閉じる" },
     ],
-    certainty: "🔶",
-  },
-  {
-    offset: 0x3763,
-    label: "代官所の奥の立ち入り（2）",
-    note: "🟢 0x3762 と同じ場面で同じ値になる。🔶 代官所の奥・拷問塔への立ち入りを塞ぐフラグとみられる。要ゲーム内確認",
-    values: [
-      { value: 0, label: "0 大老と三姉妹のあと" },
-      { value: 1, label: "1 周回の始め" },
-    ],
-    certainty: "🔶",
+    certainty: "🟢",
   },
   {
     offset: 0x3760,
@@ -223,6 +222,8 @@ export const SCENARIO_FLAGS: readonly ScenarioFlag[] = [
 
 export type ScenarioFlagsView = {
   values: number[];
+  /** pairedOffset の値。pairedOffset のないフラグは null */
+  paired: (number | null)[];
   /** レイアウトの検証に落ちた理由。あれば読み取り専用 */
   problem: string | null;
 };
@@ -232,11 +233,17 @@ export function readScenarioFlags(bytes: Uint8Array): ScenarioFlagsView {
   if (bytes.byteLength < 0x3800) throw new RangeError("ファイルが小さすぎてフラグを読めません");
   return {
     values: SCENARIO_FLAGS.map((f) => readU8(bytes, f.offset)),
+    paired: SCENARIO_FLAGS.map((f) =>
+      f.pairedOffset === undefined ? null : readU8(bytes, f.pairedOffset),
+    ),
     problem: checkLayout(bytes),
   };
 }
 
-/** index 番目のフラグの1バイトだけを書く。通常モードでは候補の値だけ、上級者モードでは任意の u8 */
+/**
+ * index 番目のフラグの1バイト（pairedOffset があればそのバイトにも同じ値）を書く。
+ * 通常モードでは候補の値だけ、上級者モードでは任意の u8
+ */
 export function writeScenarioFlag(
   bytes: Uint8Array,
   index: number,
@@ -254,4 +261,5 @@ export function writeScenarioFlag(
       `${flag.label} に指定できる値は ${flag.values.map((v) => v.value).join("・")} です: ${value}`,
     );
   writeU8(bytes, flag.offset, value);
+  if (flag.pairedOffset !== undefined) writeU8(bytes, flag.pairedOffset, value);
 }

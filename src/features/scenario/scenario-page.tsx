@@ -865,22 +865,34 @@ function ScenarioFlagsCard() {
         </div>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
-        {SCENARIO_FLAGS.map((flag, i) => (
-          <SelectRow
-            key={flag.offset}
-            label={flag.label}
-            offset={flag.offset}
-            badges={
-              flag.certainty === "🔶" ? <CertaintyBadge mark="🔶" text="意味は推測" /> : undefined
-            }
-            value={view ? String(view.values[i]) : null}
-            currentLabel={view ? `${view.values[i]} 不明` : undefined}
-            options={flag.values.map((v) => ({ value: String(v.value), label: v.label }))}
-            problem={view?.problem ?? null}
-            note={flag.note}
-            onChange={(v) => update((b) => writeScenarioFlag(b, i, Number(v), { advanced }))}
-          />
-        ))}
+        {SCENARIO_FLAGS.map((flag, i) => {
+          const paired = view?.paired[i] ?? null;
+          // 一緒に書くバイトと値が食い違うときは、どの候補とも一致しない値として出す
+          const mismatch = view !== null && paired !== null && paired !== view.values[i];
+          return (
+            <SelectRow
+              key={flag.offset}
+              label={flag.label}
+              offset={flag.offset}
+              badges={
+                flag.certainty === "🔶" ? <CertaintyBadge mark="🔶" text="意味は推測" /> : undefined
+              }
+              value={view ? (mismatch ? `${view.values[i]}/${paired}` : String(view.values[i])) : null}
+              currentLabel={
+                view
+                  ? mismatch
+                    ? `0x${flag.offset.toString(16).toUpperCase()}=${view.values[i]}・0x${flag.pairedOffset!.toString(16).toUpperCase()}=${paired} 不一致`
+                    : `${view.values[i]} 不明`
+                  : undefined
+              }
+              options={flag.values.map((v) => ({ value: String(v.value), label: v.label }))}
+              problem={view?.problem ?? null}
+              hint={flag.hint}
+              note={flag.note}
+              onChange={(v) => update((b) => writeScenarioFlag(b, i, Number(v), { advanced }))}
+            />
+          );
+        })}
       </CardContent>
     </Card>
   );
