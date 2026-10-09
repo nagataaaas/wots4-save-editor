@@ -116,7 +116,7 @@ function layoutOption(layout: number, extra?: string): SelectOption {
 const knownOptions = (known: readonly KnownValue[]): SelectOption[] =>
   known.map((k) => ({ value: String(k.value), label: `${k.label}（${hex(k.value)}）` }));
 
-/** 🟢 しゃべり方と戦闘力：約束できる相手の種類。名前のある相手 → 町の女性 → 町の男性の順 */
+/** 🟢 セリフと戦闘力：約束できる相手の種類。名前のある相手 → 町の女性 → 町の男性の順 */
 const TYPE_KINDS = ["名前のある相手", "町の人（女性）", "町の人（男性）"] as const;
 const typeOptions: SelectOption[] = TYPE_KINDS.flatMap((kind) =>
   KNOWN_TYPES.filter((t) => t.kind === kind).map((t) => ({
@@ -168,7 +168,7 @@ const PERSON_FIELDS: Record<
     note: "見た目（モデル）と声。町の人の約束では、町で出会った相手の見た目が入る。はるなをさよの値にすると、見た目と声がさよになった。台詞・強さ・名前は変わらない（確認済み）。番号は主人公設定の人物と同じ。声は見た目の顔で決まり、多くの見た目が同じ声を使う。ただし相手の種類が万由・千佳・百合のときは、声は種類のまま 🟢",
   },
   type: {
-    label: "相手の種類（しゃべり方と戦闘力）",
+    label: "相手の種類（セリフと戦闘力）",
     options: typeOptions,
     search: true,
     note: "町の人の種類。台詞と強さが決まる（はるなをさよの値にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった。見た目・声・名前は変わらない。確認済み）。多くの種類が同じ会話を使い、強さは種類ごとに違う。名前のある相手の種類にすると、夜這いのあとその人の夜這い回数が増える 🟢",
@@ -391,7 +391,7 @@ function TypeEditor({ promise, problem }: { promise: PromiseView; problem: strin
 
 /**
  * 約束した日（+0x28）。🟢 場面が変わるたびに今日の経過日数と比べ、違えばすっぽかしで消える。
- * 意味のある値は今日だけなので、今日にするかどうかだけを選ぶ
+ * 「N日目」で入力する。今日でなければ警告を出す
  */
 function DayEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
   const { save, update } = useSave();
@@ -400,23 +400,29 @@ function DayEditor({ promise, problem }: { promise: PromiseView; problem: string
   const isToday = promise.day === today;
 
   return (
-    <SelectRow
+    <FieldRow
       label="約束した日"
       offset={promiseFieldOffset("day")}
-      value={String(promise.day)}
-      currentLabel={`${promise.day + 1}日目`}
-      options={[{ value: String(today), label: `${today + 1}日目（今日）` }]}
+      value={promise.day}
       problem={problem}
+      format={(v) => `${v + 1}`}
+      parse={(input) => {
+        const r = parseNumber(input, (v) =>
+          v < 1
+            ? "1日目以上を指定してください"
+            : validatePersonField("day", v - 1, promise.day, { advanced }),
+        );
+        return r.ok ? { ok: true, value: r.value - 1 } : r;
+      }}
+      apply={(v) => update((b) => writePromiseField(b, "day", v, { advanced }))}
+      inputMode="numeric"
       warning={
         isToday
           ? null
           : `今日（${today + 1}日目）ではないので、次に場面が変わるとすっぽかしで消えます 🟢`
       }
-      hint={
-        isToday ? "今日の夜に、場所の扉から夜這いに入れます" : "今日にすると、今夜の約束になります"
-      }
-      note="+0x28。約束した日の経過日数（1日目＝0）。🟢 場面が変わるたびに今日と比べ、違えば「夜這いの約束をすっぽかしてしまった…」で約束が消える。今日のほかに選ぶ意味のある値はない"
-      onChange={(v) => update((b) => writePromiseField(b, "day", Number(v), { advanced }))}
+      hint={`${hintFor("day", advanced)}。今日は ${today + 1}日目`}
+      note="+0x28。約束した日の経過日数（1日目＝0）。画面では「N日目」で入力する。🟢 場面が変わるたびに今日と比べ、違えば「夜這いの約束をすっぽかしてしまった…」で約束が消える"
     />
   );
 }
@@ -444,7 +450,7 @@ const ageOptions: SelectOption[] = [
 ];
 
 /**
- * 空の約束の枠に約束を作る。相手の種類（しゃべり方と戦闘力）が組を決める。
+ * 空の約束の枠に約束を作る。相手の種類（セリフと戦闘力）が組を決める。
  * 名前・見た目と声・年齢・血液型は種類とは別々に効くので、約束の編集欄と同じ範囲で自由に選べる（初めはゲームが選ぶ候補の値）
  */
 function CreatePromiseForm({ problem }: { problem: string | null }) {
@@ -504,7 +510,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="flex flex-col gap-1.5 sm:col-span-3">
           <SearchSelectRow
-            label="相手の種類（しゃべり方と戦闘力）"
+            label="相手の種類（セリフと戦闘力）"
             offset={promiseFieldOffset("type")}
             value={String(spec.type)}
             options={typeOptions}
@@ -636,7 +642,7 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
         <CardDescription>
           {formatOffset(PROMISE_OFFSET)} から 0x2C
           B。約束中の相手の種類・場所・名前・見た目・年齢などを書き換えます。
-          相手の種類（しゃべり方と戦闘力）・名前・見た目と声は別々に決まるので、組み合わせを変えられます。
+          相手の種類（セリフと戦闘力）・名前・見た目と声は別々に決まるので、組み合わせを変えられます。
           約束がないとき（+0x04 が 0xFFFFFFFF）は、新しく約束を作れます。
         </CardDescription>
       </CardHeader>
@@ -871,7 +877,7 @@ export function YobaiPage() {
       <Alert>
         <AlertTitle>検証用（一部は要ゲーム内確認）</AlertTitle>
         <AlertDescription>
-          約束の場所・名前・見た目と声・しゃべり方と戦闘力・年齢・血液型は、書き換えでゲームに反映されることを確認済みです（解析ドキュメントの
+          約束の場所・名前・見た目と声・セリフと戦闘力・年齢・血液型は、書き換えでゲームに反映されることを確認済みです（解析ドキュメントの
           night-visit）。
           配置はその場所で使えるものだけを選べます。夜這いの記録は差分からの推定で、書き換えの反映は確かめていません。
           書き換える前のセーブを残してから試してください。
