@@ -109,7 +109,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x001C04`      | `0x002BA3`   | [kill-counts](chunks/kill-counts/README.md)       | 技ごとの斬殺数（累計）                         | 🟢                            |
 | `0x002BA4`      | `0x0033A3`   | [item-uses](chunks/item-uses/README.md)           | 道具ごとの使用回数（周回中・累計）             | 🟢                            |
 | `0x0033A4`      | `0x0035A3`   | [occupation](chunks/occupation/README.md)         | なりわいの状態の表                             | ✅                            |
-| `0x0035A4`      | `0x0035B3`   | [vitals](chunks/vitals/README.md)                 | HP・活力                                       | 一部 ✅（U-4）                |
+| `0x0035A4`      | `0x0035BF`   | [vitals](chunks/vitals/README.md)                 | HP・活力・つま斬りゲージ（現在／最大）         | 一部 ✅ ／ 🟢                  |
 | `0x003634`      | `0x0036A7`   | [item-effects](chunks/item-effects/README.md)     | 時間で切れる道具の効果（残り時間・倍率。読み込みでは使われない） | 🟢                            |
 | `0x0036A8`      | `0x00374D`   | [event-chart](chunks/event-chart/README.md)       | イベントの状態 A（周回中）                     | ✅                            |
 | `0x00374E`      | `0x003837`   | [scenario-flags](chunks/scenario-flags/README.md) | シナリオのフラグ列（下の5つを含む）            | 🟢範囲 ／ 一部 ✅              |
