@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
 import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatHex2, formatOffset } from "@/lib/format";
@@ -41,6 +42,26 @@ import {
   type RecordView,
   type YobaiView,
 } from "@/save/yobai";
+import { readU16 } from "@/save/binary";
+import {
+  DAY_INDEX_OFFSET,
+  PROMISE_PARTNERS,
+  ageCandidates,
+  bloodCandidates,
+  createPromise,
+  createProblem,
+  currentStage,
+  defaultSpec,
+  nameCandidates,
+  partnerDeathWarning,
+  promisePartner,
+  randomSpec,
+  rowLabel,
+  rowsFor,
+  validateSpec,
+  type PromisePartner,
+  type PromiseSpec,
+} from "@/save/yobai-create";
 import { labelKeywords, npcLabel } from "@/save/master/labels";
 import { NPC_NAMES, npcNameGroup } from "@/save/master/npc-names";
 import {
@@ -354,6 +375,183 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
 const PROMISE_ORDER: PersonField[] = ["name", "look", "type", "age", "blood", "day", "group"];
 const RECORD_ORDER = ["name", "type", "day", "age", "blood"] as const;
 
+const PARTNER_GROUPS = ["名前のある相手", "町の人（女性）", "町の人（男性）"] as const;
+const partnerGroup = (p: PromisePartner) => (p.kind === "special" ? PARTNER_GROUPS[0] : p.sex === "f" ? PARTNER_GROUPS[1] : PARTNER_GROUPS[2]);
+
+/** 相手の選択肢。名前のある相手 → 町の女性 → 町の男性の順 */
+const partnerOptions: SelectOption[] = PARTNER_GROUPS.flatMap((g) =>
+  PROMISE_PARTNERS.filter((p) => partnerGroup(p) === g).map((p) => ({
+    value: String(p.type),
+    label: `${p.label}（${hex(p.type)}）${p.note ? `・${p.note}` : ""}`,
+    group: g,
+    keywords: [p.label, hex(p.type), String(p.type), p.note],
+  })),
+);
+
+/** 名前のある相手ごとの注意（約束の外で変わる値など） */
+const PARTNER_NOTES: Readonly<Record<number, string>> = {
+  442: "ゲームでは約束のあとの場面の移動で必ず翌朝になり、すっぽかしになる相手です（書き込みで作った約束では夜這いできた。確認済み）",
+  448: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは書きません）",
+  449: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは書きません）",
+  450: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは書きません）",
+  454: "🔶 読み込み直すとローラの印が消えるので、褒美が「掘り出し物」にならないことがあります（ゲームが作った約束でも同じ）",
+  592: "ゲームでは、なりわいのフラグ 0x0126 が 76（手合わせの賭けに峰打ちで勝った）のときに約束します（ここでは書きません）",
+  788: "ゲームで約束すると、なりわいのフラグ 0x012F が 1 になります（ここでは書きません）",
+};
+
+const lookLabel = (v: number) => {
+  const known = KNOWN_LOOKS.find((k) => k.value === v);
+  return known ? `${hex(v)}（${known.label}の見た目）` : hex(v);
+};
+const ageLabel = (v: number) => (v === AGE_UNKNOWN ? "？" : `${v}歳`);
+const bloodLabel = (v: number) => BLOOD_TYPES.find((b) => b.value === v)?.label ?? String(v);
+
+/** 空の約束の枠に約束を作る。値は相手の候補から選ぶ（ゲームが約束するときと同じ候補） */
+function CreatePromiseForm({ problem }: { problem: string | null }) {
+  const { save, update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const stage = save ? currentStage(save.working) : 0;
+  const day = save ? readU16(save.working, DAY_INDEX_OFFSET) : 0;
+  const [spec, setSpec] = useState<PromiseSpec>(() => defaultSpec(promisePartner(0x25)!, stage));
+  const [error, setError] = useState<string | null>(null);
+  const partner = promisePartner(spec.type)!;
+  const blocked = problem ?? (save ? createProblem(save.working) : "セーブファイルが読み込まれていません");
+  const invalid = validateSpec(spec, stage, { advanced });
+  const death = save ? partnerDeathWarning(save.working, spec.type) : null;
+  const set = (patch: Partial<PromiseSpec>) => {
+    setError(null);
+    setSpec((s) => ({ ...s, ...patch }));
+  };
+
+  const rowOptions: SelectOption[] = rowsFor(partner, stage, { advanced }).map((r) => ({
+    value: String(r.index),
+    label: `${rowLabel(r)}${r.checked ? "・確かめた組" : ""}`,
+  }));
+  const names = advanced && partner.kind === "town" ? NPC_NAMES.map((n) => n.id) : nameCandidates(partner);
+  const nameChoices: SelectOption[] = names.map((id) => ({ value: String(id), label: `${nameLabel(id)}（${id}）`, keywords: [String(id), hex(id)] }));
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-muted-foreground text-sm">
+        約束はありません。相手を選んで、新しく約束を作れます。約束した日はいまの経過日数（{day + 1}日目）にします。
+        その日の夜に、場所の扉から夜這いに入れます。日付が変わると「すっぽかし」で消えます。
+      </p>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="flex flex-col gap-1.5 sm:col-span-3">
+          <SearchSelectRow
+            label="相手"
+            offset={promiseFieldOffset("type")}
+            value={String(spec.type)}
+            options={partnerOptions}
+            problem={blocked}
+            warning={death}
+            searchPlaceholder="相手の名前・種類・ID で検索"
+            note="約束の枠の +0x04（しゃべり方と戦闘力の型）。名前のある相手は、組・名前・見た目・年齢・血液型が1つに決まっています。町の人は種類ごとの候補から選びます"
+            onChange={(v) => {
+              setError(null);
+              setSpec(defaultSpec(promisePartner(Number(v))!, stage));
+            }}
+          />
+          {!blocked && (
+            <p className="text-muted-foreground text-xs">
+              {partner.status.startsWith("✅")
+                ? `ゲームで確かめた相手です（${partner.status.replace("✅ ", "")}）。`
+                : "🟢 値はほかの相手と同じ作り方で決めましたが、この相手での夜這いはまだ確かめていません（要ゲーム内確認）。"}
+              {PARTNER_NOTES[spec.type] ? ` ${PARTNER_NOTES[spec.type]}` : ""}
+            </p>
+          )}
+        </div>
+        <div className="sm:col-span-3">
+          <SelectRow
+            label="場所と配置"
+            offset={PROMISE_OFFSET}
+            value={String(spec.row)}
+            options={rowOptions}
+            problem={blocked}
+            disabled={rowOptions.length <= 1}
+            hint={
+              partner.kind === "town"
+                ? advanced
+                  ? `まとまり ${partner.group} の全部の組`
+                  : `まとまり ${partner.group} の組のうち、いまの段階（${stage}）以下のもの`
+                : undefined
+            }
+            note="約束の枠の +0x00〜+0x1B に写す組。段階が高い組ほど、家の中の人（家の者・用心棒）が多い。ゲームはいまの段階の組を 70% で選び、30% で1段下げる"
+            onChange={(v) => set({ row: Number(v) })}
+          />
+        </div>
+        <SearchSelectRow
+          label="名前"
+          offset={promiseFieldOffset("name")}
+          value={String(spec.name)}
+          options={nameChoices}
+          problem={blocked}
+          disabled={nameChoices.length <= 1}
+          hint={partner.kind === "town" && !advanced ? `町の人の名前（${partner.sex === "f" ? "女性" : "男性"}）から` : undefined}
+          searchPlaceholder="名前・ID で検索"
+          onChange={(v) => set({ name: Number(v) })}
+        />
+        <SelectRow
+          label="見た目と声"
+          offset={promiseFieldOffset("look")}
+          value={String(spec.look)}
+          options={partner.looks.map((v) => ({ value: String(v), label: lookLabel(v) }))}
+          problem={blocked}
+          disabled={partner.looks.length <= 1}
+          onChange={(v) => set({ look: Number(v) })}
+        />
+        <SelectRow
+          label="年齢"
+          offset={promiseFieldOffset("age")}
+          value={String(spec.age)}
+          options={ageCandidates(partner).map((v) => ({ value: String(v), label: ageLabel(v) }))}
+          problem={blocked}
+          disabled={!partner.ageRandom}
+          onChange={(v) => set({ age: Number(v) })}
+        />
+        <SelectRow
+          label="血液型"
+          offset={promiseFieldOffset("blood")}
+          value={String(spec.blood)}
+          options={bloodCandidates(partner).map((v) => ({ value: String(v), label: bloodLabel(v) }))}
+          problem={blocked}
+          disabled={partner.blood !== 0}
+          onChange={(v) => set({ blood: Number(v) })}
+        />
+      </div>
+      {!blocked && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={partner.kind === "special"}
+            onClick={() => {
+              setError(null);
+              setSpec(randomSpec(partner, stage));
+            }}
+          >
+            くじで選び直す
+          </Button>
+          <Button
+            size="sm"
+            disabled={invalid !== null}
+            onClick={() => {
+              try {
+                update((b) => createPromise(b, spec, { advanced }));
+              } catch (e) {
+                setError(errorMessage(e));
+              }
+            }}
+          >
+            約束を作る
+          </Button>
+          {(error ?? invalid) && <p className="text-destructive text-xs">{error ?? invalid}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PromiseCard({ view }: { view: YobaiView | null }) {
   const promise = view?.promise ?? null;
   const problem = view?.promiseProblem ?? null;
@@ -369,12 +567,12 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
           {formatOffset(PROMISE_OFFSET)} から 0x2C
           B。約束中の相手の名前・見た目・年齢などを書き換えます。
           名前・見た目と声・しゃべり方と戦闘力は別々に決まるので、組み合わせを変えられます。
-          約束がないときは編集できません（新しく約束を作る機能はありません）。
+          約束がないとき（+0x04 が 0xFFFFFFFF）は、新しく約束を作れます。
         </CardDescription>
       </CardHeader>
       <CardContent>
         {promise && !promise.active ? (
-          <p className="text-muted-foreground text-sm">約束はありません（+0x04 が 0xFFFFFFFF）。</p>
+          <CreatePromiseForm problem={problem} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-3">
             {promise && <PlaceEditor promise={promise} problem={problem} />}

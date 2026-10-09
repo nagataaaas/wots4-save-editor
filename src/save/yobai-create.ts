@@ -1,0 +1,255 @@
+// 空の約束の枠に、夜の約束を作る。出典：docs/save_format/chunks/night-visit「約束の作り方」。
+//
+// 🟢 約束の枠 0x14038〜 に書く値（ゲームが約束するときと同じ）：
+//   +0x00〜+0x1B  組の表（datatable/place/night-visit-row.csv）の1行の 28 B。+0x04 だけ相手の種類で上書きする
+//   +0x1C u32  名前。名前のある相手は決まった ID、町の人は名前の候補（7000 台か 8000 台）のうち相手と同じ性別のもの
+//   +0x20 u32  見た目。相手の種類ごとの候補から
+//   +0x24 u8   年齢。名前のある相手は決まった値（255＝？）、町の人は十の位が決まっていて一の位が 0〜9
+//   +0x25 u8   血液型。決まっていなければ 1〜4
+//   +0x26 u16  FFFF
+//   +0x28 u16  いまの経過日数 0x0BD8（違う日にすると、日付が変わったときにすっぽかしで消える）
+//   +0x2A・+0x2B は書かない（初めての説明を見たかのビットなど。前の値を残す）
+// 相手の種類は datatable/npc/night-visit-partner.csv（🟢）。
+// ✅ [U] 2026-10-10：女中（町の女性）・町人（町の男性）・朱美の約束をこの作り方で書き、夜這いできた。
+//    ほかの名前のある相手（先生・メリンダ・三姉妹・ローラ・さよ）は、ゲームが作った約束の実データと同じ値。
+//    名前のある男性7人は 🟢 だけで、ゲーム内では確かめていない（要ゲーム内確認）。
+// 🟢 町の人の組は、相手のまとまり（1・2）の行から、段階 0x13E30 の行（30% ずつ1段下がる）が選ばれる。
+//    通常モードでは段階 0x13E30 以下の行だけ、上級者モードではまとまりの全行を選べる。
+// 🟢 名前のある相手が死んでいても、約束を止める判定はない。エディタでは警告だけ出す。
+//
+// 書くのは +0x04 が FFFFFFFF（約束なし）の枠だけ。ファイルサイズが 0x48BB0 のときだけ書く。
+import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
+import { checkLayout } from "./hero";
+import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
+import { NIGHT_VISIT_ROW_TABLE } from "./master/dataset/night-visit-row";
+import { NPC_NAMES, npcName } from "./master/npc-names";
+import { PLACES, PROMISE_EMPTY, PROMISE_OFFSET } from "./yobai";
+
+/** 書くバイト数（+0x00〜+0x29） */
+export const PROMISE_WRITE_LENGTH = 0x2a;
+/** 🟢 経過日数（1日目＝0） */
+export const DAY_INDEX_OFFSET = 0x0bd8;
+/** 🟢 段階（0〜3） */
+export const STAGE_OFFSET = 0x13e30;
+export const STAGE_MAX = 3;
+
+export type PromiseRow = {
+  index: number;
+  /** 段階。特別な相手の行は null */
+  stage: number | null;
+  /** まとまり（0＝特別な相手、1・2＝町の人、3＝使われない） */
+  group: number;
+  place: number;
+  layout: number;
+  /** 特別な相手の行の相手の名前 */
+  partnerName: string;
+  /** 確かめた組（実データか書き込み） */
+  checked: boolean;
+  /** +0x00〜+0x1B */
+  bytes: readonly number[];
+};
+
+export const PROMISE_ROWS: readonly PromiseRow[] = Object.values(NIGHT_VISIT_ROW_TABLE).map((r) => ({
+  index: r.id_dec,
+  stage: r.stage,
+  group: r.group,
+  place: r.place,
+  layout: r.layout,
+  partnerName: r.name_ja,
+  checked: r.備考.includes("確かめた組"),
+  bytes: r.save_bytes_le.split(" ").map((h) => Number.parseInt(h, 16)),
+}));
+
+export type PromisePartner = {
+  /** 相手の種類（約束の枠の +0x04） */
+  type: number;
+  label: string;
+  kind: "special" | "town";
+  sex: "m" | "f";
+  /** 町の人の名前の候補（7＝7000 台、8＝8000 台）。名前のある相手は null */
+  nameList: 7 | 8 | null;
+  /** 名前のある相手の名前の ID */
+  name: number | null;
+  looks: readonly number[];
+  age: number;
+  ageRandom: boolean;
+  /** 0＝1〜4 から選ぶ */
+  blood: number;
+  group: number;
+  /** 名前のある相手の行 */
+  row: number | null;
+  /** 🟢 か、ゲームの反映を確かめたもの（✅） */
+  status: string;
+  note: string;
+};
+
+export const PROMISE_PARTNERS: readonly PromisePartner[] = Object.values(NIGHT_VISIT_PARTNER_TABLE).map((p) => ({
+  type: p.id_dec,
+  label: p.name_ja,
+  kind: p.kind === "special" ? "special" : "town",
+  sex: p.sex === "f" ? "f" : "m",
+  nameList: p.name_list === 7 || p.name_list === 8 ? p.name_list : null,
+  name: p.name,
+  looks: p.looks.split(";").map((h) => Number.parseInt(h, 16)),
+  age: p.age,
+  ageRandom: p.age_random === 1,
+  blood: p.blood,
+  group: p.group,
+  row: p.row,
+  status: p.status,
+  note: p.備考,
+}));
+
+export function promisePartner(type: number): PromisePartner | undefined {
+  return PROMISE_PARTNERS.find((p) => p.type === type);
+}
+
+/** 名前のある相手の生死のバイト（characters。🟢 1＝死亡） */
+const DEATH_OFFSETS: Readonly<Record<number, number>> = {
+  46: 0x374e, // 赤城
+  425: 0x374e, // 赤城（病院で療養中）
+  69: 0x374f, // 小暮
+  442: 0x3750, // 朱美
+  65: 0x3752, // 茂呂
+  448: 0x3753, // 万由
+  449: 0x3754, // 千佳
+  450: 0x3755, // 百合
+  454: 0x3757, // ローラ
+  44: 0x3758, // J.J
+  456: 0x3758, // J.J（病院で療養中）
+  788: 0x3759, // メリンダ
+};
+
+/** 名前のある相手が死んでいれば警告を返す（🟢 ゲームは約束を止めない） */
+export function partnerDeathWarning(bytes: Uint8Array, type: number): string | null {
+  const offset = DEATH_OFFSETS[type];
+  if (offset === undefined || readU8(bytes, offset) !== 1) return null;
+  return `${promisePartner(type)?.label ?? type} は死亡しています（0x${offset.toString(16).toUpperCase()} が 1）。夜這いの場に相手が出るかは確かめていません`;
+}
+
+/** いまの段階（0x13E30）。範囲外は 0〜3 に丸める */
+export function currentStage(bytes: Uint8Array): number {
+  return Math.min(readU32(bytes, STAGE_OFFSET), STAGE_MAX);
+}
+
+/** 選べる組。名前のある相手は決まった1行。町の人はまとまりの行のうち、通常モードでは段階 stage 以下のもの */
+export function rowsFor(partner: PromisePartner, stage: number, opts: { advanced: boolean }): PromiseRow[] {
+  if (partner.row !== null) return PROMISE_ROWS.filter((r) => r.index === partner.row);
+  return PROMISE_ROWS.filter((r) => r.group === partner.group && r.stage !== null && (opts.advanced || r.stage <= stage));
+}
+
+/** 町の人の名前の候補（7000 台・8000 台のうち相手と同じ性別）。名前のある相手は決まった1つ */
+export function nameCandidates(partner: PromisePartner): number[] {
+  if (partner.name !== null) return [partner.name];
+  const base = partner.nameList === 8 ? 8000 : 7000;
+  return NPC_NAMES.filter((n) => n.id > base && n.id <= base + 999 && n.sex === partner.sex).map((n) => n.id);
+}
+
+export function ageCandidates(partner: PromisePartner): number[] {
+  if (!partner.ageRandom) return [partner.age];
+  const tens = partner.age - (partner.age % 10);
+  return Array.from({ length: 10 }, (_, i) => tens + i);
+}
+
+export function bloodCandidates(partner: PromisePartner): number[] {
+  return partner.blood === 0 ? [1, 2, 3, 4] : [partner.blood];
+}
+
+export type PromiseSpec = { type: number; row: number; name: number; look: number; age: number; blood: number };
+
+/** 候補の先頭で作る（町の人の組は、いまの段階の行の先頭） */
+export function defaultSpec(partner: PromisePartner, stage: number): PromiseSpec {
+  const rows = rowsFor(partner, stage, { advanced: false });
+  const row = rows.find((r) => r.stage === stage) ?? rows[rows.length - 1];
+  return {
+    type: partner.type,
+    row: row.index,
+    name: nameCandidates(partner)[0],
+    look: partner.looks[0],
+    age: ageCandidates(partner)[0],
+    blood: bloodCandidates(partner)[0],
+  };
+}
+
+/**
+ * 🟢 ゲームと同じくじで選ぶ。町の人の組は、段階 s から 70% でそのまま、30% で1段下げる（0 より下がったら最初の段階）。
+ * その段階の行から等確率で1つ。名前・見た目・年齢の一の位・血液型（決まっていなければ）も等確率
+ */
+export function randomSpec(partner: PromisePartner, stage: number, rand: () => number = Math.random): PromiseSpec {
+  const pick = <T>(xs: readonly T[]): T => xs[Math.min(Math.floor(rand() * xs.length), xs.length - 1)];
+  let row: PromiseRow;
+  if (partner.row !== null) {
+    row = rowsFor(partner, stage, { advanced: false })[0];
+  } else {
+    let s = stage;
+    while (s >= 0 && rand() >= 0.7) s--;
+    if (s < 0) s = stage;
+    row = pick(PROMISE_ROWS.filter((r) => r.group === partner.group && r.stage === s));
+  }
+  return {
+    type: partner.type,
+    row: row.index,
+    name: pick(nameCandidates(partner)),
+    look: pick(partner.looks),
+    age: pick(ageCandidates(partner)),
+    blood: pick(bloodCandidates(partner)),
+  };
+}
+
+export function rowLabel(row: PromiseRow): string {
+  const hex = (v: number) => v.toString(16).toUpperCase().padStart(2, "0");
+  const stage = row.stage === null ? "" : `段階 ${row.stage}・`;
+  return `${hex(row.place)} ${PLACES[row.place] ?? "名前なし"}（${stage}配置 ${hex(row.layout)}）`;
+}
+
+/** 約束の枠の検証。約束を作れるなら null */
+export function createProblem(bytes: Uint8Array): string | null {
+  const layout = checkLayout(bytes);
+  if (layout) return layout;
+  if (readU32(bytes, PROMISE_OFFSET + 4) !== PROMISE_EMPTY) return "すでに約束があります（空の枠にだけ作れます）";
+  return null;
+}
+
+/**
+ * 約束の中身の検証。問題がなければ null。
+ * 通常モード：相手の候補にある値だけ（組は段階 0x13E30 以下）。上級者モード：組はまとまりの全行、名前は名前の表の全件
+ */
+export function validateSpec(spec: PromiseSpec, stage: number, opts: { advanced: boolean }): string | null {
+  const partner = promisePartner(spec.type);
+  if (!partner) return `約束できる相手の種類ではありません: ${spec.type}`;
+  if (!rowsFor(partner, stage, opts).some((r) => r.index === spec.row))
+    return opts.advanced || partner.row !== null
+      ? `この相手には使えない組です: ${spec.row}`
+      : `いまの段階（${stage}）より上の組です（上級者モードで選べます）: ${spec.row}`;
+  const nameOk = opts.advanced && partner.kind === "town" ? npcName(spec.name) !== undefined : nameCandidates(partner).includes(spec.name);
+  if (!nameOk) return `この相手の名前の候補ではありません: ${spec.name}`;
+  if (!partner.looks.includes(spec.look)) return `この相手の見た目の候補ではありません: 0x${spec.look.toString(16)}`;
+  if (!ageCandidates(partner).includes(spec.age)) return `この相手の年齢の候補ではありません: ${spec.age}`;
+  if (!bloodCandidates(partner).includes(spec.blood)) return `この相手の血液型の候補ではありません: ${spec.blood}`;
+  return null;
+}
+
+/** 約束の枠の +0x00〜+0x29 */
+export function buildPromiseBytes(spec: PromiseSpec, day: number): Uint8Array {
+  const row = PROMISE_ROWS.find((r) => r.index === spec.row);
+  if (!row) throw new RangeError(`組の表にない行です: ${spec.row}`);
+  const out = new Uint8Array(PROMISE_WRITE_LENGTH);
+  out.set(row.bytes, 0);
+  writeU32(out, 0x04, spec.type);
+  writeU32(out, 0x1c, spec.name);
+  writeU32(out, 0x20, spec.look);
+  writeU8(out, 0x24, spec.age);
+  writeU8(out, 0x25, spec.blood);
+  writeU16(out, 0x26, 0xffff);
+  writeU16(out, 0x28, day);
+  return out;
+}
+
+/** 空の枠に約束を作る。約束した日はいまの経過日数 0x0BD8。+0x2A 以降は変えない */
+export function createPromise(bytes: Uint8Array, spec: PromiseSpec, opts: { advanced: boolean }): void {
+  const problem = createProblem(bytes);
+  if (problem) throw new RangeError(problem);
+  const error = validateSpec(spec, currentStage(bytes), opts);
+  if (error) throw new RangeError(error);
+  bytes.set(buildPromiseBytes(spec, readU16(bytes, DAY_INDEX_OFFSET)), PROMISE_OFFSET);
+}
