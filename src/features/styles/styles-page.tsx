@@ -6,9 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { matchesSearch } from "@/lib/search";
 import {
   RANK_LABELS,
   SECTS,
@@ -37,6 +40,7 @@ import {
   ownedSectIds,
   rankForMastery,
   readSects,
+  sectHasUniqueSkill,
   sectSheetSkills,
   sheetStates,
   writeSectValues,
@@ -55,10 +59,40 @@ function placesOf(view: SectsView, id: number): string[] {
   return places;
 }
 
+type PlaceFilter = "owned" | "equipped" | "held" | "stored" | "missing" | "all";
+
+const PLACE_FILTER_LABELS: Record<PlaceFilter, string> = {
+  owned: "持っている",
+  equipped: "装備中",
+  held: "持ち歩き",
+  stored: "道場の箪笥",
+  missing: "持っていない",
+  all: "すべて",
+};
+
+function matchesPlace(filter: PlaceFilter, view: SectsView, owned: ReadonlySet<number>, id: number): boolean {
+  switch (filter) {
+    case "owned":
+      return owned.has(id);
+    case "equipped":
+      return view.equipped.includes(id);
+    case "held":
+      return view.held.some((s) => s.sect?.id === id);
+    case "stored":
+      return view.stored.some((s) => s.sect?.id === id);
+    case "missing":
+      return !owned.has(id);
+    case "all":
+      return true;
+  }
+}
+
 export function StylesPage() {
   const { save, update } = useSave();
   const { advanced } = useAdvancedMode();
-  const [showAll, setShowAll] = useState(false);
+  const [query, setQuery] = useState("");
+  const [placeFilter, setPlaceFilter] = useState<PlaceFilter>("owned");
+  const [uniqueOnly, setUniqueOnly] = useState(false);
   const [includeSpecial, setIncludeSpecial] = useState(false);
   const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
 
@@ -91,7 +125,10 @@ export function StylesPage() {
   const view = result.view;
   const k = save?.loadId ?? 0;
   const owned = ownedSectIds(view);
-  const sects = SECTS.filter((s) => (showAll ? !s.hidden || advanced : owned.has(s.id)));
+  const sects = SECTS.filter((s) => !s.hidden || advanced)
+    .filter((s) => matchesSearch(query, [s.nameJa, s.nameEn]))
+    .filter((s) => matchesPlace(placeFilter, view, owned, s.id))
+    .filter((s) => !uniqueOnly || sectHasUniqueSkill(s));
   const readOnly = view.problem !== null;
 
   const run = (label: string, f: (b: Uint8Array) => void) => {
@@ -142,11 +179,36 @@ export function StylesPage() {
               </Badge>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input className="w-56" placeholder="流派名で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Select
+              value={placeFilter}
+              items={PLACE_FILTER_LABELS}
+              onValueChange={(v) => v !== null && setPlaceFilter(v as PlaceFilter)}
+            >
+              <SelectTrigger className="w-36" aria-label="置き場所で絞り込み">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(PLACE_FILTER_LABELS) as PlaceFilter[]).map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {PLACE_FILTER_LABELS[f]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <label className="flex items-center gap-2">
-              <Switch checked={showAll} onCheckedChange={setShowAll} aria-label="すべての流派を表示" />
-              <Label>持っていない流派も表示する</Label>
+              <input
+                type="checkbox"
+                className="size-4"
+                checked={uniqueOnly}
+                onChange={(e) => setUniqueOnly(e.target.checked)}
+              />
+              固有技がある流派のみ
             </label>
+            <span className="text-muted-foreground text-xs">{sects.length} 件</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2">
               <Switch checked={includeSpecial} onCheckedChange={setIncludeSpecial} aria-label="固有技も習得する" />
               <Label>
@@ -186,7 +248,7 @@ export function StylesPage() {
           onValues={(v) => update((b) => writeSectValues(b, sect.id, v))}
         />
       ))}
-      {sects.length === 0 && <p className="text-muted-foreground text-sm">持っている流派がありません。</p>}
+      {sects.length === 0 && <p className="text-muted-foreground text-sm">条件に合う流派がありません。</p>}
     </div>
   );
 }

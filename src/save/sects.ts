@@ -322,6 +322,14 @@ export function sectSheetSkills(sect: Sect, sheet: SkillSheet): SheetSkill[] {
   return sheet.skills.filter((s) => !isUniqueSkill(s) || uniqueSkillSects(s.skillId).includes(sect.id))
 }
 
+/** 固有技を覚えられる流派か（sectSheetSkills に固有技が残るか）🟢 */
+export function sectHasUniqueSkill(sect: Sect): boolean {
+  return sect.sheets.some((id) => {
+    const sheet = findSkillSheet(id)
+    return sheet !== undefined && sectSheetSkills(sect, sheet).some(isUniqueSkill)
+  })
+}
+
 /** 固有技か（習得条件 51・52 など、または固有武器の秘伝の技） */
 export const isUniqueSkill = (s: SheetSkill) => isSpecialCond(s.cond) || uniqueSkillSects(s.skillId).length > 0
 

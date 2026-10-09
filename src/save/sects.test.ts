@@ -21,6 +21,7 @@ import {
   ownedSectIds,
   rankForMastery,
   readSects,
+  sectHasUniqueSkill,
   sectSheetSkills,
   sheetStateOffset,
   writeSectValues,
@@ -194,6 +195,11 @@ describe('learnSheetSkills', () => {
     learnUniqueSkills(b, sheet, [21])
     expect(state()).toBe(1)
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(1)
+  })
+
+  it('🟢 固有技を覚えられる流派は固有武器の流派だけ', () => {
+    expect(sectHasUniqueSkill(findSect(49)!)).toBe(true) // 武業流剣術（乾坤一擲）
+    expect(sectHasUniqueSkill(findSect(51)!)).toBe(false) // 鬼怒川流剣術（乾坤一擲が技の表にあるが覚えられない）
   })
 
   it('同じ操作を 2 回しても変わらない', () => {
