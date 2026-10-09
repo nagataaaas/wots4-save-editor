@@ -99,11 +99,11 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
     expect(ROUTE_CANDIDATE_NOTES[0x37aa].name).toBe('チュートリアルの進み方')
   })
 
-  it('🟢 堂島・先生のなりわい、会談の手紙、黒船、最後通告。🔶 0x37A2 の 1 の意味', () => {
+  it('🟢 堂島・先生のなりわい、般若党の本拠（1 と 2 は効果が同じ）、会談の手紙、黒船、最後通告', () => {
     expect(ROUTE_CANDIDATE_NOTES[0x3799].name).toBe('堂島が鍛冶屋に戻った')
     expect(ROUTE_CANDIDATE_NOTES[0x379a].name).toBe('先生が道場の師範代')
-    expect(ROUTE_CANDIDATE_NOTES[0x37a2].name).toBe('般若党の離散')
-    expect(ROUTE_CANDIDATE_NOTES[0x37a2].note).toContain('推定')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a2].name).toBe('般若党の本拠')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a2].note).toContain('1 と 2 の効果は同じ')
     expect(ROUTE_CANDIDATE_NOTES[0x37a3].name).toBe('会談の手紙')
     expect(ROUTE_CANDIDATE_NOTES[0x37a4].name).toBe('黒船')
     expect(ROUTE_CANDIDATE_NOTES[0x37a8].name).toBe('最後通告に逆らった')
