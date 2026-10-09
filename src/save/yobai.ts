@@ -8,7 +8,7 @@
 //   +0x04 u32  ✅ [U] しゃべり方と戦闘力の型（はるなを 0x031B にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった）。
 //              FFFFFFFF なら約束なし（空の枠）
 //   +0x08 u16  ✅ [U] 約束の場所（夜這いに入る扉と、その先のマップ）。0x00〜0x22 の名前を書き換えで確認。0x23 以降は名前が空
-//   +0x0A u16  ✅ [U] 位置 ／ 🟢 意味：行き先での同心・岡っ引きの人数と、人と布団の座標の組（datatable/place/night-visit-layout.csv）。
+//   +0x0A u16  ✅ [U] 位置 ／ 🟢 意味：行き先の家の種類・家の人・布団と、その座標の組（datatable/place/night-visit-layout.csv）。
 //              場所ごとに使える配置が決まっている（0C＋07 は布団がおかしく、0C＋06 は正常 [U]）
 //   +0x1C u32  ✅ [U] 名前（または NPC の ID）。はるなを 0xD7 にすると、名前がさよになった
 //   +0x20 u32  ✅ [U] 見た目（モデル）と声。はるなを 0xF5 にすると、見た目と声がさよになった
@@ -134,7 +134,7 @@ const GREEN_PLACE_LAYOUTS: readonly (readonly [number, readonly number[]])[] = P
 
 /**
  * ✅ [U] 約束の実データで見た組の注記。すべて 🟢 の組の中にある。
- * 2026-10-06 の 1D＋01 は操作ミスとみられる（[U] 2026-10-07。配置 00〜02 は同心・岡っ引きがいる配置で、🟢 の組に出てこない）ので外した
+ * 2026-10-06 の 1D＋01 は操作ミスとみられる（[U] 2026-10-07。配置 00〜02 は 🟢 の組に出てこない）ので外した
  */
 const SEEN_PLACE_LAYOUTS: readonly { place: number; layout: number; note?: string }[] = [
   { place: 0x00, layout: 0x03 },
@@ -172,22 +172,52 @@ export const PLACE_LAYOUTS: readonly {
   })
   .sort((a, b) => a.place - b.place || a.layout - b.layout);
 
-/** 🟢 配置ごとの家の中の人数（datatable/place/night-visit-layout.csv。同心・岡っ引き） */
-export function layoutPeople(layout: number): { doshin: number; okappiki: number } | null {
+export type LayoutInfo = {
+  /** 家の種類（町人の家・外国人の家・般若党の家・侍の家）。使われない配置は空 */
+  house: string;
+  /** いつもいる家の人 */
+  people: number;
+  /** 確率で出る家の人 */
+  peopleMaybe: number;
+  dog: number;
+  /** 布団の枚数（12 枚まで） */
+  futon: number;
+  /** ライバルが出る確率（%）。出ないなら null */
+  rival: number | null;
+  /** 夜這いに失敗したときに出てくる同心・岡っ引き */
+  doshin: number;
+  okappiki: number;
+};
+
+/**
+ * 🟢 配置ごとの夜這いの場の中身（datatable/place/night-visit-layout.csv）。家の中の人は配置だけで決まる。
+ * 同心・岡っ引きは家の中にいる人ではなく、失敗したときに出てくる捕り方
+ */
+export function layoutInfo(layout: number): LayoutInfo | null {
   const r = NIGHT_VISIT_LAYOUT_TABLE[layout as keyof typeof NIGHT_VISIT_LAYOUT_TABLE];
-  return r ? { doshin: r.doshin, okappiki: r.okappiki } : null;
+  if (!r) return null;
+  return {
+    house: r.house,
+    people: r.people,
+    peopleMaybe: r.people_maybe,
+    dog: r.dog,
+    futon: r.futon,
+    rival: r.rival,
+    doshin: r.doshin,
+    okappiki: r.okappiki,
+  };
 }
 
-/** 配置の表示（「同心1人・岡っ引き2人」）。表にない値は 16進数 */
+/** 配置の表示（「町人の家・家の人2人・布団2枚」）。表にない値は 16進数 */
 export function layoutLabel(layout: number): string {
   const r = NIGHT_VISIT_LAYOUT_TABLE[layout as keyof typeof NIGHT_VISIT_LAYOUT_TABLE];
   return r ? r.name_ja : `配置 0x${layout.toString(16).toUpperCase()}`;
 }
 
-/** 家の中の人の合計（並べ替え用） */
+/** 家の人の数（並べ替え用） */
 export function layoutHeadcount(layout: number): number {
-  const p = layoutPeople(layout);
-  return p ? p.doshin + p.okappiki : Number.POSITIVE_INFINITY;
+  const p = layoutInfo(layout);
+  return p ? p.people + p.peopleMaybe : Number.POSITIVE_INFINITY;
 }
 
 /** その場所で正しい配置（PLACE_LAYOUTS）。家の中の人が少ない順 */

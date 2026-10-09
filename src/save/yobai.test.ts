@@ -19,7 +19,7 @@ import {
   writePromisePlace,
   writeRecordField,
   layoutLabel,
-  layoutPeople,
+  layoutInfo,
   layoutsForPlace,
 } from './yobai'
 
@@ -251,15 +251,17 @@ describe('🟢 夜這いの記録 0x137F0〜0x13E2F（16 B × 100件、最初の
 })
 
 describe('配置の家の中の人 datatable/place/night-visit-layout.csv（🟢）', () => {
-  it('配置ごとの同心・岡っ引きの人数', () => {
-    expect(layoutPeople(0x06)).toEqual({ doshin: 0, okappiki: 1 }) // 稲荷前（女中・娘の実データ）
-    expect(layoutPeople(0x3d)).toEqual({ doshin: 1, okappiki: 5 }) // お屋敷（さよ）
-    expect(layoutLabel(0x20)).toBe('同心1人・岡っ引き4人') // 提灯の掛かった家（先生）
+  it('配置ごとの家の種類・家の人・布団と、失敗したときの捕り方', () => {
+    // 稲荷前（女中・娘の約束）
+    expect(layoutInfo(0x06)).toEqual({ house: '町人の家', people: 2, peopleMaybe: 0, dog: 0, futon: 2, rival: 70, doshin: 0, okappiki: 1 })
+    // 居酒屋二階の朱美：般若党の見た目の家の人がいる（[U] 2026-10-10 般若党がいた）
+    expect(layoutLabel(0x16)).toBe('般若党の家・家の人3人・犬・布団2枚')
+    expect(layoutLabel(0x08)).toBe('町人の家・家の人2人（＋1人 30%）・布団4枚')
     expect(layoutLabel(0x99)).toBe('配置 0x99') // 表にない
   })
 
-  it('場所ごとに使える配置だけを、家の中の人が少ない順に返す', () => {
-    // 提灯の掛かった家 0x11：0x0A・0x0B・0x35（3人）、0x20（5人）
+  it('場所ごとに使える配置だけを、家の人が少ない順に返す', () => {
+    // 提灯の掛かった家 0x11：0x0A・0x0B（3人）、0x35（4人）、0x20（5人）
     expect(layoutsForPlace(0x11)).toEqual([0x0a, 0x0b, 0x35, 0x20])
     expect(layoutsForPlace(0x0c)).toEqual([0x06])
   })
