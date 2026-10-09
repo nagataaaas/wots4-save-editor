@@ -4,6 +4,7 @@ import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -197,15 +198,10 @@ export function StylesPage() {
                 ))}
               </SelectContent>
             </Select>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                className="size-4"
-                checked={uniqueOnly}
-                onChange={(e) => setUniqueOnly(e.target.checked)}
-              />
+            <Label className="font-normal">
+              <Checkbox checked={uniqueOnly} onCheckedChange={(on) => setUniqueOnly(on)} />
               固有技がある流派のみ
-            </label>
+            </Label>
             <span className="text-muted-foreground text-xs">{sects.length} 件</span>
           </div>
           <div className="flex flex-wrap items-center gap-4">
