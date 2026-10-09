@@ -1,4 +1,4 @@
-import { Binary, ClipboardList, Flag, Globe, Moon, Package, ScrollText, Shirt, Store, Sword, Swords, User, Workflow, Zap, type LucideIcon } from 'lucide-react'
+import { Binary, ClipboardList, Flag, Globe, Moon, Package, ScrollText, Shirt, Store, Sword, User, Workflow, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
 // 各領域の確度は docs/save_format/README.md §3 と各 chunk を参照（chunk 名を note に残す）。
@@ -100,9 +100,15 @@ export const sectionGroups: SectionGroup[] = [
       { id: 'event-chart', label: 'イベントチャート', icon: Workflow, note: 'event-chart イベントの状態とチャート表示の記録', wide: true },
       { id: 'occupation', label: 'なりわい', icon: ClipboardList, note: 'occupation・townsfolk（なりわいのフラグ）状態の表・クリア数・連続なりわいの進み具合' },
       { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit 夜の約束（場所・人物）と夜這いの記録 🔶' },
-      { id: 'styles', label: '流派', icon: ScrollText, note: 'styles・skill-states・sect-scrolls（技の覚え状況 ✅ [U]、修練度・段 🟢）' },
-      { id: 'ore-ryu', label: '俺流', icon: Swords, note: 'custom-style・belt-copy（俺流の技の表）🟢 要ゲーム内確認' },
-      { id: 'skills', label: '技', icon: Zap, note: 'skill-states（構えごとの技の一覧と覚え状況 ✅ [U]、固有技の状態 3 は 🟢）' },
+      {
+        label: '流派',
+        icon: ScrollText,
+        sections: [
+          { id: 'skills', label: '技一覧', note: 'skill-states（構えごとの技の一覧と覚え状況 ✅ [U]、固有技の状態 3 は 🟢）' },
+          { id: 'styles', label: '流派', note: 'styles・skill-states・sect-scrolls（技の覚え状況 ✅ [U]、修練度・段 🟢）' },
+          { id: 'ore-ryu', label: '俺流', note: 'custom-style・belt-copy（俺流の技の表）🟢 要ゲーム内確認' },
+        ],
+      },
       { id: 'circulating', label: '流通', icon: Store, note: 'market-weapons 🟢 持ち去られた武器・道具・部品（読み取り専用）' },
     ],
   },

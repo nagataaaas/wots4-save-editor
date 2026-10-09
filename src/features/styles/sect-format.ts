@@ -25,3 +25,7 @@ export const UNIQUE_WEAPON_ATTR = "特定の武器でしか使えない";
 
 /** 属性の表示名（固有技は「固有技」、ほかは元の名前） */
 export const attrLabel = (a: string): string => (a === UNIQUE_WEAPON_ATTR ? "固有技" : a);
+
+/** 構えのタブの見た目。押せる枠に見えるように、選んでいない構えも枠と背景を付け、選んだ構えは塗りつぶす */
+export const STANCE_TAB_CLASS =
+  "border-border bg-background text-foreground not-data-active:hover:border-foreground/40 not-data-active:hover:bg-accent data-active:border-primary data-active:bg-primary data-active:text-primary-foreground data-active:hover:text-primary-foreground dark:data-active:border-primary dark:data-active:bg-primary dark:data-active:text-primary-foreground h-8 cursor-pointer px-2.5 shadow-xs";

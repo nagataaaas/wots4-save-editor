@@ -46,7 +46,7 @@ import {
   writeSkillPoints,
   type SectsView,
 } from "@/save/sects";
-import { errorMessage } from "./sect-format";
+import { STANCE_TAB_CLASS, errorMessage } from "./sect-format";
 import {
   IntField,
   RankField,
@@ -363,11 +363,11 @@ function SectCard({
         {/* 構え（技の表）ごとにタブで切り替える。技の表が 1 つならタブは出さない */}
         <Tabs defaultValue={String(sheets[0]?.sheet.id)}>
           {sheets.length > 1 && (
-            <TabsList>
+            <TabsList className="h-auto gap-1.5 p-1.5 group-data-horizontal/tabs:h-auto">
               {sheets.map(({ sheet, states }) => (
-                <TabsTrigger key={sheet.id} value={String(sheet.id)}>
+                <TabsTrigger key={sheet.id} value={String(sheet.id)} className={`${STANCE_TAB_CLASS} flex-none gap-3`}>
                   {findStance(sheet.stance)?.nameJa}
-                  <span className="text-muted-foreground text-xs font-normal tabular-nums">
+                  <span className="text-xs font-normal tabular-nums opacity-70">
                     {sheet.skills.filter((x) => states[x.skillNo] !== 0).length}/{sheet.skills.length}
                   </span>
                 </TabsTrigger>

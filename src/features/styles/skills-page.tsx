@@ -19,7 +19,7 @@ import {
   stanceSkillSheets,
   type SectsView,
 } from "@/save/sects";
-import { attrLabel, errorMessage } from "./sect-format";
+import { STANCE_TAB_CLASS, attrLabel, errorMessage } from "./sect-format";
 import { SkillAttrs, SkillCommandCells, SkillTreeName, SkillTreeRows, StateBadge, type SkillTreeRowContext } from "./sect-ui";
 import {
   ANY,
@@ -262,8 +262,7 @@ export function SkillsPage() {
                     <TabsTrigger
                       key={stance.id}
                       value={String(stance.id)}
-                      // 押せる枠に見えるように、選んでいない構えも枠と背景を付け、選んだ構えは塗りつぶす
-                      className="border-border bg-background text-foreground not-data-active:hover:border-foreground/40 not-data-active:hover:bg-accent data-active:border-primary data-active:bg-primary data-active:text-primary-foreground data-active:hover:text-primary-foreground dark:data-active:border-primary dark:data-active:bg-primary dark:data-active:text-primary-foreground h-8 w-full cursor-pointer justify-between px-2.5 shadow-xs"
+                      className={`${STANCE_TAB_CLASS} w-full justify-between`}
                       disabled={filtering && hits === 0}
                     >
                       {stance.nameJa}
