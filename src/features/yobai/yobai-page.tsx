@@ -100,13 +100,11 @@ const placeOption = (place: number): SelectOption => ({
 /** 🟢 約束で使われる場所（00〜22 の全部） */
 const placeOptions: SelectOption[] = [...new Set(PLACE_LAYOUTS.map((p) => p.place))].map(placeOption);
 
-/** 配置の選択肢1つ。家の中の人数で表示し、実データで見た組は相手を添える */
-function layoutOption(place: number, layout: number, extra?: string): SelectOption {
-  const seen = PLACE_LAYOUTS.find((p) => p.place === place && p.layout === layout)?.note;
-  const tail = [extra, seen && `実データ：${seen}`].filter(Boolean).join("・");
+/** 配置の選択肢1つ。家の中の人数で表示する */
+function layoutOption(layout: number, extra?: string): SelectOption {
   return {
     value: String(layout),
-    label: `${layoutLabel(layout)}（配置 ${formatHex2(layout)}${tail ? `・${tail}` : ""}）`,
+    label: `${layoutLabel(layout)}（配置 ${formatHex2(layout)}${extra ? `・${extra}` : ""}）`,
   };
 }
 
@@ -320,7 +318,7 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem
         offset={PROMISE_OFFSET + PROMISE_LAYOUT_REL}
         value={String(promise.layout)}
         currentLabel={`${layoutLabel(promise.layout)}（配置 ${formatHex2(promise.layout)}。この場所では使われない配置）`}
-        options={layouts.map((l) => layoutOption(promise.place, l))}
+        options={layouts.map((l) => layoutOption(l))}
         problem={problem}
         warning={valid ? null : "この場所で使われる配置ではありません。布団の位置がおかしくなることがあります"}
         hint={layouts.length <= 1 ? "この場所で使える配置は1つだけです" : `この場所で使える ${layouts.length} 通り`}
@@ -461,7 +459,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
     .filter((r) => r.place === row.place)
     .sort((a, b) => layoutHeadcount(a.layout) - layoutHeadcount(b.layout) || a.layout - b.layout)
     .map((r) => ({
-      ...layoutOption(r.place, r.layout, [r.stage === null ? "" : `段階 ${r.stage}`, r.checked ? "確かめた組" : ""].filter(Boolean).join("・")),
+      ...layoutOption(r.layout, r.stage === null ? undefined : `段階 ${r.stage}`),
       value: String(r.index),
     }));
   /** その場所の組のうち、今の段階にいちばん近いもの */
@@ -491,12 +489,10 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
               setSpec(defaultSpec(promisePartner(Number(v))!, stage));
             }}
           />
-          {!blocked && (
+          {!blocked && (!partner.status.startsWith("✅") || PARTNER_NOTES[spec.type]) && (
             <p className="text-muted-foreground text-xs">
-              {partner.status.startsWith("✅")
-                ? `ゲームで確かめた相手です（${partner.status.replace("✅ ", "")}）。`
-                : "🟢 値はほかの相手と同じ作り方で決めましたが、この相手での夜這いはまだ確かめていません（要ゲーム内確認）。"}
-              {PARTNER_NOTES[spec.type] ? ` ${PARTNER_NOTES[spec.type]}` : ""}
+              {partner.status.startsWith("✅") ? "" : "🟢 この相手との夜這いはまだゲームで確かめていません（要ゲーム内確認）。"}
+              {PARTNER_NOTES[spec.type] ?? ""}
             </p>
           )}
         </div>
@@ -855,7 +851,7 @@ export function YobaiPage() {
         <AlertDescription>
           約束の場所・名前・見た目と声・しゃべり方と戦闘力・年齢・血液型は、書き換えでゲームに反映されることを確認済みです（解析ドキュメントの
           night-visit）。
-          配置は確認済みの組だけを選べます。夜這いの記録は差分からの推定で、書き換えの反映は確かめていません。
+          配置はその場所で使えるものだけを選べます。夜這いの記録は差分からの推定で、書き換えの反映は確かめていません。
           書き換える前のセーブを残してから試してください。
         </AlertDescription>
       </Alert>
