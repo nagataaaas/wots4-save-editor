@@ -74,10 +74,18 @@ const placeLayoutOptions: SelectOption[] = PLACE_LAYOUTS.map((p) => ({
   value: `${p.place}:${p.layout}`,
   label: `${formatHex2(p.place)} ${placeLabel(p.place)}（配置 ${formatHex2(p.layout)}${p.note ? `・${p.note}` : ""}）`,
   group: placeLabel(p.place).split("　")[0],
-  keywords: [placeLabel(p.place), formatHex2(p.place), formatHex2(p.layout), ...(p.note ? [p.note] : [])],
+  keywords: [
+    placeLabel(p.place),
+    formatHex2(p.place),
+    formatHex2(p.layout),
+    ...(p.note ? [p.note] : []),
+  ],
 }));
 
-const placeOptions: SelectOption[] = PLACES.map((name, i) => ({ value: String(i), label: `${formatHex2(i)} ${name}` }));
+const placeOptions: SelectOption[] = PLACES.map((name, i) => ({
+  value: String(i),
+  label: `${formatHex2(i)} ${name}`,
+}));
 
 const knownOptions = (known: readonly KnownValue[]): SelectOption[] =>
   known.map((k) => ({ value: String(k.value), label: `${k.label}（${hex(k.value)}）` }));
@@ -92,7 +100,13 @@ const nameOptions: SelectOption[] = NPC_NAMES.map((n) => ({
 
 const PERSON_FIELDS: Record<
   PersonField,
-  { label: string; options: readonly SelectOption[] | null; search?: boolean; note: string; badge?: { mark: "🔶" | "❓"; text: string } }
+  {
+    label: string;
+    options: readonly SelectOption[] | null;
+    search?: boolean;
+    note: string;
+    badge?: { mark: "🔶" | "❓"; text: string };
+  }
 > = {
   name: {
     label: "名前",
@@ -135,7 +149,8 @@ const PERSON_FIELDS: Record<
 };
 
 function hintFor(field: PersonField, advanced: boolean): string {
-  if (field === "age") return advanced ? "0〜255（255＝？）" : `0〜${AGE_NORMAL_MAX}、または 255（？）`;
+  if (field === "age")
+    return advanced ? "0〜255（255＝？）" : `0〜${AGE_NORMAL_MAX}、または 255（？）`;
   if (field === "group") return "0〜0xFFFF";
   if (field === "day") return advanced ? "1〜65536日目" : `1〜${DAY_NORMAL_MAX + 1}日目`;
   return advanced ? "10進数か 0x 付きの16進数" : "確認済みの値";
@@ -161,7 +176,9 @@ function PersonFieldEditor({
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const spec = PERSON_FIELDS[field];
-  const badges = spec.badge ? <CertaintyBadge mark={spec.badge.mark} text={spec.badge.text} /> : undefined;
+  const badges = spec.badge ? (
+    <CertaintyBadge mark={spec.badge.mark} text={spec.badge.text} />
+  ) : undefined;
   const apply = (v: number) => update((b) => write(b, v, { advanced }));
   const validate = (v: number) => validatePersonField(field, v, current ?? 0, { advanced });
 
@@ -175,7 +192,9 @@ function PersonFieldEditor({
         problem={problem}
         format={(v) => `${v + 1}`}
         parse={(input) => {
-          const r = parseNumber(input, (v) => (v < 1 ? "1日目以上を指定してください" : validate(v - 1)));
+          const r = parseNumber(input, (v) =>
+            v < 1 ? "1日目以上を指定してください" : validate(v - 1),
+          );
           return r.ok ? { ok: true, value: r.value - 1 } : r;
         }}
         apply={apply}
@@ -194,7 +213,9 @@ function PersonFieldEditor({
         offset={offset}
         badges={badges}
         value={current}
-        problem={problem ?? (advanced ? null : "意味が分かっていない値です（上級者モードで書けます）")}
+        problem={
+          problem ?? (advanced ? null : "意味が分かっていない値です（上級者モードで書けます）")
+        }
         format={hex}
         parse={(input) => parseNumber(input, validate)}
         apply={apply}
@@ -284,7 +305,9 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
         currentLabel={`${formatHex2(promise.place)} ${placeLabel(promise.place)}（配置 ${formatHex2(promise.layout)}。未確認の組）`}
         options={placeLayoutOptions}
         problem={problem}
-        warning={known ? null : "確認済みの組ではありません。布団の位置がおかしくなることがあります"}
+        warning={
+          known ? null : "確認済みの組ではありません。布団の位置がおかしくなることがあります"
+        }
         hint="正しい組だけを選べます"
         searchPlaceholder="場所・配置・相手の名前で検索"
         note="+0x08 は夜這いに入る扉と、その先のマップ。+0x0A はその先での人と布団の配置。場所だけを変えると、布団が宙に浮いたり壁にめり込んだりした（確認済み）。組は約束で使われる72組（相手の名前があるものは実データで見た組）"
@@ -303,7 +326,9 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
             options={placeOptions}
             problem={problem}
             note="配置（+0x0A）は変えません"
-            onChange={(v) => update((b) => writePromisePlace(b, Number(v), promise.layout, { advanced }))}
+            onChange={(v) =>
+              update((b) => writePromisePlace(b, Number(v), promise.layout, { advanced }))
+            }
           />
           <FieldRow
             key={promise.layout}
@@ -312,7 +337,11 @@ function PlaceEditor({ promise, problem }: { promise: PromiseView; problem: stri
             value={promise.layout}
             problem={problem}
             format={hex}
-            parse={(input) => parseNumber(input, (v) => validatePlaceLayout(promise.place, v, current, { advanced }))}
+            parse={(input) =>
+              parseNumber(input, (v) =>
+                validatePlaceLayout(promise.place, v, current, { advanced }),
+              )
+            }
             apply={(v) => update((b) => writePromisePlace(b, promise.place, v, { advanced }))}
             hint="0〜0xFFFF"
           />
@@ -337,7 +366,8 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
           <CertaintyBadge mark="🔶" text="配置の意味は推定" />
         </CardTitle>
         <CardDescription>
-          {formatOffset(PROMISE_OFFSET)} から 0x2C B。約束中の相手の名前・見た目・年齢などを書き換えます。
+          {formatOffset(PROMISE_OFFSET)} から 0x2C
+          B。約束中の相手の名前・見た目・年齢などを書き換えます。
           名前・見た目と声・しゃべり方と戦闘力は別々に決まるので、組み合わせを変えられます。
           約束がないときは編集できません（新しく約束を作る機能はありません）。
         </CardDescription>
@@ -402,16 +432,23 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
           <CertaintyBadge mark="🔶" text="書き換えの反映は未確認" />
         </CardTitle>
         <CardDescription>
-          {formatOffset(RECORDS_OFFSET)} から 16 B × {RECORD_CAPACITY} 件。夜這いのたびに、最初の空いている件に書かれます
-          （{view ? `今は ${view.count} 件` : "未読み込み"}。周回を始めると全部消えます）。
+          {formatOffset(RECORDS_OFFSET)} から 16 B × {RECORD_CAPACITY}{" "}
+          件。夜這いのたびに、最初の空いている件に書かれます （
+          {view ? `今は ${view.count} 件` : "未読み込み"}。周回を始めると全部消えます）。
           今ある記録の項目だけを書き換えます（記録を足したり消したりする機能はありません）。
           見た目と声は記録に残りません。+0x08 の入った建物の番号は表示だけです。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col divide-y">
-        {view && view.records.length === 0 && <p className="text-muted-foreground text-sm">記録はありません。</p>}
-        {problem && view && <p className="text-muted-foreground pb-4 text-xs">読み取り専用：{problem}</p>}
-        {view?.records.map((r) => <RecordRow key={r.index} record={r} problem={problem} />)}
+        {view && view.records.length === 0 && (
+          <p className="text-muted-foreground text-sm">記録はありません。</p>
+        )}
+        {problem && view && (
+          <p className="text-muted-foreground pb-4 text-xs">読み取り専用：{problem}</p>
+        )}
+        {view?.records.map((r) => (
+          <RecordRow key={r.index} record={r} problem={problem} />
+        ))}
       </CardContent>
     </Card>
   );
@@ -425,12 +462,10 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          夜這いの約束の条件
-          <CertaintyBadge mark="🔶" text="書き換えの反映は未確認" />
-        </CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2">夜這いの約束の条件</CardTitle>
         <CardDescription>
-          朱美・ローラ・三姉妹・メリンダと夜這いの約束をするための好感度とポイントです（{formatOffset(0x3792)}〜{formatOffset(0x3797)}）。
+          朱美・ローラ・三姉妹・メリンダと夜這いの約束をするための好感度とポイントです（
+          {formatOffset(0x3792)}〜{formatOffset(0x3797)}）。
           約束そのものはゲームの中で、条件を満たした場面を通って作ります。
         </CardDescription>
       </CardHeader>
@@ -443,7 +478,11 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
               key={p.offset}
               label={p.label}
               offset={p.offset}
-              badges={p.pending ? <CertaintyBadge mark={p.threshold === null ? "❓" : "🔶"} text={p.pending} /> : undefined}
+              badges={
+                p.pending ? (
+                  <CertaintyBadge mark={p.threshold === null ? "❓" : "🔶"} text={p.pending} />
+                ) : undefined
+              }
               value={current}
               problem={problem}
               format={String}
@@ -452,7 +491,11 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
               inputMode="numeric"
               hint={p.threshold === null ? range : `${range}。${p.threshold} 以上で約束`}
               note={p.note}
-              warning={current !== null && current > POINT_NORMAL_MAX ? `通常の進行では見ない値です（${current}）` : null}
+              warning={
+                current !== null && current > POINT_NORMAL_MAX
+                  ? `通常の進行では見ない値です（${current}）`
+                  : null
+              }
             />
           );
         })}
@@ -465,9 +508,12 @@ function CountersCard({ view }: { view: YobaiView | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">夜這いの回数（表示だけ）</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          夜這いの回数（表示だけ）
+        </CardTitle>
         <CardDescription>
-          夜這いが終わるたびに増える値です。約束の画面の「夜這い回数」は {formatOffset(0x137ec)}（確認済み）。
+          夜這いが終わるたびに増える値です。約束の画面の「夜這い回数」は {formatOffset(0x137ec)}
+          （確認済み）。
           夜這い回数と相手ごとの回数は周回で消えず、記録・段階・愛の証の回数は周回で消えるので、記録の数と合わないことがあります。
         </CardDescription>
       </CardHeader>
@@ -483,13 +529,17 @@ function CountersCard({ view }: { view: YobaiView | null }) {
         <div>
           <p className="mb-2">
             相手ごとの夜這い回数（{formatOffset(PARTNER_COUNTS_OFFSET)}〜、u32）
-            <span className="text-muted-foreground ml-2 text-xs">特別な相手14人。さよと町の人は数えない</span>
+            <span className="text-muted-foreground ml-2 text-xs">
+              特別な相手14人。さよと町の人は数えない
+            </span>
           </p>
           <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
             {view?.partners.map((p) => (
               <p key={p.offset}>
                 {p.label}：{p.value}
-                <span className="text-muted-foreground ml-1 font-mono text-xs">{formatOffset(p.offset)}</span>
+                <span className="text-muted-foreground ml-1 font-mono text-xs">
+                  {formatOffset(p.offset)}
+                </span>
               </p>
             ))}
           </div>
@@ -502,7 +552,10 @@ function CountersCard({ view }: { view: YobaiView | null }) {
 export function YobaiPage() {
   const { save } = useSave();
 
-  const result = useMemo((): { view: YobaiView; points: YobaiPointsView } | { error: string } | null => {
+  const result = useMemo(():
+    | { view: YobaiView; points: YobaiPointsView }
+    | { error: string }
+    | null => {
     if (!save) return null;
     try {
       return { view: readYobai(save.working), points: readYobaiPoints(save.working) };
@@ -528,7 +581,9 @@ export function YobaiPage() {
       {!view && (
         <Alert>
           <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。</AlertDescription>
+          <AlertDescription>
+            サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。
+          </AlertDescription>
         </Alert>
       )}
 
@@ -542,7 +597,8 @@ export function YobaiPage() {
       <Alert>
         <AlertTitle>検証用（一部は要ゲーム内確認）</AlertTitle>
         <AlertDescription>
-          約束の場所・名前・見た目と声・しゃべり方と戦闘力・年齢・血液型は、書き換えでゲームに反映されることを確認済みです（解析ドキュメントの night-visit）。
+          約束の場所・名前・見た目と声・しゃべり方と戦闘力・年齢・血液型は、書き換えでゲームに反映されることを確認済みです（解析ドキュメントの
+          night-visit）。
           配置は確認済みの組だけを選べます。夜這いの記録は差分からの推定で、書き換えの反映は確かめていません。
           書き換える前のセーブを残してから試してください。
         </AlertDescription>
@@ -554,8 +610,10 @@ export function YobaiPage() {
       <CountersCard view={view} />
 
       <p className="text-muted-foreground text-xs">
-        約束の枠の +0x00（約束したときの段階）・+0x0C〜+0x1B（意味は未確認）・+0x26〜+0x2B（初めての説明を見たかのビットなど）は書き換えません。
-        {` `}記録の +0x08（入った建物）は {formatOffset(RECORDS_OFFSET + RECORD_BUILDING_REL)} から 16 B 刻みです。
+        約束の枠の
+        +0x00（約束したときの段階）・+0x0C〜+0x1B（意味は未確認）・+0x26〜+0x2B（初めての説明を見たかのビットなど）は書き換えません。
+        {` `}記録の +0x08（入った建物）は {formatOffset(RECORDS_OFFSET + RECORD_BUILDING_REL)} から
+        16 B 刻みです。
       </p>
     </div>
   );

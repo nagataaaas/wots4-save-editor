@@ -92,11 +92,11 @@ const yesNo = (no: string, yes: string): TownsfolkValue[] => [
   { value: 1, label: yes },
 ];
 
-/** 汁部（DLC）の 209〜212 の結果（🟢） */
+/** 汁部（DLC）の 209〜212 それぞれの進み具合（🟢） */
 const SHIRUBE_RESULT_VALUES: readonly TownsfolkValue[] = [
-  { value: 0, label: "なし（破棄・話して消えた）" },
+  { value: 0, label: "受注前" },
   { value: 1, label: "成功" },
-  { value: 2, label: "失敗を成功扱いにしてもらった（報酬なし）" },
+  { value: 2, label: "成功……？（失敗を成功扱いにしてもらった）" },
 ];
 
 /** 汁部（DLC）のなりわい 209〜212 の名前 */
@@ -197,16 +197,16 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     ],
   },
   [occupationFlagOffset(27)]: {
-    name: `${nameOf.npc(211)}（DLC）と組んでいる`,
-    note: `🟢 ${nameOf.npc(81)} ${nameOf.npc(211)}理人と組むと 1。手を切ると 0（27〜31 がすべて 0 になる）`,
-    values: yesNo("組んでいない", "組んでいる"),
+    name: `${nameOf.npc(211)}（DLC）と知り合ったか`,
+    note: `🟢 ${nameOf.npc(81)} ${nameOf.npc(211)}理人の誘いに乗って組むと 1。一度組むと 1 のまま`,
+    values: yesNo("知り合う前（組んでいない）", "知り合った（組んでいる）"),
   },
   ...Object.fromEntries(
     SHIRUBE_JOBS.map((job, i) => [
       occupationFlagOffset(28 + i),
       {
-        name: `${nameOf.npc(211)}の「${job}」の結果`,
-        note: `🟢 なりわい ${209 + i} を終えたときの結果。次に${nameOf.npc(211)}と話すと 0 に戻る`,
+        name: `${nameOf.npc(211)}の「${job}」`,
+        note: `🟢 なりわい ${209 + i} の進み具合（破棄しても 0）。成功は残る。${nameOf.npc(211)}は 28〜31 のうち最初に 0 のものの仕事を頼む。0 がなく「成功……？」があれば「あきらめた仕事があるよな」と言い、頼み直すと 0 に戻る。すべて成功ならもう頼まない`,
         values: SHIRUBE_RESULT_VALUES,
       },
     ]),

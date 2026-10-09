@@ -181,6 +181,11 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
       4, 5, 6, 7, 8, 9, 25, 26, 27, 28, 29, 30, 31,
     ])
     expect(TOWNSFOLK_NOTES[0x0138].values?.map((v) => v.value)).toEqual([0, 1, 2])
+    // 🟢 28〜31 は汁部の 209〜212 それぞれの進み具合。27 は知り合ったか（組んだか）
+    expect(TOWNSFOLK_NOTES[0x013b].values?.map((v) => v.label)).toEqual([
+      '受注前', '成功', '成功……？（失敗を成功扱いにしてもらった）',
+    ])
+    expect(TOWNSFOLK_NOTES[0x0137].values?.map((v) => v.value)).toEqual([0, 1])
     expect(TOWNSFOLK_NOTES[0x0135].values?.find((v) => v.value === 8)?.label).toBe('「四天王の証」を受け取った')
   })
 

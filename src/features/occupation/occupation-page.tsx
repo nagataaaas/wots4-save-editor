@@ -60,27 +60,21 @@ import {
   type OccupationEntry,
 } from "@/save/master/occupation-names";
 import {
-  SHIRUBE_FLAG_OFFSETS,
-  SHIRUBE_JOB_IDS,
-  SHIRUBE_STATES,
-  readShirube,
-  writeShirubeState,
-  type ShirubeView,
-} from "@/save/shirube";
-import {
   OCCUPATION_FLAG_START,
   TOWNSFOLK_NOTES,
   TOWNSFOLK_START,
   readTownsfolk,
+  writeTownsfolk,
   type TownsfolkView,
 } from "@/save/townsfolk";
+
+import { seriesOptions } from "./series-options";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 type Views = {
   occupations: OccupationView;
   townsfolk: TownsfolkView;
-  shirube: ShirubeView;
   accepted: AcceptedView;
 };
 
@@ -151,7 +145,6 @@ export function OccupationPage() {
         views: {
           occupations: readOccupations(save.working),
           townsfolk: readTownsfolk(save.working),
-          shirube: readShirube(save.working),
           accepted: readAccepted(save.working),
         },
       };
@@ -204,7 +197,7 @@ export function OccupationPage() {
         write={write}
       />
       <SeriesCard view={views?.townsfolk ?? null} write={write} />
-      <DlcCard view={views?.shirube ?? null} write={write} />
+      <DlcCard view={views?.townsfolk ?? null} write={write} />
       <SecurityCard view={views?.townsfolk ?? null} write={write} />
       <StatesCard
         key={`${save?.loadId ?? 0}-states`}
@@ -343,7 +336,7 @@ function SeriesCard({ view, write }: FlagCardProps) {
         </CardTitle>
         <CardDescription>
           【岡っ引き】野戸仏・【極道】小鳩・【泥棒】泥棒さん・【宿無し】おっつぁんの4種類。十の位が何件目か、一の位が
-          0＝依頼前・1＝依頼済みです。野戸仏は、20 で2件目「督促状」から始まり、100
+          0＝受注前・1＝受注済です。野戸仏は、20 で2件目「督促状」から始まり、100
           で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。
           4種類をすべて終えると四天王の話が進み、最終なりわいにつながります。連続なりわいを 100
           にしても、最終なりわいが 99 未満なら新しい依頼は出ません。
@@ -378,7 +371,10 @@ function SecurityCard({ view, write }: FlagCardProps) {
   );
 }
 
-function DlcCard({ view, write }: { view: ShirubeView | null; write: (m: (b: Uint8Array) => void) => void }) {
+/** 汁部（DLC）：知り合ったか（27）と、209〜212 の進み具合（28〜31）🟢 */
+const DLC_CARD_FLAGS = [27, 28, 29, 30, 31] as const;
+
+function DlcCard({ view, write }: FlagCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -386,16 +382,24 @@ function DlcCard({ view, write }: { view: ShirubeView | null; write: (m: (b: Uin
           DLC なりわい
           <InfoTip offset={flagOffsetTip}>なりわいのフラグ 27〜31</InfoTip>
         </CardTitle>
-        <CardDescription>人斬り 汁部理人と組んで受けるなりわい（209〜212）です。</CardDescription>
+        <CardDescription>
+          人斬り 汁部理人と組んで受けるなりわい（209〜212）です。汁部は 209 → 212 のうち最初に「受注前」の仕事を頼み、すべて「成功」ならもう頼みません。
+          持っている DLC によって、頼まれるのは 209・210 か 211・212 だけになります。受注は上の「受注中のなりわい」の欄で書きます。
+        </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
-        <ShirubeRow view={view} write={write} />
+        {DLC_CARD_FLAGS.map((flag) => (
+          <FlagRow key={flag} flag={flag} view={view} write={write} />
+        ))}
       </CardContent>
     </Card>
   );
 }
 
-/** なりわいのフラグ1つの欄。連続なりわい（番号 4〜7）の「依頼済み」は、そのなりわいの受注も書く */
+/**
+ * なりわいのフラグ1つの欄。連続なりわい（番号 4〜7）の「受注済」は、そのなりわいの受注も書く。
+ * 汁部（27〜31）はフラグだけを書き、受注には触らない
+ */
 function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { flag: number; separator?: string }) {
   const { advanced } = useAdvancedMode();
   const offset = OCCUPATION_FLAG_START + flag;
@@ -414,24 +418,25 @@ function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { f
       }
       value={current === null ? null : String(current)}
       currentLabel={current === null ? undefined : `${current} 不明`}
-      options={(info.values ?? []).map((s) => {
-        const accept = seriesAcceptOf(flag, s.value);
-        return {
+      options={isSeries
+        ? seriesOptions(flag, info.values ?? [], jobs ?? [])
+        : (info.values ?? []).map((s) => ({
           value: String(s.value),
-          label: `${s.value} ${s.label}${accept ? `（${accept} ${occupationLabelById(accept)} を受注）` : ""}`,
+          label: `${s.value} ${s.label}`,
           group: s.group,
-        };
-      })}
+        }))}
       problem={view?.problem ?? null}
       note={
         isSeries
-          ? `${info.note}。「依頼済み」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この連続なりわいを受注中なら受注を外します`
+          ? `${info.note}。「受注済」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この連続なりわいを受注中なら受注を外します`
           : info.note
       }
       hint={jobs && jobList(jobs, separator)}
       onChange={(v) =>
         write((b) =>
-          writeSeriesState(b, [{ flag, value: Number(v) }], seriesAcceptOf(flag, Number(v)), { advanced }),
+          (DLC_CARD_FLAGS as readonly number[]).includes(flag)
+            ? writeTownsfolk(b, offset, Number(v), { advanced })
+            : writeSeriesState(b, [{ flag, value: Number(v) }], seriesAcceptOf(flag, Number(v)), { advanced }),
         )
       }
     />
@@ -440,42 +445,6 @@ function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { f
 
 const jobList = (ids: readonly number[], separator = " → ") =>
   ids.map((id) => `${id} ${occupationLabelById(id)}`).join(separator);
-
-/**
- * 汁部（DLC）のなりわい。なりわいのフラグ 27〜31 を1つの欄にまとめる（🟢。進み具合そのものはこの欄にない 🔶）。
- * 受注中のなりわい（0x45F4E）は書かない（受注中の欄にまとめる）
- */
-function ShirubeRow({
-  view,
-  write,
-}: {
-  view: ShirubeView | null;
-  write: (m: (b: Uint8Array) => void) => void;
-}) {
-  return (
-    <SelectRow
-      label="【人斬り】汁部（DLC）（番号 27〜31）"
-      offset={SHIRUBE_FLAG_OFFSETS[0]}
-      badges={
-        <Badge variant="outline" className="font-normal">
-          書き込みは要ゲーム内確認
-        </Badge>
-      }
-      value={view === null ? null : (view.state?.key ?? "current")}
-      currentLabel={view ? `${view.values.join("・")} 表にない組み合わせ` : undefined}
-      options={SHIRUBE_STATES.map((s) => ({
-        value: s.key,
-        label: s.label,
-        group: s.group,
-        selectedLabel: s.fullLabel,
-      }))}
-      problem={view?.problem ?? null}
-      note={`${formatOffset(SHIRUBE_FLAG_OFFSETS[0])}〜${formatOffset(SHIRUBE_FLAG_OFFSETS[4])}（u8 × 5）。27＝組んでいる、28〜31＝209〜212 を終えたときの結果（1 成功、2 失敗を成功扱い）で、次に汁部と話すと 0 に戻ります。どれを選んでも 5 B すべてを書きます。受注中は 27〜31 が「組んだ」と同じ値で、受注中のなりわい ${formatOffset(ACCEPT_OFFSETS.id)} が 209〜212 になります。「受注」を選ぶと「受注中のなりわい」の欄と同じ書き込みをし、ほかを選ぶと汁部のなりわいの受注を外します`}
-      hint={`${jobList(SHIRUBE_JOB_IDS)} の順に頼まれます。どこまで進んだかはこの欄にも、下の記録にもありません（位置は未確認）`}
-      onChange={(key) => write((b) => writeShirubeState(b, key))}
-    />
-  );
-}
 
 // ---------------------------------------------------------------- 周回をまたぐ記録
 
