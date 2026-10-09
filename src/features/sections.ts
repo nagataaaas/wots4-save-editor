@@ -1,11 +1,11 @@
-import { Binary, ClipboardList, Flag, Globe, Moon, Package, ScrollText, Shirt, Store, Sword, Swords, User, Workflow, type LucideIcon } from 'lucide-react'
+import { Binary, ClipboardList, Flag, Globe, Moon, Package, ScrollText, Shirt, Store, Sword, Swords, User, Workflow, Zap, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
 // 各領域の確度は docs/save_format/README.md §3 と各 chunk を参照（chunk 名を note に残す）。
 
 export type SectionId =
   | 'hero'
-  | 'accessory-equipment'
+  | 'hero-appearance'
   | 'belt'
   | 'weapon-bag'
   | 'weapon-chest'
@@ -22,6 +22,7 @@ export type SectionId =
   | 'yobai'
   | 'styles'
   | 'ore-ryu'
+  | 'skills'
   | 'circulating'
   | 'raw'
 
@@ -59,8 +60,14 @@ export const sectionGroups: SectionGroup[] = [
   {
     label: '編集',
     items: [
-      { id: 'hero', label: '主人公', icon: User, note: 'money・player-name・stats・vitals（所持金・侍点・名前・活力・HP）、date-location（難易度・主人公設定のやり直し）' },
-      { id: 'accessory-equipment', label: '装飾品', icon: Shirt, note: 'accessories（装着10枠・位置・回転・大きさ・俺のおしゃれ 🟢 要ゲーム内確認）' },
+      {
+        label: '主人公',
+        icon: User,
+        sections: [
+          { id: 'hero', label: '基本情報', note: 'money・player-name・stats・vitals（所持金・侍点・名前・活力・HP）、date-location（現在地・難易度・主人公設定のやり直し）' },
+          { id: 'hero-appearance', label: '容姿', note: 'appearance（現在の見た目・人物・顔・髪型・服）、accessories（装着10枠・位置・回転・大きさ・俺のおしゃれ 🟢 要ゲーム内確認）' },
+        ],
+      },
       {
         label: '武器',
         icon: Sword,
@@ -95,6 +102,7 @@ export const sectionGroups: SectionGroup[] = [
       { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit 夜の約束（場所・人物）と夜這いの記録 🔶' },
       { id: 'styles', label: '流派', icon: ScrollText, note: 'styles・skill-states・sect-scrolls（技の覚え状況 ✅ [U]、修練度・段 🟢）' },
       { id: 'ore-ryu', label: '俺流', icon: Swords, note: 'custom-style・belt-copy（俺流の技の表）🟢 要ゲーム内確認' },
+      { id: 'skills', label: '技', icon: Zap, note: 'skill-states（構えごとの技の一覧と覚え状況 ✅ [U]、固有技の状態 3 は 🟢）' },
       { id: 'circulating', label: '流通', icon: Store, note: 'market-weapons 🟢 持ち去られた武器・道具・部品（読み取り専用）' },
     ],
   },

@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { findSkillConflicts, pickWithoutConflicts } from "@/save/custom-style";
-import { RANK_LABELS, findSkillInfo, findStanceSkill, skillName, stanceSkills } from "@/save/master/sect-data";
-import { uniqueWeaponsForSkill } from "@/save/unique-weapons";
-import { STATE_LABELS, parseInteger } from "./sect-format";
+import { RANK_LABELS, findSect, findSkillInfo, findStanceSkill, skillName, stanceSkills } from "@/save/master/sect-data";
+import { uniqueSkillSects, uniqueWeaponsForSkill } from "@/save/unique-weapons";
+import { STATE_LABELS, UNIQUE_WEAPON_ATTR, parseInteger } from "./sect-format";
 
 export function StateBadge({ state }: { state: number }) {
   return (
@@ -200,7 +200,7 @@ const ATTR_SHORT: Record<string, string> = {
   防御不可能: "防不可",
   攻撃を受けてものけぞらない: "剛",
 };
-const UNIQUE_WEAPON_ATTR = "特定の武器でしか使えない";
+
 
 function AttrTag({ label, tip }: { label: string; tip: ReactNode }) {
   return (
@@ -238,18 +238,26 @@ export function SkillCommandCells({ skillId }: { skillId: number }) {
   );
 }
 
-/** 技の属性の略称 🟢（datatable/sect/skill.csv）。固有技はホバーで対応する武器の名前を出す（✅ [U] 2026-10-09） */
+/** 固有技を覚えられる流派（🟢）と使える武器（✅ [U] 2026-10-09）の説明 */
+function uniqueSkillTip(skillId: number): ReactNode {
+  const sects = uniqueSkillSects(skillId).map((id) => findSect(id)?.nameJa ?? String(id));
+  return (
+    <span className="flex flex-col">
+      <span>{UNIQUE_WEAPON_ATTR}</span>
+      <span>流派：{sects.join("・") || "（流派が見つかりません）"}</span>
+      <span>武器：{uniqueWeaponsForSkill(skillId).join("・") || "（武器が見つかりません）"}</span>
+    </span>
+  );
+}
+
+/** 技の属性の略称 🟢（datatable/sect/skill.csv）。固有技はホバーで覚えられる流派と対応する武器の名前を出す（武器は ✅ [U] 2026-10-09） */
 export function SkillAttrs({ skillId }: { skillId: number }) {
   const info = findSkillInfo(skillId);
   return (
     <span className="flex flex-wrap items-center gap-1 text-xs">
       {info?.attrs.map((a) =>
         a === UNIQUE_WEAPON_ATTR ? (
-          <AttrTag
-            key={a}
-            label="固有技"
-            tip={`${a}：${uniqueWeaponsForSkill(skillId).join("・") || "（武器が見つかりません）"}`}
-          />
+          <AttrTag key={a} label="固有技" tip={uniqueSkillTip(skillId)} />
         ) : (
           <AttrTag key={a} label={ATTR_SHORT[a] ?? a} tip={a} />
         ),

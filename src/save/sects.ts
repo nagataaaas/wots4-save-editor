@@ -9,7 +9,9 @@
 import { readI16, readU16, writeI16, writeU16, writeU8 } from './binary'
 import { checkLayout } from './hero'
 import {
+  SECTS,
   SKILL_NO_COUNT,
+  SKILL_SHEETS,
   SLOT_COUNT,
   STANCE_COUNT,
   findSect,
@@ -407,4 +409,59 @@ export function rankForMastery(sect: Sect, mastery: number): number {
     if (mastery >= t) rank = i + 1
   })
   return rank
+}
+
+// 構えごとの技（技の画面）。構えの技を、その技が入っている技の表すべてで覚えさせる。
+
+/**
+ * 構えの技が入っている技の表 🟢（datatable/sect）。固有技は覚えられる流派の技の表だけ（sectSheetSkills と同じ）。
+ * 主人公が手に入れられない流派（「……」）の技の表も含む
+ */
+export function stanceSkillSheets(stance: number, skillNo: number): SkillSheet[] {
+  return SKILL_SHEETS.filter(
+    (sheet) =>
+      sheet.stance === stance &&
+      SECTS.some((sect) => sect.sheets.includes(sheet.id) && sectSheetSkills(sect, sheet).some((s) => s.skillNo === skillNo)),
+  )
+}
+
+/** 構えの技が固有技か（技の表のどれかで固有技として入っているか） */
+export function isUniqueStanceSkill(stance: number, skillNo: number): boolean {
+  return SKILL_SHEETS.some((sheet) => sheet.stance === stance && sheet.skills.some((s) => s.skillNo === skillNo && isUniqueSkill(s)))
+}
+
+function sheetSkillOf(sheet: SkillSheet, skillNo: number): SheetSkill {
+  return sheet.skills.find((s) => s.skillNo === skillNo)!
+}
+
+/**
+ * 構えの技を、入っている技の表（stanceSkillSheets）すべてで習得する。派生元も覚える（learnSheetSkills）。
+ * 固有技は状態 3（習得済・俺流には未組み込み。learnUniqueSkills 🟢 要ゲーム内確認）。どの技の表にもない技は拒否する
+ */
+export function learnStanceSkill(bytes: Uint8Array, stance: number, skillNo: number): void {
+  const sheets = stanceSkillSheets(stance, skillNo)
+  if (sheets.length === 0) throw new RangeError('この技が入っている流派がないので習得できません')
+  for (const sheet of sheets) {
+    if (isUniqueSkill(sheetSkillOf(sheet, skillNo))) learnUniqueSkills(bytes, sheet.id, [skillNo])
+    else learnSheetSkills(bytes, sheet.id, [skillNo])
+  }
+}
+
+/** 状態 3 の固有技を、入っている技の表すべてで 1（俺流に組み込める）にする（3 → 1） */
+export function showStanceSkillInOreRyu(bytes: Uint8Array, stance: number, skillNo: number): void {
+  const sheets = stanceSkillSheets(stance, skillNo)
+  if (sheets.length === 0) throw new RangeError('この技が入っている流派がありません')
+  for (const sheet of sheets) learnSheetSkills(bytes, sheet.id, [skillNo])
+}
+
+/**
+ * 構えの技を、すべての技の表と構えごとの状態で覚えていない状態（0）にする（上級者モード用。forgetSheetSkill）。
+ * 構えごとの状態は、技の表に残っていなくても 0 にする
+ */
+export function forgetStanceSkill(bytes: Uint8Array, stance: number, skillNo: number): void {
+  assertWritable(bytes)
+  for (const sheet of SKILL_SHEETS) {
+    if (sheet.stance === stance && sheet.skills.some((s) => s.skillNo === skillNo)) forgetSheetSkill(bytes, sheet.id, skillNo)
+  }
+  writeU8(bytes, STANCE_STATES_OFFSET + stance * SKILL_NO_COUNT + skillNo, 0)
 }

@@ -15,6 +15,11 @@ import {
   SHEET_STATE_SLOTS,
   STANCE_STATES_OFFSET,
   forgetSheetSkill,
+  forgetStanceSkill,
+  isUniqueStanceSkill,
+  learnStanceSkill,
+  showStanceSkillInOreRyu,
+  stanceSkillSheets,
   learnSectSkills,
   learnSheetSkills,
   learnUniqueSkills,
@@ -28,7 +33,7 @@ import {
   writeSectValues,
   writeSkillPoints,
 } from './sects'
-import { findSect, findSkillSheet } from './master/sect-data'
+import { STANCE_SKILLS, findSect, findSkillSheet } from './master/sect-data'
 
 /** 🟢 鬼怒川流剣術（ID 51）の 1つめの技の表は 29（構え 3 脇） */
 const SHEET = 29
@@ -272,5 +277,58 @@ describe('writeSectValues', () => {
   it('🟢 修練度に見合う段（夜杯流体術 300・1000・2500・4500）', () => {
     const s = findSect(108)!
     expect([0, 299, 300, 2499, 4500, 10000].map((m) => rankForMastery(s, m))).toEqual([0, 0, 1, 2, 4, 4])
+  })
+})
+
+describe('learnStanceSkill', () => {
+  const stateIn = (b: Uint8Array, sheetId: number, no: number) =>
+    readSects(b).sheetSlots.find((s) => s.sheetId === sheetId)?.states[no] ?? 0
+
+  it('🟢 構えの技を、その技が入っている技の表すべてと構えごとの状態で習得する', () => {
+    const b = makeSave()
+    // 技の表 29 で覚えていない技のうち、ほかの技の表にも入っている技
+    const no = findSkillSheet(SHEET)!.skills.find(
+      (s) => !LEARNED_BEFORE.includes(s.skillNo) && stanceSkillSheets(STANCE, s.skillNo).length > 1,
+    )!.skillNo
+    const sheets = stanceSkillSheets(STANCE, no)
+    expect(sheets.every((s) => s.stance === STANCE && s.skills.some((x) => x.skillNo === no))).toBe(true)
+    learnStanceSkill(b, STANCE, no)
+    for (const sheet of sheets) expect(stateIn(b, sheet.id, no)).not.toBe(0)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + no]).not.toBe(0)
+  })
+
+  it('🟢 固有技は覚えられる流派の技の表だけで状態 3（要ゲーム内確認）、俺流で表示で 1', () => {
+    const own = findSect(49)!.sheets[0]
+    expect(isUniqueStanceSkill(STANCE, 21)).toBe(true)
+    expect(isUniqueStanceSkill(STANCE, 0)).toBe(false)
+    expect(stanceSkillSheets(STANCE, 21).map((s) => s.id)).toContain(own)
+    expect(stanceSkillSheets(STANCE, 21).map((s) => s.id)).not.toContain(SHEET)
+
+    const b = makeSave()
+    learnStanceSkill(b, STANCE, 21)
+    expect(stateIn(b, own, 21)).toBe(3)
+    expect(stateIn(b, SHEET, 21)).toBe(0)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(3)
+
+    showStanceSkillInOreRyu(b, STANCE, 21)
+    expect(stateIn(b, own, 21)).toBe(1)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(1)
+  })
+
+  it('どの技の表にもない技は拒否してバイト列を変えない', () => {
+    const missing = STANCE_SKILLS.find((s) => stanceSkillSheets(s.stance, s.skillNo).length === 0)
+    if (!missing) return
+    const b = makeSave()
+    const before = b.slice()
+    expect(() => learnStanceSkill(b, missing.stance, missing.skillNo)).toThrow()
+    expect(b).toEqual(before)
+  })
+
+  it('忘れさせると、すべての技の表と構えごとの状態が 0 になる', () => {
+    const b = makeSave()
+    learnStanceSkill(b, STANCE, 3)
+    forgetStanceSkill(b, STANCE, 3)
+    for (const sheet of stanceSkillSheets(STANCE, 3)) expect(stateIn(b, sheet.id, 3)).toBe(0)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 3]).toBe(0)
   })
 })

@@ -19,3 +19,9 @@ export function parseInteger(min: number, max: number) {
     return { ok: true, value: v };
   };
 }
+
+/** 固有技の属性の名前 🟢（datatable/sect/skill.csv） */
+export const UNIQUE_WEAPON_ATTR = "特定の武器でしか使えない";
+
+/** 属性の表示名（固有技は「固有技」、ほかは元の名前） */
+export const attrLabel = (a: string): string => (a === UNIQUE_WEAPON_ATTR ? "固有技" : a);

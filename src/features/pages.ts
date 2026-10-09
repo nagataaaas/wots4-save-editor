@@ -1,11 +1,12 @@
 import type { ComponentType } from 'react'
-import { AccessoryEquipmentPage } from '@/features/accessory-equipment/accessory-equipment-page'
+import { HeroAppearancePage } from '@/features/hero/hero-appearance-page'
 import { BeltPage } from '@/features/belt/belt-page'
 import { EventChartPage } from '@/features/event-chart/event-chart-page'
 import { HeroPage } from '@/features/hero/hero-page'
 import { MarketWeaponsPage } from '@/features/market-weapons/market-weapons-page'
 import { OccupationPage } from '@/features/occupation/occupation-page'
 import { OreRyuPage } from '@/features/styles/ore-ryu-page'
+import { SkillsPage } from '@/features/styles/skills-page'
 import { StylesPage } from '@/features/styles/styles-page'
 import { ScenarioPage, WorldPage } from '@/features/scenario/scenario-page'
 import { ChestPage, ToolsPage } from '@/features/tools/tools-page'
@@ -20,7 +21,7 @@ import type { SectionId } from '@/features/sections'
 /** 実装済みの画面。ここにない項目は仮表示になる */
 export const pages: Partial<Record<SectionId, ComponentType>> = {
   hero: HeroPage,
-  'accessory-equipment': AccessoryEquipmentPage,
+  'hero-appearance': HeroAppearancePage,
   belt: BeltPage,
   'weapon-bag': WeaponBagPage,
   'weapon-chest': WeaponChestPage,
@@ -37,6 +38,7 @@ export const pages: Partial<Record<SectionId, ComponentType>> = {
   yobai: YobaiPage,
   styles: StylesPage,
   'ore-ryu': OreRyuPage,
+  skills: SkillsPage,
   circulating: MarketWeaponsPage,
   raw: RawPage,
 }
