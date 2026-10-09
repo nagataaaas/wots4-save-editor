@@ -10,8 +10,9 @@ import {
   RANK_LABELS,
   findSect,
   findSkillInfo,
-  findStanceSkill,
+  sheetSkillTree,
   skillName,
+  stanceSkillSheet,
   stanceSkills,
   type SkillSheet,
   type SkillTreeGroup,
@@ -19,6 +20,7 @@ import {
 } from "@/save/master/sect-data";
 import { uniqueSkillSects, uniqueWeaponsForSkill } from "@/save/unique-weapons";
 import { STATE_LABELS, UNIQUE_WEAPON_ATTR, parseInteger } from "./sect-format";
+import { EMPTY_FILTER, filterSortTree } from "./skill-list";
 
 export function StateBadge({ state }: { state: number }) {
   return (
@@ -115,8 +117,11 @@ export function SkillPicker({
 }) {
   const [filter, setFilter] = useState("");
   const skills = useMemo(() => stanceSkills(stance), [stance]);
+  // 技の一覧・流派の画面と同じ木（続けて出す技・上位技）に並べる
+  const sheet = useMemo(() => stanceSkillSheet(stance), [stance]);
+  const groups = useMemo(() => sheetSkillTree(sheet), [sheet]);
+  const shown = useMemo(() => filterSortTree(groups, { ...EMPTY_FILTER, query: filter }, "id-asc"), [groups, filter]);
   const usable = (no: number) => advanced || stanceStates[no] === 1 || stanceStates[no] === 2;
-  const shown = skills.filter((s) => (filter === "" ? true : skillName(s).includes(filter) || (findSkillInfo(s.skillId)?.commandJa ?? "").includes(filter)));
   const conflicts = useMemo(() => findSkillConflicts(stance, [...selected]), [stance, selected]);
   const toggle = (no: number, on: boolean) => {
     const next = new Set(selected);
@@ -157,44 +162,62 @@ export function SkillPicker({
           {p}
         </p>
       ))}
-      <ul className="max-h-[32rem] divide-y overflow-y-auto rounded border px-2">
-        {shown.map((s) => {
-          const ok = usable(s.skillNo);
-          const problems = conflicts.byNo.get(s.skillNo) ?? [];
-          return (
-            <li key={s.skillNo} className={`flex flex-col gap-0.5 py-1 text-sm ${problems.length ? "bg-destructive/5" : ""}`}>
-              <div className="flex flex-wrap items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="size-4"
-                  checked={selected.has(s.skillNo)}
-                  disabled={disabled || (!ok && !selected.has(s.skillNo))}
-                  onChange={(e) => toggle(s.skillNo, e.target.checked)}
-                  aria-label={skillName(s)}
-                />
-                <span className={`min-w-28 ${ok ? "" : "text-muted-foreground"}`}>{skillName(s)}</span>
-                {s.first && (
-                  <Badge variant="outline" className="font-normal">
-                    初段
-                  </Badge>
-                )}
-                <SkillMeta skillId={s.skillId} />
-                {!s.first && s.prev.length > 0 && (
-                  <span className="text-muted-foreground text-xs">
-                    ← {s.prev.map((p) => skillName(findStanceSkill(stance, p) ?? { nameJa: String(p) })).join("・")} の次
-                  </span>
-                )}
-                {!ok && <span className="text-muted-foreground text-xs">（{STATE_LABELS[stanceStates[s.skillNo]] ?? ""}）</span>}
-              </div>
-              {problems.map((p) => (
-                <span key={p} className="text-destructive pl-6 text-xs">
-                  {p}
-                </span>
-              ))}
-            </li>
-          );
-        })}
-      </ul>
+      <p className="text-muted-foreground text-xs">
+        続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
+      </p>
+      {shown.skillNos.size === 0 ? (
+        <p className="text-muted-foreground text-sm">条件に合う技がありません。</p>
+      ) : (
+        <div className="max-h-[32rem] overflow-y-auto rounded border px-2">
+          {/* 欄は技の一覧と揃える（行は subgrid） */}
+          <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_minmax(0,1fr)] gap-x-3 text-sm">
+            <div className="text-muted-foreground bg-card sticky top-0 z-10 col-span-full grid grid-cols-subgrid border-b py-1 text-xs">
+              <span />
+              <span>技</span>
+              <span>ID</span>
+              <span>状態</span>
+              <span>入力</span>
+              <span>攻撃力</span>
+              <span>効果</span>
+            </div>
+            <SkillTreeRows
+              groups={shown.groups}
+              renderRow={(ctx) => {
+                const s = ctx.node.skill;
+                const ok = usable(s.skillNo);
+                const dim = !shown.matched.has(ctx.node.key);
+                const problems = conflicts.byNo.get(s.skillNo) ?? [];
+                return (
+                  <div
+                    className={`col-span-full grid min-h-9 grid-cols-subgrid items-center border-b py-1 ${problems.length ? "bg-destructive/5" : ""} ${dim ? "opacity-60" : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-4"
+                      checked={selected.has(s.skillNo)}
+                      disabled={disabled || (!ok && !selected.has(s.skillNo))}
+                      onChange={(e) => toggle(s.skillNo, e.target.checked)}
+                      aria-label={skillName(s)}
+                    />
+                    <SkillTreeName sheet={sheet} {...ctx} dim={dim || !ok} />
+                    <span className="text-muted-foreground font-mono text-xs tabular-nums">{s.skillId}</span>
+                    <span>
+                      <StateBadge state={stanceStates[s.skillNo]} />
+                    </span>
+                    <SkillCommandCells skillId={s.skillId} />
+                    <SkillAttrs skillId={s.skillId} />
+                    {problems.map((p) => (
+                      <span key={p} className="text-destructive col-span-full pl-6 text-xs">
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                );
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -272,16 +295,6 @@ export function SkillAttrs({ skillId }: { skillId: number }) {
           <AttrTag key={a} label={ATTR_SHORT[a] ?? a} tip={a} />
         ),
       )}
-    </span>
-  );
-}
-
-/** 技のコマンド・攻撃力・属性・防御技を 1 か所にまとめた表示（俺流の技選び用） */
-export function SkillMeta({ skillId }: { skillId: number }) {
-  return (
-    <span className="flex flex-wrap items-center gap-1.5">
-      <SkillCommandCells skillId={skillId} />
-      <SkillAttrs skillId={skillId} />
     </span>
   );
 }
