@@ -135,6 +135,7 @@ export const stanceSkills = (stance: number): StanceSkill[] => STANCE_SKILLS.fil
 /** 技ごとの値 🟢（datatable/sect/skill.csv） */
 export type SkillInfo = {
   id: number
+  nameJa: string
   /** コマンドの値（0＝なし）。同じ値なら同じコマンド */
   command: number
   /** コマンドの表記（弱・強・ガード・方向） */
@@ -152,6 +153,7 @@ const SKILL_BY_ID = new Map<number, SkillInfo>(
     r.id_dec,
     {
       id: r.id_dec,
+      nameJa: r.name_ja,
       command: r.command,
       commandJa: r.command_ja,
       defenseGroup: nullable(r.defense_group),

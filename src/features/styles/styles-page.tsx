@@ -30,7 +30,6 @@ import {
   RANK_MAX,
   SKILL_POINTS_OFFSET,
   forgetSheetSkill,
-  isSpecialCond,
   learnSectSkills,
   learnSheetSkills,
   ownedSectIds,
@@ -360,11 +359,6 @@ function SkillRow({
       </span>
       <StateBadge state={state} />
       <SkillMeta skillId={s.skillId} />
-      {isSpecialCond(s.cond) && (
-        <Badge variant="outline" className="font-normal">
-          斬殺数で覚える技
-        </Badge>
-      )}
       <span className="text-muted-foreground flex-1 text-xs">
         {s.rank >= 0 ? `${RANK_LABELS[s.rank]}以上` : ""}
         {s.condJa ? `：${s.condJa}` : s.cond === 0 ? "：流派を装備すると覚える" : ""}

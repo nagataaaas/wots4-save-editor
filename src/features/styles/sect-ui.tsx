@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { FieldRow } from "@/components/field-row";
+import { LazyTip } from "@/components/lazy-tip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { findSkillConflicts, pickWithoutConflicts } from "@/save/custom-style";
 import { findSkillInfo, findStanceSkill, skillName, stanceSkills } from "@/save/master/sect-data";
+import { uniqueWeaponsForSkill } from "@/save/unique-weapons";
 import { STATE_LABELS, parseInteger } from "./sect-format";
 
 export function StateBadge({ state }: { state: number }) {
@@ -156,6 +158,31 @@ export function SkillPicker({
   );
 }
 
+/** 技の属性の略称。ホバーで元の名前を出す */
+const ATTR_SHORT: Record<string, string> = {
+  浮かせる: "浮",
+  吹き飛ばす: "飛",
+  投げ: "投",
+  当て身投げ: "当投",
+  打撃投げ: "打投",
+  防御崩し: "崩",
+  防御不可能: "防不可",
+  攻撃を受けてものけぞらない: "剛",
+};
+const UNIQUE_WEAPON_ATTR = "特定の武器でしか使えない";
+
+function AttrTag({ label, tip }: { label: string; tip: ReactNode }) {
+  return (
+    <LazyTip
+      className="text-muted-foreground hover:text-foreground rounded border px-1 leading-4"
+      contentClassName="max-w-xs"
+      content={tip}
+    >
+      {label}
+    </LazyTip>
+  );
+}
+
 /** 技のコマンド・攻撃力・属性・防御技の表示 🟢（datatable/sect/skill.csv） */
 export function SkillMeta({ skillId }: { skillId: number }) {
   const info = findSkillInfo(skillId);
@@ -172,11 +199,23 @@ export function SkillMeta({ skillId }: { skillId: number }) {
           <span className="text-muted-foreground">攻 {info.attack}</span>
         </>
       )}
-      {info.attrs.map((a) => (
-        <Badge key={a} variant="outline" className="font-normal">
-          {a}
-        </Badge>
-      ))}
+      {info.attrs.map((a) =>
+        a === UNIQUE_WEAPON_ATTR ? (
+          <AttrTag
+            key={a}
+            label="固有武器"
+            tip={
+              <>
+                {a}：{uniqueWeaponsForSkill(skillId).join("・") || "（武器が見つかりません）"}
+                <br />
+                🔶 対象の武器は推定
+              </>
+            }
+          />
+        ) : (
+          <AttrTag key={a} label={ATTR_SHORT[a] ?? a} tip={a} />
+        ),
+      )}
     </span>
   );
 }
