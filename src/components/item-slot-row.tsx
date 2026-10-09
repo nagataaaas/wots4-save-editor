@@ -161,11 +161,6 @@ export function ItemSlotRow({
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="font-medium">{index + 1}件目</span>
         <InfoTip offset={offset} />
-        {slot && (
-          <span className="text-muted-foreground ml-auto font-mono text-xs" title="+0x04〜+0x07（用途不明）">
-            ❓ {slot.unknown.toString(16).toUpperCase().padStart(8, '0')}
-          </span>
-        )}
       </div>
       <div
         className={cn(
