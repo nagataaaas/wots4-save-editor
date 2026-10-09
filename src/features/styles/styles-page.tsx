@@ -21,12 +21,9 @@ import {
   findSkillSheet,
   findStance,
   sheetSkillTree,
-  skillName,
   type Sect,
   type SheetSkill,
   type SkillSheet,
-  type SkillTreeGroup,
-  type SkillTreeNode,
 } from "@/save/master/sect-data";
 import {
   I16_MAX,
@@ -50,7 +47,16 @@ import {
   type SectsView,
 } from "@/save/sects";
 import { errorMessage } from "./sect-format";
-import { IntField, RankField, SkillAttrs, SkillCommandCells, StateBadge } from "./sect-ui";
+import {
+  IntField,
+  RankField,
+  SkillAttrs,
+  SkillCommandCells,
+  SkillTreeName,
+  SkillTreeRows,
+  StateBadge,
+  type SkillTreeRowContext,
+} from "./sect-ui";
 
 /** その流派がどこにあるか（装備・持ち歩き・箪笥） */
 function placesOf(view: SectsView, id: number): string[] {
@@ -372,20 +378,21 @@ function SectCard({
             <TabsContent key={sheet.id} value={String(sheet.id)}>
               {/* 技の名前・状態・コマンド・攻撃力・属性・習得条件・ボタンの欄を揃える（行は subgrid） */}
               <div className="grid grid-cols-[auto_auto_auto_auto_auto_minmax(0,1fr)_auto] gap-x-3 text-sm">
-                {sheetSkillTree(sheet).map((g) => (
-                  <SkillGroupView
-                    key={g.key}
-                    group={g}
-                    depth={0}
-                    sheet={sheet}
-                    states={states}
-                    readOnly={readOnly}
-                    advanced={advanced}
-                    onLearn={onLearn}
-                    onShowInOreRyu={onShowInOreRyu}
-                    onForget={onForget}
-                  />
-                ))}
+                <SkillTreeRows
+                  groups={sheetSkillTree(sheet)}
+                  renderRow={(ctx) => (
+                    <SkillRow
+                      {...ctx}
+                      sheet={sheet}
+                      states={states}
+                      readOnly={readOnly}
+                      advanced={advanced}
+                      onLearn={onLearn}
+                      onShowInOreRyu={onShowInOreRyu}
+                      onForget={onForget}
+                    />
+                  )}
+                />
               </div>
             </TabsContent>
           ))}
@@ -396,7 +403,6 @@ function SectCard({
 }
 
 type SkillRowProps = {
-  depth: number;
   sheet: SkillSheet;
   states: readonly number[];
   readOnly: boolean;
@@ -406,41 +412,7 @@ type SkillRowProps = {
   onForget: (sheet: number, no: number) => void;
 };
 
-/** 字下げ 1 段の幅（rem） */
-const INDENT_REM = 1.25;
-
-/**
- * 元の技と上位技のまとまり。上位技があるときは、続けて出す技も含めて左の帯でつなぐ。
- * 字下げは続けて出す技だけに使う。
- */
-function SkillGroupView({ group, ...props }: SkillRowProps & { group: SkillTreeGroup }) {
-  const grouped = group.members.length > 1;
-  return (
-    <div className="relative col-span-full grid grid-cols-subgrid">
-      {grouped && (
-        <span
-          aria-hidden
-          className="bg-primary/30 absolute inset-y-1 w-0.5 rounded"
-          style={{ left: `${props.depth * INDENT_REM}rem` }}
-        />
-      )}
-      {group.members.map((node, i) => (
-        <div key={node.key} className="col-span-full grid grid-cols-subgrid">
-          <SkillRow node={node} first={i === 0} grouped={grouped} {...props} />
-          {node.next.map((g) => (
-            <SkillGroupView key={g.key} group={g} {...props} depth={props.depth + 1} />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function SkillRow({
-  node,
-  first,
-  grouped,
-  depth,
   sheet,
   states,
   readOnly,
@@ -448,19 +420,13 @@ function SkillRow({
   onLearn,
   onShowInOreRyu,
   onForget,
-}: SkillRowProps & { node: SkillTreeNode; first: boolean; grouped: boolean }) {
-  const s = node.skill;
+  ...ctx
+}: SkillRowProps & SkillTreeRowContext) {
+  const s = ctx.node.skill;
   const state = states[s.skillNo];
-  const upgradeOf = node.upgradeOf === null ? null : sheet.skills.find((x) => x.skillNo === node.upgradeOf);
   return (
     <div className="col-span-full grid min-h-9 grid-cols-subgrid items-center border-b py-1">
-      <span className="flex min-w-40 flex-col" style={{ paddingLeft: `${depth * INDENT_REM + (grouped ? 0.625 : 0)}rem` }}>
-        <span>
-          {depth > 0 && first && <span className="text-muted-foreground mr-1">└</span>}
-          {skillName(s)}
-        </span>
-        {upgradeOf && <span className="text-muted-foreground text-xs">⇧ {skillName(upgradeOf)}の上位</span>}
-      </span>
+      <SkillTreeName sheet={sheet} {...ctx} />
       <span>
         <StateBadge state={state} />
       </span>

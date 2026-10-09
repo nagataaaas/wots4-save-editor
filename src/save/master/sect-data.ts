@@ -188,7 +188,7 @@ export type SkillTreeGroup = { key: string; members: SkillTreeNode[] }
 /**
  * 技の表の技を、続けて出す技（同じ技の表にある stance-skill.csv の prev）の木に並べる 🟢（datatable/sect）。
  * 上位技（parent）は元の技と同じまとまりに、元の技のすぐ後ろに入れる（上位技の上位技も続ける）。
- * 前に出す技が複数ある技は、それぞれの技の下に出す（続く技も一緒に繰り返す）。
+ * 前に出す技が複数ある技は、それぞれの技の下に出す（続く技も一緒に繰り返す）。同じ技に続く技の上位技は、元の技のまとまりにだけ出す。
  * 前に出す技も元の技もない技は、技の番号順に根として並べる。
  */
 export function sheetSkillTree(sheet: SkillSheet): SkillTreeGroup[] {
@@ -201,7 +201,20 @@ export function sheetSkillTree(sheet: SkillSheet): SkillTreeGroup[] {
   )
   const parentOf = (s: SheetSkill) => (s.parent !== null && s.parent !== s.skillNo && nos.has(s.parent) ? s.parent : null)
   const upgrades = (no: number) => sheet.skills.filter((s) => parentOf(s) === no)
-  const followers = (no: number) => sheet.skills.filter((s) => prevOf.get(s.skillNo)!.includes(no))
+  // 続けて出す技のうち、ほかの続けて出す技の上位技は、その技のまとまりに入るので別に並べない
+  const followers = (no: number) => {
+    const all = sheet.skills.filter((s) => prevOf.get(s.skillNo)!.includes(no))
+    const nosOf = new Set(all.map((s) => s.skillNo))
+    const underSibling = (s: SheetSkill) => {
+      const seen = new Set<number>()
+      for (let p = parentOf(s); p !== null && !seen.has(p); p = parentOf(sheet.skills.find((x) => x.skillNo === p)!)) {
+        if (nosOf.has(p)) return true
+        seen.add(p)
+      }
+      return false
+    }
+    return all.filter((s) => !underSibling(s))
+  }
 
   const shown = new Set<number>()
   // path は根からの技の番号。輪になるつながり（データにはないが念のため）はたどらない
@@ -234,4 +247,31 @@ export function sheetSkillTree(sheet: SkillSheet): SkillTreeGroup[] {
   // つながりをたどると輪になって根に届かない技は根として足す
   for (const s of sheet.skills) if (!shown.has(s.skillNo)) roots.push(group(s, []))
   return roots
+}
+
+/**
+ * 構えのすべての技を 1 つの技の表の形にしたもの（技の画面で sheetSkillTree に渡す。id は −1 − 構え）。
+ * 上位技の元（parent）は、その構えの技の表のどれかにある値を使う 🟢（datatable/sect）。習得条件・段は技の表ごとに違うので持たない
+ */
+export function stanceSkillSheet(stance: number): SkillSheet {
+  const sheets = SKILL_SHEETS.filter((s) => s.stance === stance)
+  const parentOf = (no: number): number | null =>
+    sheets.flatMap((sh) => sh.skills).find((s) => s.skillNo === no && s.parent !== null)?.parent ?? null
+  return {
+    id: -1 - stance,
+    stance,
+    nameJa: STANCES[stance]?.nameJa ?? '',
+    skills: stanceSkills(stance).map((s) => ({
+      sheet: -1 - stance,
+      skillNo: s.skillNo,
+      skillId: s.skillId,
+      nameJa: s.nameJa,
+      nameEn: s.nameEn,
+      cond: 0,
+      condJa: '',
+      rank: -1,
+      points: findSkillInfo(s.skillId)?.points ?? 0,
+      parent: parentOf(s.skillNo),
+    })),
+  }
 }

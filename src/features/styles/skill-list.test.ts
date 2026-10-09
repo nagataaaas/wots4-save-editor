@@ -1,7 +1,7 @@
 // 技の画面の絞り込み・並べ替え。技の値は 🟢（datatable/sect/skill.csv）
 import { describe, expect, it } from 'vitest'
-import { findSkillInfo, stanceSkills } from '@/save/master/sect-data'
-import { ANY, ATTR_OPTIONS, COMMAND_OPTIONS, EMPTY_FILTER, matchesSkillFilter, sortSkills } from './skill-list'
+import { findSkillInfo, sheetSkillTree, stanceSkillSheet, stanceSkills, type SkillTreeGroup } from '@/save/master/sect-data'
+import { ANY, ATTR_OPTIONS, COMMAND_OPTIONS, EMPTY_FILTER, filterSortTree, matchesSkillFilter, sortSkills } from './skill-list'
 
 const skills = stanceSkills(3)
 const info = (id: number) => findSkillInfo(id)!
@@ -48,5 +48,34 @@ describe('sortSkills', () => {
       const attacks = sorted.slice(0, firstDefense).map((s) => info(s.skillId).attack)
       expect(attacks).toEqual(attacks.toSorted((a, b) => (sort === 'attack-desc' ? b - a : a - b)))
     }
+  })
+})
+
+describe('filterSortTree', () => {
+  const tree = sheetSkillTree(stanceSkillSheet(3))
+  const nodes = (gs: SkillTreeGroup[]): SkillTreeGroup['members'] => gs.flatMap((g) => g.members.flatMap((m) => [m, ...nodes(m.next)]))
+
+  it('条件なしなら木の形を変えない', () => {
+    const shown = filterSortTree(tree, EMPTY_FILTER, 'id-asc')
+    expect(nodes(shown.groups).map((m) => m.key).toSorted()).toEqual(nodes(tree).map((m) => m.key).toSorted())
+    expect(shown.skillNos.size).toBe(stanceSkills(3).length)
+  })
+
+  it('条件に合う技と、そこへ続く前の技を残す。前の技は matched に入れない', () => {
+    const f = { ...EMPTY_FILTER, minAttack: 150 }
+    const shown = filterSortTree(tree, f, 'id-asc')
+    const all = nodes(shown.groups)
+    expect(all.some((m) => !shown.matched.has(m.key))).toBe(true)
+    for (const m of all) {
+      if (shown.matched.has(m.key)) expect(matchesSkillFilter(m.skill, f)).toBe(true)
+    }
+    // 残った行は、自分が合うか、まとまり・続く技のどこかに合う技がある
+    const hasMatch = (gs: SkillTreeGroup[]): boolean => gs.some((g) => g.members.some((m) => shown.matched.has(m.key) || hasMatch(m.next)))
+    for (const g of shown.groups) expect(hasMatch([g])).toBe(true)
+  })
+
+  it('同じ段のまとまりを、先頭の技で並べ替える', () => {
+    const roots = filterSortTree(tree, EMPTY_FILTER, 'id-desc').groups.map((g) => g.members[0].skill.skillId)
+    expect(roots).toEqual(roots.toSorted((a, b) => b - a))
   })
 })

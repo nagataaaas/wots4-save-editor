@@ -6,7 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { findSkillConflicts, pickWithoutConflicts } from "@/save/custom-style";
-import { RANK_LABELS, findSect, findSkillInfo, findStanceSkill, skillName, stanceSkills } from "@/save/master/sect-data";
+import {
+  RANK_LABELS,
+  findSect,
+  findSkillInfo,
+  findStanceSkill,
+  skillName,
+  stanceSkills,
+  type SkillSheet,
+  type SkillTreeGroup,
+  type SkillTreeNode,
+} from "@/save/master/sect-data";
 import { uniqueSkillSects, uniqueWeaponsForSkill } from "@/save/unique-weapons";
 import { STATE_LABELS, UNIQUE_WEAPON_ATTR, parseInteger } from "./sect-format";
 
@@ -272,6 +282,67 @@ export function SkillMeta({ skillId }: { skillId: number }) {
     <span className="flex flex-wrap items-center gap-1.5">
       <SkillCommandCells skillId={skillId} />
       <SkillAttrs skillId={skillId} />
+    </span>
+  );
+}
+
+/** 技の木の 1 行を描くときに渡すもの */
+export type SkillTreeRowContext = { node: SkillTreeNode; depth: number; first: boolean; grouped: boolean };
+
+/** 字下げ 1 段の幅（rem） */
+const INDENT_REM = 1.25;
+
+/**
+ * 技の木（sheetSkillTree）を並べる。親は grid で、行は subgrid（renderRow が col-span-full の行を返す）。
+ * 元の技と上位技のまとまりは左の帯でつなぐ。字下げは続けて出す技だけに使う。
+ */
+export function SkillTreeRows({
+  groups,
+  renderRow,
+  depth = 0,
+}: {
+  groups: readonly SkillTreeGroup[];
+  renderRow: (ctx: SkillTreeRowContext) => ReactNode;
+  depth?: number;
+}) {
+  return groups.map((group) => {
+    const grouped = group.members.length > 1;
+    return (
+      <div key={group.key} className="relative col-span-full grid grid-cols-subgrid">
+        {grouped && (
+          <span aria-hidden className="bg-primary/30 absolute inset-y-1 w-0.5 rounded" style={{ left: `${depth * INDENT_REM}rem` }} />
+        )}
+        {group.members.map((node, i) => (
+          <div key={node.key} className="col-span-full grid grid-cols-subgrid">
+            {renderRow({ node, depth, first: i === 0, grouped })}
+            <SkillTreeRows groups={node.next} renderRow={renderRow} depth={depth + 1} />
+          </div>
+        ))}
+      </div>
+    );
+  });
+}
+
+/** 技の木の名前の欄。続けて出す技は字下げして「└」、上位技は「⇧ 元の技の上位」を添える */
+export function SkillTreeName({
+  sheet,
+  node,
+  depth,
+  first,
+  grouped,
+  dim,
+}: SkillTreeRowContext & { sheet: SkillSheet; dim?: boolean }) {
+  const upgradeOf = node.upgradeOf === null ? null : sheet.skills.find((x) => x.skillNo === node.upgradeOf);
+  return (
+    <span
+      className={`flex min-w-40 flex-col ${dim ? "text-muted-foreground" : ""}`}
+      style={{ paddingLeft: `${depth * INDENT_REM + (grouped ? 0.625 : 0)}rem` }}
+    >
+      <span>
+        {depth > 0 && first && <span className="text-muted-foreground mr-1">└</span>}
+        {skillName(node.skill)}
+      </span>
+      {upgradeOf && <span className="text-muted-foreground text-xs">⇧ {skillName(upgradeOf)}の上位</span>}
     </span>
   );
 }

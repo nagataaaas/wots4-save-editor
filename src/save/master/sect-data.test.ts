@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findSkillSheet, sheetSkillTree, type SkillSheet, type SkillTreeGroup } from './sect-data'
+import { SKILL_SHEETS, findSkillSheet, sheetSkillTree, stanceSkillSheet, stanceSkills, type SkillSheet, type SkillTreeGroup } from './sect-data'
 
 /** 木を 1 行ずつにする。字下げは続けて出す技、[ ] は上位技のまとまり、^n は n の上位技 */
 const summary = (sheet: SkillSheet) => {
@@ -80,5 +80,26 @@ describe('sheetSkillTree 🟢', () => {
       ],
     }
     expect(summary(sheet)).toEqual(['[100', '[101^100'])
+  })
+})
+
+describe('stanceSkillSheet 🟢', () => {
+  it('構えのすべての技を持ち、上位技の元は技の表と同じ', () => {
+    const sheet = stanceSkillSheet(3)
+    expect(sheet.skills.map((s) => s.skillNo)).toEqual(stanceSkills(3).map((s) => s.skillNo))
+    for (const sh of SKILL_SHEETS.filter((x) => x.stance === 3)) {
+      for (const s of sh.skills) {
+        if (s.parent !== null) expect(sheet.skills.find((x) => x.skillNo === s.skillNo)!.parent).toBe(s.parent)
+      }
+    }
+  })
+
+  it('木にすべての技が 1 回以上出る', () => {
+    for (let c = 0; c < 13; c++) {
+      const sheet = stanceSkillSheet(c)
+      expect(new Set(skillNos(sheetSkillTree(sheet)))).toEqual(new Set(sheet.skills.map((s) => s.skillNo)))
+      const k = keys(sheetSkillTree(sheet))
+      expect(new Set(k).size).toBe(k.length)
+    }
   })
 })

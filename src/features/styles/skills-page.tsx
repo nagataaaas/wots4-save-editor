@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
-import { SECTS, STANCES, findStanceSkill, skillName, stanceSkills, type Sect, type StanceSkill } from "@/save/master/sect-data";
+import { SECTS, STANCES, sheetSkillTree, stanceSkillSheet, stanceSkills, type Sect, type SkillSheet } from "@/save/master/sect-data";
 import {
   forgetStanceSkill,
   isUniqueStanceSkill,
@@ -20,7 +20,7 @@ import {
   type SectsView,
 } from "@/save/sects";
 import { attrLabel, errorMessage } from "./sect-format";
-import { SkillAttrs, SkillCommandCells, StateBadge } from "./sect-ui";
+import { SkillAttrs, SkillCommandCells, SkillTreeName, SkillTreeRows, StateBadge, type SkillTreeRowContext } from "./sect-ui";
 import {
   ANY,
   ATTR_OPTIONS,
@@ -28,8 +28,8 @@ import {
   EMPTY_FILTER,
   SKILL_KIND_LABELS,
   SKILL_SORT_LABELS,
-  matchesSkillFilter,
-  sortSkills,
+  filterSortTree,
+  type ShownTree,
   type SkillFilter,
   type SkillKind,
   type SkillSort,
@@ -44,9 +44,8 @@ const ATTR_LABELS: Record<string, string> = {
   ...Object.fromEntries(ATTR_OPTIONS.map((a) => [a, attrLabel(a)])),
 };
 
-/** 構えの技 1 つと、入っている技の表・流派 */
+/** 構えの技 1 つが入っている技の表・流派 */
 type Row = {
-  skill: StanceSkill;
   /** 習得に使う技の表があるか（stanceSkillSheets） */
   learnable: boolean;
   unique: boolean;
@@ -54,16 +53,19 @@ type Row = {
   sects: Sect[];
 };
 
-function stanceRows(stance: number): Row[] {
-  return stanceSkills(stance).map((skill) => {
-    const sheets = stanceSkillSheets(stance, skill.skillNo).map((s) => s.id);
-    return {
-      skill,
-      learnable: sheets.length > 0,
-      unique: isUniqueStanceSkill(stance, skill.skillNo),
-      sects: SECTS.filter((s) => !s.hidden && s.sheets.some((id) => sheets.includes(id))),
-    };
-  });
+/** 構えの技の番号 → Row */
+function stanceRows(stance: number): Map<number, Row> {
+  return new Map(
+    stanceSkills(stance).map((skill) => {
+      const sheets = stanceSkillSheets(stance, skill.skillNo).map((s) => s.id);
+      const row: Row = {
+        learnable: sheets.length > 0,
+        unique: isUniqueStanceSkill(stance, skill.skillNo),
+        sects: SECTS.filter((s) => !s.hidden && s.sheets.some((id) => sheets.includes(id))),
+      };
+      return [skill.skillNo, row];
+    }),
+  );
 }
 
 export function SkillsPage() {
@@ -74,6 +76,15 @@ export function SkillsPage() {
   const [sort, setSort] = useState<SkillSort>("id-asc");
   const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
   const rowsByStance = useMemo(() => STANCES.map((s) => stanceRows(s.id)), []);
+  // 構えの技を、流派の画面と同じ木（続けて出す技・上位技）に並べる
+  const trees = useMemo(
+    () =>
+      STANCES.map((s) => {
+        const sheet = stanceSkillSheet(s.id);
+        return { sheet, groups: sheetSkillTree(sheet) };
+      }),
+    [],
+  );
 
   const result = useMemo((): { view: SectsView } | { error: string } | null => {
     if (!save) return null;
@@ -223,12 +234,12 @@ export function SkillsPage() {
         <TabsList className="flex-wrap group-data-horizontal/tabs:h-auto">
           {STANCES.map((stance) => {
             const states = view.stanceStates[stance.id];
-            const rows = rowsByStance[stance.id];
+            const nos = [...rowsByStance[stance.id].keys()];
             return (
               <TabsTrigger key={stance.id} value={String(stance.id)} className="flex-none">
                 {stance.nameJa}
                 <span className="text-muted-foreground text-xs font-normal tabular-nums">
-                  {rows.filter((r) => states[r.skill.skillNo] !== 0).length}/{rows.length}
+                  {nos.filter((no) => states[no] !== 0).length}/{nos.length}
                 </span>
               </TabsTrigger>
             );
@@ -238,11 +249,9 @@ export function SkillsPage() {
           <TabsContent key={stance.id} value={String(stance.id)}>
             <StanceSkillTable
               stance={stance.id}
-              rows={sortSkills(
-                rowsByStance[stance.id].filter((r) => matchesSkillFilter(r.skill, filter)),
-                sort,
-                (r) => r.skill,
-              )}
+              sheet={trees[stance.id].sheet}
+              shown={filterSortTree(trees[stance.id].groups, filter, sort)}
+              rows={rowsByStance[stance.id]}
               states={view.stanceStates[stance.id]}
               readOnly={readOnly}
               advanced={advanced}
@@ -255,22 +264,28 @@ export function SkillsPage() {
   );
 }
 
-function StanceSkillTable({
-  stance,
-  rows,
-  states,
-  readOnly,
-  advanced,
-  run,
-}: {
+type RowActions = {
   stance: number;
-  rows: Row[];
-  states: readonly number[];
   readOnly: boolean;
   advanced: boolean;
   run: (label: string, f: (b: Uint8Array) => void) => void;
+};
+
+function StanceSkillTable({
+  sheet,
+  shown,
+  rows,
+  states,
+  ...actions
+}: RowActions & {
+  sheet: SkillSheet;
+  shown: ShownTree;
+  rows: ReadonlyMap<number, Row>;
+  states: readonly number[];
 }) {
-  const pending = rows.filter((r) => r.learnable && states[r.skill.skillNo] === 0);
+  const { stance, readOnly, run } = actions;
+  const nos = [...shown.skillNos];
+  const pending = nos.filter((no) => rows.get(no)?.learnable && states[no] === 0);
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
@@ -279,23 +294,25 @@ function StanceSkillTable({
           disabled={readOnly || pending.length === 0}
           onClick={() =>
             run(`${pending.length} 個の技を習得しました`, (b) => {
-              for (const r of pending) learnStanceSkill(b, stance, r.skill.skillNo);
+              for (const no of pending) learnStanceSkill(b, stance, no);
             })
           }
         >
-          表示中の技を全部習得する
+          条件に合う技を全部習得する
         </Button>
         <span className="text-muted-foreground text-xs">
-          {rows.length} 件（未習得 {rows.filter((r) => states[r.skill.skillNo] === 0).length}）。段 5（極）や習得条件は見ずに書き込みます。
+          {nos.length} 件（未習得 {nos.filter((no) => states[no] === 0).length}）。段 5（極）や習得条件は見ずに書き込みます。
+          続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
+          条件に合わない前の技は薄く出します。
         </span>
       </div>
-      {rows.length === 0 ? (
+      {nos.length === 0 ? (
         <p className="text-muted-foreground text-sm">条件に合う技がありません。</p>
       ) : (
         <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_minmax(0,1fr)_auto] gap-x-3 text-sm">
           <div className="text-muted-foreground col-span-full grid grid-cols-subgrid border-b py-1 text-xs">
-            <span>ID</span>
             <span>技</span>
+            <span>ID</span>
             <span>状態</span>
             <span>入力</span>
             <span>攻撃力</span>
@@ -303,9 +320,19 @@ function StanceSkillTable({
             <span>流派</span>
             <span />
           </div>
-          {rows.map((r) => (
-            <SkillRow key={r.skill.skillNo} row={r} stance={stance} state={states[r.skill.skillNo]} readOnly={readOnly} advanced={advanced} run={run} />
-          ))}
+          <SkillTreeRows
+            groups={shown.groups}
+            renderRow={(ctx) => (
+              <SkillRow
+                {...ctx}
+                {...actions}
+                sheet={sheet}
+                row={rows.get(ctx.node.skill.skillNo)!}
+                state={states[ctx.node.skill.skillNo]}
+                dim={!shown.matched.has(ctx.node.key)}
+              />
+            )}
+          />
         </div>
       )}
     </div>
@@ -314,28 +341,20 @@ function StanceSkillTable({
 
 function SkillRow({
   row,
-  stance,
   state,
+  dim,
+  sheet,
+  stance,
   readOnly,
   advanced,
   run,
-}: {
-  row: Row;
-  stance: number;
-  state: number;
-  readOnly: boolean;
-  advanced: boolean;
-  run: (label: string, f: (b: Uint8Array) => void) => void;
-}) {
-  const s = row.skill;
-  const prev = s.prev.map((p) => skillName(findStanceSkill(stance, p) ?? { nameJa: String(p) }));
+  ...ctx
+}: RowActions & SkillTreeRowContext & { sheet: SkillSheet; row: Row; state: number; dim: boolean }) {
+  const s = ctx.node.skill;
   return (
-    <div className="col-span-full grid min-h-9 grid-cols-subgrid items-center border-b py-1">
+    <div className={`col-span-full grid min-h-9 grid-cols-subgrid items-center border-b py-1 ${dim ? "opacity-60" : ""}`}>
+      <SkillTreeName sheet={sheet} {...ctx} dim={dim} />
       <span className="text-muted-foreground font-mono text-xs tabular-nums">{s.skillId}</span>
-      <span className="flex min-w-40 flex-col">
-        <span>{skillName(s)}</span>
-        {prev.length > 0 && <span className="text-muted-foreground text-xs">← {prev.join("・")} の次</span>}
-      </span>
       <span>
         <StateBadge state={state} />
       </span>
