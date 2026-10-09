@@ -17,7 +17,9 @@ import {
   findSkillSheet,
   type Sect,
   type SheetSkill,
+  type SkillSheet,
 } from './master/sect-data'
+import { uniqueSkillSects } from './unique-weapons'
 
 // 技の覚え状況 🟢（chunks/skill-states）
 export const SHEET_STATES_OFFSET = 0x1417c
@@ -282,19 +284,39 @@ export function learnSheetSkills(
 
   const slot = ensureSheetSlot(bytes, view, sheetId)
   writeSheetStates(bytes, slot, states)
+  // 構えごとの状態にも書く。技の表ごとの状態が前から同じでも、対象にした技は構えごとの状態を揃える
   for (const s of sheet.skills) {
-    if (states[s.skillNo] === before[s.skillNo] || states[s.skillNo] === 0) continue
+    if (states[s.skillNo] === 0) continue
+    if (states[s.skillNo] === before[s.skillNo] && !targets.has(s.skillNo)) continue
     const at = STANCE_STATES_OFFSET + sheet.stance * SKILL_NO_COUNT + s.skillNo
     writeU8(bytes, at, nextState(bytes[at], states[s.skillNo] as SkillState))
   }
   return states.filter((v) => v !== 0).length
 }
 
-/** 流派のすべての技の表の技を覚えた状態にする */
+/**
+ * その流派の画面に出す技の表の技。固有技（習得条件 51・52）は、覚えられる流派（固有武器の流派 🟢）でだけ出す。
+ * ほかの流派の技の表にも同じ固有技が入っているが、そこでは覚えられず、覚えられる流派で覚えたものが装備したときに写る 🟢（chunks/skill-states「固有技」）
+ */
+export function sectSheetSkills(sect: Sect, sheet: SkillSheet): SheetSkill[] {
+  return sheet.skills.filter((s) => !isUniqueSkill(s) || uniqueSkillSects(s.skillId).includes(sect.id))
+}
+
+const isUniqueSkill = (s: SheetSkill) => isSpecialCond(s.cond) || uniqueSkillSects(s.skillId).length > 0
+
+/** 流派のすべての技の表の技を覚えた状態にする。覚えるのは sectSheetSkills の技だけ（固有技は includeSpecial のとき） */
 export function learnSectSkills(bytes: Uint8Array, sectId: number, options: LearnOptions = {}): void {
   const sect = findSect(sectId)
   if (!sect) throw new RangeError(`知らない流派です（${sectId}）`)
-  for (const sheet of sect.sheets) learnSheetSkills(bytes, sheet, undefined, options)
+  for (const id of sect.sheets) {
+    const sheet = findSkillSheet(id)
+    if (!sheet) continue
+    const nos = sectSheetSkills(sect, sheet)
+      .filter((s) => options.includeSpecial || !isUniqueSkill(s))
+      .map((s) => s.skillNo)
+    // 覚える技がないのに技の表の枠だけを割り当てない
+    if (nos.length > 0) learnSheetSkills(bytes, id, nos)
+  }
 }
 
 /**

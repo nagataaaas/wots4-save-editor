@@ -34,6 +34,7 @@ import {
   ownedSectIds,
   rankForMastery,
   readSects,
+  sectSheetSkills,
   sheetStates,
   writeSectValues,
   type SectsView,
@@ -149,6 +150,7 @@ export function StylesPage() {
                 固有技も習得する
                 <InfoTip>
                   固有技は、対応する武器で「今 装備している武器で100人惨殺する」などの条件を満たして覚える技（秘伝黒生・乾坤一擲・くるひかぶきなど）。
+                  固有技は、それを覚えられる流派（乾坤一擲なら武業流剣術）の技の一覧にだけ出します。
                   オンにすると「技を全部習得する」で固有技も習得します。状態は 1（俺流に組み込める）にします。
                   同じ構えのほかの流派は、ゲームでその流派を装備したときに習得済みになります（🟢）
                 </InfoTip>
@@ -200,7 +202,11 @@ function SectCard({
 }) {
   const rec = view.records.find((r) => r.id === sect.id) ?? null;
   const places = placesOf(view, sect.id);
-  const sheets = sect.sheets.map((id) => ({ sheet: findSkillSheet(id)!, states: sheetStates(view, id) }));
+  // 固有技は覚えられる流派でだけ出す（sectSheetSkills）
+  const sheets = sect.sheets.map((id) => {
+    const sheet = findSkillSheet(id)!;
+    return { sheet: { ...sheet, skills: sectSheetSkills(sect, sheet) }, states: sheetStates(view, id) };
+  });
   const total = sheets.reduce((n, s) => n + s.sheet.skills.length, 0);
   const learned = sheets.reduce((n, s) => n + s.sheet.skills.filter((x) => s.states[x.skillNo] !== 0).length, 0);
   const valueProblem = readOnly ? "検証に落ちています" : rec ? null : "流派の表にこの流派がありません";

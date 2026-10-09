@@ -20,10 +20,11 @@ import {
   ownedSectIds,
   rankForMastery,
   readSects,
+  sectSheetSkills,
   sheetStateOffset,
   writeSectValues,
 } from './sects'
-import { findSect } from './master/sect-data'
+import { findSect, findSkillSheet } from './master/sect-data'
 
 /** 🟢 鬼怒川流剣術（ID 51）の 1つめの技の表は 29（構え 3 脇） */
 const SHEET = 29
@@ -148,6 +149,32 @@ describe('learnSheetSkills', () => {
     expect(b[sheetStateOffset(0) + 4 + 19]).toBe(1)
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 19]).toBe(1)
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 47]).toBe(2)
+  })
+
+  it('🟢 技の表ごとの状態が前から 1 でも、対象にした技は構えごとの状態も書く', () => {
+    const b = makeSave()
+    writeU8(b, STANCE_STATES_OFFSET + STANCE * 128 + 0, 0)
+    learnSheetSkills(b, SHEET, [0])
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 0]).toBe(1)
+  })
+
+  it('🟢 固有技は覚えられる流派でだけ出し、ほかの流派では固有技も習得するにしても書かない', () => {
+    // 乾坤一擲（技の番号 21）は脇の技の表に入っているが、覚えられるのは武業流剣術（49）だけ
+    const sheet = findSkillSheet(SHEET)!
+    expect(sheet.skills.some((s) => s.skillNo === 21)).toBe(true)
+    expect(sectSheetSkills(findSect(51)!, sheet).some((s) => s.skillNo === 21)).toBe(false)
+    const own = findSect(49)!
+    expect(sectSheetSkills(own, findSkillSheet(own.sheets[0])!).some((s) => s.skillNo === 21)).toBe(true)
+
+    const b = makeSave()
+    learnSectSkills(b, 51, { includeSpecial: true })
+    expect(b[sheetStateOffset(0) + 4 + 21]).toBe(0)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(0)
+
+    learnSectSkills(b, 49, { includeSpecial: true })
+    const slot = readSects(b).sheetSlots.find((s) => s.sheetId === own.sheets[0])!
+    expect(slot.states[21]).toBe(1)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(1)
   })
 
   it('同じ操作を 2 回しても変わらない', () => {
