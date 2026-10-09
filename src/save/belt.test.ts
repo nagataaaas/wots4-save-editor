@@ -138,7 +138,8 @@ describe('武器レコード（合成）', () => {
     const weapon = readWeapon(b, o)
     expect(weapon.problem).toBeNull()
     expect(weapon.charms.value).toEqual(charms)
-    expect(weapon.charms.warning).toContain('要ゲーム内確認')
+    // 合計4以上の注意は画面（CharmEditor）で出すので、読み出しの値には警告を付けない
+    expect(weapon.charms.warning).toBeFalsy()
     const saved = b.slice()
     writeWeaponCharms(b, o, weapon.charms.value, { advanced: true })
     expect(b).toEqual(saved)

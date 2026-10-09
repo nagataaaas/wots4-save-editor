@@ -52,8 +52,7 @@ describe("魅力項目×個数", () => {
     const advanced = render(true);
     expect(advanced).toContain("魅力 1 の個数");
     expect(advanced).toContain("魅力 3 の個数");
-    expect(advanced).toContain("要ゲーム内確認");
-    expect(advanced).toContain("帯刀済みの武器で各魅力の効果が反映された確認");
+    expect(advanced).toContain("帯刀済みの武器で各魅力の効果が反映されます");
     expect(advanced).toContain("武器袋・武器箪笥での選択や帯刀への変更時にクラッシュ");
     expect(advanced).toContain("バックアップ");
     // ✅ 合計4以上の危険性は通常モードに戻したあとも表示する。
@@ -63,7 +62,7 @@ describe("魅力項目×個数", () => {
       { value: { advanced: false, setAdvanced: () => {} } },
       createElement(CharmEditor, { weapon: readWeapon(bytes, 0), base: 0, update: () => {} }),
     ));
-    expect(overflow).toContain("クラッシュする報告");
+    expect(overflow).toContain("クラッシュする可能性");
     expect(overflow).not.toContain("魅力 1 の個数");
   });
 });
