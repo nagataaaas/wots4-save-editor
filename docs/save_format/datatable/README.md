@@ -43,6 +43,8 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 | `event/chart-cell.csv`        | イベントチャートの升（枠と線、335件） | このリストのみ | セーブにない（チャートの並び） |        | [event-chart](../chunks/event-chart/README.md)            |
 | `place/start-location.csv`    | 開始地点（現在地） | このリストのみ           | u8                           |              | [date-location](../chunks/date-location/README.md) 0x0013 |
 | `place/night-visit-place.csv` | 夜の約束の場所     | このリストのみ           | u16 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x08      |
+| `place/night-visit-row.csv`   | 夜の約束の組（0〜74） | このリストのみ        | 約束の枠の +0x00〜+0x1B（28 B） |           | [night-visit](../chunks/night-visit/README.md) +0x00〜+0x1B |
+| `npc/night-visit-partner.csv` | 約束できる相手の種類 | 町の人の種類（0〜796）のうち約束できるもの | u32 LE        | `FFFFFFFF`＝約束なし | [night-visit](../chunks/night-visit/README.md) +0x04 |
 | `occupation/occupation.csv`   | なりわい（3〜212） | このリストのみ（0〜255） | 状態の表の添字・u16 LE       |              | [occupation](../chunks/occupation/README.md)              |
 | `npc/npc-name.csv`            | 人物の名前         | このリストのみ（1〜8200）| u32 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x1C・記録 +0x04 |
 | `sect/sect.csv`               | 流派（0〜112）     | このリストのみ           | i16 LE                       |              | [styles](../chunks/styles/README.md)、[sect-scrolls](../chunks/sect-scrolls/README.md) |
@@ -125,7 +127,17 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
   `shop` は 1＝店で買える、0＝買えない（DLC か、特典の解除で手に入る物）。`menu_order` はゲーム内の一覧の並び順 🔶（0〜158、122 が欠番）。
   ID と一覧の並び順は一致しない（ID 0 は新撰組の鉢金）
 - `npc/npc-name.csv`：全行 🟢。`sex` は m＝男、f＝女。`group` は unique＝固有の名前（1〜215）、placeholder＝勢力ごとの仮の名前（1001〜6002）、
-  female＝町の女性の名前の候補（7001〜7150・8001〜8200）。約束の相手の町の人の名前は female から選ばれる 🔶
+  town＝町の人の名前の候補（7001〜7150・8001〜8200）。約束の相手の町の人の名前は town のうち、相手の性別（`sex`）が同じものから選ばれる 🟢。
+  7000 台は日本人（女性 7001〜7100、男性 7101〜7150）、8000 台は外国人（女性 8001〜8104、男性 8105〜8200）
+- `place/night-visit-row.csv`：全行 🟢。約束すると、この表の1行（28 B、`save_bytes_le`）が約束の枠の +0x00〜+0x1B に写され、+0x04 だけが相手の種類で上書きされる。
+  `stage` は段階（空欄＝特別な相手）、`group` はまとまり（0＝特別な相手、1・2＝町の人。3 の行を選ぶ相手はいない）、`partner` は特別な相手の番号（`name_ja` がその相手）、
+  `place`・`layout` は場所と配置（`night-visit-place.csv`）。`備考` の「確かめた組」は実データか書き込みでゲームの反映を確かめた組
+- `npc/night-visit-partner.csv`：約束できる相手の種類（約束の枠の +0x04 の値）。`kind` は special＝名前のある相手（値はすべて決まっている）、town＝町の人。
+  `sex` は相手の性別、`name_list` は町の人の名前の候補（7＝7000 台、8＝8000 台。どちらも `sex` が同じ名前から選ばれる）、`name` は名前のある相手の名前の ID。
+  `looks` は見た目の候補（`;` 区切り。名前のある相手は1つ）、`age` は年齢（255＝「？」）。`age_random` が 1 なら、`age` の十の位はそのままで一の位を 0〜9 から選ぶ。
+  `blood` は血液型（0＝1〜4 から選ぶ）、`group` は町の人が使う `night-visit-row.csv` のまとまり、`row` は名前のある相手が使う行。
+  `status` は 🟢 か、ゲームの反映を確かめたもの（✅ 実データ＝ゲームが作った約束を見た、✅ 書き込みで確認＝この表の値を書いて夜這いできた）。
+  町の人は、女児・男児（「惚れた」の会話がない）と、約束すると枠が壊れる坂本を入れていない
 - `place/start-location.csv`：開始地点（現在地、位置 0x13 の u8）。`crash` は 1＝クラッシュが報告されている値（選択肢に出さない）。
   `warning_ja` は選べるが注意が必要な値の注意書き（画面にそのまま出す）。0xC5 以降は未調査で表にない
 - `source`（パーツ・銘・魅力・完成武器・アイテム）：出典。`CT`＝Cheat Engine テーブル、`TS`＝[TS] の定義、`U`＝ユーザーのゲーム内確認、`SE-BBS`＝PS3版の掲示板。複数あるときは `;` で区切る

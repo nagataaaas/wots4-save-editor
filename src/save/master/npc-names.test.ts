@@ -29,6 +29,6 @@ describe("🟢 人物の名前 datatable/npc/npc-name.csv", () => {
   it("区分", () => {
     expect(npcNameGroup(215)).toBe("固有の名前");
     expect(npcNameGroup(1001)).toBe("仮の名前");
-    expect(npcNameGroup(8200)).toBe("町の女性の名前");
+    expect(npcNameGroup(8200)).toBe("町の人の名前");
   });
 });
