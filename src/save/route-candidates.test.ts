@@ -11,6 +11,7 @@ import {
   BEST_ROUTE_EVENT_INDEX,
   BEST_ROUTE_OFFSET,
   BEST_ROUTE_VALUES,
+  NPC_ROUTE_OFFSETS,
   RAW_ROUTE_OFFSETS,
   ROUTE_CANDIDATE_NOTES,
   ROUTE_CANDIDATE_END,
@@ -59,14 +60,18 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
   it('✅ [U] 真ルートは 0x378E。三姉妹見参（添字70）と組で効く。生の値の欄には出さない', () => {
     expect(BEST_ROUTE_OFFSET).toBe(0x378e)
     expect(BEST_ROUTE_EVENT_INDEX).toBe(70)
-    expect(RAW_ROUTE_OFFSETS).toHaveLength(8)
+    expect(RAW_ROUTE_OFFSETS).toEqual([0x3799, 0x379a, 0x37a1, 0x37a2, 0x37a3, 0x37a4, 0x37a8])
     expect(RAW_ROUTE_OFFSETS).not.toContain(0x378e)
   })
 
   it('勢力の退場（0x378F〜0x3791）と好感度・ポイント（0x3792〜0x3797）はほかの画面で編集するので、生の値の欄に出さない', () => {
     for (let o = 0x378f; o <= 0x3797; o++) expect(RAW_ROUTE_OFFSETS).not.toContain(o)
-    expect(RAW_ROUTE_OFFSETS).toContain(0x378d)
     expect(RAW_ROUTE_OFFSETS).toContain(0x3799)
+  })
+
+  it('堂島・先生の職（0x3799・0x379A）は NPCイベントフラグに出す', () => {
+    expect(NPC_ROUTE_OFFSETS).toEqual({ smith: 0x3799, dojo: 0x379a })
+    for (const o of Object.values(NPC_ROUTE_OFFSETS)) expect(RAW_ROUTE_OFFSETS).toContain(o)
   })
 
   it('真ルートのフラグは 1バイトだけ書く。通常モードは 0〜2 だけ', () => {
@@ -95,12 +100,11 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
       expect(ROUTE_CANDIDATE_NOTES[o]?.name, `0x${o.toString(16)}`).toBeTruthy()
       expect(ROUTE_CANDIDATE_NOTES[o]?.note, `0x${o.toString(16)}`).toBeTruthy()
     }
-    expect(ROUTE_CANDIDATE_NOTES[0x378d].name).toBe('序章のあとの道筋')
     expect(ROUTE_CANDIDATE_NOTES[0x37a1].name).toBe('小公女の薬')
   })
 
-  it('0x379B・0x379F・0x37A0・0x37AA は生の値の欄に出さない（ユーザー判断 2026-10-10）', () => {
-    const omitted = [0x379b, 0x379f, 0x37a0, 0x37aa]
+  it('0x378D・0x379B・0x379F・0x37A0・0x37AA は生の値の欄に出さない（ユーザー判断 2026-10-10）', () => {
+    const omitted = [0x378d, 0x379b, 0x379f, 0x37a0, 0x37aa]
     expect([...OMITTED_ROUTE_OFFSETS].sort((a, b) => a - b)).toEqual(omitted)
     for (const o of omitted) {
       expect(RAW_ROUTE_OFFSETS).not.toContain(o)
@@ -112,10 +116,17 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
   })
 
   it('🟢 堂島・先生のなりわい、般若党の本拠（1 と 2 は効果が同じ）、会談の手紙、黒船、最後通告', () => {
-    expect(ROUTE_CANDIDATE_NOTES[0x3799].name).toBe('堂島が鍛冶屋に戻った')
-    expect(ROUTE_CANDIDATE_NOTES[0x379a].name).toBe('先生が道場の師範代')
+    expect(ROUTE_CANDIDATE_NOTES[0x3799].name).toBe('堂島が鍛冶屋（イベント判定用）')
+    expect(ROUTE_CANDIDATE_NOTES[0x379a].name).toBe('先生が道場の師範代（イベント判定用）')
     expect(ROUTE_CANDIDATE_NOTES[0x37a2].name).toBe('般若党の本拠')
     expect(ROUTE_CANDIDATE_NOTES[0x37a2].note).toContain('1 と 2 の効果は同じ')
+    // 選択肢は通常モードで書ける値（0〜2）だけ
+    for (const o of RAW_ROUTE_OFFSETS) {
+      const values = ROUTE_CANDIDATE_NOTES[o].values.map((v) => v.value)
+      expect(values[0], `0x${o.toString(16)}`).toBe(0)
+      for (const v of values) expect(v).toBeLessThanOrEqual(routeCandidateNormalMax(o))
+    }
+    expect(ROUTE_CANDIDATE_NOTES[0x379a].effect).toContain('無所属の剣術大会')
     expect(ROUTE_CANDIDATE_NOTES[0x37a3].name).toBe('会談の手紙')
     expect(ROUTE_CANDIDATE_NOTES[0x37a4].name).toBe('黒船')
     expect(ROUTE_CANDIDATE_NOTES[0x37a8].name).toBe('最後通告に逆らった')

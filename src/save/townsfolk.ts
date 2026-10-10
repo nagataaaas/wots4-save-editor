@@ -39,15 +39,19 @@ export const SMITH_STATE_OFFSET = 0x0127;
 export const SMITH_STATES: readonly { value: number; label: string; group: string }[] = [
   { value: 0, label: "未会話", group: "後継者イベント" },
   { value: 10, label: "「そろそろやめる」という会話を聞いた", group: "後継者イベント" },
-  { value: 20, label: `${nameOf.npc(14)}を探してくる`, group: "後継者イベント" },
-  { value: 30, label: `鍛冶屋を継げ → ${nameOf.npc(14)}の意志は固かった`, group: "後継者イベント" },
+  { value: 20, label: `堂島を探してくる`, group: "後継者イベント" },
+  { value: 30, label: `鍛冶屋を継げ → 堂島の意志は固かった`, group: "後継者イベント" },
   { value: 40, label: "鍛冶屋の過去を知った", group: "後継者イベント" },
-  { value: 50, label: `${nameOf.npc(14)}が鍛冶屋を拒むわけを知った`, group: "後継者イベント" },
-  { value: 60, label: `もう一度、${nameOf.npc(14)}を説得してみよう`, group: "後継者イベント" },
-  { value: 61, label: `${nameOf.npc(14)}はおとなしくなった`, group: "後継者イベント" },
+  { value: 50, label: `堂島が鍛冶屋を拒むわけを知った`, group: "後継者イベント" },
+  { value: 60, label: `もう一度、堂島を説得してみよう`, group: "後継者イベント" },
+  { value: 61, label: `堂島はおとなしくなった`, group: "後継者イベント" },
   { value: 69, label: "夢があった（会話後）", group: "後継者イベント" },
-  { value: 70, label: `${nameOf.npc(14)}の説得に成功した（0x0132 が 1 になる）`, group: "後継者イベント" },
-  { value: 81, label: `${nameOf.npc(14)}の鍛冶屋`, group: "鍛冶屋の状態" },
+  {
+    value: 70,
+    label: `堂島の説得に成功した（0x0132 が 1 になる）`,
+    group: "後継者イベント",
+  },
+  { value: 81, label: `鍛冶屋が${nameOf.npc(14)}`, group: "鍛冶屋の状態" },
   { value: 110, label: `${nameOf.npc(25)}のおやじから踏み倒した`, group: "鍛冶屋の状態" },
   { value: 119, label: `${nameOf.npc(14)}から踏み倒した`, group: "鍛冶屋の状態" },
   { value: 120, label: `${nameOf.npc(14)}が死亡`, group: "鍛冶屋の状態" },
@@ -59,6 +63,8 @@ export type TownsfolkNote = {
   name?: string;
   note: string;
   values?: readonly TownsfolkValue[];
+  /** 会話の段階だけでないフラグについて、書き換えるとざっくり何に効くか（欄の下に出す） */
+  effect?: string;
 };
 
 /** 🟢 なりわいのフラグ（0x011C + 番号、u8 × 64）の先頭 */
@@ -95,7 +101,11 @@ export const POLICE_SERIES_VALUES: readonly TownsfolkValue[] = [
     label: `「${nameOf.occupation(178)}」を果たした（${nameOf.npc(48)}に逃げられ、浪人は馬小屋のまま）`,
     group: afterLast(nameOf.occupation(178)),
   },
-  { value: 91, label: `浪人の身代わりに${nameOf.npc(37)}が馬小屋に入った`, group: afterLast(nameOf.occupation(178)) },
+  {
+    value: 91,
+    label: `浪人の身代わりに${nameOf.npc(37)}が馬小屋に入った`,
+    group: afterLast(nameOf.occupation(178)),
+  },
   {
     value: 97,
     label: `出された浪人（${nameOf.npc(68)}）に礼を言われた（${nameOf.npc(40)}の話はまだ）`,
@@ -152,7 +162,11 @@ export const THIEF_SERIES_VALUES: readonly TownsfolkValue[] = [
     label: `「${nameOf.occupation(194)}」を果たした（お宝はまだ渡していない）`,
     group: afterLast(nameOf.occupation(194)),
   },
-  { value: 91, label: "最後のお宝を渡した（会話の途中。続きを聞くと 92）", group: afterLast(nameOf.occupation(194)) },
+  {
+    value: 91,
+    label: "最後のお宝を渡した（会話の途中。続きを聞くと 92）",
+    group: afterLast(nameOf.occupation(194)),
+  },
   {
     value: 92,
     label: "「四天王の証」を見て記憶が戻り、身投げは自殺だったと知った",
@@ -269,22 +283,66 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
       `侍四天王（${nameOf.npc(61)}・${nameOf.npc(68)}・${nameOf.npc(69)}・${nameOf.npc(73)}）を集める話。9 を書く場面はない`,
     values: [
       { value: 0, label: "始まる前（連続なりわい4つがまだ終わっていない）" },
-      { value: 1, label: `連続なりわい4つを終え、街道に${nameOf.npc(61)}が現れた`, group: `${nameOf.npc(61)}との話` },
-      { value: 2, label: `${nameOf.npc(61)}の身の上話に「ふ～ん」と返し、「さらばだ」と去られた`, group: `${nameOf.npc(61)}との話` },
-      { value: 3, label: `${nameOf.npc(61)}が侍四天王の${nameOf.npc(61)}善鬼だと名乗った`, group: `${nameOf.npc(61)}との話` },
-      { value: 4, label: `${nameOf.npc(61)}に「侍の名が泣くぞ」と迫った`, group: `${nameOf.npc(61)}との話` },
-      { value: 5, label: `${nameOf.npc(61)}が「逃げるのはもうやめだ」と戦う決意をした`, group: `${nameOf.npc(61)}との話` },
-      { value: 6, label: `${nameOf.npc(61)}に「残りの四天王を探してくれ」と頼まれた`, group: `${nameOf.npc(61)}との話` },
-      { value: 7, label: `${nameOf.npc(61)}から合言葉「根の葉の根」を教わった`, group: `${nameOf.npc(61)}との話` },
-      { value: 8, label: `${nameOf.npc(68)}と${nameOf.npc(69)}の両方に合言葉を伝えた（${nameOf.npc(73)}が寝込む）`, group: "四天王を集める" },
+      {
+        value: 1,
+        label: `連続なりわい4つを終え、街道に${nameOf.npc(61)}が現れた`,
+        group: `${nameOf.npc(61)}との話`,
+      },
+      {
+        value: 2,
+        label: `${nameOf.npc(61)}の身の上話に「ふ～ん」と返し、「さらばだ」と去られた`,
+        group: `${nameOf.npc(61)}との話`,
+      },
+      {
+        value: 3,
+        label: `${nameOf.npc(61)}が侍四天王の${nameOf.npc(61)}善鬼だと名乗った`,
+        group: `${nameOf.npc(61)}との話`,
+      },
+      {
+        value: 4,
+        label: `${nameOf.npc(61)}に「侍の名が泣くぞ」と迫った`,
+        group: `${nameOf.npc(61)}との話`,
+      },
+      {
+        value: 5,
+        label: `${nameOf.npc(61)}が「逃げるのはもうやめだ」と戦う決意をした`,
+        group: `${nameOf.npc(61)}との話`,
+      },
+      {
+        value: 6,
+        label: `${nameOf.npc(61)}に「残りの四天王を探してくれ」と頼まれた`,
+        group: `${nameOf.npc(61)}との話`,
+      },
+      {
+        value: 7,
+        label: `${nameOf.npc(61)}から合言葉「根の葉の根」を教わった`,
+        group: `${nameOf.npc(61)}との話`,
+      },
+      {
+        value: 8,
+        label: `${nameOf.npc(68)}と${nameOf.npc(69)}の両方に合言葉を伝えた（${nameOf.npc(73)}が寝込む）`,
+        group: "四天王を集める",
+      },
       {
         value: 10,
         label: `${nameOf.npc(73)}十兵衛から「四天王の証」を受け取り、後を継いだ`,
         group: "四天王を集める",
       },
-      { value: 11, label: `${nameOf.npc(61)}たちに、${nameOf.npc(73)}は前から病気だったと伝えた`, group: "四天王を集める" },
-      { value: 12, label: `三人が${nameOf.npc(73)}に気づいてやれなかったことを悔やんだ`, group: "四天王を集める" },
-      { value: 13, label: "「四天王の証」を見せ、新たな侍四天王と認められた", group: "四天王を集める" },
+      {
+        value: 11,
+        label: `${nameOf.npc(61)}たちに、${nameOf.npc(73)}は前から病気だったと伝えた`,
+        group: "四天王を集める",
+      },
+      {
+        value: 12,
+        label: `三人が${nameOf.npc(73)}に気づいてやれなかったことを悔やんだ`,
+        group: "四天王を集める",
+      },
+      {
+        value: 13,
+        label: "「四天王の証」を見せ、新たな侍四天王と認められた",
+        group: "四天王を集める",
+      },
       {
         value: 14,
         label: `墓場での四人組との戦を持ちかけられた（「${nameOf.occupation(207)}」）`,
@@ -300,7 +358,11 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
         label: `墓場の戦に${nameOf.npc(44)}が乱入した（${nameOf.npc(73)}を治療した場合）`,
         group: "四人組との戦",
       },
-      { value: 99, label: "四天王の誰かを斬り殺したか、何度も斬りつけて敵に回した", group: "終わったあと" },
+      {
+        value: 99,
+        label: "四天王の誰かを斬り殺したか、何度も斬りつけて敵に回した",
+        group: "終わったあと",
+      },
       {
         value: 100,
         label: `${nameOf.npc(73)}が息を引き取った（50・99 のあと）か、「${nameOf.occupation(208)}」を終えた`,
@@ -317,7 +379,11 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
       "治療すると 12 以降に進み、四天王対四人組（207）から阿弥浜八人衆（208）に発展する。治療しないと 207 で終わる（🔶）",
     values: [
       { value: 0, label: `始まる前（${nameOf.npc(73)}はまだ病院に運ばれていない）` },
-      { value: 1, label: `${nameOf.npc(73)}が病に倒れ、病院に担ぎ込まれた`, group: `${nameOf.npc(73)}の病気` },
+      {
+        value: 1,
+        label: `${nameOf.npc(73)}が病に倒れ、病院に担ぎ込まれた`,
+        group: `${nameOf.npc(73)}の病気`,
+      },
       {
         value: 2,
         label: "医者に「祖国の薬がある。薬代を出す金持ちを探せ」と言われた",
@@ -386,6 +452,62 @@ export const OCCUPATION_FLAG_OFFSETS: readonly number[] =
  * エリア移動・ロードで 0 に戻るもの（会話の回数 1〜3、開発用の 15）は、エディタで書いてもロードで消えるので載せない
  */
 const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
+  [occupationFlagOffset(10)]: {
+    name: `${nameOf.npc(15)}の段階（仕事探し・道場）`,
+    note:
+      `🟢 ${nameOf.npc(93)}に働き口を紹介し、道場の師範代にして手合わせするまでの進み具合。値ごとに${nameOf.npc(15)}の居場所が変わる` +
+      `（10 番台は呉服屋、20 番台は寿司屋、30 番台は賭場、40 番台は語学所、50 以上は道場、70〜79 は街道）。` +
+      `${nameOf.npc(15)}と道場（0x0131）が 0 で 10 未満なら街道に出る。` +
+      `「紹介した」は紹介を選んだときに書き、その店で${nameOf.npc(15)}に話すと「店員になった」など（店長が死んでいれば「店長がいない」）に上書きされる。` +
+      `セーブに残り、ロードやエリア移動では消えない。周回の終わりに 0。` +
+      `74 は${nameOf.npc(15)}が読むが書く場面が見つからないので載せていない`,
+    values: [
+      { value: 0, label: "会っていない" },
+      { value: 1, label: `人斬りを討った${nameOf.npc(93)}に会った`, group: "出会い" },
+      { value: 2, label: "「大丈夫か？」と声をかけた", group: "出会い" },
+      { value: 3, label: "弟を探していると聞き、働き口を頼まれた", group: "出会い" },
+      {
+        value: 9,
+        label: `「すぐに阿弥浜を出ろ」と言った（周回後の道場では、師範代として支えると言われた）`,
+        group: "出会い",
+      },
+      { value: 10, label: "紹介した", group: "呉服屋" },
+      { value: 11, label: "店員になった", group: "呉服屋" },
+      { value: 19, label: "店長がいない", group: "呉服屋" },
+      { value: 20, label: "紹介した", group: "寿司屋" },
+      { value: 21, label: "看板娘になった", group: "寿司屋" },
+      { value: 29, label: "店長がいない", group: "寿司屋" },
+      { value: 30, label: "紹介した", group: "賭場の用心棒" },
+      { value: 31, label: "用心棒になった", group: "賭場の用心棒" },
+      { value: 40, label: "紹介した", group: "語学所" },
+      { value: 41, label: "子供の送り迎えをしている", group: "語学所" },
+      { value: 49, label: "語学所が開いていない", group: "語学所" },
+      { value: 50, label: "道場の師範代を引き受けた", group: "道場" },
+      { value: 60, label: "道場に来た", group: "道場" },
+      { value: 70, label: "手合わせの約束をした（街道で待つ）", group: "手合わせ" },
+      { value: 71, label: "賭けをせずに手合わせする", group: "手合わせ" },
+      { value: 72, label: "賭けで「一夜を共にする」を選んだ", group: "手合わせ" },
+      { value: 73, label: "賭けで「ごほうび」を選んだ", group: "手合わせ" },
+      { value: 75, label: "峰打ちで勝った", group: "手合わせ" },
+      {
+        value: 76,
+        label: "「一夜を共にする」の賭けで勝った（話すと夜這いの約束）",
+        group: "手合わせ",
+      },
+      { value: 77, label: "「ごほうび」の賭けで勝った（話すと品をもらう）", group: "手合わせ" },
+      { value: 79, label: "ごほうびをもらった", group: "手合わせ" },
+      {
+        value: 80,
+        label: "手合わせを終えた（周回後の道場では、あいさつを済ませた）",
+        group: "手合わせ",
+      },
+      {
+        value: 99,
+        label: `別れた（黒幕を名乗って斬りかかられた、または${nameOf.npc(32)}がいなくなり道場を去った）`,
+        group: "終わったあと",
+      },
+    ],
+  },
   [occupationFlagOffset(13)]: {
     name: `${nameOf.npc(32)}との話の段階`,
     note: `🟢 道場の師範への任命と、東急流剣術の上達に応じて聞いた話の記録。値は会話を聞いたあとの状態で、流派の段そのものではない。0 でないときだけ${nameOf.npc(157)}が来る。この欄だけを変えても目録の入手や技の習得は反映されない。周回の終わりに 0（🔶 100 は通常の会話をしない値だが、使われる場面は未確認）`,
@@ -393,12 +515,36 @@ const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
       { value: 0, label: "師範でない" },
       { value: 1, label: "師範に任命された" },
       { value: 10, label: "東急流剣術の目録を受け取った" },
-      { value: 20, label: "道場破りを倒すと技を覚える話を聞いた", group: "東急流剣術の上達後の会話" },
-      { value: 30, label: "東急流の由来（天奈の伝説の侍とその末裔）を聞いた", group: "東急流剣術の上達後の会話" },
-      { value: 40, label: "道場破りに見知った者がいる話を聞いた", group: "東急流剣術の上達後の会話" },
-      { value: 50, label: "かつて大勢いた門下生がいなくなった話を聞いた", group: "東急流剣術の上達後の会話" },
-      { value: 60, label: "東急流を究め、道場破りが元弟子だったと聞いた", group: "東急流剣術の上達後の会話" },
-      { value: 70, label: "皆伝後に「まだ弟子はいる、油断するな」と言われた", group: "東急流剣術の上達後の会話" },
+      {
+        value: 20,
+        label: "道場破りを倒すと技を覚える話を聞いた",
+        group: "東急流剣術の上達後の会話",
+      },
+      {
+        value: 30,
+        label: "東急流の由来（天奈の伝説の侍とその末裔）を聞いた",
+        group: "東急流剣術の上達後の会話",
+      },
+      {
+        value: 40,
+        label: "道場破りに見知った者がいる話を聞いた",
+        group: "東急流剣術の上達後の会話",
+      },
+      {
+        value: 50,
+        label: "かつて大勢いた門下生がいなくなった話を聞いた",
+        group: "東急流剣術の上達後の会話",
+      },
+      {
+        value: 60,
+        label: "東急流を究め、道場破りが元弟子だったと聞いた",
+        group: "東急流剣術の上達後の会話",
+      },
+      {
+        value: 70,
+        label: "皆伝後に「まだ弟子はいる、油断するな」と言われた",
+        group: "東急流剣術の上達後の会話",
+      },
     ],
   },
   [occupationFlagOffset(16)]: {
@@ -410,6 +556,7 @@ const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     name: `${nameOf.npc(157)}で${nameOf.npc(156)}が一度倒れた`,
     note: `🟢 1 のときにもう一度倒れると${nameOf.npc(156)}が死ぬ。${nameOf.npc(157)}が来ると決まったとき・終わったときに 0`,
     values: yesNo("倒れていない", "一度倒れた"),
+    effect: `1 だと、${nameOf.npc(157)}で${nameOf.npc(156)}がもう一度倒れたときに死ぬ`,
   },
   [occupationFlagOffset(18)]: {
     name: `${nameOf.npc(32)}が授業料で買った物の話`,
@@ -428,12 +575,13 @@ const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     name: "師範になったことがある",
     note: `🟢 ${nameOf.npc(32)}が死ぬなどで道場を失うと 0。周回の始めに 1 なら、3000文か${nameOf.npc(15)}との勝負で師範に戻れる。周回をまたいで残る`,
     values: yesNo("なっていない", "なったことがある"),
+    effect: `話しかけただけで道場がもらえるか（0 ならもらえる。1 だと3000文か${nameOf.npc(15)}との勝負が要る）。${nameOf.npc(32)}が死ぬとリセット`,
   },
   [occupationFlagOffset(21)]: {
-    name: `${nameOf.npc(15)}と道場`,
+    name: `${nameOf.npc(15)}が道場の師範代`,
     note: `🟢 ${nameOf.npc(15)}が追い出される・死ぬ、${nameOf.npc(32)}が死ぬと 0。周回をまたいで残る`,
     values: [
-      { value: 0, label: "なし" },
+      { value: 0, label: "師範代ではない" },
       { value: 1, label: `${nameOf.npc(15)}が師範代` },
       {
         value: 2,
@@ -597,7 +745,7 @@ export const TOWNSFOLK_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     values: SMITH_STATES,
   },
   0x0132: {
-    name: `${nameOf.npc(14)}が鍛冶屋を継いだ`,
+    name: `${nameOf.npc(14)}が鍛冶屋`,
     note: `${nameOf.npc(14)}の説得に成功する（0x0127＝70）と 1 になる。周回をまたいで、誰が鍛冶屋になるかを決める（確認済み：0 のまま周回するとおやじに戻り、1 だと${nameOf.npc(14)}になった）`,
     values: [
       { value: 0, label: `継いでいない（${nameOf.npc(25)}のおやじ）` },
@@ -605,6 +753,20 @@ export const TOWNSFOLK_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     ],
   },
 };
+
+/**
+ * なりわいの画面で扱わない、意味の分かったなりわいのフラグの分け方（シナリオの画面の「NPCイベントフラグ」）。
+ * 鍛冶屋・道場に入らないものは「その他」に出す
+ */
+export const TOWNSFOLK_FLAG_GROUPS = {
+  smith: [0x0127, 0x0132],
+  dojo: [10, 13, 17, 18, 20, 21].map(occupationFlagOffset),
+} as const;
+
+/** 意味の分かったなりわいのフラグのうち、なりわいの画面で扱わないもの */
+export const OTHER_TOWNSFOLK_OFFSETS: readonly number[] = Object.keys(TOWNSFOLK_NOTES)
+  .map(Number)
+  .filter((o) => !OCCUPATION_FLAG_OFFSETS.includes(o));
 
 export type TownsfolkView = {
   values: number[];

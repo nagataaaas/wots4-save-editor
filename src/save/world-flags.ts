@@ -15,6 +15,11 @@
 // ルート分岐を書き換えても、門が閉じたままだとそのルートに進めない（[U] 2026-10-05）。
 // 🟢 閉鎖条件は大寄せ前にも有効。0は閉鎖指定なしで、他の条件による閉鎖を打ち消さない。
 //
+// 代官所の拷問塔の扉（1 以上で閉じる）：
+//   0x3762・0x3763  🟢 0x3762 が拷問部屋の扉、0x3763 が屋内から拷問塔の区画へ入る扉。
+//              周回の始めに 1、大老と三姉妹の成功で 0 になり、通常のプレイでは2つは同じ値なので1つの欄にまとめて両方へ書く。
+//              0 でも、1日目夕以降かつ大老と三姉妹（0x36C9）= 4 でなければ閉じたまま。扉の見た目は要ゲーム内確認
+//
 // 🟢 初期開放条件（序章〜1日目昼、段階 ≤100）：1＝開く、0＝閉じる。閉鎖条件が優先。chunks/gates の調査記録 2026-10-06_amihama-gates.md：
 //   0x377D  ✅ [U] 代官所の門。書き換えで開閉が反映された（2026-10-06）。🟢 阿弥浜港争乱の結末（3連勝・琴吹に助太刀）と
 //              三姉妹見参の成功で 1。そのあとで 1 になる場面はない。代官所の面々はこれが 1 のときだけ起きる。幕府からの勧誘を兼ねる
@@ -35,11 +40,19 @@ import { checkLayout } from "./hero";
 /** 1 の意味。close＝1 で閉じる、open＝1 で開く */
 export type WorldFlagMeaning = "close" | "open";
 
+/** 画面での分け方。recruit＝初日勧誘、close＝閉鎖（大寄せまで）、door＝建物の中の扉 */
+export type WorldFlagGroup = "recruit" | "close" | "door";
+
 export type WorldFlag = {
   offset: number;
+  /** 同じ値を一緒に書くバイト。通常のプレイで offset と必ず同じ値になるもの */
+  pairedOffset?: number;
   label: string;
   note: string;
+  /** 欄の下に常に出す注意 */
+  hint?: string;
   meaning: WorldFlagMeaning;
+  group: WorldFlagGroup;
 };
 
 /** 通常の値は 0・1。洞窟内の柵は1で下降・通行不可のみ✅、0での回復は未確認。 */
@@ -49,53 +62,72 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     label: "代官所の表門",
     note: "1 で閉じる。🟢 大寄せで幕府ルートに入れないと 1（根無し草では 1、幕府ルートでは 0）。裏門（0x37FB）とそろえる",
     meaning: "close",
+    group: "close",
   },
   {
     offset: 0x37fb,
     label: "代官所の裏門",
     note: "🟢 裏門。表門（0x37FA）と同じ場面で同じ値になるので 1 で閉じるとみられる（🔶）。0 にして裏門が開くかは ❓ 要ゲーム内確認",
     meaning: "close",
+    group: "close",
   },
   {
     offset: 0x3764,
     label: "居留地の外門",
     note: "1 で閉じる。🟢 大寄せで外国ルートに入れないと 1。鬼怒川の魔手でローラが死んだとき・夕暮れの船上で断ったとき・傷心の帰国船の成功でも 1",
     meaning: "close",
+    group: "close",
   },
   {
     offset: 0x37c3,
     label: "神社入口の柵",
     note: "1 で閉じる。🟢 大寄せで攘夷ルートに入れないと 1。同士救出の成功・般若党壊滅の成功でも 1",
     meaning: "close",
+    group: "close",
   },
   {
     offset: 0x377d,
     label: "代官所の門",
     note: "1 で開く。🟢 阿弥浜港争乱の結末（3連勝・琴吹に助太刀）と三姉妹見参の成功で 1。代官所の面々は 1 のときだけ起きる。幕府からの勧誘のフラグを兼ねる",
     meaning: "open",
+    group: "recruit",
   },
   {
     offset: 0x377e,
     label: "居留地の門",
     note: "1 で開く。🟢 阿弥浜港争乱の結末（3連勝・4人に手間取る）と三姉妹見参の成功で 1。小公女謁見は 1 のときだけ起きる。外国からの勧誘のフラグを兼ねるとみられる（🔶）",
     meaning: "open",
+    group: "recruit",
   },
   {
     offset: 0x377f,
     label: "神社入口の柵",
     note: "✅ 入口の柵。🟢 序章〜1日目昼（段階 ≤100）の開放条件で、洞窟内の柵にも共通。志士との出会いの導入と三姉妹見参の成功で 1。導入を見たあと（イベント6 が 03 以降）に 0 にすると、近づいても開かない",
     meaning: "open",
+    group: "recruit",
   },
   {
     offset: 0x3761,
     label: "神社の洞窟内の柵",
     note: "✅ 1 で柵が降り、洞窟の通行を塞ぐことを確認済み（入口の柵 0x37C3 = 0 と併用）。0 に戻したときの上昇・通行の回復は要ゲーム内確認。🟢 大寄せで攘夷ルートに入れないと 1。同士救出・般若党壊滅の成功でも 1",
     meaning: "close",
+    group: "close",
+  },
+  {
+    offset: 0x3762,
+    pairedOffset: 0x3763,
+    label: "代官所 拷問部屋の扉",
+    note: "🟢 1 以上で閉じる。0x3762 は拷問部屋の扉、0x3763 は屋内から拷問塔の区画へ入る扉で、両方に同じ値を書く。周回の始めに 1、大老と三姉妹の成功で 0。扉の見た目は要ゲーム内確認",
+    hint: "1日目昼または「大老と三姉妹」が成功していない場合はフラグに関わらず閉じます",
+    meaning: "close",
+    group: "door",
   },
 ];
 
 export type WorldFlagsView = {
   values: number[];
+  /** pairedOffset の値。pairedOffset のないフラグは null */
+  paired: (number | null)[];
   problem: string | null;
 };
 
@@ -103,13 +135,21 @@ export function readWorldFlags(bytes: Uint8Array): WorldFlagsView {
   if (bytes.byteLength < 0x3800) throw new RangeError("ファイルが小さすぎてフラグを読めません");
   const layoutProblem = checkLayout(bytes);
   const values = WORLD_FLAGS.map((f) => readU8(bytes, f.offset));
-  const bad = values.findIndex((v) => v > 1);
+  const paired = WORLD_FLAGS.map((f) =>
+    f.pairedOffset === undefined ? null : readU8(bytes, f.pairedOffset),
+  );
+  const bad = WORLD_FLAGS.findIndex((_, i) => values[i] > 1 || (paired[i] ?? 0) > 1);
   const problem =
-    bad >= 0 ? `${WORLD_FLAGS[bad].label} の値が 0・1 以外です（${values[bad]}）` : null;
-  return { values, problem: layoutProblem ?? problem };
+    bad >= 0
+      ? `${WORLD_FLAGS[bad].label} の値が 0・1 以外です（${paired[bad] === null ? values[bad] : `${values[bad]}・${paired[bad]}`}）`
+      : null;
+  return { values, paired, problem: layoutProblem ?? problem };
 }
 
-/** index 番目のフラグの1バイトだけを書く。通常モードでは 0・1 だけ、上級者モードでは任意の u8 */
+/**
+ * index 番目のフラグの1バイト（pairedOffset があればそのバイトにも同じ値）を書く。
+ * 通常モードでは 0・1 だけ、上級者モードでは任意の u8
+ */
 export function writeWorldFlag(
   bytes: Uint8Array,
   index: number,
@@ -124,34 +164,31 @@ export function writeWorldFlag(
     throw new RangeError(`u8 の範囲外です: ${value}`);
   if (!opts.advanced && value > 1) throw new RangeError(`0 か 1 を指定してください: ${value}`);
   writeU8(bytes, flag.offset, value);
+  if (flag.pairedOffset !== undefined) writeU8(bytes, flag.pairedOffset, value);
 }
 
 // ---------------------------------------------------------------------------
 // そのほかの意味の分かったフラグ（chunks/scenario-flags・gates）。
 // どれも 🟢 1 になる場面（値）だけが分かっていて、書き換えたときのゲーム内の反映は確かめていない（要ゲーム内確認）。
 // 未確認データの扱い（AGENTS.md）に従い「生の値＋候補」で出す。通常モードは候補の値だけ、上級者モードは任意の u8。
-//   0x3761 は ✅ 神社の洞窟内の柵として WORLD_FLAGS に移した。
-//   0x37C6  🟢 大寄せで外国ルートに入れないと 1（居留地の門 0x3764 と一緒）。小公女倒れるで般若党と戦うときも 1。何が変わるかは ❓
-//   0x3762・0x3763  🟢 代官所の拷問塔の扉を閉じる（1 以上で閉）。0x3762 が拷問部屋の扉、0x3763 が屋内から拷問塔の区画へ入る扉。
-//              周回の始めに 1、大老と三姉妹の成功で 0 になり、通常のプレイでは2つは同じ値なので1つの欄にまとめて両方へ書く。
-//              0 でも、1日目夕以降かつ大老と三姉妹（0x36C9）= 4 でなければ閉じたまま。扉の見た目は要ゲーム内確認
+//   0x3761 は ✅ 神社の洞窟内の柵、0x3762・0x3763 は 🟢 代官所の拷問塔の扉として WORLD_FLAGS に置く。
+//   0x37C6  🟢 1 のとき領事館の中へ移動できない（居留地全体ではない。外門 0x3764 とは別）。案内図・地図の入口の印も出ない。
+//              大寄せで外国ルートに入れないと 1（0x3764 と一緒）。小公女倒れるで般若党と戦うときも 1。段階が変わると 0 に戻る。
+//              移動を拒んだときの表示は要ゲーム内確認
 //   0x3760  🟢 1 だと士魂は屈せずでまだらに助け出され、鬼怒川を追えでまだらが味方につく。剣術大会の準備で 0 に戻る。
 //              1 になる場面は見つかっていない（❓）
+//   0x37C0  🟢 大老武断の終わりで 1。🔶 黒船の大砲を譲った印
+// 画面に出さないバイト（ユーザー判断 2026-10-10）：
 //   0x37AB  🟢 剣術大会で勝ち抜いた試合数（各試合に勝つと 1 → 2 → 3）
 //   0x37F7  🟢 剣術大会（幕府・無所属）の3回戦でまだらに勝つと 1。1 のときの影響は ❓
 //   0x37F8  🟢 剣術大会（攘夷）の3回戦でメリンダに勝つと 1。1 のときの影響は ❓
-//   0x37C0  🟢 大老武断の終わりで 1。🔶 黒船の大砲を譲った印
 
 export type ScenarioFlagValue = { value: number; label: string };
 
 export type ScenarioFlag = {
   offset: number;
-  /** 同じ値を一緒に書くバイト。通常のプレイで offset と必ず同じ値になるもの */
-  pairedOffset?: number;
   label: string;
   note: string;
-  /** 欄の下に常に出す注意 */
-  hint?: string;
   /** 通常モードで選べる値。🟢 の場面で現れる値だけ */
   values: readonly ScenarioFlagValue[];
   /** 意味の分かったもの（🟢）、推測が入るもの（🔶）、何が変わるか分からないもの（❓） */
@@ -166,20 +203,11 @@ const OFF_ON = (on: string): readonly ScenarioFlagValue[] => [
 export const SCENARIO_FLAGS: readonly ScenarioFlag[] = [
   {
     offset: 0x37c6,
-    label: "外国ルートに入れなかった印",
-    note: "🟢 大寄せで外国ルートに入れないと 1（居留地の門 0x3764 と一緒）。小公女倒れるで般若党と戦うときも 1。1 のとき何が変わるかは ❓",
-    values: OFF_ON("立っている"),
-    certainty: "❓",
-  },
-  {
-    offset: 0x3762,
-    pairedOffset: 0x3763,
-    label: "代官所 拷問部屋の扉",
-    note: "🟢 1 以上で閉じる。0x3762 は拷問部屋の扉、0x3763 は屋内から拷問塔の区画へ入る扉で、両方に同じ値を書く。周回の始めに 1、大老と三姉妹の成功で 0。扉の見た目は要ゲーム内確認",
-    hint: "1日目昼または「大老と三姉妹」が成功していない場合はフラグに関わらず閉じます",
+    label: "領事館の中に入れない",
+    note: "🟢 1 のとき領事館の中へ移動できず、案内図・地図にも入口の印が出ない（居留地の外門 0x3764 とは別）。大寄せで外国ルートに入れないと 0x3764 と一緒に 1、小公女倒れるで般若党と戦うときも 1。段階が変わると 0 に戻る。移動を拒んだときの表示は要ゲーム内確認",
     values: [
-      { value: 0, label: "0 開く" },
-      { value: 1, label: "1 閉じる" },
+      { value: 0, label: "0 入れる" },
+      { value: 1, label: "1 入れない" },
     ],
     certainty: "🟢",
   },
@@ -188,27 +216,6 @@ export const SCENARIO_FLAGS: readonly ScenarioFlag[] = [
     label: "隠しルートでまだらが味方につく",
     note: "🟢 1 だと士魂は屈せずでまだらに助け出され（拷問・戦闘なし）、鬼怒川を追えで三姉妹ととぐろが相手になり、まだらが味方につく。剣術大会の準備で 0 に戻る。未実装要素のため、各種ムービーのアニメーションが存在しない。また、三姉妹に取り上げられた荷物が帰ってこなくなるため注意",
     values: OFF_ON("味方につく"),
-    certainty: "❓",
-  },
-  {
-    offset: 0x37ab,
-    label: "剣術大会で勝ち抜いた試合数",
-    note: "🟢 剣術大会の各試合に勝つと 1 → 2 → 3。書き換えたときの反映は要ゲーム内確認",
-    values: [0, 1, 2, 3].map((v) => ({ value: v, label: `${v} 試合` })),
-    certainty: "❓",
-  },
-  {
-    offset: 0x37f7,
-    label: "剣術大会でまだらに勝った",
-    note: "🟢 剣術大会（幕府・無所属）の3回戦でまだらに勝つと 1（斬っても峰打ちでも）。1 のときの影響は ❓",
-    values: OFF_ON("勝った"),
-    certainty: "❓",
-  },
-  {
-    offset: 0x37f8,
-    label: "剣術大会でメリンダに勝った",
-    note: "🟢 剣術大会（攘夷）の3回戦でメリンダに勝つと 1（斬っても峰打ちでも）。1 のときの影響は ❓",
-    values: OFF_ON("勝った"),
     certainty: "❓",
   },
   {
@@ -222,8 +229,6 @@ export const SCENARIO_FLAGS: readonly ScenarioFlag[] = [
 
 export type ScenarioFlagsView = {
   values: number[];
-  /** pairedOffset の値。pairedOffset のないフラグは null */
-  paired: (number | null)[];
   /** レイアウトの検証に落ちた理由。あれば読み取り専用 */
   problem: string | null;
 };
@@ -233,17 +238,11 @@ export function readScenarioFlags(bytes: Uint8Array): ScenarioFlagsView {
   if (bytes.byteLength < 0x3800) throw new RangeError("ファイルが小さすぎてフラグを読めません");
   return {
     values: SCENARIO_FLAGS.map((f) => readU8(bytes, f.offset)),
-    paired: SCENARIO_FLAGS.map((f) =>
-      f.pairedOffset === undefined ? null : readU8(bytes, f.pairedOffset),
-    ),
     problem: checkLayout(bytes),
   };
 }
 
-/**
- * index 番目のフラグの1バイト（pairedOffset があればそのバイトにも同じ値）を書く。
- * 通常モードでは候補の値だけ、上級者モードでは任意の u8
- */
+/** index 番目のフラグの1バイトだけを書く。通常モードでは候補の値だけ、上級者モードでは任意の u8 */
 export function writeScenarioFlag(
   bytes: Uint8Array,
   index: number,
@@ -261,5 +260,4 @@ export function writeScenarioFlag(
       `${flag.label} に指定できる値は ${flag.values.map((v) => v.value).join("・")} です: ${value}`,
     );
   writeU8(bytes, flag.offset, value);
-  if (flag.pairedOffset !== undefined) writeU8(bytes, flag.pairedOffset, value);
 }

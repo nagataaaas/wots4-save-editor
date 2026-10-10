@@ -2,7 +2,6 @@ import { useMemo, useState, type ReactNode } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
-import { Badge } from "@/components/ui/badge";
 import { startNewCycle, type CycleEnd, type NewCycleReport } from "@/save/new-cycle";
 import {
   PLAY_COUNT_MAX,
@@ -39,6 +38,7 @@ import {
   writeScenarioFlag,
   writeWorldFlag,
   type ScenarioFlagsView,
+  type WorldFlagGroup,
   type WorldFlagMeaning,
   type WorldFlagsView,
 } from "@/save/world-flags";
@@ -67,8 +67,9 @@ import {
   type CharactersView,
 } from "@/save/characters";
 import {
-  OCCUPATION_FLAG_OFFSETS,
+  OTHER_TOWNSFOLK_OFFSETS,
   PERSON_RECORD_SIZE,
+  TOWNSFOLK_FLAG_GROUPS,
   TOWNSFOLK_NOTES,
   TOWNSFOLK_PEOPLE,
   TOWNSFOLK_START,
@@ -85,12 +86,11 @@ import {
   BEST_ROUTE_EVENT_INDEX,
   BEST_ROUTE_OFFSET,
   BEST_ROUTE_VALUES,
+  NPC_ROUTE_OFFSETS,
   RAW_ROUTE_OFFSETS,
   ROUTE_CANDIDATE_NOTES,
   ROUTE_CANDIDATE_START,
   readRouteCandidates,
-  routeCandidateNormalMax,
-  validateRouteCandidate,
   writeBestRoute,
   writeRouteCandidate,
   type RouteCandidatesView,
@@ -221,10 +221,14 @@ export function ScenarioPage() {
     >
       {(views, k) => (
         <>
-          <ScenarioFlagsCard key={`${k}-scenario-flags`} />
+          <EventFlagsCard key={`${k}-event-flags`} route={views?.routeCandidates ?? null} />
           <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
           <PeopleCard key={`${k}-people`} view={views?.townsfolk ?? null} />
-          <TownsfolkCard key={`${k}-townsfolk`} view={views?.townsfolk ?? null} />
+          <NpcFlagsCard
+            key={`${k}-npc-flags`}
+            view={views?.townsfolk ?? null}
+            route={views?.routeCandidates ?? null}
+          />
           <RouteCandidatesCard
             key={`${k}-route-candidates`}
             view={views?.routeCandidates ?? null}
@@ -245,16 +249,22 @@ export function WorldPage() {
       note={
         <>
           この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
-          difficulty・date-location・factions・gates・facilities・best-route）。 難易度、新しい周回を始める書き込み、日数・時間帯、治安、勢力の友好度
+          difficulty・date-location・factions・gates・facilities・best-route）。
+          難易度、新しい周回を始める書き込み、日数・時間帯、治安、勢力の友好度
           +・−・敵対状態、勢力の退場は書き換えの反映を確認済みです。そのほかの値は確かめていません。
         </>
       }
     >
       {(views, k) => (
         <>
-          <CycleCard key={`${k}-cycle`} view={views?.difficulty ?? null} counts={views?.cycle ?? null} />
+          <CycleCard
+            key={`${k}-cycle`}
+            view={views?.difficulty ?? null}
+            counts={views?.cycle ?? null}
+          />
           <DateCard key={`${k}-date`} view={views?.date ?? null} />
-          <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />          <FactionCard
+          <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />{" "}
+          <FactionCard
             key={`${k}-factions`}
             view={views?.factions ?? null}
             route={views?.route ?? null}
@@ -360,7 +370,9 @@ const CYCLE_END_LABELS: Record<CycleEnd, string> = {
 
 function cycleReportText(r: NewCycleReport): string {
   const parts = [
-    r.end === "clear" ? "周回数とクリア回数を1つ増やしました" : "周回数と立ち去った回数を1つ増やしました",
+    r.end === "clear"
+      ? "周回数とクリア回数を1つ増やしました"
+      : "周回数と立ち去った回数を1つ増やしました",
     `金庫に ${r.vaultAdded.toLocaleString()} 両`,
     `武器箪笥へ ${r.weaponsMoved} 本`,
     `道具の箪笥へ ${r.itemsMoved} 枠`,
@@ -376,7 +388,13 @@ function cycleReportText(r: NewCycleReport): string {
 }
 
 /** 難易度（0x0000）、周回数（0x0B8C）と、新しい周回を始める書き込み（new-cycle.ts）。view が null ならセーブ未読み込み */
-function CycleCard({ view, counts }: { view: DifficultyView | null; counts: CycleCountsView | null }) {
+function CycleCard({
+  view,
+  counts,
+}: {
+  view: DifficultyView | null;
+  counts: CycleCountsView | null;
+}) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const [armed, setArmed] = useState<CycleEnd | null>(null);
@@ -405,7 +423,8 @@ function CycleCard({ view, counts }: { view: DifficultyView | null; counts: Cycl
       <CardHeader>
         <CardTitle>難易度・周回</CardTitle>
         <CardDescription>
-          難易度は 0x0000 の値です。易しい＝0・超難しい＝3 は、スロット一覧の表示と一致しました。書き換えはゲーム内の難易度に反映されます（確認済み）。
+          難易度は 0x0000 の値です。易しい＝0・超難しい＝3
+          は、スロット一覧の表示と一致しました。書き換えはゲーム内の難易度に反映されます（確認済み）。
           「新しい周回」は、物語を終えたときにゲームが行う引き継ぎと初期化を、同じ順序で行います。終わり方はクリア（結末を見た）か立ち去り（町を立ち去った）を選びます。
           次のロードの「続きから」で難易度と主人公の設定に進み、序章のイベント（船上の侍）から新しい周回として遊べます（以前の版で確認済み）。
           段階だけを 0 にして主人公の設定だけをやり直すときは、「主人公」画面のボタンを使います。
@@ -418,7 +437,6 @@ function CycleCard({ view, counts }: { view: DifficultyView | null; counts: Cycl
         <SelectRow
           label="難易度"
           offset={DIFFICULTY_OFFSET}
-          badges={<CertaintyBadge mark="🔶" text="普通＝1・難しい＝2 は推測" />}
           value={view ? String(view.value) : null}
           currentLabel={view ? `不明な値 ${view.value}` : undefined}
           options={difficultyOptions}
@@ -444,12 +462,17 @@ function CycleCard({ view, counts }: { view: DifficultyView | null; counts: Cycl
           <div className="flex flex-wrap items-center gap-2">
             <Label>新しい周回</Label>
             <InfoTip offset={DATE_OFFSETS.dayTime}>
-              引き継ぎ：クリアなら難易度ごとのクリア回数 0x43398〜、立ち去りなら立ち去った回数 0x46340 を1つ増やします。
-              記録 B 0x3838〜 を状態 A から更新し（B が 04 の番号は残す）、なりわいのフラグ 4〜14・18・19・23〜31 を 0 にします。
-              武器袋の武器は武器箪笥へ（本数 0x129F4 も増やす）、所持金は金庫へ、手持ちの道具は道具の箪笥へ、持っている刃・鍔・柄は部品の箪笥へ移します。箪笥に入りきらないものは元の場所に残ります。帯刀はそのまま次の主人公が持ちます。
-              初期化：難易度 0x0000＝1（普通）、段階 0x0010＝0、現在地 0x0013＝0x27、時間帯・保留量・所持金＝0、周回中の記録・技ごとの斬殺数・道具の使用回数＝0、
-              HP・活力＝1000、イベントの状態 A は FF 以外を 00、シナリオのフラグ 0x374E〜0x3837＝0（0x375D〜0x3760・0x3799・0x379A は残す）、ヒント 0x3900＝FFFF、
-              貴重品は鉄4種だけを残す、夜這いの記録・約束を消す（回数は残す）、町の人 0x015C〜0x0B33 ほか一部の範囲を初期化。
+              引き継ぎ：クリアなら難易度ごとのクリア回数 0x43398〜、立ち去りなら立ち去った回数
+              0x46340 を1つ増やします。 記録 B 0x3838〜 を状態 A から更新し（B が 04
+              の番号は残す）、なりわいのフラグ 4〜14・18・19・23〜31 を 0 にします。
+              武器袋の武器は武器箪笥へ（本数 0x129F4
+              も増やす）、所持金は金庫へ、手持ちの道具は道具の箪笥へ、持っている刃・鍔・柄は部品の箪笥へ移します。箪笥に入りきらないものは元の場所に残ります。帯刀はそのまま次の主人公が持ちます。
+              初期化：難易度 0x0000＝1（普通）、段階 0x0010＝0、現在地
+              0x0013＝0x27、時間帯・保留量・所持金＝0、周回中の記録・技ごとの斬殺数・道具の使用回数＝0、
+              HP・活力＝1000、イベントの状態 A は FF 以外を 00、シナリオのフラグ
+              0x374E〜0x3837＝0（0x375D〜0x3760・0x3799・0x379A は残す）、ヒント 0x3900＝FFFF、
+              貴重品は鉄4種だけを残す、夜這いの記録・約束を消す（回数は残す）、町の人 0x015C〜0x0B33
+              ほか一部の範囲を初期化。
               ゲームが流通の武器を確率で消したり変えたりする処理は行いません。元に戻す操作はないので、書き換える前のセーブを残してください
             </InfoTip>
           </div>
@@ -492,29 +515,36 @@ const stageOptions: SelectOption[] = STAGES.map((s) => ({
   disabled: s.value === STAGE_PROLOGUE,
 }));
 
-/** 日数・時間帯・段階。view が null ならセーブ未読み込み */
+/** 段階・日数・時間帯。view が null ならセーブ未読み込み */
 function DateCard({ view }: { view: DateView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const range = advanced ? DAY_RANGE.system : DAY_RANGE.normal;
   const problem = view?.problem ?? null;
-  const linkNote = view?.linked
-    ? "段階は日数・時間帯に連動しています。日数・時間帯を変えると段階（0x0010）も合わせて書きます"
-    : "段階は日数・時間帯に連動していません。日数・時間帯を変えても段階（0x0010）は変えません";
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>日数・時間帯・段階</CardTitle>
+        <CardTitle>段階・日数・時間帯</CardTitle>
         <CardDescription>
-          日数（0x0BD8）はゲーム内の日数の表示、時間帯（0x0014）は昼・夕・夜、段階（0x0010）はイベントが起きるかどうかを決めます。
-          1〜3日目と4日目以降（剣術大会の前）は、段階が日数・時間帯から決まるので連動して書きます。それより先の段階は話の進み具合で決まるので、別々に変えます。
-          日を進めると、過ぎた時間帯に済ませていないイベントはチャートで失敗と表示されます（寝て日を飛ばしたときと同じ）。
+          段階（0x0010）は、メインイベントが起きるかどうかを決めます。
+          日数（0x0BD8）と時間帯（0x0014）はゲーム内の表示で、メインイベントには影響しません。段階と日数・時間帯は別々に書きます
           {view &&
             ` 生の値：0x0010＝${view.raw.dayTime}、0x0012＝${view.pending}、0x0014＝${view.raw.slot}、0x0BD8＝${view.raw.dayIndex}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
+        <SelectRow
+          label="段階"
+          offset={DATE_OFFSETS.dayTime}
+          value={view ? String(view.stage) : null}
+          currentLabel={view ? `一覧にない値 ${view.stage}` : undefined}
+          options={stageOptions}
+          problem={problem}
+          hint="メインイベントの進行に影響します"
+          note="0x0010（u16）だけを書きます。日数・時間帯は変えません。0（序章）にするときは、上の「新しい周回を始める」か、主人公画面の「難易度と主人公設定を行えるようにする」を使います。410 以降を書いたときのゲーム内の動作は確かめていません"
+          onChange={(v) => update((b) => writeStage(b, Number(v)))}
+        />
         <FieldRow
           label="日数"
           offset={DATE_OFFSETS.dayIndex}
@@ -525,8 +555,7 @@ function DateCard({ view }: { view: DateView | null }) {
           parse={(input) => parseInteger(input, (v) => validateDay(v, { advanced }))}
           apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
           inputMode="numeric"
-          hint={`${range.min}〜${range.max}日目`}
-          note="0x0BD8（u16、経過日数）と 0x0014（u8）を書き、段階が連動しているときは 0x0010（u16）も書きます。ゲーム内で反映を確認済み。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示されます（セーブ上の状態は変わりません）"
+          hint={`${range.min}〜${range.max}日目。メインイベントには影響しません`}
         />
         <SelectRow
           label="時間帯"
@@ -534,26 +563,8 @@ function DateCard({ view }: { view: DateView | null }) {
           value={view ? String(view.slot) : null}
           options={slotOptions}
           problem={problem}
-          note="0x0014（u8）を書き、段階が連動しているときは 0x0010（u16）も書きます。ゲーム内で反映を確認済み"
+          hint="メインイベントには影響しません"
           onChange={(v) => update((b) => writeDayTime(b, view!.day, Number(v), { advanced }))}
-        />
-        <SelectRow
-          label="段階"
-          offset={DATE_OFFSETS.dayTime}
-          badges={
-            view && (
-              <Badge variant="outline" className="font-normal">
-                {view.linked ? "連動中" : "連動していません"}
-              </Badge>
-            )
-          }
-          value={view ? String(view.stage) : null}
-          currentLabel={view ? `一覧にない値 ${view.stage}` : undefined}
-          options={stageOptions}
-          problem={problem}
-          hint={view ? linkNote : undefined}
-          note="0x0010（u16）だけを書きます。日数・時間帯は変えません。0（序章）にするときは、上の「新しい周回を始める」か、主人公画面の「難易度と主人公設定を行えるようにする」を使います。410 以降を書いたときのゲーム内の動作は確かめていません"
-          onChange={(v) => update((b) => writeStage(b, Number(v)))}
         />
         <SelectRow
           label="時間帯を進める保留量"
@@ -561,7 +572,7 @@ function DateCard({ view }: { view: DateView | null }) {
           value={view ? String(view.pending) : null}
           options={pendingOptions}
           problem={problem}
-          note="イベントを完了すると 10 が入り、エリア移動やロードのときに 0x0010 に足されて 0 に戻ると推定しています"
+          note="イベントを完了すると 10 が入り、エリア移動やロードのときに時間が進みます"
           onChange={(v) => update((b) => writePending(b, Number(v)))}
         />
       </CardContent>
@@ -582,13 +593,8 @@ function PublicOrderCard({ view }: { view: PublicOrderView | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          治安
-          <CertaintyBadge mark="🔶" text="範囲と段階の境目は外部情報" />
-        </CardTitle>
+        <CardTitle className="flex items-center gap-2">治安</CardTitle>
         <CardDescription>
-          0x0015（u8）が治安です。書き換えはゲーム内の治安に反映されます（確認済み）。鍛冶屋で踏み倒すと 10 下がり、手元のセーブでは
-          0〜99 に収まっていました。 段階（外部情報）：
           {publicOrderLevelsText}。
           {view &&
             ` 生の値：${view.value}（${formatHex2(view.value)}）${view.level ? `＝${view.level}` : ""}`}
@@ -752,9 +758,9 @@ function FactionExitCard({ view }: { view: FactionExitView | null }) {
       <CardHeader>
         <CardTitle>勢力の退場</CardTitle>
         <CardDescription>
-          1 にすると、その勢力の人物が町から出なくなります。
-          3つとも書き換えで確認済みです。
-          外国・攘夷は物語の中でも 1 になります（ローラの死・帰国、般若党の壊滅など）。幕府が 1 になる場面はありません。
+          1 にすると、その勢力の人物が町から出なくなります。 3つとも書き換えで確認済みです。
+          外国・攘夷は物語の中でも 1 になります（ローラの死・帰国、般若党の壊滅など）。幕府が 1
+          になる場面はありません。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
@@ -764,7 +770,9 @@ function FactionExitCard({ view }: { view: FactionExitView | null }) {
             label={flag.label}
             offset={flag.offset}
             badges={
-              flag.confirmed ? undefined : <CertaintyBadge mark="❓" text="書き換えの反映は未確認" />
+              flag.confirmed ? undefined : (
+                <CertaintyBadge mark="❓" text="書き換えの反映は未確認" />
+              )
             }
             value={view ? String(view.values[i]) : null}
             currentLabel={view ? `${view.values[i]} 不明` : undefined}
@@ -784,49 +792,68 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
 
+  const section = (group: WorldFlagGroup, title?: string) => (
+    <section className="flex flex-col gap-3">
+      {title && <h3 className="text-sm font-medium">{title}</h3>}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {WORLD_FLAGS.map((flag, i) => {
+          if (flag.group !== group) return null;
+          const paired = view?.paired[i] ?? null;
+          // 一緒に書くバイトと値が食い違うときは、どの候補とも一致しない値として出す
+          const mismatch = view !== null && paired !== null && paired !== view.values[i];
+          return (
+            <SelectRow
+              key={flag.offset}
+              label={flag.label}
+              offset={flag.offset}
+              value={
+                view ? (mismatch ? `${view.values[i]}/${paired}` : String(view.values[i])) : null
+              }
+              currentLabel={
+                view
+                  ? mismatch
+                    ? `${formatOffset(flag.offset)}=${view.values[i]}・${formatOffset(flag.pairedOffset!)}=${paired} 不一致`
+                    : `${view.values[i]} 不明`
+                  : undefined
+              }
+              options={worldFlagOptions[flag.meaning]}
+              problem={view?.problem ?? null}
+              hint={flag.hint}
+              note={flag.note}
+              onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>門・柵のフラグ</CardTitle>
         <CardDescription>
-          神社は「入口の柵」と「洞窟内の柵」が別々の閉鎖フラグです。
-          洞窟内の柵（0x3761）は、1 で降りて通行を塞ぐことを確認済みです。
-          0 に戻したときの上昇・通行の回復は要ゲーム内確認です。
-          代官所の表門（0x37FA）・居留地の外門（0x3764）・神社入口の柵（0x37C3）は、
-          1 → 0 で開くことを確認済みです。裏門（0x37FB）の反映は要ゲーム内確認です。
-          🟢 閉鎖フラグは大寄せ前にも有効で、0 は閉鎖の指定を解除する値です。
-          初日昼勧誘フラグ（0x377D〜0x377F）は序章〜1日目昼（段階 ≤100）の開放判定に使われ、1 で開きます。
-          ルートやイベントの条件によっても閉じるため、0 にするだけで必ず開くとは限りません。
+          神社は「入口の柵」と「洞窟内の柵」が別々の閉鎖フラグです。 洞窟内の柵（0x3761）は、1
+          で降りて通行を塞ぐことを確認済みです。 0
+          に戻したときの上昇・通行の回復は要ゲーム内確認です。
+          代官所の表門（0x37FA）・居留地の外門（0x3764）・神社入口の柵（0x37C3）は、 1 → 0
+          で開くことを確認済みです。裏門（0x37FB）の反映は要ゲーム内確認です。 🟢
+          閉鎖フラグは大寄せ前にも有効で、0 は閉鎖の指定を解除する値です。
+          初日昼勧誘フラグ（0x377D〜0x377F）は序章〜1日目昼（段階 ≤100）の開放判定に使われ、1
+          で開きます。 ルートやイベントの条件によっても閉じるため、0
+          にするだけで必ず開くとは限りません。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        {([
-          { meaning: "open", title: "初日勧誘（1日目昼のみ影響）" },
-          { meaning: "close", title: "閉鎖（1日目夕～大老の大寄せまで）" },
-        ] as const).map((group) => (
-          <section key={group.meaning} className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium">{group.title}</h3>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {WORLD_FLAGS.map((flag, i) => flag.meaning === group.meaning ? (
-                <SelectRow
-                  key={flag.offset}
-                  label={flag.label}
-                  offset={flag.offset}
-                  value={view ? String(view.values[i]) : null}
-                  currentLabel={view ? `${view.values[i]} 不明` : undefined}
-                  options={worldFlagOptions[flag.meaning]}
-                  problem={view?.problem ?? null}
-                  note={flag.note}
-                  onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
-                />
-              ) : null)}
-            </div>
-          </section>
-        ))}
+        {section("recruit", "初日勧誘（1日目昼のみ影響）")}
+        {section("close", "閉鎖（1日目夕～大老の大寄せまで）")}
         <section className="flex flex-col gap-2">
           <h3 className="text-sm font-medium">大老の大寄せ以降</h3>
           <p className="text-sm text-muted-foreground">
-            🟢 <a href="#post-tournament-route" className="text-primary underline underline-offset-4">剣術大会以後のルート分岐</a>
+            🟢{" "}
+            <a href="#post-tournament-route" className="text-primary underline underline-offset-4">
+              剣術大会以後のルート分岐
+            </a>
             が 02 になった段階で、対応する勢力の門・柵が閉じます。
           </p>
           <p className="text-sm text-muted-foreground">
@@ -834,15 +861,72 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
             大寄せ以降は閉鎖フラグを 0 にしても、ルート分岐が 02 なら閉じます。
           </p>
         </section>
+        {section("door")}
       </CardContent>
     </Card>
   );
 }
 
-/** 門・施設・人物以外で、1 になる場面の分かったフラグ（生の値＋候補） */
-function ScenarioFlagsCard() {
-  const { save, update } = useSave();
+/** 1 になる場面の分かったフラグ1つ分の欄（生の値＋候補）。view が null ならセーブ未読み込み */
+function ScenarioFlagField({ index, view }: { index: number; view: ScenarioFlagsView | null }) {
+  const { update } = useSave();
   const { advanced } = useAdvancedMode();
+  const flag = SCENARIO_FLAGS[index];
+
+  return (
+    <SelectRow
+      label={flag.label}
+      offset={flag.offset}
+      badges={flag.certainty === "🔶" ? <CertaintyBadge mark="🔶" text="意味は推測" /> : undefined}
+      value={view ? String(view.values[index]) : null}
+      currentLabel={view ? `${view.values[index]} 不明` : undefined}
+      options={flag.values.map((v) => ({ value: String(v.value), label: v.label }))}
+      problem={view?.problem ?? null}
+      note={flag.note}
+      onChange={(v) => update((b) => writeScenarioFlag(b, index, Number(v), { advanced }))}
+    />
+  );
+}
+
+/** 真ルートの範囲（0x378D〜0x37AA）のバイト1つ分の欄。値の表から選ぶ。view が null ならセーブ未読み込み */
+function RouteCandidateField({
+  offset,
+  view,
+  badges,
+}: {
+  offset: number;
+  view: RouteCandidatesView | null;
+  badges?: ReactNode;
+}) {
+  const { update } = useSave();
+  const { advanced } = useAdvancedMode();
+  const info = ROUTE_CANDIDATE_NOTES[offset];
+  const current = view?.values[offset - ROUTE_CANDIDATE_START] ?? null;
+
+  return (
+    <SelectRow
+      label={info.name ?? formatOffset(offset)}
+      offset={offset}
+      badges={badges}
+      value={current === null ? null : String(current)}
+      currentLabel={current === null ? undefined : `${current} 不明`}
+      options={info.values.map((v) => ({ value: String(v.value), label: `${v.value} ${v.label}` }))}
+      problem={view?.problem ?? null}
+      note={info.note}
+      hint={info.effect}
+      onChange={(v) => update((b) => writeRouteCandidate(b, offset, Number(v), { advanced }))}
+    />
+  );
+}
+
+const NPC_ROUTE_OFFSET_LIST: readonly number[] = Object.values(NPC_ROUTE_OFFSETS);
+
+/**
+ * イベントで値が変わる、またはイベントを変えるフラグ（生の値＋候補）。
+ * route は真ルートの範囲の生の値（鍛冶屋・道場のバイトは NPCイベントフラグに出す）
+ */
+function EventFlagsCard({ route }: { route: RouteCandidatesView | null }) {
+  const { save } = useSave();
   const view = useMemo((): ScenarioFlagsView | null => {
     if (!save) return null;
     try {
@@ -852,48 +936,33 @@ function ScenarioFlagsCard() {
     }
   }, [save]);
 
+  // 位置の順に並べる
+  const fields = [
+    ...SCENARIO_FLAGS.map((flag, i) => ({
+      offset: flag.offset,
+      node: <ScenarioFlagField key={flag.offset} index={i} view={view} />,
+    })),
+    ...RAW_ROUTE_OFFSETS.filter((o) => !NPC_ROUTE_OFFSET_LIST.includes(o)).map((offset) => ({
+      offset,
+      node: <RouteCandidateField key={offset} offset={offset} view={route} />,
+    })),
+  ].sort((a, b) => a.offset - b.offset);
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>そのほかのフラグ</CardTitle>
+        <CardTitle>イベント関連フラグ</CardTitle>
         <CardDescription>
-          値が変わる場面だけが分かっているフラグです。書き換えたときにゲームへどう反映されるかは確かめていません（要ゲーム内確認）。
+          イベントで値が変わるフラグと、イベントの起き方を変えるフラグです。説明は、値が変わる場面と、値によって変わるイベントです。
+          書き換えたときにゲームへどう反映されるかは確かめていません（要ゲーム内確認）。
           通常モードでは、その場面で現れる値だけを選べます。
+          {route?.warning && ` ${route.warning}`}
         </CardDescription>
         <div className="flex flex-wrap gap-2">
           <CertaintyBadge mark="❓" text="書き換えの反映は未確認" />
         </div>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        {SCENARIO_FLAGS.map((flag, i) => {
-          const paired = view?.paired[i] ?? null;
-          // 一緒に書くバイトと値が食い違うときは、どの候補とも一致しない値として出す
-          const mismatch = view !== null && paired !== null && paired !== view.values[i];
-          return (
-            <SelectRow
-              key={flag.offset}
-              label={flag.label}
-              offset={flag.offset}
-              badges={
-                flag.certainty === "🔶" ? <CertaintyBadge mark="🔶" text="意味は推測" /> : undefined
-              }
-              value={view ? (mismatch ? `${view.values[i]}/${paired}` : String(view.values[i])) : null}
-              currentLabel={
-                view
-                  ? mismatch
-                    ? `0x${flag.offset.toString(16).toUpperCase()}=${view.values[i]}・0x${flag.pairedOffset!.toString(16).toUpperCase()}=${paired} 不一致`
-                    : `${view.values[i]} 不明`
-                  : undefined
-              }
-              options={flag.values.map((v) => ({ value: String(v.value), label: v.label }))}
-              problem={view?.problem ?? null}
-              hint={flag.hint}
-              note={flag.note}
-              onChange={(v) => update((b) => writeScenarioFlag(b, i, Number(v), { advanced }))}
-            />
-          );
-        })}
-      </CardContent>
+      <CardContent className="grid gap-4 sm:grid-cols-3">{fields.map((f) => f.node)}</CardContent>
     </Card>
   );
 }
@@ -1018,6 +1087,7 @@ function TownsfolkField({ offset, view }: { offset: number; view: TownsfolkView 
       }))}
       problem={view?.problem ?? null}
       note={info.note}
+      hint={info.effect}
       onChange={(v) => update((b) => writeTownsfolk(b, offset, Number(v), { advanced }))}
     />
   );
@@ -1083,26 +1153,64 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
   );
 }
 
-/** 🟢 なりわいの画面で扱わない、意味の分かったなりわいのフラグ。view が null ならセーブ未読み込み */
-function TownsfolkCard({ view }: { view: TownsfolkView | null }) {
-  // なりわいのフラグ（連続なりわいなど）はなりわいの画面で編集する
-  const named = Object.keys(TOWNSFOLK_NOTES)
-    .map(Number)
-    .filter((o) => !OCCUPATION_FLAG_OFFSETS.includes(o));
+/**
+ * 🟢 町の人（鍛冶屋・道場など）のイベントのフラグ。なりわいのフラグのうちなりわいの画面で扱わないものと、
+ * 真ルートの範囲の堂島・先生の職（0x3799・0x379A）。view・route が null ならセーブ未読み込み
+ */
+function NpcFlagsCard({
+  view,
+  route,
+}: {
+  view: TownsfolkView | null;
+  route: RouteCandidatesView | null;
+}) {
+  const grouped: readonly number[] = [
+    ...TOWNSFOLK_FLAG_GROUPS.smith,
+    ...TOWNSFOLK_FLAG_GROUPS.dojo,
+  ];
+  const groups = [
+    {
+      title: "鍛冶屋",
+      townsfolk: TOWNSFOLK_FLAG_GROUPS.smith,
+      route: [NPC_ROUTE_OFFSETS.smith],
+    },
+    {
+      title: "道場・先生",
+      townsfolk: TOWNSFOLK_FLAG_GROUPS.dojo,
+      route: [NPC_ROUTE_OFFSETS.dojo],
+    },
+    {
+      title: "その他",
+      townsfolk: OTHER_TOWNSFOLK_OFFSETS.filter((o) => !grouped.includes(o)),
+      route: [],
+    },
+  ];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">なりわいのフラグ（道場・鍛冶屋など）</CardTitle>
+        <CardTitle>NPCイベントフラグ</CardTitle>
         <CardDescription>
-          0x011C〜0x015B のなりわいのフラグのうち、意味の分かったものです。連続なりわいの進み具合などは「なりわい」の画面で編集します。
+          町の人のイベントの進み具合のフラグです。0x011C〜0x015B
+          のなりわいのフラグのうち意味の分かったものと、
+          堂島・先生の職（0x3799・0x379A）です。連続なりわいの進み具合などは「なりわい」の画面で編集します。
           鍛冶屋の後継者イベント・鍛冶屋の状態と、堂島が鍛冶屋を継いだか（周回後に誰が鍛冶屋になるかを決める）は、書き換えで確認済みです。
           そのほかのフラグの書き換えの効果は要ゲーム内確認です。エリア移動・ロードで消えるフラグは載せていません。
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        {named.map((offset) => (
-          <TownsfolkField key={offset} offset={offset} view={view} />
+      <CardContent className="flex flex-col gap-6">
+        {groups.map((g) => (
+          <section key={g.title} className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium">{g.title}</h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {g.townsfolk.map((offset) => (
+                <TownsfolkField key={offset} offset={offset} view={view} />
+              ))}
+              {g.route.map((offset) => (
+                <RouteCandidateField key={offset} offset={offset} view={route} />
+              ))}
+            </div>
+          </section>
         ))}
       </CardContent>
     </Card>
@@ -1115,7 +1223,7 @@ const bestRouteOptions: SelectOption[] = BEST_ROUTE_VALUES.map((v) => ({
 }));
 
 /**
- * 真ルート（0x378E）と、その周り 0x378D〜0x37AA の生の値。view が null ならセーブ未読み込み。
+ * 真ルート（0x378E）。周りのバイトはイベント関連フラグ・NPCイベントフラグに出す。view が null ならセーブ未読み込み。
  * sisters は三姉妹見参（イベント添字70）の状態 A
  */
 function RouteCandidatesCard({
@@ -1138,59 +1246,22 @@ function RouteCandidatesCard({
           病院（0x375D）が閉じていると赤城が死に、再起の望みより後ろのイベントが起きません。
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <SelectRow
-            label="ルート"
-            offset={BEST_ROUTE_OFFSET}
-            value={view ? String(view.best) : null}
-            currentLabel={view ? `${view.best} 不明` : undefined}
-            options={bestRouteOptions}
-            problem={view?.bestProblem ?? null}
-            hint={
-              sisters === null
-                ? undefined
-                : `今の三姉妹見参の状態：${formatHex2(sisters)}${sisters === 0x04 ? "（成功。真ルートが効く）" : "（成功ではないので、1 にしても通常ルートのまま）"}`
-            }
-            note="1 にしただけでは通常ルートのまま。三姉妹見参の状態も 04（成功）にすると真ルート（お早い到着）に入る。0 にすると通常ルートに戻る。2 は真ルートを外れた状態（再起の望みで小暮が死ぬ、怒りの矛先の成功、闇討ちの失敗、傷心の帰国船の成功などで 2 になり、周回中は戻らない）。2 で大通りに行くと大老暗殺計画が起きる。真ルートを過去の周回で記録していないと、正規のプレイでもチャートに失敗したイベントや先のイベントの枠が出ない"
-            onChange={(v) => update((b) => writeBestRoute(b, Number(v), { advanced }))}
-          />
-        </div>
-
-        <div className="flex flex-col gap-3 border-t pt-4">
-          <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-            周辺のフラグ
-            <CertaintyBadge mark="🔶" text="書き換えたときのゲーム内の反映は未確認" />
-          </div>
-          <p className="text-muted-foreground text-xs">
-            0x378D は序章のあとの道筋（1＝通常の1〜3日目、2＝真ルートに入った）です。書き換えても、ルートは変わりませんでした。
-            0x378F〜0x3791 は世界の画面の「勢力の退場」、0x3792〜0x3797 は夜這いの画面で編集できます。
-            この範囲には、堂島・先生のなりわいや黒船など、真ルートに関係しないバイトも入っています。ゲームが使わないバイトは載せていません。説明は、そのバイトが変わる場面です。書き換えたときのゲーム内の反映は確かめていません。
-            {view?.warning && ` ${view.warning}`}
-          </p>
-          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {RAW_ROUTE_OFFSETS.map((offset) => {
-              const info = ROUTE_CANDIDATE_NOTES[offset];
-              return (
-                <FieldRow
-                  key={offset}
-                  label={info?.name ?? `0x${offset.toString(16).toUpperCase()}`}
-                  offset={offset}
-                  value={view?.values[offset - ROUTE_CANDIDATE_START] ?? null}
-                  problem={view?.problem ?? null}
-                  format={String}
-                  parse={(input) =>
-                    parseInteger(input, (v) => validateRouteCandidate(v, { advanced, offset }))
-                  }
-                  apply={(v) => update((b) => writeRouteCandidate(b, offset, v, { advanced }))}
-                  inputMode="numeric"
-                  hint={advanced ? "0〜255" : `0〜${routeCandidateNormalMax(offset)}`}
-                  note={info?.note}
-                />
-              );
-            })}
-          </div>
-        </div>
+      <CardContent className="grid gap-4 sm:grid-cols-3">
+        <SelectRow
+          label="ルート"
+          offset={BEST_ROUTE_OFFSET}
+          value={view ? String(view.best) : null}
+          currentLabel={view ? `${view.best} 不明` : undefined}
+          options={bestRouteOptions}
+          problem={view?.bestProblem ?? null}
+          hint={
+            sisters === null
+              ? undefined
+              : `今の三姉妹見参の状態：${formatHex2(sisters)}${sisters === 0x04 ? "（成功。真ルートが効く）" : "（成功ではないので、1 にしても通常ルートのまま）"}`
+          }
+          note="1 にしただけでは通常ルートのまま。三姉妹見参の状態も 04（成功）にすると真ルート（お早い到着）に入る。0 にすると通常ルートに戻る。2 は真ルートを外れた状態（再起の望みで小暮が死ぬ、怒りの矛先の成功、闇討ちの失敗、傷心の帰国船の成功などで 2 になり、周回中は戻らない）。2 で大通りに行くと大老暗殺計画が起きる。真ルートを過去の周回で記録していないと、正規のプレイでもチャートに失敗したイベントや先のイベントの枠が出ない"
+          onChange={(v) => update((b) => writeBestRoute(b, Number(v), { advanced }))}
+        />
       </CardContent>
     </Card>
   );
@@ -1240,7 +1311,7 @@ function RouteJudgeRows({
                 ? `今の記録なら大寄せで${routeEligible(factions.values, c, factions.moro) ? "入れる" : "入れない"}（友好度 ${factions.values[0][c]} − ${factions.values[1][c]} ＝ ${factions.values[0][c] - factions.values[1][c]}${c === 0 && factions.moro === MORO_DEAD ? "。茂呂が死亡" : ""}）`
                 : undefined
             }
-            note={`大寄せのときに書かれる。友好度（友好度 + − 友好度 −）が ${ROUTE_THRESHOLD} 以上で 01（入れる）、それ未満で 02（入れない）。敵対状態は関係しない。${c === 0 ? "幕府は茂呂（0x3752）が死亡（01）だと友好度にかかわらず 02。" : ""}大寄せのあと、ほかの勢力の剣術大会の誘いを引き受けると 02、その勢力の人物に斬りかかっても 02、最後通告に逆らうと 3勢力とも 02`}
+            note={`大寄せのときに書かれる。友好度（友好ポイント - 対立ポイント）が ${ROUTE_THRESHOLD} 以上で 01（入れる）、それ未満で 02（入れない）。敵対状態は関係しない。${c === 0 ? "幕府は茂呂（0x3752）が死亡（01）だと友好度にかかわらず 02。" : ""}大寄せのあと、ほかの勢力の剣術大会の誘いを引き受けると 02、その勢力の人物に斬りかかっても 02、最後通告に逆らうと 3勢力とも 02`}
             onChange={(v) => update((b) => writeRouteJudge(b, c, Number(v), { advanced }))}
           />
         ))}
@@ -1273,10 +1344,10 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
       <CardHeader>
         <CardTitle>勢力の記録</CardTitle>
         <CardDescription>
-          0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。 友好度は「友好度
-          +（協力・成功）− 友好度 −（不利益・敵対行為）」です（Wiki の説明と差分が合う）。
+          0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。
+          友好度は「友好ポイント（協力・成功）− 対立ポイント（不利益・敵対行為）」。
           大寄せの時点で友好度が 3
-          以上の勢力のルートに入れます（書き換えで確認済み）。幕府は茂呂が生きていることも条件です。
+          以上の勢力のルートに入れます。幕府は茂呂が生きていることも条件です。
           友好度そのもの（符号つきの値）は別の場所にある可能性があります。
         </CardDescription>
       </CardHeader>

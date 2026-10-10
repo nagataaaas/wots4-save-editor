@@ -25,7 +25,10 @@ const NO_ROUTE = [1, 1, 1, 1, 0, 1, 0, 1];
 
 function makeSave(values: number[], size = TS_SAVE_SIZE): Uint8Array {
   const b = new Uint8Array(size);
-  WORLD_FLAGS.forEach((f, i) => writeU8(b, f.offset, values[i] ?? 0));
+  WORLD_FLAGS.forEach((f, i) => {
+    writeU8(b, f.offset, values[i] ?? 0);
+    if (f.pairedOffset !== undefined) writeU8(b, f.pairedOffset, values[i] ?? 0);
+  });
   // 意味の分からないバイト（UI に出さない）も置き、書き込みで変わらないことを見る
   writeU8(b, 0x37a2, 2);
   writeU8(b, 0x377c, 1);
@@ -39,11 +42,15 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 }
 
 describe("門・柵のフラグ chunks/gates", () => {
-  it("大寄せ以降と大寄せ前の、代官所・居留地・神社の門を読む", () => {
+  it("大寄せ以降と大寄せ前の、代官所・居留地・神社の門と、代官所の拷問部屋の扉を読む", () => {
     expect(WORLD_FLAGS.map((f) => f.offset)).toEqual([
-      0x37fa, 0x37fb, 0x3764, 0x37c3, 0x377d, 0x377e, 0x377f, 0x3761,
+      0x37fa, 0x37fb, 0x3764, 0x37c3, 0x377d, 0x377e, 0x377f, 0x3761, 0x3762,
     ]);
-    expect(readWorldFlags(makeSave(NO_ROUTE))).toEqual({ values: NO_ROUTE, problem: null });
+    expect(readWorldFlags(makeSave(NO_ROUTE))).toEqual({
+      values: [...NO_ROUTE, 0],
+      paired: [null, null, null, null, null, null, null, null, 0],
+      problem: null,
+    });
   });
 
   it("✅ [U] 大寄せ以降の門は 1 で閉じ、大寄せ前の門は 1 で開く（0x37FB の 1＝閉じるは 🔶）", () => {
@@ -56,6 +63,18 @@ describe("門・柵のフラグ chunks/gates", () => {
       "open",
       "open",
       "close",
+      "close",
+    ]);
+    expect(WORLD_FLAGS.map((f) => f.group)).toEqual([
+      "close",
+      "close",
+      "close",
+      "close",
+      "recruit",
+      "recruit",
+      "recruit",
+      "close",
+      "door",
     ]);
   });
 
@@ -83,12 +102,14 @@ describe("門・柵のフラグ chunks/gates", () => {
     expect(readWorldFlags(makeSave(NO_ROUTE, TS_SAVE_SIZE + 4)).problem).not.toBeNull();
   });
 
-  it("書き込みは、そのフラグの1バイトだけを変える", () => {
+  it("書き込みは、そのフラグの1バイト（拷問部屋の扉は2バイト）だけを変える", () => {
     WORLD_FLAGS.forEach((f, i) => {
       const before = makeSave(NO_ROUTE);
       const after = before.slice();
-      writeWorldFlag(after, i, NO_ROUTE[i] ^ 1, { advanced: false });
-      expect(diffOffsets(before, after)).toEqual([f.offset]);
+      writeWorldFlag(after, i, (NO_ROUTE[i] ?? 0) ^ 1, { advanced: false });
+      expect(diffOffsets(before, after)).toEqual(
+        f.pairedOffset === undefined ? [f.offset] : [f.offset, f.pairedOffset],
+      );
     });
   });
 
@@ -110,74 +131,93 @@ describe("門・柵のフラグ chunks/gates", () => {
   });
 });
 
-// そのほかのフラグ（chunks/scenario-flags）。どれも 🟢 1 になる場面だけが分かっていて、
-// 書き換えたときのゲーム内の反映は要ゲーム内確認。0x37C0（黒船の大砲）は意味が 🔶、
-// 0x3762・0x3763（代官所の拷問塔の扉。1 以上で閉）は意味が 🟢 で、1つの欄にまとめて両方へ同じ値を書く。
-// ほかは 1 のとき何が変わるかが ❓。
+// 代官所の拷問塔の扉（chunks/scenario-flags）。🟢 0x3762（拷問部屋）と 0x3763（拷問塔の区画の入口）を
+// 1つの欄にまとめて両方へ同じ値を書く。1 以上で閉じる。扉の見た目は要ゲーム内確認。
+describe("代官所 拷問部屋の扉（門・柵のフラグに置く）", () => {
+  const TORTURE = WORLD_FLAGS.findIndex((f) => f.offset === 0x3762);
+  /** 大寄せ以降で門がすべて閉じ、大老と三姉妹の前（0x3762・0x3763 が 1） */
+  const VALUES = [...NO_ROUTE, 1];
+
+  it("🟢 0x3763 と組にして、門・柵のフラグの「代官所の扉」に置く", () => {
+    const torture = WORLD_FLAGS[TORTURE];
+    expect(torture).toMatchObject({
+      offset: 0x3762,
+      pairedOffset: 0x3763,
+      label: "代官所 拷問部屋の扉",
+      meaning: "close",
+      group: "door",
+      hint: "1日目昼または「大老と三姉妹」が成功していない場合はフラグに関わらず閉じます",
+    });
+    expect(SCENARIO_FLAGS.some((f) => f.offset === 0x3762 || f.offset === 0x3763)).toBe(false);
+  });
+
+  it("2バイトを読み、食い違っていてもそのまま読む。書き込むと両方がそろう", () => {
+    const b = makeSave(VALUES);
+    const paired = WORLD_FLAGS.map((f) => (f.pairedOffset === undefined ? null : 1));
+    expect(readWorldFlags(b)).toEqual({ values: VALUES, paired, problem: null });
+    writeU8(b, 0x3763, 0);
+    const view = readWorldFlags(b);
+    expect(view.values[TORTURE]).toBe(1);
+    expect(view.paired[TORTURE]).toBe(0);
+    expect(view.problem).toBeNull();
+    writeWorldFlag(b, TORTURE, 0, { advanced: false });
+    expect([b[0x3762], b[0x3763]]).toEqual([0, 0]);
+  });
+
+  it("どちらかのバイトが 0・1 以外なら読み取り専用にする", () => {
+    const b = makeSave(VALUES);
+    writeU8(b, 0x3763, 2);
+    expect(readWorldFlags(b).problem).not.toBeNull();
+  });
+});
+
+// そのほかのフラグ（chunks/scenario-flags）。シナリオの画面の「イベント関連フラグ」に出す。
+// どれも 🟢 1 になる場面が分かっていて、書き換えたときのゲーム内の反映は要ゲーム内確認。
+// 0x37C0（黒船の大砲）は意味が 🔶、0x37C6（1 のとき領事館の中に入れない）は意味が 🟢、0x3760 は 1 になる場面が ❓。
+// 0x37AB（剣術大会で勝ち抜いた試合数）・0x37F7・0x37F8（剣術大会でまだら・メリンダに勝った）は画面に出さない（ユーザー判断 2026-10-10）。
 describe("そのほかのフラグ chunks/scenario-flags", () => {
-  /**
-   * SCENARIO_FLAGS の順。大寄せで外国ルートに入れず（0x37C6 が 1）、
-   * 大老と三姉妹の前（0x3762・0x3763 が 1）、剣術大会で2試合勝ち抜いたところ、という合成の値
-   */
-  const VALUES = [1, 1, 0, 2, 0, 0, 0];
+  /** SCENARIO_FLAGS の順。大寄せで外国ルートに入れず（0x37C6 が 1）、黒船の大砲を譲っていない、という合成の値 */
+  const VALUES = [1, 0, 0];
 
   function makeOther(values: number[], size = TS_SAVE_SIZE): Uint8Array {
     const b = new Uint8Array(size);
-    SCENARIO_FLAGS.forEach((f, i) => {
-      writeU8(b, f.offset, values[i]);
-      if (f.pairedOffset !== undefined) writeU8(b, f.pairedOffset, values[i]);
-    });
-    // 隣のバイト（門 0x3764・0x37C3、真ルートの範囲 0x37A2）も置き、書き込みで変わらないことを見る
+    SCENARIO_FLAGS.forEach((f, i) => writeU8(b, f.offset, values[i]));
+    // 隣のバイト（門 0x3764・0x37C3、拷問塔の扉 0x3762・0x3763、真ルートの範囲 0x37A2）も置き、書き込みで変わらないことを見る
     writeU8(b, 0x3764, 1);
     writeU8(b, 0x37c3, 1);
+    writeU8(b, 0x3762, 1);
+    writeU8(b, 0x3763, 1);
     writeU8(b, 0x37a2, 2);
     return b;
   }
 
   it("位置と候補の値", () => {
-    expect(SCENARIO_FLAGS.map((f) => f.offset)).toEqual([
-      0x37c6, 0x3762, 0x3760, 0x37ab, 0x37f7, 0x37f8, 0x37c0,
+    expect(SCENARIO_FLAGS.map((f) => f.offset)).toEqual([0x37c6, 0x3760, 0x37c0]);
+    // 🟢 0x37C6 は 1 のとき領事館の中に入れない（表示は要ゲーム内確認）
+    const consulate = SCENARIO_FLAGS[0];
+    expect(consulate.label).toBe("領事館の中に入れない");
+    expect(consulate.values).toEqual([
+      { value: 0, label: "0 入れる" },
+      { value: 1, label: "1 入れない" },
     ]);
-    // 🟢 拷問塔の扉は 0x3762（拷問部屋）と 0x3763（拷問塔の区画の入口）をまとめる。1＝閉じる、0＝開く
-    const torture = SCENARIO_FLAGS[1];
-    expect(torture.pairedOffset).toBe(0x3763);
-    expect(torture.label).toBe("代官所 拷問部屋の扉");
-    expect(torture.values).toEqual([
-      { value: 0, label: "0 開く" },
-      { value: 1, label: "1 閉じる" },
-    ]);
-    expect(torture.hint).toBe(
-      "1日目昼または「大老と三姉妹」が成功していない場合はフラグに関わらず閉じます",
-    );
-    expect(torture.certainty).toBe("🟢");
-    // 🟢 剣術大会で勝ち抜いた試合数は 0〜3
-    expect(SCENARIO_FLAGS[3].values.map((v) => v.value)).toEqual([0, 1, 2, 3]);
+    expect(consulate.certainty).toBe("🟢");
     // 🔶 意味に推測が入るのは 0x37C0
     expect(SCENARIO_FLAGS.filter((f) => f.certainty === "🔶").map((f) => f.offset)).toEqual([
       0x37c0,
     ]);
+    // 剣術大会の 0x37AB・0x37F7・0x37F8 は出さない
+    for (const o of [0x37ab, 0x37f7, 0x37f8])
+      expect(SCENARIO_FLAGS.some((f) => f.offset === o)).toBe(false);
     // 門と重ならない
     const gates = new Set(WORLD_FLAGS.map((f) => f.offset));
     expect(SCENARIO_FLAGS.some((f) => gates.has(f.offset))).toBe(false);
   });
 
   it("生の値を読む。候補にない値でも読み取り専用にしない", () => {
-    const paired = [null, 1, null, null, null, null, null];
-    expect(readScenarioFlags(makeOther(VALUES))).toEqual({ values: VALUES, paired, problem: null });
+    expect(readScenarioFlags(makeOther(VALUES))).toEqual({ values: VALUES, problem: null });
     const odd = [...VALUES];
     odd[0] = 7;
-    expect(readScenarioFlags(makeOther(odd))).toEqual({ values: odd, paired, problem: null });
-  });
-
-  it("拷問塔の扉の2バイトが食い違っていても、そのまま読む", () => {
-    const b = makeOther(VALUES);
-    writeU8(b, 0x3763, 0);
-    const view = readScenarioFlags(b);
-    expect(view.values[1]).toBe(1);
-    expect(view.paired[1]).toBe(0);
-    // 書き込むと両方がそろう
-    writeScenarioFlag(b, 1, 0, { advanced: false });
-    expect([b[0x3762], b[0x3763]]).toEqual([0, 0]);
+    expect(readScenarioFlags(makeOther(odd))).toEqual({ values: odd, problem: null });
   });
 
   it("サイズが 0x48BB0 でなければ読み取り専用にする", () => {
@@ -186,27 +226,22 @@ describe("そのほかのフラグ chunks/scenario-flags", () => {
     expect(() => writeScenarioFlag(b, 0, 0, { advanced: true })).toThrow(RangeError);
   });
 
-  it("書き込みは、そのフラグのバイト（拷問塔の扉は2バイト）だけを変える", () => {
+  it("書き込みは、そのフラグの1バイトだけを変える", () => {
     SCENARIO_FLAGS.forEach((f, i) => {
       const before = makeOther(VALUES);
       const after = before.slice();
       writeScenarioFlag(after, i, VALUES[i] === 0 ? 1 : 0, { advanced: false });
-      expect(diffOffsets(before, after)).toEqual(
-        f.pairedOffset === undefined ? [f.offset] : [f.offset, f.pairedOffset],
-      );
+      expect(diffOffsets(before, after)).toEqual([f.offset]);
     });
   });
 
   it("通常モードは候補の値だけ。上級者モードでは任意の u8", () => {
     const b = makeOther(VALUES);
     expect(() => writeScenarioFlag(b, 0, 2, { advanced: false })).toThrow(RangeError);
-    expect(() => writeScenarioFlag(b, 3, 4, { advanced: false })).toThrow(RangeError);
     expect(() => writeScenarioFlag(b, SCENARIO_FLAGS.length, 0, { advanced: false })).toThrow(
       RangeError,
     );
     expect(() => writeScenarioFlag(b, 0, 0x100, { advanced: true })).toThrow(RangeError);
-    writeScenarioFlag(b, 3, 3, { advanced: false });
-    expect(b[0x37ab]).toBe(3);
     writeScenarioFlag(b, 0, 2, { advanced: true });
     expect(b[0x37c6]).toBe(2);
   });

@@ -10,6 +10,7 @@ import {
   OCCUPATION_FLAG_COUNT,
   OCCUPATION_FLAG_OFFSETS,
   OCCUPATION_FLAG_START,
+  OTHER_TOWNSFOLK_OFFSETS,
   PERSON_COUNT,
   PERSON_RECORDS_START,
   GANGSTER_SERIES_VALUES,
@@ -26,6 +27,7 @@ import {
   SMITH_STATES,
   SMITH_STATE_OFFSET,
   TOWNSFOLK_END,
+  TOWNSFOLK_FLAG_GROUPS,
   TOWNSFOLK_LENGTH,
   TOWNSFOLK_NOTES,
   TOWNSFOLK_START,
@@ -128,6 +130,28 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
     expect(UNUSED_OCCUPATION_FLAGS).toHaveLength(35)
   })
 
+  it('NPCイベントフラグの分け方：鍛冶屋・道場と、そのほか（写真家・辻斬り・夜這い仲間）', () => {
+    expect(TOWNSFOLK_FLAG_GROUPS.smith).toEqual([0x0127, 0x0132])
+    expect(TOWNSFOLK_FLAG_GROUPS.dojo).toEqual([0x0126, 0x0129, 0x012d, 0x012e, 0x0130, 0x0131])
+    const grouped: number[] = [...TOWNSFOLK_FLAG_GROUPS.smith, ...TOWNSFOLK_FLAG_GROUPS.dojo]
+    // 分けたフラグは、どれもなりわいの画面で扱わない意味の分かったフラグ
+    for (const o of grouped) expect(OTHER_TOWNSFOLK_OFFSETS).toContain(o)
+    expect(OTHER_TOWNSFOLK_OFFSETS.filter((o) => !grouped.includes(o))).toEqual([
+      occupationFlagOffset(16),
+      occupationFlagOffset(23),
+      occupationFlagOffset(24),
+    ])
+    for (const o of OTHER_TOWNSFOLK_OFFSETS) expect(OCCUPATION_FLAG_OFFSETS).not.toContain(o)
+  })
+
+  it('🟢 先生の段階（番号 10）は、仕事探し・道場・手合わせの値を選べる（74 は書く場面がないので載せない）', () => {
+    const note = TOWNSFOLK_NOTES[0x0126]
+    expect(note.values?.map(({ value }) => value)).toEqual([
+      0, 1, 2, 3, 9, 10, 11, 19, 20, 21, 29, 30, 31, 40, 41, 49, 50, 60, 70, 71, 72, 73, 75, 76, 77, 79, 80, 99,
+    ])
+    expect(note.values?.find((v) => v.value === 50)?.label).toBe('道場の師範代を引き受けた')
+  })
+
   it('🟢 ぢぢい（番号 13）の値は、東急流の段ではなく聞いた話を表示する', () => {
     const note = TOWNSFOLK_NOTES[0x0129]
     expect(note.values?.map(({ value, label }) => [value, label])).toEqual([
@@ -161,7 +185,7 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
   })
 
   it('✅ [U] 0x0132 は堂島が鍛冶屋を継いだフラグ（0／1 を表から選ぶ）', () => {
-    expect(TOWNSFOLK_NOTES[0x0132].name).toBe('堂島が鍛冶屋を継いだ')
+    expect(TOWNSFOLK_NOTES[0x0132].name).toBe('堂島が鍛冶屋')
     expect(TOWNSFOLK_NOTES[0x0132].values?.map((v) => v.value)).toEqual([0, 1])
     const b = makeSave()
     writeTownsfolk(b, 0x0132, 1, { advanced: false })
