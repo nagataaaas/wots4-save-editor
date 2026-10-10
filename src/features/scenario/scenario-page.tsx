@@ -257,14 +257,12 @@ export function EventsPage() {
             events={views?.events ?? null}
             counts={views?.cycle ?? null}
             top={
-              <>
-                <BestRouteRow
-                  view={views?.routeCandidates ?? null}
-                  sisters={views?.events.entries[BEST_ROUTE_EVENT_INDEX]?.state ?? null}
-                />
-                <BulkEventsPanel problem={views?.events.problem ?? null} disabled={!views} />
-              </>
+              <BestRouteRow
+                view={views?.routeCandidates ?? null}
+                sisters={views?.events.entries[BEST_ROUTE_EVENT_INDEX]?.state ?? null}
+              />
             }
+            bottom={<BulkEventsPanel problem={views?.events.problem ?? null} disabled={!views} />}
           />
           <FactionCard
             key={`${k}-factions`}
@@ -1120,8 +1118,8 @@ function BestRouteRow({
   const { advanced } = useAdvancedMode();
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border p-3">
-      <div className="text-sm font-medium">真ルート</div>
+    <section className="flex flex-col gap-3">
+      <h3 className="text-sm font-medium">真ルート</h3>
       <p className="text-muted-foreground text-xs">
         0x378E が 1 で真ルートです（書き換えで確認済み）。ただし、三姉妹見参（イベント
         {BEST_ROUTE_EVENT_INDEX}）が成功（04）でないと効きません。
@@ -1144,7 +1142,7 @@ function BestRouteRow({
           onChange={(v) => update((b) => writeBestRoute(b, Number(v), { advanced }))}
         />
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -1280,7 +1278,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
 }
 
 /**
- * デバッグ用：状態・チャート表示を、イベントと対応のついた添字すべてにまとめて書く。イベントチャートの上に出す。
+ * デバッグ用：状態・チャート表示を、イベントと対応のついた添字すべてにまとめて書く。イベントチャートの下に出す。
  * 対応のない添字（47〜50・67・84 など）は対象にしない（ユーザー判断 2026-10-06）
  */
 function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabled: boolean }) {
@@ -1301,11 +1299,11 @@ function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabl
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-dashed p-3">
-      <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+    <section className="flex flex-col gap-3">
+      <h3 className="flex flex-wrap items-center gap-2 text-sm font-medium">
         一括設定（デバッグ用）
         <CertaintyBadge mark="❓" text="ゲームへの影響は未確認" />
-      </div>
+      </h3>
       <p className="text-muted-foreground text-xs">
         名前の付いたイベント（{namedIndices().length}件）すべてに、同じ値をまとめて書きます。
         チャートに出ない添字（47〜50・67・84）は対象にしません。
@@ -1352,7 +1350,7 @@ function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabl
       </div>
       {problem && <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>}
       {error && <p className="text-destructive text-xs">{error}</p>}
-    </div>
+    </section>
   );
 }
 

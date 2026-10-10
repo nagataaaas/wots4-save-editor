@@ -75,16 +75,18 @@ const MASKED = { fill: "#7A7A7A", stroke: "#111111", text: "#D4D4D4" };
 
 /**
  * イベントチャートのカード。events・counts が null ならセーブ未読み込みで、全部の枠を名前つきで描く。
- * top はチャートの上（凡例の前）に並べる欄（真ルート・一括設定）
+ * top はチャートの上（凡例の前）に並べる欄（真ルート）、bottom はチャートの下に並べる欄（一括設定）
  */
 export function EventChartCard({
   events,
   counts,
   top,
+  bottom,
 }: {
   events: EventsView | null;
   counts: CycleCountsView | null;
   top?: ReactNode;
+  bottom?: ReactNode;
 }) {
   const { save } = useSave();
   const view = useMemo(
@@ -134,6 +136,7 @@ export function EventChartCard({
           </p>
         )}
         <ChartCanvas key={save?.loadId ?? 0} events={events} view={view} revealNames={revealNames} />
+        {bottom}
       </CardContent>
     </Card>
   );
