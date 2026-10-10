@@ -695,14 +695,10 @@ export const TOWNSFOLK_PEOPLE: readonly TownsfolkPerson[] = [
       [72, nameOf.npc(16)],
       [80, nameOf.npc(211)],
       [81, nameOf.npc(215)],
+      [200, nameOf.npc(97)],
     ] as const
   ).map(([p, name]) => ({ p, name, group: "その他" })),
-  ...(
-    [
-      [200, nameOf.npc(97)],
-      [201, nameOf.npc(94)],
-    ] as const
-  ).map(([p, name]) => ({ p, name, group: "重要人物" })),
+  ...([[201, nameOf.npc(94)]] as const).map(([p, name]) => ({ p, name, group: "重要人物" })),
 ].map((x) => ({ ...x, certainty: [22, 30, 62].includes(x.p) ? "✅" : "🟢" }) as TownsfolkPerson);
 
 const PERSON_BY_NUMBER = new Map(TOWNSFOLK_PEOPLE.map((x) => [x.p, x]));
@@ -714,16 +710,10 @@ const PERSON_BY_NUMBER = new Map(TOWNSFOLK_PEOPLE.map((x) => [x.p, x]));
  */
 export function reviveNote(p: number): string | null {
   if (p >= 10 && p <= 23) {
-    const extra =
-      p === 22
-        ? "。鍛冶屋に戻すには職（0x3799）となりわいのフラグ 22 も戻す"
-        : p === 23
-          ? "。道場に戻すには職（0x379A）となりわいのフラグ 21 も戻す"
-          : "";
-    return `人物の状態（0x${(0x3744 + p).toString(16).toUpperCase()}）も 0 にしないと町に出てこない${extra}`;
+    return `人物の状態（0x${(0x3744 + p).toString(16).toUpperCase()}）も 0 にしないと町に出てこない`;
   }
-  if (p === 30) return "町には出るが、店とイベントは 0x37F9 も 0 にしないと死んだ扱いのまま";
-  if (p === 55) return "町には出るが、店とイベントは 0x375C も 0 にしないと死んだ扱いのまま";
+  if (p === 30) return "人物の状態 も 0 にしないと死んだ扱いのまま";
+  if (p === 55) return "人物の状態 も 0 にしないと死んだ扱いのまま";
   return null;
 }
 
