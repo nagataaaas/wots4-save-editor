@@ -1159,7 +1159,7 @@ function RouteCandidatesCard({
 
         <div className="flex flex-col gap-3 border-t pt-4">
           <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-            周りのバイト（生の値）
+            周辺のフラグ
             <CertaintyBadge mark="🔶" text="書き換えたときのゲーム内の反映は未確認" />
           </div>
           <p className="text-muted-foreground text-xs">
