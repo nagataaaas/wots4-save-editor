@@ -254,6 +254,7 @@ function PersonFieldEditor({
         value={current}
         problem={problem}
         format={String}
+        display={field === "age" ? (v) => (v === AGE_UNKNOWN ? "？" : String(v)) : undefined}
         parse={(input) => parseNumber(input, validate)}
         apply={apply}
         inputMode="numeric"
