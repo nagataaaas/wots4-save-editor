@@ -1171,11 +1171,10 @@ function RouteCandidatesCard({
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {RAW_ROUTE_OFFSETS.map((offset) => {
               const info = ROUTE_CANDIDATE_NOTES[offset];
-              const hex = `0x${offset.toString(16).toUpperCase()}`;
               return (
                 <FieldRow
                   key={offset}
-                  label={info?.name ? `${hex}（${info.name}）` : hex}
+                  label={info?.name ?? `0x${offset.toString(16).toUpperCase()}`}
                   offset={offset}
                   value={view?.values[offset - ROUTE_CANDIDATE_START] ?? null}
                   problem={view?.problem ?? null}
