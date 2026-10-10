@@ -30,7 +30,7 @@
 // 🟢 0x37AA  チュートリアルの進み方。1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）
 // 範囲の中には、真ルートに関係しないバイト（好感度・なりわいなど）も入っている（範囲は差分から取ったもの）。
 // 0x378F〜0x3797 はほかの画面（勢力の退場・夜這い）で編集するので、生の値の欄には出さない。
-// 使われていないバイト（0x3798・0x379C〜0x379E・0x37A5〜0x37A7・0x37A9）も出さない。
+// 使われていないバイト（0x3798・0x379C〜0x379E・0x37A5〜0x37A7・0x37A9）と、0x379B・0x379F・0x37A0・0x37AA も出さない。
 // 0x378E 以外は、書き換えたときのゲーム内の反映を確かめていないので、生の値の欄として出す（AGENTS.md「未確認データの扱い」）。
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
@@ -77,7 +77,18 @@ export const UNUSED_ROUTE_OFFSETS: ReadonlySet<number> = new Set([
   0x3798, 0x379c, 0x379d, 0x379e, 0x37a5, 0x37a6, 0x37a7, 0x37a9,
 ]);
 
-/** 生の値で出すオフセット（真ルートのフラグ、ほかの画面で編集するバイト、使われていないバイトを除く） */
+/**
+ * 使われているが生の値の欄に出さないバイト（ユーザー判断 2026-10-10）：
+ * 0x379B 朱美を送った印、0x379F 序章の大砲、0x37A0 欺きの代価の結果、0x37AA チュートリアルの進み方
+ */
+export const OMITTED_ROUTE_OFFSETS: ReadonlySet<number> = new Set([0x379b, 0x379f, 0x37a0, 0x37aa]);
+
+/** 生の値の欄に出さないバイト（使われていないバイトと、出さないと決めたバイト） */
+function isHiddenRouteOffset(offset: number): boolean {
+  return UNUSED_ROUTE_OFFSETS.has(offset) || OMITTED_ROUTE_OFFSETS.has(offset);
+}
+
+/** 生の値で出すオフセット（真ルートのフラグ、ほかの画面で編集するバイト、出さないバイトを除く） */
 export const RAW_ROUTE_OFFSETS: readonly number[] = Array.from(
   { length: ROUTE_CANDIDATE_LENGTH },
   (_, i) => ROUTE_CANDIDATE_START + i,
@@ -85,7 +96,7 @@ export const RAW_ROUTE_OFFSETS: readonly number[] = Array.from(
   (o) =>
     o !== BEST_ROUTE_OFFSET &&
     (o < ELSEWHERE_ROUTE_START || o > ELSEWHERE_ROUTE_END) &&
-    !UNUSED_ROUTE_OFFSETS.has(o),
+    !isHiddenRouteOffset(o),
 );
 
 /** 生の値の欄に出すバイトの名前と説明（🟢） */
@@ -109,12 +120,6 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; not
       "1＝主人公の道場の師範代（死ぬ・追い出す・道場を失うと 0）。周回をまたいで残る。1 だと表彰式に先生が出ず、道場破りを先生が追い払う。" +
       "町に出るかはなりわいのフラグ 21 が決める",
   },
-  0x379b: { name: "朱美を送った印", note: "真実・夜の墓場でで朱美を送ると 1。1 のあいだ居酒屋へ移動できない" },
-  0x379f: {
-    name: "序章の大砲",
-    note: "阿弥浜港争乱で大砲の般若党を倒すと 1。0 だと三姉妹見参が起きない。書き換えてもルートは変わらなかった",
-  },
-  0x37a0: { name: "欺きの代価の結果", note: "一人で剣崎を倒すと 1。1 なら終わりに報酬が出る。このイベントの中だけで使う" },
   0x37a1: { name: "小公女の薬", note: "小公女倒れるで薬を持っている。町の薬屋で 1、小公女倒れるの成功で 0" },
   // 🟢（1 と 2 を書き分ける意図だけ 🔶）
   0x37a2: {
@@ -137,10 +142,6 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; not
       "2＝去った（傷心の帰国船・鬼怒川の魔手・夕暮れの船上・破滅への道。甲板へ移動できない）",
   },
   0x37a8: { name: "最後通告に逆らった", note: "最後通告に逆らうと 1。1 のあいだ、夜に町へ出る雑魚が暗闇脳天になる" },
-  0x37aa: {
-    name: "チュートリアルの進み方",
-    note: "1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）。真ルートとは関係しない",
-  },
 };
 
 export type RouteCandidatesView = {
@@ -158,10 +159,10 @@ export function readRouteCandidates(bytes: Uint8Array): RouteCandidatesView {
   const values = Array.from({ length: ROUTE_CANDIDATE_LENGTH }, (_, i) =>
     readU8(bytes, ROUTE_CANDIDATE_START + i),
   );
-  // 使われていないバイトは欄に出さないので、警告の対象にもしない
+  // 欄に出さないバイトは、警告の対象にもしない
   const bad = values.findIndex(
     (v, i) =>
-      !UNUSED_ROUTE_OFFSETS.has(ROUTE_CANDIDATE_START + i) &&
+      !isHiddenRouteOffset(ROUTE_CANDIDATE_START + i) &&
       v > routeCandidateNormalMax(ROUTE_CANDIDATE_START + i),
   );
   const warning =

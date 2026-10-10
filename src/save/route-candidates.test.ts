@@ -16,6 +16,7 @@ import {
   ROUTE_CANDIDATE_END,
   ROUTE_CANDIDATE_LENGTH,
   ROUTE_CANDIDATE_START,
+  OMITTED_ROUTE_OFFSETS,
   UNUSED_ROUTE_OFFSETS,
   readRouteCandidates,
   routeCandidateNormalMax,
@@ -58,7 +59,7 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
   it('✅ [U] 真ルートは 0x378E。三姉妹見参（添字70）と組で効く。生の値の欄には出さない', () => {
     expect(BEST_ROUTE_OFFSET).toBe(0x378e)
     expect(BEST_ROUTE_EVENT_INDEX).toBe(70)
-    expect(RAW_ROUTE_OFFSETS).toHaveLength(12)
+    expect(RAW_ROUTE_OFFSETS).toHaveLength(8)
     expect(RAW_ROUTE_OFFSETS).not.toContain(0x378e)
   })
 
@@ -95,9 +96,19 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
       expect(ROUTE_CANDIDATE_NOTES[o]?.note, `0x${o.toString(16)}`).toBeTruthy()
     }
     expect(ROUTE_CANDIDATE_NOTES[0x378d].name).toBe('序章のあとの道筋')
-    expect(ROUTE_CANDIDATE_NOTES[0x379f].name).toBe('序章の大砲')
     expect(ROUTE_CANDIDATE_NOTES[0x37a1].name).toBe('小公女の薬')
-    expect(ROUTE_CANDIDATE_NOTES[0x37aa].name).toBe('チュートリアルの進み方')
+  })
+
+  it('0x379B・0x379F・0x37A0・0x37AA は生の値の欄に出さない（ユーザー判断 2026-10-10）', () => {
+    const omitted = [0x379b, 0x379f, 0x37a0, 0x37aa]
+    expect([...OMITTED_ROUTE_OFFSETS].sort((a, b) => a - b)).toEqual(omitted)
+    for (const o of omitted) {
+      expect(RAW_ROUTE_OFFSETS).not.toContain(o)
+      expect(ROUTE_CANDIDATE_NOTES[o]).toBeUndefined()
+    }
+    const values = BEST.slice()
+    values[0x37aa - ROUTE_CANDIDATE_START] = 5
+    expect(readRouteCandidates(makeSave(values)).warning).toBeNull()
   })
 
   it('🟢 堂島・先生のなりわい、般若党の本拠（1 と 2 は効果が同じ）、会談の手紙、黒船、最後通告', () => {
