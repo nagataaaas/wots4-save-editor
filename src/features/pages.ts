@@ -1,14 +1,13 @@
 import type { ComponentType } from 'react'
 import { HeroAppearancePage } from '@/features/hero/hero-appearance-page'
 import { BeltPage } from '@/features/belt/belt-page'
-import { EventChartPage } from '@/features/event-chart/event-chart-page'
 import { HeroPage } from '@/features/hero/hero-page'
 import { MarketWeaponsPage } from '@/features/market-weapons/market-weapons-page'
 import { OccupationPage } from '@/features/occupation/occupation-page'
 import { OreRyuPage } from '@/features/styles/ore-ryu-page'
 import { SkillsPage } from '@/features/styles/skills-page'
 import { StylesPage } from '@/features/styles/styles-page'
-import { ScenarioPage, WorldPage } from '@/features/scenario/scenario-page'
+import { AmihamaPage, EventsPage, NpcPage } from '@/features/scenario/scenario-page'
 import { StatsPage } from '@/features/stats/stats-page'
 import { ChestPage, ToolsPage } from '@/features/tools/tools-page'
 import { AccessoriesPage, AppearancePage, UnlocksPage } from '@/features/unlocks/unlocks-page'
@@ -33,9 +32,9 @@ export const pages: Partial<Record<SectionId, ComponentType>> = {
   accessories: AccessoriesPage,
   appearance: AppearancePage,
   unlocks: UnlocksPage,
-  world: WorldPage,
-  scenario: ScenarioPage,
-  'event-chart': EventChartPage,
+  world: AmihamaPage,
+  npc: NpcPage,
+  'event-chart': EventsPage,
   occupation: OccupationPage,
   yobai: YobaiPage,
   styles: StylesPage,

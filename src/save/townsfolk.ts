@@ -745,7 +745,7 @@ export const TOWNSFOLK_NOTES: Readonly<Record<number, TownsfolkNote>> = {
 };
 
 /**
- * なりわいの画面で扱わない、意味の分かったなりわいのフラグの分け方（シナリオの画面の「NPCイベントフラグ」）。
+ * なりわいの画面で扱わない、意味の分かったなりわいのフラグの分け方（世界 / NPC の画面の「NPCイベントフラグ」）。
  * 鍛冶屋・道場に入らないものは「その他」に出す
  */
 export const TOWNSFOLK_FLAG_GROUPS = {

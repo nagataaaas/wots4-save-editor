@@ -258,14 +258,14 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
         <CardTitle>難易度・主人公設定のやり直し</CardTitle>
         <CardDescription>
           次のロードの「続きから」で、難易度と主人公の設定に進むようにします（確認済み）。イベントの状態は今の周回のままなので、序章のイベントは始まらず、セーブした場所から続きます。
-          周回をはじめからやり直すときは、「世界」画面の「新しい周回を始める」を使います。
+          周回をはじめからやり直すときは、「世界 / 阿弥浜」画面の「新しい周回」を使います。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <Label>難易度と主人公設定</Label>
           <InfoTip offset={DATE_OFFSETS.dayTime}>
-            段階 0x0010（u16）だけを 0 にします。ほかのバイトは変えません。0 から元の段階に戻すときは「世界」画面の段階の欄で選び直してください
+            段階 0x0010（u16）だけを 0 にします。ほかのバイトは変えません。0 から元の段階に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください
           </InfoTip>
         </div>
         <Button

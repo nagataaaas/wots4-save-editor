@@ -1,6 +1,5 @@
-import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { SelectRow } from "@/components/select-row";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -9,7 +8,7 @@ import { recordOptions, stateOptions } from "@/features/scenario/event-options";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatHex2 } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
-import { PLAY_COUNT_REVEALS_BEST_ROUTE, readCycleCounts } from "@/save/cycle-counts";
+import { PLAY_COUNT_REVEALS_BEST_ROUTE, type CycleCountsView } from "@/save/cycle-counts";
 import {
   chartViewWithoutSave,
   computeChartView,
@@ -34,15 +33,12 @@ import {
   eventNameOf,
   EVENT_RECORD_OFFSET,
   EVENT_STATE_OFFSET,
-  readEvents,
   recordLabel,
   stateLabel,
   writeEventRecord,
   writeEventState,
   type EventsView,
 } from "@/save/scenario-events";
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 // 描く大きさ（px）。格子の偶数の列は枠の列、奇数の列は線の列
 const FRAME_COL_PX = 118;
@@ -77,91 +73,69 @@ const ROUTE_COLORS: Readonly<Record<ChartRoute, { fill: string; stroke: string; 
 const LEGEND_ROUTES: readonly ChartRoute[] = ["prajna", "shogunate", "foreigners", "other", "best"];
 const MASKED = { fill: "#7A7A7A", stroke: "#111111", text: "#D4D4D4" };
 
-type Read = { events: EventsView; view: ChartView; playCount: number; clearTotal: number } | { error: string } | null;
-
-export function EventChartPage() {
+/**
+ * イベントチャートのカード。events・counts が null ならセーブ未読み込みで、全部の枠を名前つきで描く。
+ * top はチャートの上（凡例の前）に並べる欄（真ルート・一括設定）
+ */
+export function EventChartCard({
+  events,
+  counts,
+  top,
+}: {
+  events: EventsView | null;
+  counts: CycleCountsView | null;
+  top?: ReactNode;
+}) {
   const { save } = useSave();
-
-  const result = useMemo((): Read => {
-    if (!save) return null;
-    try {
-      const b = save.working;
-      const events = readEvents(b);
-      const counts = readCycleCounts(b);
-      return {
-        events,
-        playCount: counts.playCount,
-        clearTotal: counts.clearTotal,
-        view: computeChartView({ entries: events.entries, playCount: counts.playCount, clearTotal: counts.clearTotal }),
-      };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
+  const view = useMemo(
+    () =>
+      events && counts
+        ? computeChartView({ entries: events.entries, playCount: counts.playCount, clearTotal: counts.clearTotal })
+        : chartViewWithoutSave(),
+    [events, counts],
+  );
+  const loaded = events !== null && counts !== null;
   // 名前が隠れる枠に、？？？の代わりに名前を出す。既定は隠す（ユーザー判断 2026-10-07）
   const [revealNames, setRevealNames] = useState(false);
-  const noSave = useMemo(() => chartViewWithoutSave(), []);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
 
   return (
-    <div className="flex flex-col gap-4">
-      {!result && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>
-            全部の枠を名前つきで描いています。サイドバーの「ファイルを開く」から読み込むと、セーブの状態に合わせて描き分け、枠をクリックして状態を編集できます。
-          </AlertDescription>
-        </Alert>
-      )}
-      <Card>
-        <CardHeader>
-          <CardTitle>イベントチャート</CardTitle>
-          <CardDescription>
-            ゲームの「状況」のチャートを、ゲームと同じ升の並びと規則で、イベントの状態（0x36A8＋添字）・チャート表示の記録（0x3838＋添字）・周回数（0x0B8C）から描いたものです。
-            状態が 03・04 か記録が 04 の枠は名前が出て、それ以外は「？？？」です。状態が 05 の枠と、後ろの段階に進んだのに何もしなかった時間帯の枠には失敗の印が付きます。
-            赤い線は、今の周回で到達した枠（状態 03〜05、時間帯を過ぎて失敗）どうしをつなぐ道です。
-            真ルートの枠は、状態が 03・04 か記録が 04 のときだけ出ます（周回数が {PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら全部出ます）。ゲームで出ない升は点線で薄く描いています。
-            ゲームは「いま始められるイベント」も到達した枠として扱いますが、それはセーブだけでは決まらないので、ここでは描いていません。
-            真ルートの扱い・赤い線・カーソルの範囲は、ゲームのデータから読んだ規則で、ゲーム内では確かめていません（要ゲーム内確認）。
-            {result &&
-              ` 周回数：${result.playCount.toLocaleString()}、クリア回数の合計：${result.clearTotal.toLocaleString()}`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Legend />
-            <div className="flex items-center gap-2">
-              <Switch id="reveal-names" checked={revealNames} onCheckedChange={setRevealNames} />
-              <Label htmlFor="reveal-names" className="text-xs">
-                隠れた名前を表示する
-              </Label>
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>イベントチャート</CardTitle>
+        <CardDescription>
+          ゲームの「状況」のチャートを、ゲームと同じ升の並びと規則で、イベントの状態（0x36A8＋添字）・チャート表示の記録（0x3838＋添字）・周回数（0x0B8C）から描いたものです。
+          状態が 03・04 か記録が 04 の枠は名前が出て、それ以外は「？？？」です。状態が 05 の枠と、後ろの段階に進んだのに何もしなかった時間帯の枠には失敗の印が付きます。
+          赤い線は、今の周回で到達した枠（状態 03〜05、時間帯を過ぎて失敗）どうしをつなぐ道です。
+          真ルートの枠は、状態が 03・04 か記録が 04 のときだけ出ます（周回数が {PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら全部出ます）。ゲームで出ない升は点線で薄く描いています。
+          ゲームは「いま始められるイベント」も到達した枠として扱いますが、それはセーブだけでは決まらないので、ここでは描いていません。
+          真ルートの扱い・赤い線・カーソルの範囲は、ゲームのデータから読んだ規則で、ゲーム内では確かめていません（要ゲーム内確認）。
+          {loaded
+            ? ` 周回数：${counts.playCount.toLocaleString()}、クリア回数の合計：${counts.clearTotal.toLocaleString()}。枠をクリックすると状態を編集できます。`
+            : " セーブを読み込むまでは、全部の枠を名前つきで描いています。"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        {top}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Legend />
+          <div className="flex items-center gap-2">
+            <Switch id="reveal-names" checked={revealNames} onCheckedChange={setRevealNames} />
+            <Label htmlFor="reveal-names" className="text-xs">
+              隠れた名前を表示する
+            </Label>
           </div>
-          {result && cursorLimited(result.view) && (
-            <p className="text-muted-foreground text-xs">
-              ゲームでは、カーソルは名前・進行中・失敗のどれかの枠のうち最も右の列（破線）より右へ動きません。
-              {result.view.scrollLocked
-                ? "まだ一度もクリアしていない（クリア回数の合計が 0）ので、左右のスクロールと縮小もできず、灰色の範囲はゲームの画面にほとんど入りません。"
-                : "クリアしたことがあるので、左右のスクロールと縮小で先の枠も見られます。"}
-            </p>
-          )}
-          <ChartCanvas
-            key={save?.loadId ?? 0}
-            events={result?.events ?? null}
-            view={result?.view ?? noSave}
-            revealNames={revealNames}
-          />
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+        {loaded && cursorLimited(view) && (
+          <p className="text-muted-foreground text-xs">
+            ゲームでは、カーソルは名前・進行中・失敗のどれかの枠のうち最も右の列（破線）より右へ動きません。
+            {view.scrollLocked
+              ? "まだ一度もクリアしていない（クリア回数の合計が 0）ので、左右のスクロールと縮小もできず、灰色の範囲はゲームの画面にほとんど入りません。"
+              : "クリアしたことがあるので、左右のスクロールと縮小で先の枠も見られます。"}
+          </p>
+        )}
+        <ChartCanvas key={save?.loadId ?? 0} events={events} view={view} revealNames={revealNames} />
+      </CardContent>
+    </Card>
   );
 }
 

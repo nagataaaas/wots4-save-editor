@@ -14,10 +14,7 @@ import {
   type CycleCountsView,
 } from "@/save/cycle-counts";
 import type { SelectOption } from "@/components/select-options";
-import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
-import { CHART_NODES, type ChartNodeEntry } from "@/save/master/chart-nodes";
-import { chartNodeLabel } from "@/save/master/labels";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -94,17 +91,6 @@ import {
   type RouteCandidatesView,
 } from "@/save/route-candidates";
 import {
-  HINT_DEFAULT_TEXT,
-  HINT_NONE,
-  HINT_NORMAL_MAX,
-  HINT_OFFSET,
-  hintLabel,
-  readHint,
-  validateHint,
-  writeHint,
-  type HintView,
-} from "@/save/hint";
-import {
   PUBLIC_ORDER_LEVELS,
   PUBLIC_ORDER_MAX,
   PUBLIC_ORDER_OFFSET,
@@ -160,23 +146,13 @@ import {
   type DateView,
 } from "@/save/scenario-date";
 import {
-  EVENT_LIST,
-  eventNameOf,
-  EVENT_RECORD_OFFSET,
-  EVENT_STATE_OFFSET,
-  EVENT_GAP_INDICES,
-  EVENT_GAP_NOTES,
   namedIndices,
   readEvents,
-  recordLabel,
-  stateLabel,
-  writeEventRecord,
   writeEventRecords,
-  writeEventState,
   writeEventStates,
-  type EventEntry,
   type EventsView,
 } from "@/save/scenario-events";
+import { EventChartCard } from "@/features/event-chart/event-chart-card";
 import { recordOptions, stateOptions } from "./event-options";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -194,7 +170,6 @@ type Views = {
   characters: CharactersView;
   townsfolk: TownsfolkView;
   routeCandidates: RouteCandidatesView;
-  hint: HintView;
   publicOrder: PublicOrderView;
 };
 
@@ -205,51 +180,15 @@ function parseInteger(input: string, validate: (v: number) => string | null): Pa
   return error ? { ok: false, error } : { ok: true, value };
 }
 
-/** シナリオ：イベント・フラグ・人物・真ルート・ヒント */
-export function ScenarioPage() {
+/** 世界 / 阿弥浜：難易度・治安・周回、段階・日数・時間帯、門・柵、施設（ユーザー判断 2026-10-11） */
+export function AmihamaPage() {
   return (
     <ViewsPage
       note={
         <>
           この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
-          event-chart・scenario-flags・characters・townsfolk・best-route・hint）。
-          イベントの失敗（05）・未到達（FF）、チャート表示は書き換えの反映を確認済みです。そのほかの値は確かめていません。
-        </>
-      }
-    >
-      {(views, k) => (
-        <>
-          <EventFlagsCard key={`${k}-event-flags`} route={views?.routeCandidates ?? null} />
-          <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
-          <PeopleCard key={`${k}-people`} view={views?.townsfolk ?? null} />
-          <NpcFlagsCard
-            key={`${k}-npc-flags`}
-            view={views?.townsfolk ?? null}
-            route={views?.routeCandidates ?? null}
-          />
-          <RouteCandidatesCard
-            key={`${k}-route-candidates`}
-            view={views?.routeCandidates ?? null}
-            sisters={views?.events.entries[BEST_ROUTE_EVENT_INDEX]?.state ?? null}
-          />
-          <HintCard key={`${k}-hint`} view={views?.hint ?? null} />
-          <EventsCard key={`${k}-events`} view={views?.events ?? null} />
-        </>
-      )}
-    </ViewsPage>
-  );
-}
-
-/** 世界：日数・時間帯、治安、勢力、門・柵、施設（ユーザー判断 2026-10-07） */
-export function WorldPage() {
-  return (
-    <ViewsPage
-      note={
-        <>
-          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
-          difficulty・date-location・factions・gates・facilities・best-route）。
-          難易度、新しい周回を始める書き込み、日数・時間帯、治安、勢力の友好度
-          +・−・敵対状態、勢力の退場は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+          difficulty・date-location・gates・facilities）。
+          難易度、新しい周回を始める書き込み、日数・時間帯、治安は書き換えの反映を確認済みです。そのほかの値は確かめていません。
         </>
       }
     >
@@ -259,17 +198,80 @@ export function WorldPage() {
             key={`${k}-cycle`}
             view={views?.difficulty ?? null}
             counts={views?.cycle ?? null}
+            publicOrder={views?.publicOrder ?? null}
           />
           <DateCard key={`${k}-date`} view={views?.date ?? null} />
-          <PublicOrderCard key={`${k}-public-order`} view={views?.publicOrder ?? null} />{" "}
+          <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
+          <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
+        </>
+      )}
+    </ViewsPage>
+  );
+}
+
+/** 世界 / NPC：勢力の退場、人物の状態、町の人の生死、NPCイベントフラグ（ユーザー判断 2026-10-11） */
+export function NpcPage() {
+  return (
+    <ViewsPage
+      note={
+        <>
+          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
+          factions・characters・townsfolk・best-route）。
+          勢力の退場は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+        </>
+      }
+    >
+      {(views, k) => (
+        <>
+          <FactionExitCard key={`${k}-faction-exit`} view={views?.factionExit ?? null} />
+          <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
+          <PeopleCard key={`${k}-people`} view={views?.townsfolk ?? null} />
+          <NpcFlagsCard
+            key={`${k}-npc-flags`}
+            view={views?.townsfolk ?? null}
+            route={views?.routeCandidates ?? null}
+          />
+        </>
+      )}
+    </ViewsPage>
+  );
+}
+
+/** 世界 / イベント：イベントチャート（真ルート・一括設定つき）、勢力の状態、イベント関連フラグ（ユーザー判断 2026-10-11） */
+export function EventsPage() {
+  return (
+    <ViewsPage
+      note={
+        <>
+          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
+          event-chart・best-route・factions・scenario-flags）。
+          イベントの失敗（05）・未到達（FF）、チャート表示、真ルート、勢力の友好度
+          +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
+        </>
+      }
+    >
+      {(views, k) => (
+        <>
+          <EventChartCard
+            key={`${k}-chart`}
+            events={views?.events ?? null}
+            counts={views?.cycle ?? null}
+            top={
+              <>
+                <BestRouteRow
+                  view={views?.routeCandidates ?? null}
+                  sisters={views?.events.entries[BEST_ROUTE_EVENT_INDEX]?.state ?? null}
+                />
+                <BulkEventsPanel problem={views?.events.problem ?? null} disabled={!views} />
+              </>
+            }
+          />
           <FactionCard
             key={`${k}-factions`}
             view={views?.factions ?? null}
             route={views?.route ?? null}
           />
-          <FactionExitCard key={`${k}-faction-exit`} view={views?.factionExit ?? null} />
-          <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
-          <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
+          <EventFlagsCard key={`${k}-event-flags`} route={views?.routeCandidates ?? null} />
         </>
       )}
     </ViewsPage>
@@ -304,7 +306,6 @@ function ViewsPage({
           characters: readCharacters(b),
           townsfolk: readTownsfolk(b),
           routeCandidates: readRouteCandidates(b),
-          hint: readHint(b),
           publicOrder: readPublicOrder(b),
         },
       };
@@ -385,13 +386,18 @@ function cycleReportText(r: NewCycleReport): string {
   return `${parts.join("、")}。${left.length ? `箪笥に入りきらず残ったもの：${left.join("、")}。` : ""}`;
 }
 
-/** 難易度（0x0000）、周回数（0x0B8C）と、新しい周回を始める書き込み（new-cycle.ts）。view が null ならセーブ未読み込み */
+/**
+ * 難易度（0x0000）、治安（0x0015。✅ [U] 書き換えはゲームに反映される）、周回数（0x0B8C）と、
+ * 新しい周回を始める書き込み（new-cycle.ts）。view が null ならセーブ未読み込み
+ */
 function CycleCard({
   view,
   counts,
+  publicOrder,
 }: {
   view: DifficultyView | null;
   counts: CycleCountsView | null;
+  publicOrder: PublicOrderView | null;
 }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -419,14 +425,17 @@ function CycleCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>難易度・周回</CardTitle>
+        <CardTitle>難易度・治安・周回</CardTitle>
         <CardDescription>
           難易度は 0x0000 の値です。易しい＝0・超難しい＝3
           は、スロット一覧の表示と一致しました。書き換えはゲーム内の難易度に反映されます（確認済み）。
+          治安（0x0015）は {publicOrderLevelsText} です。
           「新しい周回」は、物語を終えたときにゲームが行う引き継ぎと初期化を、同じ順序で行います。終わり方はクリア（結末を見た）か立ち去り（町を立ち去った）を選びます。
           次のロードの「続きから」で難易度と主人公の設定に進み、序章のイベント（船上の侍）から新しい周回として遊べます（以前の版で確認済み）。
           段階だけを 0 にして主人公の設定だけをやり直すときは、「主人公」画面のボタンを使います。
-          {view && ` 生の値：${view.value}`}
+          {view && ` 難易度の生の値：${view.value}`}
+          {publicOrder &&
+            `　治安の生の値：${publicOrder.value}（${formatHex2(publicOrder.value)}）${publicOrder.level ? `＝${publicOrder.level}` : ""}`}
           {counts &&
             `　クリア回数（0x43398〜、難易度ごと）：${counts.clears.join("・")}、立ち去った回数（0x46340）：${counts.goneCount}`}
         </CardDescription>
@@ -442,6 +451,19 @@ function CycleCard({
           warning={view?.warning}
           note="0x0000 の1バイトだけを書きます。普通＝1・難しい＝2 は 0 と 3 の間を埋めた推測です（🔶）。幅は u8 とみています（0x0001〜0x0007 は見たセーブではすべて 0）"
           onChange={(v) => update((b) => writeDifficulty(b, Number(v)))}
+        />
+        <FieldRow
+          label="治安"
+          offset={PUBLIC_ORDER_OFFSET}
+          value={publicOrder?.value ?? null}
+          problem={publicOrder?.problem ?? null}
+          warning={publicOrder?.warning}
+          format={String}
+          parse={(input) => parseInteger(input, (v) => validatePublicOrder(v, { advanced }))}
+          apply={(v) => update((b) => writePublicOrder(b, v, { advanced }))}
+          inputMode="numeric"
+          hint={advanced ? "0〜255" : `0〜${PUBLIC_ORDER_MAX}`}
+          note="0x0015 の1バイトだけを書きます。1日目のセーブで 0 の例があり、初期値 50 とは合いません（❓）"
         />
         <FieldRow
           label="周回数"
@@ -582,144 +604,6 @@ const publicOrderLevelsText = PUBLIC_ORDER_LEVELS.map(
   (l, i) =>
     `${l.label} ${l.min}〜${i === 0 ? PUBLIC_ORDER_MAX : PUBLIC_ORDER_LEVELS[i - 1].min - 1}`,
 ).join("／");
-
-/** 治安（0x0015。✅ [U] 書き換えはゲームに反映される）。view が null ならセーブ未読み込み */
-function PublicOrderCard({ view }: { view: PublicOrderView | null }) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">治安</CardTitle>
-        <CardDescription>
-          {publicOrderLevelsText}。
-          {view &&
-            ` 生の値：${view.value}（${formatHex2(view.value)}）${view.level ? `＝${view.level}` : ""}`}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        <FieldRow
-          label="治安"
-          offset={PUBLIC_ORDER_OFFSET}
-          value={view?.value ?? null}
-          problem={view?.problem ?? null}
-          warning={view?.warning}
-          format={String}
-          parse={(input) => parseInteger(input, (v) => validatePublicOrder(v, { advanced }))}
-          apply={(v) => update((b) => writePublicOrder(b, v, { advanced }))}
-          inputMode="numeric"
-          hint={advanced ? "0〜255" : `0〜${PUBLIC_ORDER_MAX}`}
-          note="0x0015 の1バイトだけを書きます。1日目のセーブで 0 の例があり、初期値 50 とは合いません（❓）"
-        />
-      </CardContent>
-    </Card>
-  );
-}
-
-/** 10進数か 0x 付きの16進数 */
-function parseHint(input: string, advanced: boolean): ParseResult<number> {
-  const s = input.trim();
-  let value: number;
-  if (/^0x[0-9a-f]+$/i.test(s)) value = Number.parseInt(s.slice(2), 16);
-  else if (/^\d+$/.test(s)) value = Number(s);
-  else return { ok: false, error: "整数（10進数、または 0x 付きの16進数）を入力してください" };
-  const error = validateHint(value, { advanced });
-  return error ? { ok: false, error } : { ok: true, value };
-}
-
-/** 次のイベントのヒント（0x3900）。view が null ならセーブ未読み込み */
-function HintCard({ view }: { view: HintView | null }) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          次のイベントのヒント
-          <CertaintyBadge mark="❓" text="2日目以降のノードのヒントの文は未確認" />
-        </CardTitle>
-        <CardDescription>
-          0x3900（u16）には、最後に状態を進めたイベントの、チャート上のノード番号（0〜
-          {HINT_NORMAL_MAX}）が入ります。
-          ゲームはこの番号からヒントの文を決めます。ノード番号はイベントの通し番号とは別です。
-          ヒントの文が分かっているのは1日目のノード 2〜10
-          だけです（🔶。6＝「港の様子でも見てみるか」は確認済み）。ほかのノードの文は未確認（❓）です。
-          {view &&
-            ` 現在の値：${hintLabel(view.value)}（0x${view.value.toString(16).toUpperCase().padStart(4, "0")}）。ヒントの文：${
-              view.text ? `「${view.text}」🔶` : "未確認 ❓"
-            }`}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <Alert>
-          <AlertTitle>🔶 時間帯が合わないと既定の文になります</AlertTitle>
-          <AlertDescription>
-            ノードの時間帯と現在の時間帯が合わないと、ヒントは既定の「{HINT_DEFAULT_TEXT}
-            」になります。
-            ヒントを変えたいときは、現在の時間帯の直前に当たるノードを選んでください（例：2日目昼のセーブに
-            7・13・18・83・89 を書くと既定の文でした）。
-          </AlertDescription>
-        </Alert>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <SearchSelectRow
-            label="ノード（イベント）"
-            offset={HINT_OFFSET}
-            searchPlaceholder="番号・イベント名・英語名で検索"
-            value={view ? String(view.value) : null}
-            currentLabel={view ? hintLabel(view.value) : undefined}
-            options={hintOptions}
-            problem={view?.problem ?? null}
-            warning={view?.warning}
-            hint="イベントに当たらないノード・表にない値は警告します"
-            note="🟢 ノードの表：datatable/event/chart-node.csv。1つのイベントが複数のノードを持つことがあります（大老暗殺計画は7つ など）。0xFFFF＝なし（🔶）"
-            onChange={(v) => update((b) => writeHint(b, Number(v), { advanced }))}
-          />
-          <FieldRow
-            label="生の値"
-            offset={HINT_OFFSET}
-            value={view?.value ?? null}
-            problem={view?.problem ?? null}
-            warning={view?.warning}
-            format={String}
-            parse={(input) => parseHint(input, advanced)}
-            apply={(v) => update((b) => writeHint(b, v, { advanced }))}
-            inputMode="text"
-            hint={
-              advanced
-                ? "0〜65535（0x 付きの16進数も可）"
-                : `0〜${HINT_NORMAL_MAX} か 65535（0xFFFF）`
-            }
-            note="0x3900〜0x3901 の2バイトだけを書きます。上級者モードでは任意の u16 を書けます"
-          />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/** 🟢 ノード 0〜118 と 🔶 0xFFFF（なし） */
-const hintOptionKeywords = (node: ChartNodeEntry) => [
-  String(node.id),
-  chartNodeLabel(node, ""),
-  chartNodeLabel(node, "", "en"),
-];
-
-const hintOptions: SelectOption[] = [
-  ...CHART_NODES.map((n) => ({
-    value: String(n.id),
-    label: hintLabel(n.id),
-    group: n.eventId === null ? "イベントに当たらないノード" : "イベントのノード",
-    keywords: hintOptionKeywords(n),
-  })),
-  {
-    value: String(HINT_NONE),
-    label: hintLabel(HINT_NONE),
-    group: "なし",
-    keywords: ["65535", "0xFFFF", "なし"],
-  },
-];
 
 const flagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
   close: [
@@ -1222,10 +1106,10 @@ const bestRouteOptions: SelectOption[] = BEST_ROUTE_VALUES.map((v) => ({
 }));
 
 /**
- * 真ルート（0x378E）。周りのバイトはイベント関連フラグ・NPCイベントフラグに出す。view が null ならセーブ未読み込み。
- * sisters は三姉妹見参（イベント添字70）の状態 A
+ * 真ルート（0x378E）。イベントチャートの上に出す。周りのバイトはイベント関連フラグ・NPCイベントフラグに出す。
+ * view が null ならセーブ未読み込み。sisters は三姉妹見参（イベント添字70）の状態 A
  */
-function RouteCandidatesCard({
+function BestRouteRow({
   view,
   sisters,
 }: {
@@ -1236,16 +1120,14 @@ function RouteCandidatesCard({
   const { advanced } = useAdvancedMode();
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>真ルート</CardTitle>
-        <CardDescription>
-          0x378E が 1 で真ルートです（書き換えで確認済み）。ただし、三姉妹見参（イベント
-          {BEST_ROUTE_EVENT_INDEX}）が成功（04）でないと効きません。
-          病院（0x375D）が閉じていると赤城が死に、再起の望みより後ろのイベントが起きません。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
+    <div className="flex flex-col gap-3 rounded-md border p-3">
+      <div className="text-sm font-medium">真ルート</div>
+      <p className="text-muted-foreground text-xs">
+        0x378E が 1 で真ルートです（書き換えで確認済み）。ただし、三姉妹見参（イベント
+        {BEST_ROUTE_EVENT_INDEX}）が成功（04）でないと効きません。
+        病院（0x375D）が閉じていると赤城が死に、再起の望みより後ろのイベントが起きません。
+      </p>
+      <div className="grid gap-4 sm:grid-cols-3">
         <SelectRow
           label="ルート"
           offset={BEST_ROUTE_OFFSET}
@@ -1261,8 +1143,8 @@ function RouteCandidatesCard({
           note="1 にしただけでは通常ルートのまま。三姉妹見参の状態も 04（成功）にすると真ルート（お早い到着）に入る。0 にすると通常ルートに戻る。2 は真ルートを外れた状態（再起の望みで小暮が死ぬ、怒りの矛先の成功、闇討ちの失敗、傷心の帰国船の成功などで 2 になり、周回中は戻らない）。2 で大通りに行くと大老暗殺計画が起きる。真ルートを過去の周回で記録していないと、正規のプレイでもチャートに失敗したイベントや先のイベントの枠が出ない"
           onChange={(v) => update((b) => writeBestRoute(b, Number(v), { advanced }))}
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -1341,7 +1223,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
   return (
     <Card>
       <CardHeader>
-        <CardTitle>勢力の記録</CardTitle>
+        <CardTitle>勢力の状態</CardTitle>
         <CardDescription>
           0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。
           友好度は「友好ポイント（協力・成功）− 対立ポイント（不利益・敵対行為）」。
@@ -1397,76 +1279,11 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
   );
 }
 
-/** イベントの状態。view が null ならセーブ未読み込み */
-function EventsCard({ view }: { view: EventsView | null }) {
-  const options = stateOptions;
-  // イベントと対応のついた添字だけを添字順に並べる。対応のない添字は表示しない（ユーザー判断 2026-10-06）
-  const indices = namedIndices();
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>イベントの状態</CardTitle>
-        <CardDescription>
-          「状態」は周回中の状態（0x36A8＋添字）です。失敗（05）と未到達（FF）は、書き換えでチャートの表示が変わることを確認済みです。
-          「チャート表示」は周回をまたぐ記録（0x3838＋添字、🔶 生きた証）で、FF
-          なら枠だけ出て名前が隠れ、04 なら名前が出ます（確認済み）。ただし FF
-          でも、状態が成功（04）のイベントは名前が出ます（確認済み）。
-          真ルートのイベントだけは、チャート表示が FF
-          だと、成功したもの以外は枠ごと出ません（正規のプレイでも同じ。真ルート以外は FF
-          でも失敗が出ます）。 チャート表示を 04
-          にすると、失敗したイベントも、まだ起きていない先のイベント（大老暗殺計画など）も出ます（確認済み）。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <BulkEventsPanel problem={view?.problem ?? null} disabled={!view} stateOptions={options} />
-        <div className="grid gap-4 sm:grid-cols-2">
-          {indices.map((i) => (
-            <EventBox
-              key={i}
-              index={i}
-              entry={view?.entries[i] ?? null}
-              problem={view?.problem ?? null}
-              options={options}
-            />
-          ))}
-        </div>
-
-        {/* 名前の付いた添字の間の欠番。チャートに出ない・起きない。フラグ確認用（ユーザー判断 2026-10-06） */}
-        <div className="flex flex-col gap-3 border-t pt-4">
-          <div className="text-sm font-medium">チャートに出ない添字（フラグ確認用）</div>
-          <p className="text-muted-foreground text-xs">
-            名前の付いた添字の間にある、チャートに出ない・ゲームで起きない添字です。 47〜50
-            は剣術大会（幕府・外国・攘夷・無所属）、67 は未実装とみられる悲しみのローラ、84
-            は名前の分からないローラの決意の導入です。 一括設定の対象にはしていません。
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {EVENT_GAP_INDICES.map((i) => (
-              <EventBox
-                key={i}
-                index={i}
-                entry={view?.entries[i] ?? null}
-                problem={view?.problem ?? null}
-                options={options}
-              />
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/** デバッグ用：状態・チャート表示を、イベントと対応のついた添字すべてにまとめて書く */
-function BulkEventsPanel({
-  problem,
-  disabled,
-  stateOptions,
-}: {
-  problem: string | null;
-  disabled: boolean;
-  stateOptions: SelectOption[];
-}) {
+/**
+ * デバッグ用：状態・チャート表示を、イベントと対応のついた添字すべてにまとめて書く。イベントチャートの上に出す。
+ * 対応のない添字（47〜50・67・84 など）は対象にしない（ユーザー判断 2026-10-06）
+ */
+function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabled: boolean }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const [state, setState] = useState<string>("");
@@ -1490,7 +1307,8 @@ function BulkEventsPanel({
         <CertaintyBadge mark="❓" text="ゲームへの影響は未確認" />
       </div>
       <p className="text-muted-foreground text-xs">
-        下に並んでいるイベント（{namedIndices().length}件）すべてに、同じ値をまとめて書きます。
+        名前の付いたイベント（{namedIndices().length}件）すべてに、同じ値をまとめて書きます。
+        チャートに出ない添字（47〜50・67・84）は対象にしません。
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex items-end gap-2">
@@ -1571,64 +1389,6 @@ function BulkSelect({
           ))}
         </SelectContent>
       </Select>
-    </div>
-  );
-}
-
-/** 1イベント分の枠。周回中の状態とチャート表示（記録）を並べる */
-function EventBox({
-  index,
-  entry,
-  problem,
-  options,
-}: {
-  index: number;
-  entry: EventEntry | null;
-  problem: string | null;
-  options: SelectOption[];
-}) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-  const name = EVENT_LIST[index];
-  const gap = EVENT_GAP_NOTES[index];
-  const title = name ? eventNameOf(index) : gap?.name;
-
-  return (
-    <div className="flex flex-col gap-3 rounded-md border p-3">
-      <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-        {title ? `${index}. ${title}` : `添字 ${index}`}
-        {/* ✅（チャートで確認）・🟢 の対応には確度のバッジを付けない */}
-        {name && <span className="text-muted-foreground text-xs font-normal">{name.day}</span>}
-        {gap &&
-          (gap.name ? (
-            <span className="text-muted-foreground text-xs font-normal">{gap.note}</span>
-          ) : (
-            <CertaintyBadge mark="❓" text={gap.note} />
-          ))}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <SelectRow
-          label="状態"
-          offset={EVENT_STATE_OFFSET + index}
-          value={entry ? String(entry.state) : null}
-          currentLabel={entry ? `${formatHex2(entry.state)} ${stateLabel(entry.state)}` : undefined}
-          options={options}
-          problem={problem}
-          onChange={(v) => update((b) => writeEventState(b, index, Number(v), { advanced }))}
-        />
-        <SelectRow
-          label="チャート表示"
-          offset={EVENT_RECORD_OFFSET + index}
-          value={entry ? String(entry.record) : null}
-          currentLabel={
-            entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined
-          }
-          options={recordOptions(advanced)}
-          problem={problem}
-          note="周回をまたぐ記録（生きた証）。FF で名前が隠れ、04 で名前が出る。FF でも状態が成功（04）なら出ます。真ルートのイベントは FF だと成功以外は枠ごと出ないので、ここを 04 にすると出ます（確認済み）。ほかの周回にも引き継がれる可能性があります"
-          onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
-        />
-      </div>
     </div>
   );
 }

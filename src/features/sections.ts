@@ -1,4 +1,4 @@
-import { Binary, ClipboardList, Flag, Globe, Moon, Package, ScrollText, Shirt, Store, Sword, User, Workflow, type LucideIcon } from 'lucide-react'
+import { Binary, ClipboardList, Globe, Moon, Package, ScrollText, Shirt, Store, Sword, User, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
 // 各領域の確度は docs/save_format/README.md §3 と各 chunk を参照（chunk 名を note に残す）。
@@ -17,7 +17,7 @@ export type SectionId =
   | 'appearance'
   | 'unlocks'
   | 'world'
-  | 'scenario'
+  | 'npc'
   | 'event-chart'
   | 'occupation'
   | 'yobai'
@@ -97,9 +97,15 @@ export const sectionGroups: SectionGroup[] = [
           { id: 'unlocks', label: '特典解除', note: 'unlocks 🔶 特典の状態（U-17）' },
         ],
       },
-      { id: 'world', label: '世界', icon: Globe, note: 'difficulty・date-location・factions・gates・facilities・best-route 🔶 難易度・周回、日数・時間帯、治安、勢力、勢力の退場、門・柵、施設' },
-      { id: 'scenario', label: 'シナリオ', icon: Flag, note: 'event-chart・scenario-flags・characters・best-route 🔶 イベントの状態、フラグ、人物、真ルート' },
-      { id: 'event-chart', label: 'イベントチャート', icon: Workflow, note: 'event-chart イベントの状態とチャート表示の記録', wide: true },
+      {
+        label: '世界',
+        icon: Globe,
+        sections: [
+          { id: 'world', label: '阿弥浜', note: 'difficulty・date-location・gates・facilities 🔶 難易度・治安・周回、段階・日数・時間帯、門・柵、施設' },
+          { id: 'npc', label: 'NPC', note: 'factions・characters・townsfolk・best-route 🔶 勢力の退場、人物の状態、町の人の生死、NPCイベントフラグ' },
+          { id: 'event-chart', label: 'イベント', note: 'event-chart・best-route・factions・scenario-flags 🔶 イベントチャート（真ルート・一括設定）、勢力の状態、イベント関連フラグ', wide: true },
+        ],
+      },
       { id: 'occupation', label: 'なりわい', icon: ClipboardList, note: 'occupation・townsfolk（なりわいのフラグ）状態の表・クリア数・連続なりわいの進み具合' },
       { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit 夜の約束（場所・人物）と夜這いの記録 🔶' },
       {
