@@ -13,8 +13,8 @@
 //               ただし序章のイベントは始まらず、セーブした場所から始まった。0 にする書き込みは new-cycle.ts
 //   0x0012 u8   時間帯を進める保留量。✅ [U] 10 → 0 の書き換えで、エリア移動しても時間帯が進まなくなった（2026-10-05）
 //
-// 段階は日数・時間帯と「連動」しているとき（1〜3日目の「日×100＋時間帯×10」か、4日目以降の 400）だけ、日数・時間帯の書き込みで一緒に書く。
-// 話の進み具合で決まる段階（0・410 以降など）のときは、日数・時間帯を変えても段階を変えない（[U] 2026-10-08 のユーザー判断）。
+// 段階と日数・時間帯は別々に書く。日数・時間帯を変えても段階は変えず、合っていなくても警告しない（[U] 2026-10-10 のユーザー判断）。
+// メインイベントが起きるかどうかは段階で決まり、日数・時間帯は影響しない。
 //
 // 4日目以降（🔶 03 copy 7・8・9、[U] 2026-10-05）：
 //   copy 7（5日目昼）＝0x0BD8 4・0x0014 0、copy 8（5日目夕）＝4・1、copy 9（6日目昼）＝5・0。いずれも 0x0010＝400。
@@ -87,11 +87,6 @@ export function stageOf(value: number): Stage | null {
   return STAGES.find((s) => s.value === value) ?? null
 }
 
-/** 日数・時間帯に連動しているときの段階。1〜3日目は「日×100＋時間帯×10」、4日目以降は 400 */
-export function linkedStage(day: number, slot: number): number {
-  return day <= 3 ? day * 100 + slot * 10 : DAY_TIME_AFTER_DAY3
-}
-
 export type DateView = {
   layoutProblem: string | null
   /** 0x0BD8＋1 */
@@ -101,8 +96,6 @@ export type DateView = {
   pending: number
   /** 0x0010 */
   stage: number
-  /** 段階が日数・時間帯と連動しているか（日数・時間帯を書くと段階も書く） */
-  linked: boolean
   raw: { dayTime: number; slot: number; dayIndex: number }
   /** 妥当性検証に落ちた理由。null なら編集可能 */
   problem: string | null
@@ -118,17 +111,13 @@ export function readDate(bytes: Uint8Array): DateView {
   const pending = readU8(bytes, DATE_OFFSETS.pending)
   const dayIndex = readU16(bytes, DATE_OFFSETS.dayIndex)
   const day = dayIndex + 1
-  const linked = stage === linkedStage(day, slot)
 
   let problem: string | null = null
   if (slot >= TIME_SLOTS.length) problem = `0x0014 の時間帯が想定外です（${slot}）`
   else if (!(PENDING_VALUES as readonly number[]).includes(pending)) problem = `0x0012 の値が想定外です（${pending}）`
 
   const warnings: string[] = []
-  const known = stageOf(stage)
-  if (!known) warnings.push(`段階（0x0010）が一覧にない値です（${stage}）`)
-  else if (!linked && stage >= 100 && stage <= DAY_TIME_AFTER_DAY3)
-    warnings.push(`段階（${known.label}）が日数・時間帯（${day}日目 ${TIME_SLOTS[slot] ?? slot}）と合っていません`)
+  if (!stageOf(stage)) warnings.push(`段階（0x0010）が一覧にない値です（${stage}）`)
   if (pending !== 0) warnings.push('時間帯を進める保留量が入っています。エリア移動・ロードで時間帯が1つ進みます')
   if (day > DAY_SEEN_MAX) warnings.push(`${DAY_SEEN_MAX}日目より後の値は確かめていません`)
 
@@ -138,7 +127,6 @@ export function readDate(bytes: Uint8Array): DateView {
     slot,
     pending,
     stage,
-    linked,
     raw: { dayTime: stage, slot, dayIndex },
     problem: layoutProblem ?? problem,
     warning: warnings.length ? warnings.join('。') : null,
@@ -159,23 +147,21 @@ function editable(bytes: Uint8Array): DateView {
 }
 
 /**
- * 日数と時間帯を書く。0x0BD8（u16）・0x0014（u8）を書き、段階が連動しているときだけ 0x0010（u16）も書く。保留量（0x0012）は変えない。
- * 時間帯・日数とも ✅ [U] ゲーム内で反映を確認。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示される。
- * 4日目以降は 0x0010 に 400 を書く（✅ [U] 5日目への書き換えで大老 鬼怒川怨仙が発生）
+ * 日数と時間帯を書く。0x0BD8（u16）・0x0014（u8）だけを書き、段階（0x0010）と保留量（0x0012）は変えない（[U] 2026-10-10）。
+ * 時間帯・日数とも ✅ [U] ゲーム内で反映を確認。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示される
  */
 export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts: { advanced: boolean }): void {
-  const view = editable(bytes)
+  editable(bytes)
   const problem = validateDay(day, opts)
   if (problem) throw new RangeError(problem)
   if (!Number.isInteger(slot) || slot < 0 || slot >= TIME_SLOTS.length) throw new RangeError(`時間帯が範囲外です: ${slot}`)
-  if (view.linked) writeU16(bytes, DATE_OFFSETS.dayTime, linkedStage(day, slot))
   writeU8(bytes, DATE_OFFSETS.slot, slot)
   writeU16(bytes, DATE_OFFSETS.dayIndex, day - 1)
 }
 
 /**
  * 段階（0x0010 u16）だけを書く。日数・時間帯は変えない。一覧（STAGES）にある値だけ。
- * 1〜3日目の値と 400 は日数・時間帯と一緒に書いて反映を確認済み。❓ 410 以降を書いたときのゲーム内の動作は要ゲーム内確認。
+ * メインイベントが起きるかどうかはこの値で決まる。1〜3日目の値と 400 は日数・時間帯と一緒に書いて反映を確認済み。❓ 410 以降を書いたときのゲーム内の動作は要ゲーム内確認。
  * 0（序章）はここでは書かない。0x0010 だけを 0 にすると、序章のイベントが始まらずセーブした場所から始まった（✅ [U] 2026-10-08）。
  * 0 にするときは new-cycle.ts の startNewCycle（周回の初期化）か enableCharacterSetup（0x0010 だけ）を使う
  */

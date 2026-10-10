@@ -1,10 +1,10 @@
-import { useState, type ReactNode } from 'react'
-import { InfoTip } from '@/components/info-tip'
-import { LazySelect } from '@/components/lazy-select'
-import { groupOptions, type SelectOption } from '@/components/select-options'
-import { WarningTip } from '@/components/warning-tip'
-import { Label } from '@/components/ui/label'
-import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from '@/components/ui/select'
+import { useState, type ReactNode } from "react";
+import { InfoTip } from "@/components/info-tip";
+import { LazySelect } from "@/components/lazy-select";
+import { groupOptions, type SelectOption } from "@/components/select-options";
+import { WarningTip } from "@/components/warning-tip";
+import { Label } from "@/components/ui/label";
+import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from "@/components/ui/select";
 
 function OptionContent({ option: o }: { option: SelectOption }) {
   return (
@@ -12,7 +12,7 @@ function OptionContent({ option: o }: { option: SelectOption }) {
       {o.icon && <o.icon />}
       {o.label}
     </>
-  )
+  );
 }
 
 function OptionItem({ option: o }: { option: SelectOption }) {
@@ -20,39 +20,55 @@ function OptionItem({ option: o }: { option: SelectOption }) {
     <SelectItem value={o.value} disabled={o.disabled}>
       <OptionContent option={o} />
     </SelectItem>
-  )
+  );
 }
 
 type Props = {
-  label: string
-  offset: number
-  badges?: ReactNode
+  label: string;
+  offset: number;
+  badges?: ReactNode;
   /** null はセーブ未読み込み */
-  value: string | null
+  value: string | null;
   /** 現在の値が options にないときに表示する名前（例：未知の ID）。選び直すことはできない */
-  currentLabel?: string
-  options: readonly SelectOption[]
+  currentLabel?: string;
+  options: readonly SelectOption[];
   /** 妥当性検証に落ちた理由。あれば読み取り専用 */
-  problem: string | null
+  problem: string | null;
   /** 検証は通っているが、今は変更させないとき（例：上書きを明示していない）。hint はそのまま表示する */
-  disabled?: boolean
-  warning?: string | null
+  disabled?: boolean;
+  warning?: string | null;
   /** バリデーション（文字数・数値の範囲など）だけを簡潔に書く。下に常に表示する */
-  hint?: ReactNode
+  hint?: ReactNode;
   /** 備考。項目名の端の丸ハテナにホバーで表示する */
-  note?: ReactNode
+  note?: ReactNode;
   /** 現在値と違う値を選んだときだけ呼ばれる。例外はその場で表示する */
-  onChange: (value: string) => void
-}
+  onChange: (value: string) => void;
+};
 
 /** 選択肢から1つ選ぶ1フィールド分の欄。FieldRow と同じ見た目にする */
-export function SelectRow({ label, offset, badges, value, currentLabel, options, problem, disabled, warning, hint, note, onChange }: Props) {
-  const [error, setError] = useState<string | null>(null)
-  const listed = value === null || options.some((o) => o.value === value)
+export function SelectRow({
+  label,
+  offset,
+  badges,
+  value,
+  currentLabel,
+  options,
+  problem,
+  disabled,
+  warning,
+  hint,
+  note,
+  onChange,
+}: Props) {
+  const [error, setError] = useState<string | null>(null);
+  const listed = value === null || options.some((o) => o.value === value);
   // トリガーに出す名前（Base UI の Select は閉じている間は選択肢を描かないので、items から引く）
-  const items: Record<string, ReactNode> = {}
-  for (const o of options) items[o.value] = <OptionContent option={o.selectedLabel ? { ...o, label: o.selectedLabel } : o} />
-  if (!listed && value !== null) items[value] = `${currentLabel ?? value}（現在の値）`
+  const items: Record<string, ReactNode> = {};
+  for (const o of options)
+    items[o.value] = (
+      <OptionContent option={o.selectedLabel ? { ...o, label: o.selectedLabel } : o} />
+    );
+  if (!listed && value !== null) items[value] = `${currentLabel ?? value}（現在の値）`;
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -70,12 +86,12 @@ export function SelectRow({ label, offset, badges, value, currentLabel, options,
         className="w-full"
         disabled={disabled || value === null || problem !== null || options.length === 0}
         onValueChange={(v) => {
-          if (v === value) return
-          setError(null)
+          if (v === value) return;
+          setError(null);
           try {
-            onChange(v)
+            onChange(v);
           } catch (e) {
-            setError(e instanceof Error ? e.message : String(e))
+            setError(e instanceof Error ? e.message : String(e));
           }
         }}
       >
@@ -108,5 +124,5 @@ export function SelectRow({ label, offset, badges, value, currentLabel, options,
         </>
       )}
     </div>
-  )
+  );
 }
