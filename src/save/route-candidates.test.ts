@@ -16,6 +16,7 @@ import {
   ROUTE_CANDIDATE_END,
   ROUTE_CANDIDATE_LENGTH,
   ROUTE_CANDIDATE_START,
+  UNUSED_ROUTE_OFFSETS,
   readRouteCandidates,
   routeCandidateNormalMax,
   validateRouteCandidate,
@@ -57,14 +58,14 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
   it('✅ [U] 真ルートは 0x378E。三姉妹見参（添字70）と組で効く。生の値の欄には出さない', () => {
     expect(BEST_ROUTE_OFFSET).toBe(0x378e)
     expect(BEST_ROUTE_EVENT_INDEX).toBe(70)
-    expect(RAW_ROUTE_OFFSETS).toHaveLength(20)
+    expect(RAW_ROUTE_OFFSETS).toHaveLength(12)
     expect(RAW_ROUTE_OFFSETS).not.toContain(0x378e)
   })
 
   it('勢力の退場（0x378F〜0x3791）と好感度・ポイント（0x3792〜0x3797）はほかの画面で編集するので、生の値の欄に出さない', () => {
     for (let o = 0x378f; o <= 0x3797; o++) expect(RAW_ROUTE_OFFSETS).not.toContain(o)
     expect(RAW_ROUTE_OFFSETS).toContain(0x378d)
-    expect(RAW_ROUTE_OFFSETS).toContain(0x3798)
+    expect(RAW_ROUTE_OFFSETS).toContain(0x3799)
   })
 
   it('真ルートのフラグは 1バイトだけ書く。通常モードは 0〜2 だけ', () => {
@@ -109,10 +110,19 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
     expect(ROUTE_CANDIDATE_NOTES[0x37a8].name).toBe('最後通告に逆らった')
   })
 
-  it('🟢 0x37A9 は周回数ではなく未使用。0x3798・0x379C〜0x379E・0x37A5〜0x37A7 も未使用', () => {
-    for (const o of [0x3798, 0x379c, 0x379d, 0x379e, 0x37a5, 0x37a6, 0x37a7, 0x37a9])
-      expect(ROUTE_CANDIDATE_NOTES[o].name).toBe('未使用')
-    expect(ROUTE_CANDIDATE_NOTES[0x37a9].note).toContain('周回数ではない')
+  it('🟢 使われていないバイト（0x3798・0x379C〜0x379E・0x37A5〜0x37A7・0x37A9）は生の値の欄に出さない', () => {
+    const unused = [0x3798, 0x379c, 0x379d, 0x379e, 0x37a5, 0x37a6, 0x37a7, 0x37a9]
+    expect([...UNUSED_ROUTE_OFFSETS].sort((a, b) => a - b)).toEqual(unused)
+    for (const o of unused) {
+      expect(RAW_ROUTE_OFFSETS).not.toContain(o)
+      expect(ROUTE_CANDIDATE_NOTES[o]).toBeUndefined()
+    }
+  })
+
+  it('🟢 使われていないバイトに 3 以上が入っていても警告しない', () => {
+    const values = BEST.slice()
+    values[0x37a9 - ROUTE_CANDIDATE_START] = 5
+    expect(readRouteCandidates(makeSave(values)).warning).toBeNull()
   })
 
   it('🔶 好感度・ポイント（0x3792〜0x3797）は通常モードで 0〜20。ほかは 0〜2', () => {

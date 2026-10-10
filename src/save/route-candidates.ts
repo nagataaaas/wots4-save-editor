@@ -30,6 +30,7 @@
 // 🟢 0x37AA  チュートリアルの進み方。1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）
 // 範囲の中には、真ルートに関係しないバイト（好感度・なりわいなど）も入っている（範囲は差分から取ったもの）。
 // 0x378F〜0x3797 はほかの画面（勢力の退場・夜這い）で編集するので、生の値の欄には出さない。
+// 使われていないバイト（0x3798・0x379C〜0x379E・0x37A5〜0x37A7・0x37A9）も出さない。
 // 0x378E 以外は、書き換えたときのゲーム内の反映を確かめていないので、生の値の欄として出す（AGENTS.md「未確認データの扱い」）。
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
@@ -69,11 +70,23 @@ export function routeCandidateNormalMax(offset: number): number {
 export const ELSEWHERE_ROUTE_START = 0x378f;
 export const ELSEWHERE_ROUTE_END = 0x3797;
 
-/** 生の値で出すオフセット（真ルートのフラグと、ほかの画面で編集するバイトを除く） */
+/**
+ * 🟢 使われていないバイト（生の値の欄に出さない）。0x379C・0x379D は 1 だと移動先が閉じるが、ゲームが 1 にする場面はない
+ */
+export const UNUSED_ROUTE_OFFSETS: ReadonlySet<number> = new Set([
+  0x3798, 0x379c, 0x379d, 0x379e, 0x37a5, 0x37a6, 0x37a7, 0x37a9,
+]);
+
+/** 生の値で出すオフセット（真ルートのフラグ、ほかの画面で編集するバイト、使われていないバイトを除く） */
 export const RAW_ROUTE_OFFSETS: readonly number[] = Array.from(
   { length: ROUTE_CANDIDATE_LENGTH },
   (_, i) => ROUTE_CANDIDATE_START + i,
-).filter((o) => o !== BEST_ROUTE_OFFSET && (o < ELSEWHERE_ROUTE_START || o > ELSEWHERE_ROUTE_END));
+).filter(
+  (o) =>
+    o !== BEST_ROUTE_OFFSET &&
+    (o < ELSEWHERE_ROUTE_START || o > ELSEWHERE_ROUTE_END) &&
+    !UNUSED_ROUTE_OFFSETS.has(o),
+);
 
 /** 生の値の欄に出すバイトの名前と説明（🟢） */
 export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; note: string }>> = {
@@ -84,7 +97,6 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; not
       "1＝通常の1〜3日目（序章の終わりで 1。通常の勢力イベントはどれも 1 が条件）、2＝真ルートに入った（三姉妹見参の成功で 2。周回中は戻らない）。" +
       "書き換えてもルートは変わらず、チャートの真ルートの枠も出なかった",
   },
-  0x3798: { name: "未使用", note: "ゲームは読みも書きもしない" },
   0x3799: {
     name: "堂島が鍛冶屋に戻った",
     note:
@@ -98,9 +110,6 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; not
       "町に出るかはなりわいのフラグ 21 が決める",
   },
   0x379b: { name: "朱美を送った印", note: "真実・夜の墓場でで朱美を送ると 1。1 のあいだ居酒屋へ移動できない" },
-  0x379c: { name: "未使用", note: "1 にすると港のカジノへ移動できなくなるが、ゲームが 1 にする場面はない" },
-  0x379d: { name: "未使用", note: "1 にすると居留地の病院へ移動できなくなるが、ゲームが 1 にする場面はない" },
-  0x379e: { name: "未使用", note: "ゲームは読みも書きもしない" },
   0x379f: {
     name: "序章の大砲",
     note: "阿弥浜港争乱で大砲の般若党を倒すと 1。0 だと三姉妹見参が起きない。書き換えてもルートは変わらなかった",
@@ -127,11 +136,7 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, { name?: string; not
       "1＝幕府が借り受けた（黒船を我が手にの成功。甲板に乗組員が出ない）、" +
       "2＝去った（傷心の帰国船・鬼怒川の魔手・夕暮れの船上・破滅への道。甲板へ移動できない）",
   },
-  0x37a5: { name: "未使用", note: "ゲームは読みも書きもしない" },
-  0x37a6: { name: "未使用", note: "ゲームは読みも書きもしない" },
-  0x37a7: { name: "未使用", note: "ゲームは読みも書きもしない" },
   0x37a8: { name: "最後通告に逆らった", note: "最後通告に逆らうと 1。1 のあいだ、夜に町へ出る雑魚が暗闇脳天になる" },
-  0x37a9: { name: "未使用", note: "周回数ではない（周回数は世界の画面の「難易度・周回」）。ゲームは使わない" },
   0x37aa: {
     name: "チュートリアルの進み方",
     note: "1＝チュートリアル（1周目は必ず）、2＝「口出し無用」、0＝「まとめて相手をしてやる」（3周目以降）。真ルートとは関係しない",
@@ -153,7 +158,12 @@ export function readRouteCandidates(bytes: Uint8Array): RouteCandidatesView {
   const values = Array.from({ length: ROUTE_CANDIDATE_LENGTH }, (_, i) =>
     readU8(bytes, ROUTE_CANDIDATE_START + i),
   );
-  const bad = values.findIndex((v, i) => v > routeCandidateNormalMax(ROUTE_CANDIDATE_START + i));
+  // 使われていないバイトは欄に出さないので、警告の対象にもしない
+  const bad = values.findIndex(
+    (v, i) =>
+      !UNUSED_ROUTE_OFFSETS.has(ROUTE_CANDIDATE_START + i) &&
+      v > routeCandidateNormalMax(ROUTE_CANDIDATE_START + i),
+  );
   const warning =
     bad >= 0
       ? `0x${(ROUTE_CANDIDATE_START + bad).toString(16).toUpperCase()} に通常の進行では見ない値があります（${values[bad]}）`
