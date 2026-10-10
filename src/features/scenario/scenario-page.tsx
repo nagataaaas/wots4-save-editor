@@ -57,12 +57,10 @@ import {
   type FacilityFlagsView,
 } from "@/save/facility-flags";
 import {
-  CHARACTER_LENGTH,
-  CHARACTER_NORMAL_MAX,
   CHARACTER_NOTES,
-  CHARACTER_START,
+  CHARACTER_OFFSETS,
+  characterValues,
   readCharacters,
-  validateCharacter,
   writeCharacter,
   type CharactersView,
 } from "@/save/characters";
@@ -877,7 +875,6 @@ function ScenarioFlagField({ index, view }: { index: number; view: ScenarioFlags
     <SelectRow
       label={flag.label}
       offset={flag.offset}
-      badges={flag.certainty === "🔶" ? <CertaintyBadge mark="🔶" text="意味は推測" /> : undefined}
       value={view ? String(view.values[index]) : null}
       currentLabel={view ? `${view.values[index]} 不明` : undefined}
       options={flag.values.map((v) => ({ value: String(v.value), label: v.label }))}
@@ -1025,20 +1022,20 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
 function CharactersCard({ view }: { view: CharactersView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
-  const offsets = Array.from({ length: CHARACTER_LENGTH }, (_, i) => CHARACTER_START + i);
+  const offsets = CHARACTER_OFFSETS;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">人物の状態（生の値）</CardTitle>
+        <CardTitle className="flex items-center gap-2">人物の状態</CardTitle>
         <CardDescription>
-          イベントの状態のすぐ後ろにある15バイトで、重要人物ごとの状態（生死など）です。周回の始めはすべて
+          イベントの状態のすぐ後ろにある15バイトと、寿司屋の状態（0x37F9）で、重要人物ごとの状態（生死など）です。周回の始めはすべて
           0 です。 多くの人物は 0 が生存、1 が死亡です。赤城の 3 は病院に運ばれて助かった状態、J.J.
           の 3・4・5 は伯爵救出の成功・打ち解けた・逮捕された状態です。
           鬼怒川怨仙（0x3756）は船上の侍で 2 になり、大老暗殺計画で倒すと 0 になります。
           朱美・ローラ・J.J. は 1
           を書くといなくなることを確認済みです。ほかの人物の書き換えの効果は要ゲーム内確認です。
-          各欄の説明に、値が変わる場面と、値を条件にするイベントを書いています。
+          各欄は値の意味から選びます。説明に、値が変わる場面と、値を条件にするイベントを書いています。
           {view?.warning && ` ${view.warning}`}
         </CardDescription>
       </CardHeader>
@@ -1046,19 +1043,21 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
         {offsets.map((offset, i) => {
           const info = CHARACTER_NOTES[offset];
           const hex = `0x${offset.toString(16).toUpperCase()}`;
+          const current = view?.values[i] ?? null;
           return (
-            <FieldRow
+            <SelectRow
               key={offset}
               label={info?.name ? `${hex}（${info.name}）` : hex}
               offset={offset}
-              value={view?.values[i] ?? null}
+              value={current === null ? null : String(current)}
+              currentLabel={current === null ? undefined : `${current} 不明`}
+              options={characterValues(offset).map((s) => ({
+                value: String(s.value),
+                label: `${s.value} ${s.label}`,
+              }))}
               problem={view?.problem ?? null}
-              format={String}
-              parse={(input) => parseInteger(input, (v) => validateCharacter(v, { advanced }))}
-              apply={(v) => update((b) => writeCharacter(b, offset, v, { advanced }))}
-              inputMode="numeric"
-              hint={advanced ? "0〜255" : `0〜${CHARACTER_NORMAL_MAX}`}
               note={info?.note}
+              onChange={(v) => update((b) => writeCharacter(b, offset, Number(v), { advanced }))}
             />
           );
         })}
