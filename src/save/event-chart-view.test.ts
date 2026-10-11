@@ -9,7 +9,7 @@ function input(states: Record<number, [state: number, record?: number]>, opts: P
     const [state, record] = states[index] ?? [0xff];
     return { index, state, record: record ?? 0xff };
   });
-  return { entries, playCount: 0, clearTotal: 0, ...opts };
+  return { entries, playCount: 0, clearTotal: 0, stage: null, bestRoute: null, ...opts };
 }
 
 const frameOf = (eventId: number): ChartFrame => CHART_FRAMES.find((f) => f.eventId === eventId)!;
@@ -37,11 +37,20 @@ describe("枠の名前と印", () => {
     expect(v.frames.get(frameOf(8).id)).toMatchObject({ named: true, failed: true });
   });
 
-  it("状態 03 は名前を出して光る。01・02 は何も変わらない", () => {
+  it("状態 03 は名前を出す（進行中）。01・02 は何も変わらない", () => {
     const v = computeChartView(input({ 6: [0x03], 7: [0x01], 8: [0x02] }));
     expect(v.frames.get(frameOf(6).id)).toMatchObject({ named: true, inProgress: true });
     expect(v.frames.get(frameOf(7).id)).toMatchObject({ named: false, inProgress: false, reached: false });
     expect(v.frames.get(frameOf(8).id)).toMatchObject({ named: false, reached: false });
+  });
+
+  it("🟢 緑の枠は状態 03・04 だけ。記録 04 だけ・失敗・01・02 には付かない", () => {
+    const v = computeChartView(input({ 6: [0x03], 7: [0x04], 8: [0x05, 0x04], 9: [0xff, 0x04], 10: [0x02] }));
+    expect(v.frames.get(frameOf(6).id)!.lit).toBe(true);
+    expect(v.frames.get(frameOf(7).id)!.lit).toBe(true);
+    expect(v.frames.get(frameOf(8).id)!.lit).toBe(false);
+    expect(v.frames.get(frameOf(9).id)!.lit).toBe(false);
+    expect(v.frames.get(frameOf(10).id)!.lit).toBe(false);
   });
 
   it("見え方の説明", () => {
@@ -151,6 +160,30 @@ describe("結末への到達", () => {
     expect(computeChartView(input({ ...PROLOGUE, 92: [0x05] })).endingReached).toBe(true);
     expect(computeChartView(input({ ...PROLOGUE, 92: [0xff, 0x04] })).endingReached).toBe(false);
     expect(chartViewWithoutSave().endingReached).toBe(false);
+  });
+});
+
+describe("🟢 今の段階の紫の箱", () => {
+  const eventsIn = (ids: readonly number[]) =>
+    [...new Set(ids.map((id) => CHART_FRAMES.find((f) => f.id === id)!.eventId))].sort((a, b) => a - b);
+
+  it("真ルートでなければ、同じ段階の真ルート以外の枠を囲む", () => {
+    // 1日目夜（120）：代官所潜入 12・阿片密売を阻止せよ 10・辻斬りを辻斬る 11。真ルートの再起の望み 72 は入れない
+    const v = computeChartView(input({}, { stage: 120, bestRoute: 0 }));
+    expect(eventsIn(v.stageFrames)).toEqual([10, 11, 12]);
+  });
+
+  it("真ルート（0x378E が 0 以外）なら、同じ段階の真ルートの枠だけを囲む。枠が出ているかは見ない", () => {
+    expect(eventsIn(computeChartView(input({}, { stage: 120, bestRoute: 1 })).stageFrames)).toEqual([72]);
+    expect(eventsIn(computeChartView(input({}, { stage: 120, bestRoute: 2 })).stageFrames)).toEqual([72]);
+  });
+
+  it("当てはまる枠がなければ描かない。段階か真ルートが分からなければ描かない", () => {
+    // 1日目昼（100）に真ルートの枠はない
+    expect(computeChartView(input({}, { stage: 100, bestRoute: 1 })).stageFrames).toEqual([]);
+    expect(computeChartView(input({}, { stage: 123, bestRoute: 0 })).stageFrames).toEqual([]);
+    expect(computeChartView(input({}, { stage: null, bestRoute: 0 })).stageFrames).toEqual([]);
+    expect(chartViewWithoutSave().stageFrames).toEqual([]);
   });
 });
 

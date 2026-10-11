@@ -256,6 +256,8 @@ export function EventsPage() {
             key={`${k}-chart`}
             events={views?.events ?? null}
             counts={views?.cycle ?? null}
+            stage={views?.date.stage ?? null}
+            bestRoute={views?.routeCandidates.best ?? null}
             top={
               <BestRouteRow
                 view={views?.routeCandidates ?? null}
@@ -1119,12 +1121,6 @@ function BestRouteRow({
 
   return (
     <section className="flex flex-col gap-3">
-      <h3 className="text-sm font-medium">真ルート</h3>
-      <p className="text-muted-foreground text-xs">
-        0x378E が 1 で真ルートです（書き換えで確認済み）。ただし、三姉妹見参（イベント
-        {BEST_ROUTE_EVENT_INDEX}）が成功（04）でないと効きません。
-        病院（0x375D）が閉じていると赤城が死に、再起の望みより後ろのイベントが起きません。
-      </p>
       <div className="grid gap-4 sm:grid-cols-3">
         <SelectRow
           label="ルート"
@@ -1136,7 +1132,7 @@ function BestRouteRow({
           hint={
             sisters === null
               ? undefined
-              : `今の三姉妹見参の状態：${formatHex2(sisters)}${sisters === 0x04 ? "（成功。真ルートが効く）" : "（成功ではないので、1 にしても通常ルートのまま）"}`
+              : `今の三姉妹見参の状態：${formatHex2(sisters)}${sisters === 0x04 ? "（成功。真ルートに分岐）" : "（成功ではないので、1 にしても通常ルートのまま）"}`
           }
           note="1 にしただけでは通常ルートのまま。三姉妹見参の状態も 04（成功）にすると真ルート（お早い到着）に入る。0 にすると通常ルートに戻る。2 は真ルートを外れた状態（再起の望みで小暮が死ぬ、怒りの矛先の成功、闇討ちの失敗、傷心の帰国船の成功などで 2 になり、周回中は戻らない）。2 で大通りに行くと大老暗殺計画が起きる。真ルートを過去の周回で記録していないと、正規のプレイでもチャートに失敗したイベントや先のイベントの枠が出ない"
           onChange={(v) => update((b) => writeBestRoute(b, Number(v), { advanced }))}

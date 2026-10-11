@@ -28,6 +28,7 @@ import {
   type ChartRoute,
   type ChartLine,
 } from "@/save/master/event-chart-layout";
+import { eventSummaryOf } from "@/save/master/event-summaries";
 import {
   EVENT_LIST,
   eventNameOf,
@@ -48,7 +49,8 @@ const FRAME_H = 24;
 const MARGIN = 16;
 
 /** 列の左端 */
-const colX = (col: number) => MARGIN + Math.ceil(col / 2) * FRAME_COL_PX + Math.floor(col / 2) * LINE_COL_PX;
+const colX = (col: number) =>
+  MARGIN + Math.ceil(col / 2) * FRAME_COL_PX + Math.floor(col / 2) * LINE_COL_PX;
 const colW = (col: number) => (col % 2 === 0 ? FRAME_COL_PX : LINE_COL_PX);
 const rowY = (row: number) => MARGIN + row * ROW_PX;
 const WIDTH = colX(CHART_COLS) + MARGIN;
@@ -60,16 +62,21 @@ const LINK_COLOR = "#2B2B2B";
 const RED_LINK = "#D40000";
 const HIDDEN_COLOR = "#8A8A8A";
 const FAILED_COLOR = "#7A0000";
-const GLOW_COLOR = "#F0B400";
+// 🟢 状態 03・04 の枠の緑の枠と、今の段階の枠を囲む紫の箱（どちらもゲームと同じ色・透明度）
+const LIT_COLOR = "rgb(152 235 168 / 0.55)";
+const STAGE_BOX_COLOR = "rgb(153 77 179 / 0.3)";
+/** 紫の箱の、枠の外側の余白。ゲームは枠の高さの 14/32 */
+const STAGE_BOX_PAD = Math.round((FRAME_H * 14) / 32);
 const TEXT_COLOR = "#3B2A2E";
-const ROUTE_COLORS: Readonly<Record<ChartRoute, { fill: string; stroke: string; label: string }>> = {
-  prajna: { fill: "#F7D3DC", stroke: "#D2557A", label: "攘夷" },
-  shogunate: { fill: "#D8EDC7", stroke: "#78A955", label: "幕府" },
-  foreigners: { fill: "#CFE4F1", stroke: "#5E9BC4", label: "外国" },
-  other: { fill: "#F3EBC2", stroke: "#C2A845", label: "共通・無所属" },
-  best: { fill: "#E6D6EF", stroke: "#9C6FB8", label: "真ルート" },
-  tutorial: { fill: "#EEEEEE", stroke: "#999999", label: "その他" },
-};
+const ROUTE_COLORS: Readonly<Record<ChartRoute, { fill: string; stroke: string; label: string }>> =
+  {
+    prajna: { fill: "#F7D3DC", stroke: "#D2557A", label: "攘夷" },
+    shogunate: { fill: "#D8EDC7", stroke: "#78A955", label: "幕府" },
+    foreigners: { fill: "#CFE4F1", stroke: "#5E9BC4", label: "外国" },
+    other: { fill: "#F3EBC2", stroke: "#C2A845", label: "共通・無所属" },
+    best: { fill: "#E6D6EF", stroke: "#9C6FB8", label: "真ルート" },
+    tutorial: { fill: "#EEEEEE", stroke: "#999999", label: "その他" },
+  };
 const LEGEND_ROUTES: readonly ChartRoute[] = ["prajna", "shogunate", "foreigners", "other", "best"];
 const MASKED = { fill: "#7A7A7A", stroke: "#111111", text: "#D4D4D4" };
 
@@ -80,11 +87,17 @@ const MASKED = { fill: "#7A7A7A", stroke: "#111111", text: "#D4D4D4" };
 export function EventChartCard({
   events,
   counts,
+  stage,
+  bestRoute,
   top,
   bottom,
 }: {
   events: EventsView | null;
   counts: CycleCountsView | null;
+  /** 段階 0x0010。null なら紫の箱を描かない */
+  stage: number | null;
+  /** 真ルート 0x378E。null なら紫の箱を描かない */
+  bestRoute: number | null;
   top?: ReactNode;
   bottom?: ReactNode;
 }) {
@@ -92,9 +105,15 @@ export function EventChartCard({
   const view = useMemo(
     () =>
       events && counts
-        ? computeChartView({ entries: events.entries, playCount: counts.playCount, clearTotal: counts.clearTotal })
+        ? computeChartView({
+            entries: events.entries,
+            playCount: counts.playCount,
+            clearTotal: counts.clearTotal,
+            stage,
+            bestRoute,
+          })
         : chartViewWithoutSave(),
-    [events, counts],
+    [events, counts, stage, bestRoute],
   );
   const loaded = events !== null && counts !== null;
   // 名前が隠れる枠に、？？？の代わりに名前を出す。既定は隠す（ユーザー判断 2026-10-07）
@@ -106,11 +125,17 @@ export function EventChartCard({
         <CardTitle>イベントチャート</CardTitle>
         <CardDescription>
           ゲームの「状況」のチャートを、ゲームと同じ升の並びと規則で、イベントの状態（0x36A8＋添字）・チャート表示の記録（0x3838＋添字）・周回数（0x0B8C）から描いたものです。
-          状態が 03・04 か記録が 04 の枠は名前が出て、それ以外は「？？？」です。状態が 05 の枠と、後ろの段階に進んだのに何もしなかった時間帯の枠には失敗の印が付きます。
+          状態が 03・04 か記録が 04 の枠は名前が出て、それ以外は「？？？」です。状態が 03・04
+          の枠は緑の枠で囲まれます（03 と 04 で見え方は同じ）。状態が 05
+          の枠と、後ろの段階に進んだのに何もしなかった時間帯の枠には失敗の印が付きます。
+          紫の箱は、段階（0x0010）と同じ段階の枠を囲みます。真ルート（0x378E）が 0
+          以外なら真ルートの行の枠だけを囲み、当てはまる枠がなければ出ません。
           赤い線は、今の周回で到達した枠（状態 03〜05、時間帯を過ぎて失敗）どうしをつなぐ道です。
-          真ルートの枠は、状態が 03・04 か記録が 04 のときだけ出ます（周回数が {PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら全部出ます）。ゲームで出ない升は点線で薄く描いています。
+          真ルートの枠は、状態が 03・04 か記録が 04 のときだけ出ます（周回数が{" "}
+          {PLAY_COUNT_REVEALS_BEST_ROUTE}{" "}
+          以上なら全部出ます）。ゲームで出ない升は点線で薄く描いています。
           ゲームは「いま始められるイベント」も到達した枠として扱いますが、それはセーブだけでは決まらないので、ここでは描いていません。
-          真ルートの扱い・赤い線・カーソルの範囲は、ゲームのデータから読んだ規則で、ゲーム内では確かめていません（要ゲーム内確認）。
+          真ルートの扱い・赤い線・緑の枠・紫の箱・カーソルの範囲は、ゲーム内では確かめていません（要ゲーム内確認）。
           {loaded
             ? ` 周回数：${counts.playCount.toLocaleString()}、クリア回数の合計：${counts.clearTotal.toLocaleString()}。枠をクリックすると状態を編集できます。`
             : " セーブを読み込むまでは、全部の枠を名前つきで描いています。"}
@@ -135,7 +160,12 @@ export function EventChartCard({
               : "クリアしたことがあるので、左右のスクロールと縮小で先の枠も見られます。"}
           </p>
         )}
-        <ChartCanvas key={save?.loadId ?? 0} events={events} view={view} revealNames={revealNames} />
+        <ChartCanvas
+          key={save?.loadId ?? 0}
+          events={events}
+          view={view}
+          revealNames={revealNames}
+        />
         {bottom}
       </CardContent>
     </Card>
@@ -157,13 +187,19 @@ function Legend() {
         const c = ROUTE_COLORS[r];
         return (
           <span key={r} className="flex items-center gap-1.5">
-            <span className="inline-block h-3 w-5 rounded-sm border" style={{ background: c.fill, borderColor: c.stroke }} />
+            <span
+              className="inline-block h-3 w-5 rounded-sm border"
+              style={{ background: c.fill, borderColor: c.stroke }}
+            />
             {c.label}
           </span>
         );
       })}
       <span className="flex items-center gap-1.5">
-        <span className="inline-block h-3 w-5 rounded-sm border" style={{ background: MASKED.fill, borderColor: MASKED.stroke }} />
+        <span
+          className="inline-block h-3 w-5 rounded-sm border"
+          style={{ background: MASKED.fill, borderColor: MASKED.stroke }}
+        />
         ？？？
       </span>
       <span className="flex items-center gap-1.5">
@@ -175,24 +211,52 @@ function Legend() {
       </span>
       <span className="flex items-center gap-1.5">
         <svg width={20} height={12} aria-hidden>
-          <rect x={1} y={1} width={18} height={10} rx={2} fill="#fff" stroke={GLOW_COLOR} strokeWidth={2} />
+          <rect
+            x={1.5}
+            y={1.5}
+            width={17}
+            height={9}
+            rx={2}
+            fill="#fff"
+            stroke={LIT_COLOR}
+            strokeWidth={3}
+          />
         </svg>
-        進行中（状態 03）
+        状態 03・04
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="inline-block h-3 w-5 rounded-sm" style={{ background: STAGE_BOX_COLOR }} />
+        今の段階
       </span>
       <span className="flex items-center gap-1.5">
         <svg width={20} height={12} aria-hidden>
-          <line x1={0} y1={6} x2={20} y2={6} stroke={RED_LINK} strokeWidth={2} />
-        </svg>
-        到達した枠どうしの道
-      </span>
-      <span className="flex items-center gap-1.5">
-        <svg width={20} height={12} aria-hidden>
-          <rect x={0.5} y={0.5} width={19} height={11} rx={2} fill="none" stroke={HIDDEN_COLOR} strokeDasharray="3 3" />
+          <rect
+            x={0.5}
+            y={0.5}
+            width={19}
+            height={11}
+            rx={2}
+            fill="none"
+            stroke={HIDDEN_COLOR}
+            strokeDasharray="3 3"
+          />
         </svg>
         ゲームでは出ない
       </span>
     </div>
   );
+}
+
+/** 🟢 今の段階の枠を全部囲む紫の箱。囲む枠がなければ null */
+function stageBoxOf(view: ChartView) {
+  const frames = CHART_FRAMES.filter((f) => view.stageFrames.includes(f.id));
+  if (frames.length === 0) return null;
+  const left = Math.min(...frames.map((f) => colX(f.col))) - STAGE_BOX_PAD;
+  const right = Math.max(...frames.map((f) => colX(f.col) + FRAME_COL_PX)) + STAGE_BOX_PAD;
+  const top = Math.min(...frames.map((f) => rowY(f.row))) + (ROW_PX - FRAME_H) / 2 - STAGE_BOX_PAD;
+  const bottom =
+    Math.max(...frames.map((f) => rowY(f.row))) + (ROW_PX + FRAME_H) / 2 + STAGE_BOX_PAD;
+  return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
 /** 線の升の中心から、腕の向きの端まで */
@@ -234,6 +298,7 @@ function ChartCanvas({
       })),
     );
   const cursorX = cursorLimited(view) ? colX(view.cursorMaxCol + 1) : null;
+  const stageBox = stageBoxOf(view);
 
   return (
     <div className="overflow-x-auto rounded-md border">
@@ -247,9 +312,23 @@ function ChartCanvas({
           style={{ background: BACKGROUND, display: "block" }}
         >
           {cursorX !== null && view.scrollLocked && (
-            <rect x={cursorX} y={0} width={WIDTH - cursorX} height={HEIGHT} fill="#000" fillOpacity={0.12} />
+            <rect
+              x={cursorX}
+              y={0}
+              width={WIDTH - cursorX}
+              height={HEIGHT}
+              fill="#000"
+              fillOpacity={0.12}
+            />
           )}
-          <g stroke={HIDDEN_COLOR} strokeOpacity={0.6} strokeWidth={1} strokeDasharray="3 3" fill="none">
+          {stageBox && <rect {...stageBox} fill={STAGE_BOX_COLOR} />}
+          <g
+            stroke={HIDDEN_COLOR}
+            strokeOpacity={0.6}
+            strokeWidth={1}
+            strokeDasharray="3 3"
+            fill="none"
+          >
             {arms(["hidden"]).map((s) => (
               <line key={s.key} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} />
             ))}
@@ -265,7 +344,15 @@ function ChartCanvas({
             ))}
           </g>
           {cursorX !== null && (
-            <line x1={cursorX} y1={0} x2={cursorX} y2={HEIGHT} stroke="#555" strokeWidth={1} strokeDasharray="6 4" />
+            <line
+              x1={cursorX}
+              y1={0}
+              x2={cursorX}
+              y2={HEIGHT}
+              stroke="#555"
+              strokeWidth={1}
+              strokeDasharray="6 4"
+            />
           )}
           {CHART_FRAMES.map((f) => (
             <FrameShape
@@ -290,11 +377,18 @@ function ChartCanvas({
             }}
           />
         )}
-        <Popover open={selectedFrame !== undefined} onOpenChange={(open) => !open && setSelected(null)}>
-          <PopoverContent ref={editorRef} initialFocus={editorRef} className="w-80" align="start" anchor={anchor}>
-            {selectedFrame && (
-              <FrameEditor frame={selectedFrame} events={events} look={view.frames.get(selectedFrame.id)!} />
-            )}
+        <Popover
+          open={selectedFrame !== undefined}
+          onOpenChange={(open) => !open && setSelected(null)}
+        >
+          <PopoverContent
+            ref={editorRef}
+            initialFocus={editorRef}
+            className="w-80"
+            align="start"
+            anchor={anchor}
+          >
+            {selectedFrame && <FrameEditor frame={selectedFrame} events={events} />}
           </PopoverContent>
         </Popover>
       </div>
@@ -378,8 +472,17 @@ function FrameShape({
   return (
     <g {...common}>
       <title>{title}</title>
-      {look.inProgress && (
-        <rect x={x - 2} y={y - 2} width={w + 4} height={FRAME_H + 4} rx={4} fill="none" stroke={GLOW_COLOR} strokeWidth={3} />
+      {look.lit && (
+        <rect
+          x={x - 2}
+          y={y - 2}
+          width={w + 4}
+          height={FRAME_H + 4}
+          rx={4}
+          fill="none"
+          stroke={LIT_COLOR}
+          strokeWidth={4}
+        />
       )}
       <rect
         x={x}
@@ -412,19 +515,27 @@ function FrameShape({
         {label}
       </text>
       {look.failed && (
-        <line x1={x + 1} y1={y + FRAME_H - 1} x2={x + w - 1} y2={y + 1} stroke={FAILED_COLOR} strokeWidth={2} />
+        <line
+          x1={x + 1}
+          y1={y + FRAME_H - 1}
+          x2={x + w - 1}
+          y2={y + 1}
+          stroke={FAILED_COLOR}
+          strokeWidth={2}
+        />
       )}
     </g>
   );
 }
 
-function FrameEditor({ frame, events, look }: { frame: ChartFrame; events: EventsView | null; look: FrameLook }) {
+function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const index = frame.eventId;
   const entry = events?.entries[index] ?? null;
   const problem = events?.problem ?? null;
   const shared = CHART_FRAMES.filter((f) => f.eventId === index).length > 1;
+  const summary = eventSummaryOf(index);
 
   return (
     <div className="flex flex-col gap-3">
@@ -432,10 +543,12 @@ function FrameEditor({ frame, events, look }: { frame: ChartFrame; events: Event
         <div className="text-sm font-medium">
           {index}. {eventNameOf(index) ?? frameName(frame)}
         </div>
-        <div className="text-muted-foreground text-xs">
-          {EVENT_LIST[index]?.day}
-          {events && `　チャート：${frameLookLabel(look)}`}
-        </div>
+        <div className="text-muted-foreground text-xs">{EVENT_LIST[index]?.day}</div>
+        {summary && (
+          <p className="text-muted-foreground text-xs wrap-anywhere break-normal line-strict">
+            {summary}
+          </p>
+        )}
       </div>
       <SelectRow
         label="状態"
@@ -450,7 +563,9 @@ function FrameEditor({ frame, events, look }: { frame: ChartFrame; events: Event
         label="チャート表示"
         offset={EVENT_RECORD_OFFSET + index}
         value={entry ? String(entry.record) : null}
-        currentLabel={entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined}
+        currentLabel={
+          entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined
+        }
         options={recordOptions(advanced)}
         problem={problem}
         note={`周回をまたぐ記録（生きた証）。04 で名前が出て、それ以外は状態が 03・04 のときだけ名前が出ます（確認済みは FF と 04）。真ルートのイベントは、これが 04 か状態が 03・04 でないと枠ごと出ません（状態が 04 以外で FF のときに出ないことは確認済み。周回数が ${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら常に出る）。ほかの周回にも引き継がれる可能性があります`}
