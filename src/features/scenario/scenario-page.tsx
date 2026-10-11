@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
+import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
 import { startNewCycle, type CycleEnd, type NewCycleReport } from "@/save/new-cycle";
@@ -180,7 +181,7 @@ function parseInteger(input: string, validate: (v: number) => string | null): Pa
   return error ? { ok: false, error } : { ok: true, value };
 }
 
-/** 世界 / 阿弥浜：難易度・治安・周回、段階・日数・時間帯、門・柵、施設（ユーザー判断 2026-10-11） */
+/** 世界 / 阿弥浜：難易度・治安・周回、段階・日数・時間帯、施設、門・柵（ユーザー判断 2026-10-11） */
 export function AmihamaPage() {
   return (
     <ViewsPage
@@ -201,8 +202,8 @@ export function AmihamaPage() {
             publicOrder={views?.publicOrder ?? null}
           />
           <DateCard key={`${k}-date`} view={views?.date ?? null} />
-          <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
           <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
+          <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
         </>
       )}
     </ViewsPage>
@@ -543,60 +544,60 @@ function DateCard({ view }: { view: DateView | null }) {
   const problem = view?.problem ?? null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>段階・日数・時間帯</CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="段階・日数・時間帯"
+      contentClassName="grid gap-4 sm:grid-cols-3"
+      description={
+        <>
           段階（0x0010）は、メインイベントが起きるかどうかを決めます。
           日数（0x0BD8）と時間帯（0x0014）はゲーム内の表示で、メインイベントには影響しません。段階と日数・時間帯は別々に書きます
           {view &&
             ` 生の値：0x0010＝${view.raw.dayTime}、0x0012＝${view.pending}、0x0014＝${view.raw.slot}、0x0BD8＝${view.raw.dayIndex}`}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        <SelectRow
-          label="段階"
-          offset={DATE_OFFSETS.dayTime}
-          value={view ? String(view.stage) : null}
-          currentLabel={view ? `一覧にない値 ${view.stage}` : undefined}
-          options={stageOptions}
-          problem={problem}
-          hint="メインイベントの進行に影響します"
-          note="0x0010（u16）だけを書きます。日数・時間帯は変えません。0（序章）にするときは、上の「新しい周回を始める」か、主人公画面の「難易度と主人公設定を行えるようにする」を使います。410 以降を書いたときのゲーム内の動作は確かめていません"
-          onChange={(v) => update((b) => writeStage(b, Number(v)))}
-        />
-        <FieldRow
-          label="日数"
-          offset={DATE_OFFSETS.dayIndex}
-          value={view?.day ?? null}
-          problem={problem}
-          warning={view?.warning}
-          format={String}
-          parse={(input) => parseInteger(input, (v) => validateDay(v, { advanced }))}
-          apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
-          inputMode="numeric"
-          hint={`${range.min}〜${range.max}日目。メインイベントには影響しません`}
-        />
-        <SelectRow
-          label="時間帯"
-          offset={DATE_OFFSETS.slot}
-          value={view ? String(view.slot) : null}
-          options={slotOptions}
-          problem={problem}
-          hint="メインイベントには影響しません"
-          onChange={(v) => update((b) => writeDayTime(b, view!.day, Number(v), { advanced }))}
-        />
-        <SelectRow
-          label="時間帯を進める保留量"
-          offset={DATE_OFFSETS.pending}
-          value={view ? String(view.pending) : null}
-          options={pendingOptions}
-          problem={problem}
-          note="イベントを完了すると 10 が入り、エリア移動やロードのときに時間が進みます"
-          onChange={(v) => update((b) => writePending(b, Number(v)))}
-        />
-      </CardContent>
-    </Card>
+        </>
+      }
+    >
+      <SelectRow
+        label="段階"
+        offset={DATE_OFFSETS.dayTime}
+        value={view ? String(view.stage) : null}
+        currentLabel={view ? `一覧にない値 ${view.stage}` : undefined}
+        options={stageOptions}
+        problem={problem}
+        hint="メインイベントの進行に影響します"
+        note="0x0010（u16）だけを書きます。日数・時間帯は変えません。0（序章）にするときは、上の「新しい周回を始める」か、主人公画面の「難易度と主人公設定を行えるようにする」を使います。410 以降を書いたときのゲーム内の動作は確かめていません"
+        onChange={(v) => update((b) => writeStage(b, Number(v)))}
+      />
+      <FieldRow
+        label="日数"
+        offset={DATE_OFFSETS.dayIndex}
+        value={view?.day ?? null}
+        problem={problem}
+        warning={view?.warning}
+        format={String}
+        parse={(input) => parseInteger(input, (v) => validateDay(v, { advanced }))}
+        apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
+        inputMode="numeric"
+        hint={`${range.min}〜${range.max}日目。メインイベントには影響しません`}
+      />
+      <SelectRow
+        label="時間帯"
+        offset={DATE_OFFSETS.slot}
+        value={view ? String(view.slot) : null}
+        options={slotOptions}
+        problem={problem}
+        hint="メインイベントには影響しません"
+        onChange={(v) => update((b) => writeDayTime(b, view!.day, Number(v), { advanced }))}
+      />
+      <SelectRow
+        label="時間帯を進める保留量"
+        offset={DATE_OFFSETS.pending}
+        value={view ? String(view.pending) : null}
+        options={pendingOptions}
+        problem={problem}
+        note="イベントを完了すると 10 が入り、エリア移動やロードのときに時間が進みます"
+        onChange={(v) => update((b) => writePending(b, Number(v)))}
+      />
+    </CollapsibleCard>
   );
 }
 
@@ -636,40 +637,40 @@ function FactionExitCard({ view }: { view: FactionExitView | null }) {
   const { advanced } = useAdvancedMode();
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>勢力の退場</CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="勢力の退場"
+      contentClassName="grid gap-4 sm:grid-cols-3"
+      description={
+        <>
           1 にすると、その勢力の人物が町から出なくなります。 3つとも書き換えで確認済みです。
           外国・攘夷は物語の中でも 1 になります（ローラの死・帰国、般若党の壊滅など）。幕府が 1
           になる場面はありません。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        {FACTION_EXIT_FLAGS.map((flag, i) => (
-          <SelectRow
-            key={flag.offset}
-            label={flag.label}
-            offset={flag.offset}
-            badges={
-              flag.confirmed ? undefined : (
-                <CertaintyBadge mark="❓" text="書き換えの反映は未確認" />
-              )
-            }
-            value={view ? String(view.values[i]) : null}
-            currentLabel={view ? `${view.values[i]} 不明` : undefined}
-            options={factionExitOptions}
-            problem={view?.problem ?? null}
-            note={flag.note}
-            onChange={(v) => update((b) => writeFactionExit(b, i, Number(v), { advanced }))}
-          />
-        ))}
-      </CardContent>
-    </Card>
+        </>
+      }
+    >
+      {FACTION_EXIT_FLAGS.map((flag, i) => (
+        <SelectRow
+          key={flag.offset}
+          label={flag.label}
+          offset={flag.offset}
+          badges={
+            flag.confirmed ? undefined : (
+              <CertaintyBadge mark="❓" text="書き換えの反映は未確認" />
+            )
+          }
+          value={view ? String(view.values[i]) : null}
+          currentLabel={view ? `${view.values[i]} 不明` : undefined}
+          options={factionExitOptions}
+          problem={view?.problem ?? null}
+          note={flag.note}
+          onChange={(v) => update((b) => writeFactionExit(b, i, Number(v), { advanced }))}
+        />
+      ))}
+    </CollapsibleCard>
   );
 }
 
-/** 門・柵のフラグ。view が null ならセーブ未読み込み */
+/** 門・柵の状態。view が null ならセーブ未読み込み */
 function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -711,10 +712,11 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>門・柵のフラグ</CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="門・柵の状態"
+      contentClassName="flex flex-col gap-6"
+      description={
+        <>
           神社は「入口の柵」と「洞窟内の柵」が別々の閉鎖フラグです。 洞窟内の柵（0x3761）は、1
           で降りて通行を塞ぐことを確認済みです。 0
           に戻したときの上昇・通行の回復は要ゲーム内確認です。
@@ -724,28 +726,27 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
           初日昼勧誘フラグ（0x377D〜0x377F）は序章〜1日目昼（段階 ≤100）の開放判定に使われ、1
           で開きます。 ルートやイベントの条件によっても閉じるため、0
           にするだけで必ず開くとは限りません。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        {section("recruit", "初日勧誘（1日目昼のみ影響）")}
-        {section("close", "閉鎖（1日目夕～大老の大寄せまで）")}
-        <section className="flex flex-col gap-2">
-          <h3 className="text-sm font-medium">大老の大寄せ以降</h3>
-          <p className="text-sm text-muted-foreground">
-            🟢{" "}
-            <a href="#post-tournament-route" className="text-primary underline underline-offset-4">
-              剣術大会以後のルート分岐
-            </a>
-            が 02 になった段階で、対応する勢力の門・柵が閉じます。
-          </p>
-          <p className="text-sm text-muted-foreground">
-            グループ名は進行時期の目安です。初日勧誘は序章にも影響し、閉鎖フラグは初日昼以前・大寄せ以降にも有効です。
-            大寄せ以降は閉鎖フラグを 0 にしても、ルート分岐が 02 なら閉じます。
-          </p>
-        </section>
-        {section("door")}
-      </CardContent>
-    </Card>
+        </>
+      }
+    >
+      {section("recruit", "初日勧誘（1日目昼のみ影響）")}
+      {section("close", "閉鎖（1日目夕～大老の大寄せまで）")}
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium">大老の大寄せ以降</h3>
+        <p className="text-sm text-muted-foreground">
+          🟢{" "}
+          <a href="#post-tournament-route" className="text-primary underline underline-offset-4">
+            剣術大会以後のルート分岐
+          </a>
+          が 02 になった段階で、対応する勢力の門・柵が閉じます。
+        </p>
+        <p className="text-sm text-muted-foreground">
+          グループ名は進行時期の目安です。初日勧誘は序章にも影響し、閉鎖フラグは初日昼以前・大寄せ以降にも有効です。
+          大寄せ以降は閉鎖フラグを 0 にしても、ルート分岐が 02 なら閉じます。
+        </p>
+      </section>
+      {section("door")}
+    </CollapsibleCard>
   );
 }
 
@@ -854,10 +855,11 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
   const { advanced } = useAdvancedMode();
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>施設</CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="施設"
+      contentClassName="grid gap-4 sm:grid-cols-3"
+      description={
+        <>
           病院（0x375D）・カジノ（0x375E）・語学所（0x375F）の開閉です。書き換えで反映を確認済みです。
           カジノだけ値が逆で、1 が閉じている状態です。3つとも 0
           が初期状態（病院・語学所は閉、カジノは開）です。
@@ -869,36 +871,35 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
             (facilitiesReadyForLightOfHope(view.values)
               ? " 今のセーブはこの条件を満たしています。"
               : " 今のセーブはこの条件を満たしていません。")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        {FACILITY_FLAGS.map((flag, i) => (
-          <div key={flag.offset} className="grid content-start gap-2">
-            <SelectRow
-              label={flag.label}
-              offset={flag.offset}
-              value={view ? String(view.values[i]) : null}
-              currentLabel={view ? `${view.values[i]} 不明` : undefined}
-              options={flagOptions[flag.meaning]}
-              problem={view?.problem ?? null}
-              note={flag.note}
-              onChange={(v) => update((b) => writeFacilityFlag(b, i, Number(v), { advanced }))}
-            />
-            <ul className="text-muted-foreground list-disc pl-5 text-xs">
-              {flag.slots.map((slot) => {
-                const current = view ? facilitySlotEvent(slot, view.values[i]) : null;
-                return (
-                  <li key={slot.label}>
-                    {slot.label}：0 で{slot.when0}、1 で{slot.when1}
-                    {current && `（今は${current}）`}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+        </>
+      }
+    >
+      {FACILITY_FLAGS.map((flag, i) => (
+        <div key={flag.offset} className="grid content-start gap-2">
+          <SelectRow
+            label={flag.label}
+            offset={flag.offset}
+            value={view ? String(view.values[i]) : null}
+            currentLabel={view ? `${view.values[i]} 不明` : undefined}
+            options={flagOptions[flag.meaning]}
+            problem={view?.problem ?? null}
+            note={flag.note}
+            onChange={(v) => update((b) => writeFacilityFlag(b, i, Number(v), { advanced }))}
+          />
+          <ul className="text-muted-foreground list-disc pl-5 text-xs">
+            {flag.slots.map((slot) => {
+              const current = view ? facilitySlotEvent(slot, view.values[i]) : null;
+              return (
+                <li key={slot.label}>
+                  {slot.label}：0 で{slot.when0}、1 で{slot.when1}
+                  {current && `（今は${current}）`}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+    </CollapsibleCard>
   );
 }
 
@@ -909,10 +910,11 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
   const offsets = CHARACTER_OFFSETS;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">人物の状態</CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="人物の状態"
+      contentClassName="grid gap-4 sm:grid-cols-3 lg:grid-cols-5"
+      description={
+        <>
           イベントの状態のすぐ後ろにある15バイトと、寿司屋の状態（0x37F9）で、重要人物ごとの状態（生死など）です。周回の始めはすべて
           0 です。 多くの人物は 0 が生存、1 が死亡です。赤城の 3 は病院に運ばれて助かった状態、J.J.
           の 3・4・5 は伯爵救出の成功・打ち解けた・逮捕された状態です。
@@ -921,32 +923,31 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
           を書くといなくなることを確認済みです。ほかの人物の書き換えの効果は要ゲーム内確認です。
           各欄は値の意味から選びます。説明に、値が変わる場面と、値を条件にするイベントを書いています。
           {view?.warning && ` ${view.warning}`}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {offsets.map((offset, i) => {
-          const info = CHARACTER_NOTES[offset];
-          const hex = `0x${offset.toString(16).toUpperCase()}`;
-          const current = view?.values[i] ?? null;
-          return (
-            <SelectRow
-              key={offset}
-              label={info?.name ? `${hex}（${info.name}）` : hex}
-              offset={offset}
-              value={current === null ? null : String(current)}
-              currentLabel={current === null ? undefined : `${current} 不明`}
-              options={characterValues(offset).map((s) => ({
-                value: String(s.value),
-                label: `${s.value} ${s.label}`,
-              }))}
-              problem={view?.problem ?? null}
-              note={info?.note}
-              onChange={(v) => update((b) => writeCharacter(b, offset, Number(v), { advanced }))}
-            />
-          );
-        })}
-      </CardContent>
-    </Card>
+        </>
+      }
+    >
+      {offsets.map((offset, i) => {
+        const info = CHARACTER_NOTES[offset];
+        const hex = `0x${offset.toString(16).toUpperCase()}`;
+        const current = view?.values[i] ?? null;
+        return (
+          <SelectRow
+            key={offset}
+            label={info?.name ? `${hex}（${info.name}）` : hex}
+            offset={offset}
+            value={current === null ? null : String(current)}
+            currentLabel={current === null ? undefined : `${current} 不明`}
+            options={characterValues(offset).map((s) => ({
+              value: String(s.value),
+              label: `${s.value} ${s.label}`,
+            }))}
+            problem={view?.problem ?? null}
+            note={info?.note}
+            onChange={(v) => update((b) => writeCharacter(b, offset, Number(v), { advanced }))}
+          />
+        );
+      })}
+    </CollapsibleCard>
   );
 }
 
@@ -986,53 +987,53 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          町の人の生死
-          <InfoTip offset={`0x015C + ${PERSON_RECORD_SIZE} × 人物番号（+0x00 の bit0）`}>
-            町の人ごとの 12 バイトのレコードの先頭のビット。ほかのビットとバイトは使われていません
-          </InfoTip>
-        </CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="町の人の生死"
+      extra={
+        <InfoTip offset={`0x015C + ${PERSON_RECORD_SIZE} × 人物番号（+0x00 の bit0）`}>
+          町の人ごとの 12 バイトのレコードの先頭のビット。ほかのビットとバイトは使われていません
+        </InfoTip>
+      }
+      contentClassName="flex flex-col gap-4"
+      description={
+        <>
           チェックの付いた人は死亡した（または引退などで町からいなくなった）人で、町に出てきません。周回の終わりに全員が生き返ります。
           堂島・寿司屋・鍛冶屋のおやじは死亡の位置を差分で確認済みで、寿司屋と鍛冶屋のおやじは外すと生き返ることを確認済みです。
           重要人物・寿司屋・薬屋は、外すだけでは生き返りません（警告のアイコンに一緒に戻す値を書いています）。
           ほかの人は外せば町に出てくるはずですが、要ゲーム内確認です。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {groups.map((g) => (
-          <div key={g} className="flex flex-col gap-2">
-            <p className="text-sm font-medium">{g}</p>
-            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              {TOWNSFOLK_PEOPLE.filter((x) => x.group === g).map((x) => {
-                const dead = deadOf(x.p);
-                const revive = reviveNote(x.p);
-                return (
-                  <div key={x.p} className="flex items-center gap-1">
-                    <Label className="flex items-center gap-2 font-normal">
-                      <Checkbox
-                        checked={dead ?? false}
-                        disabled={dead === null || view?.problem != null}
-                        onCheckedChange={(on) => update((b) => writePersonDead(b, x.p, on))}
-                      />
-                      <span>
-                        {x.name}
-                        <span className="text-muted-foreground ml-1 font-mono text-xs">
-                          {formatOffset(personOffset(x.p))}
-                        </span>
+        </>
+      }
+    >
+      {groups.map((g) => (
+        <div key={g} className="flex flex-col gap-2">
+          <p className="text-sm font-medium">{g}</p>
+          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {TOWNSFOLK_PEOPLE.filter((x) => x.group === g).map((x) => {
+              const dead = deadOf(x.p);
+              const revive = reviveNote(x.p);
+              return (
+                <div key={x.p} className="flex items-center gap-1">
+                  <Label className="flex items-center gap-2 font-normal">
+                    <Checkbox
+                      checked={dead ?? false}
+                      disabled={dead === null || view?.problem != null}
+                      onCheckedChange={(on) => update((b) => writePersonDead(b, x.p, on))}
+                    />
+                    <span>
+                      {x.name}
+                      <span className="text-muted-foreground ml-1 font-mono text-xs">
+                        {formatOffset(personOffset(x.p))}
                       </span>
-                    </Label>
-                    {revive && <WarningTip warning={`外すだけでは生き返りません：${revive}`} />}
-                  </div>
-                );
-              })}
-            </div>
+                    </span>
+                  </Label>
+                  {revive && <WarningTip warning={`外すだけでは生き返りません：${revive}`} />}
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </CardContent>
-    </Card>
+        </div>
+      ))}
+    </CollapsibleCard>
   );
 }
 
@@ -1070,33 +1071,33 @@ function NpcFlagsCard({
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>NPCイベントフラグ</CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="NPCイベントフラグ"
+      contentClassName="flex flex-col gap-6"
+      description={
+        <>
           町の人のイベントの進み具合のフラグです。0x011C〜0x015B
           のなりわいのフラグのうち意味の分かったものと、
           堂島・先生の職（0x3799・0x379A）です。連続なりわいの進み具合などは「なりわい」の画面で編集します。
           鍛冶屋の後継者イベント・鍛冶屋の状態と、堂島が鍛冶屋を継いだか（周回後に誰が鍛冶屋になるかを決める）は、書き換えで確認済みです。
           そのほかのフラグの書き換えの効果は要ゲーム内確認です。エリア移動・ロードで消えるフラグは載せていません。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        {groups.map((g) => (
-          <section key={g.title} className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium">{g.title}</h3>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {g.townsfolk.map((offset) => (
-                <TownsfolkField key={offset} offset={offset} view={view} />
-              ))}
-              {g.route.map((offset) => (
-                <RouteCandidateField key={offset} offset={offset} view={route} />
-              ))}
-            </div>
-          </section>
-        ))}
-      </CardContent>
-    </Card>
+        </>
+      }
+    >
+      {groups.map((g) => (
+        <section key={g.title} className="flex flex-col gap-3">
+          <h3 className="text-sm font-medium">{g.title}</h3>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {g.townsfolk.map((offset) => (
+              <TownsfolkField key={offset} offset={offset} view={view} />
+            ))}
+            {g.route.map((offset) => (
+              <RouteCandidateField key={offset} offset={offset} view={route} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </CollapsibleCard>
   );
 }
 

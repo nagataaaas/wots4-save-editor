@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { CertaintyBadge } from "@/components/certainty-badge";
+import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
 import { SearchSelectRow } from "@/components/search-select-row";
@@ -706,32 +707,30 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
   const problem = view?.recordsProblem ?? null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          夜這いの記録
-          <CertaintyBadge mark="🔶" text="書き換えの反映は未確認" />
-        </CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="夜這いの記録"
+      extra={<CertaintyBadge mark="🔶" text="書き換えの反映は未確認" />}
+      description={
+        <>
           {formatOffset(RECORDS_OFFSET)} から 16 B × {RECORD_CAPACITY}{" "}
           件。夜這いのたびに、最初の空いている件に書かれます （
           {view ? `今は ${view.count} 件` : "未読み込み"}。周回を始めると全部消えます）。
           今ある記録の項目だけを書き換えます（記録を足したり消したりする機能はありません）。
           見た目と声は記録に残りません。+0x08 の入った建物の番号は表示だけです。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col divide-y">
-        {view && view.records.length === 0 && (
-          <p className="text-muted-foreground text-sm">記録はありません。</p>
-        )}
-        {problem && view && (
-          <p className="text-muted-foreground pb-4 text-xs">読み取り専用：{problem}</p>
-        )}
-        {view?.records.map((r) => (
-          <RecordRow key={r.index} record={r} problem={problem} />
-        ))}
-      </CardContent>
-    </Card>
+        </>
+      }
+      contentClassName="flex flex-col divide-y"
+    >
+      {view && view.records.length === 0 && (
+        <p className="text-muted-foreground text-sm">記録はありません。</p>
+      )}
+      {problem && view && (
+        <p className="text-muted-foreground pb-4 text-xs">読み取り専用：{problem}</p>
+      )}
+      {view?.records.map((r) => (
+        <RecordRow key={r.index} record={r} problem={problem} />
+      ))}
+    </CollapsibleCard>
   );
 }
 
@@ -741,92 +740,90 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
   const problem = view?.problem ?? null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">夜這いの約束の条件</CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="夜這いの約束の条件"
+      description={
+        <>
           朱美・ローラ・三姉妹・メリンダと夜這いの約束をするための好感度とポイントです（
           {formatOffset(0x3792)}〜{formatOffset(0x3797)}）。
           約束そのものはゲームの中で、条件を満たした場面を通って作ります。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        {YOBAI_POINTS.map((p) => {
-          const current = view?.values.find((v) => v.offset === p.offset)?.value ?? null;
-          const range = advanced ? "0〜255" : `0〜${POINT_NORMAL_MAX}`;
-          return (
-            <FieldRow
-              key={p.offset}
-              label={p.label}
-              offset={p.offset}
-              badges={
-                p.pending ? (
-                  <CertaintyBadge mark={p.threshold === null ? "❓" : "🔶"} text={p.pending} />
-                ) : undefined
-              }
-              value={current}
-              problem={problem}
-              format={String}
-              parse={(input) => parseNumber(input, (v) => validateYobaiPoint(v, { advanced }))}
-              apply={(v) => update((b) => writeYobaiPoint(b, p.offset, v, { advanced }))}
-              inputMode="numeric"
-              hint={p.threshold === null ? range : `${range}。${p.threshold} 以上で約束`}
-              note={p.note}
-              warning={
-                current !== null && current > POINT_NORMAL_MAX
-                  ? `通常の進行では見ない値です（${current}）`
-                  : null
-              }
-            />
-          );
-        })}
-      </CardContent>
-    </Card>
+        </>
+      }
+      contentClassName="grid gap-4 sm:grid-cols-3"
+    >
+      {YOBAI_POINTS.map((p) => {
+        const current = view?.values.find((v) => v.offset === p.offset)?.value ?? null;
+        const range = advanced ? "0〜255" : `0〜${POINT_NORMAL_MAX}`;
+        return (
+          <FieldRow
+            key={p.offset}
+            label={p.label}
+            offset={p.offset}
+            badges={
+              p.pending ? (
+                <CertaintyBadge mark={p.threshold === null ? "❓" : "🔶"} text={p.pending} />
+              ) : undefined
+            }
+            value={current}
+            problem={problem}
+            format={String}
+            parse={(input) => parseNumber(input, (v) => validateYobaiPoint(v, { advanced }))}
+            apply={(v) => update((b) => writeYobaiPoint(b, p.offset, v, { advanced }))}
+            inputMode="numeric"
+            hint={p.threshold === null ? range : `${range}。${p.threshold} 以上で約束`}
+            note={p.note}
+            warning={
+              current !== null && current > POINT_NORMAL_MAX
+                ? `通常の進行では見ない値です（${current}）`
+                : null
+            }
+          />
+        );
+      })}
+    </CollapsibleCard>
   );
 }
 
 function CountersCard({ view }: { view: YobaiView | null }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          夜這いの回数（表示だけ）
-        </CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="夜這いの回数（表示だけ）"
+      description={
+        <>
           夜這いが終わるたびに増える値です。約束の画面の「夜這い回数」は {formatOffset(0x137ec)}
           （確認済み）。
           夜這い回数と相手ごとの回数は周回で消えず、記録・段階・愛の証の回数は周回で消えるので、記録の数と合わないことがあります。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4 text-sm">
-        <div className="grid gap-2 sm:grid-cols-2">
-          {view?.counters.map((c) => (
-            <p key={c.offset}>
-              {c.label}（<span className="font-mono">{formatOffset(c.offset)}</span>）：{c.value}
-              <span className="text-muted-foreground ml-2 text-xs">{c.note}</span>
+        </>
+      }
+      contentClassName="flex flex-col gap-4 text-sm"
+    >
+      <div className="grid gap-2 sm:grid-cols-2">
+        {view?.counters.map((c) => (
+          <p key={c.offset}>
+            {c.label}（<span className="font-mono">{formatOffset(c.offset)}</span>）：{c.value}
+            <span className="text-muted-foreground ml-2 text-xs">{c.note}</span>
+          </p>
+        ))}
+      </div>
+      <div>
+        <p className="mb-2">
+          相手ごとの夜這い回数（{formatOffset(PARTNER_COUNTS_OFFSET)}〜、u32）
+          <span className="text-muted-foreground ml-2 text-xs">
+            特別な相手14人。さよと町の人は数えない
+          </span>
+        </p>
+        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+          {view?.partners.map((p) => (
+            <p key={p.offset}>
+              {p.label}：{p.value}
+              <span className="text-muted-foreground ml-1 font-mono text-xs">
+                {formatOffset(p.offset)}
+              </span>
             </p>
           ))}
         </div>
-        <div>
-          <p className="mb-2">
-            相手ごとの夜這い回数（{formatOffset(PARTNER_COUNTS_OFFSET)}〜、u32）
-            <span className="text-muted-foreground ml-2 text-xs">
-              特別な相手14人。さよと町の人は数えない
-            </span>
-          </p>
-          <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
-            {view?.partners.map((p) => (
-              <p key={p.offset}>
-                {p.label}：{p.value}
-                <span className="text-muted-foreground ml-1 font-mono text-xs">
-                  {formatOffset(p.offset)}
-                </span>
-              </p>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </CollapsibleCard>
   );
 }
 
@@ -885,8 +882,8 @@ export function YobaiPage() {
         </AlertDescription>
       </Alert>
 
-      <PointsCard key={`${k}-points`} view={result?.points ?? null} />
       <PromiseCard key={`${k}-promise`} view={view} />
+      <PointsCard key={`${k}-points`} view={result?.points ?? null} />
       <RecordsCard key={`${k}-records`} view={view} />
       <CountersCard view={view} />
 

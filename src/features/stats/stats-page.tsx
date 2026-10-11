@@ -32,7 +32,7 @@ import {
 } from "@/save/stats";
 
 /** 最初から開いておくまとまり */
-const OPEN_GROUPS: readonly StatGroupId[] = ["evaluation", "actions", "time", "combat"];
+const OPEN_GROUPS: readonly StatGroupId[] = ["evaluation", "actions"];
 
 /** float32 は有効桁7桁程度なので、それを超える桁は表示しない */
 const formatValue = (field: StatField) => (v: number) =>

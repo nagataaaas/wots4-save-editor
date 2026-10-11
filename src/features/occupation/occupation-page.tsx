@@ -326,28 +326,28 @@ const flagOffsetTip = `${formatOffset(OCCUPATION_FLAG_START)} + 番号（u8）`;
 
 function SeriesCard({ view, write }: FlagCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          連続なりわい
-          <InfoTip offset={flagOffsetTip}>
-            なりわいのフラグ。依頼主はこの値を見て次の依頼を出します（状態の表は見ません）。「連続なりわい」は Wiki での呼び方です（ゲーム内には呼び方がありません）
-          </InfoTip>
-        </CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="連続なりわい"
+      extra={
+        <InfoTip offset={flagOffsetTip}>
+          なりわいのフラグ。依頼主はこの値を見て次の依頼を出します（状態の表は見ません）。「連続なりわい」は Wiki での呼び方です（ゲーム内には呼び方がありません）
+        </InfoTip>
+      }
+      description={
+        <>
           【岡っ引き】野戸仏・【極道】小鳩・【泥棒】泥棒さん・【宿無し】おっつぁんの4種類。十の位が何件目か、一の位が
           0＝受注前・1＝受注済です。野戸仏は、20 で2件目「督促状」から始まり、100
           で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。
           4種類をすべて終えると四天王の話が進み、最終なりわいにつながります。連続なりわいを 100
           にしても、最終なりわいが 99 未満なら新しい依頼は出ません。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        {SERIES_CARD_FLAGS.map((flag) => (
-          <FlagRow key={flag} flag={flag} view={view} write={write} />
-        ))}
-      </CardContent>
-    </Card>
+        </>
+      }
+      contentClassName="grid gap-4 sm:grid-cols-2"
+    >
+      {SERIES_CARD_FLAGS.map((flag) => (
+        <FlagRow key={flag} flag={flag} view={view} write={write} />
+      ))}
+    </CollapsibleCard>
   );
 }
 
@@ -376,23 +376,21 @@ const DLC_CARD_FLAGS = [27, 28, 29, 30, 31] as const;
 
 function DlcCard({ view, write }: FlagCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          DLC なりわい
-          <InfoTip offset={flagOffsetTip}>なりわいのフラグ 27〜31</InfoTip>
-        </CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="DLC なりわい"
+      extra={<InfoTip offset={flagOffsetTip}>なりわいのフラグ 27〜31</InfoTip>}
+      description={
+        <>
           人斬り 汁部理人と組んで受けるなりわい（209〜212）です。汁部は 209 → 212 のうち最初に「受注前」の仕事を頼み、すべて「成功」ならもう頼みません。
           持っている DLC によって、頼まれるのは 209・210 か 211・212 だけになります。受注は上の「受注中のなりわい」の欄で書きます。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        {DLC_CARD_FLAGS.map((flag) => (
-          <FlagRow key={flag} flag={flag} view={view} write={write} />
-        ))}
-      </CardContent>
-    </Card>
+        </>
+      }
+      contentClassName="grid gap-4 sm:grid-cols-2"
+    >
+      {DLC_CARD_FLAGS.map((flag) => (
+        <FlagRow key={flag} flag={flag} view={view} write={write} />
+      ))}
+    </CollapsibleCard>
   );
 }
 

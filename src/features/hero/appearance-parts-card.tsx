@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
+import { CollapsibleCard } from "@/components/collapsible-card";
 import { InfoTip } from "@/components/info-tip";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
 import {
@@ -241,122 +241,122 @@ export function AppearancePartsCard() {
 
   const kinds = PART_KINDS.filter((kind) => advanced || kind !== "body");
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">容姿</CardTitle>
-        <CardDescription>
+    <CollapsibleCard
+      title="容姿"
+      description={
+        <>
           人物を選ぶと、タイプ・身長・髪の色・顔・髪型・服をその人物の値で書きます（体型・肌色は変えません）。
           人物を選んでいる間、ゲームは顔・髪型・服・髪の色を人物の値で表示します。部品や髪の色を変えると「個別に設定」になります。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        <SearchSelectRow
-          key={`${k}-person-${advanced}`}
-          label="人物"
-          offset={APPEARANCE_PARTS_OFFSETS.person}
-          value={view ? String(view.person) : null}
-          currentLabel={
-            view?.person === PERSON_CUSTOM ? "個別に設定（FFFF）" : `不明な人物 ${view?.person}`
-          }
-          options={personOptions}
-          problem={problem}
-          hint={
-            person
-              ? `身長 ${person.height}cm（ふつう）`
-              : view?.person === PERSON_CUSTOM
-                ? "顔・髪型・服を個別に設定しています"
-                : undefined
-          }
-          note="🟢 人物の番号。✅ [U] 選び直して見た目が変わることを確認。0x3AAD6 に書く値は 🔶（U-19）。身長は今の低い・高いの倍率を引き継ぐ"
-          searchPlaceholder="人物を検索"
-          onChange={(v) => update((b) => writePerson(b, Number(v)))}
-        />
-        <SelectRow
-          key={`${k}-body-kind-${advanced}`}
-          label="タイプ"
-          offset={APPEARANCE_PARTS_OFFSETS.bodyKind}
-          value={view ? String(view.bodyKind) : null}
-          currentLabel={`不明な値 ${view?.bodyKind}`}
-          options={BODY_KIND_NAMES.flatMap((g, i) =>
-            BODY_KIND_CRASH.includes(i) ? [] : [{ value: String(i), label: `${g}（${i}）` }],
-          )}
-          problem={problem}
-          disabled={!advanced}
-          hint={
-            advanced
-              ? "上級者モード：タイプだけを書き換えます。異なるタイプの部品と組み合わさると表示が崩れるおそれがあります"
-              : "人物を選ぶと決まります"
-          }
-          note="🔶 0＝男、1＝女。2＝ローラ・3＝子供（✅ [U] 人物として表示を確認）。4＝動物はロードでクラッシュするので出さない（✅ [U]）"
-          onChange={(v) => update((b) => writeBodyKind(b, Number(v), advanced))}
-        />
-        <SelectRow
-          key={`${k}-hair-color-${advanced}`}
-          label="髪の色"
-          offset={APPEARANCE_PARTS_OFFSETS.hairColor}
-          value={view ? String(view.hairColor) : null}
-          currentLabel={hairLabel(view?.hairColor ?? 0)}
-          options={hairOptions}
-          problem={problem}
-          hint={
-            advanced
-              ? "上級者モード：0〜15（0・10 以上は色がつきません）"
-              : `${HAIR_COLOR_MIN}〜${HAIR_COLOR_MAX}`
-          }
-          note="値＝主人公設定の一覧の左からの位置。✅ [U] 0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪。🔶 5＝赤・6〜9（U-19）"
-          onChange={(v) => update((b) => writeHairColor(b, Number(v), advanced))}
-        />
-        <NudeButtons
-          disabled={view === null || problem !== null || (view.bodyKind !== 0 && view.bodyKind !== 1)}
-          onNude={(kind) => update((b) => writeNude(b, kind))}
-        />
-        {kinds.map((kind) => {
-          const part = view?.parts[kind];
-          const current = part && part.id !== -1 ? findPart(kind, part.id) : undefined;
-          return (
-            <div key={`${k}-${kind}-${advanced}`} className="flex flex-col gap-1">
-              <SearchSelectRow
-                label={PART_KIND_LABELS[kind]}
-                offset={part?.offset ?? 0}
-                value={part ? String(part.id) : null}
-                currentLabel={
-                  part?.id === -1
-                    ? "なし（FFFF）"
-                    : current
-                      ? partLabel(current)
-                      : `表にない番号 ${part?.id}`
-                }
-                options={partOptions(kind, heroBodyKind, advanced)}
+        </>
+      }
+      contentClassName="grid gap-4 sm:grid-cols-2"
+    >
+      <SearchSelectRow
+        key={`${k}-person-${advanced}`}
+        label="人物"
+        offset={APPEARANCE_PARTS_OFFSETS.person}
+        value={view ? String(view.person) : null}
+        currentLabel={
+          view?.person === PERSON_CUSTOM ? "個別に設定（FFFF）" : `不明な人物 ${view?.person}`
+        }
+        options={personOptions}
+        problem={problem}
+        hint={
+          person
+            ? `身長 ${person.height}cm（ふつう）`
+            : view?.person === PERSON_CUSTOM
+              ? "顔・髪型・服を個別に設定しています"
+              : undefined
+        }
+        note="🟢 人物の番号。✅ [U] 選び直して見た目が変わることを確認。0x3AAD6 に書く値は 🔶（U-19）。身長は今の低い・高いの倍率を引き継ぐ"
+        searchPlaceholder="人物を検索"
+        onChange={(v) => update((b) => writePerson(b, Number(v)))}
+      />
+      <SelectRow
+        key={`${k}-body-kind-${advanced}`}
+        label="タイプ"
+        offset={APPEARANCE_PARTS_OFFSETS.bodyKind}
+        value={view ? String(view.bodyKind) : null}
+        currentLabel={`不明な値 ${view?.bodyKind}`}
+        options={BODY_KIND_NAMES.flatMap((g, i) =>
+          BODY_KIND_CRASH.includes(i) ? [] : [{ value: String(i), label: `${g}（${i}）` }],
+        )}
+        problem={problem}
+        disabled={!advanced}
+        hint={
+          advanced
+            ? "上級者モード：タイプだけを書き換えます。異なるタイプの部品と組み合わさると表示が崩れるおそれがあります"
+            : "人物を選ぶと決まります"
+        }
+        note="🔶 0＝男、1＝女。2＝ローラ・3＝子供（✅ [U] 人物として表示を確認）。4＝動物はロードでクラッシュするので出さない（✅ [U]）"
+        onChange={(v) => update((b) => writeBodyKind(b, Number(v), advanced))}
+      />
+      <SelectRow
+        key={`${k}-hair-color-${advanced}`}
+        label="髪の色"
+        offset={APPEARANCE_PARTS_OFFSETS.hairColor}
+        value={view ? String(view.hairColor) : null}
+        currentLabel={hairLabel(view?.hairColor ?? 0)}
+        options={hairOptions}
+        problem={problem}
+        hint={
+          advanced
+            ? "上級者モード：0〜15（0・10 以上は色がつきません）"
+            : `${HAIR_COLOR_MIN}〜${HAIR_COLOR_MAX}`
+        }
+        note="値＝主人公設定の一覧の左からの位置。✅ [U] 0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪。🔶 5＝赤・6〜9（U-19）"
+        onChange={(v) => update((b) => writeHairColor(b, Number(v), advanced))}
+      />
+      <NudeButtons
+        disabled={view === null || problem !== null || (view.bodyKind !== 0 && view.bodyKind !== 1)}
+        onNude={(kind) => update((b) => writeNude(b, kind))}
+      />
+      {kinds.map((kind) => {
+        const part = view?.parts[kind];
+        const current = part && part.id !== -1 ? findPart(kind, part.id) : undefined;
+        return (
+          <div key={`${k}-${kind}-${advanced}`} className="flex flex-col gap-1">
+            <SearchSelectRow
+              label={PART_KIND_LABELS[kind]}
+              offset={part?.offset ?? 0}
+              value={part ? String(part.id) : null}
+              currentLabel={
+                part?.id === -1
+                  ? "なし（FFFF）"
+                  : current
+                    ? partLabel(current)
+                    : `表にない番号 ${part?.id}`
+              }
+              options={partOptions(kind, heroBodyKind, advanced)}
+              problem={problem}
+              hint={
+                (kind === "upper" || kind === "lower") && view && isNude(view, kind)
+                  ? `今は${kind === "upper" ? "上裸" : "下裸"}です（服の層を外して体の層だけにしています）`
+                  : advanced
+                    ? undefined
+                    : heroBodyKind === 0 || heroBodyKind === 1
+                      ? `${bodyKindName(heroBodyKind)}用と共通の、名前のある部品だけを表示しています`
+                      : BODY_KIND_PARTS[heroBodyKind]
+                        ? `${bodyKindName(heroBodyKind)}用の部品だけを表示しています`
+                        : `タイプが${bodyKindName(heroBodyKind) ?? `不明な値 ${heroBodyKind}`}のときは、通常モードでは部品を選べません。上級者モードで選んでください`
+              }
+              // その項目が「なし」のときだけ（止めない。ユーザー判断 2026-10-08）
+              warning={part ? partNoneWarning(kind, part.id) : null}
+              note={PART_NOTES[kind]}
+              searchPlaceholder={`${PART_KIND_LABELS[kind]}を検索`}
+              onChange={(v) => update((b) => writePart(b, kind, Number(v), advanced))}
+            />
+            {advanced && part && (
+              <LayerEditor
+                kind={kind}
+                part={part}
                 problem={problem}
-                hint={
-                  (kind === "upper" || kind === "lower") && view && isNude(view, kind)
-                    ? `今は${kind === "upper" ? "上裸" : "下裸"}です（服の層を外して体の層だけにしています）`
-                    : advanced
-                      ? undefined
-                      : heroBodyKind === 0 || heroBodyKind === 1
-                        ? `${bodyKindName(heroBodyKind)}用と共通の、名前のある部品だけを表示しています`
-                        : BODY_KIND_PARTS[heroBodyKind]
-                          ? `${bodyKindName(heroBodyKind)}用の部品だけを表示しています`
-                          : `タイプが${bodyKindName(heroBodyKind) ?? `不明な値 ${heroBodyKind}`}のときは、通常モードでは部品を選べません。上級者モードで選んでください`
-                }
-                // その項目が「なし」のときだけ（止めない。ユーザー判断 2026-10-08）
-                warning={part ? partNoneWarning(kind, part.id) : null}
-                note={PART_NOTES[kind]}
-                searchPlaceholder={`${PART_KIND_LABELS[kind]}を検索`}
-                onChange={(v) => update((b) => writePart(b, kind, Number(v), advanced))}
+                onChange={(layer, v) => update((b) => writeLayer(b, kind, layer, v, advanced))}
               />
-              {advanced && part && (
-                <LayerEditor
-                  kind={kind}
-                  part={part}
-                  problem={problem}
-                  onChange={(layer, v) => update((b) => writeLayer(b, kind, layer, v, advanced))}
-                />
-              )}
-            </div>
-          );
-        })}
-      </CardContent>
-    </Card>
+            )}
+          </div>
+        );
+      })}
+    </CollapsibleCard>
   );
 }

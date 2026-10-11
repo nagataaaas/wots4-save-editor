@@ -41,7 +41,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   return out;
 }
 
-describe("門・柵のフラグ chunks/gates", () => {
+describe("門・柵の状態 chunks/gates", () => {
   it("大寄せ以降と大寄せ前の、代官所・居留地・神社の門と、代官所の拷問部屋の扉を読む", () => {
     expect(WORLD_FLAGS.map((f) => f.offset)).toEqual([
       0x37fa, 0x37fb, 0x3764, 0x37c3, 0x377d, 0x377e, 0x377f, 0x3761, 0x3762,
@@ -133,12 +133,12 @@ describe("門・柵のフラグ chunks/gates", () => {
 
 // 代官所の拷問塔の扉（chunks/scenario-flags）。🟢 0x3762（拷問部屋）と 0x3763（拷問塔の区画の入口）を
 // 1つの欄にまとめて両方へ同じ値を書く。1 以上で閉じる。扉の見た目は要ゲーム内確認。
-describe("代官所 拷問部屋の扉（門・柵のフラグに置く）", () => {
+describe("代官所 拷問部屋の扉（門・柵の状態に置く）", () => {
   const TORTURE = WORLD_FLAGS.findIndex((f) => f.offset === 0x3762);
   /** 大寄せ以降で門がすべて閉じ、大老と三姉妹の前（0x3762・0x3763 が 1） */
   const VALUES = [...NO_ROUTE, 1];
 
-  it("🟢 0x3763 と組にして、門・柵のフラグの「代官所の扉」に置く", () => {
+  it("🟢 0x3763 と組にして、門・柵の状態の「代官所の扉」に置く", () => {
     const torture = WORLD_FLAGS[TORTURE];
     expect(torture).toMatchObject({
       offset: 0x3762,
