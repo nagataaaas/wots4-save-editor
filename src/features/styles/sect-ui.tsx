@@ -22,7 +22,9 @@ import { uniqueSkillSects, uniqueWeaponsForSkill } from "@/save/unique-weapons";
 import { STATE_LABELS, UNIQUE_WEAPON_ATTR, parseInteger } from "./sect-format";
 import { EMPTY_FILTER, filterSortTree } from "./skill-list";
 
-export function StateBadge({ state }: { state: number }) {
+/** state が null はセーブ未読み込み */
+export function StateBadge({ state }: { state: number | null }) {
+  if (state === null) return <span className="text-muted-foreground">—</span>;
   return (
     <Badge variant={state === 0 ? "outline" : state === 3 ? "secondary" : "default"} className="font-normal">
       {STATE_LABELS[state] ?? "不明"}
@@ -111,7 +113,8 @@ export function SkillPicker({
   stance: number;
   selected: ReadonlySet<number>;
   onChange: (next: Set<number>) => void;
-  stanceStates: readonly number[];
+  /** null はセーブ未読み込み。状態を「—」で出し、技を薄くしない（操作は disabled で止める） */
+  stanceStates: readonly number[] | null;
   advanced: boolean;
   disabled?: boolean;
 }) {
@@ -121,7 +124,7 @@ export function SkillPicker({
   const sheet = useMemo(() => stanceSkillSheet(stance), [stance]);
   const groups = useMemo(() => sheetSkillTree(sheet), [sheet]);
   const shown = useMemo(() => filterSortTree(groups, { ...EMPTY_FILTER, query: filter }, "id-asc"), [groups, filter]);
-  const usable = (no: number) => advanced || stanceStates[no] === 1 || stanceStates[no] === 2;
+  const usable = (no: number) => advanced || !stanceStates || stanceStates[no] === 1 || stanceStates[no] === 2;
   const conflicts = useMemo(() => findSkillConflicts(stance, [...selected]), [stance, selected]);
   const toggle = (no: number, on: boolean) => {
     const next = new Set(selected);
@@ -202,7 +205,7 @@ export function SkillPicker({
                     />
                     <SkillTreeName sheet={sheet} {...ctx} dim={dim || !ok} />
                     <span>
-                      <StateBadge state={stanceStates[s.skillNo]} />
+                      <StateBadge state={stanceStates ? stanceStates[s.skillNo] : null} />
                     </span>
                     <SkillCommandCells skillId={s.skillId} />
                     <SkillAttrs skillId={s.skillId} />

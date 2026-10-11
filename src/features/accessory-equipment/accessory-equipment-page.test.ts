@@ -53,7 +53,8 @@ describe('装飾品の装着画面', () => {
     expect(list).not.toContain('<select')
     expect(list?.match(/<button\b/g)).toHaveLength(10)
     expect(list?.match(/aria-pressed="true"/g)).toHaveLength(1)
-    for (let i = 1; i <= 10; i++) expect(list).toContain(`${i}枠目：未読み込み`)
+    // 未読み込みのときの文字の値は「—」（AGENTS.md「セーブ未読み込みのときの表示」）
+    for (let i = 1; i <= 10; i++) expect(list).toContain(`${i}枠目：—`)
   })
   it('内側にBoxを作らず、選択と枠リストを5:2に並べ、調整は区切り線と小見出しで整理する', () => {
     const html = render(null)
@@ -77,6 +78,8 @@ describe('装飾品の装着画面', () => {
     expect(html).toContain('俺のおしゃれ5')
     expect(html).not.toContain('アンサンブル')
     expect(html).toContain('disabled')
+    // 見出しの装飾品名は「—」
+    expect(html).toMatch(/<h3[^>]*>1枠目：—<\/h3>/)
   })
   it('🟢 合成した装着とサイズ1.0を表示。サイズ不一致は読み取り専用', () => {
     const bytes = new Uint8Array(TS_SAVE_SIZE)

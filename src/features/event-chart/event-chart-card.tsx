@@ -135,12 +135,9 @@ export function EventChartCard({
               ゲームで出ない升は点線で薄く描く。ゲームは「いま始められるイベント」も到達した枠として扱うが、セーブだけでは決まらないので描かない。
               状態 03・04 = 引き受けた・成功、記録 04 = 名前を出す、状態 05 = 失敗、段階 0x0010、真ルート 0x378E、周回数 0x0B8C、イベントの状態 0x36A8＋添字、チャート表示の記録 0x3838＋添字。
               ❓ 真ルートの扱い・赤い線・緑の枠・紫の箱・カーソルの範囲は要ゲーム内確認 */}
-          {loaded && (
-            <>
-              <br />
-              周回数 {counts.playCount.toLocaleString()}・クリア回数の合計 {counts.clearTotal.toLocaleString()}
-            </>
-          )}
+          <br />
+          周回数 {counts ? counts.playCount.toLocaleString() : "—"}・クリア回数の合計{" "}
+          {counts ? counts.clearTotal.toLocaleString() : "—"}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">

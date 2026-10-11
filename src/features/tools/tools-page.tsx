@@ -91,13 +91,6 @@ function ItemBoxPage({
 
   return (
     <div className="flex flex-col gap-4">
-      {!view && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。</AlertDescription>
-        </Alert>
-      )}
-
       {view?.layoutProblem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>

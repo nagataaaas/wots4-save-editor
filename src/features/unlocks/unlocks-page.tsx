@@ -44,8 +44,8 @@ import {
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-/** 読み込み前・読み取り専用・エラーの表示と、書き込みのエラーの受け止め */
-function usePageState<T extends { layoutProblem: string | null }>(read: (bytes: Uint8Array) => T, showMissingSave = true) {
+/** 読み取り専用・エラーの表示と、書き込みのエラーの受け止め（未読み込みの案内は NoSaveNotice が出す） */
+function usePageState<T extends { layoutProblem: string | null }>(read: (bytes: Uint8Array) => T) {
   const { save, update } = useSave();
   const [writeError, setWriteError] = useState<string | null>(null);
   const result = useMemo((): { view: T } | { error: string } | null => {
@@ -68,12 +68,6 @@ function usePageState<T extends { layoutProblem: string | null }>(read: (bytes: 
   }
   const banner: ReactNode = (
     <>
-      {!save && showMissingSave && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。</AlertDescription>
-        </Alert>
-      )}
       {result && "error" in result && (
         <Alert variant="destructive">
           <AlertTitle>読み込めません</AlertTitle>
@@ -126,7 +120,7 @@ export function AccessoriesPage() {
         }),
     [query, filter, part, view],
   );
-  const ownedCount = view ? view.values.filter((v) => v !== 0).length : 0;
+  const ownedCount = view ? view.values.filter((v) => v !== 0).length : "—";
 
   return (
     <div className="flex flex-col gap-4">
@@ -201,14 +195,14 @@ export function AccessoriesPage() {
           </div>
           <div className="flex flex-col divide-y">
             {rows.map((a) => {
-              const value = view?.values[a.id] ?? 0;
+              const value = view ? view.values[a.id] : null;
               return (
                 <div key={a.id} className="flex items-center gap-3 py-1.5">
                   <OwnershipStateButton
-                    owned={value !== 0}
+                    owned={value === null ? null : value !== 0}
                     name={a.ja}
                     labels={["未所持", "所持"]}
-                    disabled={readOnly || (value > 1 && !advanced)}
+                    disabled={readOnly || (value !== null && value > 1 && !advanced)}
                     onChange={(on) => write((b) => writeAccessoryFlag(b, a.id, on ? 1 : 0, { advanced }))}
                   />
                   <ItemInformation
@@ -229,7 +223,7 @@ export function AccessoriesPage() {
                         </Badge>
                       )}
                   </ItemInformation>
-                  {value > 1 && <span className="text-destructive text-xs">状態不明</span>}
+                  {value !== null && value > 1 && <span className="text-destructive text-xs">状態不明</span>}
                 </div>
               );
             })}
@@ -273,7 +267,7 @@ function UnlockStateRows({
   return (
     <div className="flex flex-col divide-y">
       {rows.map((u) => {
-        const value = view?.values[u.id] ?? 0;
+        const value = view ? view.values[u.id] : null;
         const info = appearance ? appearanceUnlockInformation(u) : { ja: u.ja, en: u.en, descriptionJa: u.effectJa };
 
         return (
@@ -281,7 +275,7 @@ function UnlockStateRows({
             <UnlockStateButton
               value={value}
               name={info.ja}
-              disabled={readOnly || (value > 2 && !advanced)}
+              disabled={readOnly || (value !== null && value > 2 && !advanced)}
               onChange={(v) => write((b) => writeUnlockState(b, u.id, v, { advanced }))}
             />
             <ItemInformation
@@ -300,7 +294,7 @@ function UnlockStateRows({
 
 function AppearanceUnlocksCard() {
   const { advanced } = useAdvancedMode();
-  const { view, readOnly, write, banner } = usePageState(readUnlockStates, false);
+  const { view, readOnly, write, banner } = usePageState(readUnlockStates);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const rows = UNLOCKS.filter((u) => APPEARANCE_UNLOCK_CATEGORIES.some((c) => c === u.category))
@@ -365,7 +359,7 @@ export function AppearancePage() {
       if (filter === "all" || !view) return true;
       return isAppearanceBitSet(view, c.id) === (filter === "on");
     });
-  const onCount = view ? CLOTHES.filter((c) => isAppearanceBitSet(view, c.id)).length : 0;
+  const onCount = view ? CLOTHES.filter((c) => isAppearanceBitSet(view, c.id)).length : "—";
 
   return (
     <div className="flex flex-col gap-4">
@@ -428,7 +422,7 @@ export function AppearancePage() {
               return (
                 <div key={c.id} className="flex items-center gap-3 py-1.5">
                   <OwnershipStateButton
-                    owned={view ? isAppearanceBitSet(view, c.id) : false}
+                    owned={view ? isAppearanceBitSet(view, c.id) : null}
                     name={c.ja}
                     labels={["未解放", "解放済み"]}
                     disabled={readOnly}

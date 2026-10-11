@@ -83,15 +83,6 @@ export function WeaponChestPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {!view && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>
-            サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。
-          </AlertDescription>
-        </Alert>
-      )}
-
       {view?.layoutProblem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>
@@ -149,27 +140,30 @@ export function WeaponChestPage() {
         </CardContent>
       </Card>
 
-      {view && weapons && (
-        <Card className="gap-2">
-          <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2">
-              刀箪笥の武器
-              <span className="text-muted-foreground text-sm font-normal">
-                {view.filled.length} 本
-              </span>
-              <InfoTip offset={WEAPON_CHEST_OFFSET} />
-              <div className="ml-auto flex items-center gap-2 text-sm font-normal">
-                <Switch id={showEmptyId} checked={showEmpty} onCheckedChange={setShowEmpty} />
-                <Label htmlFor={showEmptyId}>空き枠も表示</Label>
-              </div>
-            </CardTitle>
-            <CardDescription>
-              行を押すと編集欄を開きます。
-              <br />
-              {showEmpty ? `容量の枠（${slots} 枠）と、その外で武器が入っている枠を表示しています。` : "武器が入っている枠だけを表示しています。"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      {/* 未読み込みのときは枠だけを描き、一覧は「—」にする */}
+      <Card className="gap-2">
+        <CardHeader>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            刀箪笥の武器
+            <span className="text-muted-foreground text-sm font-normal">
+              {view ? view.filled.length : "—"} 本
+            </span>
+            <InfoTip offset={WEAPON_CHEST_OFFSET} />
+            <div className="ml-auto flex items-center gap-2 text-sm font-normal">
+              <Switch id={showEmptyId} checked={showEmpty} onCheckedChange={setShowEmpty} />
+              <Label htmlFor={showEmptyId}>空き枠も表示</Label>
+            </div>
+          </CardTitle>
+          <CardDescription>
+            行を押すと編集欄を開きます。
+            <br />
+            {showEmpty
+              ? `容量の枠（${view ? slots : "—"} 枠）と、その外で武器が入っている枠を表示しています。`
+              : "武器が入っている枠だけを表示しています。"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {weapons ? (
             <CompactWeaponList
               key={save?.loadId ?? 0}
               weapons={weapons}
@@ -180,9 +174,11 @@ export function WeaponChestPage() {
                 i >= slots && !weapons[i].empty ? <Badge variant="outline">容量の外</Badge> : null
               }
             />
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-muted-foreground text-sm">—</p>
+          )}
+        </CardContent>
+      </Card>
 
       <p className="text-muted-foreground text-xs">
         空き枠は編集できず、武器を作る・消す機能はないので、武器の欄を書き換えても本数は変わりません。

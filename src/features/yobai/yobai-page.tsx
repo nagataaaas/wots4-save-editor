@@ -22,7 +22,9 @@ import {
   PROMISE_LAYOUT_REL,
   PROMISE_OFFSET,
   PROMISE_PLACE_REL,
+  PARTNER_COUNT_NPCS,
   RECORD_CAPACITY,
+  YOBAI_COUNTERS,
   promiseFieldOffset,
   readYobai,
   recordFieldOffset,
@@ -302,24 +304,26 @@ function PersonFieldEditor({
  * 場所（約束の枠の +0x08）と配置（+0x0A）。配置はその場所で使える配置（🟢 PLACE_LAYOUTS）だけを、家の中の人数で選ぶ。
  * 場所を変えると、今の配置がその場所で使えなければ、家の中の人がいちばん少ない配置にする
  */
-function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
+function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView | null; problem: string | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
-  const layouts = layoutsForPlace(promise.place);
-  const valid = layouts.includes(promise.layout);
+  // promise が null（セーブ未読み込み）のときは欄を無効にして描く
+  const layouts = promise ? layoutsForPlace(promise.place) : [];
+  const valid = !promise || layouts.includes(promise.layout);
 
   return (
     <>
       <SelectRow
         label="場所"
         offset={PROMISE_OFFSET + PROMISE_PLACE_REL}
-        value={String(promise.place)}
+        value={promise ? String(promise.place) : null}
         currentLabel="名前なし"
         options={placeOptions}
         problem={problem}
         // ✅ 扉とマップの書き換えの反映を確認
         note="夜這いに入る扉と、その先のマップ。場所を変えると、配置もその場所で使えるものに合わせる"
         onChange={(v) => {
+          if (!promise) return;
           const place = Number(v);
           const next = layoutsForPlace(place);
           const layout = next.includes(promise.layout) ? promise.layout : next[0];
@@ -329,8 +333,8 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem
       <SelectRow
         label="配置（家の中の人）"
         offset={PROMISE_OFFSET + PROMISE_LAYOUT_REL}
-        value={String(promise.layout)}
-        currentLabel={`${layoutLabel(promise.layout)}（この場所では使われない配置）`}
+        value={promise ? String(promise.layout) : null}
+        currentLabel={promise ? `${layoutLabel(promise.layout)}（この場所では使われない配置）` : undefined}
         options={layoutOptionsOf(layouts)}
         problem={problem}
         warning={
@@ -339,13 +343,15 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem
             : "この場所で使われる配置ではありません。布団の位置がおかしくなることがあります"
         }
         hint={
-          layouts.length <= 1
-            ? "この場所で使える配置は1つだけです"
-            : `この場所で使える配置は ${layouts.length} 通りです`
+          !promise
+            ? undefined
+            : layouts.length <= 1
+              ? "この場所で使える配置は1つだけです"
+              : `この場所で使える配置は ${layouts.length} 通りです`
         }
         note={LAYOUT_NOTE}
         onChange={(v) =>
-          update((b) => writePromisePlace(b, promise.place, Number(v), { advanced }))
+          promise && update((b) => writePromisePlace(b, promise.place, Number(v), { advanced }))
         }
       />
     </>
@@ -355,21 +361,22 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem
 /**
  * 相手の種類（約束の枠の +0x04）。名前のある相手の種類にしたとき、場所と配置がその相手のもの（組の表の行）と違えば、合わせるボタンを出す
  */
-function TypeEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
+function TypeEditor({ promise, problem }: { promise: PromiseView | null; problem: string | null }) {
   const { save, update } = useSave();
   const { advanced } = useAdvancedMode();
-  const partner = promisePartner(promise.type);
-  const death = save ? partnerDeathWarning(save.working, promise.type) : null;
+  // promise が null（セーブ未読み込み）のときは欄を無効にして描く
+  const partner = promise ? promisePartner(promise.type) : undefined;
+  const death = save && promise ? partnerDeathWarning(save.working, promise.type) : null;
   const home = partner?.row != null ? PROMISE_ROWS.find((r) => r.index === partner.row) : undefined;
   const away =
-    home && (home.place !== promise.place || home.layout !== promise.layout) ? home : undefined;
+    promise && home && (home.place !== promise.place || home.layout !== promise.layout) ? home : undefined;
 
   return (
     <div className="flex flex-col gap-2 sm:col-span-3">
       <SearchSelectRow
         label={PERSON_FIELDS.type.label}
         offset={promiseFieldOffset("type")}
-        value={String(promise.type)}
+        value={promise ? String(promise.type) : null}
         currentLabel="約束できる相手の表にない種類"
         options={typeOptions}
         problem={problem}
@@ -399,24 +406,25 @@ function TypeEditor({ promise, problem }: { promise: PromiseView; problem: strin
  * 約束した日（+0x28、経過日数で 1日目＝0）。🟢 場面が変わるたびに今日の経過日数と比べ、違えばすっぽかしで消える。
  * 「N日目」で入力する。今日でなければ警告を出す
  */
-function DayEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
+function DayEditor({ promise, problem }: { promise: PromiseView | null; problem: string | null }) {
   const { save, update } = useSave();
   const { advanced } = useAdvancedMode();
-  const today = save ? readU16(save.working, DAY_INDEX_OFFSET) : promise.day;
-  const isToday = promise.day === today;
+  // promise が null（セーブ未読み込み）のときは欄を無効にし、今日の日付を出さない
+  const today = save ? readU16(save.working, DAY_INDEX_OFFSET) : null;
+  const isToday = !promise || today === null || promise.day === today;
 
   return (
     <FieldRow
       label="約束した日"
       offset={promiseFieldOffset("day")}
-      value={promise.day}
+      value={promise?.day ?? null}
       problem={problem}
       format={(v) => `${v + 1}`}
       parse={(input) => {
         const r = parseNumber(input, (v) =>
           v < 1
             ? "1日目以上を指定してください"
-            : validatePersonField("day", v - 1, promise.day, { advanced }),
+            : promise && validatePersonField("day", v - 1, promise.day, { advanced }),
         );
         return r.ok ? { ok: true, value: r.value - 1 } : r;
       }}
@@ -424,11 +432,11 @@ function DayEditor({ promise, problem }: { promise: PromiseView; problem: string
       inputMode="numeric"
       // 🟢 場面が変わるたびに今日と比べ、違えば約束が消える
       warning={
-        isToday
+        isToday || today === null
           ? null
           : `今日（${today + 1}日目）ではないので、次に場面が変わるとすっぽかしで消えます`
       }
-      hint={`${hintFor("day", advanced)}。今日は ${today + 1}日目`}
+      hint={`${hintFor("day", advanced)}。今日は ${today === null ? "—" : `${today + 1}日目`}`}
       note="場面が変わるたびに今日と比べ、違えば「夜這いの約束をすっぽかしてしまった…」で約束が消える"
     />
   );
@@ -656,13 +664,9 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
           <CreatePromiseForm problem={problem} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-3">
-            {promise && (
-              <>
-                <TypeEditor promise={promise} problem={problem} />
-                <PlaceLayoutEditor promise={promise} problem={problem} />
-                <DayEditor promise={promise} problem={problem} />
-              </>
-            )}
+            <TypeEditor promise={promise} problem={problem} />
+            <PlaceLayoutEditor promise={promise} problem={problem} />
+            <DayEditor promise={promise} problem={problem} />
             {PROMISE_ORDER.map((field) => (
               <PersonFieldEditor
                 key={field}
@@ -714,12 +718,13 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
         <>
           これまでの夜這いの記録を書き換えられます（記録を足したり消したりはできません）。
           <br />
-          最大 {RECORD_CAPACITY} 件{view && `（今は ${view.count} 件）`}で、周回を始めると全部消えます。
+          最大 {RECORD_CAPACITY} 件（今は {view ? view.count : "—"} 件）で、周回を始めると全部消えます。
           {/* 夜這いのたびに最初の空いている件に書かれる。見た目と声は記録に残らない */}
         </>
       }
       contentClassName="flex flex-col divide-y"
     >
+      {!view && <p className="text-muted-foreground text-sm">—</p>}
       {view && view.records.length === 0 && (
         <p className="text-muted-foreground text-sm">記録はありません。</p>
       )}
@@ -795,9 +800,10 @@ function CountersCard({ view }: { view: YobaiView | null }) {
     >
       <div className="grid gap-2 sm:grid-cols-2">
         {/* 🟢 段階（0x13E30）はゲーム内で数字として見えない内部の値なので出さない */}
-        {view?.counters.filter((c) => c.offset !== 0x13e30).map((c) => (
+        {/* 未読み込みのときは同じ行を「—」で出す */}
+        {YOBAI_COUNTERS.filter((c) => c.offset !== 0x13e30).map((c) => (
           <p key={c.offset}>
-            {c.label}：{c.value}
+            {c.label}：{view?.counters.find((v) => v.offset === c.offset)?.value ?? "—"}
             <span className="text-muted-foreground ml-2 text-xs">{c.note}</span>
           </p>
         ))}
@@ -810,9 +816,9 @@ function CountersCard({ view }: { view: YobaiView | null }) {
           </span>
         </p>
         <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
-          {view?.partners.map((p) => (
-            <p key={p.offset}>
-              {p.label}：{p.value}
+          {PARTNER_COUNT_NPCS.map((p, k) => (
+            <p key={p.npc}>
+              {p.label}：{view ? view.partners[k].value : "—"}
             </p>
           ))}
         </div>
@@ -850,15 +856,6 @@ export function YobaiPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {!view && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>
-            サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。
-          </AlertDescription>
-        </Alert>
-      )}
-
       {view?.promiseProblem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>

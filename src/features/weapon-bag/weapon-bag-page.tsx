@@ -32,19 +32,10 @@ export function WeaponBagPage() {
 
   const view = result?.view ?? null;
   const k = save?.loadId ?? 0;
-  const filled = view?.weapons.filter((w) => !w.empty).length ?? 0;
+  const filled = view ? view.weapons.filter((w) => !w.empty).length : "—";
 
   return (
     <div className="flex flex-col gap-4">
-      {!view && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>
-            サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。
-          </AlertDescription>
-        </Alert>
-      )}
-
       {view?.layoutProblem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>
@@ -52,27 +43,30 @@ export function WeaponBagPage() {
         </Alert>
       )}
 
-      {view && (
-        <Card className="gap-2">
-          <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2">
-              武器袋
-              <span className="text-muted-foreground text-sm font-normal">
-                {filled} / {WEAPON_BAG_COUNT} 本
-              </span>
-              <InfoTip offset={WEAPON_BAG_OFFSET} />
-            </CardTitle>
-            <CardDescription>行を押すと編集欄を開きます。</CardDescription>
-          </CardHeader>
-          <CardContent>
+      {/* 未読み込みのときは枠だけを描き、一覧は「—」にする */}
+      <Card className="gap-2">
+        <CardHeader>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            武器袋
+            <span className="text-muted-foreground text-sm font-normal">
+              {filled} / {WEAPON_BAG_COUNT} 本
+            </span>
+            <InfoTip offset={WEAPON_BAG_OFFSET} />
+          </CardTitle>
+          <CardDescription>行を押すと編集欄を開きます。</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {view ? (
             <CompactWeaponList
               key={k}
               weapons={view.weapons}
               update={(i) => (mutate) => update((b) => mutate(b, weaponBagOffset(i)))}
             />
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-muted-foreground text-sm">—</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ❓ 用途不明の領域。🟢 レコードの先頭は完成武器ID（既存エディタ [TS] の位置より 6 B 後ろ） */}
       <p className="text-muted-foreground text-xs">

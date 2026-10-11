@@ -103,14 +103,6 @@ export function StatsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {!view && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>
-            サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。
-          </AlertDescription>
-        </Alert>
-      )}
       {view?.problem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>
@@ -204,9 +196,10 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
 
   return (
     <CollapsibleCard title={t.label} description={SCORE_NOTES[table]} contentClassName="flex flex-col gap-4">
-      {top.length > 0 && (
+      {(!view || top.length > 0) && (
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="text-muted-foreground">累計の上位：</span>
+          {!view && <span className="text-muted-foreground">—</span>}
           {top.map((x) => (
             <button
               key={x.i}
@@ -222,7 +215,8 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
       <SearchSelectRow
         label={table === "arts" ? "技" : "道具"}
         offset={scoreOffset(table, "cycle", index)}
-        value={view ? String(index) : null}
+        // 表示する1件を選ぶだけでセーブには書かないので、未読み込みのときも選べる
+        value={String(index)}
         currentLabel="不明"
         options={options}
         problem={null}

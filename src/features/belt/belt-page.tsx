@@ -54,15 +54,6 @@ export function BeltPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {!view && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>
-            サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。
-          </AlertDescription>
-        </Alert>
-      )}
-
       {view?.layoutProblem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>
@@ -194,9 +185,10 @@ function StateCard({
 }
 
 /** 帯刀の一覧（閉じていても見える部分）の能力値と画像。ゲームの武器の画面に寄せた見た目 */
-export function WeaponPanel({ weapon }: { weapon: WeaponView }) {
+/** weapon が null ならセーブ未読み込み。同じ枠に「—」を並べる */
+export function WeaponPanel({ weapon }: { weapon: WeaponView | null }) {
   // ゲームと同じく桁区切りなし。耐久・質は現在値 / 最大値で並べる。
-  const num = (key: NumberKey) => String(weapon.numbers[key].value);
+  const num = (key: NumberKey) => (weapon ? String(weapon.numbers[key].value) : "—");
   const pair = (current: NumberKey, maximum: NumberKey) => (
     <span className="weapon-preview-pair" aria-label={`${num(current)}/${num(maximum)}`}>
       <span>{num(current)}</span><span>/</span><span>{num(maximum)}</span>
@@ -208,20 +200,22 @@ export function WeaponPanel({ weapon }: { weapon: WeaponView }) {
       <dd>{value}</dd>
     </div>
   );
-  const charmIds = weapon.charms.value.filter((id): id is number => id !== null);
-  const charms: string[] = charmIds.length > 3
-    ? [...new Set(charmIds)].map((id) => `${charmLabel(id)} ×${charmIds.filter((value) => value === id).length}`)
-    : charmIds.map((id) => charmLabel(id) ?? "不明");
+  const charmIds = weapon ? weapon.charms.value.filter((id): id is number => id !== null) : [];
+  const charms: string[] = !weapon
+    ? ["—", "—", "—"]
+    : charmIds.length > 3
+      ? [...new Set(charmIds)].map((id) => `${charmLabel(id)} ×${charmIds.filter((value) => value === id).length}`)
+      : charmIds.map((id) => charmLabel(id) ?? "不明");
   while (charms.length < 3) charms.push("---");
   return (
     <div className="weapon-preview">
       <div className="weapon-preview-layout">
         <div className="weapon-preview-details">
           <div className="weapon-preview-name">
-            {weapon.title.value !== null && weapon.title.label && (
+            {weapon?.title.value != null && weapon.title.label && (
               <span>{weapon.title.label}</span>
             )}
-            <span>{weapon.nameHidden.value ? "*****" : weapon.name.value || "（名前なし）"}</span>
+            <span>{!weapon ? "—" : weapon.nameHidden.value ? "*****" : weapon.name.value || "（名前なし）"}</span>
           </div>
           <div className="weapon-preview-rule" aria-hidden="true">
             <span />
@@ -240,7 +234,13 @@ export function WeaponPanel({ weapon }: { weapon: WeaponView }) {
             ))}
           </ul>
         </div>
-        <WeaponImage key={weapon.completeByParts} id={weapon.completeByParts} />
+        {weapon ? (
+          <WeaponImage key={weapon.completeByParts} id={weapon.completeByParts} />
+        ) : (
+          <div className="weapon-preview-image weapon-preview-image-empty">
+            <div className="text-wots-label flex size-full items-center justify-center p-2 font-serif text-xs">—</div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -322,7 +322,7 @@ function WeaponCard({
             )}
             {weapon?.nameHidden.value && <Badge variant="outline">名前を隠す</Badge>}
           </CardTitle>
-          {weapon && <WeaponPanel weapon={weapon} />}
+          <WeaponPanel weapon={weapon} />
           {recordProblem && (
             <CardDescription className="text-destructive">
               読み取り専用：{recordProblem}

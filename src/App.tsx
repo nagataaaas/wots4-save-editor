@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppSidebar } from '@/components/app-sidebar'
+import { NoSaveNotice } from '@/components/no-save-notice'
 import { SectionPlaceholder } from '@/components/section-placeholder'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
@@ -32,6 +33,7 @@ export default function App() {
                   </h1>
                 </header>
                 <div className={`mx-auto w-full p-4 ${section.wide ? 'min-w-0' : 'max-w-5xl'}`}>
+                  <NoSaveNotice />
                   {Page ? <Page /> : <SectionPlaceholder section={section} />}
                 </div>
               </SidebarInset>

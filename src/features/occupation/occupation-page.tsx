@@ -141,14 +141,6 @@ export function OccupationPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {!save && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>
-            サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。
-          </AlertDescription>
-        </Alert>
-      )}
       {result && "error" in result && (
         <Alert variant="destructive">
           <AlertTitle>読み込めません</AlertTitle>
@@ -404,8 +396,12 @@ function StatesCard({
   const rows = OCCUPATIONS.filter((o) => group === "all" || occupationGroupOf(o.id) === group)
     .filter((o) => matches(query, ...entryKeywords(o), o.client, o.type))
     .filter((o) => filter === "all" || !view || kindOf(view.states[o.id]) === filter);
-  const counts = { hidden: 0, open: 0, cleared: 0 };
-  if (view) for (const o of OCCUPATIONS) counts[kindOf(view.states[o.id])]++;
+  const counts: Record<StateKind, number | "—"> = { hidden: "—", open: "—", cleared: "—" };
+  if (view) {
+    const tally = { hidden: 0, open: 0, cleared: 0 };
+    for (const o of OCCUPATIONS) tally[kindOf(view.states[o.id])]++;
+    Object.assign(counts, tally);
+  }
 
   /** 状態を書き、指定があればクリア数も揃える */
   const writeStates = (mutator: (b: Uint8Array) => void) =>

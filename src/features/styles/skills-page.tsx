@@ -103,15 +103,7 @@ export function SkillsPage() {
     }
   }, [save]);
 
-  if (!result) {
-    return (
-      <Alert>
-        <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-        <AlertDescription>サイドバーの「ファイルを開く」から読み込んでください。</AlertDescription>
-      </Alert>
-    );
-  }
-  if ("error" in result) {
+  if (result && "error" in result) {
     return (
       <Alert variant="destructive">
         <AlertTitle>読み込めません</AlertTitle>
@@ -120,8 +112,9 @@ export function SkillsPage() {
     );
   }
 
-  const view = result.view;
-  const readOnly = view.problem !== null;
+  // 未読み込みのときは view が null。技の表から同じ一覧を描き、状態を「—」・操作を無効にする
+  const view = result?.view ?? null;
+  const readOnly = !view || view.problem !== null;
   const set = (patch: Partial<SkillFilter>) => setFilter((f) => ({ ...f, ...patch }));
 
   const run = (label: string, f: (b: Uint8Array) => void) => {
@@ -135,7 +128,7 @@ export function SkillsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {view.problem && (
+      {view?.problem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>
           <AlertDescription>{view.problem}</AlertDescription>
@@ -258,7 +251,7 @@ export function SkillsPage() {
               <span className="text-muted-foreground w-12 shrink-0 pl-1 text-xs font-medium">{row.label}</span>
               <div className="grid flex-1 grid-cols-3 gap-1 sm:grid-cols-4 lg:grid-cols-7">
                 {row.stances.map((stance) => {
-                  const states = view.stanceStates[stance.id];
+                  const states = view?.stanceStates[stance.id];
                   const nos = [...rowsByStance[stance.id].keys()];
                   const hits = shownByStance[stance.id].skillNos.size;
                   return (
@@ -270,7 +263,7 @@ export function SkillsPage() {
                     >
                       {stance.nameJa}
                       <span className="text-xs font-normal tabular-nums opacity-70">
-                        {filtering ? `${hits}件` : `${nos.filter((no) => states[no] !== 0).length}/${nos.length}`}
+                        {filtering ? `${hits}件` : `${states ? nos.filter((no) => states[no] !== 0).length : "—"}/${nos.length}`}
                       </span>
                     </TabsTrigger>
                   );
@@ -286,7 +279,7 @@ export function SkillsPage() {
               sheet={trees[stance.id].sheet}
               shown={shownByStance[stance.id]}
               rows={rowsByStance[stance.id]}
-              states={view.stanceStates[stance.id]}
+              states={view ? view.stanceStates[stance.id] : null}
               readOnly={readOnly}
               advanced={advanced}
               run={run}
@@ -324,11 +317,12 @@ function StanceSkillTable({
   sheet: SkillSheet;
   shown: ShownTree;
   rows: ReadonlyMap<number, Row>;
-  states: readonly number[];
+  /** null はセーブ未読み込み */
+  states: readonly number[] | null;
 }) {
   const { stance, readOnly, run } = actions;
   const nos = [...shown.skillNos];
-  const pending = nos.filter((no) => rows.get(no)?.learnable && states[no] === 0);
+  const pending = states ? nos.filter((no) => rows.get(no)?.learnable && states[no] === 0) : [];
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
@@ -344,7 +338,7 @@ function StanceSkillTable({
           条件に合う技を全部習得する
         </Button>
         <span className="text-muted-foreground text-xs">
-          {nos.length} 件（未習得 {nos.filter((no) => states[no] === 0).length}）。段や習得条件は見ずに書き込みます。
+          {nos.length} 件（未習得 {states ? nos.filter((no) => states[no] === 0).length : "—"}）。段や習得条件は見ずに書き込みます。
           続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
           条件に合わない前の技は薄く出します。
         </span>
@@ -370,7 +364,7 @@ function StanceSkillTable({
                 {...actions}
                 sheet={sheet}
                 row={rows.get(ctx.node.skill.skillNo)!}
-                state={states[ctx.node.skill.skillNo]}
+                state={states ? states[ctx.node.skill.skillNo] : null}
                 dim={!shown.matched.has(ctx.node.key)}
               />
             )}
@@ -391,7 +385,7 @@ function SkillRow({
   advanced,
   run,
   ...ctx
-}: RowActions & SkillTreeRowContext & { sheet: SkillSheet; row: Row; state: number; dim: boolean }) {
+}: RowActions & SkillTreeRowContext & { sheet: SkillSheet; row: Row; state: number | null; dim: boolean }) {
   const s = ctx.node.skill;
   return (
     <div className={`col-span-full grid min-h-9 grid-cols-subgrid items-center border-b py-1 ${dim ? "opacity-60" : ""}`}>
@@ -426,7 +420,8 @@ function SkillRow({
             俺流で表示
           </Button>
         ) : (
-          (state === 0 || state === 3) && (
+          // 未読み込み（state が null）のときも、無効にした「習得する」を出す
+          (state === null || state === 0 || state === 3) && (
             <Button
               size="sm"
               variant="outline"
@@ -438,7 +433,7 @@ function SkillRow({
             </Button>
           )
         )}
-        {advanced && state !== 0 && (
+        {advanced && state !== null && state !== 0 && (
           <Button
             size="sm"
             variant="ghost"

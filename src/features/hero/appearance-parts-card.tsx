@@ -22,6 +22,7 @@ import {
   isNude,
   LAYER_COUNT,
   layersCustomized,
+  partOffset,
   readAppearanceParts,
   validatePart,
   writeBodyKind,
@@ -329,7 +330,7 @@ export function AppearancePartsCard() {
           <div key={`${k}-${kind}-${advanced}`} className="flex flex-col gap-1">
             <SearchSelectRow
               label={PART_KIND_LABELS[kind]}
-              offset={part?.offset ?? 0}
+              offset={part?.offset ?? partOffset(kind)}
               value={part ? String(part.id) : null}
               currentLabel={
                 part?.id === -1
@@ -343,7 +344,7 @@ export function AppearancePartsCard() {
               hint={
                 (kind === "upper" || kind === "lower") && view && isNude(view, kind)
                   ? `今は${kind === "upper" ? "上裸" : "下裸"}です（服の層を外して体の層だけにしています）`
-                  : advanced
+                  : advanced || !view
                     ? undefined
                     : heroBodyKind === 0 || heroBodyKind === 1
                       ? `${bodyKindName(heroBodyKind)}用と共通の、名前のある部品だけを表示しています`

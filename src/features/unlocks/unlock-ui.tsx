@@ -28,13 +28,28 @@ export function ItemInformation({
   );
 }
 
+/** セーブ未読み込みのときの状態ボタン。状態は「—」にして押せなくする */
+function UnloadedStateButton() {
+  return (
+    <button
+      type="button"
+      disabled
+      className="text-muted-foreground inline-flex size-8 shrink-0 cursor-not-allowed items-center justify-center rounded-md border opacity-50"
+    >
+      —
+    </button>
+  );
+}
+
 export function OwnershipStateButton({ owned, name, disabled, labels, onChange }: {
-  owned: boolean;
+  /** null はセーブ未読み込み */
+  owned: boolean | null;
   name: string;
   disabled: boolean;
   labels: readonly [string, string];
   onChange: (owned: boolean) => void;
 }) {
+  if (owned === null) return <UnloadedStateButton />;
   const label = labels[owned ? 1 : 0];
   const Icon = owned ? Check : LockKeyhole;
   return (
@@ -54,11 +69,13 @@ export function OwnershipStateButton({ owned, name, disabled, labels, onChange }
 }
 
 export function UnlockStateButton({ value, name, disabled, onChange }: {
-  value: number;
+  /** null はセーブ未読み込み */
+  value: number | null;
   name: string;
   disabled: boolean;
   onChange: (value: number) => void;
 }) {
+  if (value === null) return <UnloadedStateButton />;
   const label = ["非表示", "未取得", "取得済み"][value] ?? "不明";
   const Icon = [Minus, LockKeyhole, Check][value] ?? CircleHelp;
   const iconColor = [

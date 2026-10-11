@@ -10,6 +10,7 @@ import { useSave } from "@/lib/save-context";
 import {
   MARKET_ELAPSED,
   MARKET_HOLDER,
+  MARKET_OTHERS,
   MARKET_WEAPON_OFFSET,
   MARKET_WEAPON_SLOTS,
   readMarket,
@@ -55,13 +56,6 @@ export function MarketWeaponsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {!view && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>サイドバーの「ファイルを開く」から読み込むと、流通中の武器・道具・部品を表示します。</AlertDescription>
-        </Alert>
-      )}
-
       {view?.layoutProblem && (
         <Alert variant="destructive">
           <AlertTitle>位置がずれている可能性があります</AlertTitle>
@@ -87,7 +81,7 @@ export function MarketWeaponsPage() {
         </CardHeader>
       </Card>
 
-      {view && (
+      {view ? (
         <>
           <Group title="武器" filled={view.weapons.length} slots={MARKET_WEAPON_SLOTS} offset={MARKET_WEAPON_OFFSET}>
             {view.weapons.map((entry) => (
@@ -98,6 +92,14 @@ export function MarketWeaponsPage() {
             <Group key={o.key} title={o.label} filled={o.filled} slots={o.slots} offset={o.offset}>
               <OtherTable summary={o} />
             </Group>
+          ))}
+        </>
+      ) : (
+        // 未読み込みのときはグループの枠だけを描き、件数と中身を「—」にする
+        <>
+          <Group title="武器" filled={null} slots={MARKET_WEAPON_SLOTS} offset={MARKET_WEAPON_OFFSET} />
+          {MARKET_OTHERS.map((o) => (
+            <Group key={o.key} title={o.label} filled={null} slots={o.slots} offset={o.offset} />
           ))}
         </>
       )}
@@ -114,10 +116,11 @@ function Group({
   children,
 }: {
   title: string;
-  filled: number;
+  /** null はセーブ未読み込み */
+  filled: number | null;
   slots: number;
   offset: number;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <Card className="py-0">
@@ -127,14 +130,20 @@ function Group({
             <ChevronRight className="size-4 shrink-0 transition-transform group-data-panel-open:rotate-90" aria-hidden />
             {title}
             <span className="text-muted-foreground text-sm font-normal">
-              {filled} / {slots}
+              {filled ?? "—"} / {slots}
             </span>
           </CollapsibleTrigger>
           <InfoTip offset={offset} />
         </div>
         <CollapsibleContent>
           <CardContent className="flex flex-col gap-4 pb-6">
-            {filled === 0 ? <p className="text-muted-foreground text-sm">ありません。</p> : children}
+            {filled === null ? (
+              <p className="text-muted-foreground text-sm">—</p>
+            ) : filled === 0 ? (
+              <p className="text-muted-foreground text-sm">ありません。</p>
+            ) : (
+              children
+            )}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>

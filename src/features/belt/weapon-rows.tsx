@@ -65,12 +65,13 @@ export function OverrideRow({
   const rowProps = {
     ...props,
     label,
-    badges: props.value !== null && !props.problem && (
-      // 負のマージンで、ボタンが項目名の行の高さを変えないようにする（隣の欄と高さを揃える）
+    badges: !props.problem && (
+      // 負のマージンで、ボタンが項目名の行の高さを変えないようにする（隣の欄と高さを揃える）。未読み込みのときは無効にして出す
       <Button
         variant="outline"
         size="xs"
         className="-my-1.5 ml-auto"
+        disabled={props.value === null}
         onClick={() => setOverride(!override)}
       >
         {override ? "上書きをやめる" : `${label}を上書き`}

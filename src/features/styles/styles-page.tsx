@@ -113,15 +113,7 @@ export function StylesPage() {
     }
   }, [save]);
 
-  if (!result) {
-    return (
-      <Alert>
-        <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-        <AlertDescription>サイドバーの「ファイルを開く」から読み込んでください。</AlertDescription>
-      </Alert>
-    );
-  }
-  if ("error" in result) {
+  if (result && "error" in result) {
     return (
       <Alert variant="destructive">
         <AlertTitle>読み込めません</AlertTitle>
@@ -130,14 +122,16 @@ export function StylesPage() {
     );
   }
 
-  const view = result.view;
+  // 未読み込みのときは view が null。流派の表から同じカードを描き、値を空・操作を無効にする
+  const view = result?.view ?? null;
   const k = save?.loadId ?? 0;
-  const owned = ownedSectIds(view);
+  const owned = view ? ownedSectIds(view) : null;
   const sects = SECTS.filter((s) => !s.hidden || advanced)
     .filter((s) => matchesSearch(query, [s.nameJa, s.nameEn]))
-    .filter((s) => matchesPlace(placeFilter, view, owned, s.id))
+    // 置き場所はセーブから決まるので、未読み込みのときは絞り込まない
+    .filter((s) => !view || !owned || matchesPlace(placeFilter, view, owned, s.id))
     .filter((s) => !uniqueOnly || sectHasUniqueSkill(s));
-  const readOnly = view.problem !== null;
+  const readOnly = !view || view.problem !== null;
 
   const run = (label: string, f: (b: Uint8Array) => void) => {
     try {
@@ -150,7 +144,7 @@ export function StylesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {view.problem && (
+      {view?.problem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>
           <AlertDescription>{view.problem}</AlertDescription>
@@ -172,8 +166,8 @@ export function StylesPage() {
             <IntField
               label="腕前点"
               offset={SKILL_POINTS_OFFSET}
-              value={view.skillPoints}
-              problem={readOnly ? "検証に落ちています" : null}
+              value={view?.skillPoints ?? null}
+              problem={view?.problem ? "検証に落ちています" : null}
               min={0}
               max={advanced ? 0xffff : SKILL_POINTS_MAX}
               apply={(v) => update((b) => writeSkillPoints(b, v, { advanced }))}
@@ -181,14 +175,14 @@ export function StylesPage() {
               // 🟢 要ゲーム内確認
             />
             <span className="sm:pt-7">
-              習得技数：{view.learnedCount}
+              習得技数：{view?.learnedCount ?? "—"}
               <InfoTip offset={LEARNED_COUNT_OFFSET}>戦闘中に閃いて覚えた数。ここでの書き換えでは増やしません</InfoTip>
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {view.equipped.map((id, s) => (
+            {SLOT_LABELS.map((label, s) => (
               <Badge key={s} variant="outline" className="font-normal">
-                {SLOT_LABELS[s]}：{findSect(id)?.nameJa ?? "俺流など"}
+                {label}：{view ? (findSect(view.equipped[s])?.nameJa ?? "俺流など") : "—"}
               </Badge>
             ))}
           </div>
@@ -198,6 +192,7 @@ export function StylesPage() {
               value={placeFilter}
               items={PLACE_FILTER_LABELS}
               onValueChange={(v) => v !== null && setPlaceFilter(v as PlaceFilter)}
+              disabled={!view}
             >
               <SelectTrigger className="w-36" aria-label="置き場所で絞り込み">
                 <SelectValue />
@@ -257,7 +252,8 @@ function SectCard({
   onValues,
 }: {
   sect: Sect;
-  view: SectsView;
+  /** null はセーブ未読み込み */
+  view: SectsView | null;
   readOnly: boolean;
   advanced: boolean;
   onLearnAll: () => void;
@@ -266,17 +262,19 @@ function SectCard({
   onForget: (sheet: number, no: number) => void;
   onValues: (v: { mastery: number; rank: number; kills: number }) => void;
 }) {
-  const rec = view.records.find((r) => r.id === sect.id) ?? null;
-  const places = placesOf(view, sect.id);
-  // 固有技は覚えられる流派でだけ出す（sectSheetSkills）
+  const rec = view?.records.find((r) => r.id === sect.id) ?? null;
+  const places = view ? placesOf(view, sect.id) : [];
+  // 固有技は覚えられる流派でだけ出す（sectSheetSkills）。未読み込みのときは states が null
   const sheets = sect.sheets.map((id) => {
     const sheet = findSkillSheet(id)!;
-    return { sheet: { ...sheet, skills: sectSheetSkills(sect, sheet) }, states: sheetStates(view, id) };
+    return { sheet: { ...sheet, skills: sectSheetSkills(sect, sheet) }, states: view ? sheetStates(view, id) : null };
   });
   const hasUnique = sheets.some((s) => s.sheet.skills.some(isUniqueSkill));
   const total = sheets.reduce((n, s) => n + s.sheet.skills.length, 0);
-  const learned = sheets.reduce((n, s) => n + s.sheet.skills.filter((x) => s.states[x.skillNo] !== 0).length, 0);
-  const valueProblem = readOnly ? "検証に落ちています" : rec ? null : "流派の表にこの流派がありません";
+  const learned = view
+    ? sheets.reduce((n, s) => n + s.sheet.skills.filter((x) => s.states?.[x.skillNo] !== 0).length, 0)
+    : null;
+  const valueProblem = !view ? null : readOnly ? "検証に落ちています" : rec ? null : "流派の表にこの流派がありません";
   const values = rec ? { mastery: rec.mastery, rank: rec.rank, kills: rec.kills } : null;
 
   return (
@@ -306,7 +304,7 @@ function SectCard({
             <span className="w-[2.5em] shrink-0">{rec ? (RANK_LABELS[rec.rank] ?? "不明") : "—"}</span>
             <span className="w-[7.5em] shrink-0 tabular-nums">修練度 {rec ? rec.mastery : "—"}</span>
             <span className="w-[5em] shrink-0 tabular-nums">
-              技 {learned}/{total}
+              技 {learned ?? "—"}/{total}
             </span>
           </span>
         </span>
@@ -369,7 +367,7 @@ function SectCard({
                 <TabsTrigger key={sheet.id} value={String(sheet.id)} className={`${STANCE_TAB_CLASS} flex-none gap-3`}>
                   {findStance(sheet.stance)?.nameJa}
                   <span className="text-xs font-normal tabular-nums opacity-70">
-                    {sheet.skills.filter((x) => states[x.skillNo] !== 0).length}/{sheet.skills.length}
+                    {states ? sheet.skills.filter((x) => states[x.skillNo] !== 0).length : "—"}/{sheet.skills.length}
                   </span>
                 </TabsTrigger>
               ))}
@@ -405,7 +403,8 @@ function SectCard({
 
 type SkillRowProps = {
   sheet: SkillSheet;
-  states: readonly number[];
+  /** null はセーブ未読み込み */
+  states: readonly number[] | null;
   readOnly: boolean;
   advanced: boolean;
   onLearn: (sheet: number, skill: SheetSkill) => void;
@@ -424,7 +423,7 @@ function SkillRow({
   ...ctx
 }: SkillRowProps & SkillTreeRowContext) {
   const s = ctx.node.skill;
-  const state = states[s.skillNo];
+  const state = states ? states[s.skillNo] : null;
   return (
     <div className="col-span-full grid min-h-9 grid-cols-subgrid items-center border-b py-1">
       <SkillTreeName sheet={sheet} {...ctx} />
@@ -445,13 +444,14 @@ function SkillRow({
             俺流で表示
           </Button>
         ) : (
-          (state === 0 || state === 3) && (
+          // 未読み込み（state が null）のときも、無効にした「習得する」を出す
+          (state === null || state === 0 || state === 3) && (
             <Button size="sm" variant="outline" disabled={readOnly} onClick={() => onLearn(sheet.id, s)}>
               習得する
             </Button>
           )
         )}
-        {advanced && state !== 0 && (
+        {advanced && state !== null && state !== 0 && (
           <Button size="sm" variant="ghost" disabled={readOnly} onClick={() => onForget(sheet.id, s.skillNo)}>
             忘れさせる
           </Button>

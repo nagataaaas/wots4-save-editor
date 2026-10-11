@@ -122,6 +122,11 @@ export function WeaponEditor({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
             {rows.title}
+            {!weapon && (
+              <EffectBox>
+                <p className="text-muted-foreground">—</p>
+              </EffectBox>
+            )}
             {weapon && !weapon.title.problem && (
               <EffectBox>
                 {title ? (
@@ -148,6 +153,11 @@ export function WeaponEditor({
             <InfoTip offset={base + WEAPON_FIELDS.charms} />
           </div>
           <CharmEditor weapon={weapon} base={base} update={update} />
+          {!weapon && (
+            <EffectBox>
+              <p className="text-muted-foreground">—</p>
+            </EffectBox>
+          )}
           {weapon && !charms?.problem && (
             <EffectBox>
               {effects.length === 0 ? (

@@ -259,15 +259,6 @@ function ViewsPage({ children }: { children: (views: Views | null, k: number) =>
 
   return (
     <div className="flex flex-col gap-4">
-      {!views && (
-        <Alert>
-          <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-          <AlertDescription>
-            サイドバーの「ファイルを開く」から読み込むと、下の項目を編集できます。
-          </AlertDescription>
-        </Alert>
-      )}
-
       {views?.date.layoutProblem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>
@@ -364,16 +355,19 @@ function CycleCard({
           {/* 新しい周回：物語を終えたときにゲームが行う引き継ぎと初期化を同じ順序で行う。終わり方はクリアか立ち去り。
               次のロードの「続きから」で難易度と主人公の設定に進み、序章（船上の侍）から遊べる。
               段階だけを序章に戻すのは「主人公」画面のボタン */}
-          {publicOrder?.level && (
+          {/* view が null（セーブ未読み込み）のときは、今の値を「—」で出す */}
+          {(!view || publicOrder?.level) && (
             <>
               <br />
-              今の治安：{publicOrder.level}
+              今の治安：{publicOrder?.level ?? "—"}
             </>
           )}
-          {counts && (
+          {(!view || counts) && (
             <>
               <br />
-              クリア回数：{counts.clears.map((n, i) => `${DIFFICULTIES[i]?.label ?? "不明"} ${n}`).join("・")}／立ち去った回数：{counts.goneCount}
+              クリア回数：
+              {counts ? counts.clears.map((n, i) => `${DIFFICULTIES[i]?.label ?? "不明"} ${n}`).join("・") : "—"}
+              ／立ち去った回数：{counts ? counts.goneCount : "—"}
             </>
           )}
         </CardDescription>
@@ -650,6 +644,7 @@ function FacilityFlagsCard() {
           病院・カジノ・語学所の開閉を切り替えられます。2日目に起きるイベントが変わります。
           <br />
           真ルートで希望の光に進むには、病院・語学所が開き、カジノが閉じている必要があります
+          {/* セーブ未読み込みのときは、今のセーブの判定を出さない（判定する値がない） */}
           {values &&
             (facilitiesReadyForLightOfHope(values)
               ? "（今のセーブは満たしています）"

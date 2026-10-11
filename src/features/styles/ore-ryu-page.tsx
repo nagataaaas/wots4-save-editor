@@ -60,15 +60,7 @@ export function OreRyuPage() {
     }
   }, [save]);
 
-  if (!result) {
-    return (
-      <Alert>
-        <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-        <AlertDescription>サイドバーの「ファイルを開く」から読み込んでください。</AlertDescription>
-      </Alert>
-    );
-  }
-  if ("error" in result) {
+  if (result && "error" in result) {
     return (
       <Alert variant="destructive">
         <AlertTitle>読み込めません</AlertTitle>
@@ -77,9 +69,10 @@ export function OreRyuPage() {
     );
   }
 
-  const view = result.view;
+  // 未読み込みのときは view が null。俺流の一覧は空、作る欄は無効にして描く
+  const view = result?.view ?? null;
   const k = save?.loadId ?? 0;
-  const readOnly = view.problem !== null;
+  const readOnly = !view || view.problem !== null;
   /** 成功したら true */
   const run = (label: string, f: (b: Uint8Array) => void): boolean => {
     try {
@@ -94,7 +87,7 @@ export function OreRyuPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {view.problem && (
+      {view?.problem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>
           <AlertDescription>{view.problem}</AlertDescription>
@@ -122,7 +115,7 @@ export function OreRyuPage() {
         )}
       </Card>
 
-      {view.styles.map((style) => (
+      {view?.styles.map((style) => (
         <StyleCard key={`${k}-${style.id}`} style={style} view={view} readOnly={readOnly} advanced={advanced} run={run} update={update} />
       ))}
 
@@ -375,7 +368,8 @@ function CreateCard({
   advanced,
   run,
 }: {
-  view: CustomStylesView;
+  /** null はセーブ未読み込み */
+  view: CustomStylesView | null;
   readOnly: boolean;
   advanced: boolean;
   run: (label: string, f: (b: Uint8Array) => void) => boolean;
@@ -385,7 +379,7 @@ function CreateCard({
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const s = Number(stance);
   const nameProblem = validateCustomName(name, { advanced });
-  const skillProblem = validateSkillSelection(view, s, [...selected], { advanced });
+  const skillProblem = view ? validateSkillSelection(view, s, [...selected], { advanced }) : null;
 
   return (
     <Card>
@@ -436,7 +430,7 @@ function CreateCard({
           stance={s}
           selected={selected}
           onChange={setSelected}
-          stanceStates={view.sects.stanceStates[s]}
+          stanceStates={view ? view.sects.stanceStates[s] : null}
           advanced={advanced}
           disabled={readOnly}
         />

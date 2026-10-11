@@ -18,6 +18,7 @@ import {
   ACCESSORY_ATTACHMENT_LABELS,
   ACCESSORY_FLOAT_FIELDS,
   accessoryFloatRange,
+  accessorySlotOffset,
   copySheathedAccessoryToDrawn,
   equipAccessory,
   readAccessorySlot,
@@ -61,7 +62,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
   const current = save ? readAccessorySlot(save.working, group, slot, advanced) : null;
-  const offset = current?.offset ?? 0x39cc;
+  const offset = current?.offset ?? accessorySlotOffset(group, slot);
   const problem = current?.problem ?? null;
   const selected = ACCESSORIES.find((a) => a.id === current?.id);
   const disabled = !current || Boolean(problem) || !selected;
@@ -89,7 +90,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
         <section className="min-w-0 space-y-4 sm:pr-6">
           <div className="space-y-2">
           <h3 className="text-sm font-semibold">
-            {slot + 1}枠目：{selected?.ja ?? (current?.id === -1 ? "空き" : "装飾品")}
+            {slot + 1}枠目：{!current ? "—" : (selected?.ja ?? (current.id === -1 ? "空き" : "装飾品"))}
           </h3>
           <p className="text-muted-foreground text-sm">
             装飾品を変更すると、新しい装飾品の標準部位に取り付け、納刀・抜刀の補正を0へ戻します。所持の状態は変更しません。
@@ -164,7 +165,8 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
                 key={value}
                 variant={mode === value ? "default" : "outline"}
                 aria-pressed={mode === value}
-                disabled={disabled}
+                // 納刀・抜刀は表示の切り替えだけなので、未読み込みのときも押せる。共通は書き込みの確認を開くので止める
+                disabled={value === "common" || current ? disabled : false}
                 onClick={() => {
                   if (value === mode) return;
                   if (value === "common") {
@@ -280,7 +282,7 @@ function AccessorySlotList({ group, slot, onSelectSlot }: { group: number; slot:
       <div className="grid gap-1">
         {Array.from({ length: 10 }, (_, i) => {
           const entry = save ? readAccessorySlot(save.working, group, i) : null;
-          const name = entry?.id === -1 ? "空き" : (ACCESSORIES.find((a) => a.id === entry?.id)?.ja ?? (entry ? "不明" : "未読み込み"));
+          const name = entry?.id === -1 ? "空き" : (ACCESSORIES.find((a) => a.id === entry?.id)?.ja ?? (entry ? "不明" : "—"));
           return (
             <Button
               key={i}

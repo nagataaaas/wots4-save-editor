@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { CollapsibleCard } from '@/components/collapsible-card'
 import { InfoTip } from '@/components/info-tip'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -70,14 +69,8 @@ export function RawPage() {
   const [diffBase, setDiffBase] = useState<DiffBase>('original')
   const [compare, setCompare] = useState<CompareFile | null>(null)
 
-  if (!save) {
-    return (
-      <Alert>
-        <AlertTitle>セーブファイルが読み込まれていません</AlertTitle>
-        <AlertDescription>サイドバーの「ファイルを開く」から読み込むと、ファイル全体のバイト列を表示します。</AlertDescription>
-      </Alert>
-    )
-  }
+  // 表示するものがすべてバイト列そのものなので、未読み込みのときは共通の案内（NoSaveNotice）だけを出す
+  if (!save) return null
 
   return (
     // 読み込み直したら選択位置を先頭に戻す（前のファイルの範囲外を選んだままにしない）
