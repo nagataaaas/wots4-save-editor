@@ -128,6 +128,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x00A6A8`      | `0x00A6AF`   | [belt-state](chunks/belt-state/README.md)         | 帯刀の状態（本数・選択中・二刀流・峰打）       | ✅読み ／ 🟢読み込み ／ ❓書き込み |
 | `0x0137EC`      | `0x014037`   | [night-visit](chunks/night-visit/README.md)       | 夜這いの回数・記録（100件）・段階・相手ごとの回数 | 一部 ✅ ／ 🟢                 |
 | `0x014038`      | `0x014063`   | [night-visit](chunks/night-visit/README.md)       | 夜の約束の枠                                   | 一部 ✅                       |
+| `0x014064`      | `0x01417B`   | [dojo](chunks/dojo/README.md)                     | 道場（弟子 20 人の名簿・評判の点と段階・道場破り） | 🟢                            |
 | `0x01417C`      | `0x0189FB`   | [skill-states](chunks/skill-states/README.md)     | 技の覚え状況（技の表ごと 128 枠・構えごと 13 × 128） | 🟢                            |
 | `0x0189FC`      | `0x01920D`   | [styles](chunks/styles/README.md)                 | 習得技数・腕前点・構えの組ごとの装備・流派ごとの修練度・段・倒した数（16 B × 128 枠） | 🟢                            |
 | `0x01920E`      | `0x01A60F`   | [custom-style](chunks/custom-style/README.md)     | 俺流（件数・80 B × 64 枠）                     | 🟢                            |
@@ -147,7 +148,7 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | データ         | PS3でのアドレス | 型・値の例                                           |
 | -------------- | --------------- | ---------------------------------------------------- |
 | 魂技ゲージ     | 0x35B4 / 0x35B8 | float                                                |
-| 弟子           | 0x13D0C〜       | 20人分、構造は不明                                   |
+| 弟子           | 0x13D0C〜       | 20人分（PC版は [dojo](chunks/dojo/README.md) の `0x1406C`〜 🟢） |
 | 腕前           | 0x186AA         | u16                                                  |
 | 流派書の経験値 | 0x186CC〜       | u16 の配列                                           |
 | 特典解除       | 0x43030〜       | 状態値（1=解除可能、2=解除済み表示だが反映されない） |

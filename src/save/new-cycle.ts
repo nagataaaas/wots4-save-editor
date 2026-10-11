@@ -308,7 +308,8 @@ function removeValuables(bytes: Uint8Array, report: NewCycleReport): void {
  * | 0x3900 ヒント（u16）・0x6324（u16） | FFFF |
  * | 夜這いの記録 0x137F0〜（16 B × 100） | FF×8・00×4・FF FF 00 00 |
  * | 0x13E30・0x13E34（u32） | 0 |
- * | 夜の約束の枠 0x14038〜0x1405F | FF。0x14060（u16）・0x14062・0x14064 は 0 |
+ * | 夜の約束の枠 0x14038〜0x1405F | FF。0x14060（u16）・0x14062 は 0 |
+ * | 0x14064 道場破りが来ている（🟢。道場の弟子・評判は残す） | 0 |
  * | 0x45F40〜0x45F4D、0x45F4E〜0x4626D | 0 |
  */
 function resetCycle(bytes: Uint8Array, report: NewCycleReport): void {
