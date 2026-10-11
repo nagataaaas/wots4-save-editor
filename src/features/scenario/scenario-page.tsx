@@ -1,5 +1,4 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { CertaintyBadge } from "@/components/certainty-badge";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
@@ -134,7 +133,6 @@ import {
 import {
   DATE_OFFSETS,
   DAY_RANGE,
-  DAY_TIME_AFTER_DAY3,
   PENDING_VALUES,
   STAGES,
   STAGE_PROLOGUE,
@@ -181,18 +179,14 @@ function parseInteger(input: string, validate: (v: number) => string | null): Pa
   return error ? { ok: false, error } : { ok: true, value };
 }
 
-/** 世界 / 阿弥浜：難易度・治安・周回、段階・日数・時間帯、施設、門・柵（ユーザー判断 2026-10-11） */
+/**
+ * 世界 / 阿弥浜：難易度・治安・周回、段階・日数・時間帯、施設、門・柵（ユーザー判断 2026-10-11）
+ * 確度：どれもセーブの差分から推定（docs: difficulty・date-location・gates・facilities）。
+ * 難易度、新しい周回を始める書き込み、日数・時間帯、治安は ✅ 書き換えの反映を確認。そのほかは ❓ 要ゲーム内確認
+ */
 export function AmihamaPage() {
   return (
-    <ViewsPage
-      note={
-        <>
-          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
-          difficulty・date-location・gates・facilities）。
-          難易度、新しい周回を始める書き込み、日数・時間帯、治安は書き換えの反映を確認済みです。そのほかの値は確かめていません。
-        </>
-      }
-    >
+    <ViewsPage>
       {(views, k) => (
         <>
           <CycleCard
@@ -210,18 +204,14 @@ export function AmihamaPage() {
   );
 }
 
-/** 世界 / NPC：勢力の退場、人物の状態、町の人の生死、NPCイベントフラグ（ユーザー判断 2026-10-11） */
+/**
+ * 世界 / NPC：勢力の退場、人物の状態、町の人の生死、NPCイベントフラグ（ユーザー判断 2026-10-11）
+ * 確度：どれもセーブの差分から推定（docs: factions・characters・townsfolk・best-route）。
+ * 勢力の退場は ✅ 書き換えの反映を確認。そのほかは ❓ 要ゲーム内確認
+ */
 export function NpcPage() {
   return (
-    <ViewsPage
-      note={
-        <>
-          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
-          factions・characters・townsfolk・best-route）。
-          勢力の退場は書き換えの反映を確認済みです。そのほかの値は確かめていません。
-        </>
-      }
-    >
+    <ViewsPage>
       {(views, k) => (
         <>
           <FactionExitCard key={`${k}-faction-exit`} view={views?.factionExit ?? null} />
@@ -238,19 +228,15 @@ export function NpcPage() {
   );
 }
 
-/** 世界 / イベント：イベントチャート（真ルート・一括設定つき）、勢力の状態、イベント関連フラグ（ユーザー判断 2026-10-11） */
+/**
+ * 世界 / イベント：イベントチャート（真ルート・一括設定つき）、勢力の状態、イベント関連フラグ（ユーザー判断 2026-10-11）
+ * 確度：どれもセーブの差分から推定（docs: event-chart・best-route・factions・scenario-flags）。
+ * イベントの失敗（05）・未到達（FF）、チャート表示、真ルート、勢力の友好度 +・−・敵対状態は ✅ 書き換えの反映を確認。
+ * そのほかは ❓ 要ゲーム内確認
+ */
 export function EventsPage() {
   return (
-    <ViewsPage
-      note={
-        <>
-          この画面の項目は、どれもセーブの差分から推定したものです（解析ドキュメントの
-          event-chart・best-route・factions・scenario-flags）。
-          イベントの失敗（05）・未到達（FF）、チャート表示、真ルート、勢力の友好度
-          +・−・敵対状態は書き換えの反映を確認済みです。そのほかの値は確かめていません。
-        </>
-      }
-    >
+    <ViewsPage>
       {(views, k) => (
         <>
           <EventChartCard
@@ -280,13 +266,7 @@ export function EventsPage() {
 }
 
 /** セーブを読み、共通の注意書きを出して、children に各欄を描かせる。views が null ならセーブ未読み込み、k は読み込みごとの key */
-function ViewsPage({
-  note,
-  children,
-}: {
-  note: ReactNode;
-  children: (views: Views | null, k: number) => ReactNode;
-}) {
+function ViewsPage({ children }: { children: (views: Views | null, k: number) => ReactNode }) {
   const { save } = useSave();
 
   const result = useMemo((): { views: Views } | { error: string } | null => {
@@ -346,10 +326,9 @@ function ViewsPage({
       )}
 
       <Alert>
-        <AlertTitle>検証用（要ゲーム内確認）</AlertTitle>
+        <AlertTitle>検証用</AlertTitle>
         <AlertDescription>
-          {note}
-          書き換える前のセーブを残してから試してください。
+          この画面の値は、書き換える前のセーブを残してから試してください。
         </AlertDescription>
       </Alert>
 
@@ -423,16 +402,19 @@ function CycleCard({
     }
   };
 
+  // 確度：難易度の書き換えの反映は ✅。新しい周回は ✅（以前の版で確認）。
+  // 普通＝1・難しい＝2 は 0 と 3 の間を埋めた 🔶 推測。治安の 1日目 0 の例と初期値 50 の食い違いは ❓。
+  // 周回数が PLAY_COUNT_REVEALS_BEST_ROUTE 以上で真ルートの枠と線が全部出るのは ❓ 要ゲーム内確認、死亡で増えるかは ❓
   return (
     <Card>
       <CardHeader>
         <CardTitle>難易度・治安・周回</CardTitle>
         <CardDescription>
           難易度は 0x0000 の値です。易しい＝0・超難しい＝3
-          は、スロット一覧の表示と一致しました。書き換えはゲーム内の難易度に反映されます（確認済み）。
+          は、スロット一覧の表示と一致しました。書き換えはゲーム内の難易度に反映されます。
           治安（0x0015）は {publicOrderLevelsText} です。
           「新しい周回」は、物語を終えたときにゲームが行う引き継ぎと初期化を、同じ順序で行います。終わり方はクリア（結末を見た）か立ち去り（町を立ち去った）を選びます。
-          次のロードの「続きから」で難易度と主人公の設定に進み、序章のイベント（船上の侍）から新しい周回として遊べます（以前の版で確認済み）。
+          次のロードの「続きから」で難易度と主人公の設定に進み、序章のイベント（船上の侍）から新しい周回として遊べます。
           段階だけを 0 にして主人公の設定だけをやり直すときは、「主人公」画面のボタンを使います。
           {view && ` 難易度の生の値：${view.value}`}
           {publicOrder &&
@@ -450,7 +432,7 @@ function CycleCard({
           options={difficultyOptions}
           problem={view?.problem ?? null}
           warning={view?.warning}
-          note="0x0000 の1バイトだけを書きます。普通＝1・難しい＝2 は 0 と 3 の間を埋めた推測です（🔶）。幅は u8 とみています（0x0001〜0x0007 は見たセーブではすべて 0）"
+          note="0x0000 の1バイトだけを書きます。普通＝1・難しい＝2 は 0 と 3 の間の値です。幅は u8 とみています（0x0001〜0x0007 は見たセーブではすべて 0）"
           onChange={(v) => update((b) => writeDifficulty(b, Number(v)))}
         />
         <FieldRow
@@ -464,7 +446,7 @@ function CycleCard({
           apply={(v) => update((b) => writePublicOrder(b, v, { advanced }))}
           inputMode="numeric"
           hint={advanced ? "0〜255" : `0〜${PUBLIC_ORDER_MAX}`}
-          note="0x0015 の1バイトだけを書きます。1日目のセーブで 0 の例があり、初期値 50 とは合いません（❓）"
+          note="0x0015 の1バイトだけを書きます。1日目のセーブで 0 の例があり、初期値 50 とは合いません"
         />
         <FieldRow
           label="周回数"
@@ -477,7 +459,7 @@ function CycleCard({
           apply={(n) => update((b) => writePlayCount(b, n, { advanced }))}
           inputMode="numeric"
           hint={advanced ? "0〜4,294,967,295" : `0〜${PLAY_COUNT_MAX.toLocaleString()}`}
-          note={`0x0B8C（u32）の4バイトだけを書きます。終えた周回の数で、クリアでも立ち去りでも物語を終えるたびにゲームが1つ増やします（${PLAY_COUNT_MAX.toLocaleString()} まで）。新しい周回の初期化では 0 になりません。${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上だと、イベントチャートに真ルートの枠と線が全部出ます（要ゲーム内確認）。死亡で増えるかは未確認です`}
+          note={`0x0B8C（u32）の4バイトだけを書きます。終えた周回の数で、クリアでも立ち去りでも物語を終えるたびにゲームが1つ増やします（${PLAY_COUNT_MAX.toLocaleString()} まで）。新しい周回の初期化では 0 になりません。${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上だと、イベントチャートに真ルートの枠と線が全部出ます`}
         />
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -525,13 +507,13 @@ const pendingOptions: SelectOption[] = PENDING_VALUES.map((v) => ({
   value: String(v),
   label: v === 0 ? "0（なし）" : `${v}（エリア移動・ロードで時間帯が1つ進む）`,
 }));
-/** ❓ 410 以降は書き込んだときのゲーム内の動作を確かめていない。0（序章）は「新しい周回を始める」か主人公画面のボタンで書くので選ばせない */
+/** ❓ 410 以降（DAY_TIME_AFTER_DAY3 より後）は書き込んだときのゲーム内の動作を確かめていない。0（序章）は「新しい周回を始める」か主人公画面のボタンで書くので選ばせない */
 const stageOptions: SelectOption[] = STAGES.map((s) => ({
   value: String(s.value),
   label:
     s.value === STAGE_PROLOGUE
       ? `${s.value}：${s.label}（「新しい周回を始める」などで書く）`
-      : `${s.value}：${s.label}${s.value > DAY_TIME_AFTER_DAY3 ? "（❓ 要ゲーム内確認）" : ""}`,
+      : `${s.value}：${s.label}`,
   selectedLabel: `${s.value}：${s.label}`,
   disabled: s.value === STAGE_PROLOGUE,
 }));
@@ -564,7 +546,7 @@ function DateCard({ view }: { view: DateView | null }) {
         options={stageOptions}
         problem={problem}
         hint="メインイベントの進行に影響します"
-        note="0x0010（u16）だけを書きます。日数・時間帯は変えません。0（序章）にするときは、上の「新しい周回を始める」か、主人公画面の「難易度と主人公設定を行えるようにする」を使います。410 以降を書いたときのゲーム内の動作は確かめていません"
+        note="0x0010（u16）だけを書きます。日数・時間帯は変えません。0（序章）にするときは、上の「新しい周回を始める」か、主人公画面の「難易度と主人公設定を行えるようにする」を使います"
         onChange={(v) => update((b) => writeStage(b, Number(v)))}
       />
       <FieldRow
@@ -636,13 +618,14 @@ function FactionExitCard({ view }: { view: FactionExitView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
 
+  // 確度：3つとも ✅ 書き換えで確認。flag.confirmed が false の行は ❓ 書き換えの反映は未確認
   return (
     <CollapsibleCard
       title="勢力の退場"
       contentClassName="grid gap-4 sm:grid-cols-3"
       description={
         <>
-          1 にすると、その勢力の人物が町から出なくなります。 3つとも書き換えで確認済みです。
+          1 にすると、その勢力の人物が町から出なくなります。
           外国・攘夷は物語の中でも 1 になります（ローラの死・帰国、般若党の壊滅など）。幕府が 1
           になる場面はありません。
         </>
@@ -653,11 +636,6 @@ function FactionExitCard({ view }: { view: FactionExitView | null }) {
           key={flag.offset}
           label={flag.label}
           offset={flag.offset}
-          badges={
-            flag.confirmed ? undefined : (
-              <CertaintyBadge mark="❓" text="書き換えの反映は未確認" />
-            )
-          }
           value={view ? String(view.values[i]) : null}
           currentLabel={view ? `${view.values[i]} 不明` : undefined}
           options={factionExitOptions}
@@ -711,6 +689,9 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
     </section>
   );
 
+  // 確度：洞窟内の柵（0x3761）が 1 で降りて通行を塞ぐのは ✅、0 に戻したときの上昇・通行の回復は ❓ 要ゲーム内確認。
+  // 表門（0x37FA）・外門（0x3764）・神社入口の柵（0x37C3）が 1 → 0 で開くのは ✅、裏門（0x37FB）の反映は ❓ 要ゲーム内確認。
+  // 閉鎖フラグが大寄せ前にも有効なこと、大寄せ以降のルート分岐 02 で門・柵が閉じることは 🟢
   return (
     <CollapsibleCard
       title="門・柵の状態"
@@ -718,10 +699,9 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
       description={
         <>
           神社は「入口の柵」と「洞窟内の柵」が別々の閉鎖フラグです。 洞窟内の柵（0x3761）は、1
-          で降りて通行を塞ぐことを確認済みです。 0
-          に戻したときの上昇・通行の回復は要ゲーム内確認です。
+          で降りて通行を塞ぎます。
           代官所の表門（0x37FA）・居留地の外門（0x3764）・神社入口の柵（0x37C3）は、 1 → 0
-          で開くことを確認済みです。裏門（0x37FB）の反映は要ゲーム内確認です。 🟢
+          で開きます。
           閉鎖フラグは大寄せ前にも有効で、0 は閉鎖の指定を解除する値です。
           初日昼勧誘フラグ（0x377D〜0x377F）は序章〜1日目昼（段階 ≤100）の開放判定に使われ、1
           で開きます。 ルートやイベントの条件によっても閉じるため、0
@@ -734,7 +714,6 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
       <section className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">大老の大寄せ以降</h3>
         <p className="text-sm text-muted-foreground">
-          🟢{" "}
           <a href="#post-tournament-route" className="text-primary underline underline-offset-4">
             剣術大会以後のルート分岐
           </a>
@@ -805,7 +784,8 @@ const NPC_ROUTE_OFFSET_LIST: readonly number[] = Object.values(NPC_ROUTE_OFFSETS
 
 /**
  * イベントで値が変わる、またはイベントを変えるフラグ（生の値＋候補）。
- * route は真ルートの範囲の生の値（鍛冶屋・道場のバイトは NPCイベントフラグに出す）
+ * route は真ルートの範囲の生の値（鍛冶屋・道場のバイトは NPCイベントフラグに出す）。
+ * ❓ 書き換えたときのゲームへの反映は要ゲーム内確認
  */
 function EventFlagsCard({ route }: { route: RouteCandidatesView | null }) {
   const { save } = useSave();
@@ -836,20 +816,16 @@ function EventFlagsCard({ route }: { route: RouteCandidatesView | null }) {
         <CardTitle>イベント関連フラグ</CardTitle>
         <CardDescription>
           イベントで値が変わるフラグと、イベントの起き方を変えるフラグです。説明は、値が変わる場面と、値によって変わるイベントです。
-          書き換えたときにゲームへどう反映されるかは確かめていません（要ゲーム内確認）。
           通常モードでは、その場面で現れる値だけを選べます。
           {route?.warning && ` ${route.warning}`}
         </CardDescription>
-        <div className="flex flex-wrap gap-2">
-          <CertaintyBadge mark="❓" text="書き換えの反映は未確認" />
-        </div>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">{fields.map((f) => f.node)}</CardContent>
     </Card>
   );
 }
 
-/** 施設の状態（0x375D〜0x375F）。view が null ならセーブ未読み込み */
+/** 施設の状態（0x375D〜0x375F。✅ 書き換えで反映を確認）。view が null ならセーブ未読み込み */
 function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -860,7 +836,7 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
       contentClassName="grid gap-4 sm:grid-cols-3"
       description={
         <>
-          病院（0x375D）・カジノ（0x375E）・語学所（0x375F）の開閉です。書き換えで反映を確認済みです。
+          病院（0x375D）・カジノ（0x375E）・語学所（0x375F）の開閉です。
           カジノだけ値が逆で、1 が閉じている状態です。3つとも 0
           が初期状態（病院・語学所は閉、カジノは開）です。
           周回をまたいで引き継がれると考えられます。
@@ -903,7 +879,10 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
   );
 }
 
-/** 🟢 重要人物の状態（0x374E〜0x375C）の生の値。view が null ならセーブ未読み込み */
+/**
+ * 🟢 重要人物の状態（0x374E〜0x375C）の生の値。view が null ならセーブ未読み込み。
+ * 朱美・ローラ・J.J. に 1 を書くといなくなるのは ✅。ほかの人物の書き換えの効果は ❓ 要ゲーム内確認
+ */
 function CharactersCard({ view }: { view: CharactersView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -919,8 +898,7 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
           0 です。 多くの人物は 0 が生存、1 が死亡です。赤城の 3 は病院に運ばれて助かった状態、J.J.
           の 3・4・5 は伯爵救出の成功・打ち解けた・逮捕された状態です。
           鬼怒川怨仙（0x3756）は船上の侍で 2 になり、大老暗殺計画で倒すと 0 になります。
-          朱美・ローラ・J.J. は 1
-          を書くといなくなることを確認済みです。ほかの人物の書き換えの効果は要ゲーム内確認です。
+          朱美・ローラ・J.J. は 1 を書くといなくなります。
           各欄は値の意味から選びます。説明に、値が変わる場面と、値を条件にするイベントを書いています。
           {view?.warning && ` ${view.warning}`}
         </>
@@ -977,7 +955,11 @@ function TownsfolkField({ offset, view }: { offset: number; view: TownsfolkView 
   );
 }
 
-/** 🟢 町の人（人物番号 p）の死亡のビット（0x015C + 12 × p の bit0）。view が null ならセーブ未読み込み */
+/**
+ * 🟢 町の人（人物番号 p）の死亡のビット（0x015C + 12 × p の bit0）。view が null ならセーブ未読み込み。
+ * 堂島・寿司屋・鍛冶屋のおやじの死亡の位置は ✅ 差分で確認、寿司屋と鍛冶屋のおやじが外すと生き返るのは ✅。
+ * ほかの人が外せば町に出てくるかは ❓ 要ゲーム内確認
+ */
 function PeopleCard({ view }: { view: TownsfolkView | null }) {
   const { update } = useSave();
   const groups = [...new Set(TOWNSFOLK_PEOPLE.map((x) => x.group))];
@@ -998,9 +980,8 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
       description={
         <>
           チェックの付いた人は死亡した（または引退などで町からいなくなった）人で、町に出てきません。周回の終わりに全員が生き返ります。
-          堂島・寿司屋・鍛冶屋のおやじは死亡の位置を差分で確認済みで、寿司屋と鍛冶屋のおやじは外すと生き返ることを確認済みです。
+          チェックを外すと生き返ります。
           重要人物・寿司屋・薬屋は、外すだけでは生き返りません（警告のアイコンに一緒に戻す値を書いています）。
-          ほかの人は外せば町に出てくるはずですが、要ゲーム内確認です。
         </>
       }
     >
@@ -1039,7 +1020,8 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
 
 /**
  * 🟢 町の人（鍛冶屋・道場など）のイベントのフラグ。なりわいのフラグのうちなりわいの画面で扱わないものと、
- * 真ルートの範囲の堂島・先生の職（0x3799・0x379A）。view・route が null ならセーブ未読み込み
+ * 真ルートの範囲の堂島・先生の職（0x3799・0x379A）。view・route が null ならセーブ未読み込み。
+ * 鍛冶屋の後継者イベント・鍛冶屋の状態・堂島が鍛冶屋を継いだかは ✅ 書き換えで確認。そのほかは ❓ 要ゲーム内確認
  */
 function NpcFlagsCard({
   view,
@@ -1079,8 +1061,7 @@ function NpcFlagsCard({
           町の人のイベントの進み具合のフラグです。0x011C〜0x015B
           のなりわいのフラグのうち意味の分かったものと、
           堂島・先生の職（0x3799・0x379A）です。連続なりわいの進み具合などは「なりわい」の画面で編集します。
-          鍛冶屋の後継者イベント・鍛冶屋の状態と、堂島が鍛冶屋を継いだか（周回後に誰が鍛冶屋になるかを決める）は、書き換えで確認済みです。
-          そのほかのフラグの書き換えの効果は要ゲーム内確認です。エリア移動・ロードで消えるフラグは載せていません。
+          堂島が鍛冶屋を継いだかは、周回後に誰が鍛冶屋になるかを決めます。エリア移動・ロードで消えるフラグは載せていません。
         </>
       }
     >
@@ -1209,7 +1190,7 @@ function RouteJudgeRows({
   );
 }
 
-/** 勢力の 3×3 表。view が null ならセーブ未読み込み */
+/** 勢力の 3×3 表（🔶 3勢力 × 3項目の並びは推定）。view が null ならセーブ未読み込み */
 function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJudgeView | null }) {
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
@@ -1220,7 +1201,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
       <CardHeader>
         <CardTitle>勢力の状態</CardTitle>
         <CardDescription>
-          0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べたものと推定しています。
+          0x3780〜0x3788 の9バイトを、3勢力 × 3項目に並べています。
           友好度は「友好ポイント（協力・成功）− 対立ポイント（不利益・敵対行為）」。
           大寄せの時点で友好度が 3
           以上の勢力のルートに入れます。幕府は茂呂が生きていることも条件です。
@@ -1298,8 +1279,8 @@ function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabl
   return (
     <section className="flex flex-col gap-3">
       <h3 className="flex flex-wrap items-center gap-2 text-sm font-medium">
+        {/* ❓ ゲームへの影響は未確認 */}
         一括設定（デバッグ用）
-        <CertaintyBadge mark="❓" text="ゲームへの影響は未確認" />
       </h3>
       <p className="text-muted-foreground text-xs">
         名前の付いたイベント（{namedIndices().length}件）すべてに、同じ値をまとめて書きます。

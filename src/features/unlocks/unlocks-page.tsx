@@ -1,5 +1,4 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { CertaintyBadge } from "@/components/certainty-badge";
 import { InfoTip } from "@/components/info-tip";
 import { ItemInformation, OwnershipStateButton, UnlockStateButton } from "./unlock-ui";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -24,14 +23,11 @@ import {
   ACCESSORY_COUNT,
   ACCESSORY_FLAGS_OFFSET,
   APPEARANCE_BYTES,
-  APPEARANCE_CONFIRMED,
   APPEARANCE_OFFSET,
   APPEARANCE_REWARDS,
   UNLOCK_COUNT,
-  UNLOCK_READ_CONFIRMED,
   UNLOCK_STATE_LABELS,
   UNLOCK_STATES_OFFSET,
-  UNLOCK_WRITE_CONFIRMED,
   appearanceBitPosition,
   isAppearanceBitSet,
   readAccessoryFlags,
@@ -140,11 +136,12 @@ export function AccessoriesPage() {
           <CardTitle className="flex flex-wrap items-center gap-2">
             装飾品
             <InfoTip offset={`${formatOffset(ACCESSORY_FLAGS_OFFSET)} + ID（1 B × ${ACCESSORY_COUNT}）`}>
-              ID ごとの所持フラグ。書き換えが装飾品設定に反映されることを確認済み（✅）
+              {/* ✅ 書き換えが装飾品設定に反映されることを確認。並びがゲーム内の一覧の順なのは 🔶 */}
+              ID ごとの所持フラグ。書き換えは装飾品設定に反映されます
             </InfoTip>
           </CardTitle>
           <CardDescription>
-            持っている装飾品を切り替えます。並びはゲーム内の一覧の順（🔶）です。所持 {ownedCount} / {ACCESSORY_COUNT}
+            持っている装飾品を切り替えます。並びはゲーム内の一覧の順です。所持 {ownedCount} / {ACCESSORY_COUNT}
           </CardDescription>
           {view?.warning && <p className="text-destructive text-xs">{view.warning}</p>}
         </CardHeader>
@@ -238,8 +235,9 @@ export function AccessoriesPage() {
           </div>
         </CardContent>
       </Card>
+      {/* ❓ 2 以上の値の意味は未確認 */}
       <p className="text-muted-foreground text-xs">
-        各装飾品の 1 B だけを書き換えます（0＝なし、1＝所持）。2 以上の値の意味は ❓ で、上級者モードでだけ残したまま切り替えられます。
+        各装飾品の 1 B だけを書き換えます（0＝なし、1＝所持）。2 以上の値は、上級者モードでだけ残したまま切り替えられます。
         「特典」は店で買えず、特典解除で手に入る物です。
       </p>
     </div>
@@ -257,6 +255,10 @@ const categoryItems = (categories: readonly string[], allLabel = "すべての�
   ...categories.map((c) => ({ value: c, label: c })),
 ];
 
+/**
+ * 特典の状態の行。確度：UNLOCK_READ_CONFIRMED の番号は ✅ 解除前後の差分で対応を確認（書き込みは ❓ 要ゲーム内確認）、
+ * UNLOCK_WRITE_CONFIRMED の番号（ライフルの免許）は ✅ 取得済みへの変更を確認。ほかは 🔶 U-17
+ */
 function UnlockStateRows({
   rows, view, readOnly, advanced, write, appearance = false,
 }: {
@@ -288,10 +290,7 @@ function UnlockStateRows({
               description={info.descriptionJa}
               offset={UNLOCK_STATES_OFFSET + u.id}
               condition={u.conditionJa}
-            >
-                {UNLOCK_READ_CONFIRMED.has(u.id) && <Badge variant="outline" className="font-normal">✅ 解除前後の差分で対応を確認。書き込みは要ゲーム内確認</Badge>}
-                {UNLOCK_WRITE_CONFIRMED.has(u.id) && <Badge variant="outline" className="font-normal">✅ 取得済みへの変更を確認済み</Badge>}
-            </ItemInformation>
+            />
           </div>
         );
       })}
@@ -319,12 +318,12 @@ function AppearanceUnlocksCard() {
           <CardTitle className="flex flex-wrap items-center gap-2">
             顔・髪型などの特典
             <InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)} + 特典番号（1 B）`}>
-              顔・髪型・服・肌の色・髪の色・体型は特典解除の状態列で管理します。🔶 U-17：多くの番号の対応と書き込みの反映は要ゲーム内確認です。
+              {/* 🔶 U-17：多くの番号の対応と書き込みの反映は要ゲーム内確認。J.J. の顔は ✅ 解除前後の差分で対応を確認（書き込みは ❓） */}
+              顔・髪型・服・肌の色・髪の色・体型は特典解除の状態列で管理します。
             </InfoTip>
-            <CertaintyBadge mark="🔶" text="U-17 一部は要ゲーム内確認" />
           </CardTitle>
           <CardDescription>
-            主人公設定で使う特典の状態です。0＝非表示、1＝表示中・未取得、2＝取得済み。J.J. の顔は解除前後の差分で対応を確認済みですが、書き込みの反映は要ゲーム内確認です。
+            主人公設定で使う特典の状態です。0＝非表示、1＝表示中・未取得、2＝取得済み。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -375,8 +374,8 @@ export function AppearancePage() {
           <CardTitle className="flex flex-wrap items-center gap-2">
             容姿の服
             <InfoTip offset={`${formatOffset(APPEARANCE_OFFSET)}〜${formatOffset(APPEARANCE_OFFSET + APPEARANCE_BYTES - 1)}`}>
+              {/* APPEARANCE_CONFIRMED の番号は ✅ ゲーム内で書き換えを確認、ほかは 🟢 */}
               服の番号ごとに1ビット（番号 n は {formatOffset(APPEARANCE_OFFSET)} + n/8 の bit n%8）。
-              ✅ の付いた番号はゲーム内で書き換えを確かめた物、ほかは 🟢
             </InfoTip>
           </CardTitle>
           <CardDescription>
@@ -445,7 +444,6 @@ export function AppearancePage() {
                         {ACCESSORY_DLC_LABELS[c.dlc] ?? `DLC ${c.dlc}`}
                       </Badge>
                     )}
-                    {APPEARANCE_CONFIRMED.has(c.id) && <span className="text-xs">✅</span>}
                   </ItemInformation>
                 </div>
               );
@@ -482,12 +480,12 @@ export function UnlocksPage() {
           <CardTitle className="flex flex-wrap items-center gap-2">
             特典解除
             <InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)} + 番号（1 B × ${UNLOCK_COUNT}）`}>
-              0＝非表示、1＝表示中・未取得、2＝取得済み。先頭16件と J.J. の顔はゲーム内の状態と照合済みです。ライフルの免許は2への変更の反映を確認済み。ほかは 🔶 U-17
+              {/* 先頭16件と J.J. の顔は ✅ ゲーム内の状態と照合、ライフルの免許は ✅ 2 への変更の反映を確認。ほかは 🔶 U-17（書き込みは要ゲーム内確認） */}
+              0＝非表示、1＝表示中・未取得、2＝取得済み。
             </InfoTip>
-            <CertaintyBadge mark="🔶" text="U-17 一部は要ゲーム内確認" />
           </CardTitle>
           <CardDescription>
-            特典ごとの状態を切り替えます。ライフルの免許は取得済みへの変更の反映を確認済みです。ほかの書き込みは要ゲーム内確認です。
+            特典ごとの状態を切り替えます。
             全部を解除済みにすると、Steam の実績（すべての容姿設定を解除 など）が取れる可能性があります（取れた実績は戻せません）。
           </CardDescription>
           {view?.warning && <p className="text-destructive text-xs">{view.warning}</p>}
@@ -517,9 +515,10 @@ export function UnlocksPage() {
           <UnlockStateRows rows={rows} view={view} readOnly={readOnly} advanced={advanced} write={write} />
         </CardContent>
       </Card>
+      {/* ❓ ライフルの免許以外の書き込み後の反映は要ゲーム内確認。装飾品の所持フラグと連動するかは ❓ */}
       <p className="text-muted-foreground text-xs">
-        各特典の 1 B だけを書き換えます。値は 0〜2 の範囲です。ライフルの免許以外の書き込み後の反映は要ゲーム内確認です。
-        装飾品の特典を解除済みにしても、装飾品の所持フラグは変えません（連動するかは ❓）。
+        各特典の 1 B だけを書き換えます。値は 0〜2 の範囲です。
+        装飾品の特典を解除済みにしても、装飾品の所持フラグは変えません。
       </p>
     </div>
   );

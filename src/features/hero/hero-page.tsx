@@ -78,9 +78,9 @@ const GAUGE_LABELS: Record<GaugeKind, string> = {
 
 /** 現在値の備考。現在HP・つま斬りゲージは 🟢（ゲーム内の反映は未確認）、活力の現在値は ✅ [U] */
 const GAUGE_CURRENT_NOTES: Record<GaugeKind, string> = {
-  hp: "0 以下はゲームが 1 として保存します。書き換えたときのゲーム内の反映は未確認です",
+  hp: "0 以下はゲームが 1 として保存します",
   vitality: "時間とともに減ります",
-  tsuma: "最大値の半分以上たまっていると発動できます。書き換えたときのゲーム内の反映は未確認です",
+  tsuma: "最大値の半分以上たまっていると発動できます",
 };
 
 export function HeroPage() {
@@ -257,7 +257,7 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
       <CardHeader>
         <CardTitle>難易度・主人公設定のやり直し</CardTitle>
         <CardDescription>
-          次のロードの「続きから」で、難易度と主人公の設定に進むようにします（確認済み）。イベントの状態は今の周回のままなので、序章のイベントは始まらず、セーブした場所から続きます。
+          次のロードの「続きから」で、難易度と主人公の設定に進むようにします。イベントの状態は今の周回のままなので、序章のイベントは始まらず、セーブした場所から続きます。
           周回をはじめからやり直すときは、「世界 / 阿弥浜」画面の「新しい周回」を使います。
         </CardDescription>
       </CardHeader>

@@ -68,15 +68,18 @@ const NUMBER_LABELS: Record<NumberKey, string> = {
   heldTime: "手に持っていた時間（秒）",
 };
 
+// 確度はコメントに残す（画面には出さない）：
+// kills 🔶 4万を超えると表示が崩れる報告。tsumaKills 🔶 上限は斬殺数に合わせた。
+// durabilityRecovery ✅ 位置、ゲーム上の上限は未確認、書き換えの効果は要ゲーム内確認。
+// heldTime 🔶 メニュー画面は数えない、書き換えの効果は要ゲーム内確認。
 const NUMBER_NOTES: Partial<Record<NumberKey, string>> = {
   attack: "銘を付けても500を超えない",
   quality: "上限なし（質の最大値を超えてもよい）",
   qualityMax: "上限は武器ごとに異なる",
-  kills: "🔶 4万を超えると表示が崩れる報告あり",
-  tsumaKills: "🔶 斬殺数と同じ上限にしている",
-  durabilityRecovery: "✅ 位置。ゲーム上の上限は分からない。書き換えの効果は要ゲーム内確認",
-  heldTime:
-    "🔶 メニュー画面は数えない。同じ値の写し（+0x84）も一緒に書く。書き換えの効果は要ゲーム内確認",
+  kills: "4万を超えると表示が崩れる報告あり",
+  tsumaKills: "斬殺数と同じ上限にしている",
+  durabilityRecovery: "上限はエディタの目安",
+  heldTime: "メニュー画面は数えない。同じ値の写し（+0x84）も一緒に書く",
 };
 
 const PART_LABELS: Record<PartKind, string> = { blade: "刃", guard: "鍔", grip: "柄" };
@@ -181,7 +184,7 @@ export function useWeaponRows({
       const label = isXUnknown(kind, p)
         ? `${name}（X 不明・要分解→組み立て）`
         : p.xExtended
-          ? `${name}（X は推測・要確認）`
+          ? `${name}（X は計算値）` // 🔶 X は規則から計算した値（U-3 案C、要ゲーム内確認）
           : name;
       const group = special ? undefined : WEAPON_KIND_LABELS[weaponKind(p.name)].ja;
       // 読み・ja・en の部分一致で検索できる（ユーザー判断 2026-10-05）
@@ -210,7 +213,8 @@ export function useWeaponRows({
             ? undefined
             : weapon?.special
               ? "特殊武器の刃は特殊武器の刃の間だけで変えられます"
-              : "[CT] だけにある刃は、X を 🔶 規則で計算して書きます（U-3 案C、要ゲーム内確認）。X 不明の刃は ID だけを書き X は元のまま残すので、ゲーム内で分解→組み立てて正しい X にしてください（U-3 案B）"
+              : // 🔶 X の計算は U-3 案C（要ゲーム内確認）、X 不明の刃の扱いは U-3 案B
+                "[CT] だけにある刃は、X を規則で計算して書きます。X 不明の刃は ID だけを書き X は元のまま残すので、ゲーム内で分解→組み立てて正しい X にしてください"
         }
         onChange={(v) => update((b, o) => writeWeaponPart(b, o, kind, v))}
       />
@@ -254,7 +258,8 @@ export function useWeaponRows({
         parse={parseName}
         apply={(v) => update((b, o) => writeWeaponName(b, o, v))}
         hint={`最大${WEAPON_NAME_MAX_CHARS}文字`}
-        note={`🟢 完成武器の名前の番号（${formatOffset(base + WEAPON_FIELDS.nameNo)}）が −1 のときだけ、この名前が表示されます（自作の武器）`}
+        // 🟢
+        note={`完成武器の名前の番号（${formatOffset(base + WEAPON_FIELDS.nameNo)}）が −1 のときだけ、この名前が表示されます（自作の武器）`}
       />
     ),
     weaponId: (
@@ -311,7 +316,8 @@ export function useWeaponRows({
         options={completeOptions}
         problem={weapon?.problem ?? weapon?.weaponType.problem ?? null}
         hint="完成武器・武器種・刃・鞘・鍔・柄（固有武器の秘伝を含む）をその武器のものに置き換えます。名前・攻撃力・耐久・質・魅力・銘は変わりません"
-        note="ゲームがその完成武器のレコードに書く値（+0x00〜+0x0F、+0x18〜+0x1D、+0x6C〜+0x6F）をそのまま書きます。特殊武器との間でも変更できます（ゲーム内での読み込みは要確認）"
+        note="ゲームがその完成武器のレコードに書く値（+0x00〜+0x0F、+0x18〜+0x1D、+0x6C〜+0x6F）をそのまま書きます。特殊武器との間でも変更できます"
+        // 特殊武器との間の変更をゲームが読めるかは要ゲーム内確認
         onChange={(v) => update((b, o) => writeCompleteWeapon(b, o, Number(v)))}
       />
     ),

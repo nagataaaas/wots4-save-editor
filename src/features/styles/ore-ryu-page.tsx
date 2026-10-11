@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { CertaintyBadge } from "@/components/certainty-badge";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
@@ -105,14 +104,13 @@ export function OreRyuPage() {
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             俺流
-            <CertaintyBadge mark="🔶" text="要ゲーム内確認" />
+            {/* 並びは 🟢。🔶 書き換えたセーブをゲームで読めるかは要ゲーム内確認 */}
             <InfoTip offset={`件数 ${CUSTOM_COUNT_OFFSET.toString(16).toUpperCase()}・技の表 ${CUSTOM_SHEET_COUNT_OFFSET.toString(16).toUpperCase()}`}>
               chunks/custom-style・belt-copy（俺流の技の表）・sect-scrolls
             </InfoTip>
           </CardTitle>
           <CardDescription>
-            俺流の名前・修練度・技の構成を書き換えたり、新しく作ったりできます。並びは 🟢
-            で、書き換えたセーブをゲームで読めるかはまだ確かめていません。必ず元のセーブをバックアップしてください。
+            俺流の名前・修練度・技の構成を書き換えたり、新しく作ったりできます。書き換える前に、必ず元のセーブをバックアップしてください。
             技は、構えの技の表から選びます（通常モードでは、覚えていて俺流に入れられる技だけ。上級者モードでは構えの全部の技）。
           </CardDescription>
         </CardHeader>
@@ -157,7 +155,7 @@ function StyleCard({
   const [addStance, setAddStance] = useState<string>("");
   // 生きた証の写しはその人物が町に出るたびに作り直されるので、上級者モードでだけ書き換える 🔶
   const locked = readOnly || (style.kind !== "player" && !advanced);
-  const lockReason = readOnly ? "検証に落ちています" : locked ? "生きた証の写しは上級者モードでだけ書き換えられます（作り直されて上書きされるとみられます）" : null;
+  const lockReason = readOnly ? "検証に落ちています" : locked ? "生きた証の写しは上級者モードでだけ書き換えられます（その人物が町に出るたびに作り直されます）" : null;
   const sheets = style.sheetIds.filter((id) => id >= 0).map((id) => view.sheets.find((s) => s.id === id)!);
   const firstStance = sheets[0] ? findStance(sheets[0].stance) : undefined;
   const addable = STANCES.filter((s) => s.slot === firstStance?.slot && !sheets.some((x) => x.stance === s.id));
@@ -393,7 +391,7 @@ function CreateCard({
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           俺流を新しく作る
-          <CertaintyBadge mark="🔶" text="要ゲーム内確認" />
+          {/* 🔶 要ゲーム内確認 */}
         </CardTitle>
         <CardDescription>
           ゲームと同じく、空いている最小の流派 ID（1000〜）・技の表 ID（2000〜）を使い、流派の書を持ち歩きの空き（なければ道場の箪笥）に入れます。

@@ -165,9 +165,8 @@ export function StylesPage() {
               技の覚え状況・流派の表・流派の書（chunks/skill-states・styles・sect-scrolls）
             </InfoTip>
           </CardTitle>
-          <CardDescription>
-            流派ごとに技を覚えた状態にできます（ゲームで反映を確認済み）。腕前点・修練度・段・倒した数の書き換えはゲーム内で未確認です（🟢）。
-          </CardDescription>
+          {/* 技の覚え状況の書き込みは ✅（ゲームで反映を確認済み）。腕前点・修練度・段・倒した数は 🟢（書き換えはゲーム内で未確認） */}
+          <CardDescription>流派ごとに技を覚えた状態にできます。</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-sm">
           <div className="grid items-start gap-4 sm:grid-cols-3">
@@ -179,7 +178,8 @@ export function StylesPage() {
               min={0}
               max={advanced ? 0xffff : SKILL_POINTS_MAX}
               apply={(v) => update((b) => writeSkillPoints(b, v, { advanced }))}
-              note={`俺流を作るとき、選んだ技の腕前点の合計がこれ以下である必要があります。ゲームでは ${SKILL_POINTS_MAX} で止まります（上級者モードでは 65535 まで）。🟢 要ゲーム内確認`}
+              note={`俺流を作るとき、選んだ技の腕前点の合計がこれ以下である必要があります。ゲームでは ${SKILL_POINTS_MAX} で止まります（上級者モードでは 65535 まで）`}
+              // 🟢 要ゲーム内確認
             />
             <span className="sm:pt-7">
               習得技数：{view.learnedCount}
@@ -324,8 +324,9 @@ function SectCard({
             技を全部習得する
           </Button>
           <span className="text-muted-foreground text-xs">
+            {/* 固有技の「習得する」は 🟢 要ゲーム内確認 */}
             段 5（極）にはならないので、必要なら下の段を 5 にしてください。
-            固有技は「習得する」で習得済（俺流には未組み込み）（🟢 要ゲーム内確認）、「俺流で表示」で俺流に組み込める状態にします。
+            固有技は「習得する」で習得済（俺流には未組み込み）、「俺流で表示」で俺流に組み込める状態にします。
             続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
           </span>
         </div>
@@ -339,14 +340,15 @@ function SectCard({
             min={0}
             max={MASTERY_MAX}
             apply={(m) => values && onValues({ ...values, mastery: m, rank: Math.max(values.rank, rankForMastery(sect, m)) })}
-            note={`しきい値：${sect.thresholds.join("・")}。修練度に合わせて段も上げます（🟢 要ゲーム内確認）`}
+            note={`しきい値：${sect.thresholds.join("・")}。修練度に合わせて段も上げます`}
+            // 🟢 要ゲーム内確認
           />
           <RankField
             offset={rec?.offset ? rec.offset + 4 : 0}
             value={values?.rank ?? null}
             problem={valueProblem}
             apply={(r) => values && onValues({ ...values, rank: r })}
-            note="🟢 要ゲーム内確認"
+            // 🟢 要ゲーム内確認
           />
           <IntField
             label="この流派で倒した数"
@@ -356,7 +358,7 @@ function SectCard({
             min={0}
             max={I16_MAX}
             apply={(n) => values && onValues({ ...values, kills: n })}
-            note="🟢 要ゲーム内確認"
+            // 🟢 要ゲーム内確認
           />
         </div>
 

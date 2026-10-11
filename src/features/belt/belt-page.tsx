@@ -1,5 +1,4 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { CertaintyBadge } from "@/components/certainty-badge";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
@@ -25,8 +24,6 @@ import { Chevron, SwitchRow, WeaponImage } from "./weapon-rows";
 import { COLLAPSIBLE_ANIMATION, NONE, isOnButton, type WeaponUpdate } from "./weapon-ui";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
-/** 帯刀の状態：位置は [U] の差分、読み込みでの扱いは 🟢。書き込みの反映はゲーム内で未確認 */
-const stateBadge = <CertaintyBadge mark="🔶" text="差分で確認・書き込み未検証" />;
 
 const weaponTitle = (w: WeaponView | undefined, i: number) =>
   `${i + 1}本目${w && !w.empty ? `：${w.name.value || "（名前なし）"}` : w?.empty ? "：空き" : ""}`;
@@ -89,11 +86,12 @@ export function BeltPage() {
         />
       ))}
 
+      {/* 🟢 レコードの先頭・0x1A6B2 付近の別の記録・帯刀の読み込み元。❓ 用途不明の領域 */}
       <p className="text-muted-foreground text-xs">
-        各フィールドのバイトだけを書き換えます。用途不明（❓）の領域は変えません。レコードの位置は、完成武器ID
-        の位置を先頭として表示します（🟢。既存エディタ [TS] の位置より 6 B 後ろ）。0x1A6B2
-        付近にある帯刀と同じ並び（🟢 帯刀のコピーではない別の記録）は書き換えません。ゲームは帯刀を
-        0xA4C8〜 と帯刀の状態から読みます（🟢）。
+        各フィールドのバイトだけを書き換えます。用途不明の領域は変えません。レコードの位置は、完成武器ID
+        の位置を先頭として表示します（既存エディタ [TS] の位置より 6 B 後ろ）。0x1A6B2
+        付近にある帯刀と同じ並び（帯刀のコピーではない別の記録）は書き換えません。ゲームは帯刀を
+        0xA4C8〜 と帯刀の状態から読みます。
       </p>
     </div>
   );
@@ -143,10 +141,8 @@ function StateCard({
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           帯刀の状態
-          <InfoTip offset={`${formatOffset(BELT_STATE.count)}〜0xA6AF`}>
-            位置は差分で確かめた値、ロード時の扱いは 🟢 です。書き換えたときのゲーム内の反映は未確認です（要ゲーム内確認）。
-          </InfoTip>
-          {stateBadge}
+          {/* 位置は [U] の差分、ロード時の扱いは 🟢。🔶 書き換えたときのゲーム内の反映は未確認（要ゲーム内確認） */}
+          <InfoTip offset={`${formatOffset(BELT_STATE.count)}〜0xA6AF`} />
         </CardTitle>
         <CardDescription>どの武器を手に持つか、二刀流。</CardDescription>
       </CardHeader>
@@ -179,7 +175,8 @@ function StateCard({
             value={String(state.left)}
             options={usable(state.right)}
             problem={problem}
-            note="🟢 左手に持てない武器ならロード時に二刀流が解除されます。🔶 どの組み合わせで持てるか（種類の制限）は未確認です"
+            // 🟢 ロード時の二刀流の解除。🔶 どの組み合わせで持てるか（種類の制限）は未確認
+            note="左手に持てない武器ならロード時に二刀流が解除されます"
             onChange={(v) => onDual(Number(v))}
           />
         )}
@@ -323,7 +320,8 @@ function WeaponCard({
               <Badge key={r}>{r}</Badge>
             ))}
             {weapon && state && index >= state.count && (
-              <Badge variant="outline">帯刀の本数より後ろ（読まれない 🟢）</Badge>
+              // 🟢 帯刀の本数より後ろはゲームが読まない
+              <Badge variant="outline">帯刀の本数より後ろ（読まれない）</Badge>
             )}
             {weapon?.nameHidden.value && <Badge variant="outline">名前を隠す</Badge>}
           </CardTitle>

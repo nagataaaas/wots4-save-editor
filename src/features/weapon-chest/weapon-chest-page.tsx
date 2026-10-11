@@ -1,5 +1,4 @@
 import { useId, useMemo, useState } from "react";
-import { CertaintyBadge } from "@/components/certainty-badge";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
@@ -108,11 +107,10 @@ export function WeaponChestPage() {
             <InfoTip offset={`${formatOffset(WEAPON_CHEST_COUNT)}〜${formatOffset(WEAPON_CHEST_CAPACITY)}`}>
               箪笥の武器は {formatOffset(WEAPON_CHEST_OFFSET)} から 0xA0 B × 200 枠。その直後に本数（2 B）と容量÷10（1 B）があります。
             </InfoTip>
-            {/* 位置・意味は 🟢。書き込みの反映は未確認 */}
-            <CertaintyBadge mark="🔶" text="書き込み未検証" />
           </CardTitle>
+          {/* 位置・意味は 🟢。🔶 書き換えたときのゲーム内の反映は未確認（要ゲーム内確認） */}
           <CardDescription>
-            ゲームは箪笥の先頭から容量の枠までだけを使い、本数が容量に達すると武器を入れられません。書き換えたときのゲーム内の反映は要ゲーム内確認です。
+            ゲームは箪笥の先頭から容量の枠までだけを使い、本数が容量に達すると武器を入れられません。
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -139,7 +137,8 @@ export function WeaponChestPage() {
               <div className="flex flex-col items-start gap-2">
                 <p className="text-xs text-amber-600 dark:text-amber-400">{view.countWarning}</p>
                 <Button variant="outline" size="sm" onClick={fixCount}>
-                  本数を枠の数に合わせる（🔶）
+                  {/* 🔶 */}
+                  本数を枠の数に合わせる
                 </Button>
               </div>
             )}

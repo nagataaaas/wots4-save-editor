@@ -79,7 +79,7 @@ export function OverrideRow({
     disabled: !override,
     hint: override ? (
       <span className="text-amber-600 dark:text-amber-400">
-        🔶 データ破損のおそれ。{overrideHint}
+        データ破損のおそれ。{overrideHint}
       </span>
     ) : (
       idleHint

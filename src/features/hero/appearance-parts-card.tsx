@@ -13,7 +13,6 @@ import {
   BODY_KIND_CRASH,
   BODY_KIND_NAMES,
   BODY_KIND_PARTS,
-  HAIR_COLOR_CONFIRMED,
   HAIR_COLOR_MAX,
   HAIR_COLOR_MIN,
   HAIR_COLOR_NAMES,
@@ -146,7 +145,8 @@ function LayerEditor({
               problem={problem}
               disabled={!def}
               hint={def ? undefined : "この部品にはない層です"}
-              note="🟢 値はテクスチャの番号で、形は部品の番号で決まる（✅ [U] 2026-10-08）。なしにすると層が消える（足元の層2で履物が消えた ✅ [U]）"
+              // 🟢 値はテクスチャの番号、形は部品の番号（✅ [U] 2026-10-08）。なしで層が消える（足元の層2で履物が消えた ✅ [U]）
+              note="値はテクスチャの番号で、形は部品の番号で決まる。なしにすると層が消える（足元の層2なら履物が消える）"
               onChange={(v) => onChange(layer, Number(v))}
             />
           );
@@ -156,17 +156,22 @@ function LayerEditor({
   );
 }
 
+/**
+ * 部品ごとの注記。確度：上半身・下半身・顔・髪型・手・足元の構造は 🟢。
+ * 上半身・下半身・足元の書き込みの反映は ❓ 要ゲーム内確認（U-19）。顔・髪型・手（J.J の手）の書き込みの反映は ✅ [U]。
+ * 籠手・脛当て・前掛け・外套は ✅ [U]
+ */
 const PART_NOTES: Record<PartKind, string> = {
-  upper: "🟢 部品の番号とモデルの値（u16 × 4）を書く。書き込みの反映は要ゲーム内確認（U-19）",
-  lower: "🟢 部品の番号とモデルの値（u16 × 4）を書く。書き込みの反映は要ゲーム内確認（U-19）",
-  face: "🟢 部品の番号とモデルの値を書く。✅ [U] 書き込みの反映を確認",
-  hair: "🟢 部品の番号とモデルの値を書く。✅ [U] 書き込みの反映を確認",
-  body: "🟢 手のモデル（名前のない15種）。上級者モードだけ。✅ [U] J.J の手の書き込みの反映を確認",
-  feet: "🟢 部品の番号とモデルの値（u16 × 4）を書く。書き込みの反映は要ゲーム内確認（U-19）",
-  gauntlet: "✅ [U] 部品の番号と、色違いまで含めたモデルの値を書く",
-  leggings: "✅ [U] 部品の番号と、色違いまで含めたモデルの値を書く",
-  apron: "✅ [U] 部品の番号と、色違いまで含めたモデルの値を書く",
-  cape: "✅ [U] 部品の番号と、色違いまで含めたモデルの値を書く",
+  upper: "部品の番号とモデルの値（u16 × 4）を書く",
+  lower: "部品の番号とモデルの値（u16 × 4）を書く",
+  face: "部品の番号とモデルの値を書く",
+  hair: "部品の番号とモデルの値を書く",
+  body: "手のモデル（名前のない15種）。上級者モードだけ",
+  feet: "部品の番号とモデルの値（u16 × 4）を書く",
+  gauntlet: "部品の番号と、色違いまで含めたモデルの値を書く",
+  leggings: "部品の番号と、色違いまで含めたモデルの値を書く",
+  apron: "部品の番号と、色違いまで含めたモデルの値を書く",
+  cape: "部品の番号と、色違いまで含めたモデルの値を書く",
 };
 
 /** 上裸・下裸のボタン。体の種類が男・女のときだけ使える（✅ [U] 2026-10-08、ユーザー判断 2026-10-08） */
@@ -191,7 +196,7 @@ function NudeButtons({
       <div className="flex flex-wrap items-center gap-2">
         <Label>裸</Label>
         <InfoTip offset={APPEARANCE_PARTS_OFFSETS.parts}>
-          ✅ [U] 服の部品のモデルの値から服の層を外し、体の層だけにする。男：上半身
+          服の部品のモデルの値から服の層を外し、体の層だけにする。男：上半身
           117（110）・下半身 88（196）、女：上半身 98（152）・下半身 26（233）
         </InfoTip>
       </div>
@@ -232,8 +237,8 @@ export function AppearancePartsCard() {
 
   const hairMin = advanced ? 0 : HAIR_COLOR_MIN;
   const hairMax = advanced ? 15 : HAIR_COLOR_MAX;
-  const hairLabel = (i: number) =>
-    `${HAIR_COLOR_NAMES[i] ?? "色なし"}（${i}）${HAIR_COLOR_CONFIRMED.has(i) || i > HAIR_COLOR_MAX ? "" : " 🔶"}`;
+  // 髪の色：HAIR_COLOR_CONFIRMED の値（0〜4）は ✅ [U]、5＝赤・6〜9 は 🔶（U-19）
+  const hairLabel = (i: number) => `${HAIR_COLOR_NAMES[i] ?? "色なし"}（${i}）`;
   const hairOptions: SelectOption[] = Array.from({ length: hairMax - hairMin + 1 }, (_, i) => ({
     value: String(hairMin + i),
     label: hairLabel(hairMin + i),
@@ -268,7 +273,8 @@ export function AppearancePartsCard() {
               ? "顔・髪型・服を個別に設定しています"
               : undefined
         }
-        note="🟢 人物の番号。✅ [U] 選び直して見た目が変わることを確認。0x3AAD6 に書く値は 🔶（U-19）。身長は今の低い・高いの倍率を引き継ぐ"
+        // 🟢 人物の番号。✅ [U] 選び直して見た目が変わることを確認。0x3AAD6 に書く値は 🔶（U-19）
+        note="人物の番号。選び直すと見た目が変わる。身長は今の低い・高いの倍率を引き継ぐ"
         searchPlaceholder="人物を検索"
         onChange={(v) => update((b) => writePerson(b, Number(v)))}
       />
@@ -288,7 +294,8 @@ export function AppearancePartsCard() {
             ? "上級者モード：タイプだけを書き換えます。異なるタイプの部品と組み合わさると表示が崩れるおそれがあります"
             : "人物を選ぶと決まります"
         }
-        note="🔶 0＝男、1＝女。2＝ローラ・3＝子供（✅ [U] 人物として表示を確認）。4＝動物はロードでクラッシュするので出さない（✅ [U]）"
+        // 🔶 0＝男、1＝女。2＝ローラ・3＝子供は ✅ [U] 人物として表示を確認。4＝動物のクラッシュは ✅ [U]
+        note="0＝男、1＝女、2＝ローラ、3＝子供。4＝動物はロードでゲームが止まるので出さない"
         onChange={(v) => update((b) => writeBodyKind(b, Number(v), advanced))}
       />
       <SelectRow
@@ -304,7 +311,8 @@ export function AppearancePartsCard() {
             ? "上級者モード：0〜15（0・10 以上は色がつきません）"
             : `${HAIR_COLOR_MIN}〜${HAIR_COLOR_MAX}`
         }
-        note="値＝主人公設定の一覧の左からの位置。✅ [U] 0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪。🔶 5＝赤・6〜9（U-19）"
+        // ✅ [U] 0〜4。🔶 5＝赤・6〜9（U-19）
+        note="値＝主人公設定の一覧の左からの位置。0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪・5＝赤・6〜9"
         onChange={(v) => update((b) => writeHairColor(b, Number(v), advanced))}
       />
       <NudeButtons

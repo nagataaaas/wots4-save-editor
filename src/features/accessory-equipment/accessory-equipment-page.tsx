@@ -122,7 +122,8 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
               options={jointOptions}
               problem={problem}
               disabled={!selected}
-              note="🟢 標準の位置・回転からさらに補正して配置します。頭は顔、胸は背中も含みます。"
+              // 🟢
+              note="標準の位置・回転からさらに補正して配置します。頭は顔、胸は背中も含みます。"
               onChange={(v) =>
                 update((b) => writeAccessoryField(b, group, slot, "joint", Number(v), advanced))
               }
@@ -150,7 +151,8 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
       </div>
       <section className="space-y-4 border-t pt-6">
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold">{MODE_LABELS[mode]}の調整 🟢</h3>
+          {/* 🟢 */}
+          <h3 className="text-sm font-semibold">{MODE_LABELS[mode]}の調整</h3>
           <p className="text-muted-foreground text-sm">
             位置・回転は標準からの補正。大きさは1.0で標準（保存補正0.0）です。共通を選ぶと納刀の調整で抜刀を上書きします。
           </p>
@@ -271,7 +273,8 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
             この枠の生バイト（0x{offset.toString(16).toUpperCase()}、64 B）
           </summary>
           <p className="mt-2 break-all font-mono">{current.raw || "領域を読み取れません"}</p>
-          <p className="mt-2">+0x00〜03・+0x3Dの意味は未確認で、編集時も維持します。</p>
+          {/* ❓ +0x00〜03・+0x3D の意味は未確認 */}
+          <p className="mt-2">+0x00〜03・+0x3D は編集時も元の値を維持します。</p>
         </details>
       )}
     </>

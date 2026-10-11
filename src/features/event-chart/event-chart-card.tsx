@@ -135,7 +135,7 @@ export function EventChartCard({
           {PLAY_COUNT_REVEALS_BEST_ROUTE}{" "}
           以上なら全部出ます）。ゲームで出ない升は点線で薄く描いています。
           ゲームは「いま始められるイベント」も到達した枠として扱いますが、それはセーブだけでは決まらないので、ここでは描いていません。
-          真ルートの扱い・赤い線・緑の枠・紫の箱・カーソルの範囲は、ゲーム内では確かめていません（要ゲーム内確認）。
+          {/* ❓ 真ルートの扱い・赤い線・緑の枠・紫の箱・カーソルの範囲は要ゲーム内確認 */}
           {loaded
             ? ` 周回数：${counts.playCount.toLocaleString()}、クリア回数の合計：${counts.clearTotal.toLocaleString()}。枠をクリックすると状態を編集できます。`
             : " セーブを読み込むまでは、全部の枠を名前つきで描いています。"}
@@ -568,7 +568,8 @@ function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView 
         }
         options={recordOptions(advanced)}
         problem={problem}
-        note={`周回をまたぐ記録（生きた証）。04 で名前が出て、それ以外は状態が 03・04 のときだけ名前が出ます（確認済みは FF と 04）。真ルートのイベントは、これが 04 か状態が 03・04 でないと枠ごと出ません（状態が 04 以外で FF のときに出ないことは確認済み。周回数が ${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら常に出る）。ほかの周回にも引き継がれる可能性があります`}
+        // 確度：名前の出方は FF と 04 で ✅。真ルートの枠が状態 04 以外・記録 FF で出ないのは ✅
+        note={`周回をまたぐ記録（生きた証）。04 で名前が出て、それ以外は状態が 03・04 のときだけ名前が出ます。真ルートのイベントは、これが 04 か状態が 03・04 でないと枠ごと出ません（周回数が ${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら常に出る）。ほかの周回にも引き継がれる可能性があります`}
         onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
       />
       {shared && (

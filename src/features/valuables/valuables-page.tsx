@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { CertaintyBadge } from "@/components/certainty-badge";
 import { InfoTip } from "@/components/info-tip";
 import { ItemSlotRow } from "@/components/item-slot-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -95,13 +95,14 @@ export function ValuablesPage() {
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             重要品
+            {/* チップ・木札は ❓ U-12 */}
             <InfoTip offset={`${formatOffset(VALUABLES_OFFSET)} から 8 B × ${VALUABLE_SLOT_COUNT} 件`}>
-              チップ・木札は、Steam版で書き込むとゲーム内でセーブできなくなったため選択肢に出しません（❓ U-12）
+              チップ・木札は、Steam版で書き込むとゲーム内でセーブできなくなったため選択肢に出しません
             </InfoTip>
           </CardTitle>
+          {/* 拷問部屋の鍵・謎の鍵の ID は 🟢。ゲーム内での表示と使用は未確認（U-14） */}
           <CardDescription>
-            各枠の重要品（地金・会談の手紙・鍵）と個数を設定できます。拷問部屋の鍵・謎の鍵の ID は 🟢
-            で、ゲーム内での表示と使用は未確認です（U-14）。
+            各枠の重要品（地金・会談の手紙・鍵）と個数を設定できます。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col divide-y">
@@ -128,10 +129,10 @@ export function ValuablesPage() {
         </CardContent>
       </Card>
 
+      {/* ❓ +0x04〜+0x07 の用途。🔶 個数の上限は推測（chunks/items）で、ゲーム内の上限は未確認 */}
       <p className="text-muted-foreground text-xs">
         各枠の +0x00〜+0x03（ID・個数）だけを書き換えます。+0x04〜+0x07
-        は用途不明（❓）のため変えません。 個数の上限 {VALUABLE_COUNT_MAX} は推測（🔶
-        chunks/items）で、ゲーム内の上限は未確認です。
+        は用途不明のため変えません。個数の上限 {VALUABLE_COUNT_MAX} はエディタの目安です。
       </p>
     </div>
   );
@@ -174,14 +175,14 @@ function ProbeCard({
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex flex-wrap items-center gap-2">
             ID調査モード
-            <CertaintyBadge mark="❓" text="上級者向け" />
+            <Badge variant="outline" className="font-normal">上級者向け</Badge>
           </CardTitle>
           <Switch checked={enabled} onCheckedChange={onToggle} aria-label="ID調査モード" />
         </div>
+        {/* 不正な ID でセーブできなくなる例は U-12 */}
         <CardDescription>
-          一覧にない ID を16進で直接書いて、ゲーム内の表示を調べるための上級者モードです。 ID
-          が不正だとゲーム内でセーブできなくなることがあるので（U-12）、必ず samples/
-          のコピーで試してください。
+          一覧にない ID を16進で直接書いて、ゲーム内の表示を調べるための上級者モードです。ID
+          が不正だとゲーム内でセーブできなくなることがあるので、必ずセーブのコピーで試してください。
         </CardDescription>
       </CardHeader>
       {enabled && (
@@ -220,8 +221,9 @@ function ProbeCard({
               {message.text}
             </p>
           )}
+          {/* 🔶 候補の範囲 */}
           <p className="text-muted-foreground text-xs">
-            「なし」の枠に、開始 ID から順に候補（🔶 0xD7〜0xFF、続いて 0x9F〜0xBF の残り）を個数 1
+            「なし」の枠に、開始 ID から順に候補（0xD7〜0xFF、続いて 0x9F〜0xBF の残り）を個数 1
             で入れます。既に入っている枠は変えません。
             ゲームでロードして重要品の一覧に出た名前を確かめ、ID と名前の対応を教えてください。
           </p>

@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { CertaintyBadge } from "@/components/certainty-badge";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { GameLabel } from "@/components/game-label";
 import { InfoTip } from "@/components/info-tip";
@@ -41,7 +40,6 @@ import {
   OCCUPATION_CLEAR_MAX,
   OCCUPATION_NOT_APPEARED,
   OCCUPATION_STATE_OFFSET,
-  OCCUPATION_WRITE_CONFIRMED,
   occupationStateOffset,
   readOccupations,
   syncClearCount,
@@ -227,8 +225,8 @@ function SummaryCard({
       <CardHeader>
         <CardTitle>受注中・クリア数</CardTitle>
         <CardDescription>
-          クリアしたなりわいの数も周回をまたぐ統計で、下の記録の合計（クリア回数の合計）と揃えておきます。揃っていないときのゲームの動作は
-          ❓ です。
+          {/* ❓ 揃っていないときのゲームの動作は未確認 */}
+          クリアしたなりわいの数も周回をまたぐ統計で、下の記録の合計（クリア回数の合計）と揃えておきます。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -264,7 +262,10 @@ function SummaryCard({
 const flagWritesText = (writes: readonly FlagWrite[]) =>
   writes.map((w) => `番号 ${w.flag}＝${w.value}`).join("、");
 
-/** 受注中のなりわい。受注・外す書き込みは occupation-accept.ts（✅ 受注中の情報、🟢 受注で書くフラグ、🔶 外すときのフラグ） */
+/**
+ * 受注中のなりわい。受注・外す書き込みは occupation-accept.ts（✅ 受注中の情報、🟢 受注で書くフラグ、🔶 外すときのフラグ）。
+ * ❓ 書き込みのゲーム内の反映は要ゲーム内確認
+ */
 function AcceptRow({
   view,
   write,
@@ -287,11 +288,6 @@ function AcceptRow({
     <SearchSelectRow
       label="受注中のなりわい"
       offset={ACCEPT_OFFSETS.id}
-      badges={
-        <Badge variant="outline" className="font-normal">
-          書き込みは要ゲーム内確認
-        </Badge>
-      }
       value={view === null ? null : String(view.id)}
       currentLabel={view ? `${view.id} 表にない ID` : undefined}
       options={options}
@@ -336,8 +332,9 @@ function SeriesCard({ view, write }: FlagCardProps) {
       description={
         <>
           【岡っ引き】野戸仏・【極道】小鳩・【泥棒】泥棒さん・【宿無し】おっつぁんの4種類。十の位が何件目か、一の位が
+          {/* ✅ 野戸仏の 20・100 は書き込みで確認。ほかの欄の書き込みの反映は ❓ 要ゲーム内確認 */}
           0＝受注前・1＝受注済です。野戸仏は、20 で2件目「督促状」から始まり、100
-          で完了になることを確認済みです。ほかの欄の書き込みの反映は要ゲーム内確認です。
+          で完了になります。
           4種類をすべて終えると四天王の話が進み、最終なりわいにつながります。連続なりわいを 100
           にしても、最終なりわいが 99 未満なら新しい依頼は出ません。
         </>
@@ -359,7 +356,8 @@ function SecurityCard({ view, write }: FlagCardProps) {
       description={
         <>
           【同心頭】佐古津と【賭場】女将の2人から受けるなりわいです。連続なりわいではなく、そのときの治安によって受けられるなりわいが変わり、何回でも受けられます。
-          女将は最終なりわい（阿弥浜八人衆）を始める人でもあります。値の意味は未確認で、書き込みの反映は要ゲーム内確認です。
+          {/* ❓ 値の意味と書き込みの反映は要ゲーム内確認 */}
+          女将は最終なりわい（阿弥浜八人衆）を始める人でもあります。
         </>
       }
       contentClassName="grid gap-4 sm:grid-cols-2"
@@ -409,11 +407,7 @@ function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { f
     <SelectRow
       label={`${info.name}（番号 ${flag}）`}
       offset={offset}
-      badges={
-        <Badge variant="outline" className="font-normal">
-          {flag === 4 ? "受注の書き込みは要ゲーム内確認" : "書き込みは要ゲーム内確認"}
-        </Badge>
-      }
+      // ❓ 書き込みの反映は要ゲーム内確認（番号 4 は受注の書き込みだけ）
       value={current === null ? null : String(current)}
       currentLabel={current === null ? undefined : `${current} 不明`}
       options={isSeries
@@ -485,14 +479,12 @@ function StatesCard({
     <CollapsibleCard
       title="なりわいの記録（周回をまたぐ統計）"
       extra={
-        <>
-          <InfoTip offset={`${formatOffset(OCCUPATION_STATE_OFFSET)} + ID×2（u16 × 256）`}>
-            FFFF＝まだ出ていない、0＝出た・未クリア（🔶）、1
-            以上＝これまでの周回を通してクリアした回数。 1
-            にするとなりわい一覧でクリア済みになることを確認済み（今宵の虎徹は）
-          </InfoTip>
-          <CertaintyBadge mark="🔶" text="0 の意味と、FFFF・0 への書き込みは要ゲーム内確認" />
-        </>
+        <InfoTip offset={`${formatOffset(OCCUPATION_STATE_OFFSET)} + ID×2（u16 × 256）`}>
+          {/* 🔶 0 の意味と、FFFF・0 への書き込みは要ゲーム内確認。1 でクリア済みになるのは ✅（今宵の虎徹で確認） */}
+          FFFF＝まだ出ていない、0＝出た・未クリア、1
+          以上＝これまでの周回を通してクリアした回数。 1
+          にするとなりわい一覧でクリア済みになります
+        </InfoTip>
       }
       description={
         <>
@@ -647,7 +639,6 @@ function StateRow({
             </Badge>
           )}
           {accepted && <Badge className="font-normal">受注中</Badge>}
-          {OCCUPATION_WRITE_CONFIRMED.has(o.id) && <span className="text-xs">✅</span>}
         </div>
         <span className="text-muted-foreground text-xs">
           報酬 {o.reward.toLocaleString()} 文

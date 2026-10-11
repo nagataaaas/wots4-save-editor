@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { CertaintyBadge } from "@/components/certainty-badge";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
@@ -101,10 +100,10 @@ const placeOptions: SelectOption[] = [...new Set(PLACE_LAYOUTS.map((p) => p.plac
   placeOption,
 );
 
-/** 配置の説明（欄の注記） */
+/** 配置の説明（欄の注記）。家の種類・家の人・犬・布団と座標の組は 🟢、ほかの配置で布団が宙に浮くなどは ✅ */
 const LAYOUT_NOTE =
-  "+0x0A。夜這いの場の家の種類・家の人・犬・布団と、その座標の組 🟢。家の中の人は配置だけで決まる（家の人の見た目は家の種類ごとの組から選ばれ、強さは同じ）。" +
-  "場所ごとに使える配置が決まっていて、ほかの配置にすると布団が宙に浮いたり壁にめり込んだりした（確認済み）";
+  "+0x0A。夜這いの場の家の種類・家の人・犬・布団と、その座標の組。家の中の人は配置だけで決まる（家の人の見た目は家の種類ごとの組から選ばれ、強さは同じ）。" +
+  "場所ごとに使える配置が決まっていて、ほかの配置にすると布団が宙に浮いたり壁にめり込んだりする";
 
 /** 配置の選択肢1つ。家の種類と人数で表示する */
 function layoutOption(layout: number, extra?: string): SelectOption {
@@ -146,6 +145,11 @@ const nameOptions: SelectOption[] = NPC_NAMES.map((n) => ({
   keywords: [...labelKeywords({ kind: "npc", id: n.labelId }), String(n.id), hex(n.id)],
 }));
 
+/**
+ * 人物の項目ごとの表示。確度：名前・見た目と声・相手の種類・年齢・血液型の書き換えの反映は ✅。
+ * 声が見た目の顔で決まること（万由・千佳・百合は種類のまま）、名前のある相手の種類で夜這い回数が増えること、
+ * 夜這いした日が約束した日と同じになることは 🟢
+ */
 const PERSON_FIELDS: Record<
   EditableField,
   {
@@ -153,41 +157,40 @@ const PERSON_FIELDS: Record<
     options: readonly SelectOption[] | null;
     search?: boolean;
     note: string;
-    badge?: { mark: "🔶" | "❓"; text: string };
   }
 > = {
   name: {
     label: "名前",
     options: nameOptions,
     search: true,
-    note: "名前の ID。はるなをさよの値にすると、名前がさよになった（確認済み）。約束の画面に職業は出ない。町の人の名前は「町の人の名前」から、相手の性別に合わせて選ばれる",
+    note: "名前の ID。はるなをさよの値にすると、名前がさよになる。約束の画面に職業は出ない。町の人の名前は「町の人の名前」から、相手の性別に合わせて選ばれる",
   },
   look: {
     label: "見た目と声",
     options: lookOptions,
     search: true,
-    note: "見た目（モデル）と声。町の人の約束では、町で出会った相手の見た目が入る。はるなをさよの値にすると、見た目と声がさよになった。台詞・強さ・名前は変わらない（確認済み）。番号は主人公設定の人物と同じ。声は見た目の顔で決まり、多くの見た目が同じ声を使う。ただし相手の種類が万由・千佳・百合のときは、声は種類のまま 🟢",
+    note: "見た目（モデル）と声。町の人の約束では、町で出会った相手の見た目が入る。はるなをさよの値にすると、見た目と声がさよになる。台詞・強さ・名前は変わらない。番号は主人公設定の人物と同じ。声は見た目の顔で決まり、多くの見た目が同じ声を使う。ただし相手の種類が万由・千佳・百合のときは、声は種類のまま",
   },
   type: {
     label: "相手の種類（セリフと戦闘力）",
     options: typeOptions,
     search: true,
-    note: "町の人の種類。台詞と強さが決まる（はるなをさよの値にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなった。見た目・声・名前は変わらない。確認済み）。多くの種類が同じ会話を使い、強さは種類ごとに違う。名前のある相手の種類にすると、夜這いのあとその人の夜這い回数が増える 🟢",
+    note: "町の人の種類。台詞と強さが決まる（はるなをさよの値にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなる。見た目・声・名前は変わらない）。多くの種類が同じ会話を使い、強さは種類ごとに違う。名前のある相手の種類にすると、夜這いのあとその人の夜這い回数が増える",
   },
   age: {
     label: "年齢",
     options: null,
-    note: "0x30（48）にすると48歳と表示された（確認済み）。255 は「？」（さよ）",
+    note: "0x30（48）にすると48歳と表示される。255 は「？」（さよ）",
   },
   blood: {
     label: "血液型",
     options: knownOptions(BLOOD_TYPES),
-    note: "1＝A、2＝B、3＝O、4＝AB（確認済み）。5 は「？」（さよ）",
+    note: "1＝A、2＝B、3＝O、4＝AB。5 は「？」（さよ）",
   },
   day: {
     label: "夜這いした日",
     options: null,
-    note: "記録の +0x0C。経過日数（1日目＝0）。🟢 約束した日と同じ日になる。画面では「N日目」で表示する",
+    note: "記録の +0x0C。経過日数（1日目＝0）。約束した日と同じ日になる。画面では「N日目」で表示する",
   },
 };
 
@@ -218,9 +221,6 @@ function PersonFieldEditor({
   const { update } = useSave();
   const { advanced } = useAdvancedMode();
   const spec = PERSON_FIELDS[field];
-  const badges = spec.badge ? (
-    <CertaintyBadge mark={spec.badge.mark} text={spec.badge.text} />
-  ) : undefined;
   const apply = (v: number) => update((b) => write(b, v, { advanced }));
   const validate = (v: number) => validatePersonField(field, v, current ?? 0, { advanced });
 
@@ -229,7 +229,6 @@ function PersonFieldEditor({
       <FieldRow
         label={spec.label}
         offset={offset}
-        badges={badges}
         value={current}
         problem={problem}
         format={(v) => `${v + 1}`}
@@ -251,7 +250,6 @@ function PersonFieldEditor({
       <FieldRow
         label={spec.label}
         offset={offset}
-        badges={badges}
         value={current}
         problem={problem}
         format={String}
@@ -269,7 +267,6 @@ function PersonFieldEditor({
     <SearchSelectRow
       label={spec.label}
       offset={offset}
-      badges={badges}
       value={current === null ? null : String(current)}
       currentLabel={current === null ? undefined : `${hex(current)} 不明`}
       options={spec.options}
@@ -284,7 +281,6 @@ function PersonFieldEditor({
     <SelectRow
       label={spec.label}
       offset={offset}
-      badges={badges}
       value={current === null ? null : String(current)}
       currentLabel={current === null ? undefined : `${hex(current)} 不明`}
       options={spec.options}
@@ -314,7 +310,8 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem
         currentLabel={`${formatHex2(promise.place)} 名前なし`}
         options={placeOptions}
         problem={problem}
-        note="+0x08。夜這いに入る扉と、その先のマップ（確認済み）。場所を変えると、配置もその場所で使えるものに合わせる"
+        // ✅ 扉とマップの書き換えの反映を確認
+        note="+0x08。夜這いに入る扉と、その先のマップ。場所を変えると、配置もその場所で使えるものに合わせる"
         onChange={(v) => {
           const place = Number(v);
           const next = layoutsForPlace(place);
@@ -418,13 +415,14 @@ function DayEditor({ promise, problem }: { promise: PromiseView; problem: string
       }}
       apply={(v) => update((b) => writePromiseField(b, "day", v, { advanced }))}
       inputMode="numeric"
+      // 🟢 場面が変わるたびに今日と比べ、違えば約束が消える
       warning={
         isToday
           ? null
-          : `今日（${today + 1}日目）ではないので、次に場面が変わるとすっぽかしで消えます 🟢`
+          : `今日（${today + 1}日目）ではないので、次に場面が変わるとすっぽかしで消えます`
       }
       hint={`${hintFor("day", advanced)}。今日は ${today + 1}日目`}
-      note="+0x28。約束した日の経過日数（1日目＝0）。画面では「N日目」で入力する。🟢 場面が変わるたびに今日と比べ、違えば「夜這いの約束をすっぽかしてしまった…」で約束が消える"
+      note="+0x28。約束した日の経過日数（1日目＝0）。画面では「N日目」で入力する。場面が変わるたびに今日と比べ、違えば「夜這いの約束をすっぽかしてしまった…」で約束が消える"
     />
   );
 }
@@ -703,13 +701,13 @@ function RecordRow({ record, problem }: { record: RecordView; problem: string | 
   );
 }
 
+/** 夜這いの記録。🔶 差分からの推定で、書き換えの反映は未確認 */
 function RecordsCard({ view }: { view: YobaiView | null }) {
   const problem = view?.recordsProblem ?? null;
 
   return (
     <CollapsibleCard
       title="夜這いの記録"
-      extra={<CertaintyBadge mark="🔶" text="書き換えの反映は未確認" />}
       description={
         <>
           {formatOffset(RECORDS_OFFSET)} から 16 B × {RECORD_CAPACITY}{" "}
@@ -785,8 +783,9 @@ function CountersCard({ view }: { view: YobaiView | null }) {
       title="夜這いの回数（表示だけ）"
       description={
         <>
+          {/* ✅ 約束の画面の「夜這い回数」は 0x137EC */}
           夜這いが終わるたびに増える値です。約束の画面の「夜這い回数」は {formatOffset(0x137ec)}
-          （確認済み）。
+          です。
           夜這い回数と相手ごとの回数は周回で消えず、記録・段階・愛の証の回数は周回で消えるので、記録の数と合わないことがあります。
         </>
       }
@@ -867,12 +866,14 @@ export function YobaiPage() {
         </Alert>
       )}
 
+      {/*
+        確度（docs: night-visit）：約束の場所・名前・見た目と声・セリフと戦闘力・年齢・血液型は ✅ 書き換えでゲームに反映。
+        夜這いの記録は 🔶 差分からの推定で、書き換えの反映は未確認
+      */}
       <Alert>
-        <AlertTitle>検証用（一部は要ゲーム内確認）</AlertTitle>
+        <AlertTitle>検証用</AlertTitle>
         <AlertDescription>
-          約束の場所・名前・見た目と声・セリフと戦闘力・年齢・血液型は、書き換えでゲームに反映されることを確認済みです（解析ドキュメントの
-          night-visit）。
-          配置はその場所で使えるものだけを選べます。夜這いの記録は差分からの推定で、書き換えの反映は確かめていません。
+          配置はその場所で使えるものだけを選べます。
           書き換える前のセーブを残してから試してください。
         </AlertDescription>
       </Alert>
@@ -884,7 +885,7 @@ export function YobaiPage() {
 
       <p className="text-muted-foreground text-xs">
         約束の枠の
-        +0x00（約束したときの段階）・+0x02（まとまり）・+0x0C〜+0x1B（意味は未確認）・+0x26〜+0x2B（初めての説明を見たかのビットなど）は、約束を作るとき以外は書き換えません。
+        +0x00（約束したときの段階）・+0x02（まとまり）・+0x0C〜+0x1B（意味の分からない範囲）・+0x26〜+0x2B（初めての説明を見たかのビットなど）は、約束を作るとき以外は書き換えません。
         {` `}記録の +0x08（入った建物）は {formatOffset(RECORDS_OFFSET + RECORD_BUILDING_REL)} から
         16 B 刻みです。
       </p>

@@ -81,9 +81,10 @@ export function MarketWeaponsPage() {
             </InfoTip>
             <Badge variant="outline" className="font-normal">読み取り専用</Badge>
           </CardTitle>
+          {/* 🟢 周回の終わりの変化と確率。確率はゲーム内では未確認（要ゲーム内確認） */}
           <CardDescription>
             主人公が死んだときに町の人に持ち去られた帯刀・道具・部品です。周回をまたいで残り、周回の終わりごとに古くなります。
-            古い武器は消えたり、精錬されたり、銘が付いたりします（道具・部品は消えません）。確率はゲーム内では未確認です（要ゲーム内確認）。
+            古い武器は消えたり、精錬されたり、銘が付いたりします（道具・部品は消えません）。
           </CardDescription>
         </CardHeader>
       </Card>
@@ -194,7 +195,8 @@ function OtherTable({ summary }: { summary: MarketOtherSummary }) {
             <th className="py-1 pr-3 font-normal">名前</th>
             {isItem && <th className="py-1 pr-3 font-normal">個数</th>}
             <th className="py-1 pr-3 font-normal">流通に入ってから</th>
-            <th className="py-1 font-normal">残りのバイト（❓）</th>
+            {/* ❓ 残りのバイトの意味 */}
+            <th className="py-1 font-normal">残りのバイト</th>
           </tr>
         </thead>
         <tbody>

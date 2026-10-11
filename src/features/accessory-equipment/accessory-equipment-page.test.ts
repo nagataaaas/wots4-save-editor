@@ -63,7 +63,8 @@ describe('装飾品の装着画面', () => {
     expect(html).toContain('sm:grid-cols-[minmax(0,5fr)_minmax(0,2fr)]')
     expect(html).toContain('border-t')
     expect(html).toContain('sm:border-l')
-    expect(html).toMatch(/<h3[^>]*>納刀の調整 🟢<\/h3>/)
+    // 🟢 調整の値。見出しには確度を出さない（AGENTS.md「UI に確度を出さない」）
+    expect(html).toMatch(/<h3[^>]*>納刀の調整<\/h3>/)
     expect(html.indexOf('標準設定に戻す')).toBeGreaterThan(html.indexOf('調整する構え'))
   })
   it('未読み込みでも入力欄と調整モードを表示', () => {
