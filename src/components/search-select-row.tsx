@@ -64,7 +64,7 @@ export function SearchSelectRow({
   const [error, setError] = useState<string | null>(null)
   const selected = options.find((o) => o.value === value)
   const triggerText =
-    value === null ? '未読み込み' : selected ? selected.label : `${currentLabel ?? value}（現在の値）`
+    value === null ? '未読み込み' : selected ? selected.label : `${currentLabel ?? '不明'}（現在の値）`
 
   const select = (v: string) => {
     setOpen(false)

@@ -105,9 +105,8 @@ export function OreRyuPage() {
           <CardTitle className="flex flex-wrap items-center gap-2">
             俺流
             {/* 並びは 🟢。🔶 書き換えたセーブをゲームで読めるかは要ゲーム内確認 */}
-            <InfoTip offset={`件数 ${CUSTOM_COUNT_OFFSET.toString(16).toUpperCase()}・技の表 ${CUSTOM_SHEET_COUNT_OFFSET.toString(16).toUpperCase()}`}>
-              chunks/custom-style・belt-copy（俺流の技の表）・sect-scrolls
-            </InfoTip>
+            {/* chunks/custom-style・belt-copy（俺流の技の表）・sect-scrolls */}
+            <InfoTip offset={`0x${CUSTOM_COUNT_OFFSET.toString(16).toUpperCase()}、0x${CUSTOM_SHEET_COUNT_OFFSET.toString(16).toUpperCase()}`} />
           </CardTitle>
           <CardDescription>
             俺流の名前・修練度・技の構成を書き換えたり、新しく作ったりできます。書き換える前に、必ず元のセーブをバックアップしてください。
@@ -168,7 +167,7 @@ function StyleCard({
         <span className="flex flex-wrap items-center gap-2">
           {style.name || "（名前なし）"}
           <span className="text-muted-foreground text-xs font-normal">
-            ID {style.id}／{sheets.map((s) => findStance(s.stance)?.nameJa).join("・")}／{RANK_LABELS[style.rank] ?? style.rank}・修練度 {style.mastery}
+            {sheets.map((s) => findStance(s.stance)?.nameJa).join("・")}／{RANK_LABELS[style.rank] ?? "不明"}・修練度 {style.mastery}
           </span>
         </span>
       }
@@ -336,7 +335,7 @@ function SheetEditor({
     <div className="flex flex-col gap-2 rounded border p-3">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-sm font-medium">
-          {findStance(sheet.stance)?.nameJa}の技（技の表 {sheet.id}、{sheet.skills.length} 個）
+          {findStance(sheet.stance)?.nameJa}の技（{sheet.skills.length} 個）
         </h3>
         {canRemove && (
           <Button size="sm" variant="ghost" disabled={locked} onClick={onRemove}>
@@ -394,7 +393,7 @@ function CreateCard({
           {/* 🔶 要ゲーム内確認 */}
         </CardTitle>
         <CardDescription>
-          ゲームと同じく、空いている最小の流派 ID（1000〜）・技の表 ID（2000〜）を使い、流派の書を持ち歩きの空き（なければ道場の箪笥）に入れます。
+          ゲームと同じ手順で、流派の書を持ち歩きの空き（なければ道場の箪笥）に入れます。
           白紙目録は使いません。装備はゲーム内の流派の切り替えで行ってください。
         </CardDescription>
       </CardHeader>

@@ -58,9 +58,9 @@ export function AppearanceCurrentCard() {
                 currentLabel={
                   field?.value === null || field?.value === undefined
                     ? undefined
-                    : `不明な値 ${field.value}`
+                    : "不明"
                 }
-                options={names.map((name, i) => ({ value: String(i), label: `${name}（${i}）` }))}
+                options={names.map((name, i) => ({ value: String(i), label: name }))}
                 problem={field?.problem ?? null}
                 hint={hint}
                 note={APPEARANCE_CURRENT_NOTES[key]}
@@ -68,9 +68,6 @@ export function AppearanceCurrentCard() {
                   update((bytes) => writeAppearanceCurrent(bytes, key, Number(v), advanced))
                 }
               />
-              {field?.offset !== null && field?.offset !== undefined && (
-                <p className="text-muted-foreground font-mono text-xs">生バイト：{field.raw}</p>
-              )}
             </div>
           );
         })}
@@ -114,9 +111,6 @@ export function AppearanceCurrentCard() {
                 }
                 note={APPEARANCE_CURRENT_NOTES[key]}
               />
-              {field?.offset !== null && field?.offset !== undefined && (
-                <p className="text-muted-foreground font-mono text-xs">生バイト：{field.raw}</p>
-              )}
             </div>
           );
         })}

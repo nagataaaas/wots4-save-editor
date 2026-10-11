@@ -139,10 +139,10 @@ function clearAccepted(bytes: Uint8Array): void {
  */
 export function acceptOccupation(bytes: Uint8Array, id: number): void {
   assertEditable(bytes);
-  if (!occupationById(id)) throw new RangeError(`表にないなりわいの ID です: ${id}`);
+  if (!occupationById(id)) throw new RangeError(`表にないなりわいです`);
   const date = readDate(bytes);
   if (date.problem) throw new RangeError(`日付を読めないので受注を書けません：${date.problem}`);
-  if (date.raw.dayIndex > 0xffff) throw new RangeError(`経過日数が u16 を超えています: ${date.raw.dayIndex}`);
+  if (date.raw.dayIndex > 0xffff) throw new RangeError(`経過日数が大きすぎて受注を書けません`);
 
   const current = readU16(bytes, ACCEPT_OFFSETS.id);
   if (current !== 0 && current !== id) writeFlags(bytes, acceptRuleOf(current).onRelease);

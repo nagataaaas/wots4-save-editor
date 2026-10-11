@@ -47,7 +47,7 @@ export const EVENT_COUNT = 166 // 🟢 chunks/event-chart（通し番号 166 か
  */
 export const EVENT_STATES = [
   { value: 0x00, label: '未到達', confirmed: false },
-  { value: 0xff, label: '未到達（FF）', confirmed: true },
+  { value: 0xff, label: '未到達（初期状態）', confirmed: true }, // 🔶 FF の呼び名は仮。00 との違いは ❓
   { value: 0x01, label: '導入を見た', confirmed: false },
   { value: 0x02, label: '断った・保留した', confirmed: false },
   { value: 0x03, label: '引き受けた・進行中', confirmed: false },
@@ -221,8 +221,8 @@ export function stateLabel(value: number): string {
  * 🔶 B は通し番号では 400＋添字に当たる（chunks/event-chart）
  */
 export const EVENT_RECORDS_SEEN = [
-  { value: 0x05, label: '不明（05。書いてもチャートに出なかった）' },
-  { value: 0x03, label: '不明（03）' },
+  { value: 0x05, label: '不明（書いてもチャートに出ない）' },
+  { value: 0x03, label: '不明（志士との出会いで見た値）' },
   { value: 0x00, label: '不明（名無し侍の一部で見た値）' },
 ] as const
 
@@ -245,17 +245,13 @@ export function readEvents(bytes: Uint8Array): EventsView {
 
   let problem: string | null = null
   const bad = entries.find((e) => !PLAUSIBLE_STATES.has(e.state) || !PLAUSIBLE_STATES.has(e.record))
-  if (bad) problem = `添字${bad.index} の値が想定外です（周回中 0x${hex(bad.state)}／記録 0x${hex(bad.record)}）。位置がずれている可能性があります`
+  if (bad) problem = '一部のイベントの状態が想定外です。位置がずれている可能性があります'
   return { layoutProblem, entries, problem: layoutProblem ?? problem }
 }
 
-function hex(v: number): string {
-  return v.toString(16).toUpperCase().padStart(2, '0')
-}
-
 function validateU8(value: number, known: readonly { value: number }[], opts: { advanced: boolean }): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `u8 の範囲外です: ${value}`
-  if (!opts.advanced && !known.some((s) => s.value === value)) return `通常モードで選べる値ではありません（0x${hex(value)}）`
+  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `値が範囲外です: ${value}`
+  if (!opts.advanced && !known.some((s) => s.value === value)) return '通常モードで選べない状態です'
   return null
 }
 
@@ -265,7 +261,7 @@ export const validateEventRecord = (value: number, opts: { advanced: boolean }) 
 function editable(bytes: Uint8Array, index: number): void {
   const view = readEvents(bytes)
   if (view.problem) throw new RangeError(view.problem)
-  if (!Number.isInteger(index) || index < 0 || index >= EVENT_COUNT) throw new RangeError(`添字が範囲外です: ${index}`)
+  if (!Number.isInteger(index) || index < 0 || index >= EVENT_COUNT) throw new RangeError('イベントの指定が範囲外です')
 }
 
 /**
@@ -299,7 +295,7 @@ export function writeEventRecord(bytes: Uint8Array, index: number, value: number
  *   84     🟢 名前不明。ローラの決意（85）の前半の導入。人間湯通しの恐怖に続く場面が始まると 04 になり、
  *          85 の開始条件が「84 = 04」。チャートには名前が出ない
  */
-const TOURNAMENT_NOTE = 'チャートには出ない。出場した勢力だけ 03、優勝で 04、負け・降参で 05'
+const TOURNAMENT_NOTE = 'チャートには出ない。出場した勢力だけが進行中になり、優勝で成功、負け・降参で失敗になる'
 const LAURA_RESOLVE = 85 // ローラの決意
 export const EVENT_GAP_NOTES: Readonly<Record<number, { name: string | null; note: string }>> = {
   47: { name: eventNameOf(47), note: TOURNAMENT_NOTE },
@@ -309,7 +305,7 @@ export const EVENT_GAP_NOTES: Readonly<Record<number, { name: string | null; not
   67: { name: eventNameOf(67), note: '未実装のイベントとみられる（ゲームでは起きない）' },
   84: {
     name: `（名前不明。${eventNameOf(LAURA_RESOLVE)}の導入）`,
-    note: `チャートには出ない。場面が始まると 04 になり、${eventNameOf(LAURA_RESOLVE)}（${LAURA_RESOLVE}）の開始条件が「84 = 04」`,
+    note: `チャートには出ない。場面が始まると成功になり、${eventNameOf(LAURA_RESOLVE)}の開始条件になる`,
   },
 }
 

@@ -68,7 +68,7 @@ export function SelectRow({
     items[o.value] = (
       <OptionContent option={o.selectedLabel ? { ...o, label: o.selectedLabel } : o} />
     );
-  if (!listed && value !== null) items[value] = `${currentLabel ?? value}（現在の値）`;
+  if (!listed && value !== null) items[value] = `${currentLabel ?? "不明"}（現在の値）`;
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -97,7 +97,7 @@ export function SelectRow({
       >
         {!listed && value !== null && (
           <SelectItem value={value} disabled>
-            {currentLabel ?? value}（現在の値）
+            {currentLabel ?? "不明"}（現在の値）
           </SelectItem>
         )}
         {groupOptions(options).map((g, i) =>

@@ -146,13 +146,13 @@ export function readSects(bytes: Uint8Array): SectsView {
   if (layout) problems.push(layout)
 
   const sectCount = readU16(bytes, SECT_COUNT_OFFSET)
-  if (sectCount > SECT_RECORD_SLOTS) problems.push(`流派の件数が大きすぎます（${sectCount}）`)
+  if (sectCount > SECT_RECORD_SLOTS) problems.push('流派の件数が大きすぎます')
   const records: SectRecord[] = []
   for (let i = 0; i < Math.min(sectCount, SECT_RECORD_SLOTS); i++) {
     const offset = SECT_RECORDS_OFFSET + i * SECT_RECORD_BYTES
     const id = readI16(bytes, offset)
     const sect = findSect(id) ?? null
-    if (!sect) problems.push(`流派の表に知らない流派 ID があります（${i + 1}件目：${id}）`)
+    if (!sect) problems.push('流派の表に知らない流派があります')
     records.push({
       index: i,
       offset,
@@ -167,12 +167,12 @@ export function readSects(bytes: Uint8Array): SectsView {
   const held = Array.from({ length: SCROLL_HELD_SLOTS }, (_, i) => readScroll(bytes, 'held', i))
   const stored = Array.from({ length: SCROLL_STORED_SLOTS }, (_, i) => readScroll(bytes, 'stored', i))
   const storedCount = readU16(bytes, SCROLL_STORED_COUNT_OFFSET)
-  if (storedCount > SCROLL_STORED_SLOTS) problems.push(`流派の箪笥の件数が大きすぎます（${storedCount}）`)
+  if (storedCount > SCROLL_STORED_SLOTS) problems.push('流派の箪笥の件数が大きすぎます')
 
   const sheetSlots: SheetStateSlot[] = []
   for (let i = 0; i < SHEET_STATE_SLOTS; i++) {
     const s = readSheetSlot(bytes, i)
-    if (s.states.some((v) => v > 3)) problems.push(`技の状態に 0〜3 以外の値があります（技の表 ${s.sheetId}）`)
+    if (s.states.some((v) => v > 3)) problems.push('技の覚え状況に不明な値があります')
     sheetSlots.push(s)
   }
   const stanceStates = Array.from({ length: STANCE_COUNT }, (_, c) =>
@@ -227,7 +227,7 @@ function ensureSheetSlot(bytes: Uint8Array, view: SectsView, sheetId: number): S
   const found = view.sheetSlots.find((s) => s.sheetId === sheetId)
   if (found) return found
   const free = view.sheetSlots.find((s) => s.sheetId < 0)
-  if (!free) throw new RangeError('技の覚え状況の枠（128）に空きがありません')
+  if (!free) throw new RangeError('技の覚え状況に空きがありません')
   writeI16(bytes, free.offset, sheetId)
   writeU16(bytes, free.offset + 2, 0)
   bytes.fill(0, free.offset + 4, free.offset + 4 + SKILL_NO_COUNT)
@@ -247,7 +247,7 @@ function writeSheetStates(bytes: Uint8Array, slot: SheetStateSlot, states: numbe
  */
 export function learnSheetSkills(bytes: Uint8Array, sheetId: number, skillNos?: readonly number[]): number {
   const sheet = findSkillSheet(sheetId)
-  if (!sheet) throw new RangeError(`知らない技の表です（${sheetId}）`)
+  if (!sheet) throw new RangeError('知らない技の表です')
   const view = assertWritable(bytes)
   const targets = new Set<number>(
     (skillNos ?? sheet.skills.filter((s) => !isUniqueSkill(s)).map((s) => s.skillNo)).filter(
@@ -293,7 +293,7 @@ export function learnSheetSkills(bytes: Uint8Array, sheetId: number, skillNos?: 
  */
 export function learnUniqueSkills(bytes: Uint8Array, sheetId: number, skillNos: readonly number[]): void {
   const sheet = findSkillSheet(sheetId)
-  if (!sheet) throw new RangeError(`知らない技の表です（${sheetId}）`)
+  if (!sheet) throw new RangeError('知らない技の表です')
   const view = assertWritable(bytes)
   const targets = skillNos.filter((no) => sheet.skills.some((s) => s.skillNo === no))
   if (targets.length === 0) return
@@ -331,7 +331,7 @@ export const isUniqueSkill = (s: SheetSkill) => isSpecialCond(s.cond) || uniqueS
  */
 export function learnSectSkills(bytes: Uint8Array, sectId: number): void {
   const sect = findSect(sectId)
-  if (!sect) throw new RangeError(`知らない流派です（${sectId}）`)
+  if (!sect) throw new RangeError('知らない流派です')
   for (const id of sect.sheets) {
     const sheet = findSkillSheet(id)
     if (!sheet) continue
@@ -349,7 +349,7 @@ export function learnSectSkills(bytes: Uint8Array, sectId: number): void {
  */
 export function forgetSheetSkill(bytes: Uint8Array, sheetId: number, skillNo: number): void {
   const sheet = findSkillSheet(sheetId)
-  if (!sheet) throw new RangeError(`知らない技の表です（${sheetId}）`)
+  if (!sheet) throw new RangeError('知らない技の表です')
   const view = assertWritable(bytes)
   const slot = view.sheetSlots.find((s) => s.sheetId === sheetId)
   if (!slot || slot.states[skillNo] === 0) return
@@ -370,7 +370,7 @@ export type SectValues = { mastery: number; rank: number; kills: number }
 
 export function validateSectValues(v: SectValues): string | null {
   if (!Number.isInteger(v.mastery) || v.mastery < 0 || v.mastery > MASTERY_MAX) return `修練度は 0〜${MASTERY_MAX} です`
-  if (!Number.isInteger(v.rank) || v.rank < 0 || v.rank > RANK_MAX) return `段は 0〜${RANK_MAX} です`
+  if (!Number.isInteger(v.rank) || v.rank < 0 || v.rank > RANK_MAX) return '段が正しくありません'
   if (!Number.isInteger(v.kills) || v.kills < 0 || v.kills > I16_MAX) return `倒した数は 0〜${I16_MAX} です`
   return null
 }
@@ -381,7 +381,7 @@ export function writeSectValues(bytes: Uint8Array, sectId: number, v: SectValues
   if (problem) throw new RangeError(problem)
   const view = assertWritable(bytes)
   const rec = view.records.find((r) => r.id === sectId)
-  if (!rec) throw new RangeError(`流派の表に流派 ${sectId} がありません`)
+  if (!rec) throw new RangeError('この流派が流派の表にありません')
   writeI16(bytes, rec.offset + 2, v.mastery)
   writeI16(bytes, rec.offset + 4, v.rank)
   writeI16(bytes, rec.offset + 6, v.kills)

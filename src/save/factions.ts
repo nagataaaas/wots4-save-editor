@@ -53,7 +53,7 @@ export const FACTION_ROWS = [
   },
   {
     label: "敵対状態",
-    note: "1 だと、その勢力のイベントで門前払いされたり、謝罪の選択肢が出たりする。謝罪して成功させると 0 に戻る。三姉妹見参の成功・ローラ奪還で3勢力とも 0 に戻る。剣術大会以後のルート分岐には使われない",
+    note: "敵対中だと、その勢力のイベントで門前払いされたり、謝罪の選択肢が出たりする。謝罪して成功させるとなしに戻る。三姉妹見参の成功・ローラ奪還で3勢力ともなしに戻る。剣術大会以後のルート分岐には使われない",
   },
 ] as const;
 
@@ -98,7 +98,7 @@ export function readFactions(bytes: Uint8Array): FactionsView {
   );
   const max = Math.max(...values.flat());
   const problem =
-    max > PLAUSIBLE_MAX ? `値が大きすぎます（${max}）。位置がずれている可能性があります` : null;
+    max > PLAUSIBLE_MAX ? "値が大きすぎます。位置がずれている可能性があります" : null;
   const moro = readU8(bytes, MORO_OFFSET);
   return { layoutProblem, values, moro, problem: layoutProblem ?? problem };
 }
@@ -177,7 +177,7 @@ export function readRouteJudge(bytes: Uint8Array): RouteJudgeView {
   const known = (list: readonly { value: number }[], v: number) => list.some((x) => x.value === v);
   let problem: string | null = null;
   if (!judges.every((v) => known(ROUTE_JUDGE_VALUES, v)) || !known(ROUTE_NONE_VALUES, none))
-    problem = `剣術大会以後のルート分岐の値が想定外です（${[...judges, none].map((v) => v.toString(16).padStart(2, "0")).join(" ")}）`;
+    problem = "剣術大会以後のルート分岐が想定外の状態になっています";
   // ✅ [U] 勢力の 01 が無所属より優先される
   const warning =
     none === 0x01 && judges.includes(0x01)
@@ -201,10 +201,10 @@ export function writeRouteJudge(
   if (!Number.isInteger(col) || col < 0 || col > FACTIONS.length)
     throw new RangeError(`列が範囲外です: ${col}`);
   if (!Number.isInteger(value) || value < 0 || value > 0xff)
-    throw new RangeError(`u8 の範囲外です: ${value}`);
+    throw new RangeError(`値が範囲外です: ${value}`);
   const list = col === FACTIONS.length ? ROUTE_NONE_VALUES : ROUTE_JUDGE_VALUES;
   if (!opts.advanced && !list.some((x) => x.value === value))
-    throw new RangeError(`見たことのある値ではありません（${value}）`);
+    throw new RangeError("通常モードでは指定できない状態です");
   writeU8(bytes, col === FACTIONS.length ? ROUTE_NONE_OFFSET : ROUTE_JUDGE_OFFSET + col, value);
 }
 

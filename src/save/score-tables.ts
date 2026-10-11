@@ -72,10 +72,10 @@ export function readScoreTable(bytes: Uint8Array, table: ScoreTableId): ScoreTab
 /** 問題がなければ null */
 export function validateScore(table: ScoreTableId, index: number, value: number, opts: { advanced: boolean }): string | null {
   const t = SCORE_TABLES[table]
-  if (!Number.isInteger(index) || index < 0 || index >= t.count) return `添字の範囲外です: ${index}`
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff_ffff) return `u32 の範囲外です: ${value}`
+  if (!Number.isInteger(index) || index < 0 || index >= t.count) return "範囲外の技・道具です"
+  if (!Number.isInteger(value) || value < 0 || value > 0xffff_ffff) return `書ける範囲を超えています: ${value}`
   if (opts.advanced) return null
-  if (scoreEntryName(table, index) === null) return `表にない添字です（上級者モードで書けます）: ${index}`
+  if (scoreEntryName(table, index) === null) return "表にない技・道具です（上級者モードで書けます）"
   if (value > t.max) return `通常モードでは 0〜${t.max.toLocaleString()} を指定してください: ${value}`
   return null
 }

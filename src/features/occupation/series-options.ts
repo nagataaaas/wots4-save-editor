@@ -21,7 +21,7 @@ export function seriesOptions(
     if (n < 1 || n > 8 || digit > 1) {
       return {
         value,
-        label: state.value >= 90 ? `${state.value} ${state.label}` : state.label,
+        label: state.label,
         group: state.group,
       };
     }
@@ -34,7 +34,7 @@ export function seriesOptions(
     // 🟢 小鳩・おっつぁんの 8件目は受注で 81 を書かない。81 を受注済とは呼ばない
     const label = digit === 0
       ? "受注前"
-      : seriesAcceptOf(flag, state.value) ? "受注済" : `${state.value}（受注では書かない値）`;
+      : seriesAcceptOf(flag, state.value) ? "受注済" : "受注済（受注中にはならない）";
     return { value, label, group, selectedLabel: `${group} ${label}` };
   });
 }

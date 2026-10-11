@@ -587,7 +587,7 @@ describe('耐久回復の累積値（✅ +0x88 の u32）・手に持ってい�
     expect([...b.subarray(o + 0x80, o + 0x88)]).toEqual([0xb5, 0x02, 0, 0, 0xb5, 0x02, 0, 0])
     expect(readWeapon(b, o).numbers.heldTime).toMatchObject({ value: 693, warning: null })
     b[o + 0x84] = 0
-    expect(readWeapon(b, o).numbers.heldTime.warning).toContain('+0x84')
+    expect(readWeapon(b, o).numbers.heldTime.warning).toContain('食い違っています') // 写し（+0x84）との不一致
   })
 })
 

@@ -55,18 +55,18 @@ export type HintView = {
 
 /** 値の表示名（例：「6 琴吹光探検隊」「65535 なし」） */
 export function hintLabel(value: number): string {
-  if (value === HINT_NONE) return `${value}（0xFFFF）なし`; // 🔶
+  if (value === HINT_NONE) return "なし"; // 🔶
   const node = chartNode(value);
-  if (!node) return `${value}（ノード表にない値）`;
-  return node.labelId !== null ? `${value} ${chartNodeLabel(node)}` : `${value}（イベントに当たらないノード）`;
+  if (!node) return "一覧にないイベント";
+  return node.labelId !== null ? chartNodeLabel(node) : "イベントに当たらない項目";
 }
 
 /** 表にない値・イベントに当たらないノードなら警告の文。0xFFFF とイベントのノードは null */
 export function hintWarning(value: number): string | null {
   if (value === HINT_NONE) return null;
   const node = chartNode(value);
-  if (!node) return `ノードの表（0〜${CHART_NODE_MAX}）にない値です（${value}）`;
-  if (node.eventId === null) return `イベントに当たらないノードです（${value}）`;
+  if (!node) return "一覧にないイベントです";
+  if (node.eventId === null) return "イベントに当たらない項目です";
   return null;
 }
 
@@ -84,9 +84,9 @@ export function readHint(bytes: Uint8Array): HintView {
 
 /** 通常モードは 0〜118（ノード）と 0xFFFF、上級者モードは任意の u16。問題がなければ null */
 export function validateHint(value: number, opts: { advanced: boolean }): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff) return `u16 の範囲外です: ${value}`;
+  if (!Number.isInteger(value) || value < 0 || value > 0xffff) return `値が範囲外です: ${value}`;
   if (!opts.advanced && value > HINT_NORMAL_MAX && value !== HINT_NONE)
-    return `通常モードでは 0〜${HINT_NORMAL_MAX}（ノード番号）か 65535（0xFFFF）を指定してください: ${value}`;
+    return "通常モードでは指定できないイベントです";
   return null;
 }
 

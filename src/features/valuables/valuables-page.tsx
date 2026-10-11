@@ -20,6 +20,7 @@ import {
   PROBE_CANDIDATES,
   VALUABLES,
   VALUABLE_COUNT_MAX,
+  VALUABLE_SLOT_BYTES,
   VALUABLE_SLOT_COUNT,
   VALUABLES_OFFSET,
   fillEmptySlotsWithProbes,
@@ -96,7 +97,7 @@ export function ValuablesPage() {
           <CardTitle className="flex flex-wrap items-center gap-2">
             重要品
             {/* チップ・木札は ❓ U-12 */}
-            <InfoTip offset={`${formatOffset(VALUABLES_OFFSET)} から 8 B × ${VALUABLE_SLOT_COUNT} 件`}>
+            <InfoTip offset={`${formatOffset(VALUABLES_OFFSET)}〜${formatOffset(VALUABLES_OFFSET + VALUABLE_SLOT_BYTES * VALUABLE_SLOT_COUNT - 1)}`}>
               チップ・木札は、Steam版で書き込むとゲーム内でセーブできなくなったため選択肢に出しません
             </InfoTip>
           </CardTitle>
@@ -129,10 +130,10 @@ export function ValuablesPage() {
         </CardContent>
       </Card>
 
-      {/* ❓ +0x04〜+0x07 の用途。🔶 個数の上限は推測（chunks/items）で、ゲーム内の上限は未確認 */}
+      {/* 各枠の +0x00〜+0x03（ID・個数）だけを書き換える。❓ +0x04〜+0x07 の用途は不明なので変えない。
+          🔶 個数の上限は推測（chunks/items）で、ゲーム内の上限は未確認 */}
       <p className="text-muted-foreground text-xs">
-        各枠の +0x00〜+0x03（ID・個数）だけを書き換えます。+0x04〜+0x07
-        は用途不明のため変えません。個数の上限 {VALUABLE_COUNT_MAX} はエディタの目安です。
+        個数の上限 {VALUABLE_COUNT_MAX} はエディタの目安です。
       </p>
     </div>
   );
@@ -221,9 +222,9 @@ function ProbeCard({
               {message.text}
             </p>
           )}
-          {/* 🔶 候補の範囲 */}
+          {/* 🔶 候補の範囲：0xD7〜0xFF、続いて 0x9F〜0xBF の残り */}
           <p className="text-muted-foreground text-xs">
-            「なし」の枠に、開始 ID から順に候補（0xD7〜0xFF、続いて 0x9F〜0xBF の残り）を個数 1
+            「なし」の枠に、開始 ID から順に候補の ID を個数 1
             で入れます。既に入っている枠は変えません。
             ゲームでロードして重要品の一覧に出た名前を確かめ、ID と名前の対応を教えてください。
           </p>

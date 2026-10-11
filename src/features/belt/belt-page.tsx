@@ -86,12 +86,9 @@ export function BeltPage() {
         />
       ))}
 
-      {/* 🟢 レコードの先頭・0x1A6B2 付近の別の記録・帯刀の読み込み元。❓ 用途不明の領域 */}
+      {/* 🟢 レコードの先頭は完成武器ID の位置（既存エディタ [TS] の位置より 6 B 後ろ）。0x1A6B2 付近に帯刀と同じ並びの別の記録があるが書き換えない（帯刀のコピーではない）。ゲームは帯刀を 0xA4C8〜 と帯刀の状態から読む。❓ 用途不明の領域は変えない */}
       <p className="text-muted-foreground text-xs">
-        各フィールドのバイトだけを書き換えます。用途不明の領域は変えません。レコードの位置は、完成武器ID
-        の位置を先頭として表示します（既存エディタ [TS] の位置より 6 B 後ろ）。0x1A6B2
-        付近にある帯刀と同じ並び（帯刀のコピーではない別の記録）は書き換えません。ゲームは帯刀を
-        0xA4C8〜 と帯刀の状態から読みます。
+        用途が分かっていない領域は変更しません。
       </p>
     </div>
   );
@@ -162,7 +159,7 @@ function StateCard({
           value={state ? (state.right === null ? NONE : String(state.right)) : null}
           currentLabel={state && state.right !== null ? `${state.right + 1}本目` : undefined}
           options={[
-            { value: NONE, label: "何も選んでいない（0xFF）" },
+            { value: NONE, label: "何も選んでいない" },
             ...usable(state?.left ?? null),
           ]}
           problem={problem}
@@ -214,7 +211,7 @@ export function WeaponPanel({ weapon }: { weapon: WeaponView }) {
   const charmIds = weapon.charms.value.filter((id): id is number => id !== null);
   const charms: string[] = charmIds.length > 3
     ? [...new Set(charmIds)].map((id) => `${charmLabel(id)} ×${charmIds.filter((value) => value === id).length}`)
-    : charmIds.map((id) => charmLabel(id) ?? `?${id}`);
+    : charmIds.map((id) => charmLabel(id) ?? "不明");
   while (charms.length < 3) charms.push("---");
   return (
     <div className="weapon-preview">
@@ -274,7 +271,7 @@ function WeaponCard({
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             {weaponTitle(weapon, index)}
-            <InfoTip offset={`${formatOffset(base)} から 0xA0 B`} />
+            <InfoTip offset={base} />
           </CardTitle>
           <CardDescription>
             空き枠は編集できません（武器を新しく作る機能はありません）。
@@ -315,7 +312,7 @@ function WeaponCard({
                 {open ? "編集を閉じる" : "編集する"}
               </span>
             </CollapsibleTrigger>
-            <InfoTip offset={`${formatOffset(base)} から 0xA0 B`} />
+            <InfoTip offset={base} />
             {roles.map((r) => (
               <Badge key={r}>{r}</Badge>
             ))}

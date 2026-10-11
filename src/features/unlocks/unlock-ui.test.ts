@@ -5,11 +5,12 @@ import { ItemInformation, OwnershipStateButton, UnlockStateButton } from "./unlo
 import { nextUnlockState } from "./unlock-state";
 
 describe("容姿・特典のアイテム表示", () => {
-  it("ID・名前・種別・説明を表示し、取得条件は常時表示しない", () => {
+  it("名前・種別・説明を表示し、番号と取得条件は常時表示しない", () => {
     const html = renderToStaticMarkup(
-      createElement(ItemInformation, { id: 31, name: "テストの顔", category: "顔", description: "説明の本文", offset: 0x43337, condition: "取得条件の本文" }),
+      createElement(ItemInformation, { name: "テストの顔", category: "顔", description: "説明の本文", offset: 0x43337, condition: "取得条件の本文" }),
     );
-    for (const text of ["31", "テストの顔", "顔", "説明の本文"]) expect(html).toContain(text);
+    for (const text of ["テストの顔", "顔", "説明の本文"]) expect(html).toContain(text);
+    expect(html).not.toMatch(/>31</);
     expect(html).not.toContain("取得条件の本文");
     expect(html).not.toContain("0x43337");
     expect(html).toContain("補足");
@@ -17,7 +18,7 @@ describe("容姿・特典のアイテム表示", () => {
 
   it("説明がない服は未登録と表示し、説明を推測しない", () => {
     expect(renderToStaticMarkup(
-      createElement(ItemInformation, { id: 1, name: "服", category: "上半身", offset: "0x03AB5C bit1" }),
+      createElement(ItemInformation, { name: "服", category: "上半身", offset: "0x03AB5C bit1" }),
     )).toContain("説明未登録");
   });
 });

@@ -111,15 +111,15 @@ function readSheet(bytes: Uint8Array, index: number, problems: string[]): Custom
   const type = readU16(bytes, offset + 2)
   const stance = readI16(bytes, offset + 4)
   const n = readI16(bytes, offset + 6)
-  if (type !== 2) problems.push(`俺流の技の表 ${id} の種類が 2 ではありません（${type}）`)
-  if (stance < 0 || stance >= STANCE_COUNT) problems.push(`俺流の技の表 ${id} の構えが範囲外です（${stance}）`)
-  if (n < 0 || n > CUSTOM_SHEET_SKILL_MAX) problems.push(`俺流の技の表 ${id} の技の数が範囲外です（${n}）`)
+  if (type !== 2) problems.push('俺流の技の表の種類が正しくありません')
+  if (stance < 0 || stance >= STANCE_COUNT) problems.push('俺流の技の表の構えが正しくありません')
+  if (n < 0 || n > CUSTOM_SHEET_SKILL_MAX) problems.push('俺流の技の表の技の数が正しくありません')
   const skills: CustomSkill[] = []
   for (let j = 0; j < Math.max(0, Math.min(n, CUSTOM_SHEET_SKILL_MAX)); j++) {
     const at = offset + 8 + 8 * j
     const flags = bytes[at + 1]
     const linkCount = flags & 0x7f
-    if (linkCount > LINK_MAX) problems.push(`俺流の技の表 ${id} の繋がる技の数が 4 を超えています`)
+    if (linkCount > LINK_MAX) problems.push('俺流の技の表の、続けて出す技の数が多すぎます')
     skills.push({
       skillNo: bytes[at],
       first: (flags & FIRST_BIT) !== 0,
@@ -128,7 +128,7 @@ function readSheet(bytes: Uint8Array, index: number, problems: string[]): Custom
     })
   }
   const nos = new Set(skills.map((s) => s.skillNo))
-  if (skills.some((s) => s.next.some((x) => !nos.has(x)))) problems.push(`俺流の技の表 ${id} に、表にない技への繋がりがあります`)
+  if (skills.some((s) => s.next.some((x) => !nos.has(x)))) problems.push('俺流の技の表に、表にない技へのつながりがあります')
   return { index, offset, id, type, stance, skills }
 }
 
@@ -137,8 +137,8 @@ export function readCustomStyles(bytes: Uint8Array): CustomStylesView {
   const problems: string[] = sects.problem ? [sects.problem] : []
   const count = readU16(bytes, CUSTOM_COUNT_OFFSET)
   const sheetCount = readU16(bytes, CUSTOM_SHEET_COUNT_OFFSET)
-  if (count > CUSTOM_SLOTS) problems.push(`俺流の件数が大きすぎます（${count}）`)
-  if (sheetCount > CUSTOM_SHEET_SLOTS) problems.push(`俺流の技の表の件数が大きすぎます（${sheetCount}）`)
+  if (count > CUSTOM_SLOTS) problems.push('俺流の件数が大きすぎます')
+  if (sheetCount > CUSTOM_SHEET_SLOTS) problems.push('俺流の技の表の件数が大きすぎます')
 
   const sheets = Array.from({ length: Math.min(sheetCount, CUSTOM_SHEET_SLOTS) }, (_, i) => readSheet(bytes, i, problems))
   const scrolls = [...sects.held, ...sects.stored]
@@ -148,7 +148,7 @@ export function readCustomStyles(bytes: Uint8Array): CustomStylesView {
     const id = readI16(bytes, offset)
     const sheetIds = [0x48, 0x4a, 0x4c].map((d) => readI16(bytes, offset + d))
     for (const sid of sheetIds) {
-      if (sid >= 0 && !sheets.some((s) => s.id === sid)) problems.push(`俺流 ${id} の技の表 ${sid} がありません`)
+      if (sid >= 0 && !sheets.some((s) => s.id === sid)) problems.push('俺流に対応する技の表がありません')
     }
     styles.push({
       index: i,
@@ -177,7 +177,7 @@ function assertWritable(bytes: Uint8Array): CustomStylesView {
 
 function findStyle(view: CustomStylesView, id: number): CustomStyle {
   const s = view.styles.find((x) => x.id === id)
-  if (!s) throw new RangeError(`俺流 ${id} がありません`)
+  if (!s) throw new RangeError('その俺流がありません')
   return s
 }
 
@@ -186,7 +186,7 @@ export type EditOptions = { advanced?: boolean }
 export function validateCustomName(name: string, options: EditOptions = {}): string | null {
   const max = options.advanced ? NAME_MAX_ADVANCED : NAME_MAX
   if (name.length === 0) return '名前が空です'
-  if (name.length > max) return `名前は${max}文字までです（${name.length}文字）`
+  if (name.length > max) return `名前は${max}文字までです`
   for (let i = 0; i < name.length; i++) if (name.charCodeAt(i) < 0x20) return '制御文字は使えません'
   return null
 }
@@ -212,7 +212,7 @@ export type CustomValues = { mastery: number; rank: number; kills: number }
 
 export function validateCustomValues(v: CustomValues): string | null {
   if (!Number.isInteger(v.mastery) || v.mastery < 0 || v.mastery > MASTERY_MAX) return `修練度は 0〜${MASTERY_MAX} です`
-  if (!Number.isInteger(v.rank) || v.rank < 0 || v.rank > RANK_MAX) return `段は 0〜${RANK_MAX} です`
+  if (!Number.isInteger(v.rank) || v.rank < 0 || v.rank > RANK_MAX) return '段が正しくありません'
   if (!Number.isInteger(v.kills) || v.kills < 0 || v.kills > I16_MAX) return `倒した数は 0〜${I16_MAX} です`
   return null
 }
@@ -331,10 +331,10 @@ export function validateSkillSelection(
   if (set.size !== skillNos.length) return '同じ技が 2 回入っています'
   for (const no of skillNos) {
     const s = findStanceSkill(stance, no)
-    if (!s) return `構え ${findStance(stance)?.nameJa ?? stance} に技の番号 ${no} はありません`
+    if (!s) return 'この構えにない技が含まれています'
     if (options.advanced) continue
     const state = view.sects.stanceStates[stance][no]
-    if (state !== 1 && state !== 2) return `${s.nameJa || `技 ${no}`} はまだ俺流に入れられません（覚えていないか、斬殺数が足りない技）`
+    if (state !== 1 && state !== 2) return `${s.nameJa || 'この技'} はまだ俺流に入れられません（覚えていないか、斬殺数が足りない技）`
   }
   if (options.advanced) return null
   const conflicts = findSkillConflicts(stance, skillNos)
@@ -373,7 +373,7 @@ function writeSheetBody(bytes: Uint8Array, offset: number, id: number, stance: n
 export function writeCustomSheetSkills(bytes: Uint8Array, sheetId: number, skillNos: readonly number[], options: EditOptions = {}): void {
   const view = assertWritable(bytes)
   const sheet = view.sheets.find((s) => s.id === sheetId)
-  if (!sheet) throw new RangeError(`俺流の技の表 ${sheetId} がありません`)
+  if (!sheet) throw new RangeError('その構えの技の表がありません')
   const problem = validateSkillSelection(view, sheet.stance, skillNos, options)
   if (problem) throw new RangeError(problem)
   writeSheetBody(bytes, sheet.offset, sheet.id, sheet.stance, buildCustomSkills(sheet.stance, skillNos))
@@ -381,7 +381,7 @@ export function writeCustomSheetSkills(bytes: Uint8Array, sheetId: number, skill
 
 function unusedId(min: number, max: number, used: Set<number>): number {
   for (let id = min; id <= max; id++) if (!used.has(id)) return id
-  throw new RangeError(`空いている ID がありません（${min}〜${max}）`)
+  throw new RangeError('俺流を作る空きがありません')
 }
 
 /** 技の覚え状況（chunks/skill-states）に残っている ID も避ける（捨てた俺流の状態を引き継がないため 🔶） */
@@ -400,7 +400,7 @@ export function addCustomStance(bytes: Uint8Array, id: number, stance: number, s
   const slot = findStance(stances[0])?.slot
   if (findStance(stance)?.slot !== slot) throw new RangeError('構えはすべて同じ構えの組にします')
   if (stances.includes(stance)) throw new RangeError('同じ構えがすでに入っています')
-  if (view.sheets.length >= CUSTOM_SHEET_SLOTS) throw new RangeError('俺流の技の表の枠（128）に空きがありません')
+  if (view.sheets.length >= CUSTOM_SHEET_SLOTS) throw new RangeError('俺流の技の表に空きがありません')
   const problem = validateSkillSelection(view, stance, skillNos, options)
   if (problem) throw new RangeError(problem)
   const sheetId = newSheetId(view)
@@ -424,7 +424,7 @@ export function removeCustomStance(bytes: Uint8Array, id: number, sheetId: numbe
   const view = assertWritable(bytes)
   const style = findStyle(view, id)
   const ids = style.sheetIds.filter((s) => s >= 0)
-  if (!ids.includes(sheetId)) throw new RangeError(`俺流 ${id} に技の表 ${sheetId} はありません`)
+  if (!ids.includes(sheetId)) throw new RangeError('この俺流にその構えはありません')
   if (ids.length === 1) throw new RangeError('最後の構えは外せません')
   const rest = ids.filter((s) => s !== sheetId)
   ;[0, 1, 2].forEach((k) => writeI16(bytes, style.offset + 0x48 + 2 * k, rest[k] ?? -1))
@@ -449,8 +449,8 @@ export function createCustomStyle(bytes: Uint8Array, spec: NewCustomStyle, optio
   const view = assertWritable(bytes)
   const nameProblem = validateCustomName(spec.name, options)
   if (nameProblem) throw new RangeError(nameProblem)
-  if (view.styles.length >= CUSTOM_SLOTS) throw new RangeError('俺流の枠（64）に空きがありません')
-  if (view.sheets.length >= CUSTOM_SHEET_SLOTS) throw new RangeError('俺流の技の表の枠（128）に空きがありません')
+  if (view.styles.length >= CUSTOM_SLOTS) throw new RangeError('俺流に空きがありません')
+  if (view.sheets.length >= CUSTOM_SHEET_SLOTS) throw new RangeError('俺流の技の表に空きがありません')
   const selection = validateSkillSelection(view, spec.stance, spec.skillNos, options)
   if (selection) throw new RangeError(selection)
   const scroll = freeScroll(view.sects)

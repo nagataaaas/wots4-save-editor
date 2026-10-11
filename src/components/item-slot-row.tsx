@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { formatHex4 } from '@/lib/format'
 import { matchesSearch } from '@/lib/search'
 import { cn } from '@/lib/utils'
 import { EMPTY_ID, validateItemCount, type ItemOptionGroup, type ItemSlot } from '@/save/item-slot'
@@ -57,7 +56,7 @@ export function ItemSlotRow({
   groups: readonly ItemOptionGroup[]
   /** 読み上げ用の名前（例：重要品、道具） */
   noun: string
-  /** 検索欄のプレースホルダー。なければ「（noun）を検索（名前・読み・英語名・ID）」 */
+  /** 検索欄のプレースホルダー。なければ「（noun）を検索（名前・読み・英語名）」 */
   searchPlaceholder?: string
   /** ID を16進で直接入れる欄を出す（上級者モード） */
   investigate?: boolean
@@ -86,7 +85,7 @@ export function ItemSlotRow({
         ? 'なし'
         : selected
           ? selected.label
-          : `${formatHex4(slot.id)} ${slot.label ?? '未知の ID'}（現在の値）`
+          : `${slot.label ?? '不明'}（現在の値）`
 
   function run(action: () => void) {
     setError(null)
@@ -203,7 +202,7 @@ export function ItemSlotRow({
           </PopoverTrigger>
           <PopoverContent className="w-(--anchor-width) min-w-64 p-0" align="start">
             <Command filter={substringFilter} defaultValue={slot ? String(slot.id) : undefined}>
-              <CommandInput placeholder={searchPlaceholder ?? `${noun}を検索（名前・読み・英語名・ID）`} />
+              <CommandInput placeholder={searchPlaceholder ?? `${noun}を検索（名前・読み・英語名）`} />
               <CommandList>
                 <CommandEmpty>見つかりません</CommandEmpty>
                 <CommandGroup>{item(EMPTY_ID, 'なし', ['FFFF'])}</CommandGroup>

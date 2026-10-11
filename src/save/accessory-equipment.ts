@@ -60,8 +60,8 @@ export function readAccessorySlot(bytes: Uint8Array, group: number, slot: number
   result.id = view.getInt16(offset + 0x3e, true)
   result.joint = view.getInt8(offset + 0x3c)
   result.raw = Array.from(bytes.subarray(offset, offset + ACCESSORY_RECORD_SIZE), b => b.toString(16).padStart(2, '0')).join(' ')
-  if (result.id < -1 || result.id > 157) result.problem ??= '未知の装飾品IDです'
-  if (result.joint < 0 || result.joint > 12) result.problem ??= '未知の取り付け先番号です'
+  if (result.id < -1 || result.id > 157) result.problem ??= '不明な装飾品です'
+  if (result.joint < 0 || result.joint > 12) result.problem ??= '不明な取り付け先です'
   for (const field of ACCESSORY_FLOAT_FIELDS) {
     const stored = view.getFloat32(offset + field.relative, true)
     const value = field.key.startsWith('size') ? stored + 1 : stored
@@ -83,7 +83,7 @@ export function writeAccessoryField(bytes: Uint8Array, group: number, slot: numb
   if (key === 'id' || key === 'joint') {
     const min = key === 'id' ? -1 : 0
     const max = key === 'id' ? 157 : 12
-    if (!Number.isInteger(value) || value < min || value > max) throw new RangeError(`${min}〜${max}の整数を入力してください`)
+    if (!Number.isInteger(value) || value < min || value > max) throw new RangeError('選べない値です')
     if (key === 'id') view.setInt16(current.offset + 0x3e, value, true)
     else view.setInt8(current.offset + 0x3c, value)
     return

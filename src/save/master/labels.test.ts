@@ -34,9 +34,9 @@ describe("共通ラベル", () => {
     expect(labelKeywords({ kind: "item", id: itemLabelId(0x10) })).toEqual(["砥石", "Whetting Stone", "といし"]);
   });
 
-  it("表にない LabelId は fallback、または種別つきの不明表示にする", () => {
+  it("表にない LabelId は fallback、または「不明」にする", () => {
     expect(labelOf({ kind: "item", id: itemLabelId(0xffff) }, "ja", "なし")).toBe("なし");
-    expect(labelOf({ kind: "npc", id: npcLabelId(9999) })).toBe("不明（npc:9999）");
+    expect(labelOf({ kind: "npc", id: npcLabelId(9999) })).toBe("不明");
     expect(labelKeywords({ kind: "npc", id: npcLabelId(9999) })).toEqual([]);
   });
 

@@ -22,7 +22,7 @@ export const CAPACITY_MAX = 20
 export const CAPACITY_UNIT = 10
 
 export function weaponChestOffset(index: number): number {
-  if (!Number.isInteger(index) || index < 0 || index >= WEAPON_CHEST_SLOTS) throw new RangeError(`武器箪笥の番号が範囲外です: ${index}`)
+  if (!Number.isInteger(index) || index < 0 || index >= WEAPON_CHEST_SLOTS) throw new RangeError("武器箪笥の番号が範囲外です")
   return WEAPON_CHEST_OFFSET + index * WEAPON_RECORD_BYTES
 }
 
@@ -51,8 +51,8 @@ export function readWeaponChest(bytes: Uint8Array): WeaponChestView {
   for (let i = 0; i < WEAPON_CHEST_SLOTS; i++) if (!isEmptyWeapon(bytes, weaponChestOffset(i))) filled.push(i)
 
   let problem: string | null = null
-  if (capacity < CAPACITY_MIN || capacity > CAPACITY_MAX) problem = `容量の値が想定外です（${capacity}）`
-  else if (count < 0 || count > WEAPON_CHEST_SLOTS) problem = `本数が想定外です（${count}）`
+  if (capacity < CAPACITY_MIN || capacity > CAPACITY_MAX) problem = "容量が想定外です"
+  else if (count < 0 || count > WEAPON_CHEST_SLOTS) problem = "本数が想定外です"
   const countWarning =
     count === filled.length ? null : `本数（${count}）が、武器が入っている枠の数（${filled.length}）と合いません`
   return { layoutProblem, count, capacity, filled, problem: layoutProblem ?? problem, countWarning }

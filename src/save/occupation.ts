@@ -34,7 +34,7 @@ export const OCCUPATION_ACCEPTED_OFFSET = 0x45f4e;
 export const OCCUPATION_WRITE_CONFIRMED: ReadonlySet<number> = new Set([209]);
 
 export function occupationStateOffset(id: number): number {
-  if (!Number.isInteger(id) || id < 0 || id >= OCCUPATION_STATE_COUNT) throw new RangeError(`なりわいの ID が範囲外です: ${id}`);
+  if (!Number.isInteger(id) || id < 0 || id >= OCCUPATION_STATE_COUNT) throw new RangeError(`なりわいが範囲外です`);
   return OCCUPATION_STATE_OFFSET + id * 2;
 }
 
@@ -62,7 +62,7 @@ export function readOccupations(bytes: Uint8Array): OccupationView {
   const layoutProblem =
     checkLayout(bytes) ??
     (bad >= 0
-      ? `なりわい ID ${bad} の状態が想定外の値です（${states[bad]}。FFFF か 0〜${OCCUPATION_CLEAR_MAX}）。位置がずれている可能性があるため読み取り専用にしています。`
+      ? `なりわいの記録に想定外の値があります。位置がずれている可能性があるため読み取り専用にしています。`
       : null);
   return {
     states,
@@ -78,10 +78,10 @@ export function readOccupations(bytes: Uint8Array): OccupationView {
  * 今の値と同じ値の書き戻しは許す。問題がなければ null
  */
 export function validateOccupationState(id: number, value: number, current: number, opts: { advanced: boolean }): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff) return `u16 の範囲外です: ${value}`;
+  if (!Number.isInteger(value) || value < 0 || value > 0xffff) return `指定できる範囲を超えています: ${value}`;
   if (opts.advanced || value === current) return null;
-  if (!occupationById(id)) return `表にないなりわいの ID です: ${id}`;
-  if (!isValidState(value)) return `FFFF か 0〜${OCCUPATION_CLEAR_MAX} を指定してください: ${value}`;
+  if (!occupationById(id)) return `表にないなりわいです`;
+  if (!isValidState(value)) return `クリア回数は ${OCCUPATION_CLEAR_MAX} 回までです: ${value}`;
   return null;
 }
 
@@ -108,6 +108,6 @@ export function writeOccupationStates(bytes: Uint8Array, ids: readonly number[],
 export function syncClearCount(bytes: Uint8Array): void {
   assertEditable(bytes);
   const sum = readOccupations(bytes).stateSum;
-  if (sum > 0xffff) throw new RangeError(`状態の表の合計が u16 を超えています: ${sum}`);
+  if (sum > 0xffff) throw new RangeError(`クリア回数の合計が大きすぎて書けません: ${sum}`);
   writeU16(bytes, OCCUPATION_CLEAR_COUNT_OFFSET, sum);
 }

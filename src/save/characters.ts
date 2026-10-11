@@ -60,12 +60,12 @@ export const CHARACTER_DEFAULT_VALUES: readonly CharacterValue[] = [
 
 /** 人物と、値の説明。values は基本（0＝生存、1＝死亡）と違う人物だけに書く */
 export const CHARACTER_NOTES: Readonly<
-  Record<number, { name?: string; note: string; values?: readonly CharacterValue[] }>
+  Record<number, { name?: string; note?: string; values?: readonly CharacterValue[] }>
 > = {
   0x374e: {
     name: nameOf.npc(1),
     // 🟢
-    note: "0＝生存、1＝死亡、3＝病院に運ばれて助かった（再起の望みの成功）。将の器は 3、怒りの矛先は 1 で起きる",
+    note: "将の器は病院に運ばれて助かった状態、怒りの矛先は死亡の状態のときに起きる",
     values: [
       { value: 0, label: "生存" },
       { value: 1, label: "死亡" },
@@ -75,31 +75,31 @@ export const CHARACTER_NOTES: Readonly<
   0x374f: {
     name: nameOf.npc(2),
     // 🟢
-    note: "0＝生存、1＝死亡。願い虚しくは 0 のとき小暮本人が敵になる",
+    note: "願い虚しくは、生存のとき小暮本人が敵になる",
   },
   0x3750: {
     name: nameOf.npc(3),
     // 🟢
-    note: "真実でまだら（朱美）に勝つと死亡",
+    note: "真実でまだら（朱美）に勝つと死亡する",
     values: [
       { value: 0, label: "通常" },
       { value: 1, label: "死亡" },
     ],
   },
   // 🟢
-  0x3751: { name: nameOf.npc(4), note: "1 になる場面はない（武人 琴吹光で死んでも変わらない）" },
+  0x3751: { name: nameOf.npc(4), note: "死亡になる場面はない（武人 琴吹光で死んでも変わらない）" },
   0x3752: {
     name: nameOf.npc(5),
     // 🟢
-    note: "0＝生存、1＝死亡。1 だと剣術大会の準備で建築現場にいない。大寄せで幕府ルートに入るには 1 でないことが要る",
+    note: "死亡だと剣術大会の準備で建築現場にいない。大寄せで幕府ルートに入るには生存していることが要る",
   },
-  0x3753: { name: nameOf.npc(6), note: "0＝生存、1＝死亡" },
-  0x3754: { name: nameOf.npc(7), note: "0＝生存、1＝死亡" },
-  0x3755: { name: nameOf.npc(8), note: "0＝生存、1＝死亡" },
+  0x3753: { name: nameOf.npc(6) },
+  0x3754: { name: nameOf.npc(7) },
+  0x3755: { name: nameOf.npc(8) },
   0x3756: {
     name: "鬼怒川怨仙",
     // 🟢
-    note: "船上の侍（周回の始め）で 2、大老暗殺計画で倒すと 0。1 になる場面はない",
+    note: "船上の侍（周回の始め）で生存の状態になり、大老暗殺計画で倒すと偽物が死亡の状態になる",
     values: [
       { value: 0, label: "偽物が死亡" },
       { value: 2, label: "生存" },
@@ -108,7 +108,7 @@ export const CHARACTER_NOTES: Readonly<
   0x3757: {
     name: nameOf.npc(11),
     // 🟢
-    note: "1＝死亡（鬼怒川の魔手）。2＝領事館を出て代官所（鬼怒川のもと）へ向かった（ローラの決意の導入）。領事館に出るのは 0 のときだけ",
+    note: "鬼怒川の魔手で死亡する。ローラの決意の導入で、領事館を出て代官所（鬼怒川のもと）へ向かう。領事館に出るのは生存のときだけ",
     values: [
       { value: 0, label: "生存" },
       { value: 1, label: "死亡" },
@@ -118,7 +118,7 @@ export const CHARACTER_NOTES: Readonly<
   0x3758: {
     name: "J.J.",
     // 🟢
-    note: "1＝死亡、3＝伯爵救出の成功（療養中）、4＝打ち解けた、5＝逮捕された（刺激が欲しいの成功）。ローラ奪還で 0",
+    note: "伯爵救出の成功で療養中、伯爵に刺激をの成功で打ち解け、刺激が欲しいの成功で逮捕される。ローラ奪還で通常に戻る",
     values: [
       { value: 0, label: "通常" },
       { value: 1, label: "死亡" },
@@ -130,12 +130,12 @@ export const CHARACTER_NOTES: Readonly<
   0x3759: {
     name: nameOf.npc(13),
     // 🟢
-    note: "0＝生存、1＝死亡（講師ご到着・祝 病院開業・傷心の帰国船の戦闘、魔鱗組として）",
+    note: "講師ご到着・祝 病院開業・傷心の帰国船の戦闘、魔鱗組としてで死亡する",
   },
   0x375a: {
     name: nameOf.npc(14),
     // 🟢
-    note: "表彰式でほかの優勝者として並ぶと 1（釜茹で）。町の人の状態の「堂島の死亡」とは別のバイト",
+    note: "表彰式でほかの優勝者として並ぶと釜茹でになる。町の人の生死の「堂島」とは別の欄",
     values: [
       { value: 0, label: "通常" },
       { value: 1, label: "表彰式で釜茹でになった" },
@@ -151,7 +151,7 @@ export const CHARACTER_NOTES: Readonly<
   [SUSHI_STATUS_OFFSET]: {
     name: "寿司屋",
     // 🟢
-    note: "寿司屋の店主を殺すと 1。伯爵に刺激を・傷心の帰国船の開始条件に関わる。町の人の生死のビットとは別のバイトで、両方 0 にしないと店とイベントは死んだ扱いのまま",
+    note: "寿司屋の店主を殺すと死亡になる。伯爵に刺激を・傷心の帰国船の開始条件に関わる。町の人の生死の「寿司屋」とは別の欄で、両方を生存にしないと店とイベントは死んだ扱いのまま",
   },
 };
 
@@ -175,16 +175,16 @@ export function readCharacters(bytes: Uint8Array): CharactersView {
   const bad = values.findIndex((v) => v > CHARACTER_NORMAL_MAX);
   const warning =
     bad >= 0
-      ? `0x${CHARACTER_OFFSETS[bad].toString(16).toUpperCase()} に通常のプレイでは取らない値があります（${values[bad]}）`
+      ? `${CHARACTER_NOTES[CHARACTER_OFFSETS[bad]]?.name ?? "人物"}に通常のプレイでは取らない状態があります`
       : null;
   return { values, warning, problem: checkLayout(bytes) };
 }
 
 /** 通常モードは 0〜5、上級者モードは任意の u8。問題がなければ null */
 export function validateCharacter(value: number, opts: { advanced: boolean }): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `u8 の範囲外です: ${value}`;
+  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `値が範囲外です: ${value}`;
   if (!opts.advanced && value > CHARACTER_NORMAL_MAX)
-    return `通常モードでは 0〜${CHARACTER_NORMAL_MAX} を指定してください: ${value}`;
+    return "通常モードでは指定できない状態です";
   return null;
 }
 

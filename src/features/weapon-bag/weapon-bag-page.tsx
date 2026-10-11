@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import { WEAPON_BAG_COUNT, WEAPON_BAG_OFFSET, readWeaponBag, weaponBagOffset, type WeaponBagView } from "@/save/weapon-bag";
 import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
@@ -61,7 +60,7 @@ export function WeaponBagPage() {
               <span className="text-muted-foreground text-sm font-normal">
                 {filled} / {WEAPON_BAG_COUNT} 本
               </span>
-              <InfoTip offset={`${formatOffset(WEAPON_BAG_OFFSET)} から 0xA0 B × ${WEAPON_BAG_COUNT}`} />
+              <InfoTip offset={WEAPON_BAG_OFFSET} />
             </CardTitle>
             <CardDescription>行を押すと編集欄を開きます。</CardDescription>
           </CardHeader>
@@ -75,10 +74,9 @@ export function WeaponBagPage() {
         </Card>
       )}
 
-      {/* ❓ 用途不明の領域。🟢 レコードの先頭は完成武器ID */}
+      {/* ❓ 用途不明の領域。🟢 レコードの先頭は完成武器ID（既存エディタ [TS] の位置より 6 B 後ろ） */}
       <p className="text-muted-foreground text-xs">
-        各フィールドのバイトだけを書き換えます。用途不明の領域は変えません。空き枠は編集できません（武器を新しく作る機能はありません）。
-        レコードの位置は、完成武器ID の位置を先頭として表示します（既存エディタ [TS] の位置より 6 B 後ろ）。
+        用途が分かっていない領域は変更しません。空き枠は編集できません（武器を新しく作る機能はありません）。
       </p>
     </div>
   );

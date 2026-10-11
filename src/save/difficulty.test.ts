@@ -45,11 +45,12 @@ describe('難易度 0x0000', () => {
     const b = makeSave(SEEN.easy)
     writeU8(b, DIFFICULTY_OFFSET, 4)
     expect(readDifficulty(b)).toMatchObject({ label: null, problem: null })
-    expect(readDifficulty(b).warning).toMatch(/0〜3/)
+    expect(readDifficulty(b).warning).toMatch(/想定外/)
+    expect(readDifficulty(b).warning).not.toMatch(/0x|[0-9]/)
     for (const offset of [1, 2, 7]) {
       const c = makeSave(SEEN.easy)
       writeU8(c, offset, 1)
-      expect(readDifficulty(c).warning).toMatch(/0x0001〜0x0007/)
+      expect(readDifficulty(c).warning).toMatch(/使われていない/)
     }
   })
 

@@ -94,9 +94,9 @@ export function readYobaiPoints(bytes: Uint8Array): YobaiPointsView {
 
 /** 通常モードは 0〜POINT_NORMAL_MAX、上級者モードは任意の u8。問題がなければ null */
 export function validateYobaiPoint(value: number, opts: { advanced: boolean }): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `0〜255 の整数を指定してください: ${value}`;
+  if (!Number.isInteger(value) || value < 0 || value > 0xff) return "0〜255 の整数を指定してください";
   if (!opts.advanced && value > POINT_NORMAL_MAX)
-    return `通常モードでは 0〜${POINT_NORMAL_MAX} を指定してください（上級者モードで 255 まで書けます）: ${value}`;
+    return `通常モードでは 0〜${POINT_NORMAL_MAX} を指定してください（上級者モードで 255 まで書けます）`;
   return null;
 }
 
@@ -105,7 +105,7 @@ export function writeYobaiPoint(bytes: Uint8Array, offset: number, value: number
   const view = readYobaiPoints(bytes);
   if (view.problem) throw new RangeError(view.problem);
   if (!YOBAI_POINTS.some((p) => p.offset === offset))
-    throw new RangeError(`好感度・ポイントの位置ではありません: 0x${offset.toString(16)}`);
+    throw new RangeError("好感度・ポイントの位置ではありません");
   const error = validateYobaiPoint(value, opts);
   if (error) throw new RangeError(error);
   writeU8(bytes, offset, value);

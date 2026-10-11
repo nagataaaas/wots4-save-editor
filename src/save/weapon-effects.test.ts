@@ -41,6 +41,6 @@ describe('魅力の効果（[W] p20）', () => {
   it('魅力なしは空、疾風は効果量なし、未知の ID は効果不明', () => {
     expect(charmEffects([null, null, null])).toEqual([])
     expect(charmEffects([5])[0].amount).toBeNull()
-    expect(charmEffects([0x20])[0]).toMatchObject({ label: '未知（32）', summary: '効果は不明', amount: null })
+    expect(charmEffects([0x20])[0]).toMatchObject({ label: '未知', summary: '効果は不明', amount: null })
   })
 })

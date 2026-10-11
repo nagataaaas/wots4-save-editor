@@ -47,7 +47,7 @@ export function LazySelect({ value, items, placeholder, disabled, className, onV
         }}
       >
         <span data-slot="select-value" className="flex flex-1 text-left">
-          {label ?? placeholder ?? (value === null ? '' : value)}
+          {label ?? placeholder ?? (value === null ? '' : '不明')}
         </span>
         <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4" />
       </button>

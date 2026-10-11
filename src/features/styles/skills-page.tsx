@@ -146,9 +146,8 @@ export function SkillsPage() {
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             技
-            <InfoTip offset="0x1837C〜0x189FB（構えごと）、0x1417C〜（技の表ごと）">
-              構えごとの技の覚え状況（chunks/skill-states）。状態は構えごとの状態を出します
-            </InfoTip>
+            {/* 構えごとの技の覚え状況（chunks/skill-states）。状態は構えごとの状態を出す */}
+            <InfoTip offset="0x1837C〜0x189FB、0x1417C〜" />
           </CardTitle>
           {/* 「習得する」は ✅（ゲームで反映を確認済み）。固有技の「習得する」は 🟢 要ゲーム内確認 */}
           <CardDescription>
@@ -342,7 +341,7 @@ function StanceSkillTable({
           条件に合う技を全部習得する
         </Button>
         <span className="text-muted-foreground text-xs">
-          {nos.length} 件（未習得 {nos.filter((no) => states[no] === 0).length}）。段 5（極）や習得条件は見ずに書き込みます。
+          {nos.length} 件（未習得 {nos.filter((no) => states[no] === 0).length}）。段や習得条件は見ずに書き込みます。
           続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
           条件に合わない前の技は薄く出します。
         </span>
@@ -350,10 +349,9 @@ function StanceSkillTable({
       {nos.length === 0 ? (
         <p className="text-muted-foreground text-sm">条件に合う技がありません。</p>
       ) : (
-        <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_minmax(0,1fr)_auto] gap-x-3 text-sm">
+        <div className="grid grid-cols-[auto_auto_auto_auto_auto_minmax(0,1fr)_auto] gap-x-3 text-sm">
           <div className="text-muted-foreground col-span-full grid grid-cols-subgrid border-b py-1 text-xs">
             <span>技</span>
-            <span>ID</span>
             <span>状態</span>
             <span>入力</span>
             <span>攻撃力</span>
@@ -395,7 +393,6 @@ function SkillRow({
   return (
     <div className={`col-span-full grid min-h-9 grid-cols-subgrid items-center border-b py-1 ${dim ? "opacity-60" : ""}`}>
       <SkillTreeName sheet={sheet} {...ctx} dim={dim} />
-      <span className="text-muted-foreground font-mono text-xs tabular-nums">{s.skillId}</span>
       <span>
         <StateBadge state={state} />
       </span>

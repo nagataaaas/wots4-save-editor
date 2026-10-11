@@ -33,19 +33,19 @@ describe("連続なりわいの選択肢", () => {
     expect(find(options, 80).group).toMatch(/^「.+」$/);
     expect(find(options, 80).label).toBe("受注前");
     // 🟢 小鳩・おっつぁんの81には受注の割り当てがない。表示変更で受注扱いにしない。
-    expect(find(options, 81).label).toBe("81（受注では書かない値）");
+    expect(find(options, 81).label).toBe("受注済（受注中にはならない）");
   });
 
   it("🟢 8件目のあとは、値とその会話を「8件目の仕事名」のあと・すべて終えた の見出しで出す", () => {
     const options = seriesOptions(4, POLICE_SERIES_VALUES, jobs);
     expect(find(options, 97)).toMatchObject({
-      label: "97 出された浪人（虎鉄）に礼を言われた（野戸仏の話はまだ）",
+      label: "出された浪人（虎鉄）に礼を言われた（野戸仏の話はまだ）",
       group: "「真犯人」のあと",
     });
     expect(find(options, 100)).toMatchObject({
       label: "野戸仏の話も虎鉄の礼も済み、岡っ引きの仕事をやり遂げた",
       group: "すべて終えた",
     });
-    expect(find(options, 102)).toMatchObject({ label: "102 熊神が亡くなった", group: "すべて終えた" });
+    expect(find(options, 102)).toMatchObject({ label: "熊神が亡くなった", group: "すべて終えた" });
   });
 });

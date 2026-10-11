@@ -5,8 +5,9 @@ import { matchesSearch } from '@/lib/search'
 export type SkillSort = 'id-asc' | 'id-desc' | 'attack-desc' | 'attack-asc'
 
 export const SKILL_SORT_LABELS: Record<SkillSort, string> = {
-  'id-asc': 'ID（小さい順）',
-  'id-desc': 'ID（大きい順）',
+  // 内部の並びはキー（id-asc / id-desc）のまま。画面には ID を出さない
+  'id-asc': 'ゲームの並び順',
+  'id-desc': 'ゲームの並びの逆順',
   'attack-desc': 'ダメージ（大きい順）',
   'attack-asc': 'ダメージ（小さい順）',
 }

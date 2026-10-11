@@ -120,7 +120,7 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, RouteCandidateNote>>
   // 🟢
   0x3799: {
     name: "堂島が鍛冶屋（イベント判定用）",
-    note: "1＝鍛冶屋で働いている（堂島の説得に成功すると 1、死ぬと 0）。周回をまたいで残る。町に出るかはなりわいのフラグ 22 が決める",
+    note: "堂島の説得に成功すると鍛冶屋で働く状態になり、死ぬと戻る。周回をまたいで残る。町に出るかはなりわいが決める",
     values: [
       { value: 0, label: "鍛冶屋ではない" },
       { value: 1, label: "堂島が鍛冶屋" },
@@ -130,7 +130,7 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, RouteCandidateNote>>
   },
   0x379a: {
     name: "先生が道場の師範代（イベント判定用）",
-    note: "1＝主人公の道場の師範代（死ぬ・追い出す・道場を失うと 0）。周回をまたいで残る。町に出るかはなりわいのフラグ 21 が決める",
+    note: "先生が主人公の道場の師範代になる状態で、死ぬ・追い出す・道場を失うと戻る。周回をまたいで残る。町に出るかはなりわいが決める",
     values: [
       { value: 0, label: "師範代ではない" },
       { value: 1, label: "道場の師範代" },
@@ -140,7 +140,7 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, RouteCandidateNote>>
   },
   0x37a1: {
     name: "小公女の薬",
-    note: "小公女倒れるで薬を持っている。町の薬屋で 1、小公女倒れるの成功で 0",
+    note: "小公女倒れるで薬を持っている。町の薬屋で持つ状態になり、小公女倒れるの成功で持っていない状態に戻る",
     values: [
       { value: 0, label: "持っていない" },
       { value: 1, label: "持っている" },
@@ -151,21 +151,21 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, RouteCandidateNote>>
   0x37a2: {
     name: "般若党の本拠",
     note:
-      "0＝神社にいる、1＝片付いた（剣術大会以降。同士救出・般若党壊滅・三匹で斬るの成功）、" +
-      "2＝離散した（再起の望みで赤城が死ぬ・将の器の成功・怒りの矛先の成功・大寄せで攘夷ルートに入れない・志士の刀で戦闘・願い虚しくで手紙を託される・臆病風）。" +
-      "1 と 2 の効果は同じで、2 だけが真ルートの闇討ちの条件になる",
+      "片付いた＝剣術大会以降の同士救出・般若党壊滅・三匹で斬るの成功。" +
+      "離散した＝再起の望みで赤城が死ぬ・将の器の成功・怒りの矛先の成功・大寄せで攘夷ルートに入れない・志士の刀で戦闘・願い虚しくで手紙を託される・臆病風。" +
+      "片付いたと離散したの効果は同じで、離散したのときだけ真ルートの闇討ちの条件になる",
     values: [
       { value: 0, label: "神社にいる" },
       { value: 1, label: "片付いた" },
       { value: 2, label: "離散した" },
     ],
-    effect: "0 以外で神社の般若党・赤城・小暮・雑貨屋と、居酒屋の朱美・客が町に出なくなる",
+    effect: "神社にいる以外だと、神社の般若党・赤城・小暮・雑貨屋と、居酒屋の朱美・客が町に出なくなる",
   },
   0x37a3: {
     name: "会談の手紙",
     note:
-      "1＝ローラから預かった、2＝神社の般若党の門番に渡した（2 で領事館でローラへの報告の場面になる）。" +
-      "話はこの値だけで進み、持ち物の会談の手紙（重要品の画面）は見ない",
+      "ローラから預かった状態と、神社の般若党の門番に渡した状態がある（渡すと領事館でローラへの報告の場面になる）。" +
+      "話はこの状態だけで進み、持ち物の会談の手紙（重要品の画面）は見ない",
     values: [
       { value: 0, label: "なし" },
       { value: 1, label: "ローラから預かった" },
@@ -175,23 +175,23 @@ export const ROUTE_CANDIDATE_NOTES: Readonly<Record<number, RouteCandidateNote>>
   0x37a4: {
     name: "黒船",
     note:
-      "1＝幕府が借り受けた（黒船を我が手にの成功）、" +
-      "2＝去った（傷心の帰国船・鬼怒川の魔手・夕暮れの船上・破滅への道）",
+      "幕府が借り受けるのは黒船を我が手にの成功のとき。" +
+      "去るのは傷心の帰国船・鬼怒川の魔手・夕暮れの船上・破滅への道のとき",
     values: [
       { value: 0, label: "外国の船のまま" },
       { value: 1, label: "幕府が借り受けた" },
       { value: 2, label: "去った" },
     ],
-    effect: "1 で甲板に乗組員・写真家が出ない。2 で甲板へ移動できない",
+    effect: "幕府が借り受けると甲板に乗組員・写真家が出ない。去ると甲板へ移動できない",
   },
   0x37a8: {
     name: "最後通告に逆らった",
-    note: "最後通告に逆らうと 1",
+    note: "最後通告に逆らうとこの状態になる",
     values: [
       { value: 0, label: "逆らっていない" },
       { value: 1, label: "逆らった" },
     ],
-    effect: "1 のあいだ、夜に町へ出る雑魚が暗闇脳天になる",
+    effect: "逆らったあいだ、夜に町へ出る雑魚が暗闇脳天になる",
   },
 };
 
@@ -219,13 +219,13 @@ export function readRouteCandidates(bytes: Uint8Array): RouteCandidatesView {
   );
   const warning =
     bad >= 0
-      ? `0x${(ROUTE_CANDIDATE_START + bad).toString(16).toUpperCase()} に通常の進行では見ない値があります（${values[bad]}）`
+      ? "通常の進行では見ない状態の項目があります"
       : null;
   const best = readU8(bytes, BEST_ROUTE_OFFSET);
   const layoutProblem = checkLayout(bytes);
   const bestProblem =
     layoutProblem ??
-    (best > BEST_ROUTE_MAX ? `真ルートのフラグが 0〜${BEST_ROUTE_MAX} 以外です（${best}）` : null);
+    (best > BEST_ROUTE_MAX ? "ルートが想定外の状態になっています" : null);
   return { values, best, bestProblem, warning, problem: layoutProblem };
 }
 
@@ -236,10 +236,10 @@ export function validateRouteCandidate(
   value: number,
   opts: { advanced: boolean; offset?: number },
 ): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `u8 の範囲外です: ${value}`;
+  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `値が範囲外です: ${value}`;
   const max =
     opts.offset === undefined ? ROUTE_CANDIDATE_NORMAL_MAX : routeCandidateNormalMax(opts.offset);
-  if (!opts.advanced && value > max) return `通常モードでは 0〜${max} を指定してください: ${value}`;
+  if (!opts.advanced && value > max) return "通常モードでは指定できない状態です";
   return null;
 }
 
@@ -268,8 +268,8 @@ export function writeBestRoute(
   const view = readRouteCandidates(bytes);
   if (view.bestProblem) throw new RangeError(view.bestProblem);
   if (!Number.isInteger(value) || value < 0 || value > 0xff)
-    throw new RangeError(`u8 の範囲外です: ${value}`);
+    throw new RangeError(`値が範囲外です: ${value}`);
   if (!opts.advanced && value > BEST_ROUTE_MAX)
-    throw new RangeError(`0〜${BEST_ROUTE_MAX} を指定してください: ${value}`);
+    throw new RangeError("通常モードでは指定できない状態です");
   writeU8(bytes, BEST_ROUTE_OFFSET, value);
 }

@@ -17,7 +17,6 @@ import {
   type ItemOption,
   type ItemSlot,
 } from './item-slot'
-import { formatHex4 } from '@/lib/format'
 import { itemLabel, nameOf } from './master/labels'
 import { itemLabelId } from './master/label-types'
 
@@ -213,14 +212,14 @@ export function valuableLabel(id: number): string | null {
  * ID調査モードでは u16 の任意の ID（U-12 の ID を除く）。
  */
 export function validateValuableId(id: number, options: ValuableOptions = {}): string | null {
-  if (!Number.isInteger(id) || id < 0 || id > 0xffff) return `ID は 0x0000〜0xFFFF です（${id}）`
+  if (!Number.isInteger(id) || id < 0 || id > 0xffff) return '重要品の一覧から選んでください'
   if (id === EMPTY_ID || findValuable(id)) return null
   if (id in U12_LABELS) {
-    return `${formatHex4(id)} は書き込むとゲーム内でセーブできなくなるため書き込めません` // ❓ U-12
+    return `${U12_LABELS[id]}は書き込むとゲーム内でセーブできなくなるため書き込めません` // ❓ U-12
   }
   if (options.investigate) return null
-  if (id in PROBED_LABELS) return `${PROBED_LABELS[id]}（${formatHex4(id)}）は重要品の枠には書けません` // ❓ U-14
-  return `未知の ID です（${formatHex4(id)}）`
+  if (id in PROBED_LABELS) return `${PROBED_LABELS[id]}は重要品の枠には書けません` // ❓ U-14
+  return '重要品の一覧にない値です'
 }
 
 export const validateValuableCount = validateItemCount
@@ -238,7 +237,7 @@ export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}):
     const idProblem = validateValuableId(id, options)
     let problem: string | null = null
     if (!idProblem && id !== EMPTY_ID && count > VALUABLE_COUNT_MAX) {
-      problem = `個数が大きすぎます（${count}）。位置がずれている可能性があります`
+      problem = '個数が大きすぎるため編集できません' // 位置がずれている可能性
     }
 
     let warning: string | null = null
@@ -250,8 +249,8 @@ export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}):
       if (idProblem) warning = `${idProblem}。ほかの値に変更してください`
       const caution = findValuable(id)?.caution
       if (caution) warning = caution
-      if (!idProblem && id in PROBED_LABELS) warning = `${PROBED_LABELS[id]} は重要品ではない ID です` // ❓ U-14
-      if (!idProblem && valuableLabel(id) === null) warning = `未知の ID です（${formatHex4(id)}）。ゲーム内の表示を確認してください` // ❓ U-14
+      if (!idProblem && id in PROBED_LABELS) warning = `${PROBED_LABELS[id]} は重要品ではありません` // ❓ U-14
+      if (!idProblem && valuableLabel(id) === null) warning = '重要品の一覧にない値です。ゲーム内の表示を確認してください' // ❓ U-14
     }
 
     slots.push({
@@ -300,7 +299,7 @@ export function fillEmptySlotsWithProbes(bytes: Uint8Array, start: number): numb
   if (view.layoutProblem) throw new RangeError(view.layoutProblem)
   const used = new Set(view.slots.map((s) => s.id))
   const from = PROBE_CANDIDATES.indexOf(start)
-  if (from < 0) throw new RangeError(`${formatHex4(start)} は調査の候補ではありません`)
+  if (from < 0) throw new RangeError('開始 ID が調査の候補にありません')
   const ids = PROBE_CANDIDATES.slice(from).filter((id) => !used.has(id))
   const filled: number[] = []
   for (const slot of view.slots) {

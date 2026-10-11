@@ -82,7 +82,7 @@ describe("✅ 装飾品の所持フラグ chunks/accessories", () => {
     const b = makeSave();
     expect(() => writeAccessoryFlag(b, 1, 2, { advanced: false })).toThrow();
     writeAccessoryFlag(b, 1, 2, { advanced: true });
-    expect(readAccessoryFlags(b).warning).toContain("ID 1");
+    expect(readAccessoryFlags(b).warning).toContain("想定外");
     expect(() => writeAccessoryFlag(b, 158, 1, { advanced: true })).toThrow();
   });
 

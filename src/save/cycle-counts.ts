@@ -46,7 +46,7 @@ export function readCycleCounts(bytes: Uint8Array): CycleCountsView {
     goneCount: readU32(bytes, GONE_COUNT_OFFSET),
     warning:
       playCount > PLAY_COUNT_MAX
-        ? `周回数（${playCount.toLocaleString()}）がゲームの上限（${PLAY_COUNT_MAX.toLocaleString()}）を超えています`
+        ? `周回数がゲームの上限（${PLAY_COUNT_MAX.toLocaleString()}）を超えています`
         : null,
     problem: checkLayout(bytes),
   }
@@ -54,7 +54,7 @@ export function readCycleCounts(bytes: Uint8Array): CycleCountsView {
 
 /** 通常モードは 0〜99,999、上級者モードは任意の u32。問題がなければ null */
 export function validatePlayCount(value: number, opts: { advanced: boolean }): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff_ffff) return `u32 の範囲外です: ${value}`
+  if (!Number.isInteger(value) || value < 0 || value > 0xffff_ffff) return `値が範囲外です: ${value}`
   if (!opts.advanced && value > PLAY_COUNT_MAX)
     return `通常モードでは 0〜${PLAY_COUNT_MAX.toLocaleString()} を指定してください: ${value}`
   return null

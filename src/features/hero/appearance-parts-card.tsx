@@ -55,7 +55,7 @@ function partLabel(p: PartEntry): string {
   const name = p.ja
     ? p.alias ? `${p.ja}：${p.alias}` : p.ja
     : p.alias ? `名前なし：${p.alias}` : "名前なし";
-  return `${name}（${p.id}）${tags.length ? ` [${tags.join("・")}]` : ""}`;
+  return `${name}${tags.length ? ` [${tags.join("・")}]` : ""}`;
 }
 
 /**
@@ -65,7 +65,7 @@ function partLabel(p: PartEntry): string {
 function partOptions(kind: PartKind, heroBodyKind: number, advanced: boolean): SelectOption[] {
   const none: SelectOption[] =
     validatePart(kind, -1, heroBodyKind, advanced) === null
-      ? [{ value: "-1", label: "なし（FFFF）", group: advanced ? "なし" : undefined }]
+      ? [{ value: "-1", label: "なし", group: advanced ? "なし" : undefined }]
       : [];
   const parts = PARTS[kind].filter((p) => validatePart(kind, p.id, heroBodyKind, advanced) === null);
   if (!advanced)
@@ -92,7 +92,7 @@ function layerOptions(def: PartLayer, standard: number): SelectOption[] {
     { value: "-1", label: "なし（この層を消す）" },
     ...def.textures.map((t, i) => ({
       value: String(t),
-      label: `色${i + 1}（${t}）${t === standard ? "［標準］" : ""}`,
+      label: `色${i + 1}${t === standard ? "［標準］" : ""}`,
     })),
   ];
 }
@@ -140,13 +140,13 @@ function LayerEditor({
               label={`層${layer + 1}：${def?.mesh ?? "この部品にない層"}`}
               offset={part.offset + 4 + layer * 2}
               value={String(value)}
-              currentLabel={def ? `この形の色違いではない値 ${value}` : `値 ${value}`}
+              currentLabel={def ? "この形にない色" : "不明"}
               options={def ? layerOptions(def, entry.models[layer]) : []}
               problem={problem}
               disabled={!def}
               hint={def ? undefined : "この部品にはない層です"}
               // 🟢 値はテクスチャの番号、形は部品の番号（✅ [U] 2026-10-08）。なしで層が消える（足元の層2で履物が消えた ✅ [U]）
-              note="値はテクスチャの番号で、形は部品の番号で決まる。なしにすると層が消える（足元の層2なら履物が消える）"
+              note="形は部品で決まる。なしにすると層が消える（足元の層2なら履物が消える）"
               onChange={(v) => onChange(layer, Number(v))}
             />
           );
@@ -160,18 +160,19 @@ function LayerEditor({
  * 部品ごとの注記。確度：上半身・下半身・顔・髪型・手・足元の構造は 🟢。
  * 上半身・下半身・足元の書き込みの反映は ❓ 要ゲーム内確認（U-19）。顔・髪型・手（J.J の手）の書き込みの反映は ✅ [U]。
  * 籠手・脛当て・前掛け・外套は ✅ [U]
+ * 書く内容：部品の番号とモデルの値（u16 × 4。籠手などは色違いまで含めた値）。男の裸は上半身 117（110）・下半身 88（196）、女は上半身 98（152）・下半身 26（233）
  */
 const PART_NOTES: Record<PartKind, string> = {
-  upper: "部品の番号とモデルの値（u16 × 4）を書く",
-  lower: "部品の番号とモデルの値（u16 × 4）を書く",
-  face: "部品の番号とモデルの値を書く",
-  hair: "部品の番号とモデルの値を書く",
+  upper: "",
+  lower: "",
+  face: "",
+  hair: "",
   body: "手のモデル（名前のない15種）。上級者モードだけ",
-  feet: "部品の番号とモデルの値（u16 × 4）を書く",
-  gauntlet: "部品の番号と、色違いまで含めたモデルの値を書く",
-  leggings: "部品の番号と、色違いまで含めたモデルの値を書く",
-  apron: "部品の番号と、色違いまで含めたモデルの値を書く",
-  cape: "部品の番号と、色違いまで含めたモデルの値を書く",
+  feet: "",
+  gauntlet: "色違いも含めて選ぶ",
+  leggings: "色違いも含めて選ぶ",
+  apron: "色違いも含めて選ぶ",
+  cape: "色違いも含めて選ぶ",
 };
 
 /** 上裸・下裸のボタン。体の種類が男・女のときだけ使える（✅ [U] 2026-10-08、ユーザー判断 2026-10-08） */
@@ -196,8 +197,7 @@ function NudeButtons({
       <div className="flex flex-wrap items-center gap-2">
         <Label>裸</Label>
         <InfoTip offset={APPEARANCE_PARTS_OFFSETS.parts}>
-          服の部品のモデルの値から服の層を外し、体の層だけにする。男：上半身
-          117（110）・下半身 88（196）、女：上半身 98（152）・下半身 26（233）
+          服の層を外して、体の層だけにします
         </InfoTip>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -229,7 +229,7 @@ export function AppearancePartsCard() {
   const personGroups: string[] = [...BODY_KIND_NAMES, PERSON_HIDDEN_GROUP];
   const personOptions: SelectOption[] = PERSONS.map((p) => ({
       value: String(p.id),
-      label: `${p.ja}（${p.id}）${p.dlc !== null ? " [DLC]" : ""}`,
+      label: `${p.ja}${p.dlc !== null ? " [DLC]" : ""}`,
       group: p.selectable ? BODY_KIND_NAMES[p.bodyKind] : PERSON_HIDDEN_GROUP,
       keywords: [String(p.id), p.en],
     })).sort((a, b) => personGroups.indexOf(a.group) - personGroups.indexOf(b.group));
@@ -238,7 +238,7 @@ export function AppearancePartsCard() {
   const hairMin = advanced ? 0 : HAIR_COLOR_MIN;
   const hairMax = advanced ? 15 : HAIR_COLOR_MAX;
   // 髪の色：HAIR_COLOR_CONFIRMED の値（0〜4）は ✅ [U]、5＝赤・6〜9 は 🔶（U-19）
-  const hairLabel = (i: number) => `${HAIR_COLOR_NAMES[i] ?? "色なし"}（${i}）`;
+  const hairLabel = (i: number) => HAIR_COLOR_NAMES[i] ?? "色なし";
   const hairOptions: SelectOption[] = Array.from({ length: hairMax - hairMin + 1 }, (_, i) => ({
     value: String(hairMin + i),
     label: hairLabel(hairMin + i),
@@ -262,7 +262,7 @@ export function AppearancePartsCard() {
         offset={APPEARANCE_PARTS_OFFSETS.person}
         value={view ? String(view.person) : null}
         currentLabel={
-          view?.person === PERSON_CUSTOM ? "個別に設定（FFFF）" : `不明な人物 ${view?.person}`
+          view?.person === PERSON_CUSTOM ? "個別に設定" : "不明な人物"
         }
         options={personOptions}
         problem={problem}
@@ -274,7 +274,7 @@ export function AppearancePartsCard() {
               : undefined
         }
         // 🟢 人物の番号。✅ [U] 選び直して見た目が変わることを確認。0x3AAD6 に書く値は 🔶（U-19）
-        note="人物の番号。選び直すと見た目が変わる。身長は今の低い・高いの倍率を引き継ぐ"
+        note="選び直すと見た目が変わる。身長は今の低い・高いの倍率を引き継ぐ"
         searchPlaceholder="人物を検索"
         onChange={(v) => update((b) => writePerson(b, Number(v)))}
       />
@@ -283,9 +283,9 @@ export function AppearancePartsCard() {
         label="タイプ"
         offset={APPEARANCE_PARTS_OFFSETS.bodyKind}
         value={view ? String(view.bodyKind) : null}
-        currentLabel={`不明な値 ${view?.bodyKind}`}
+        currentLabel="不明"
         options={BODY_KIND_NAMES.flatMap((g, i) =>
-          BODY_KIND_CRASH.includes(i) ? [] : [{ value: String(i), label: `${g}（${i}）` }],
+          BODY_KIND_CRASH.includes(i) ? [] : [{ value: String(i), label: g }],
         )}
         problem={problem}
         disabled={!advanced}
@@ -295,7 +295,7 @@ export function AppearancePartsCard() {
             : "人物を選ぶと決まります"
         }
         // 🔶 0＝男、1＝女。2＝ローラ・3＝子供は ✅ [U] 人物として表示を確認。4＝動物のクラッシュは ✅ [U]
-        note="0＝男、1＝女、2＝ローラ、3＝子供。4＝動物はロードでゲームが止まるので出さない"
+        note="男・女のほか、ローラ・子供がある。動物はロードでゲームが止まるので出さない"
         onChange={(v) => update((b) => writeBodyKind(b, Number(v), advanced))}
       />
       <SelectRow
@@ -308,11 +308,11 @@ export function AppearancePartsCard() {
         problem={problem}
         hint={
           advanced
-            ? "上級者モード：0〜15（0・10 以上は色がつきません）"
-            : `${HAIR_COLOR_MIN}〜${HAIR_COLOR_MAX}`
+            ? "上級者モード：名前のない色を選ぶと髪の色がつきません"
+            : undefined
         }
         // ✅ [U] 0〜4。🔶 5＝赤・6〜9（U-19）
-        note="値＝主人公設定の一覧の左からの位置。0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪・5＝赤・6〜9"
+        note="主人公設定の髪の色の一覧と同じ順に並ぶ"
         onChange={(v) => update((b) => writeHairColor(b, Number(v), advanced))}
       />
       <NudeButtons
@@ -330,10 +330,10 @@ export function AppearancePartsCard() {
               value={part ? String(part.id) : null}
               currentLabel={
                 part?.id === -1
-                  ? "なし（FFFF）"
+                  ? "なし"
                   : current
                     ? partLabel(current)
-                    : `表にない番号 ${part?.id}`
+                    : "表にない部品"
               }
               options={partOptions(kind, heroBodyKind, advanced)}
               problem={problem}
@@ -346,7 +346,7 @@ export function AppearancePartsCard() {
                       ? `${bodyKindName(heroBodyKind)}用と共通の、名前のある部品だけを表示しています`
                       : BODY_KIND_PARTS[heroBodyKind]
                         ? `${bodyKindName(heroBodyKind)}用の部品だけを表示しています`
-                        : `タイプが${bodyKindName(heroBodyKind) ?? `不明な値 ${heroBodyKind}`}のときは、通常モードでは部品を選べません。上級者モードで選んでください`
+                        : `タイプが${bodyKindName(heroBodyKind) ?? "不明"}のときは、通常モードでは部品を選べません。上級者モードで選んでください`
               }
               // その項目が「なし」のときだけ（止めない。ユーザー判断 2026-10-08）
               warning={part ? partNoneWarning(kind, part.id) : null}

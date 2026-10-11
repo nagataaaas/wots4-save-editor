@@ -144,10 +144,10 @@ function RawEditor({
             <CardTitle className="flex flex-wrap items-center gap-2">
               16進表示
               <InfoTip offset={`0x0〜0x${(bytes.byteLength - 1).toString(16).toUpperCase()}（${bytes.byteLength.toLocaleString()} B）`}>
-                背景色は解析ドキュメントの領域（下の「領域の一覧」）、赤字は差分の基準と違うバイトです。クリックで選択し、矢印キー・PageUp/PageDown で移動できます。
+                背景色は既知の領域（下の「領域の一覧」）、赤字は差分の基準と違うバイトです。クリックで選択し、矢印キー・PageUp/PageDown で移動できます。
               </InfoTip>
             </CardTitle>
-            <CardDescription>ファイル全体のバイト列です。右の欄は 2 バイトずつ UTF-16LE として読んだ文字です。</CardDescription>
+            <CardDescription>ファイル全体のバイト列です。右の欄は文字として読んだ表示です。</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <JumpForm size={bytes.byteLength} onJump={goTo} />
@@ -170,8 +170,7 @@ function RawEditor({
         <CardHeader>
           <CardTitle>差分</CardTitle>
           <CardDescription>
-            基準と今のバイト列（編集を含む）で値が違う範囲です。比較用のファイルを開くと、別のセーブとの違いを見られます。差分を読むときの注意は解析ドキュメント §7.2
-            を参照してください（時間で進む値などは操作と関係なく変わります）。
+            基準と今のバイト列（編集を含む）で値が違う範囲です。比較用のファイルを開くと、別のセーブとの違いを見られます。時間で進む値などは操作と関係なく変わります。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -217,7 +216,7 @@ function RawEditor({
 
       <CollapsibleCard
         title="領域の一覧"
-        description="解析ドキュメント（docs/save_format/README.md §3）の領域です。終了が分からないものは色分けしません。行をクリックすると、その位置へ移動します。"
+        description="既知の領域です。終了が分からないものは色分けしません。行をクリックすると、その位置へ移動します。"
         contentClassName="overflow-x-auto"
       >
         <RegionTable onJump={goTo} />
@@ -449,10 +448,10 @@ function SelectionCard({
         <CardTitle className="font-mono">{formatOffset(offset)}</CardTitle>
         <CardDescription>
           {regions.length === 0
-            ? '解析ドキュメントの領域に入っていない位置です'
+            ? '既知の領域に入っていない位置です'
             : regions.map((r) => (
                 <span key={`${r.start}-${r.chunk}-${r.label}`} className="block">
-                  {r.label} {positionInRegion(r, offset)}（{r.chunk}）
+                  {r.label} {positionInRegion(r, offset)}
                 </span>
               ))}
         </CardDescription>
@@ -681,7 +680,6 @@ function RegionTable({ onJump }: { onJump: (offset: number) => void }) {
           <th className="px-2 py-1 font-normal">開始</th>
           <th className="px-2 py-1 font-normal">終了</th>
           <th className="px-2 py-1 font-normal">内容</th>
-          <th className="px-2 py-1 font-normal">まとまり</th>
         </tr>
       </thead>
       <tbody>
@@ -696,7 +694,6 @@ function RegionTable({ onJump }: { onJump: (offset: number) => void }) {
               {r.label}
               {r.recordSize ? `（${r.recordSize === 0xa0 ? '0xA0' : r.recordSize} B × ${((r.end ?? r.start) - r.start + 1) / r.recordSize} 件）` : ''}
             </td>
-            <td className="px-2 py-1 font-mono">{r.chunk}</td>
           </tr>
         ))}
       </tbody>

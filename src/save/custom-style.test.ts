@@ -85,7 +85,7 @@ describe('readCustomStyles', () => {
   it('俺流が指す技の表がなければ読み取り専用', () => {
     const b = makeSave()
     writeI16(b, CUSTOM_OFFSET + 0x48, 4999)
-    expect(readCustomStyles(b).problem).toMatch(/4999/)
+    expect(readCustomStyles(b).problem).toMatch(/対応する技の表がありません/)
   })
 })
 

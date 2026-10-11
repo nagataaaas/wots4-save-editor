@@ -61,7 +61,7 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     offset: 0x37fa,
     label: "代官所の表門",
     // 🟢 1 になる場面
-    note: "1 で閉じる。大寄せで幕府ルートに入れないと 1（根無し草では 1、幕府ルートでは 0）。裏門（0x37FB）とそろえる",
+    note: "大寄せで幕府ルートに入れないと閉じる（根無し草では閉じ、幕府ルートでは閉じない）。裏門とそろえる",
     meaning: "close",
     group: "close",
   },
@@ -69,7 +69,7 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     offset: 0x37fb,
     label: "代官所の裏門",
     // 🟢 表門と同じ場面で同じ値。🔶 1 で閉じる。❓ 0 にして裏門が開くか（要ゲーム内確認）
-    note: "裏門。表門（0x37FA）と同じ場面で同じ値になる。表門とそろえる",
+    note: "表門と同じ場面で同じ状態になる。表門とそろえる",
     meaning: "close",
     group: "close",
   },
@@ -77,7 +77,7 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     offset: 0x3764,
     label: "居留地の外門",
     // 🟢 1 になる場面
-    note: "1 で閉じる。大寄せで外国ルートに入れないと 1。鬼怒川の魔手でローラが死んだとき・夕暮れの船上で断ったとき・傷心の帰国船の成功でも 1",
+    note: "大寄せで外国ルートに入れないと閉じる。鬼怒川の魔手でローラが死んだとき・夕暮れの船上で断ったとき・傷心の帰国船の成功でも閉じる",
     meaning: "close",
     group: "close",
   },
@@ -85,7 +85,7 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     offset: 0x37c3,
     label: "神社入口の柵",
     // 🟢 1 になる場面
-    note: "1 で閉じる。大寄せで攘夷ルートに入れないと 1。同士救出の成功・般若党壊滅の成功でも 1",
+    note: "大寄せで攘夷ルートに入れないと閉じる。同士救出の成功・般若党壊滅の成功でも閉じる",
     meaning: "close",
     group: "close",
   },
@@ -93,7 +93,7 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     offset: 0x377d,
     label: "代官所の門",
     // 🟢 1 になる場面
-    note: "1 で開く。阿弥浜港争乱の結末（3連勝・琴吹に助太刀）と三姉妹見参の成功で 1。代官所の面々は 1 のときだけ起きる。幕府からの勧誘のフラグを兼ねる",
+    note: "阿弥浜港争乱の結末（3連勝・琴吹に助太刀）と三姉妹見参の成功で開く。代官所の面々は開いているときだけ起きる。幕府からの勧誘のフラグを兼ねる",
     meaning: "open",
     group: "recruit",
   },
@@ -101,7 +101,7 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     offset: 0x377e,
     label: "居留地の門",
     // 🟢 1 になる場面。🔶 外国からの勧誘のフラグを兼ねる
-    note: "1 で開く。阿弥浜港争乱の結末（3連勝・4人に手間取る）と三姉妹見参の成功で 1。小公女謁見は 1 のときだけ起きる。外国からの勧誘のフラグを兼ねる",
+    note: "阿弥浜港争乱の結末（3連勝・4人に手間取る）と三姉妹見参の成功で開く。小公女謁見は開いているときだけ起きる。外国からの勧誘のフラグを兼ねる",
     meaning: "open",
     group: "recruit",
   },
@@ -109,7 +109,7 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     offset: 0x377f,
     label: "神社入口の柵",
     // ✅ 入口の柵。🟢 開放条件と 1 になる場面
-    note: "入口の柵。序章〜1日目昼（段階 ≤100）の開放条件で、洞窟内の柵にも共通。志士との出会いの導入と三姉妹見参の成功で 1。導入を見たあと（イベント6 が 03 以降）に 0 にすると、近づいても開かない",
+    note: "序章〜1日目昼の開放条件で、洞窟内の柵にも共通。志士との出会いの導入と三姉妹見参の成功で開く。導入を見たあとに閉じた状態にすると、近づいても開かない",
     meaning: "open",
     group: "recruit",
   },
@@ -117,7 +117,7 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     offset: 0x3761,
     label: "神社の洞窟内の柵",
     // ✅ 1 で柵が降りて通行を塞ぐ。❓ 0 に戻したときの上昇・通行の回復は要ゲーム内確認。🟢 1 になる場面
-    note: "1 で柵が降り、洞窟の通行を塞ぐ（入口の柵 0x37C3 = 0 と併用）。大寄せで攘夷ルートに入れないと 1。同士救出・般若党壊滅の成功でも 1",
+    note: "閉じると柵が降り、洞窟の通行を塞ぐ（入口の柵を開けた状態と併用）。大寄せで攘夷ルートに入れないと閉じる。同士救出・般若党壊滅の成功でも閉じる",
     meaning: "close",
     group: "close",
   },
@@ -126,7 +126,7 @@ export const WORLD_FLAGS: readonly WorldFlag[] = [
     pairedOffset: 0x3763,
     label: "代官所 拷問部屋の扉",
     // 🟢 ❓ 扉の見た目は要ゲーム内確認
-    note: "1 以上で閉じる。0x3762 は拷問部屋の扉、0x3763 は屋内から拷問塔の区画へ入る扉で、両方に同じ値を書く。周回の始めに 1、大老と三姉妹の成功で 0",
+    note: "拷問部屋の扉と、屋内から拷問塔の区画へ入る扉の2つをまとめて書く。周回の始めは閉じていて、大老と三姉妹の成功で開く",
     hint: "1日目昼または「大老と三姉妹」が成功していない場合はフラグに関わらず閉じます",
     meaning: "close",
     group: "door",
@@ -150,7 +150,7 @@ export function readWorldFlags(bytes: Uint8Array): WorldFlagsView {
   const bad = WORLD_FLAGS.findIndex((_, i) => values[i] > 1 || (paired[i] ?? 0) > 1);
   const problem =
     bad >= 0
-      ? `${WORLD_FLAGS[bad].label} の値が 0・1 以外です（${paired[bad] === null ? values[bad] : `${values[bad]}・${paired[bad]}`}）`
+      ? `${WORLD_FLAGS[bad].label}が開閉のどちらでもない状態になっています`
       : null;
   return { values, paired, problem: layoutProblem ?? problem };
 }
@@ -170,8 +170,9 @@ export function writeWorldFlag(
   const flag = WORLD_FLAGS[index];
   if (!flag) throw new RangeError(`フラグの番号が範囲外です: ${index}`);
   if (!Number.isInteger(value) || value < 0 || value > 0xff)
-    throw new RangeError(`u8 の範囲外です: ${value}`);
-  if (!opts.advanced && value > 1) throw new RangeError(`0 か 1 を指定してください: ${value}`);
+    throw new RangeError(`値が範囲外です: ${value}`);
+  if (!opts.advanced && value > 1)
+    throw new RangeError("通常モードでは開閉のどちらかを指定してください");
   writeU8(bytes, flag.offset, value);
   if (flag.pairedOffset !== undefined) writeU8(bytes, flag.pairedOffset, value);
 }
@@ -203,8 +204,8 @@ export type ScenarioFlag = {
 };
 
 const OFF_ON = (on: string): readonly ScenarioFlagValue[] => [
-  { value: 0, label: "0 なし" },
-  { value: 1, label: `1 ${on}` },
+  { value: 0, label: "なし" },
+  { value: 1, label: on },
 ];
 
 export const SCENARIO_FLAGS: readonly ScenarioFlag[] = [
@@ -212,24 +213,24 @@ export const SCENARIO_FLAGS: readonly ScenarioFlag[] = [
     offset: 0x37c6,
     label: "領事館の中に入れない",
     // 🟢 ❓ 移動を拒んだときの表示は要ゲーム内確認
-    note: "1 のとき領事館の中へ移動できず、案内図・地図にも入口の印が出ない（居留地の外門 0x3764 とは別）。大寄せで外国ルートに入れないと 0x3764 と一緒に 1、小公女倒れるで般若党と戦うときも 1。段階が変わると 0 に戻る",
+    note: "入れないとき、領事館の中へ移動できず、案内図・地図にも入口の印が出ない（居留地の外門とは別）。大寄せで外国ルートに入れないと外門と一緒に入れなくなり、小公女倒れるで般若党と戦うときも入れない。段階が変わると入れる状態に戻る",
     values: [
-      { value: 0, label: "0 入れる" },
-      { value: 1, label: "1 入れない" },
+      { value: 0, label: "入れる" },
+      { value: 1, label: "入れない" },
     ],
   },
   {
     offset: 0x3760,
     label: "隠しルートでまだらが味方につく",
     // 🟢 ❓ 何が変わるかの全体は分かっていない
-    note: "1 だと士魂は屈せずでまだらに助け出され（拷問・戦闘なし）、鬼怒川を追えで三姉妹ととぐろが相手になり、まだらが味方につく。剣術大会の準備で 0 に戻る。未実装要素のため、各種ムービーのアニメーションが存在しない。また、三姉妹に取り上げられた荷物が帰ってこなくなるため注意",
+    note: "味方につく状態だと、士魂は屈せずでまだらに助け出され（拷問・戦闘なし）、鬼怒川を追えで三姉妹ととぐろが相手になり、まだらが味方につく。剣術大会の準備でなしに戻る。未実装要素のため、各種ムービーのアニメーションが存在しない。また、三姉妹に取り上げられた荷物が帰ってこなくなるため注意",
     values: OFF_ON("味方につく"),
   },
   {
     offset: 0x37c0,
     label: "黒船の大砲を譲った",
     // 🟢 1 になる場面。🔶 意味に推測が入る
-    note: "大老武断の終わりで 1。黒船の大砲を譲った印。譲った場合、黒船から大砲が消える",
+    note: "大老武断の終わりで譲った状態になる。譲った場合、黒船から大砲が消える",
     values: OFF_ON("譲った"),
   },
 ];
@@ -261,10 +262,8 @@ export function writeScenarioFlag(
   const flag = SCENARIO_FLAGS[index];
   if (!flag) throw new RangeError(`フラグの番号が範囲外です: ${index}`);
   if (!Number.isInteger(value) || value < 0 || value > 0xff)
-    throw new RangeError(`u8 の範囲外です: ${value}`);
+    throw new RangeError(`値が範囲外です: ${value}`);
   if (!opts.advanced && !flag.values.some((v) => v.value === value))
-    throw new RangeError(
-      `${flag.label} に指定できる値は ${flag.values.map((v) => v.value).join("・")} です: ${value}`,
-    );
+    throw new RangeError(`通常モードでは ${flag.label} に指定できない値です`);
   writeU8(bytes, flag.offset, value);
 }

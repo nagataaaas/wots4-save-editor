@@ -34,7 +34,7 @@ import {
   type WeaponBuild,
   type WeaponIdOption,
 } from "./weapon-ids";
-import { formatHex4 } from "@/lib/format";
+
 import { checkLayout } from "./hero";
 
 export const WEAPON_RECORD_BYTES = 0xa0;
@@ -278,7 +278,7 @@ export function readU24(bytes: Uint8Array, offset: number): number {
 
 function writeU24(bytes: Uint8Array, offset: number, value: number): void {
   if (!Number.isInteger(value) || value < 0 || value > 0xffffff)
-    throw new RangeError(`3 B の範囲外です: ${value}`);
+    throw new RangeError("値が範囲外です");
   writeU16(bytes, offset, value & 0xffff);
   writeU8(bytes, offset + 2, value >>> 16);
 }
@@ -334,7 +334,7 @@ export function decodeTitle(raw: number): number | null | undefined {
 
 export function encodeTitle(no: number | null): number {
   if (no === null) return 0xffffff;
-  if (!TITLES.some((t) => t.no === no)) throw new RangeError(`未知の銘です（${no}）`);
+  if (!TITLES.some((t) => t.no === no)) throw new RangeError("未知の銘です");
   return (0x6a + no) | (0x01 << 8) | (no << 16);
 }
 
@@ -375,7 +375,7 @@ export function validateCharms(
   const counts = new Map<number, number>();
   for (const c of charms) {
     if (c === null) continue;
-    if (!charmLabel(c)) return `未知の魅力です（${c}）`;
+    if (!charmLabel(c)) return "未知の魅力です";
     counts.set(c, (counts.get(c) ?? 0) + 1);
   }
   if (counts.size > CHARM_SLOTS) return `魅力は${CHARM_SLOTS}種類までです`;
@@ -396,11 +396,11 @@ function readCharms(bytes: Uint8Array, base: number): Field<(number | null)[]> {
     const id = readU16(bytes, base + i * 4);
     const count = readU16(bytes, base + i * 4 + 2);
     if (id === NO_CHARM) {
-      if (count !== 0) problem = `魅力なしの組に個数（${count}）が入っています`;
+      if (count !== 0) problem = "魅力がないのに個数が入っています";
       continue;
     }
-    if (!charmLabel(id)) problem = `未知の魅力ID です（${formatHex4(id)}）`;
-    else if (count === 0 || count > CHARM_TOTAL_MAX) problem = `魅力の個数が範囲外です（${count}）`;
+    if (!charmLabel(id)) problem = "未知の魅力が付いています";
+    else if (count === 0 || count > CHARM_TOTAL_MAX) problem = "魅力の個数が範囲外です";
     else for (let n = 0; n < count; n++) list.push(id);
   }
   const value: (number | null)[] = [...list];
@@ -432,9 +432,9 @@ export function readWeapon(
   const nameRaw = readUtf16Fixed(bytes, at("name"), WEAPON_NAME_BYTES);
   // レコード全体の妥当性（位置がずれていないか）。名前の終端と魅力で判定する
   const nameProblem = !nameRaw.terminated
-    ? "武器名の終端（0x0000）が見つかりません"
+    ? "武器名の終わりが見つかりません"
     : !nameRaw.paddingClean
-      ? "武器名の終端以降が 0 で埋まっていません"
+      ? "武器名の後ろに余計なデータがあります"
       : hasControlChar(nameRaw.text)
         ? "武器名に制御文字があります"
         : null;
@@ -469,7 +469,7 @@ export function readWeapon(
   }
   const heldTime2 = readU32(bytes, at("heldTime2"));
   if (heldTime2 !== numbers.heldTime.value) {
-    numbers.heldTime.warning = `写し（+0x84）の値（${heldTime2.toLocaleString()}）と違います。書き込むと両方を同じ値にします`;
+    numbers.heldTime.warning = "別の場所に持っている同じ値と食い違っています。書き込むと両方を同じ値にします";
   }
 
   const titleRaw = readU24(bytes, at("title"));
@@ -509,15 +509,15 @@ export function readWeapon(
     const warning = !hit
       ? special && kind !== "blade"
         ? null
-        : `ID 表にない${noun}です。既知の${noun}への変更だけができます` // U-10
+        : `表にない${noun}です。既知の${noun}への変更だけができます` // U-10
       : partName(hit.option).includes("？")
         ? `名前に「？」が付いた ID です。ゲーム内では別の名前で表示されることがあります` // U-13 ゲーム内の名前が未確認
         : xDiffers
-          ? `鞘（X ${formatHex4(sheathValue)}）がこの刃の標準の鞘（${formatHex4(standardX)}）と違います。刃を選び直すと標準の鞘に戻ります`
+          ? "鞘がこの刃の標準の鞘と違います。刃を選び直すと標準の鞘に戻ります"
           : isXUnknown(kind, hit.option)
-            ? `この刃の X（鞘）は不明で、元の値のままです。ゲーム内で分解→組み立てると正しい X になります` // U-3 案B
+            ? "この刃の鞘は不明で、元のままです。ゲーム内で分解→組み立てると正しい鞘になります" // U-3 案B
             : hit.option.xExtended
-              ? `X は規則を延ばして計算した値です。ゲーム内の名前・外観が違うことがあります` // U-3 規則を確かめた範囲の外
+              ? "鞘は計算で求めた値です。ゲーム内の名前・外観が違うことがあります" // U-3 規則を確かめた範囲の外
               : null;
     return f(view, kind === "blade" ? null : specialProblem, warning);
   };
@@ -532,7 +532,7 @@ export function readWeapon(
       nameLength > WEAPON_NAME_MAX_CHARS
         ? `${WEAPON_NAME_MAX_CHARS}文字を超えています（${nameLength}文字）`
         : nameNo >= 0
-          ? `完成武器の名前の番号（${nameNo}）が入っているので、ゲームでは完成武器の名前が表示され、この名前は使われません` // 🟢
+          ? "完成武器の名前が表示されるので、この名前は使われません" // 🟢
           : null,
     ),
     nameNo,
@@ -541,7 +541,7 @@ export function readWeapon(
       ...f(
         weaponId,
         null,
-        weaponIdLabel(weaponId) ? null : `未知の完成武器ID です（${formatHex4(weaponId)}）`,
+        weaponIdLabel(weaponId) ? null : "未知の完成武器です",
       ),
       label: weaponIdLabel(weaponId),
     },
@@ -556,18 +556,18 @@ export function readWeapon(
         titleNo ?? null,
         null,
         titleLabel === null
-          ? `未知の銘のバイト列です（${titleRaw.toString(16).padStart(6, "0")}）`
+          ? "未知の銘が付いています"
           : null,
       ),
       label: titleLabel,
       raw: titleRaw,
     },
     sheath: {
-      ...f(sheathValue, null, sheathLabel ? null : `表にない鞘です（${formatHex4(sheathValue)}）`),
+      ...f(sheathValue, null, sheathLabel ? null : "表にない鞘です"),
       label: sheathLabel,
     },
     weaponType: {
-      ...f(typeValue, null, typeLabel ? null : `未知の武器種です（${typeValue}）`),
+      ...f(typeValue, null, typeLabel ? null : "未知の武器種です"),
       label: typeLabel,
     },
     matchesComplete: matchesCompleteWeapon(bytes, offset, weaponId),
@@ -611,7 +611,7 @@ export function writeWeaponNumber(
 
 /** 完成武器ID（+0x00 の 2 B）だけを書く。名前・パーツは変えない */
 export function writeWeaponId(bytes: Uint8Array, offset: number, id: number): void {
-  if (!weaponIdLabel(id)) throw new RangeError(`未知の完成武器ID です（${formatHex4(id)}）`);
+  if (!weaponIdLabel(id)) throw new RangeError("未知の完成武器です");
   assertEditable(bytes, offset);
   writeU16(bytes, offset + WEAPON_FIELDS.weaponId, id);
 }
@@ -654,7 +654,7 @@ function completeWeaponWords(id: number, build: WeaponBuild): [number, number][]
  */
 export function writeCompleteWeapon(bytes: Uint8Array, offset: number, id: number): void {
   const option = COMPLETE_WEAPONS.find((w) => w.id === id);
-  if (!option) throw new RangeError(`構成が分からない完成武器です（${formatHex4(id)}）`);
+  if (!option) throw new RangeError("構成が分からない完成武器です");
   const view = readWeapon(bytes, offset);
   if (view.problem) throw new RangeError(view.problem);
   for (const [at, value] of completeWeaponWords(option.id, option.build))
@@ -750,7 +750,7 @@ export function writeWeaponPart(
   const view = readWeapon(bytes, offset);
   if (view.problem) throw new RangeError(view.problem);
   const option = partOptions(kind, view.special).find((p) => partKey(p) === key);
-  if (!option) throw new RangeError(`書き込めないパーツです（${key}）`);
+  if (!option) throw new RangeError("書き込めないパーツです");
 
   const id = partId(kind, option.value, option.source);
   if (kind === "grip") return writeU16(bytes, offset + WEAPON_FIELDS.grip, id);
@@ -807,7 +807,7 @@ export function writeWeaponSheath(
   options: AdvancedOptions = {},
 ): void {
   if (!options.advanced) throw new RangeError("鞘は上級者モードでだけ変更できます");
-  if (!SHEATHS.some((s) => s.id === x)) throw new RangeError(`表にない鞘です（${formatHex4(x)}）`);
+  if (!SHEATHS.some((s) => s.id === x)) throw new RangeError("表にない鞘です");
   assertEditable(bytes, offset);
   writeU16(bytes, offset + WEAPON_FIELDS.sheath, x);
 }
@@ -820,7 +820,7 @@ export function writeWeaponType(
   options: AdvancedOptions = {},
 ): void {
   if (!options.advanced) throw new RangeError("武器種は上級者モードでだけ変更できます");
-  if (!WEAPON_TYPES.some((t) => t.id === type)) throw new RangeError(`未知の武器種です（${type}）`);
+  if (!WEAPON_TYPES.some((t) => t.id === type)) throw new RangeError("未知の武器種です");
   assertEditable(bytes, offset);
   writeU16(bytes, offset + WEAPON_FIELDS.weaponType, type);
 }

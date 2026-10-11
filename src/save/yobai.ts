@@ -83,7 +83,7 @@ export const YOBAI_COUNTERS: readonly {
     size: 4,
     label: "段階",
     // 🟢
-    note: "0〜3。夜這い回数 10・45・85 で上がる。高いほど家の中の人が多い場所になりやすい",
+    note: "夜這い回数が 10・45・85 に届くたびに上がる。高いほど家の中の人が多い場所になりやすい",
   },
   {
     offset: 0x13e34,
@@ -215,7 +215,7 @@ export function layoutInfo(layout: number): LayoutInfo | null {
 /** 配置の表示（「町人の家・家の人2人・布団2枚」）。表にない値は 16進数 */
 export function layoutLabel(layout: number): string {
   const r = NIGHT_VISIT_LAYOUT_TABLE[layout as keyof typeof NIGHT_VISIT_LAYOUT_TABLE];
-  return r ? r.name_ja : `配置 0x${layout.toString(16).toUpperCase()}`;
+  return r ? r.name_ja : "不明な配置";
 }
 
 /** 家の人の数（並べ替え用） */
@@ -261,10 +261,10 @@ export const KNOWN_LOOKS: readonly (KnownValue & { sex: "f" | "m"; usedBy: strin
     usedBy: l.used_by,
   }));
 
-/** 名前の表示。🟢 名前の表（npc-names）にない ID は 16進数 */
+/** 名前の表示。🟢 名前の表（npc-names）にない ID は「不明」 */
 export function nameLabel(id: number): string {
   const entry = npcName(id);
-  return entry ? labelOf({ kind: "npc", id: entry.labelId }) : `0x${id.toString(16).toUpperCase()}`;
+  return entry ? labelOf({ kind: "npc", id: entry.labelId }) : "不明";
 }
 
 /** ✅ [U] 血液型（1〜4 は書き換えで確認。5 はさよの「？」） */
@@ -451,20 +451,20 @@ export function validatePersonField(
 ): string | null {
   const size = PROMISE_FIELDS[field].size;
   const max = size === 1 ? 0xff : size === 2 ? 0xffff : 0xffffffff;
-  if (!Number.isInteger(value) || value < 0 || value > max) return `範囲外の値です: ${value}`;
-  if (field === "type" && value === PROMISE_EMPTY) return "0xFFFFFFFF は空きの印なので書けません";
+  if (!Number.isInteger(value) || value < 0 || value > max) return "範囲外の値です";
+  if (field === "type" && value === PROMISE_EMPTY) return "空きを表す値なので書けません";
   if (opts.advanced || value === current) return null;
   const known = knownList(field);
   if (known)
     return known.some((k) => k.value === value)
       ? null
-      : `表にない値です（上級者モードで書けます）: ${value}`;
+      : "表にない値です（上級者モードで書けます）";
   if (field === "age")
     return value <= AGE_NORMAL_MAX || value === AGE_UNKNOWN
       ? null
-      : `通常モードでは 0〜${AGE_NORMAL_MAX} か 255（？）を指定してください: ${value}`;
+      : `通常モードでは 0〜${AGE_NORMAL_MAX} か「？」を指定してください`;
   if (field === "name")
-    return npcName(value) ? null : `名前の表にない ID です（上級者モードで書けます）: ${value}`;
+    return npcName(value) ? null : "名前の表にない名前です（上級者モードで書けます）";
   if (field === "day")
     return value <= DAY_NORMAL_MAX
       ? null
@@ -506,11 +506,11 @@ export function validatePlaceLayout(
   opts: { advanced: boolean },
 ): string | null {
   for (const v of [place, layout])
-    if (!Number.isInteger(v) || v < 0 || v > 0xffff) return `u16 の範囲外です: ${v}`;
+    if (!Number.isInteger(v) || v < 0 || v > 0xffff) return "範囲外の値です";
   if (opts.advanced || (place === current.place && layout === current.layout)) return null;
   return PLACE_LAYOUTS.some((p) => p.place === place && p.layout === layout)
     ? null
-    : `表にある場所と配置の組ではありません（上級者モードで書けます）: 0x${place.toString(16)}・0x${layout.toString(16)}`;
+    : "表にある場所と配置の組ではありません（上級者モードで書けます）";
 }
 
 export function writePromisePlace(

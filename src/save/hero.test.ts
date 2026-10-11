@@ -103,13 +103,13 @@ describe('readHero', () => {
     expect(v.cashbox.warning).toBeNull()
   })
 
-  it('名前の終端がない・終端以降が 0 でない場合は読み取り専用にする', () => {
+  it('名前の終わりがない・その後ろに余計なデータがある場合は読み取り専用にする', () => {
     const b = makeSave()
     b.fill(0x41, HERO_OFFSETS.name, HERO_OFFSETS.name + NAME_BYTES)
-    expect(readHero(b).name.problem).toMatch(/終端/)
+    expect(readHero(b).name.problem).toMatch(/終わり/)
     const c = makeSave()
     c[HERO_OFFSETS.name + NAME_BYTES - 1] = 1
-    expect(readHero(c).name.problem).toMatch(/0 で埋まって/)
+    expect(readHero(c).name.problem).toMatch(/余計なデータ/)
   })
 
   it('クラッシュが報告されている開始地点の値は読み取り専用にする', () => {

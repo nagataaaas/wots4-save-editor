@@ -196,7 +196,7 @@ export function validatePart(
   if (id === -1)
     return advanced || NONE_ALLOWED[kind] ? null : "通常モードでは「なし」にできません";
   const part = findPart(kind, id);
-  if (!part) return `${id} は部品の表にありません`;
+  if (!part) return "部品の表にありません";
   if (part.crash) return "この部品はロードでクラッシュします";
   if (advanced) return null;
   const only = BODY_KIND_PARTS[heroBodyKind];
@@ -298,14 +298,14 @@ export function validateLayer(
 ): string | null {
   if (!advanced) return "層の組み合わせは上級者モードでだけ変更できます";
   if (!Number.isInteger(layer) || layer < 0 || layer >= LAYER_COUNT)
-    return `層は 0〜${LAYER_COUNT - 1} です`;
+    return "指定できない層です";
   if (partId === -1) return "部品が「なし」のときは層を選べません。先に部品を選んでください";
   const part = findPart(kind, partId);
-  if (!part) return `${partId} は${PART_KIND_LABELS[kind]}の表にない部品です`;
+  if (!part) return `${PART_KIND_LABELS[kind]}の表にない部品です`;
   const def = part.layers[layer];
   if (!def) return `この部品には層${layer + 1}がありません`;
   if (value === -1 || def.textures.includes(value)) return null;
-  return `${value} は層${layer + 1}（${def.mesh}）の色違いではありません`;
+  return `層${layer + 1}（${def.mesh}）の色違いではありません`;
 }
 
 /**
@@ -336,7 +336,7 @@ export function layersCustomized(kind: PartKind, part: PartValue): boolean {
 export function validateHairColor(value: number, advanced: boolean): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 255) return "0〜255の整数を入力してください";
   if (!advanced && (value < HAIR_COLOR_MIN || value > HAIR_COLOR_MAX))
-    return `通常モードでは${HAIR_COLOR_MIN}〜${HAIR_COLOR_MAX}を選んでください`;
+    return "通常モードでは名前のある色だけ選べます";
   return null;
 }
 
@@ -357,7 +357,7 @@ export function writeBodyKind(bytes: Uint8Array, value: number, advanced: boolea
   if (!Number.isInteger(value) || value < 0 || value > 255)
     throw new RangeError("0〜255の整数を入力してください");
   if (BODY_KIND_CRASH.includes(value))
-    throw new RangeError(`タイプ ${value}（${bodyKindName(value)}）はロードでクラッシュします`);
+    throw new RangeError(`タイプ「${bodyKindName(value) ?? "不明"}」はロードでクラッシュします`);
   writeU8(bytes, APPEARANCE_PARTS_OFFSETS.bodyKind, value);
 }
 
@@ -372,7 +372,7 @@ const HEIGHT_RATIOS = [0.9, 1, 1.1];
 export function writePerson(bytes: Uint8Array, personId: number): void {
   const view = requireWritable(bytes);
   const person = findPerson(personId);
-  if (!person) throw new RangeError(`${personId} は人物の表にありません`);
+  if (!person) throw new RangeError("人物の表にありません");
   const current = findPerson(view.person);
   const height = readF32(bytes, APPEARANCE_PARTS_OFFSETS.height);
   const ratio = current

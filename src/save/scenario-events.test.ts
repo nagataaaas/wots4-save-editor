@@ -57,7 +57,7 @@ describe('readEvents 🔶 chunks/event-chart', () => {
   it('想定外の値があれば読み取り専用にする', () => {
     const b = makeSave(A_START)
     writeU8(b, EVENT_STATE_OFFSET + 20, 0x40)
-    expect(readEvents(b).problem).toMatch(/添字20/)
+    expect(readEvents(b).problem).toMatch(/想定外/)
   })
 
   it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
@@ -153,7 +153,7 @@ describe('記録の書き込み（✅ [U] FF・04 がチャート表示に効く
 
   it('🔶 記録で見た未確認の値（05：02 copy の再起の望み、03：00 の志士との出会い、00）は、上級者モードの選択肢に出す', () => {
     expect(EVENT_RECORDS_SEEN.map((r) => r.value)).toEqual([0x05, 0x03, 0x00])
-    expect(recordLabel(0x05)).toBe('不明（05。書いてもチャートに出なかった）')
+    expect(recordLabel(0x05)).toBe('不明（書いてもチャートに出ない）')
     // 選択肢を出す値は、上級者モードで書けて、読み込みで想定外にならない
     for (const { value } of EVENT_RECORDS_SEEN) {
       const b = makeSave(A_START)
@@ -192,7 +192,7 @@ describe('一括設定（デバッグ用）', () => {
     // 🟢 84 は名前不明のローラの決意の導入（始まると 04、85 の開始条件が「84 = 04」）
     expect(EVENT_GAP_NOTES[47].name).toBe('剣術大会（幕府）')
     expect(EVENT_GAP_NOTES[50].name).toBe('剣術大会（無所属）')
-    expect(EVENT_GAP_NOTES[50].note).toMatch(/優勝で 04/)
+    expect(EVENT_GAP_NOTES[50].note).toMatch(/優勝で成功/)
     expect(EVENT_GAP_NOTES[67].name).toBe('悲しみのローラ')
     expect(EVENT_GAP_NOTES[84].name).toBe('（名前不明。ローラの決意の導入）')
     expect(EVENT_GAP_INDICES.some((i) => named.has(i))).toBe(false)

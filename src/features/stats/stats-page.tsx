@@ -176,8 +176,8 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
 
   const options: SelectOption[] = entries.map((e) => ({
     value: String(e.index),
-    label: `${e.index} ${e.name}`,
-    keywords: [e.name, String(e.index)],
+    label: e.name,
+    keywords: [e.name],
   }));
 
   const countRow = (scope: ScoreScope) => (
@@ -213,7 +213,7 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
               className="hover:bg-muted rounded border px-1.5 py-0.5"
               onClick={() => setIndex(x.i)}
             >
-              {scoreEntryName(table, x.i) ?? `番号 ${x.i}`} {x.n.toLocaleString()}
+              {scoreEntryName(table, x.i) ?? "不明"} {x.n.toLocaleString()}
             </button>
           ))}
         </div>
@@ -222,7 +222,7 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
         label={table === "arts" ? "技" : "道具"}
         offset={scoreOffset(table, "cycle", index)}
         value={view ? String(index) : null}
-        currentLabel={`番号 ${index}`}
+        currentLabel="不明"
         options={options}
         problem={null}
         onChange={(v) => setIndex(Number(v))}

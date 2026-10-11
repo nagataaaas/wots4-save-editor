@@ -21,7 +21,6 @@ import {
 } from "./item-slot";
 import { labelKeywords, labelOf } from "./master/labels";
 import { ITEMS, ITEM_KIND_LABELS, findItem, type ItemEntry } from "./master/item-names";
-import { formatHex4 } from "@/lib/format";
 
 /** 上級者モード。種別が料理・宿・なし（手に入る経路がない）の ID と、最大数を超える個数を書ける */
 export type ItemBoxOptions = { advanced?: boolean };
@@ -85,7 +84,7 @@ const VALUABLE_IDS = new Set([0x00, 0x29, 0x2a, 0x2b, 0x2c, 0xed, 0xee]);
 const KIND_CAUTION: Record<1 | 2 | 3, string> = {
   1: "料理屋でその場で食べる料理で、道具としては手に入りません",
   2: "宿の部屋で、道具としては手に入りません",
-  3: "手に入る経路がない ID です",
+  3: "手に入る経路がない道具です",
 };
 
 const ALL_KINDS = [0, 1, 2, 3] as const;
@@ -120,12 +119,12 @@ export function itemLabel(id: number): string | null {
 
 /** 書き込める ID。選択肢にある道具か、なし */
 export function validateItemId(id: number, options: ItemBoxOptions = {}): string | null {
-  if (!Number.isInteger(id) || id < 0 || id > 0xffff) return `ID は 0x0000〜0xFFFF です（${id}）`;
+  if (!Number.isInteger(id) || id < 0 || id > 0xffff) return "道具の一覧から選んでください";
   if (id === EMPTY_ID) return null;
-  if (U12_IDS.has(id)) return `${formatHex4(id)} は書くとゲーム内でセーブできなくなる ID です`; // ❓ U-12
-  if (VALUABLE_IDS.has(id)) return `${formatHex4(id)} は重要品の画面で扱う ID です`;
+  if (U12_IDS.has(id)) return "チップ・木札は書くとゲーム内でセーブできなくなるため選べません"; // ❓ U-12
+  if (VALUABLE_IDS.has(id)) return `${itemLabel(id) ?? "この道具"}は重要品の画面で扱います`;
   const it = findItem(id);
-  if (!it) return `道具の一覧にない ID です（${formatHex4(id)}）`;
+  if (!it) return "道具の一覧にない値です";
   if (it.kind !== 0 && !options.advanced) {
     return `${itemDisplayLabel(it)} は種別「${ITEM_KIND_LABELS[it.kind]}」で、上級者モードでだけ書けます`;
   }
@@ -172,7 +171,8 @@ export function itemBoxSlotOffset(area: ItemBoxArea, index: number): number {
 }
 
 const MISSING_MARK_WARNING =
-  "+0x04 が 0x06 ではありません。手持ちではこのままだと店の売却一覧を開くときにゲームが落ちます（[U]）。「修復」で直せます";
+  // +0x04 が 0x06 でない枠。手持ちで売却一覧が落ちたのは [U]
+  "道具として扱えない状態です。このままだと店で売却一覧を開くときにゲームが落ちることがあります。「修復」で直せます";
 
 export function readItemBox(bytes: Uint8Array, area: ItemBoxArea, options: ItemBoxOptions = {}): ItemBoxView {
   const end = area.offset + ITEM_SLOT_BYTES * area.slotCount;
@@ -191,13 +191,13 @@ export function readItemBox(bytes: Uint8Array, area: ItemBoxArea, options: ItemB
       : Math.max(ITEM_COUNT_MAX, item ? area.normalCountMax(item) : 0);
     let problem: string | null = null;
     if (id !== EMPTY_ID && item && count > sanityMax) {
-      problem = `個数が大きすぎます（${count}）。位置がずれている可能性があります`;
+      problem = "個数が大きすぎるため編集できません"; // 位置がずれている可能性
     }
 
     let warning: string | null = null;
     if (id !== EMPTY_ID) {
       if (item && count > area.normalCountMax(item)) {
-        warning = `個数 ${count} は最大数 ${area.normalCountMax(item)} を超えています（上級者モードでだけ書ける値）`;
+        warning = `個数が最大数 ${area.normalCountMax(item)} を超えています（上級者モードでだけ書けます）`;
       }
       if (count === 0) warning = "個数が 0 です";
       if (item && item.kind !== 0) warning = KIND_CAUTION[item.kind];

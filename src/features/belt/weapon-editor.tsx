@@ -2,7 +2,6 @@ import { createElement, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { InfoTip } from "@/components/info-tip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { formatOffset } from "@/lib/format";
 import { WEAPON_FIELDS, type WeaponView } from "@/save/weapon";
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import { charmIcon, titleIcon } from "./effect-icons";
@@ -146,9 +145,7 @@ export function WeaponEditor({
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium">魅力</span>
-            <InfoTip offset={`${formatOffset(base + WEAPON_FIELDS.charms)} から 4 B × 3組`}>
-              同じ魅力は1組にまとめて個数で書きます
-            </InfoTip>
+            <InfoTip offset={base + WEAPON_FIELDS.charms} />
           </div>
           <CharmEditor weapon={weapon} base={base} update={update} />
           {weapon && !charms?.problem && (

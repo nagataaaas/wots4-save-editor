@@ -34,7 +34,7 @@ export const NO_LEFT = 0xff
 export const NO_RIGHT = 0xff
 
 export function beltOffset(index: number): number {
-  if (!Number.isInteger(index) || index < 0 || index >= BELT_COUNT) throw new RangeError(`帯刀の番号が範囲外です: ${index}`)
+  if (!Number.isInteger(index) || index < 0 || index >= BELT_COUNT) throw new RangeError("帯刀の番号が範囲外です")
   return BELT_OFFSET + index * WEAPON_RECORD_BYTES
 }
 
@@ -65,12 +65,12 @@ function readState(bytes: Uint8Array, weapons: readonly WeaponView[], layoutProb
   const dual = readU8(bytes, BELT_STATE.dual)
 
   let problem: string | null = null
-  if (count > BELT_COUNT) problem = `帯刀の本数が範囲外です（${count}）`
-  else if (right !== null && right >= BELT_COUNT) problem = `右手の番号が範囲外です（${right}）`
-  else if (dual > 1) problem = `二刀流の値が想定外です（${dual}）`
-  else if (dual === 0 && leftRaw !== NO_LEFT) problem = `二刀流でないのに左手の番号が入っています（${leftRaw}）`
+  if (count > BELT_COUNT) problem = "帯刀の本数が範囲外です"
+  else if (right !== null && right >= BELT_COUNT) problem = "右手の指定が範囲外です"
+  else if (dual > 1) problem = "二刀流の状態が想定外です"
+  else if (dual === 0 && leftRaw !== NO_LEFT) problem = "二刀流でないのに左手の指定が入っています"
   else if (dual === 1 && right === null) problem = '右手に何も持たずに二刀流になっています'
-  else if (dual === 1 && (leftRaw >= BELT_COUNT || leftRaw === right)) problem = `左手の番号が想定外です（${leftRaw}）`
+  else if (dual === 1 && (leftRaw >= BELT_COUNT || leftRaw === right)) problem = "左手の指定が想定外です"
 
   // 🟢 ロード時の扱いと食い違う点。値はそのまま編集できる
   const warnings: string[] = []
@@ -79,8 +79,8 @@ function readState(bytes: Uint8Array, weapons: readonly WeaponView[], layoutProb
       if (i < count && w.empty) warnings.push(`${i + 1}本目は帯刀の本数（${count}）の内側ですが空きです`)
       if (i >= count && !w.empty) warnings.push(`${i + 1}本目は帯刀の本数（${count}）より後ろなので、ゲームでは読まれません`)
     })
-    if (right !== null && right >= count) warnings.push('右手の番号が帯刀の本数より後ろです。ロード時に右手・左手・二刀流が解除されます')
-    else if (dual === 1 && leftRaw >= count) warnings.push('左手の番号が帯刀の本数より後ろです。ロード時に二刀流が解除されます')
+    if (right !== null && right >= count) warnings.push('右手が帯刀の本数より後ろの武器です。ロード時に右手・左手・二刀流が解除されます')
+    else if (dual === 1 && leftRaw >= count) warnings.push('左手が帯刀の本数より後ろの武器です。ロード時に二刀流が解除されます')
   }
 
   return {
@@ -110,7 +110,7 @@ function editableState(bytes: Uint8Array): BeltView {
 
 /** 🟢 手に持てるのは、帯刀の本数の内側にある空きでない武器 */
 function assertUsable(view: BeltView, index: number, hand: string): void {
-  if (!Number.isInteger(index) || index < 0 || index >= BELT_COUNT) throw new RangeError(`${hand}の番号が範囲外です: ${index}`)
+  if (!Number.isInteger(index) || index < 0 || index >= BELT_COUNT) throw new RangeError(`${hand}の指定が範囲外です`)
   if (view.weapons[index].empty) throw new RangeError(`${index + 1}本目は空きなので${hand}に持てません`)
   if (index >= view.state.count) throw new RangeError(`${index + 1}本目は帯刀の本数（${view.state.count}）より後ろなので${hand}に持てません`)
 }

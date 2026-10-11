@@ -51,9 +51,9 @@ export const FACILITY_FLAGS: readonly FacilityFlag[] = [
     offset: 0x375d,
     label: "病院",
     note:
-      "1 で開く。初期状態は 0（閉）。病院占拠事件の成功で開く。" +
+      "初期状態は閉。病院占拠事件の成功で開く。" +
       "病院廃業の企てで千両箱を奪って報告する・祝 病院開業で千両箱を奪うと閉じる（病院廃業の企てで一行を通すと開いたまま）。" +
-      "西洋医学お断りでは閉じたまま。1 のとき、真ルートの再起の望みで「英国の病院に連れて行こう」が出る",
+      "西洋医学お断りでは閉じたまま。開いているとき、真ルートの再起の望みで「英国の病院に連れて行こう」が出る",
     meaning: "open",
     slots: [
       { label: "幕府・2日目昼", when0: "西洋医学お断り", when1: "病院廃業の企て" },
@@ -65,9 +65,9 @@ export const FACILITY_FLAGS: readonly FacilityFlag[] = [
     offset: 0x375e,
     label: "カジノ",
     note:
-      "1 で閉じる。初期状態は 0（開）。カジノを破壊せよの成功で閉じる（寝返ると開いたまま）。" +
+      "初期状態は開。カジノを破壊せよの成功で閉じる（寝返ると開いたまま）。" +
       "カジノ再建を急げの成功、カジノ再建断固阻止で寝返る・伯爵から逃げると開く。" +
-      "真ルートでは前の周回から引き継いだ値のまま2日目夕を迎え、1 なら伯爵に刺激を、0 なら運命のルーレットが起きる",
+      "真ルートでは前の周回から引き継いだ状態のまま2日目夕を迎え、閉じていれば伯爵に刺激を、開いていれば運命のルーレットが起きる",
     meaning: "close",
     slots: [
       { label: "外国・2日目夜", when0: "ライジングサン", when1: "カジノ再建を急げ" },
@@ -80,9 +80,9 @@ export const FACILITY_FLAGS: readonly FacilityFlag[] = [
     offset: 0x375f,
     label: "語学所",
     note:
-      "1 で開く。初期状態は 0（閉）。講師ご到着で講師を送り届けると開く。" +
+      "初期状態は閉。講師ご到着で講師を送り届けると開く。" +
       "語学所開設で講師が殺される・講師を亡き者にで講師を斬ると閉じる（講師を亡き者にで逃げ切られると開いたまま）。" +
-      "語学無用では閉じたまま。1 のとき、真ルートの闇討ちで「赤城のようになりたくないのか？」が出る",
+      "語学無用では閉じたまま。開いているとき、真ルートの闇討ちで「赤城のようになりたくないのか？」が出る",
     meaning: "open",
     slots: [
       { label: "幕府・2日目夕", when0: "講師ご到着", when1: "語学所開設" },
@@ -103,7 +103,7 @@ export function readFacilityFlags(bytes: Uint8Array): FacilityFlagsView {
   const values = FACILITY_FLAGS.map((f) => readU8(bytes, f.offset));
   const bad = values.findIndex((v) => v > 1);
   const problem =
-    bad >= 0 ? `${FACILITY_FLAGS[bad].label} の値が 0・1 以外です（${values[bad]}）` : null;
+    bad >= 0 ? `${FACILITY_FLAGS[bad].label}が開閉のどちらでもない状態になっています` : null;
   return { values, problem: layoutProblem ?? problem };
 }
 
@@ -131,7 +131,8 @@ export function writeFacilityFlag(
   const flag = FACILITY_FLAGS[index];
   if (!flag) throw new RangeError(`フラグの番号が範囲外です: ${index}`);
   if (!Number.isInteger(value) || value < 0 || value > 0xff)
-    throw new RangeError(`u8 の範囲外です: ${value}`);
-  if (!opts.advanced && value > 1) throw new RangeError(`0 か 1 を指定してください: ${value}`);
+    throw new RangeError(`値が範囲外です: ${value}`);
+  if (!opts.advanced && value > 1)
+    throw new RangeError("通常モードでは開閉のどちらかを指定してください");
   writeU8(bytes, flag.offset, value);
 }

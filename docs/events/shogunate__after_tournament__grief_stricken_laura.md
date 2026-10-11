@@ -13,7 +13,7 @@ faction:
     内容は外国ルートの[鬼怒川の魔手](foreigners__after_tournament__kinugawas_evil_influence.md)と[夕暮れの船上](foreigners__after_kinugawa__twilight_on_board.md)の間の場面にあたる。
 
 summary: >-
-  ゲーム内では起きず、状態 0x36EB はどの場面でも書き換わらない（未実装とみられる）。
+  ゲーム内では起きず、このイベントの状態はどの場面でも変わらない（未実装とみられる）。
   残っている内容は、夜の領事館でローラが流れた血と伯爵の死を嘆き、英国への帰還命令を告げたうえで、傍にいてほしいと主人公に頼む場面。
 
 timing:

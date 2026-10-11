@@ -26,13 +26,11 @@ import type { SelectOption } from "@/components/select-options";
 import {
   ACCEPT_OFFSETS,
   acceptOccupation,
-  acceptRuleOf,
   readAccepted,
   releaseOccupation,
   seriesAcceptOf,
   writeSeriesState,
   type AcceptedView,
-  type FlagWrite,
 } from "@/save/occupation-accept";
 import { TIME_SLOTS } from "@/save/scenario-date";
 import {
@@ -233,7 +231,7 @@ function SummaryCard({
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <Label>クリアしたなりわいの数</Label>
-            <InfoTip offset={OCCUPATION_CLEAR_COUNT_OFFSET}>u16。状態の表の合計に等しい</InfoTip>
+            <InfoTip offset={OCCUPATION_CLEAR_COUNT_OFFSET}>下の記録のクリア回数の合計と同じ値にしておきます</InfoTip>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-sm">{view ? view.clearCount : "—"}</span>
@@ -259,9 +257,6 @@ function SummaryCard({
   );
 }
 
-const flagWritesText = (writes: readonly FlagWrite[]) =>
-  writes.map((w) => `番号 ${w.flag}＝${w.value}`).join("、");
-
 /**
  * 受注中のなりわい。受注・外す書き込みは occupation-accept.ts（✅ 受注中の情報、🟢 受注で書くフラグ、🔶 外すときのフラグ）。
  * ❓ 書き込みのゲーム内の反映は要ゲーム内確認
@@ -274,12 +269,11 @@ function AcceptRow({
   write: (m: (b: Uint8Array) => void) => void;
 }) {
   const entry = view && view.id !== 0 ? occupationById(view.id) : undefined;
-  const rule = view && view.id !== 0 ? acceptRuleOf(view.id) : null;
   const options: SelectOption[] = [
     { value: "0", label: "受注していない" },
     ...OCCUPATIONS.map((o) => ({
       value: String(o.id),
-      label: `${o.id} ${entryLabel(o)}`,
+      label: entryLabel(o),
       group: groupLabelOf(o.id),
       keywords: [...entryKeywords(o), o.client, o.type],
     })),
@@ -289,14 +283,14 @@ function AcceptRow({
       label="受注中のなりわい"
       offset={ACCEPT_OFFSETS.id}
       value={view === null ? null : String(view.id)}
-      currentLabel={view ? `${view.id} 表にない ID` : undefined}
+      currentLabel={view ? "不明" : undefined}
       options={options}
       problem={view?.problem ?? null}
-      searchPlaceholder="名前・依頼主・ID"
-      note={`${formatOffset(ACCEPT_OFFSETS.id)} u16 ID、${formatOffset(ACCEPT_OFFSETS.day)} u16 受注した日（経過日数）、${formatOffset(ACCEPT_OFFSETS.slot)} u8 受注した時間帯、${formatOffset(ACCEPT_OFFSETS.active)} u8 受注中だけ FF。受注すると、今の日・時間帯で受注したことにし、連続なりわいなら依頼主がそのとき書くなりわいのフラグ（野戸仏の2件目なら番号 4＝21 など）も書きます。記録が「まだ出ていない」なら「出た・未クリア」にします。ほかのなりわいを受注中なら、先にそれを外します（連続なりわいは「n 件目を依頼する前」に戻す）`}
+      searchPlaceholder="名前・依頼主"
+      note="受注すると、今の日・時間帯で受注したことにします。連続なりわいなら、依頼主の次の依頼も進みます。記録が「まだ出ていない」なら「出た・未クリア」にします。ほかのなりわいを受注中なら、先にそれを外します（連続なりわいは「n 件目を依頼する前」に戻ります）"
       hint={
         view && view.id !== 0
-          ? `${view.day + 1}日目 ${TIME_SLOTS[view.slot] ?? `時間帯 ${view.slot}`}に受注${entry ? `（${entry.client}）` : ""}${rule?.onAccept.length ? `。受注中のフラグ：${flagWritesText(rule.onAccept)}` : ""}${rule?.onRelease.length ? `。外すと ${flagWritesText(rule.onRelease)}` : ""}`
+          ? `${view.day + 1}日目 ${TIME_SLOTS[view.slot] ?? "不明な時間帯"}に受注${entry ? `（${entry.client}）` : ""}`
           : "受注すると、今の日・時間帯で受注したことになります"
       }
       onChange={(v) =>
@@ -318,7 +312,7 @@ const SERIES_CARD_FLAGS = [4, 5, 6, 7, 25, 26] as const;
 /** 治安なりわい（番号 8・9） */
 const SECURITY_CARD_FLAGS = [8, 9] as const;
 
-const flagOffsetTip = `${formatOffset(OCCUPATION_FLAG_START)} + 番号（u8）`;
+const flagOffsetTip = `${formatOffset(OCCUPATION_FLAG_START)} + 番号`;
 
 function SeriesCard({ view, write }: FlagCardProps) {
   return (
@@ -331,12 +325,10 @@ function SeriesCard({ view, write }: FlagCardProps) {
       }
       description={
         <>
-          【岡っ引き】野戸仏・【極道】小鳩・【泥棒】泥棒さん・【宿無し】おっつぁんの4種類。十の位が何件目か、一の位が
-          {/* ✅ 野戸仏の 20・100 は書き込みで確認。ほかの欄の書き込みの反映は ❓ 要ゲーム内確認 */}
-          0＝受注前・1＝受注済です。野戸仏は、20 で2件目「督促状」から始まり、100
-          で完了になります。
-          4種類をすべて終えると四天王の話が進み、最終なりわいにつながります。連続なりわいを 100
-          にしても、最終なりわいが 99 未満なら新しい依頼は出ません。
+          【岡っ引き】野戸仏・【極道】小鳩・【泥棒】泥棒さん・【宿無し】おっつぁんの4種類。何件目の依頼まで進んだか、その依頼を受注する前か受注済かを選べます。
+          {/* ✅ 野戸仏の 20・100 は書き込みで確認。ほかの欄の書き込みの反映は ❓ 要ゲーム内確認。十の位が何件目、一の位が 0＝受注前・1＝受注済 */}
+          4種類をすべて終えると四天王の話が進み、最終なりわいにつながります。連続なりわいを終えても、最終なりわいが
+          終わっていなければ新しい依頼は出ません。
         </>
       }
       contentClassName="grid gap-4 sm:grid-cols-2"
@@ -376,11 +368,11 @@ function DlcCard({ view, write }: FlagCardProps) {
   return (
     <CollapsibleCard
       title="DLC なりわい"
-      extra={<InfoTip offset={flagOffsetTip}>なりわいのフラグ 27〜31</InfoTip>}
+      extra={<InfoTip offset={flagOffsetTip}>なりわいのフラグ</InfoTip>}
       description={
         <>
-          人斬り 汁部理人と組んで受けるなりわい（209〜212）です。汁部は 209 → 212 のうち最初に「受注前」の仕事を頼み、すべて「成功」ならもう頼みません。
-          持っている DLC によって、頼まれるのは 209・210 か 211・212 だけになります。受注は上の「受注中のなりわい」の欄で書きます。
+          人斬り 汁部理人と組んで受けるなりわいです。汁部は{jobList([209, 210, 211, 212])}のうち最初に「受注前」の仕事を頼み、すべて「成功」ならもう頼みません。
+          持っている DLC によって、頼まれるのは{jobList([209, 210], "・")}か{jobList([211, 212], "・")}だけになります。受注は上の「受注中のなりわい」の欄で書きます。
         </>
       }
       contentClassName="grid gap-4 sm:grid-cols-2"
@@ -405,16 +397,16 @@ function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { f
   const isSeries = flag >= 4 && flag <= 7;
   return (
     <SelectRow
-      label={`${info.name}（番号 ${flag}）`}
+      label={info.name ?? ""}
       offset={offset}
       // ❓ 書き込みの反映は要ゲーム内確認（番号 4 は受注の書き込みだけ）
       value={current === null ? null : String(current)}
-      currentLabel={current === null ? undefined : `${current} 不明`}
+      currentLabel={current === null ? undefined : "不明"}
       options={isSeries
         ? seriesOptions(flag, info.values ?? [], jobs ?? [])
         : (info.values ?? []).map((s) => ({
           value: String(s.value),
-          label: `${s.value} ${s.label}`,
+          label: s.label,
           group: s.group,
         }))}
       problem={view?.problem ?? null}
@@ -436,7 +428,7 @@ function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { f
 }
 
 const jobList = (ids: readonly number[], separator = " → ") =>
-  ids.map((id) => `${id} ${occupationLabelById(id)}`).join(separator);
+  ids.map((id) => occupationLabelById(id) ?? "不明").join(separator);
 
 // ---------------------------------------------------------------- 周回をまたぐ記録
 
@@ -457,7 +449,7 @@ function StatesCard({
   const [sync, setSync] = useState(true);
 
   const rows = OCCUPATIONS.filter((o) => group === "all" || occupationGroupOf(o.id) === group)
-    .filter((o) => matches(query, ...entryKeywords(o), o.client, o.type, String(o.id)))
+    .filter((o) => matches(query, ...entryKeywords(o), o.client, o.type))
     .filter((o) => filter === "all" || !view || kindOf(view.states[o.id]) === filter);
   const counts = { hidden: 0, open: 0, cleared: 0 };
   if (view) for (const o of OCCUPATIONS) counts[kindOf(view.states[o.id])]++;
@@ -479,11 +471,9 @@ function StatesCard({
     <CollapsibleCard
       title="なりわいの記録（周回をまたぐ統計）"
       extra={
-        <InfoTip offset={`${formatOffset(OCCUPATION_STATE_OFFSET)} + ID×2（u16 × 256）`}>
-          {/* 🔶 0 の意味と、FFFF・0 への書き込みは要ゲーム内確認。1 でクリア済みになるのは ✅（今宵の虎徹で確認） */}
-          FFFF＝まだ出ていない、0＝出た・未クリア、1
-          以上＝これまでの周回を通してクリアした回数。 1
-          にするとなりわい一覧でクリア済みになります
+        <InfoTip offset={formatOffset(OCCUPATION_STATE_OFFSET)}>
+          {/* 🔶 0 の意味と、FFFF・0 への書き込みは要ゲーム内確認。1 でクリア済みになるのは ✅（今宵の虎徹で確認）。FFFF＝まだ出ていない、0＝出た・未クリア、1 以上＝クリアした回数 */}
+          まだ出ていない・出た・未クリア・クリア済み（クリアした回数）のどれかです。クリア回数を入れるとなりわい一覧でクリア済みになります
         </InfoTip>
       }
       description={
@@ -498,7 +488,7 @@ function StatesCard({
         <div className="flex flex-wrap items-center gap-2">
           <Input
             className="w-56"
-            placeholder="名前・依頼主・ID で絞り込み"
+            placeholder="名前・依頼主で絞り込み"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -621,7 +611,6 @@ function StateRow({
       )}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-muted-foreground font-mono text-xs">{o.id}</span>
           <span className="text-sm"><GameLabel occupation={o.labelId} /></span>
           <InfoTip offset={offset}>
             <GameLabel occupation={o.labelId} lang="en" />
@@ -677,7 +666,7 @@ function CountInput({
   function commit() {
     const text = draft.trim();
     if (!/^\d+$/.test(text) || Number(text) < 1) {
-      setError("1 以上の整数");
+      setError("1 以上の整数で入力してください");
       return;
     }
     const v = Number(text);

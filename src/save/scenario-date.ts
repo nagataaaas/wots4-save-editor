@@ -113,11 +113,11 @@ export function readDate(bytes: Uint8Array): DateView {
   const day = dayIndex + 1
 
   let problem: string | null = null
-  if (slot >= TIME_SLOTS.length) problem = `0x0014 の時間帯が想定外です（${slot}）`
-  else if (!(PENDING_VALUES as readonly number[]).includes(pending)) problem = `0x0012 の値が想定外です（${pending}）`
+  if (slot >= TIME_SLOTS.length) problem = '時間帯が想定外の状態になっています'
+  else if (!(PENDING_VALUES as readonly number[]).includes(pending)) problem = '時間帯を進める保留量が想定外の状態になっています'
 
   const warnings: string[] = []
-  if (!stageOf(stage)) warnings.push(`段階（0x0010）が一覧にない値です（${stage}）`)
+  if (!stageOf(stage)) warnings.push('段階が一覧にない状態です')
   if (pending !== 0) warnings.push('時間帯を進める保留量が入っています。エリア移動・ロードで時間帯が1つ進みます')
   if (day > DAY_SEEN_MAX) warnings.push(`${DAY_SEEN_MAX}日目より後の値は確かめていません`)
 
@@ -154,7 +154,7 @@ export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts:
   editable(bytes)
   const problem = validateDay(day, opts)
   if (problem) throw new RangeError(problem)
-  if (!Number.isInteger(slot) || slot < 0 || slot >= TIME_SLOTS.length) throw new RangeError(`時間帯が範囲外です: ${slot}`)
+  if (!Number.isInteger(slot) || slot < 0 || slot >= TIME_SLOTS.length) throw new RangeError('時間帯が範囲外です')
   writeU8(bytes, DATE_OFFSETS.slot, slot)
   writeU16(bytes, DATE_OFFSETS.dayIndex, day - 1)
 }
@@ -167,7 +167,7 @@ export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts:
  */
 export function writeStage(bytes: Uint8Array, value: number): void {
   editable(bytes)
-  if (!stageOf(value)) throw new RangeError(`一覧にない段階です: ${value}`)
+  if (!stageOf(value)) throw new RangeError('一覧にない段階です')
   if (value === STAGE_PROLOGUE)
     throw new RangeError('序章にするときは「新しい周回を始める」か「難易度と主人公設定を行えるようにする」を使ってください')
   writeU16(bytes, DATE_OFFSETS.dayTime, value)
@@ -176,6 +176,6 @@ export function writeStage(bytes: Uint8Array, value: number): void {
 /** 保留量（0x0012）の1バイトだけを書く。0 か 10 だけ（✅ [U] 10 → 0 で反映を確認） */
 export function writePending(bytes: Uint8Array, value: number): void {
   editable(bytes)
-  if (!(PENDING_VALUES as readonly number[]).includes(value)) throw new RangeError(`保留量は ${PENDING_VALUES.join('・')} のどれかです: ${value}`)
+  if (!(PENDING_VALUES as readonly number[]).includes(value)) throw new RangeError('保留量は「なし」か「あり」のどちらかです')
   writeU8(bytes, DATE_OFFSETS.pending, value)
 }

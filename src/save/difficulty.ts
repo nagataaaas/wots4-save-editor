@@ -36,9 +36,9 @@ export function readDifficulty(bytes: Uint8Array): DifficultyView {
   const value = readU8(bytes, DIFFICULTY_OFFSET)
   const known = DIFFICULTIES.find((d) => d.value === value)
   const warnings: string[] = []
-  if (!known) warnings.push(`難易度の値が想定（0〜3）の外です（${value}）`)
+  if (!known) warnings.push('難易度が想定外の状態になっています')
   // 🟢 0x0001〜0x0007 は詰め物。0 でなければ書き換えられたファイルとして知らせる
-  if (bytes.subarray(1, 8).some((b) => b !== 0)) warnings.push('0x0001〜0x0007（使われていない詰め物）が 0 ではありません')
+  if (bytes.subarray(1, 8).some((b) => b !== 0)) warnings.push('使われていないはずの領域に値が入っています')
   return {
     value,
     label: known?.label ?? null,
@@ -51,6 +51,6 @@ export function readDifficulty(bytes: Uint8Array): DifficultyView {
 export function writeDifficulty(bytes: Uint8Array, value: number): void {
   const view = readDifficulty(bytes)
   if (view.problem) throw new RangeError(view.problem)
-  if (!DIFFICULTIES.some((d) => d.value === value)) throw new RangeError(`難易度は 0〜3 のどれかです: ${value}`)
+  if (!DIFFICULTIES.some((d) => d.value === value)) throw new RangeError(`難易度を選び直してください: ${value}`)
   writeU8(bytes, DIFFICULTY_OFFSET, value)
 }

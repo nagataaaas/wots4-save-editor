@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { formatHex2, formatOffset } from "@/lib/format";
+import { formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
   ACCESSORIES,
@@ -135,9 +135,9 @@ export function AccessoriesPage() {
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             装飾品
-            <InfoTip offset={`${formatOffset(ACCESSORY_FLAGS_OFFSET)} + ID（1 B × ${ACCESSORY_COUNT}）`}>
+            <InfoTip offset={`${formatOffset(ACCESSORY_FLAGS_OFFSET)}〜${formatOffset(ACCESSORY_FLAGS_OFFSET + ACCESSORY_COUNT - 1)}`}>
               {/* ✅ 書き換えが装飾品設定に反映されることを確認。並びがゲーム内の一覧の順なのは 🔶 */}
-              ID ごとの所持フラグ。書き換えは装飾品設定に反映されます
+              書き換えは装飾品設定に反映されます
             </InfoTip>
           </CardTitle>
           <CardDescription>
@@ -210,7 +210,6 @@ export function AccessoriesPage() {
                     onChange={(on) => write((b) => writeAccessoryFlag(b, a.id, on ? 1 : 0, { advanced }))}
                   />
                   <ItemInformation
-                    id={a.id}
                     name={a.ja}
                     category={ACCESSORY_PART_LABELS[a.part] ?? a.part}
                     description={a.descJa}
@@ -219,7 +218,7 @@ export function AccessoriesPage() {
                   >
                       {a.dlc !== null && (
                         <Badge variant="outline" className="font-normal">
-                          {ACCESSORY_DLC_LABELS[a.dlc] ?? `DLC ${a.dlc}`}
+                          {ACCESSORY_DLC_LABELS[a.dlc] ?? "DLC"}
                         </Badge>
                       )}
                       {!a.shop && a.dlc === null && (
@@ -228,16 +227,16 @@ export function AccessoriesPage() {
                         </Badge>
                       )}
                   </ItemInformation>
-                  {value > 1 && <span className="text-destructive font-mono text-xs">{formatHex2(value)}</span>}
+                  {value > 1 && <span className="text-destructive text-xs">状態不明</span>}
                 </div>
               );
             })}
           </div>
         </CardContent>
       </Card>
-      {/* ❓ 2 以上の値の意味は未確認 */}
+      {/* 各装飾品の 1 B だけを書き換える（0＝なし、1＝所持）。❓ 2 以上の値の意味は未確認 */}
       <p className="text-muted-foreground text-xs">
-        各装飾品の 1 B だけを書き換えます（0＝なし、1＝所持）。2 以上の値は、上級者モードでだけ残したまま切り替えられます。
+        状態不明の装飾品は、上級者モードでだけ切り替えられます。
         「特典」は店で買えず、特典解除で手に入る物です。
       </p>
     </div>
@@ -284,7 +283,6 @@ function UnlockStateRows({
               onChange={(v) => write((b) => writeUnlockState(b, u.id, v, { advanced }))}
             />
             <ItemInformation
-              id={u.id}
               name={info.ja}
               category={u.category}
               description={info.descriptionJa}
@@ -317,13 +315,13 @@ function AppearanceUnlocksCard() {
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             顔・髪型などの特典
-            <InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)} + 特典番号（1 B）`}>
+            <InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)}〜${formatOffset(UNLOCK_STATES_OFFSET + UNLOCK_COUNT - 1)}`}>
               {/* 🔶 U-17：多くの番号の対応と書き込みの反映は要ゲーム内確認。J.J. の顔は ✅ 解除前後の差分で対応を確認（書き込みは ❓） */}
-              顔・髪型・服・肌の色・髪の色・体型は特典解除の状態列で管理します。
+              顔・髪型・服・肌の色・髪の色・体型の特典は、特典解除の画面でも切り替えられます。
             </InfoTip>
           </CardTitle>
           <CardDescription>
-            主人公設定で使う特典の状態です。0＝非表示、1＝表示中・未取得、2＝取得済み。
+            主人公設定で使う特典の状態です。クリックするたびに 非表示 → 未取得 → 取得済み の順に切り替わります。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -373,13 +371,12 @@ export function AppearancePage() {
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             容姿の服
-            <InfoTip offset={`${formatOffset(APPEARANCE_OFFSET)}〜${formatOffset(APPEARANCE_OFFSET + APPEARANCE_BYTES - 1)}`}>
-              {/* APPEARANCE_CONFIRMED の番号は ✅ ゲーム内で書き換えを確認、ほかは 🟢 */}
-              服の番号ごとに1ビット（番号 n は {formatOffset(APPEARANCE_OFFSET)} + n/8 の bit n%8）。
-            </InfoTip>
+            {/* 服の番号ごとに1ビット（番号 n は APPEARANCE_OFFSET + n/8 の bit n%8）。
+                APPEARANCE_CONFIRMED の番号は ✅ ゲーム内で書き換えを確認、ほかは 🟢 */}
+            <InfoTip offset={`${formatOffset(APPEARANCE_OFFSET)}〜${formatOffset(APPEARANCE_OFFSET + APPEARANCE_BYTES - 1)}`} />
           </CardTitle>
           <CardDescription>
-            容姿設定で選べる服の解放ビットを切り替えます。上の特典とは別の領域です。解放 {onCount} / {CLOTHES.length}
+            容姿設定で選べる服を解放済みにするかを切り替えます。解放 {onCount} / {CLOTHES.length}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -421,7 +418,7 @@ export function AppearancePage() {
           </div>
           <div className="flex flex-col divide-y">
             {rows.map((c) => {
-              const { offset, mask } = appearanceBitPosition(c.id);
+              const { offset } = appearanceBitPosition(c.id); // ビット位置（bit 番号）は画面に出さない
               return (
                 <div key={c.id} className="flex items-center gap-3 py-1.5">
                   <OwnershipStateButton
@@ -432,16 +429,15 @@ export function AppearancePage() {
                     onChange={(on) => write((b) => writeAppearanceBit(b, c.id, on))}
                   />
                   <ItemInformation
-                    id={c.id}
                     name={c.ja}
                     category={c.category}
                     description={c.descJa || "説明なし"}
-                    offset={`${formatOffset(offset)} bit${Math.log2(mask)}`}
+                    offset={offset}
                     condition={APPEARANCE_REWARDS[c.id]}
                   >
                     {c.dlc !== null && (
                       <Badge variant="outline" className="font-normal">
-                        {ACCESSORY_DLC_LABELS[c.dlc] ?? `DLC ${c.dlc}`}
+                        {ACCESSORY_DLC_LABELS[c.dlc] ?? "DLC"}
                       </Badge>
                     )}
                   </ItemInformation>
@@ -451,9 +447,7 @@ export function AppearancePage() {
           </div>
         </CardContent>
       </Card>
-      <p className="text-muted-foreground text-xs">
-        各服のビットだけを書き換えます（同じバイトのほかのビットは変えません）。服のない番号（47 など）のビットは扱いません。
-      </p>
+      {/* 各服のビットだけを書き換える（同じバイトのほかのビットは変えない）。服のない番号（47 など）のビットは扱わない */}
     </div>
   );
 }
@@ -479,10 +473,9 @@ export function UnlocksPage() {
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             特典解除
-            <InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)} + 番号（1 B × ${UNLOCK_COUNT}）`}>
-              {/* 先頭16件と J.J. の顔は ✅ ゲーム内の状態と照合、ライフルの免許は ✅ 2 への変更の反映を確認。ほかは 🔶 U-17（書き込みは要ゲーム内確認） */}
-              0＝非表示、1＝表示中・未取得、2＝取得済み。
-            </InfoTip>
+            {/* 0＝非表示、1＝表示中・未取得、2＝取得済み。
+                先頭16件と J.J. の顔は ✅ ゲーム内の状態と照合、ライフルの免許は ✅ 2 への変更の反映を確認。ほかは 🔶 U-17（書き込みは要ゲーム内確認） */}
+            <InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)}〜${formatOffset(UNLOCK_STATES_OFFSET + UNLOCK_COUNT - 1)}`} />
           </CardTitle>
           <CardDescription>
             特典ごとの状態を切り替えます。
@@ -508,17 +501,17 @@ export function UnlocksPage() {
             </Select>
             {([0, 1, 2] as const).map((v) => (
               <Button key={v} variant="outline" size="sm" disabled={readOnly} onClick={() => write((b) => writeUnlockStates(b, ids, v))}>
-                表示中を {UNLOCK_STATE_LABELS[v]}
+                表示中を{UNLOCK_STATE_LABELS[v]}にする
               </Button>
             ))}
           </div>
           <UnlockStateRows rows={rows} view={view} readOnly={readOnly} advanced={advanced} write={write} />
         </CardContent>
       </Card>
-      {/* ❓ ライフルの免許以外の書き込み後の反映は要ゲーム内確認。装飾品の所持フラグと連動するかは ❓ */}
+      {/* 各特典の 1 B だけを書き換える。値は 0〜2 の範囲。
+          ❓ ライフルの免許以外の書き込み後の反映は要ゲーム内確認。装飾品の所持フラグと連動するかは ❓ */}
       <p className="text-muted-foreground text-xs">
-        各特典の 1 B だけを書き換えます。値は 0〜2 の範囲です。
-        装飾品の特典を解除済みにしても、装飾品の所持フラグは変えません。
+        装飾品の特典を取得済みにしても、装飾品の所持は変わりません。所持は「装飾品」の画面で切り替えます。
       </p>
     </div>
   );

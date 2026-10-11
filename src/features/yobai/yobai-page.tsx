@@ -8,7 +8,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { formatHex2, formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
   AGE_NORMAL_MAX,
@@ -23,14 +22,10 @@ import {
   PROMISE_LAYOUT_REL,
   PROMISE_OFFSET,
   PROMISE_PLACE_REL,
-  PARTNER_COUNTS_OFFSET,
   RECORD_CAPACITY,
-  RECORDS_OFFSET,
-  RECORD_BUILDING_REL,
   promiseFieldOffset,
   readYobai,
   recordFieldOffset,
-  recordOffset,
   layoutHeadcount,
   layoutLabel,
   layoutsForPlace,
@@ -73,57 +68,71 @@ import {
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-const hex = (v: number) => `0x${v.toString(16).toUpperCase()}`;
-
 /** 10進数か 0x 付きの16進数 */
 function parseNumber(input: string, validate: (v: number) => string | null): ParseResult<number> {
   const s = input.trim();
   let value: number;
   if (/^0x[0-9a-f]+$/i.test(s)) value = Number.parseInt(s.slice(2), 16);
   else if (/^\d+$/.test(s)) value = Number(s);
-  else return { ok: false, error: "整数（10進数、または 0x 付きの16進数）を入力してください" };
+  else return { ok: false, error: "整数を入力してください" };
   const error = validate(value);
   return error ? { ok: false, error } : { ok: true, value };
 }
 
 const placeLabel = (place: number) => PLACES[place] ?? "名前なし";
 
+/**
+ * 同じ表示名が複数あるとき、同じ見出しの中で区別できるように「（その n）」を付ける。
+ * 場所と配置は表の名前が重なる行がある（番号を画面に出さないための代わり）
+ */
+function numberDuplicates(options: SelectOption[]): SelectOption[] {
+  const total = new Map<string, number>();
+  for (const o of options) total.set(o.label, (total.get(o.label) ?? 0) + 1);
+  const seen = new Map<string, number>();
+  return options.map((o) => {
+    if ((total.get(o.label) ?? 0) <= 1) return o;
+    const n = (seen.get(o.label) ?? 0) + 1;
+    seen.set(o.label, n);
+    return { ...o, label: `${o.label}（その${n}）` };
+  });
+}
+
 /** 場所の選択肢1つ。地区（「港」「町」など、場所の名前の最初の語）ごとにまとめる */
 const placeOption = (place: number): SelectOption => ({
   value: String(place),
-  label: `${formatHex2(place)} ${placeLabel(place)}`,
+  label: placeLabel(place),
   group: placeLabel(place).split(/[ 　]/)[0],
 });
 
+/** 場所の選択肢（名前が重なる場所には「（その n）」を付ける） */
+const placeOptionsOf = (places: readonly number[]): SelectOption[] =>
+  numberDuplicates(places.map(placeOption));
+
 /** 🟢 約束で使われる場所（00〜22 の全部） */
-const placeOptions: SelectOption[] = [...new Set(PLACE_LAYOUTS.map((p) => p.place))].map(
-  placeOption,
-);
+const placeOptions: SelectOption[] = placeOptionsOf([
+  ...new Set(PLACE_LAYOUTS.map((p) => p.place)),
+]);
 
 /** 配置の説明（欄の注記）。家の種類・家の人・犬・布団と座標の組は 🟢、ほかの配置で布団が宙に浮くなどは ✅ */
 const LAYOUT_NOTE =
-  "+0x0A。夜這いの場の家の種類・家の人・犬・布団と、その座標の組。家の中の人は配置だけで決まる（家の人の見た目は家の種類ごとの組から選ばれ、強さは同じ）。" +
+  "夜這いの場の家の種類・家の人・犬・布団と、その座標の組。家の中の人は配置だけで決まる（家の人の見た目は家の種類ごとの組から選ばれ、強さは同じ）。" +
   "場所ごとに使える配置が決まっていて、ほかの配置にすると布団が宙に浮いたり壁にめり込んだりする";
 
-/** 配置の選択肢1つ。家の種類と人数で表示する */
-function layoutOption(layout: number, extra?: string): SelectOption {
-  return {
-    value: String(layout),
-    label: `${layoutLabel(layout)}（配置 ${formatHex2(layout)}${extra ? `・${extra}` : ""}）`,
-  };
-}
+/** 配置の選択肢（家の種類と人数で表示する。名前が重なる配置には「（その n）」を付ける） */
+const layoutOptionsOf = (layouts: readonly number[]): SelectOption[] =>
+  numberDuplicates(layouts.map((l) => ({ value: String(l), label: layoutLabel(l) })));
 
 const knownOptions = (known: readonly KnownValue[]): SelectOption[] =>
-  known.map((k) => ({ value: String(k.value), label: `${k.label}（${hex(k.value)}）` }));
+  known.map((k) => ({ value: String(k.value), label: k.label }));
 
 /** 🟢 セリフと戦闘力：約束できる相手の種類。名前のある相手 → 町の女性 → 町の男性の順 */
 const TYPE_KINDS = ["名前のある相手", "町の人（女性）", "町の人（男性）"] as const;
 const typeOptions: SelectOption[] = TYPE_KINDS.flatMap((kind) =>
   KNOWN_TYPES.filter((t) => t.kind === kind).map((t) => ({
     value: String(t.value),
-    label: `${t.label}（${hex(t.value)}）`,
+    label: t.label,
     group: kind,
-    keywords: [t.label, hex(t.value), String(t.value)],
+    keywords: [t.label],
   })),
 );
 
@@ -131,19 +140,19 @@ const typeOptions: SelectOption[] = TYPE_KINDS.flatMap((kind) =>
 const lookOptions: SelectOption[] = (["f", "m"] as const).flatMap((sex) =>
   KNOWN_LOOKS.filter((l) => l.sex === sex).map((l) => ({
     value: String(l.value),
-    label: `${l.label}（${hex(l.value)}）`,
+    label: l.label,
     group: sex === "f" ? "女性" : "男性",
-    keywords: [l.label, l.usedBy, hex(l.value), String(l.value)],
+    keywords: [l.label, l.usedBy],
   })),
 );
 
 /** 🟢 名前の表の全件。区分ごとにまとめ、英語名でも検索できるようにする */
-const nameOptions: SelectOption[] = NPC_NAMES.map((n) => ({
+const nameOptions: SelectOption[] = numberDuplicates(NPC_NAMES.map((n) => ({
   value: String(n.id),
-  label: `${npcLabel(n.labelId)}（${hex(n.id)}）`,
+  label: npcLabel(n.labelId),
   group: npcNameGroup(n.id),
-  keywords: [...labelKeywords({ kind: "npc", id: n.labelId }), String(n.id), hex(n.id)],
-}));
+  keywords: labelKeywords({ kind: "npc", id: n.labelId }),
+})));
 
 /**
  * 人物の項目ごとの表示。確度：名前・見た目と声・相手の種類・年齢・血液型の書き換えの反映は ✅。
@@ -163,40 +172,40 @@ const PERSON_FIELDS: Record<
     label: "名前",
     options: nameOptions,
     search: true,
-    note: "名前の ID。はるなをさよの値にすると、名前がさよになる。約束の画面に職業は出ない。町の人の名前は「町の人の名前」から、相手の性別に合わせて選ばれる",
+    note: "はるなをさよにすると、名前がさよになる。約束の画面に職業は出ない。町の人の名前は「町の人の名前」から、相手の性別に合わせて選ばれる",
   },
   look: {
     label: "見た目と声",
     options: lookOptions,
     search: true,
-    note: "見た目（モデル）と声。町の人の約束では、町で出会った相手の見た目が入る。はるなをさよの値にすると、見た目と声がさよになる。台詞・強さ・名前は変わらない。番号は主人公設定の人物と同じ。声は見た目の顔で決まり、多くの見た目が同じ声を使う。ただし相手の種類が万由・千佳・百合のときは、声は種類のまま",
+    note: "見た目（モデル）と声。町の人の約束では、町で出会った相手の見た目が入る。はるなをさよにすると、見た目と声がさよになる。台詞・強さ・名前は変わらない。見た目の選択肢は主人公設定の人物と同じ。声は見た目の顔で決まり、多くの見た目が同じ声を使う。ただし相手の種類が万由・千佳・百合のときは、声は種類のまま",
   },
   type: {
     label: "相手の種類（セリフと戦闘力）",
     options: typeOptions,
     search: true,
-    note: "町の人の種類。台詞と強さが決まる（はるなをさよの値にすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなる。見た目・声・名前は変わらない）。多くの種類が同じ会話を使い、強さは種類ごとに違う。名前のある相手の種類にすると、夜這いのあとその人の夜這い回数が増える",
+    note: "町の人の種類。台詞と強さが決まる（はるなをさよにすると、台詞がさよの「・・・」になり、体力・攻撃力が高くなる。見た目・声・名前は変わらない）。多くの種類が同じ会話を使い、強さは種類ごとに違う。名前のある相手の種類にすると、夜這いのあとその人の夜這い回数が増える",
   },
   age: {
     label: "年齢",
     options: null,
-    note: "0x30（48）にすると48歳と表示される。255 は「？」（さよ）",
+    note: "「？」はさよの表示",
   },
   blood: {
     label: "血液型",
     options: knownOptions(BLOOD_TYPES),
-    note: "1＝A、2＝B、3＝O、4＝AB。5 は「？」（さよ）",
+    note: "「？」はさよの表示",
   },
   day: {
     label: "夜這いした日",
     options: null,
-    note: "記録の +0x0C。経過日数（1日目＝0）。約束した日と同じ日になる。画面では「N日目」で表示する",
+    note: "約束した日と同じ日になる",
   },
 };
 
 function hintFor(field: EditableField, advanced: boolean): string | undefined {
   if (field === "age")
-    return advanced ? "0〜255（255＝？）" : `0〜${AGE_NORMAL_MAX}、または 255（？）`;
+    return advanced ? "0〜255（255 で「？」）" : `0〜${AGE_NORMAL_MAX}、または「？」`;
   if (field === "day") return advanced ? "1〜65536日目" : `1〜${DAY_NORMAL_MAX + 1}日目`;
   return undefined;
 }
@@ -268,13 +277,11 @@ function PersonFieldEditor({
       label={spec.label}
       offset={offset}
       value={current === null ? null : String(current)}
-      currentLabel={current === null ? undefined : `${hex(current)} 不明`}
+      currentLabel={current === null ? undefined : "不明"}
       options={spec.options}
       problem={problem}
       note={spec.note}
-      searchPlaceholder={
-        field === "name" ? "名前・英語名・ID で検索" : "名前・町の人の種類・ID で検索"
-      }
+      searchPlaceholder={field === "name" ? "名前・英語名で検索" : "名前・町の人の種類で検索"}
       onChange={(v) => apply(Number(v))}
     />
   ) : (
@@ -282,7 +289,7 @@ function PersonFieldEditor({
       label={spec.label}
       offset={offset}
       value={current === null ? null : String(current)}
-      currentLabel={current === null ? undefined : `${hex(current)} 不明`}
+      currentLabel={current === null ? undefined : "不明"}
       options={spec.options}
       problem={problem}
       note={spec.note}
@@ -292,7 +299,7 @@ function PersonFieldEditor({
 }
 
 /**
- * 場所（+0x08）と配置（+0x0A）。配置はその場所で使える配置（🟢 PLACE_LAYOUTS）だけを、家の中の人数で選ぶ。
+ * 場所（約束の枠の +0x08）と配置（+0x0A）。配置はその場所で使える配置（🟢 PLACE_LAYOUTS）だけを、家の中の人数で選ぶ。
  * 場所を変えると、今の配置がその場所で使えなければ、家の中の人がいちばん少ない配置にする
  */
 function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
@@ -307,11 +314,11 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem
         label="場所"
         offset={PROMISE_OFFSET + PROMISE_PLACE_REL}
         value={String(promise.place)}
-        currentLabel={`${formatHex2(promise.place)} 名前なし`}
+        currentLabel="名前なし"
         options={placeOptions}
         problem={problem}
         // ✅ 扉とマップの書き換えの反映を確認
-        note="+0x08。夜這いに入る扉と、その先のマップ。場所を変えると、配置もその場所で使えるものに合わせる"
+        note="夜這いに入る扉と、その先のマップ。場所を変えると、配置もその場所で使えるものに合わせる"
         onChange={(v) => {
           const place = Number(v);
           const next = layoutsForPlace(place);
@@ -323,8 +330,8 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem
         label="配置（家の中の人）"
         offset={PROMISE_OFFSET + PROMISE_LAYOUT_REL}
         value={String(promise.layout)}
-        currentLabel={`${layoutLabel(promise.layout)}（配置 ${formatHex2(promise.layout)}。この場所では使われない配置）`}
-        options={layouts.map((l) => layoutOption(l))}
+        currentLabel={`${layoutLabel(promise.layout)}（この場所では使われない配置）`}
+        options={layoutOptionsOf(layouts)}
         problem={problem}
         warning={
           valid
@@ -334,7 +341,7 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem
         hint={
           layouts.length <= 1
             ? "この場所で使える配置は1つだけです"
-            : `この場所で使える ${layouts.length} 通り`
+            : `この場所で使える配置は ${layouts.length} 通りです`
         }
         note={LAYOUT_NOTE}
         onChange={(v) =>
@@ -346,7 +353,7 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView; problem
 }
 
 /**
- * 相手の種類（+0x04）。名前のある相手の種類にしたとき、場所と配置がその相手のもの（組の表の行）と違えば、合わせるボタンを出す
+ * 相手の種類（約束の枠の +0x04）。名前のある相手の種類にしたとき、場所と配置がその相手のもの（組の表の行）と違えば、合わせるボタンを出す
  */
 function TypeEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
   const { save, update } = useSave();
@@ -363,12 +370,12 @@ function TypeEditor({ promise, problem }: { promise: PromiseView; problem: strin
         label={PERSON_FIELDS.type.label}
         offset={promiseFieldOffset("type")}
         value={String(promise.type)}
-        currentLabel={`${hex(promise.type)} 約束できる相手の表にない種類`}
+        currentLabel="約束できる相手の表にない種類"
         options={typeOptions}
         problem={problem}
         warning={death}
         note={PERSON_FIELDS.type.note}
-        searchPlaceholder="名前・町の人の種類・ID で検索"
+        searchPlaceholder="名前・町の人の種類で検索"
         onChange={(v) => update((b) => writePromiseField(b, "type", Number(v), { advanced }))}
       />
       {!problem && away && (
@@ -389,7 +396,7 @@ function TypeEditor({ promise, problem }: { promise: PromiseView; problem: strin
 }
 
 /**
- * 約束した日（+0x28）。🟢 場面が変わるたびに今日の経過日数と比べ、違えばすっぽかしで消える。
+ * 約束した日（+0x28、経過日数で 1日目＝0）。🟢 場面が変わるたびに今日の経過日数と比べ、違えばすっぽかしで消える。
  * 「N日目」で入力する。今日でなければ警告を出す
  */
 function DayEditor({ promise, problem }: { promise: PromiseView; problem: string | null }) {
@@ -422,7 +429,7 @@ function DayEditor({ promise, problem }: { promise: PromiseView; problem: string
           : `今日（${today + 1}日目）ではないので、次に場面が変わるとすっぽかしで消えます`
       }
       hint={`${hintFor("day", advanced)}。今日は ${today + 1}日目`}
-      note="+0x28。約束した日の経過日数（1日目＝0）。画面では「N日目」で入力する。場面が変わるたびに今日と比べ、違えば「夜這いの約束をすっぽかしてしまった…」で約束が消える"
+      note="場面が変わるたびに今日と比べ、違えば「夜這いの約束をすっぽかしてしまった…」で約束が消える"
     />
   );
 }
@@ -476,16 +483,14 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
   // （この相手の組にない組を選ぶと、組はそのままで場所と配置だけを上書きする）
   const { place, layout } = specPlace(spec);
   const rowPlaces = [...new Set(rows.map((r) => r.place))].sort((a, b) => a - b);
-  const placeChoices = advanced ? placeOptions : rowPlaces.map(placeOption);
+  const placeChoices = advanced ? placeOptions : placeOptionsOf(rowPlaces);
   const rowFor = (p: number, l: number) => rows.find((r) => r.place === p && r.layout === l);
-  const layoutChoices = (
-    advanced ? layoutsForPlace(place) : rows.filter((r) => r.place === place).map((r) => r.layout)
-  )
-    .sort((a, b) => layoutHeadcount(a) - layoutHeadcount(b) || a - b)
-    .map((l) => {
-      const r = rowFor(place, l);
-      return layoutOption(l, r?.stage != null ? `段階 ${r.stage}` : undefined);
-    });
+  const layoutChoices = layoutOptionsOf(
+    (advanced
+      ? layoutsForPlace(place)
+      : rows.filter((r) => r.place === place).map((r) => r.layout)
+    ).sort((a, b) => layoutHeadcount(a) - layoutHeadcount(b) || a - b),
+  );
   /** 場所と配置を選ぶ。この相手の組にあればその組、なければ今の組のまま上書き */
   const choose = (p: number, l: number) => {
     const r = rowFor(p, l);
@@ -516,8 +521,8 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
             options={typeOptions}
             problem={blocked}
             warning={death}
-            searchPlaceholder="名前・町の人の種類・ID で検索"
-            note="約束の枠の +0x04。場所と配置の組はこれで決まる。選ぶと、名前・見た目と声・年齢・血液型は、ゲームがその種類で選ぶ候補の値になる（そのあと別々に変えられる）"
+            searchPlaceholder="名前・町の人の種類で検索"
+            note="場所と配置の組はこれで決まる。選ぶと、名前・見た目と声・年齢・血液型は、ゲームがその種類で選ぶ候補の値になる（そのあと別々に変えられる）"
             onChange={(v) => {
               setError(null);
               setSpec(defaultSpec(promisePartner(Number(v))!, stage));
@@ -541,10 +546,10 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
             advanced
               ? "全部の場所から選べます（上級者モード）"
               : partner.kind === "town"
-                ? `この種類で、いまの段階（${stage}）以下の組がある場所`
+                ? "この種類で、いまの段階以下の組がある場所"
                 : "名前のある相手は場所が決まっています（上級者モードで変えられます）"
           }
-          note="+0x08。夜這いに入る扉と、その先のマップ"
+          note="夜這いに入る扉と、その先のマップ"
           onChange={(v) => chooseAt(Number(v))}
         />
         <div className="sm:col-span-2">
@@ -570,7 +575,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
           value={String(spec.name)}
           options={nameOptions}
           problem={blocked}
-          searchPlaceholder="名前・英語名・ID で検索"
+          searchPlaceholder="名前・英語名で検索"
           onChange={(v) => set({ name: Number(v) })}
         />
         <SearchSelectRow
@@ -579,7 +584,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
           value={String(spec.look)}
           options={lookOptions}
           problem={blocked}
-          searchPlaceholder="名前・町の人の種類・ID で検索"
+          searchPlaceholder="名前・町の人の種類で検索"
           onChange={(v) => set({ look: Number(v) })}
         />
         <SelectRow
@@ -640,10 +645,9 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">夜の約束</CardTitle>
         <CardDescription>
-          {formatOffset(PROMISE_OFFSET)} から 0x2C
-          B。約束中の相手の種類・場所・名前・見た目・年齢などを書き換えます。
+          約束中の相手の種類・場所・名前・見た目・年齢などを書き換えます。
           相手の種類（セリフと戦闘力）・名前・見た目と声は別々に決まるので、組み合わせを変えられます。
-          約束がないとき（+0x04 が 0xFFFFFFFF）は、新しく約束を作れます。
+          約束がないときは、新しく約束を作れます。
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -681,9 +685,6 @@ function RecordRow({ record, problem }: { record: RecordView; problem: string | 
     <div className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0">
       <p className="text-sm font-medium">
         {record.index + 1}件目：{name}
-        <span className="text-muted-foreground ml-2 font-mono text-xs">
-          {formatOffset(recordOffset(record.index))}　入った建物 {hex(record.building)}
-        </span>
       </p>
       <div className="grid gap-4 sm:grid-cols-3">
         {RECORD_ORDER.map((field) => (
@@ -710,11 +711,10 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
       title="夜這いの記録"
       description={
         <>
-          {formatOffset(RECORDS_OFFSET)} から 16 B × {RECORD_CAPACITY}{" "}
-          件。夜這いのたびに、最初の空いている件に書かれます （
+          夜這いのたびに、最初の空いている件に書かれます（最大 {RECORD_CAPACITY} 件。
           {view ? `今は ${view.count} 件` : "未読み込み"}。周回を始めると全部消えます）。
           今ある記録の項目だけを書き換えます（記録を足したり消したりする機能はありません）。
-          見た目と声は記録に残りません。+0x08 の入った建物の番号は表示だけです。
+          見た目と声は記録に残りません。
         </>
       }
       contentClassName="flex flex-col divide-y"
@@ -742,8 +742,7 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
       title="夜這いの約束の条件"
       description={
         <>
-          朱美・ローラ・三姉妹・メリンダと夜這いの約束をするための好感度とポイントです（
-          {formatOffset(0x3792)}〜{formatOffset(0x3797)}）。
+          朱美・ローラ・三姉妹・メリンダと夜這いの約束をするための好感度とポイントです。
           約束そのものはゲームの中で、条件を満たした場面を通って作ります。
         </>
       }
@@ -767,7 +766,7 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
             note={p.note}
             warning={
               current !== null && current > POINT_NORMAL_MAX
-                ? `通常の進行では見ない値です（${current}）`
+                ? "通常の進行では見ない大きさの値です"
                 : null
             }
           />
@@ -784,24 +783,24 @@ function CountersCard({ view }: { view: YobaiView | null }) {
       description={
         <>
           {/* ✅ 約束の画面の「夜這い回数」は 0x137EC */}
-          夜這いが終わるたびに増える値です。約束の画面の「夜這い回数」は {formatOffset(0x137ec)}
-          です。
-          夜這い回数と相手ごとの回数は周回で消えず、記録・段階・愛の証の回数は周回で消えるので、記録の数と合わないことがあります。
+          夜這いが終わるたびに増える値です。
+          夜這い回数と相手ごとの回数は周回で消えず、記録と愛の証の回数は周回で消えるので、記録の数と合わないことがあります。
         </>
       }
       contentClassName="flex flex-col gap-4 text-sm"
     >
       <div className="grid gap-2 sm:grid-cols-2">
-        {view?.counters.map((c) => (
+        {/* 🟢 段階（0x13E30）はゲーム内で数字として見えない内部の値なので出さない */}
+        {view?.counters.filter((c) => c.offset !== 0x13e30).map((c) => (
           <p key={c.offset}>
-            {c.label}（<span className="font-mono">{formatOffset(c.offset)}</span>）：{c.value}
+            {c.label}：{c.value}
             <span className="text-muted-foreground ml-2 text-xs">{c.note}</span>
           </p>
         ))}
       </div>
       <div>
         <p className="mb-2">
-          相手ごとの夜這い回数（{formatOffset(PARTNER_COUNTS_OFFSET)}〜、u32）
+          相手ごとの夜這い回数
           <span className="text-muted-foreground ml-2 text-xs">
             特別な相手14人。さよと町の人は数えない
           </span>
@@ -810,9 +809,6 @@ function CountersCard({ view }: { view: YobaiView | null }) {
           {view?.partners.map((p) => (
             <p key={p.offset}>
               {p.label}：{p.value}
-              <span className="text-muted-foreground ml-1 font-mono text-xs">
-                {formatOffset(p.offset)}
-              </span>
             </p>
           ))}
         </div>
@@ -883,12 +879,7 @@ export function YobaiPage() {
       <RecordsCard key={`${k}-records`} view={view} />
       <CountersCard view={view} />
 
-      <p className="text-muted-foreground text-xs">
-        約束の枠の
-        +0x00（約束したときの段階）・+0x02（まとまり）・+0x0C〜+0x1B（意味の分からない範囲）・+0x26〜+0x2B（初めての説明を見たかのビットなど）は、約束を作るとき以外は書き換えません。
-        {` `}記録の +0x08（入った建物）は {formatOffset(RECORDS_OFFSET + RECORD_BUILDING_REL)} から
-        16 B 刻みです。
-      </p>
+      {/* 約束の枠の +0x00（約束したときの段階）・+0x02（まとまり）・+0x0C〜+0x1B・+0x26〜+0x2B は、約束を作るとき以外は書き換えない。記録の +0x08 は入った建物で表示しない */}
     </div>
   );
 }

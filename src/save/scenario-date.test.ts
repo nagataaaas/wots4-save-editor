@@ -85,13 +85,13 @@ describe('readDate chunks/date-location', () => {
   it('時間帯（0x0014）が 0〜2 の外なら読み取り専用にする', () => {
     const b = makeSave(SEEN.day1Evening)
     writeU8(b, DATE_OFFSETS.slot, 3)
-    expect(readDate(b).problem).toMatch(/0x0014/)
+    expect(readDate(b).problem).toMatch(/時間帯/)
   })
 
   it('保留量が 0・10 以外なら読み取り専用にする', () => {
     const b = makeSave(SEEN.day1Evening)
     writeU8(b, DATE_OFFSETS.pending, 5)
-    expect(readDate(b).problem).toMatch(/0x0012/)
+    expect(readDate(b).problem).toMatch(/保留量/)
   })
 
   it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {

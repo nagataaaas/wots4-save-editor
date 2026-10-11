@@ -103,9 +103,9 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
   })
 
   it('🟢 ビットを外すだけでは生き返らない人物（重要人物・寿司屋・薬屋）には一緒に戻す値を示す（要ゲーム内確認）', () => {
-    expect(reviveNote(11)).toMatch(/0x374F/)
-    expect(reviveNote(22)).toMatch(/0x375A/)
-    expect(reviveNote(23)).toMatch(/0x375B/)
+    // 重要人物（p 10〜23）は 0x3744 + p の人物の状態も戻す。アドレスは画面に出さない
+    for (const p of [11, 22, 23]) expect(reviveNote(p)).toMatch(/人物の状態/)
+    for (const p of [11, 22, 23, 30, 55]) expect(reviveNote(p)).not.toMatch(/0x/)
     expect(reviveNote(30)).toMatch(/人物の状態/)
     expect(reviveNote(55)).toMatch(/人物の状態/)
     expect(reviveNote(62)).toBeNull()
@@ -167,8 +167,7 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
     expect(note.note).toContain('流派の段そのものではない')
     expect(note.note).toContain('目録の入手や技の習得は反映されない')
     // 🔶 100 の使われる場面は未確認なので、通常モードには出さない。
-    expect(note.note).toContain('100 は通常の会話をしない値') // 🔶 使われる場面は未確認
-    expect(() => writeTownsfolk(makeSave(), 0x0129, 100, { advanced: false })).toThrow(RangeError)
+        expect(() => writeTownsfolk(makeSave(), 0x0129, 100, { advanced: false })).toThrow(RangeError)
     for (const { value } of note.values!) {
       const b = makeSave()
       b[0x0128] = 0xa5

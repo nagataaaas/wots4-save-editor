@@ -37,7 +37,7 @@ export const MARKET_OTHERS = [
 export const MARKET_END = 0x45f3b
 
 export function marketWeaponOffset(index: number): number {
-  if (!Number.isInteger(index) || index < 0 || index >= MARKET_WEAPON_SLOTS) throw new RangeError(`流通の武器の番号が範囲外です: ${index}`)
+  if (!Number.isInteger(index) || index < 0 || index >= MARKET_WEAPON_SLOTS) throw new RangeError("流通の武器の番号が範囲外です")
   return MARKET_WEAPON_OFFSET + index * MARKET_WEAPON_BYTES
 }
 

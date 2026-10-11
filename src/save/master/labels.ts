@@ -39,8 +39,9 @@ export function labelOf(ref: LabelRef, lang: Language = "ja", fallback?: string)
   return label[lang] || label.ja;
 }
 
-export function unknownLabel(ref: LabelRef): string {
-  return `不明（${ref.kind}:${Number(ref.id)}）`;
+/** 表にない ID の表示。ID は画面に出さない（生の値は「生データ」画面で見る） */
+export function unknownLabel(_ref: LabelRef): string {
+  return "不明";
 }
 
 /** 検索に使う語（日本語・英語・読み）。表にない ID は空 */
@@ -79,7 +80,7 @@ export const nameOf = {
 /** ノードの名前。イベントの名前と違う名前を持つノード（町の薬師 など）はその名前 */
 export function chartNodeLabel(
   node: Pick<ChartNodeEntry, "id" | "labelId">,
-  fallback = `ノード ${node.id}`,
+  fallback = "不明",
   lang: Language = "ja",
 ): string {
   const own = CHART_NODE_OWN_LABELS.get(node.id);

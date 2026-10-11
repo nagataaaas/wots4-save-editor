@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { WeaponPanel } from "@/features/belt/belt-page";
-import { formatHex4, formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import {
   MARKET_ELAPSED,
@@ -29,8 +28,6 @@ function destination(type: number): string {
   if (type === 1) return "槍泥棒が持つ";
   return "落し物屋に並ぶ";
 }
-
-const hexBytes = (b: Uint8Array) => [...b].map((v) => v.toString(16).toUpperCase().padStart(2, "0")).join(" ");
 
 /** 流通中の武器・道具・部品（🟢）。読み取り専用 */
 export function MarketWeaponsPage() {
@@ -76,9 +73,8 @@ export function MarketWeaponsPage() {
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             流通
-            <InfoTip offset={`${formatOffset(MARKET_WEAPON_OFFSET)}〜`}>
-              武器は 0xA4 B × {MARKET_WEAPON_SLOTS} 件（武器レコード＋持っている町の人の番号）。続けて道具・刃・鍔・柄の記録があります。
-            </InfoTip>
+            <InfoTip offset={MARKET_WEAPON_OFFSET} />
+            {/* 武器は 0xA4 B × MARKET_WEAPON_SLOTS 件（武器レコード＋持っている町の人の番号）。続けて道具・刃・鍔・柄の記録 */}
             <Badge variant="outline" className="font-normal">読み取り専用</Badge>
           </CardTitle>
           {/* 🟢 周回の終わりの変化と確率。確率はゲーム内では未確認（要ゲーム内確認） */}
@@ -153,7 +149,7 @@ function MarketWeaponItem({ entry }: { entry: MarketWeaponEntry }) {
         {entry.index + 1}件目
         <InfoTip offset={entry.offset} />
         <Badge variant="secondary" className="font-normal">
-          {weapon.weaponType.label ?? `武器種 ${type}`}・{destination(type)}
+          {weapon.weaponType.label ?? "武器種不明"}・{destination(type)}
         </Badge>
       </div>
       <WeaponPanel weapon={weapon} />
@@ -165,8 +161,8 @@ function MarketWeaponItem({ entry }: { entry: MarketWeaponEntry }) {
         </div>
         <div className="flex items-center gap-2">
           <dt className="text-muted-foreground">持っている町の人</dt>
-          <dd>{holder === null ? "なし" : `番号 ${holder}`}</dd>
-          <InfoTip offset={entry.offset + MARKET_HOLDER}>場面を読み込むたびに選び直されます。</InfoTip>
+          <dd>{holder === null ? "なし" : "いる"}</dd>
+          <InfoTip offset={entry.offset + MARKET_HOLDER} />
         </div>
         <div className="flex items-center gap-2 sm:col-span-2">
           <dt className="text-muted-foreground">次の周回の終わり</dt>
@@ -191,26 +187,23 @@ function OtherTable({ summary }: { summary: MarketOtherSummary }) {
         <thead className="text-muted-foreground text-left text-xs">
           <tr className="border-b">
             <th className="py-1 pr-3 font-normal">件目</th>
-            <th className="py-1 pr-3 font-normal">位置</th>
             <th className="py-1 pr-3 font-normal">名前</th>
             {isItem && <th className="py-1 pr-3 font-normal">個数</th>}
             <th className="py-1 pr-3 font-normal">流通に入ってから</th>
-            {/* ❓ 残りのバイトの意味 */}
-            <th className="py-1 font-normal">残りのバイト</th>
           </tr>
         </thead>
         <tbody>
           {summary.entries.map((e) => (
             <tr key={e.index} className="border-b last:border-b-0">
-              <td className="py-1 pr-3">{e.index + 1}</td>
-              <td className="py-1 pr-3 font-mono text-xs">{formatOffset(e.offset)}</td>
+              <td className="flex items-center gap-1 py-1 pr-3">
+                {e.index + 1}
+                <InfoTip offset={e.offset} />
+              </td>
               <td className="py-1 pr-3">
-                {e.label ?? <span className="text-amber-600 dark:text-amber-400">表にない ID</span>}
-                <span className="text-muted-foreground ml-2 font-mono text-xs">{formatHex4(e.id)}</span>
+                {e.label ?? <span className="text-amber-600 dark:text-amber-400">表にない</span>}
               </td>
               {isItem && <td className="py-1 pr-3">{e.count}</td>}
               <td className="py-1 pr-3">{e.elapsed} 周</td>
-              <td className="text-muted-foreground py-1 font-mono text-xs">{hexBytes(e.rest)}</td>
             </tr>
           ))}
         </tbody>

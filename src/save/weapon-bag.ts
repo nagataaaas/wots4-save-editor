@@ -13,7 +13,7 @@ export const WEAPON_BAG_OFFSET = 0xa6b0 // ✅ [TS][I-2][I-3] の 0xA6AA ＋ �
 export const WEAPON_BAG_COUNT = 10
 
 export function weaponBagOffset(index: number): number {
-  if (!Number.isInteger(index) || index < 0 || index >= WEAPON_BAG_COUNT) throw new RangeError(`武器袋の番号が範囲外です: ${index}`)
+  if (!Number.isInteger(index) || index < 0 || index >= WEAPON_BAG_COUNT) throw new RangeError("武器袋の番号が範囲外です")
   return WEAPON_BAG_OFFSET + index * WEAPON_RECORD_BYTES
 }
 

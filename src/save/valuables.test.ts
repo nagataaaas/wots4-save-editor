@@ -206,7 +206,7 @@ describe('❓ U-14：ID調査モード', () => {
     expect(() => writeValuable(b, 5, 0x30, 1)).toThrow()
     const inv = readValuables(b, { investigate: true })
     expect(inv.slots[2]).toMatchObject({ label: 'チラシ', idWritable: true })
-    expect(inv.slots[2].warning).toContain('重要品ではない ID')
+    expect(inv.slots[2].warning).toContain('重要品ではありません')
   })
 
   it('空き枠だけに候補 ID を個数 1 で入れ、既存の枠は変えない', () => {

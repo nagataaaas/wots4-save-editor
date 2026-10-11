@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatHex2 as hex2 } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import {
@@ -265,7 +264,7 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
         <div className="flex flex-wrap items-center gap-2">
           <Label>難易度と主人公設定</Label>
           <InfoTip offset={DATE_OFFSETS.dayTime}>
-            段階 0x0010（u16）だけを 0 にします。ほかのバイトは変えません。0 から元の段階に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください
+            次のロードで難易度と主人公の設定に進む状態にします。元の状態に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください
           </InfoTip>
         </div>
         <Button
@@ -300,9 +299,9 @@ function LocationCard({
   const warning = currentLoc?.warning;
   // Base UI の Select はトリガーに出す名前を items から引く
   const locationItems: Record<string, string> = {};
-  for (const l of selectableLocations) locationItems[String(l.value)] = `${hex2(l.value)} ${l.label}${l.warning ? " ⚠" : ""}`;
+  for (const l of selectableLocations) locationItems[String(l.value)] = `${l.label}${l.warning ? " ⚠" : ""}`;
   if (!isSelectable && current !== null)
-    locationItems[String(current)] = `${hex2(current)} ${currentLoc?.label ?? "未調査"}（現在の値）`;
+    locationItems[String(current)] = `${currentLoc?.label ?? "不明"}（現在の値）`;
 
   return (
     <Card>
@@ -338,12 +337,12 @@ function LocationCard({
           <SelectContent>
             {!isSelectable && current !== null && (
               <SelectItem value={String(current)} disabled>
-                {hex2(current)} {currentLoc?.label ?? "未調査"}（現在の値）
+                {currentLoc?.label ?? "不明"}（現在の値）
               </SelectItem>
             )}
             {selectableLocations.map((l) => (
               <SelectItem key={l.value} value={String(l.value)}>
-                {hex2(l.value)} {l.label}
+                {l.label}
                 {l.warning && " ⚠"}
               </SelectItem>
             ))}

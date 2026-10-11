@@ -2,7 +2,6 @@ import { FieldRow, type ParseResult } from "@/components/field-row";
 import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
-import { formatOffset } from "@/lib/format";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { usePartOrder } from "@/lib/part-order-context";
 import {
@@ -52,7 +51,7 @@ import {
   weaponIdName,
 } from "@/save/weapon-ids";
 import { OverrideRow, SwitchRow } from "./weapon-rows";
-import { NONE, hex, type WeaponUpdate } from "./weapon-ui";
+import { NONE, type WeaponUpdate } from "./weapon-ui";
 
 // 帯刀・武器袋・刀箪笥で共通の、武器レコード1件分の編集欄。
 
@@ -79,18 +78,18 @@ const NUMBER_NOTES: Partial<Record<NumberKey, string>> = {
   kills: "4万を超えると表示が崩れる報告あり",
   tsumaKills: "斬殺数と同じ上限にしている",
   durabilityRecovery: "上限はエディタの目安",
-  heldTime: "メニュー画面は数えない。同じ値の写し（+0x84）も一緒に書く",
+  heldTime: "メニュー画面は数えない",
 };
 
 const PART_LABELS: Record<PartKind, string> = { blade: "刃", guard: "鍔", grip: "柄" };
 
 const WEAPON_ID_OPTIONS: SelectOption[] = WEAPON_IDS.map((w) => ({
   value: String(w.id),
-  label: `${weaponIdName(w)}（${hex(w.id, 4)}）`,
+  label: weaponIdName(w),
 }));
 const TYPE_OPTIONS: SelectOption[] = WEAPON_TYPES.map((t) => ({
   value: String(t.id),
-  label: `${t.label}（${t.id}）`,
+  label: t.label,
 }));
 // 鞘も刀・槍に分ける（ユーザー判断 2026-10-05）。鞘なし（0xFFFF）はどちらにも入れず先頭に置く
 const SHEATH_OPTIONS: SelectOption[] = [...SHEATHS]
@@ -182,9 +181,9 @@ export function useWeaponRows({
     const options = list.map((p) => {
       const name = partName(p);
       const label = isXUnknown(kind, p)
-        ? `${name}（X 不明・要分解→組み立て）`
+        ? `${name}（鞘が不明・要分解→組み立て）`
         : p.xExtended
-          ? `${name}（X は計算値）` // 🔶 X は規則から計算した値（U-3 案C、要ゲーム内確認）
+          ? `${name}（鞘は計算値）` // 🔶 X は規則から計算した値（U-3 案C、要ゲーム内確認）
           : name;
       const group = special ? undefined : WEAPON_KIND_LABELS[weaponKind(p.name)].ja;
       // 読み・ja・en の部分一致で検索できる（ユーザー判断 2026-10-05）
@@ -192,7 +191,6 @@ export function useWeaponRows({
       const leading = <PartImageTip completeIds={completeWeaponsUsingPart(kind, p)} />;
       return { value: partKey(p), label, group, keywords: weaponSearchTerms(p.name), leading };
     });
-    const digits = kind === "grip" ? 4 : 6;
     return (
       <SearchSelectRow
         key={kind}
@@ -202,7 +200,7 @@ export function useWeaponRows({
         value={field ? (field.value.key ?? `raw:${field.value.value}`) : null}
         currentLabel={
           field
-            ? `${field.value.label ?? "未登録"}（${hex(field.value.value, digits)}）`
+            ? field.value.label ?? "未登録"
             : undefined
         }
         options={options}
@@ -214,7 +212,7 @@ export function useWeaponRows({
             : weapon?.special
               ? "特殊武器の刃は特殊武器の刃の間だけで変えられます"
               : // 🔶 X の計算は U-3 案C（要ゲーム内確認）、X 不明の刃の扱いは U-3 案B
-                "[CT] だけにある刃は、X を規則で計算して書きます。X 不明の刃は ID だけを書き X は元のまま残すので、ゲーム内で分解→組み立てて正しい X にしてください"
+                "一部の刃は、鞘を計算して書きます。鞘が不明な刃は鞘を元のまま残すので、ゲーム内で分解→組み立てて正しい鞘にしてください"
         }
         onChange={(v) => update((b, o) => writeWeaponPart(b, o, kind, v))}
       />
@@ -259,7 +257,7 @@ export function useWeaponRows({
         apply={(v) => update((b, o) => writeWeaponName(b, o, v))}
         hint={`最大${WEAPON_NAME_MAX_CHARS}文字`}
         // 🟢
-        note={`完成武器の名前の番号（${formatOffset(base + WEAPON_FIELDS.nameNo)}）が −1 のときだけ、この名前が表示されます（自作の武器）`}
+        note="完成武器の名前を使う武器では、この名前は表示されません（自作の武器だけ表示されます）"
       />
     ),
     weaponId: (
@@ -268,7 +266,7 @@ export function useWeaponRows({
         label="完成武器"
         offset={base + WEAPON_FIELDS.weaponId}
         value={weapon ? String(weapon.weaponId.value) : null}
-        currentLabel={weapon ? `未知（${hex(weapon.weaponId.value, 4)}）` : undefined}
+        currentLabel={weapon ? "未知" : undefined}
         options={WEAPON_ID_OPTIONS}
         problem={weapon?.weaponId.problem ?? null}
         warning={weapon?.weaponId.warning ?? null}
@@ -282,7 +280,7 @@ export function useWeaponRows({
         label="武器種"
         offset={base + WEAPON_FIELDS.weaponType}
         value={weapon ? String(weapon.weaponType.value) : null}
-        currentLabel={weapon ? `未知（${weapon.weaponType.value}）` : undefined}
+        currentLabel={weapon ? "未知" : undefined}
         options={TYPE_OPTIONS}
         problem={weapon?.weaponType.problem ?? null}
         warning={weapon?.weaponType.warning ?? null}
@@ -316,7 +314,7 @@ export function useWeaponRows({
         options={completeOptions}
         problem={weapon?.problem ?? weapon?.weaponType.problem ?? null}
         hint="完成武器・武器種・刃・鞘・鍔・柄（固有武器の秘伝を含む）をその武器のものに置き換えます。名前・攻撃力・耐久・質・魅力・銘は変わりません"
-        note="ゲームがその完成武器のレコードに書く値（+0x00〜+0x0F、+0x18〜+0x1D、+0x6C〜+0x6F）をそのまま書きます。特殊武器との間でも変更できます"
+        note="特殊武器との間でも変更できます"
         // 特殊武器との間の変更をゲームが読めるかは要ゲーム内確認
         onChange={(v) => update((b, o) => writeCompleteWeapon(b, o, Number(v)))}
       />
@@ -327,7 +325,7 @@ export function useWeaponRows({
         label="鞘"
         offset={base + WEAPON_FIELDS.sheath}
         value={weapon ? String(weapon.sheath.value) : null}
-        currentLabel={weapon ? `表にない鞘（${hex(weapon.sheath.value, 4)}）` : undefined}
+        currentLabel={weapon ? "表にない鞘" : undefined}
         options={SHEATH_OPTIONS}
         searchPlaceholder="刃の読み・名前・英語名で検索"
         problem={weapon?.sheath.problem ?? null}
@@ -346,7 +344,7 @@ export function useWeaponRows({
         offset={base + WEAPON_FIELDS.title}
         value={weapon ? (weapon.title.value === null ? NONE : String(weapon.title.value)) : null}
         currentLabel={
-          weapon ? (weapon.title.label ?? `未知（${hex(weapon.title.raw, 6)}）`) : undefined
+          weapon ? (weapon.title.label ?? "未知") : undefined
         }
         options={TITLE_OPTIONS}
         problem={weapon?.title.problem ?? null}

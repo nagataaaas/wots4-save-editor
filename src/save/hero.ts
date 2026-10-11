@@ -5,7 +5,6 @@
 //   1. ファイルサイズが [TS] の構造体サイズ 0x48BB0 と一致する
 //   2. 各フィールドの値が妥当な範囲にある
 import { readF32, readU32, readU8, readUtf16Fixed, writeF32, writeU32, writeU8, writeUtf16Fixed } from './binary'
-import { formatHex2 } from '@/lib/format'
 import { findLocation } from './locations'
 
 /** [TS] が扱うファイルサイズ（docs/save_format/README.md §2） */
@@ -107,7 +106,7 @@ export type HeroView = {
 
 export function checkLayout(bytes: Uint8Array): string | null {
   if (bytes.byteLength !== TS_SAVE_SIZE) {
-    return `ファイルサイズが想定（${TS_SAVE_SIZE.toLocaleString()} B）と異なります（${bytes.byteLength.toLocaleString()} B）。読み取り専用にしています。`
+    return 'ファイルサイズが想定と異なります。読み取り専用にしています。'
   }
   return null
 }
@@ -151,7 +150,7 @@ export function validateCurrent(value: number, max: number, allowOverMax = false
 
 export function validateLocation(value: number): string | null {
   const loc = findLocation(value)
-  if (!loc) return `未調査の値です（${formatHex2(value)}）`
+  if (!loc) return '未調査の場所です'
   if (loc.crash) return 'クラッシュが報告されている値です'
   return null
 }
@@ -168,14 +167,14 @@ export function readHero(bytes: Uint8Array): HeroView {
 
   const name = readUtf16Fixed(bytes, HERO_OFFSETS.name, NAME_BYTES)
   const nameProblem = !name.terminated
-    ? '終端（0x0000）が見つかりません'
+    ? '名前の終わりが見つかりません'
     : !name.paddingClean
-      ? '終端以降が 0 で埋まっていません'
+      ? '名前の後ろに余計なデータがあります'
       : validateName(name.text)
 
   const u32 = (key: U32Key) => {
     const v = readU32(bytes, HERO_OFFSETS[key])
-    const implausible = v > AMOUNT_PLAUSIBLE_MAX ? `値が大きすぎます（${v.toLocaleString()}）。位置がずれている可能性があります` : null
+    const implausible = v > AMOUNT_PLAUSIBLE_MAX ? `値が大きすぎます（${v.toLocaleString()}）` : null
     const outOfRange =
       v > AMOUNT_LIMITS[key] ? `現在の値（${v.toLocaleString()}）は正規の上限（${AMOUNT_LIMITS[key].toLocaleString()}）を超えています` : null
     return { ...field(layoutProblem, v, implausible), warning: outOfRange }

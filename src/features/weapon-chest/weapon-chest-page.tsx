@@ -19,7 +19,6 @@ import {
   WEAPON_CHEST_CAPACITY,
   WEAPON_CHEST_COUNT,
   WEAPON_CHEST_OFFSET,
-  WEAPON_CHEST_SLOTS,
   readWeaponChest,
   readWeaponChestWeapons,
   weaponChestOffset,
@@ -104,9 +103,8 @@ export function WeaponChestPage() {
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             刀箪笥の本数と容量
-            <InfoTip offset={`${formatOffset(WEAPON_CHEST_COUNT)}〜${formatOffset(WEAPON_CHEST_CAPACITY)}`}>
-              箪笥の武器は {formatOffset(WEAPON_CHEST_OFFSET)} から 0xA0 B × 200 枠。その直後に本数（2 B）と容量÷10（1 B）があります。
-            </InfoTip>
+            <InfoTip offset={`${formatOffset(WEAPON_CHEST_COUNT)}〜${formatOffset(WEAPON_CHEST_CAPACITY)}`} />
+            {/* 箪笥の武器は WEAPON_CHEST_OFFSET から 0xA0 B × 200 枠。その直後に本数（2 B）と容量÷10（1 B） */}
           </CardTitle>
           {/* 位置・意味は 🟢。🔶 書き換えたときのゲーム内の反映は未確認（要ゲーム内確認） */}
           <CardDescription>
@@ -118,7 +116,7 @@ export function WeaponChestPage() {
             label="容量"
             offset={WEAPON_CHEST_CAPACITY}
             value={view ? String(view.capacity) : null}
-            currentLabel={view ? `想定外（${view.capacity}）` : undefined}
+            currentLabel={view ? "想定外" : undefined}
             options={capacityOptions}
             problem={problem}
             hint={`${CAPACITY_MIN * CAPACITY_UNIT}〜${CAPACITY_MAX * CAPACITY_UNIT} 本。新しく始めたときは ${CAPACITY_MIN * CAPACITY_UNIT} 本`}
@@ -158,7 +156,7 @@ export function WeaponChestPage() {
               <span className="text-muted-foreground text-sm font-normal">
                 {view.filled.length} 本
               </span>
-              <InfoTip offset={`${formatOffset(WEAPON_CHEST_OFFSET)} から 0xA0 B × ${WEAPON_CHEST_SLOTS}`} />
+              <InfoTip offset={WEAPON_CHEST_OFFSET} />
               <div className="ml-auto flex items-center gap-2 text-sm font-normal">
                 <Switch id={showEmptyId} checked={showEmpty} onCheckedChange={setShowEmpty} />
                 <Label htmlFor={showEmptyId}>空き枠も表示</Label>
@@ -184,7 +182,7 @@ export function WeaponChestPage() {
       )}
 
       <p className="text-muted-foreground text-xs">
-        各フィールドのバイトだけを書き換えます。空き枠は編集できず、武器を作る・消す機能はないので、武器の欄を書き換えても本数は変わりません。
+        空き枠は編集できず、武器を作る・消す機能はないので、武器の欄を書き換えても本数は変わりません。
         武器を生データで直接増やす・減らすときは、本数を武器が入っている枠の数に合わせてください。
       </p>
     </div>

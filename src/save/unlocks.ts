@@ -44,7 +44,7 @@ export function readAccessoryFlags(bytes: Uint8Array): FlagBytesView {
   return {
     values,
     layoutProblem: checkLayout(bytes),
-    warning: bad >= 0 ? `ID ${bad} の値が 0・1 以外です（${values[bad]}）` : null,
+    warning: bad >= 0 ? "所持の状態が想定外の装飾品があります。切り替えは上級者モードでだけできます" : null,
   };
 }
 
@@ -54,14 +54,14 @@ function assertEditable(bytes: Uint8Array): void {
 }
 
 function assertValue(value: number, max: number, advanced: boolean): void {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) throw new RangeError(`u8 の範囲外です: ${value}`);
-  if (!advanced && value > max) throw new RangeError(`0〜${max} を指定してください: ${value}`);
+  if (!Number.isInteger(value) || value < 0 || value > 0xff) throw new RangeError("指定できない値です");
+  if (!advanced && value > max) throw new RangeError("通常モードでは指定できない値です");
 }
 
 /** 装飾品 id の所持フラグを書く。通常モードでは 0・1、上級者モードでは任意の u8 */
 export function writeAccessoryFlag(bytes: Uint8Array, id: number, value: number, opts: { advanced: boolean }): void {
   assertEditable(bytes);
-  if (!Number.isInteger(id) || id < 0 || id >= ACCESSORY_COUNT) throw new RangeError(`装飾品の ID が範囲外です: ${id}`);
+  if (!Number.isInteger(id) || id < 0 || id >= ACCESSORY_COUNT) throw new RangeError("装飾品が範囲外です");
   assertValue(value, 1, opts.advanced);
   writeU8(bytes, ACCESSORY_FLAGS_OFFSET + id, value);
 }
@@ -93,7 +93,7 @@ export const APPEARANCE_REWARDS: Readonly<Record<number, string>> = {
 };
 
 export function appearanceBitPosition(bit: number): { offset: number; mask: number } {
-  if (!Number.isInteger(bit) || bit < 0 || bit >= APPEARANCE_BIT_COUNT) throw new RangeError(`ビット番号が範囲外です: ${bit}`);
+  if (!Number.isInteger(bit) || bit < 0 || bit >= APPEARANCE_BIT_COUNT) throw new RangeError("服が範囲外です");
   return { offset: APPEARANCE_OFFSET + (bit >> 3), mask: 1 << (bit & 7) };
 }
 
@@ -136,9 +136,9 @@ export const UNLOCK_READ_CONFIRMED: ReadonlySet<number> = new Set([31]);
 export const UNLOCK_WRITE_CONFIRMED: ReadonlySet<number> = new Set([101]);
 
 export const UNLOCK_STATE_LABELS: Record<number, string> = {
-  0: "0 非表示",
-  1: "1 表示中・未取得",
-  2: "2 取得済み",
+  0: "非表示",
+  1: "未取得", // 表示中・未取得
+  2: "取得済み",
 };
 
 export type UnlockStatesView = FlagBytesView & { offset: number | null };
@@ -152,7 +152,7 @@ export function readUnlockStates(bytes: Uint8Array): UnlockStatesView {
   return {
     values,
     offset,
-    layoutProblem: layoutProblem ?? (!readable ? "ファイルが小さすぎて特典を読めません" : bad >= 0 ? `特典番号 ${bad} の値が0〜2以外のため読み取り専用です` : null), // 🔶 U-17
+    layoutProblem: layoutProblem ?? (!readable ? "ファイルが小さすぎて特典を読めません" : bad >= 0 ? "想定外の状態の特典があるため読み取り専用です" : null), // 🔶 U-17
     warning: null,
   };
 }
@@ -160,9 +160,9 @@ export function readUnlockStates(bytes: Uint8Array): UnlockStatesView {
 /** 🔶 U-17 特典 index の状態を書く。固定位置でサイズ・境界・値の範囲を検証する。 */
 export function writeUnlockState(bytes: Uint8Array, index: number, value: number, opts: { advanced: boolean }): void {
   assertEditable(bytes);
-  if (!Number.isInteger(index) || index < 0 || index >= UNLOCK_COUNT) throw new RangeError(`特典の番号が範囲外です: ${index}`);
+  if (!Number.isInteger(index) || index < 0 || index >= UNLOCK_COUNT) throw new RangeError("特典が範囲外です");
   assertValue(value, 2, opts.advanced);
-  if (value > 2) throw new RangeError("特典の状態列は 0〜2 の値だけ編集できます");
+  if (value > 2) throw new RangeError("指定できない状態です");
   const view = readUnlockStates(bytes);
   if (view.layoutProblem) throw new RangeError(view.layoutProblem);
   writeU8(bytes, UNLOCK_STATES_OFFSET + index, value);

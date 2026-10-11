@@ -48,7 +48,7 @@ export const SMITH_STATES: readonly { value: number; label: string; group: strin
   { value: 69, label: "夢があった（会話後）", group: "後継者イベント" },
   {
     value: 70,
-    label: `堂島の説得に成功した（0x0132 が 1 になる）`,
+    label: `堂島の説得に成功した（堂島が鍛冶屋を継ぐ）`,
     group: "後継者イベント",
   },
   { value: 81, label: `鍛冶屋が${nameOf.npc(14)}`, group: "鍛冶屋の状態" },
@@ -139,7 +139,7 @@ export const GANGSTER_SERIES_VALUES: readonly TownsfolkValue[] = [
   },
   {
     value: 91,
-    label: "「ひとりで菩殺会を片付けた」と礼を言われた（会話の途中。続きを聞くと 100）",
+    label: "「ひとりで菩殺会を片付けた」と礼を言われた（会話の途中。続きを聞くと完了）",
     group: afterLast(nameOf.occupation(186)),
   },
   {
@@ -164,7 +164,7 @@ export const THIEF_SERIES_VALUES: readonly TownsfolkValue[] = [
   },
   {
     value: 91,
-    label: "最後のお宝を渡した（会話の途中。続きを聞くと 92）",
+    label: "最後のお宝を渡した（会話の途中。続きを聞くと次へ進む）",
     group: afterLast(nameOf.occupation(194)),
   },
   {
@@ -195,7 +195,7 @@ export const HOMELESS_SERIES_VALUES: readonly TownsfolkValue[] = [
   },
   {
     value: 91,
-    label: "「よく助けに戻ってくれた」と礼を言われた（会話の途中。続きを聞くと 100）",
+    label: "「よく助けに戻ってくれた」と礼を言われた（会話の途中。続きを聞くと完了）",
     group: "「くさい物にふた」のあと",
   },
   { value: 100, label: "「さぶらう」の教えを受け、宿無しの仕事をやり遂げた", group: SERIES_DONE },
@@ -232,37 +232,37 @@ const groupTitle = (key: string): string => occupationGroupLabel(occupationGroup
 export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(4)]: {
     name: groupTitle("police"),
-    note: `代官所の同心 ${nameOf.npc(40)}新太郎の連続なりわい 171〜178。書き換えると${nameOf.npc(40)}の次の依頼が変わる（20 で2件目「督促状」から、100 で完了）`,
+    note: `代官所の同心 ${nameOf.npc(40)}新太郎の連続なりわい。書き換えると${nameOf.npc(40)}の次の依頼が変わる（2件目「督促状」から始める、完了にする、など）`,
     values: POLICE_SERIES_VALUES,
   },
   [occupationFlagOffset(5)]: {
     name: groupTitle("gangster"),
     // 🟢
-    note: `町の極道者 ${nameOf.npc(45)}戒の連続なりわい 179〜186`,
+    note: `町の極道者 ${nameOf.npc(45)}戒の連続なりわい`,
     values: GANGSTER_SERIES_VALUES,
   },
   [occupationFlagOffset(6)]: {
     name: groupTitle("thief"),
     // 🟢
-    note: `港の${nameOf.npc(169)}の連続なりわい 187〜194`,
+    note: `港の${nameOf.npc(169)}の連続なりわい`,
     values: THIEF_SERIES_VALUES,
   },
   [occupationFlagOffset(7)]: {
     name: groupTitle("homeless"),
     // 🟢
-    note: `居留地の${nameOf.npc(76)}の連続なりわい 195〜206`,
+    note: `居留地の${nameOf.npc(76)}の連続なりわい`,
     values: HOMELESS_SERIES_VALUES,
   },
   [occupationFlagOffset(8)]: {
     name: groupTitle("sakotsu"),
     note:
       // 🟢
-      `代官所の同心頭 ${nameOf.npc(37)}上武之介との話の段階。30 で治安なりわい 163〜166（賭場を偵察・訪問・襲撃・殲滅）を頼める。` +
+      `代官所の同心頭 ${nameOf.npc(37)}上武之介との話の段階。引き受けると治安なりわい（賭場を偵察・訪問・襲撃・殲滅）を頼める。` +
       "連続ではなく、そのときの治安で受けられるなりわいが変わり、何回でも受けられる（[U] 2026-10-07）",
     values: [
       { value: 0, label: "まだ会っていない" },
       { value: 10, label: "名乗りを聞いた" },
-      { value: 20, label: "人斬りに誘われた（断ると 20 のまま）" },
+      { value: 20, label: "人斬りに誘われた（断ってもこのまま）" },
       { value: 30, label: "引き受けた（治安なりわいを頼める）" },
     ],
   },
@@ -270,9 +270,9 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     name: groupTitle("okami"),
     note:
       // 🟢
-      `賭場の${nameOf.npc(44)}の治安なりわい 167〜170（代官所を偵察・訪問・襲撃・殲滅）。` +
+      `賭場の${nameOf.npc(44)}の治安なりわい（代官所を偵察・訪問・襲撃・殲滅）。` +
       "連続ではなく、そのときの治安で受けられるなりわいが変わり、何回でも受けられる（[U] 2026-10-07）。" +
-      `${nameOf.npc(44)}は最終なりわい（阿弥浜八人衆 208）を始める人でもある。20 以上で${nameOf.npc(44)}は賭場に移る`,
+      `${nameOf.npc(44)}は最終なりわい（阿弥浜八人衆）を始める人でもある。裏の顔を聞いたあとは賭場に移る`,
     values: [
       { value: 0, label: "まだ仕事を頼んでいない" },
       { value: 1, label: "仕事を頼んで怒られた" },
@@ -285,8 +285,8 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     name: "四天王の話",
     note:
       // 🟢
-      `連続なりわい4つ（${nameOf.npc(40)}・${nameOf.npc(45)}・${nameOf.npc(169)}・${nameOf.npc(76)}）のどれかを終えたとき、ほかの3つがすべて 100 なら 1 になり、街道に${nameOf.npc(61)}が現れる。` +
-      `侍四天王（${nameOf.npc(61)}・${nameOf.npc(68)}・${nameOf.npc(69)}・${nameOf.npc(73)}）を集める話。9 を書く場面はない`,
+      `連続なりわい4つ（${nameOf.npc(40)}・${nameOf.npc(45)}・${nameOf.npc(169)}・${nameOf.npc(76)}）のどれかを終えたとき、ほかの3つがすべて完了していれば話が始まり、街道に${nameOf.npc(61)}が現れる。` +
+      `侍四天王（${nameOf.npc(61)}・${nameOf.npc(68)}・${nameOf.npc(69)}・${nameOf.npc(73)}）を集める話`,
     values: [
       { value: 0, label: "始まる前（連続なりわい4つがまだ終わっていない）" },
       {
@@ -371,7 +371,7 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
       },
       {
         value: 100,
-        label: `${nameOf.npc(73)}が息を引き取った（50・99 のあと）か、「${nameOf.occupation(208)}」を終えた`,
+        label: `${nameOf.npc(73)}が息を引き取った（直前の段階のあと）か、「${nameOf.occupation(208)}」を終えた`,
         group: "終わったあと",
       },
     ],
@@ -380,11 +380,11 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     name: "最終なりわい",
     note:
       // 🟢
-      `なりわい 207・208 と、${nameOf.npc(73)}（${nameOf.npc(76)}）の病気の進み具合。10 以上が治療済み（${nameOf.npc(44)}が薬代を出した）。` +
-      "43 以上で医者が「病み上がり」と言う（43 ちょうどを書く場面はなく、99・100 で当てはまる）。" +
-      "99 以上で、連続なりわいを終えた依頼主から8件を選び直せる（99 未満だと新しい依頼が出ない）。" +
-      // 🔶 治療しないと 207 で終わる
-      "治療すると 12 以降に進み、四天王対四人組（207）から阿弥浜八人衆（208）に発展する。治療しないと 207 で終わる",
+      `最終なりわい（四天王対四人組・阿弥浜八人衆）と、${nameOf.npc(73)}（${nameOf.npc(76)}）の病気の進み具合。治療済みなら${nameOf.npc(44)}が薬代を出している。` +
+      "病み上がりと医者が言うのは終盤の状態。" +
+      "終盤の状態では、連続なりわいを終えた依頼主から8件を選び直せる（それより前だと新しい依頼が出ない）。" +
+      // 🔶 治療しないと四天王対四人組（207）で終わる
+      "治療すると、四天王対四人組から阿弥浜八人衆に発展する。治療しないと四天王対四人組で終わる",
     values: [
       { value: 0, label: `始まる前（${nameOf.npc(73)}はまだ病院に運ばれていない）` },
       {
@@ -409,7 +409,7 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
       },
       {
         value: 12,
-        label: `墓場の戦に${nameOf.npc(44)}（鳥葬会の親分）が現れた（四天王の話も 60）`,
+        label: `墓場の戦に${nameOf.npc(44)}（鳥葬会の親分）が現れた（四天王の話も同じ場面）`,
         group: nameOf.occupation(208),
       },
       {
@@ -437,7 +437,7 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(27)]: {
     name: `${nameOf.npc(211)}（DLC）と知り合ったか`,
     // 🟢
-    note: `${nameOf.npc(81)} ${nameOf.npc(211)}理人の誘いに乗って組むと 1。一度組むと 1 のまま`,
+    note: `${nameOf.npc(81)} ${nameOf.npc(211)}理人の誘いに乗って組むと知り合った状態になり、一度組むとそのまま`,
     values: yesNo("知り合う前（組んでいない）", "知り合った（組んでいる）"),
   },
   ...Object.fromEntries(
@@ -446,7 +446,7 @@ export const OCCUPATION_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
       {
         name: `${nameOf.npc(211)}の「${job}」`,
         // 🟢
-        note: `なりわい ${209 + i} の進み具合（破棄しても 0）。成功は残る。${nameOf.npc(211)}は 28〜31 のうち最初に 0 のものの仕事を頼む。0 がなく「成功……？」があれば「あきらめた仕事があるよな」と言い、頼み直すと 0 に戻る。すべて成功ならもう頼まない`,
+        note: `なりわいの進み具合（破棄すると受注前に戻る）。成功は残る。${nameOf.npc(211)}は4つの仕事のうち最初に受注前のものを頼む。受注前がなく「成功……？」があれば「あきらめた仕事があるよな」と言い、頼み直すと受注前に戻る。すべて成功ならもう頼まない`,
         values: SHIRUBE_RESULT_VALUES,
       },
     ]),
@@ -467,11 +467,11 @@ const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     note:
       // 🟢
       `${nameOf.npc(93)}に働き口を紹介し、道場の師範代にして手合わせするまでの進み具合。値ごとに${nameOf.npc(15)}の居場所が変わる` +
-      `（10 番台は呉服屋、20 番台は寿司屋、30 番台は賭場、40 番台は語学所、50 以上は道場、70〜79 は街道）。` +
-      `${nameOf.npc(15)}と道場（0x0131）が 0 で 10 未満なら街道に出る。` +
+      `（紹介先は呉服屋・寿司屋・賭場・語学所、そのあと道場、手合わせのときは街道）。` +
+      `${nameOf.npc(15)}と道場の状態によっては、会う前や出会いの段階なら街道に出る。` +
       `「紹介した」は紹介を選んだときに書き、その店で${nameOf.npc(15)}に話すと「店員になった」など（店長が死んでいれば「店長がいない」）に上書きされる。` +
-      `セーブに残り、ロードやエリア移動では消えない。周回の終わりに 0。` +
-      `74 は${nameOf.npc(15)}が読むが書く場面が見つからないので載せていない`,
+      `セーブに残り、ロードやエリア移動では消えない。周回の終わりに会っていない状態に戻る。` +
+      `ゲームが読むだけで書く場面が見つからない段階は載せていない`,
     values: [
       { value: 0, label: "会っていない" },
       { value: 1, label: `人斬りを討った${nameOf.npc(93)}に会った`, group: "出会い" },
@@ -522,8 +522,8 @@ const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(13)]: {
     name: `${nameOf.npc(32)}との話の段階`,
     // 🟢
-    // 🔶 100 は通常の会話をしない値だが、使われる場面は未確認
-    note: `道場の師範への任命と、東急流剣術の上達に応じて聞いた話の記録。値は会話を聞いたあとの状態で、流派の段そのものではない。0 でないときだけ${nameOf.npc(157)}が来る。この欄だけを変えても目録の入手や技の習得は反映されない。周回の終わりに 0。100 は通常の会話をしない値`,
+    // 🔶 値 100 は通常の会話をしない値だが、使われる場面は未確認
+    note: `道場の師範への任命と、東急流剣術の上達に応じて聞いた話の記録。会話を聞いたあとの状態で、流派の段そのものではない。師範でない状態以外のときだけ${nameOf.npc(157)}が来る。この欄だけを変えても目録の入手や技の習得は反映されない。周回の終わりに師範でない状態に戻る`,
     values: [
       { value: 0, label: "師範でない" },
       { value: 1, label: "師範に任命された" },
@@ -569,14 +569,14 @@ const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(17)]: {
     name: `${nameOf.npc(157)}で${nameOf.npc(156)}が一度倒れた`,
     // 🟢
-    note: `1 のときにもう一度倒れると${nameOf.npc(156)}が死ぬ。${nameOf.npc(157)}が来ると決まったとき・終わったときに 0`,
+    note: `一度倒れた状態でもう一度倒れると${nameOf.npc(156)}が死ぬ。${nameOf.npc(157)}が来ると決まったとき・終わったときに倒れていない状態に戻る`,
     values: yesNo("倒れていない", "一度倒れた"),
-    effect: `1 だと、${nameOf.npc(157)}で${nameOf.npc(156)}がもう一度倒れたときに死ぬ`,
+    effect: `一度倒れた状態だと、${nameOf.npc(157)}で${nameOf.npc(156)}がもう一度倒れたときに死ぬ`,
   },
   [occupationFlagOffset(18)]: {
     name: `${nameOf.npc(32)}が授業料で買った物の話`,
     // 🟢
-    note: "道場の評判（☆0〜5）が上がるたびに、次の買い物の話に進む（☆5 で 99）。周回の終わりに 0",
+    note: "道場の評判（☆0〜5）が上がるたびに、次の買い物の話に進む（☆5 で土地をもらう）。周回の終わりに始まる前に戻る",
     values: [
       { value: 0, label: "始まる前" },
       { value: 19, label: "パイプ" },
@@ -590,14 +590,14 @@ const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(20)]: {
     name: "師範になったことがある",
     // 🟢
-    note: `${nameOf.npc(32)}が死ぬなどで道場を失うと 0。周回の始めに 1 なら、3000文か${nameOf.npc(15)}との勝負で師範に戻れる。周回をまたいで残る`,
+    note: `${nameOf.npc(32)}が死ぬなどで道場を失うとなっていない状態に戻る。周回の始めになったことがあるなら、3000文か${nameOf.npc(15)}との勝負で師範に戻れる。周回をまたいで残る`,
     values: yesNo("なっていない", "なったことがある"),
-    effect: `話しかけただけで道場がもらえるか（0 ならもらえる。1 だと3000文か${nameOf.npc(15)}との勝負が要る）。${nameOf.npc(32)}が死ぬとリセット`,
+    effect: `話しかけただけで道場がもらえるか（なっていないならもらえる。なったことがあると3000文か${nameOf.npc(15)}との勝負が要る）。${nameOf.npc(32)}が死ぬとリセット`,
   },
   [occupationFlagOffset(21)]: {
     name: `${nameOf.npc(15)}が道場の師範代`,
     // 🟢
-    note: `${nameOf.npc(15)}が追い出される・死ぬ、${nameOf.npc(32)}が死ぬと 0。周回をまたいで残る`,
+    note: `${nameOf.npc(15)}が追い出される・死ぬ、${nameOf.npc(32)}が死ぬと師範代でなくなる。周回をまたいで残る`,
     values: [
       { value: 0, label: "師範代ではない" },
       { value: 1, label: `${nameOf.npc(15)}が師範代` },
@@ -611,7 +611,7 @@ const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
     name: `${nameOf.npc(114)}と${nameOf.npc(92)}`,
     // 🟢
     // 🔶 2・3 は次に出ると 1 に戻る
-    note: `クリア・立ち去りで周回を終えると 0（死亡では残る）。${nameOf.npc(114)}が出るたびに 1 を書くので、2・3 は次に${nameOf.npc(114)}が出ると 1 に戻る`,
+    note: `クリア・立ち去りで周回を終えるとなしに戻る（死亡では残る）。${nameOf.npc(114)}が出るたびに「出た」になるので、頼みを引き受けた状態は次に${nameOf.npc(114)}が出ると「出た」に戻る`,
     values: [
       { value: 0, label: "なし" },
       { value: 1, label: `${nameOf.npc(114)}が出た` },
@@ -622,7 +622,7 @@ const OTHER_FLAG_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   [occupationFlagOffset(24)]: {
     name: "夜這い仲間の初回の説明を聞いた",
     // 🟢
-    note: "周回の終わりに 0",
+    note: "周回の終わりに聞いていない状態に戻る",
     values: yesNo("聞いていない", "聞いた"),
   },
 };
@@ -731,10 +731,10 @@ const PERSON_BY_NUMBER = new Map(TOWNSFOLK_PEOPLE.map((x) => [x.p, x]));
  */
 export function reviveNote(p: number): string | null {
   if (p >= 10 && p <= 23) {
-    return `人物の状態（0x${(0x3744 + p).toString(16).toUpperCase()}）も 0 にしないと町に出てこない`;
+    return "「人物の状態」の同じ人物も生存にしないと町に出てこない";
   }
-  if (p === 30) return "人物の状態 も 0 にしないと死んだ扱いのまま";
-  if (p === 55) return "人物の状態 も 0 にしないと死んだ扱いのまま";
+  if (p === 30) return "「人物の状態」の寿司屋も生存にしないと死んだ扱いのまま";
+  if (p === 55) return "「人物の状態」の同じ人物も生存にしないと死んだ扱いのまま";
   return null;
 }
 
@@ -753,12 +753,12 @@ export const TOWNSFOLK_NOTES: Readonly<Record<number, TownsfolkNote>> = {
   0x0127: {
     name: "鍛冶屋の後継者イベント・鍛冶屋の状態",
     // ✅ 書き換えで確認済み
-    note: "踏み倒しの回数 0x0B58（u32、この範囲の外）も +1 になる。周回後に誰が鍛冶屋になるかは 0x0132 が決める",
+    note: "踏み倒しの回数も増える。周回後に誰が鍛冶屋になるかは「堂島が鍛冶屋」が決める",
     values: SMITH_STATES,
   },
   0x0132: {
     name: `${nameOf.npc(14)}が鍛冶屋`,
-    note: `${nameOf.npc(14)}の説得に成功する（0x0127＝70）と 1 になる。周回をまたいで、誰が鍛冶屋になるかを決める（0 のまま周回するとおやじに戻り、1 だと${nameOf.npc(14)}になる）`,
+    note: `${nameOf.npc(14)}の説得に成功すると継いだ状態になる。周回をまたいで、誰が鍛冶屋になるかを決める（継いでいないまま周回するとおやじに戻り、継いでいると${nameOf.npc(14)}になる）`,
     values: [
       { value: 0, label: `継いでいない（${nameOf.npc(25)}のおやじ）` },
       { value: 1, label: `継いだ（${nameOf.npc(14)}の鍛冶屋）` },
@@ -804,14 +804,14 @@ export function validateTownsfolk(
   current: number,
   opts: { advanced: boolean },
 ): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `u8 の範囲外です: ${value}`;
+  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `値が範囲外です: ${value}`;
   if (opts.advanced || value === current) return null;
   const info = TOWNSFOLK_NOTES[offset];
   if (info?.values)
     return info.values.some((s) => s.value === value)
       ? null
-      : `通常モードで選べる値ではありません: ${value}`;
-  if (value > TOWNSFOLK_NORMAL_MAX) return `通常モードでは 0 か 1 を指定してください: ${value}`;
+      : "通常モードで選べない状態です";
+  if (value > TOWNSFOLK_NORMAL_MAX) return "通常モードでは指定できない状態です";
   return null;
 }
 
@@ -861,7 +861,7 @@ export function writePersonDead(bytes: Uint8Array, p: number, dead: boolean): vo
   const problem = checkLayout(bytes);
   if (problem) throw new RangeError(problem);
   if (!Number.isInteger(p) || p < 0 || p >= PERSON_COUNT)
-    throw new RangeError(`人物番号の範囲外です: ${p}`);
+    throw new RangeError("人物の指定が正しくありません");
   const offset = personOffset(p);
   const old = readU8(bytes, offset);
   writeU8(bytes, offset, dead ? old | 1 : old & 0xfe);

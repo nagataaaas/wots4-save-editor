@@ -37,11 +37,11 @@ const GROUP_LABELS = [
 const formatFloat = (value: number) => String(Number(value.toPrecision(7)));
 const idOptions = [
   { value: "-1", label: "なし（空き枠）" },
-  ...ACCESSORIES.map((a) => ({ value: String(a.id), label: `${a.ja}（ID ${a.id}）` })),
+  ...ACCESSORIES.map((a) => ({ value: String(a.id), label: a.ja })),
 ];
 const jointOptions = ACCESSORY_ATTACHMENT_LABELS.map((label, i) => ({
   value: String(i),
-  label: `${label}（${i}）`,
+  label,
 }));
 const MODE_LABELS = { A: "納刀", B: "抜刀", common: "共通" } as const;
 
@@ -92,7 +92,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
             {slot + 1}枠目：{selected?.ja ?? (current?.id === -1 ? "空き" : "装飾品")}
           </h3>
           <p className="text-muted-foreground text-sm">
-            装飾品を変更すると、新しい装飾品の標準部位に取り付け、納刀・抜刀の補正を0へ戻します。所持フラグ・未知のバイトは変更しません。
+            装飾品を変更すると、新しい装飾品の標準部位に取り付け、納刀・抜刀の補正を0へ戻します。所持の状態は変更しません。
           </p>
           </div>
           <div className="space-y-4">
@@ -101,12 +101,12 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
               label="装飾品"
               offset={offset + 0x3e}
               value={current?.id === null || !current ? null : String(current.id)}
-              currentLabel={`未知のID ${current?.id}`}
+              currentLabel="不明な装飾品"
               options={idOptions}
               problem={problem}
               warning={
                 unowned
-                  ? "この装飾品の所持フラグは1ではありません。必要なら所持画面で変更してください。"
+                  ? "この装飾品は未所持です。必要なら所持画面で変更してください。"
                   : null
               }
               onChange={(v) => {
@@ -141,7 +141,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
             </div>
           )}
           <p className="text-muted-foreground text-sm">
-            「なし」にすると外れます。位置・回転・大きさ・未知のバイトは残します。
+            「なし」にすると外れます。位置・回転・大きさは残します。
           </p>
           </div>
         </section>
@@ -154,7 +154,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
           {/* 🟢 */}
           <h3 className="text-sm font-semibold">{MODE_LABELS[mode]}の調整</h3>
           <p className="text-muted-foreground text-sm">
-            位置・回転は標準からの補正。大きさは1.0で標準（保存補正0.0）です。共通を選ぶと納刀の調整で抜刀を上書きします。
+            位置・回転は標準からの補正。大きさは1.0が標準です。共通を選ぶと納刀の調整で抜刀を上書きします。
           </p>
         </div>
         <div className="space-y-4">
@@ -267,16 +267,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {current && (
-        <details className="text-muted-foreground text-xs">
-          <summary className="cursor-pointer">
-            この枠の生バイト（0x{offset.toString(16).toUpperCase()}、64 B）
-          </summary>
-          <p className="mt-2 break-all font-mono">{current.raw || "領域を読み取れません"}</p>
-          {/* ❓ +0x00〜03・+0x3D の意味は未確認 */}
-          <p className="mt-2">+0x00〜03・+0x3D は編集時も元の値を維持します。</p>
-        </details>
-      )}
+      {/* 生バイトの表示（枠の 64 B）は画面から外した。❓ +0x00〜03・+0x3D の意味は未確認で、編集時も元の値を維持する */}
     </>
   );
 }
@@ -289,7 +280,7 @@ function AccessorySlotList({ group, slot, onSelectSlot }: { group: number; slot:
       <div className="grid gap-1">
         {Array.from({ length: 10 }, (_, i) => {
           const entry = save ? readAccessorySlot(save.working, group, i) : null;
-          const name = entry?.id === -1 ? "空き" : (ACCESSORIES.find((a) => a.id === entry?.id)?.ja ?? (entry ? `ID ${entry.id ?? "不明"}` : "未読み込み"));
+          const name = entry?.id === -1 ? "空き" : (ACCESSORIES.find((a) => a.id === entry?.id)?.ja ?? (entry ? "不明" : "未読み込み"));
           return (
             <Button
               key={i}

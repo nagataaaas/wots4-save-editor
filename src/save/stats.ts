@@ -49,7 +49,7 @@ export const STAT_GROUPS: readonly { id: StatGroupId; label: string; note: strin
   {
     id: 'actions',
     label: '行動の回数',
-    note: '侍度の計算に使う回数。評価の結果画面の「不適切な行動」は i 0〜3 の合計。周回の終わりに 0',
+    note: '侍度の計算に使う回数。評価の結果画面の「不適切な行動」は最初の 4 項目の合計。周回の終わりに 0',
   },
   { id: 'titles', label: '称号ごとの獲得回数', note: '評価のたびに得た称号の欄が 1 増える。周回をまたいで残る' },
   { id: 'time', label: 'プレイ時間', note: '単位は秒' },
@@ -203,7 +203,7 @@ export const STAT_FIELDS: readonly StatField[] = [
       key: `action${a.index}`,
       offset: 0x0b4c + 4 * a.index,
       type: 'u32',
-      label: `i ${a.index}：${a.label}`,
+      label: a.label,
       group: 'actions',
       max: ACTION_COUNT_MAX,
       note: a.note,
@@ -214,7 +214,7 @@ export const STAT_FIELDS: readonly StatField[] = [
       key: `title${i}`,
       offset: 0x0b9c + 2 * i,
       type: 'u16',
-      label: `${i}：${name}`,
+      label: name,
       group: 'titles',
       max: 999,
       note: `称号「${name}」を得た回数`,
@@ -257,7 +257,7 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '移動距離（周回中）',
     group: 'combat',
     max: 9_999_999,
-    note: '記録の画面では ÷1000 して km で表示する',
+    note: '記録の画面では km で表示される',
     unit: 'distance',
   },
   {
@@ -267,7 +267,7 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '総移動距離（累計）',
     group: 'combat',
     max: 9_999_999,
-    note: '記録の画面では ÷1000 して km で表示する',
+    note: '記録の画面では km で表示される',
     unit: 'distance',
   },
   {
@@ -384,7 +384,7 @@ export function validateStat(field: StatField, value: number, opts: { advanced: 
     if (opts.advanced) return null
   } else {
     if (!Number.isInteger(value) || value < 0 || value > TYPE_MAX[field.type])
-      return `${field.type} の範囲外です: ${value}`
+      return `この項目に書ける範囲を超えています: ${value}`
     if (opts.advanced) return null
   }
   if (value < 0 || value > field.max)

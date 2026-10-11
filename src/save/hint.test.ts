@@ -86,7 +86,7 @@ describe('次のイベントのヒント 0x3900（🟢 チャートのノード�
     for (const v of [0, 1, 53, 113, 114, 118]) expect(hintWarning(v)).toContain('イベントに当たらない')
     const view = readHint(makeSave(119))
     expect(view.node).toBeNull()
-    expect(view.warning).toContain('ノードの表')
+    expect(view.warning).toContain('一覧にない')
     expect(view.problem).toBeNull()
   })
 

@@ -18,7 +18,7 @@ export function readU8(bytes: Uint8Array, offset: number): number {
 
 export function writeU8(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 1)
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) throw new RangeError(`u8 の範囲外です: ${value}`)
+  if (!Number.isInteger(value) || value < 0 || value > 0xff) throw new RangeError("入力できる範囲を超えています")
   bytes[offset] = value
 }
 
@@ -29,7 +29,7 @@ export function readU16(bytes: Uint8Array, offset: number): number {
 
 export function writeU16(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 2)
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff) throw new RangeError(`u16 の範囲外です: ${value}`)
+  if (!Number.isInteger(value) || value < 0 || value > 0xffff) throw new RangeError("入力できる範囲を超えています")
   view(bytes).setUint16(offset, value, true)
 }
 
@@ -40,7 +40,7 @@ export function readI16(bytes: Uint8Array, offset: number): number {
 
 export function writeI16(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 2)
-  if (!Number.isInteger(value) || value < -0x8000 || value > 0x7fff) throw new RangeError(`i16 の範囲外です: ${value}`)
+  if (!Number.isInteger(value) || value < -0x8000 || value > 0x7fff) throw new RangeError("入力できる範囲を超えています")
   view(bytes).setInt16(offset, value, true)
 }
 
@@ -51,7 +51,7 @@ export function readU32(bytes: Uint8Array, offset: number): number {
 
 export function writeU32(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 4)
-  if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) throw new RangeError(`u32 の範囲外です: ${value}`)
+  if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) throw new RangeError("入力できる範囲を超えています")
   view(bytes).setUint32(offset, value, true)
 }
 

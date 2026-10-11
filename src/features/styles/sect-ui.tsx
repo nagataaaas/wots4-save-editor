@@ -25,7 +25,7 @@ import { EMPTY_FILTER, filterSortTree } from "./skill-list";
 export function StateBadge({ state }: { state: number }) {
   return (
     <Badge variant={state === 0 ? "outline" : state === 3 ? "secondary" : "default"} className="font-normal">
-      {STATE_LABELS[state] ?? `不明（${state}）`}
+      {STATE_LABELS[state] ?? "不明"}
     </Badge>
   );
 }
@@ -68,7 +68,7 @@ export function IntField({
 
 const RANK_OPTIONS = RANK_LABELS.map((label, v) => ({ value: String(v), label }));
 
-/** 段の選択欄（0 初段〜5 極） */
+/** 段の選択欄（内部の値は 0 初段〜5 極） */
 export function RankField({
   offset,
   value,
@@ -87,7 +87,7 @@ export function RankField({
       label="段"
       offset={offset}
       value={value === null ? null : String(value)}
-      currentLabel={value === null ? undefined : `不明（${value}）`}
+      currentLabel={value === null ? undefined : "不明"}
       options={RANK_OPTIONS}
       problem={problem}
       note={note}
@@ -170,11 +170,10 @@ export function SkillPicker({
       ) : (
         <div className="max-h-[32rem] overflow-y-auto rounded border px-2">
           {/* 欄は技の一覧と揃える（行は subgrid） */}
-          <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_minmax(0,1fr)] gap-x-3 text-sm">
+          <div className="grid grid-cols-[auto_auto_auto_auto_auto_minmax(0,1fr)] gap-x-3 text-sm">
             <div className="text-muted-foreground bg-card sticky top-0 z-10 col-span-full grid grid-cols-subgrid border-b py-1 text-xs">
               <span />
               <span>技</span>
-              <span>ID</span>
               <span>状態</span>
               <span>入力</span>
               <span>攻撃力</span>
@@ -202,7 +201,6 @@ export function SkillPicker({
                       aria-label={skillName(s)}
                     />
                     <SkillTreeName sheet={sheet} {...ctx} dim={dim || !ok} />
-                    <span className="text-muted-foreground font-mono text-xs tabular-nums">{s.skillId}</span>
                     <span>
                       <StateBadge state={stanceStates[s.skillNo]} />
                     </span>

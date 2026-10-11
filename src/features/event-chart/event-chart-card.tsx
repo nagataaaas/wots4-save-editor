@@ -6,7 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { recordOptions, stateOptions } from "@/features/scenario/event-options";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { formatHex2 } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import { PLAY_COUNT_REVEALS_BEST_ROUTE, type CycleCountsView } from "@/save/cycle-counts";
 import {
@@ -94,9 +93,9 @@ export function EventChartCard({
 }: {
   events: EventsView | null;
   counts: CycleCountsView | null;
-  /** 段階 0x0010。null なら紫の箱を描かない */
+  /** 段階（0x0010）。null なら紫の箱を描かない */
   stage: number | null;
-  /** 真ルート 0x378E。null なら紫の箱を描かない */
+  /** 真ルート（0x378E）。null なら紫の箱を描かない */
   bestRoute: number | null;
   top?: ReactNode;
   bottom?: ReactNode;
@@ -124,20 +123,20 @@ export function EventChartCard({
       <CardHeader>
         <CardTitle>イベントチャート</CardTitle>
         <CardDescription>
-          ゲームの「状況」のチャートを、ゲームと同じ升の並びと規則で、イベントの状態（0x36A8＋添字）・チャート表示の記録（0x3838＋添字）・周回数（0x0B8C）から描いたものです。
-          状態が 03・04 か記録が 04 の枠は名前が出て、それ以外は「？？？」です。状態が 03・04
-          の枠は緑の枠で囲まれます（03 と 04 で見え方は同じ）。状態が 05
-          の枠と、後ろの段階に進んだのに何もしなかった時間帯の枠には失敗の印が付きます。
-          紫の箱は、段階（0x0010）と同じ段階の枠を囲みます。真ルート（0x378E）が 0
-          以外なら真ルートの行の枠だけを囲み、当てはまる枠がなければ出ません。
-          赤い線は、今の周回で到達した枠（状態 03〜05、時間帯を過ぎて失敗）どうしをつなぐ道です。
-          真ルートの枠は、状態が 03・04 か記録が 04 のときだけ出ます（周回数が{" "}
+          ゲームの「状況」のチャートを、セーブの内容から描いたものです。
+          引き受けた・成功したイベントの枠か、チャートに名前を出す設定のイベントの枠は名前が出て、それ以外は「？？？」です。
+          引き受けた・成功した枠は緑の枠で囲まれます。
+          失敗したイベントの枠と、後ろの段階に進んだのに何もしなかった時間帯の枠には失敗の印が付きます。
+          紫の箱は、今の段階と同じ段階の枠を囲みます。真ルートに入っているときは、真ルートの行の枠だけを囲み、当てはまる枠がなければ出ません。
+          赤い線は、今の周回で到達した枠（引き受けた・成功した・失敗した枠）どうしをつなぐ道です。
+          真ルートの枠は、引き受けた・成功したか、チャートに名前を出す設定のときだけ出ます（周回数が{" "}
           {PLAY_COUNT_REVEALS_BEST_ROUTE}{" "}
           以上なら全部出ます）。ゲームで出ない升は点線で薄く描いています。
           ゲームは「いま始められるイベント」も到達した枠として扱いますが、それはセーブだけでは決まらないので、ここでは描いていません。
-          {/* ❓ 真ルートの扱い・赤い線・緑の枠・紫の箱・カーソルの範囲は要ゲーム内確認 */}
+          {/* 状態 03・04 = 引き受けた・成功、記録 04 = 名前を出す、状態 05 = 失敗、段階 0x0010、真ルート 0x378E、周回数 0x0B8C、イベントの状態 0x36A8＋添字、チャート表示の記録 0x3838＋添字。
+              ❓ 真ルートの扱い・赤い線・緑の枠・紫の箱・カーソルの範囲は要ゲーム内確認 */}
           {loaded
-            ? ` 周回数：${counts.playCount.toLocaleString()}、クリア回数の合計：${counts.clearTotal.toLocaleString()}。枠をクリックすると状態を編集できます。`
+            ? ` 周回数：${counts.playCount.toLocaleString()}、クリア回数の合計：${counts.clearTotal.toLocaleString()}。枠をクリックすると編集できます。`
             : " セーブを読み込むまでは、全部の枠を名前つきで描いています。"}
         </CardDescription>
       </CardHeader>
@@ -222,7 +221,7 @@ function Legend() {
             strokeWidth={3}
           />
         </svg>
-        状態 03・04
+        引き受けた・成功
       </span>
       <span className="flex items-center gap-1.5">
         <span className="inline-block h-3 w-5 rounded-sm" style={{ background: STAGE_BOX_COLOR }} />
@@ -541,7 +540,7 @@ function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView 
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-0.5">
         <div className="text-sm font-medium">
-          {index}. {eventNameOf(index) ?? frameName(frame)}
+          {eventNameOf(index) ?? frameName(frame)}
         </div>
         <div className="text-muted-foreground text-xs">{EVENT_LIST[index]?.day}</div>
         {summary && (
@@ -554,7 +553,7 @@ function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView 
         label="状態"
         offset={EVENT_STATE_OFFSET + index}
         value={entry ? String(entry.state) : null}
-        currentLabel={entry ? `${formatHex2(entry.state)} ${stateLabel(entry.state)}` : undefined}
+        currentLabel={entry ? stateLabel(entry.state) : undefined}
         options={stateOptions}
         problem={problem}
         onChange={(v) => update((b) => writeEventState(b, index, Number(v), { advanced }))}
@@ -564,12 +563,12 @@ function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView 
         offset={EVENT_RECORD_OFFSET + index}
         value={entry ? String(entry.record) : null}
         currentLabel={
-          entry ? `${formatHex2(entry.record)} ${recordLabel(entry.record)}` : undefined
+          entry ? recordLabel(entry.record) : undefined
         }
         options={recordOptions(advanced)}
         problem={problem}
         // 確度：名前の出方は FF と 04 で ✅。真ルートの枠が状態 04 以外・記録 FF で出ないのは ✅
-        note={`周回をまたぐ記録（生きた証）。04 で名前が出て、それ以外は状態が 03・04 のときだけ名前が出ます。真ルートのイベントは、これが 04 か状態が 03・04 でないと枠ごと出ません（周回数が ${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら常に出る）。ほかの周回にも引き継がれる可能性があります`}
+        note={`周回をまたぐ記録（生きた証）。「名前を出す」にすると名前が出て、それ以外は引き受けた・成功のときだけ名前が出ます。真ルートのイベントは、これが「名前を出す」か、引き受けた・成功でないと枠ごと出ません（周回数が ${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら常に出る）。ほかの周回にも引き継がれる可能性があります`}
         onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
       />
       {shared && (

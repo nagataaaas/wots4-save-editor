@@ -47,14 +47,14 @@ export function readPublicOrder(bytes: Uint8Array): PublicOrderView {
   return {
     value,
     level: publicOrderLevel(value),
-    warning: value > PUBLIC_ORDER_MAX ? `治安の範囲（0〜${PUBLIC_ORDER_MAX}）を超えています（${value}）` : null,
+    warning: value > PUBLIC_ORDER_MAX ? `治安がゲームの範囲（0〜${PUBLIC_ORDER_MAX}）を超えています` : null,
     problem: checkLayout(bytes),
   };
 }
 
 /** 通常モードは 0〜99、上級者モードは任意の u8。問題がなければ null */
 export function validatePublicOrder(value: number, opts: { advanced: boolean }): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `u8 の範囲外です: ${value}`;
+  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `値が範囲外です: ${value}`;
   if (!opts.advanced && value > PUBLIC_ORDER_MAX)
     return `通常モードでは 0〜${PUBLIC_ORDER_MAX} を指定してください: ${value}`;
   return null;

@@ -2,7 +2,6 @@ import { useState, type ReactNode } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { formatOffset } from "@/lib/format";
 import { charmLabel, type WeaponView } from "@/save/weapon";
 import { WeaponEditor } from "./weapon-editor";
 import { Chevron, WeaponImage } from "./weapon-rows";
@@ -22,7 +21,7 @@ function Num({ value, digits }: { value: number; digits: number }) {
 /** 閉じた行に出す能力値（ゲームと同じく桁区切りなし）。攻撃力・斬殺数は4桁、耐久は4桁/4桁、質は2桁/2桁の幅 */
 function Stats({ weapon }: { weapon: WeaponView }) {
   const n = (key: keyof WeaponView["numbers"]) => weapon.numbers[key].value;
-  const charms = weapon.charms.value.filter((c): c is number => c !== null).map((c) => charmLabel(c) ?? `?${c}`);
+  const charms = weapon.charms.value.filter((c): c is number => c !== null).map((c) => charmLabel(c) ?? "不明");
   return (
     <span className="text-muted-foreground hidden shrink-0 items-center gap-3 font-mono text-xs tabular-nums sm:flex">
       <span>攻 <Num value={n("attack")} digits={4} /></span>
@@ -47,7 +46,7 @@ function CompactWeaponRow({
 }) {
   const [open, setOpen] = useState(false);
   const no = <span className="text-muted-foreground w-7 shrink-0 text-right text-xs tabular-nums">{index + 1}</span>;
-  const offsetTip = <InfoTip offset={`${formatOffset(weapon.offset)} から 0xA0 B`} />;
+  const offsetTip = <InfoTip offset={weapon.offset} />;
 
   if (weapon.empty) {
     return (

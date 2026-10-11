@@ -119,7 +119,7 @@ describe('真ルート 0x378E と周りの生の値 0x378D〜0x37AA chunks/best-
     expect(ROUTE_CANDIDATE_NOTES[0x3799].name).toBe('堂島が鍛冶屋（イベント判定用）')
     expect(ROUTE_CANDIDATE_NOTES[0x379a].name).toBe('先生が道場の師範代（イベント判定用）')
     expect(ROUTE_CANDIDATE_NOTES[0x37a2].name).toBe('般若党の本拠')
-    expect(ROUTE_CANDIDATE_NOTES[0x37a2].note).toContain('1 と 2 の効果は同じ')
+    expect(ROUTE_CANDIDATE_NOTES[0x37a2].note).toContain('片付いたと離散したの効果は同じ')
     // 選択肢は通常モードで書ける値（0〜2）だけ
     for (const o of RAW_ROUTE_OFFSETS) {
       const values = ROUTE_CANDIDATE_NOTES[o].values.map((v) => v.value)

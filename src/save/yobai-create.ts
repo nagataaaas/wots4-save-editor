@@ -128,7 +128,7 @@ const DEATH_OFFSETS: Readonly<Record<number, number>> = {
 export function partnerDeathWarning(bytes: Uint8Array, type: number): string | null {
   const offset = DEATH_OFFSETS[type];
   if (offset === undefined || readU8(bytes, offset) !== 1) return null;
-  return `${promisePartner(type)?.label ?? type} は死亡しています（0x${offset.toString(16).toUpperCase()} が 1）。夜這いの場に相手が出るかは確かめていません`;
+  return `${promisePartner(type)?.label ?? type} は死亡しています。夜這いの場に相手が出るかは確かめていません`;
 }
 
 /** いまの段階（0x13E30）。範囲外は 0〜3 に丸める */
@@ -234,17 +234,17 @@ export function createProblem(bytes: Uint8Array): string | null {
  */
 export function validateSpec(spec: PromiseSpec, stage: number, opts: { advanced: boolean }): string | null {
   const partner = promisePartner(spec.type);
-  if (!partner) return `約束できる相手の種類ではありません: ${spec.type}`;
+  if (!partner) return "約束できる相手の種類ではありません";
   if (!rowsFor(partner, stage, opts).some((r) => r.index === spec.row))
     return opts.advanced || partner.row !== null
-      ? `この相手には使えない組です: ${spec.row}`
-      : `いまの段階（${stage}）より上の組です（上級者モードで選べます）: ${spec.row}`;
+      ? "この相手には使えない組です"
+      : "いまの段階より上の組です（上級者モードで選べます）";
   const row = PROMISE_ROWS.find((r) => r.index === spec.row)!;
   const { place, layout } = specPlace(spec);
   if (place !== row.place || layout !== row.layout) {
     if (!opts.advanced) return "この相手の組と違う場所・配置は、上級者モードでだけ選べます";
     if (!PLACE_LAYOUTS.some((p) => p.place === place && p.layout === layout))
-      return `その場所で使える配置ではありません: 0x${place.toString(16)}・0x${layout.toString(16)}`;
+      return "その場所で使える配置ではありません";
   }
   // 名前・見た目と声・年齢・血液型は種類とは別々に効く（✅ [U]）ので、約束の編集欄と同じ範囲で選べる。NaN は書き戻しの扱いをしないため
   for (const field of ["name", "look", "age", "blood"] as const) {
@@ -257,7 +257,7 @@ export function validateSpec(spec: PromiseSpec, stage: number, opts: { advanced:
 /** 約束の枠の +0x00〜+0x29 */
 export function buildPromiseBytes(spec: PromiseSpec, day: number): Uint8Array {
   const row = PROMISE_ROWS.find((r) => r.index === spec.row);
-  if (!row) throw new RangeError(`組の表にない行です: ${spec.row}`);
+  if (!row) throw new RangeError("組の表にない行です");
   const out = new Uint8Array(PROMISE_WRITE_LENGTH);
   out.set(row.bytes, 0);
   writeU32(out, 0x04, spec.type);

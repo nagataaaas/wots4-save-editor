@@ -29,21 +29,21 @@ export const FACTION_EXIT_FLAGS: readonly FactionExitFlag[] = [
     offset: 0x378f,
     label: "幕府",
     // ✅ 書き換えで確認済み。🟢 1 になる場面
-    note: "1 で同心・岡っ引き・魔鱗組・武士、代官所の門の外と牢屋の人物（茂呂・佐古津・野戸仏・琴吹・三姉妹・鬼怒川など）、治安が高いときの取り締まり役、夜の暗闇脳天の巡回が消える。通常のプレイで 1 になる場面はない",
+    note: "退場すると同心・岡っ引き・魔鱗組・武士、代官所の門の外と牢屋の人物（茂呂・佐古津・野戸仏・琴吹・三姉妹・鬼怒川など）、治安が高いときの取り締まり役、夜の暗闇脳天の巡回が消える。通常のプレイで退場する場面はない",
     confirmed: true,
   },
   {
     offset: 0x3790,
     label: "外国",
     // ✅ 書き換えで確認済み。🟢 1 になる場面
-    note: "1 で外国人・外国商人・海兵隊・船乗り・貴婦人・パツキン隊、領事館のローラ・J.J・メリンダ、居留地・病院・語学所・カジノ・レストラン・黒船の人が消える。鬼怒川の魔手（ローラが死んだとき）・夕暮れの船上（断ったとき）・傷心の帰国船で 1",
+    note: "退場すると外国人・外国商人・海兵隊・船乗り・貴婦人・パツキン隊、領事館のローラ・J.J・メリンダ、居留地・病院・語学所・カジノ・レストラン・黒船の人が消える。鬼怒川の魔手（ローラが死んだとき）・夕暮れの船上（断ったとき）・傷心の帰国船で退場する",
     confirmed: true,
   },
   {
     offset: 0x3791,
     label: "攘夷",
     // ✅ 書き換えで確認済み。🟢 1 になる場面
-    note: "1 で般若党（神社・港・大通り・街道など）、神社の赤城・小暮・雑貨屋、朱美と客が消える。再起の望み（赤城が死んだとき）・般若党壊滅・三匹で斬るの成功で 1",
+    note: "退場すると般若党（神社・港・大通り・街道など）、神社の赤城・小暮・雑貨屋、朱美と客が消える。再起の望み（赤城が死んだとき）・般若党壊滅・三匹で斬るの成功で退場する",
     confirmed: true,
   },
 ];
@@ -75,7 +75,8 @@ export function writeFactionExit(
   const flag = FACTION_EXIT_FLAGS[index];
   if (!flag) throw new RangeError(`フラグの番号が範囲外です: ${index}`);
   if (!Number.isInteger(value) || value < 0 || value > 0xff)
-    throw new RangeError(`u8 の範囲外です: ${value}`);
-  if (!opts.advanced && value > 1) throw new RangeError(`0 か 1 を指定してください: ${value}`);
+    throw new RangeError(`値が範囲外です: ${value}`);
+  if (!opts.advanced && value > 1)
+    throw new RangeError("通常モードでは町にいる・退場したのどちらかを指定してください");
   writeU8(bytes, flag.offset, value);
 }

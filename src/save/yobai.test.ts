@@ -257,7 +257,7 @@ describe('配置の家の中の人 datatable/place/night-visit-layout.csv（🟢
     // 居酒屋二階の朱美：般若党の見た目の家の人がいる（[U] 2026-10-10 般若党がいた）
     expect(layoutLabel(0x16)).toBe('般若党の家・家の人3人・犬・布団2枚')
     expect(layoutLabel(0x08)).toBe('町人の家・家の人2人（＋1人 30%）・布団4枚')
-    expect(layoutLabel(0x99)).toBe('配置 0x99') // 表にない
+    expect(layoutLabel(0x99)).toBe('不明な配置') // 表にない
   })
 
   it('場所ごとに使える配置だけを、家の人が少ない順に返す', () => {

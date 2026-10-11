@@ -3,13 +3,11 @@ import { Check, CircleHelp, LockKeyhole, Minus } from "lucide-react";
 import { InfoTip } from "@/components/info-tip";
 import { LazyTip } from "@/components/lazy-tip";
 import { Badge } from "@/components/ui/badge";
-import { formatHex2 } from "@/lib/format";
 import { nextUnlockState } from "./unlock-state";
 
 export function ItemInformation({
-  id, name, category, description, offset, condition, children,
+  name, category, description, offset, condition, children,
 }: {
-  id: number;
   name: string;
   category: string;
   description?: string;
@@ -20,7 +18,6 @@ export function ItemInformation({
   return (
     <div className="flex min-w-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-muted-foreground font-mono text-xs">{id}</span>
         <span className="text-sm">{name}</span>
         <Badge variant="secondary" className="font-normal">{category}</Badge>
         <InfoTip offset={offset}>{condition ? `取得条件：${condition}` : undefined}</InfoTip>
@@ -62,7 +59,7 @@ export function UnlockStateButton({ value, name, disabled, onChange }: {
   disabled: boolean;
   onChange: (value: number) => void;
 }) {
-  const label = ["非表示", "未取得", "取得済み"][value] ?? `${formatHex2(value)} 不明`;
+  const label = ["非表示", "未取得", "取得済み"][value] ?? "不明";
   const Icon = [Minus, LockKeyhole, Check][value] ?? CircleHelp;
   const iconColor = [
     "text-muted-foreground",

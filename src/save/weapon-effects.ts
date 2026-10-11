@@ -74,7 +74,7 @@ export function charmEffects(charms: readonly (number | null)[]): CharmEffect[] 
   const counts = new Map<number, number>()
   for (const c of charms) if (c !== null) counts.set(c, (counts.get(c) ?? 0) + 1)
   return [...counts].map(([id, count]) => {
-    const label = CHARMS.find((c) => c.id === id)?.label ?? `未知（${id}）`
+    const label = CHARMS.find((c) => c.id === id)?.label ?? '未知'
     const def = CHARM_EFFECTS[id]
     if (!def) return { id, label, count, summary: '効果は不明', amount: null }
     const amount = def.amounts && count >= 1 && count <= 3 ? def.amounts[count - 1] : null

@@ -83,7 +83,7 @@ describe("門・柵の状態 chunks/gates", () => {
     expect(WORLD_FLAGS.find((f) => f.offset === 0x377f)?.label).toContain("神社入口の柵");
     const cave = WORLD_FLAGS.find((f) => f.offset === 0x3761)!;
     expect(cave.label).toContain("神社の洞窟内の柵");
-    expect(cave.note).toContain("1 で柵が降り"); // ✅
+    expect(cave.note).toContain("閉じると柵が降り"); // ✅
     // ❓ 0 に戻したときの上昇・通行の回復は要ゲーム内確認（画面には確度を出さない）
     expect(cave.note).not.toMatch(/✅|🟢|🔶|❓|要ゲーム内確認|確認済み/);
     expect(
@@ -198,8 +198,8 @@ describe("そのほかのフラグ chunks/scenario-flags", () => {
     const consulate = SCENARIO_FLAGS[0];
     expect(consulate.label).toBe("領事館の中に入れない");
     expect(consulate.values).toEqual([
-      { value: 0, label: "0 入れる" },
-      { value: 1, label: "1 入れない" },
+      { value: 0, label: "入れる" },
+      { value: 1, label: "入れない" },
     ]);
     // 🔶 意味に推測が入るのは 0x37C0、❓ 0x3760。確度は画面に出さない
     for (const f of SCENARIO_FLAGS) expect(f.note).not.toMatch(/✅|🟢|🔶|❓|要ゲーム内確認/);
