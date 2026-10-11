@@ -141,7 +141,7 @@ function StateCard({
           {/* 位置は [U] の差分、ロード時の扱いは 🟢。🔶 書き換えたときのゲーム内の反映は未確認（要ゲーム内確認） */}
           <InfoTip offset={`${formatOffset(BELT_STATE.count)}〜0xA6AF`} />
         </CardTitle>
-        <CardDescription>どの武器を手に持つか、二刀流。</CardDescription>
+        <CardDescription>手に持つ武器と、二刀流にするかを選べます。</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-wrap items-center gap-6 sm:col-span-2">

@@ -645,9 +645,10 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">夜の約束</CardTitle>
         <CardDescription>
-          約束中の相手の種類・場所・名前・見た目・年齢などを書き換えます。
-          相手の種類（セリフと戦闘力）・名前・見た目と声は別々に決まるので、組み合わせを変えられます。
-          約束がないときは、新しく約束を作れます。
+          約束中の相手・場所・名前・見た目などを書き換えられます。約束がないときは新しく作れます。
+          <br />
+          相手の種類・名前・見た目は別々に選べるので、自由に組み合わせられます。
+          {/* 相手の種類（セリフと戦闘力）・名前・見た目と声は別々に決まる */}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -711,10 +712,10 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
       title="夜這いの記録"
       description={
         <>
-          夜這いのたびに、最初の空いている件に書かれます（最大 {RECORD_CAPACITY} 件。
-          {view ? `今は ${view.count} 件` : "未読み込み"}。周回を始めると全部消えます）。
-          今ある記録の項目だけを書き換えます（記録を足したり消したりする機能はありません）。
-          見た目と声は記録に残りません。
+          これまでの夜這いの記録を書き換えられます（記録を足したり消したりはできません）。
+          <br />
+          最大 {RECORD_CAPACITY} 件{view && `（今は ${view.count} 件）`}で、周回を始めると全部消えます。
+          {/* 夜這いのたびに最初の空いている件に書かれる。見た目と声は記録に残らない */}
         </>
       }
       contentClassName="flex flex-col divide-y"
@@ -743,7 +744,8 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
       description={
         <>
           朱美・ローラ・三姉妹・メリンダと夜這いの約束をするための好感度とポイントです。
-          約束そのものはゲームの中で、条件を満たした場面を通って作ります。
+          <br />
+          約束そのものは、条件を満たしてゲームの中で結びます。
         </>
       }
       contentClassName="grid gap-4 sm:grid-cols-3"
@@ -782,9 +784,11 @@ function CountersCard({ view }: { view: YobaiView | null }) {
       title="夜這いの回数（表示だけ）"
       description={
         <>
-          {/* ✅ 約束の画面の「夜這い回数」は 0x137EC */}
-          夜這いが終わるたびに増える値です。
-          夜這い回数と相手ごとの回数は周回で消えず、記録と愛の証の回数は周回で消えるので、記録の数と合わないことがあります。
+          {/* ✅ 約束の画面の「夜這い回数」は 0x137EC。
+              夜這い回数と相手ごとの回数は周回で消えず、記録と愛の証の回数は周回で消える */}
+          夜這いの回数などの記録です。
+          <br />
+          周回で消える値と消えない値があるので、記録の数と合わないことがあります。
         </>
       }
       contentClassName="flex flex-col gap-4 text-sm"

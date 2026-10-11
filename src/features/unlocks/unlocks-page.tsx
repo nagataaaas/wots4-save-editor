@@ -141,7 +141,9 @@ export function AccessoriesPage() {
             </InfoTip>
           </CardTitle>
           <CardDescription>
-            持っている装飾品を切り替えます。並びはゲーム内の一覧の順です。所持 {ownedCount} / {ACCESSORY_COUNT}
+            持っている装飾品を切り替えられます（並びはゲーム内の一覧の順）。
+            <br />
+            所持 {ownedCount} / {ACCESSORY_COUNT}
           </CardDescription>
           {view?.warning && <p className="text-destructive text-xs">{view.warning}</p>}
         </CardHeader>
@@ -321,7 +323,9 @@ function AppearanceUnlocksCard() {
             </InfoTip>
           </CardTitle>
           <CardDescription>
-            主人公設定で使う特典の状態です。クリックするたびに 非表示 → 未取得 → 取得済み の順に切り替わります。
+            主人公設定で選べる顔・髪型などの特典を解除できます。
+            <br />
+            クリックするたびに 非表示 → 未取得 → 取得済み の順に切り替わります。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -376,7 +380,9 @@ export function AppearancePage() {
             <InfoTip offset={`${formatOffset(APPEARANCE_OFFSET)}〜${formatOffset(APPEARANCE_OFFSET + APPEARANCE_BYTES - 1)}`} />
           </CardTitle>
           <CardDescription>
-            容姿設定で選べる服を解放済みにするかを切り替えます。解放 {onCount} / {CLOTHES.length}
+            容姿設定で選べる服を解放できます。
+            <br />
+            解放 {onCount} / {CLOTHES.length}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -478,8 +484,10 @@ export function UnlocksPage() {
             <InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)}〜${formatOffset(UNLOCK_STATES_OFFSET + UNLOCK_COUNT - 1)}`} />
           </CardTitle>
           <CardDescription>
-            特典ごとの状態を切り替えます。
-            全部を解除済みにすると、Steam の実績（すべての容姿設定を解除 など）が取れる可能性があります（取れた実績は戻せません）。
+            ゲームの特典を解除できます。
+            <br />
+            全部を解除すると Steam の実績が取れることがあります（取れた実績は戻せません）。
+            {/* 実績の例：すべての容姿設定を解除 */}
           </CardDescription>
           {view?.warning && <p className="text-destructive text-xs">{view.warning}</p>}
         </CardHeader>

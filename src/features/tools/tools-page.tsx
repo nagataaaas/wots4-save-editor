@@ -31,7 +31,8 @@ export function ToolsPage() {
     <ItemBoxPage
       area={TOOLS_AREA}
       title="道具"
-      description="手持ちの道具。各枠の道具と個数を設定できます。個数は1枠にまとめて持てる最大数まで（ほとんどの道具は 1）。"
+      // 個数は1枠にまとめて持てる最大数まで（ほとんどの道具は 1）
+      description="持ち歩いている道具と個数を設定できます。"
       // [U] 2026-10-05 +0x04 が 0x06 でないと、売却一覧でゲームが落ちた
       missingMarkNote="このままだと、店で売却一覧を開くときにゲームが落ちます。"
     />
@@ -44,7 +45,7 @@ export function ChestPage() {
     <ItemBoxPage
       area={CHEST_AREA}
       title="箪笥"
-      description="道場の箪笥に入っている道具。各枠の道具と個数を設定できます。"
+      description="道場の箪笥に入っている道具と個数を設定できます。"
       // ゲームが書く枠の +0x04 が 0x06 なのは 🟢。手持ちで 0x06 でないと落ちたのは [U]
       missingMarkNote="手持ちの道具では、このままだと店で売却一覧を開くときにゲームが落ちます。"
     />

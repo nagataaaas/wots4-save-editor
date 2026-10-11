@@ -109,8 +109,10 @@ export function OreRyuPage() {
             <InfoTip offset={`0x${CUSTOM_COUNT_OFFSET.toString(16).toUpperCase()}、0x${CUSTOM_SHEET_COUNT_OFFSET.toString(16).toUpperCase()}`} />
           </CardTitle>
           <CardDescription>
-            俺流の名前・修練度・技の構成を書き換えたり、新しく作ったりできます。書き換える前に、必ず元のセーブをバックアップしてください。
-            技は、構えの技の表から選びます（通常モードでは、覚えていて俺流に入れられる技だけ。上級者モードでは構えの全部の技）。
+            俺流の名前・修練度・技の構成を書き換えたり、新しく作ったりできます。
+            <br />
+            書き換える前に、必ず元のセーブをバックアップしてください。
+            {/* 技は構えの技の表から選ぶ（通常モードでは覚えていて俺流に入れられる技だけ、上級者モードでは構えの全部の技） */}
           </CardDescription>
         </CardHeader>
         {message && (
@@ -393,8 +395,10 @@ function CreateCard({
           {/* 🔶 要ゲーム内確認 */}
         </CardTitle>
         <CardDescription>
-          ゲームと同じ手順で、流派の書を持ち歩きの空き（なければ道場の箪笥）に入れます。
-          白紙目録は使いません。装備はゲーム内の流派の切り替えで行ってください。
+          白紙目録なしで新しい俺流を作り、流派の書を持ち物（いっぱいなら道場の箪笥）に入れます。
+          <br />
+          装備はゲーム内の流派の切り替えで行ってください。
+          {/* ゲームと同じ手順で書く */}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">

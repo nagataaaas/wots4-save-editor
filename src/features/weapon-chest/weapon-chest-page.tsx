@@ -108,7 +108,8 @@ export function WeaponChestPage() {
           </CardTitle>
           {/* 位置・意味は 🟢。🔶 書き換えたときのゲーム内の反映は未確認（要ゲーム内確認） */}
           <CardDescription>
-            ゲームは箪笥の先頭から容量の枠までだけを使い、本数が容量に達すると武器を入れられません。
+            刀箪笥に入る本数（容量）を変えられます。本数が容量に達すると、武器を入れられなくなります。
+            {/* 🟢 ゲームは箪笥の先頭から容量の枠までだけを使う */}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -163,7 +164,9 @@ export function WeaponChestPage() {
               </div>
             </CardTitle>
             <CardDescription>
-              行を押すと編集欄を開きます。{showEmpty ? `容量の枠（${slots} 枠）と、その外で武器が入っている枠を表示しています。` : "武器が入っている枠だけを表示しています。"}
+              行を押すと編集欄を開きます。
+              <br />
+              {showEmpty ? `容量の枠（${slots} 枠）と、その外で武器が入っている枠を表示しています。` : "武器が入っている枠だけを表示しています。"}
             </CardDescription>
           </CardHeader>
           <CardContent>

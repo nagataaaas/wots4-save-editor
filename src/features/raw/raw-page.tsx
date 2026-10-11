@@ -170,7 +170,10 @@ function RawEditor({
         <CardHeader>
           <CardTitle>差分</CardTitle>
           <CardDescription>
-            基準と今のバイト列（編集を含む）で値が違う範囲です。比較用のファイルを開くと、別のセーブとの違いを見られます。時間で進む値などは操作と関係なく変わります。
+            読み込み時から変わった範囲を一覧します。
+            <br />
+            比較用のファイルを開くと、別のセーブとの違いも見られます。
+            {/* 時間で進む値などは操作と関係なく変わる */}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -216,7 +219,8 @@ function RawEditor({
 
       <CollapsibleCard
         title="領域の一覧"
-        description="既知の領域です。終了が分からないものは色分けしません。行をクリックすると、その位置へ移動します。"
+        // 終了が分からない領域は色分けしない
+        description="分かっている領域の一覧です。行をクリックすると、その位置へ移動します。"
         contentClassName="overflow-x-auto"
       >
         <RegionTable onJump={goTo} />
@@ -588,7 +592,8 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
     <Card>
       <CardHeader>
         <CardTitle>検索</CardTitle>
-        <CardDescription>今のバイト列（編集を含む）から探します。数値はリトルエンディアンのバイト列として探します。</CardDescription>
+        {/* 今のバイト列（編集を含む）から探す。数値はリトルエンディアンのバイト列として探す */}
+        <CardDescription>セーブの中から値や文字列を探せます。編集中の内容も対象です。</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <form
@@ -750,7 +755,9 @@ function PatchCard({
           </InfoTip>
         </CardTitle>
         <CardDescription>
-          オフセットとバイト列の組を貼り付けると、全部の行をまとめて上書きします。1行でも読めない行があれば何も書きません。
+          オフセットとバイト列の組を貼り付けて、まとめて上書きできます。
+          <br />
+          1行でも読めない行があれば、何も書き込みません。
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">

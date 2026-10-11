@@ -40,24 +40,19 @@ export type StatField = {
 
 export type StatGroupId = 'evaluation' | 'actions' | 'titles' | 'time' | 'combat' | 'damage'
 
+// note はカードの説明（画面に出す概要）。
+// 侍度・分子・分母・得る侍点は評価のときに計算し直される。評価の結果画面の「不適切な行動」は行動の回数の最初の 4 項目の合計で、行動の回数は周回の終わりに 0。
+// 称号の欄は評価のたびに 1 増え、周回をまたいで残る。移動距離・斬殺数の周回中の値は周回の終わりに 0、累計は残る
 export const STAT_GROUPS: readonly { id: StatGroupId; label: string; note: string }[] = [
-  {
-    id: 'evaluation',
-    label: '侍評価',
-    note: '周回の終わりの評価画面が使う値。侍度・分子・分母・得る侍点は評価のときに計算し直される',
-  },
-  {
-    id: 'actions',
-    label: '行動の回数',
-    note: '侍度の計算に使う回数。評価の結果画面の「不適切な行動」は最初の 4 項目の合計。周回の終わりに 0',
-  },
-  { id: 'titles', label: '称号ごとの獲得回数', note: '評価のたびに得た称号の欄が 1 増える。周回をまたいで残る' },
-  { id: 'time', label: 'プレイ時間', note: '単位は秒' },
-  { id: 'combat', label: '移動距離・斬殺数', note: '周回中の値は周回の終わりに 0、累計は残る' },
+  { id: 'evaluation', label: '侍評価', note: '周回の終わりの評価画面で使う値です。' },
+  { id: 'actions', label: '行動の回数', note: '侍度の計算に使う、侍らしい行動・恥ずかしい行動などの回数です。' },
+  { id: 'titles', label: '称号ごとの獲得回数', note: '評価でそれぞれの称号を得た回数です。' },
+  { id: 'time', label: 'プレイ時間', note: '周回中・累計などのプレイ時間（秒）です。' },
+  { id: 'combat', label: '移動距離・斬殺数', note: '移動距離・斬殺数・連斬の記録です。' },
   {
     id: 'damage',
     label: '人物ごとに与えた痛手',
-    note: '人物の種類ごとに、主人公が与えた痛手の合計。累計で最大の人物が記録の画面の「不倶戴天の敵」になる',
+    note: '人物の種類ごとに与えた痛手の合計です。いちばん多い人物が「不倶戴天の敵」になります。',
   },
 ]
 

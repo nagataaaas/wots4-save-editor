@@ -213,7 +213,10 @@ export function HeroPage() {
         <CardHeader>
           <CardTitle>HP・活力・つま斬り</CardTitle>
           <CardDescription>
-            現在値は最大値以下で入力します（上級者モードでは超えられます）。ロード時、現在値は最大値で頭打ちになります。
+            HP・活力・つま斬りの現在値と最大値を編集できます。
+            <br />
+            現在値は最大値まで入力できます（上級者モードでは超えられます）。
+            {/* ロード時、現在値は最大値で頭打ちになる */}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
@@ -256,8 +259,10 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
       <CardHeader>
         <CardTitle>難易度・主人公設定のやり直し</CardTitle>
         <CardDescription>
-          次のロードの「続きから」で、難易度と主人公の設定に進むようにします。イベントの状態は今の周回のままなので、序章のイベントは始まらず、セーブした場所から続きます。
+          今の周回のまま、難易度と主人公の設定だけをやり直せます。
+          <br />
           周回をはじめからやり直すときは、「世界 / 阿弥浜」画面の「新しい周回」を使います。
+          {/* 次のロードの「続きから」で難易度と主人公の設定に進む。イベントの状態は今の周回のままなので、序章のイベントは始まらず、セーブした場所から続く */}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-1.5">
@@ -308,7 +313,8 @@ function LocationCard({
       <CardHeader>
         <CardTitle>現在地（開始地点）</CardTitle>
         <CardDescription>
-          ロード時に出現する場所。クラッシュが報告されている値は選択肢に出しません。
+          次にロードしたときに出現する場所を選べます。
+          {/* クラッシュが報告されている値は選択肢に出さない */}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-1.5">

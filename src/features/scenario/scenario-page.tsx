@@ -409,13 +409,22 @@ function CycleCard({
       <CardHeader>
         <CardTitle>難易度・治安・周回</CardTitle>
         <CardDescription>
-          難易度・治安・周回数を編集します。治安は {publicOrderLevelsText} です。
-          「新しい周回」は、物語を終えたときにゲームが行う引き継ぎと初期化を、同じ順序で行います。終わり方はクリア（結末を見た）か立ち去り（町を立ち去った）を選びます。
-          次のロードの「続きから」で難易度と主人公の設定に進み、序章のイベント（船上の侍）から新しい周回として遊べます。
-          段階だけを序章に戻して主人公の設定だけをやり直すときは、「主人公」画面のボタンを使います。
-          {publicOrder?.level && ` 今の治安は「${publicOrder.level}」です。`}
-          {counts &&
-            ` クリア回数（難易度ごと）：${counts.clears.map((n, i) => `${DIFFICULTIES[i]?.label ?? "不明"} ${n}`).join("・")}、立ち去った回数：${counts.goneCount}`}
+          難易度・治安・周回数を編集できます。「新しい周回」で、物語を終えたときと同じように次の周回を始められます。
+          {/* 新しい周回：物語を終えたときにゲームが行う引き継ぎと初期化を同じ順序で行う。終わり方はクリアか立ち去り。
+              次のロードの「続きから」で難易度と主人公の設定に進み、序章（船上の侍）から遊べる。
+              段階だけを序章に戻すのは「主人公」画面のボタン */}
+          {publicOrder?.level && (
+            <>
+              <br />
+              今の治安：{publicOrder.level}
+            </>
+          )}
+          {counts && (
+            <>
+              <br />
+              クリア回数：{counts.clears.map((n, i) => `${DIFFICULTIES[i]?.label ?? "不明"} ${n}`).join("・")}／立ち去った回数：{counts.goneCount}
+            </>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -441,7 +450,7 @@ function CycleCard({
           apply={(v) => update((b) => writePublicOrder(b, v, { advanced }))}
           inputMode="numeric"
           hint={advanced ? "0〜255" : `0〜${PUBLIC_ORDER_MAX}`}
-          note="初期値は 50 です"
+          note={`初期値は 50 です。${publicOrderLevelsText}`}
         />
         <FieldRow
           label="周回数"
@@ -521,8 +530,9 @@ function DateCard({ view }: { view: DateView | null }) {
       contentClassName="grid gap-4 sm:grid-cols-3"
       description={
         <>
-          段階は、メインイベントが起きるかどうかを決めます。
-          日数と時間帯はゲーム内の表示で、メインイベントには影響しません。段階と日数・時間帯は別々に書きます
+          物語の進み具合（段階）と、日数・時間帯を編集できます。
+          <br />
+          メインイベントが起きるかは段階で決まり、日数・時間帯は表示だけです。
         </>
       }
     >
@@ -613,8 +623,10 @@ function FactionExitCard({ view }: { view: FactionExitView | null }) {
       contentClassName="grid gap-4 sm:grid-cols-3"
       description={
         <>
-          退場すると、その勢力の人物が町から出なくなります。
-          外国・攘夷は物語の中でも退場します（ローラの死・帰国、般若党の壊滅など）。幕府が退場する場面はありません。
+          幕府・外国・攘夷の勢力を、町から退場させるかを選べます。
+          <br />
+          退場した勢力の人物は町に出てこなくなります。
+          {/* 外国・攘夷は物語の中でも退場する（ローラの死・帰国、般若党の壊滅など）。幕府が退場する場面はない */}
         </>
       }
     >
@@ -685,11 +697,12 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
       contentClassName="flex flex-col gap-6"
       description={
         <>
-          神社は「入口の柵」と「洞窟内の柵」が別々の閉鎖の指定です。 洞窟内の柵は、閉じると降りて通行を塞ぎます。
-          代官所の表門・居留地の外門・神社入口の柵は、閉鎖指定なしにすると開きます。
-          閉鎖の指定は大寄せ前にも有効で、「閉鎖指定なし」は閉鎖の指定を解除します。
-          初日勧誘の項目（代官所の門・居留地の門・神社入口の柵）は序章〜1日目昼の開放判定に使われ、開いていれば通れます。
-          ルートやイベントの条件によっても閉じるため、開けるだけで必ず通れるとは限りません。
+          代官所・居留地・神社などの門や柵を開け閉めできます。
+          <br />
+          ルートやイベントによっても閉じるため、開けても通れないことがあります。
+          {/* 神社は「入口の柵」と「洞窟内の柵」が別々の閉鎖の指定。洞窟内の柵は閉じると降りて通行を塞ぐ。
+              代官所の表門・居留地の外門・神社入口の柵は、閉鎖指定なしにすると開く。閉鎖の指定は大寄せ前にも有効。
+              初日勧誘の項目は序章〜1日目昼の開放判定に使われ、開いていれば通れる */}
         </>
       }
     >
@@ -799,9 +812,16 @@ function EventFlagsCard({ route }: { route: RouteCandidatesView | null }) {
       <CardHeader>
         <CardTitle>イベント関連フラグ</CardTitle>
         <CardDescription>
-          イベントで状態が変わるフラグと、イベントの起き方を変えるフラグです。説明は、状態が変わる場面と、状態によって変わるイベントです。
-          通常モードでは、その場面で現れる状態だけを選べます。
-          {route?.warning && ` ${route.warning}`}
+          イベントで変わる状態や、イベントの起き方を変えるフラグを編集できます。
+          <br />
+          各欄の説明に、状態が変わる場面と、影響するイベントを書いています。
+          {/* 通常モードでは、その場面で現れる状態だけを選べる */}
+          {route?.warning && (
+            <>
+              <br />
+              {route.warning}
+            </>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">{fields.map((f) => f.node)}</CardContent>
@@ -820,16 +840,16 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
       contentClassName="grid gap-4 sm:grid-cols-3"
       description={
         <>
-          病院・カジノ・語学所の開閉です。
-          初期状態は、病院・語学所が閉、カジノが開です。
-          周回をまたいで引き継がれます。
-          2日目の各枠では、施設の値によって起きるイベントが入れ替わります。
-          真ルートで希望の光に進むには、病院・語学所が開き、カジノが閉じている必要があります。
+          病院・カジノ・語学所の開閉を切り替えられます。2日目に起きるイベントが変わります。
+          <br />
+          真ルートで希望の光に進むには、病院・語学所が開き、カジノが閉じている必要があります
           {view &&
             !view.problem &&
             (facilitiesReadyForLightOfHope(view.values)
-              ? " 今のセーブはこの条件を満たしています。"
-              : " 今のセーブはこの条件を満たしていません。")}
+              ? "（今のセーブは満たしています）"
+              : "（今のセーブは満たしていません）")}
+          。
+          {/* 初期状態は病院・語学所が閉、カジノが開。周回をまたいで引き継がれる */}
         </>
       }
     >
@@ -878,13 +898,17 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
       contentClassName="grid gap-4 sm:grid-cols-3 lg:grid-cols-5"
       description={
         <>
-          重要人物と寿司屋の状態（生死など）です。周回の始めはすべて生存（通常）です。
-          赤城には病院に運ばれて助かった状態、J.J.
-          には伯爵救出の成功・打ち解けた・逮捕された状態があります。
-          鬼怒川怨仙は船上の侍で生存になり、大老暗殺計画で倒すと偽物が死亡になります。
-          朱美・ローラ・J.J. は死亡にするといなくなります。
-          各欄は状態から選びます。説明に、状態が変わる場面と、状態を条件にするイベントを書いています。
-          {view?.warning && ` ${view.warning}`}
+          重要人物と寿司屋の生死などの状態を選べます。
+          <br />
+          各欄の説明に、状態が変わる場面と、影響するイベントを書いています。
+          {/* 周回の始めはすべて生存（通常）。赤城には病院に運ばれて助かった状態、J.J. には伯爵救出の成功・打ち解けた・逮捕された状態がある。
+              鬼怒川怨仙は船上の侍で生存になり、大老暗殺計画で倒すと偽物が死亡になる。朱美・ローラ・J.J. は死亡にするといなくなる */}
+          {view?.warning && (
+            <>
+              <br />
+              {view.warning}
+            </>
+          )}
         </>
       }
     >
@@ -957,9 +981,11 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
       contentClassName="flex flex-col gap-4"
       description={
         <>
-          チェックの付いた人は死亡した（または引退などで町からいなくなった）人で、町に出てきません。周回の終わりに全員が生き返ります。
-          チェックを外すと生き返ります。
-          重要人物・寿司屋・薬屋は、外すだけでは生き返りません（警告のアイコンに、一緒に戻すものを書いています）。
+          死亡した（町からいなくなった）町の人を、チェックを外して生き返らせられます。
+          <br />
+          警告のアイコンが付いた人は、外すだけでは生き返りません。
+          {/* チェックの付いた人は町に出てこない（引退なども含む）。周回の終わりに全員が生き返る。
+              重要人物・寿司屋・薬屋は、警告のアイコンに一緒に戻すものを書く */}
         </>
       }
     >
@@ -1032,8 +1058,10 @@ function NpcFlagsCard({
       contentClassName="flex flex-col gap-6"
       description={
         <>
-          町の人のイベントの進み具合です。鍛冶屋・道場・堂島・先生などに関わるものを編集できます。連続なりわいの進み具合などは「なりわい」の画面で編集します。
-          堂島が鍛冶屋を継いだかは、周回後に誰が鍛冶屋になるかを決めます。
+          鍛冶屋・道場・堂島・先生など、町の人のイベントの進み具合を編集できます。
+          <br />
+          連続なりわいの進み具合は「なりわい」画面にあります。
+          {/* 堂島が鍛冶屋を継いだかは、周回後に誰が鍛冶屋になるかを決める */}
         </>
       }
     >
@@ -1173,10 +1201,10 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
       <CardHeader>
         <CardTitle>勢力の状態</CardTitle>
         <CardDescription>
-          3勢力 × 3項目の記録です。
-          友好度は「友好ポイント（協力・成功）− 対立ポイント（不利益・敵対行為）」。
-          大寄せの時点で友好度が 3
-          以上の勢力のルートに入れます。幕府は茂呂が生きていることも条件です。
+          幕府・外国・攘夷との友好・対立の記録を編集できます。どの勢力のルートに入れるかが変わります。
+          <br />
+          大寄せの時点で友好度が 3 以上の勢力のルートに入れます（幕府は茂呂が生きていることも条件）。
+          {/* 友好度＝友好ポイント（協力・成功）− 対立ポイント（不利益・敵対行為） */}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
