@@ -21,7 +21,9 @@ import { readU16, readU8, writeU16, writeU8 } from "./binary";
 import { occupationById } from "./master/occupation-names";
 import { OCCUPATION_NOT_APPEARED, occupationStateOffset, readOccupations } from "./occupation";
 import { readDate } from "./scenario-date";
-import { occupationFlagOffset, readTownsfolk, writeTownsfolk } from "./townsfolk";
+import { writeFlag } from "./flags/byte-flag";
+import { occupationFlag } from "./flags/occupation";
+import { readTownsfolk } from "./townsfolk";
 
 export const ACCEPT_OFFSETS = {
   /** u16 ✅ 受注中のなりわいの ID */
@@ -121,7 +123,7 @@ function assertEditable(bytes: Uint8Array): void {
 }
 
 function writeFlags(bytes: Uint8Array, writes: readonly FlagWrite[]): void {
-  for (const w of writes) writeTownsfolk(bytes, occupationFlagOffset(w.flag), w.value, { advanced: false });
+  for (const w of writes) writeFlag(bytes, occupationFlag(w.flag), w.value, { advanced: false });
 }
 
 /** 受注中の情報（4か所）だけを 0 にする。フラグには触らない */
@@ -181,7 +183,7 @@ export function writeSeriesState(
     writeFlags(bytes, flags);
     return;
   }
-  for (const w of flags) writeTownsfolk(bytes, occupationFlagOffset(w.flag), w.value, opts);
+  for (const w of flags) writeFlag(bytes, occupationFlag(w.flag), w.value, opts);
   const current = readU16(bytes, ACCEPT_OFFSETS.id);
   if (current !== 0 && acceptRuleOf(current).onAccept.some((a) => flags.some((w) => w.flag === a.flag))) clearAccepted(bytes);
 }

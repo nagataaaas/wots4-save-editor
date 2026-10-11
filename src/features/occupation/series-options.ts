@@ -2,7 +2,7 @@ import type { SelectOption } from "@/components/select-options";
 import { acceptRuleOf, seriesAcceptOf } from "@/save/occupation-accept";
 import { occupationLabel } from "@/save/master/labels";
 import { occupationById } from "@/save/master/occupation-names";
-import type { TownsfolkValue } from "@/save/townsfolk";
+import type { FlagValue } from "@/save/flags/byte-flag";
 
 /**
  * 表示だけを DLC と揃える（依頼主に会う前／「仕事名」受注前・受注済／すべて終えた）。選択値と受注の判定は変えない。
@@ -10,7 +10,7 @@ import type { TownsfolkValue } from "@/save/townsfolk";
  */
 export function seriesOptions(
   flag: number,
-  values: readonly TownsfolkValue[],
+  values: readonly FlagValue[],
   jobs: readonly number[],
 ): SelectOption[] {
   return values.map((state) => {

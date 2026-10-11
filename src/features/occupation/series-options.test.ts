@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HOMELESS_SERIES_VALUES, POLICE_SERIES_VALUES } from "@/save/townsfolk";
+import { HOMELESS_SERIES_VALUES, POLICE_SERIES_VALUES } from "@/save/flags/occupation";
 import { seriesOptions } from "./series-options";
 
 const jobs = [171, 172, 173, 174, 175, 176, 177, 178];

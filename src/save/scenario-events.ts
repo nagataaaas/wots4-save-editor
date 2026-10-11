@@ -2,7 +2,7 @@
 // イベント名は docs/save_format/datatable/event/event.csv。
 //
 //   0x36A8〜 u8 × 166  周回中のイベント状態（A）。添字ごとに1イベント。
-//                      🟢 通し番号 0〜165（添字＝ゲーム内のイベントID）。166 からは重要人物の状態（characters.ts）
+//                      🟢 通し番号 0〜165（添字＝ゲーム内のイベントID）。166 からは重要人物の状態（flags/characters.ts）
 //   0x3838〜 u8 × 166  周回をまたぐ記録（B、🔶 生きた証）。チャートに表示するかどうかを決めていると推定
 //
 // A の値：
@@ -42,17 +42,17 @@ export const EVENT_RECORD_OFFSET = 0x3838 // 🔶 chunks/event-chart
 export const EVENT_COUNT = 166 // 🟢 chunks/event-chart（通し番号 166 から重要人物の状態）
 
 /**
- * 周回中の状態（A）。confirmed は書き込みでゲーム内の表示を確かめたもの。
- * 01〜04 の意味は 🟢（chunks/event-chart）
+ * 周回中の状態（A）。FF・05 は書き込みでゲーム内の表示を確かめた（✅ [U]）。
+ * 01〜04 の意味は 🟢（chunks/event-chart）。00 は ❓ 書き込みでの表示は未確認
  */
 export const EVENT_STATES = [
-  { value: 0x00, label: '未到達', confirmed: false },
-  { value: 0xff, label: '未到達（初期状態）', confirmed: true }, // 🔶 FF の呼び名は仮。00 との違いは ❓
-  { value: 0x01, label: '導入を見た', confirmed: false },
-  { value: 0x02, label: '断った・保留した', confirmed: false },
-  { value: 0x03, label: '引き受けた・進行中', confirmed: false },
-  { value: 0x04, label: '成功', confirmed: false },
-  { value: 0x05, label: '失敗', confirmed: true },
+  { value: 0x00, label: '未到達' },
+  { value: 0xff, label: '未到達（初期状態）' }, // 🔶 FF の呼び名は仮。00 との違いは ❓
+  { value: 0x01, label: '導入を見た' },
+  { value: 0x02, label: '断った・保留した' },
+  { value: 0x03, label: '引き受けた・進行中' },
+  { value: 0x04, label: '成功' },
+  { value: 0x05, label: '失敗' },
 ] as const
 
 /**
@@ -67,124 +67,137 @@ export const EVENT_RECORDS = [
 /** 読み込み時に妥当とみなす値。EVENT_STATES と同じ */
 const PLAUSIBLE_STATES = new Set([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0xff])
 
-/** イベント一覧の1行。名前はイベントの表（master/event-names.ts）から通し番号で引く（eventLabel） */
-export type EventListEntry = {
+/** 名前の付いたイベント1件。名前はイベントの表（master/event-names.ts）から添字で引く（eventNameOf） */
+export type NamedEvent = {
+  /** 添字（通し番号） */
+  index: number
+  /** 時間帯。4日目以降はルート・エンディングの区分 */
   day: string
-  /**
-   * 'chart'＝ゲーム内のチャートで添字とイベントの対応を確認（✅ [U] 2026-10-05）、
-   * 'game'＝差分の観察で添字とイベントの対応を確認（🟢）
-   */
-  basis: 'chart' | 'game'
 }
 
 /**
- * 名前の分かっている添字。名前は docs/save_format/datatable/event/event.csv。day は docs/event.md（Wiki）の時間帯。
+ * 名前の付いたイベント（添字の順）。イベントチャートの枠の説明と、一括設定の対象はこの配列で決める。
+ * 名前は docs/save_format/datatable/event/event.csv。day は docs/event.md（Wiki）の時間帯。
  * 行末のコメントの名前は読みやすさのための写しで、表示には使わない。
- * 2〜46 の名前はユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）。52〜98 も同じ（[U] 2026-10-06）。
+ * 添字とイベントの対応の根拠：
+ *   0・1・3・6・9〜12  🟢 差分の観察（行末に差分を書く）
+ *   2〜46 のそのほか  ✅ ユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）
+ *   51〜99・116      ✅ 同じ（[U] 2026-10-06）。名前はゲーム内の表記に合わせる（🟢）
  * 4日目以降のイベントの day は時間帯ではなく、docs/event.md の節（ルート・エンディング）を入れる。
- * 51・99・116 も [U] 2026-10-06。名前はゲーム内の表記に合わせる（🟢）。
  *
- * 画面のイベント一覧に出すのはここにある添字だけ（ユーザー判断 2026-10-06）。覚え書き：
- *   47〜50・67・84  チャートに出ない・起きない添字。フラグ確認用に画面の下にまとめて出す（EVENT_GAP_NOTES）
- *   100〜165（116 以外）🟢 対応するイベントがない。表示しない
+ * 載せない添字（ユーザー判断 2026-10-06）：
+ *   47〜50  🟢 剣術大会（幕府／外国／攘夷／無所属）。チャートには出ない。
+ *           出場した勢力の1つだけが 03 になり、優勝で 04、負け・降参で 05（🟢）
+ *   67      悲しみのローラ。未実装のイベントとみられる（[U] 2026-10-06）
+ *   84      🟢 名前不明。ローラの決意（85）の前半の導入。人間湯通しの恐怖に続く場面が始まると 04 になり、
+ *           85 の開始条件が「84 = 04」。チャートには名前が出ない
+ *   100〜165（116 以外）🟢 対応するイベントがない
  *     102 ガイジンとゲイシャで「102 = 3」のときの別の会話があるが、値を書く場面がない（使われていない。🟢）
  */
-export const EVENT_LIST: Readonly<Record<number, EventListEntry>> = {
-  0: { day: '1日目昼', basis: 'game' }, // 船上の侍。どのセーブでも 04（Samurai on Board、オープニング）
-  1: { day: '1日目昼', basis: 'game' }, // 阿弥浜港争乱。スキップで 00、1周目で 04
-  3: { day: '1日目昼', basis: 'game' }, // 嵐のあと。差分 03 copy → copy 2。Wiki の表記は「嵐の後」
-  6: { day: '1日目昼', basis: 'game' }, // 志士との出会い。差分 03 copy 2 → copy 3 → copy 4
-  9: { day: '1日目夕', basis: 'game' }, // 海兵隊の横暴。差分 03 copy 5 → 04 copy（成功）／04 copy 2（失敗）／04 copy 4（成功）
-  10: { day: '1日目夜', basis: 'game' }, // 阿片密売を阻止せよ。差分 04 copy 2 → copy 3
-  11: { day: '1日目夜', basis: 'game' }, // 辻斬りを辻斬る。差分 04 copy 4 → copy 5
-  12: { day: '1日目夜', basis: 'game' }, // 代官所潜入。差分 04 copy 4 → 03 copy 6
-  2: { day: '1日目昼', basis: 'chart' }, // 簀巻き日和
-  4: { day: '1日目昼', basis: 'chart' }, // 代官所の面々
-  5: { day: '1日目昼', basis: 'chart' }, // 小公女謁見
-  7: { day: '1日目夕', basis: 'chart' }, // 琴吹光探検隊
-  8: { day: '1日目夕', basis: 'chart' }, // 電信あり
-  13: { day: '2日目昼', basis: 'chart' }, // 西洋医学お断り
-  14: { day: '2日目昼', basis: 'chart' }, // 病院廃業の企て
-  15: { day: '2日目昼', basis: 'chart' }, // 病院占拠事件
-  16: { day: '2日目昼', basis: 'chart' }, // 祝 病院開業
-  17: { day: '2日目昼', basis: 'chart' }, // 欺きの代価
-  18: { day: '2日目夕', basis: 'chart' }, // 講師ご到着
-  19: { day: '2日目夕', basis: 'chart' }, // 語学所開設
-  20: { day: '2日目夕', basis: 'chart' }, // お団子物語
-  21: { day: '2日目夕', basis: 'chart' }, // 語学無用
-  22: { day: '2日目夕', basis: 'chart' }, // 講師を亡き者に
-  23: { day: '2日目夜', basis: 'chart' }, // ガイジンとゲイシャ
-  24: { day: '2日目夜', basis: 'chart' }, // ライジングサン
-  25: { day: '2日目夜', basis: 'chart' }, // カジノ再建を急げ
-  26: { day: '2日目夜', basis: 'chart' }, // カジノを破壊せよ
-  27: { day: '2日目夜', basis: 'chart' }, // カジノ再建断固阻止
-  28: { day: '3日目昼', basis: 'chart' }, // 大老 鬼怒川怨仙
-  29: { day: '3日目昼', basis: 'chart' }, // 魔鱗組の力
-  30: { day: '3日目昼', basis: 'chart' }, // 小公女と大老
-  31: { day: '3日目昼', basis: 'chart' }, // 血で血を洗う戦い
-  32: { day: '3日目昼', basis: 'chart' }, // 白昼の激突
-  33: { day: '3日目夕', basis: 'chart' }, // 大老と三姉妹
-  34: { day: '3日目夕', basis: 'chart' }, // 小公女倒れる
-  35: { day: '3日目夕', basis: 'chart' }, // 売国奴を斬れ
-  36: { day: '3日目夜', basis: 'chart' }, // 剣術大会の準備
-  37: { day: '3日目夜', basis: 'chart' }, // 危険な賭け
-  38: { day: '3日目夜', basis: 'chart' }, // 真実
-  39: { day: '3日目夜', basis: 'chart' }, // 仕組まれた襲撃
-  40: { day: '3日目夜', basis: 'chart' }, // 罠を破れ
-  41: { day: '4日目以降', basis: 'chart' }, // 大老の大寄せ
-  42: { day: '4日目以降', basis: 'chart' }, // 公儀の剣。ユーザーの一覧では「広儀の剣」。docs/event.md の表記に合わせた
-  43: { day: '4日目以降', basis: 'chart' }, // 東国の騎士
-  44: { day: '4日目以降', basis: 'chart' }, // 志士の刀
-  45: { day: '4日目以降', basis: 'chart' }, // 根無し草
-  46: { day: '4日目以降', basis: 'chart' }, // 剣術大会開催
-  51: { day: '4日目以降', basis: 'chart' }, // 覇者となる。[U] 2026-10-06
-  52: { day: '4日目以降', basis: 'chart' }, // 最後通告
-  53: { day: '幕府ルート', basis: 'chart' }, // 闇黒の意志
-  54: { day: '幕府ルート', basis: 'chart' }, // 大老武断
-  55: { day: '幕府ルート', basis: 'chart' }, // 憂国の士
-  56: { day: '外国ルート', basis: 'chart' }, // 願い虚しく
-  57: { day: '攘夷ルート', basis: 'chart' }, // 臆病風
-  58: { day: '攘夷ルート', basis: 'chart' }, // 同士救出
-  59: { day: '幕府ルート', basis: 'chart' }, // 般若党壊滅
-  60: { day: '幕府ルート', basis: 'chart' }, // 黒船を我が手に
-  61: { day: '外国ルート', basis: 'chart' }, // 鬼怒川の魔手
-  62: { day: '攘夷ルート', basis: 'chart' }, // 領事館斬り込み
-  63: { day: '攘夷ルート', basis: 'chart' }, // 武士の魂
-  64: { day: '幕府ルート', basis: 'chart' }, // 三匹で斬る
-  65: { day: '幕府ルート', basis: 'chart' }, // 剣客 茂呂茂
-  66: { day: '幕府ルート', basis: 'chart' }, // 武人 琴吹光
-  68: { day: '外国ルート', basis: 'chart' }, // 夕暮れの船上
-  69: { day: '外国ルート', basis: 'chart' }, // 討ち入り
-  70: { day: '真ルート', basis: 'chart' }, // 三姉妹見参
-  71: { day: '真ルート', basis: 'chart' }, // お早い到着
-  72: { day: '真ルート', basis: 'chart' }, // 再起の望み
-  73: { day: '真ルート', basis: 'chart' }, // 将の器
-  74: { day: '真ルート', basis: 'chart' }, // 怒りの矛先
-  75: { day: '真ルート', basis: 'chart' }, // 伯爵に刺激を
-  76: { day: '真ルート', basis: 'chart' }, // 運命のルーレット
-  77: { day: '真ルート', basis: 'chart' }, // 闇討ち
-  78: { day: '真ルート', basis: 'chart' }, // 学問のすすめ
-  79: { day: '真ルート', basis: 'chart' }, // 刺激が欲しい
-  80: { day: '真ルート', basis: 'chart' }, // 傷心の帰国船
-  81: { day: '真ルート', basis: 'chart' }, // 伯爵救出
-  82: { day: '真ルート', basis: 'chart' }, // 人間湯通しの恐怖
-  83: { day: '真ルート', basis: 'chart' }, // 大老暗殺計画
-  85: { day: '真ルート', basis: 'chart' }, // ローラの決意
-  86: { day: '真ルート', basis: 'chart' }, // 士魂は屈せず
-  87: { day: '真ルート', basis: 'chart' }, // ローラ奪還
-  88: { day: '真ルート', basis: 'chart' }, // 鬼怒川を追え
-  89: { day: '真ルート', basis: 'chart' }, // 黒船の決闘
-  90: { day: 'エンディング', basis: 'chart' }, // 希望の光
-  91: { day: 'エンディング', basis: 'chart' }, // 熱き魂
-  92: { day: 'エンディング', basis: 'chart' }, // 攘夷の炎
-  93: { day: 'エンディング', basis: 'chart' }, // 破滅への道
-  94: { day: 'エンディング', basis: 'chart' }, // 変わり往く心
-  95: { day: 'エンディング', basis: 'chart' }, // 海外雄飛
-  96: { day: 'エンディング', basis: 'chart' }, // 侍一直線
-  97: { day: 'エンディング', basis: 'chart' }, // 魔鱗組として。docs/event.md に記載なし。エンディングなのは [U] 2026-10-06
-  98: { day: 'エンディング', basis: 'chart' }, // 釜茹で侍。同上
-  99: { day: 'エンディング', basis: 'chart' }, // 大老は生きていた。[U] 2026-10-06
-  116: { day: '3日目夜', basis: 'chart' }, // 夜の墓場で。[U] 2026-10-06。99 以降で初めて見つかった添字
+export const NAMED_EVENTS: readonly NamedEvent[] = [
+  { index: 0, day: '1日目昼' }, // 船上の侍。どのセーブでも 04（Samurai on Board、オープニング）
+  { index: 1, day: '1日目昼' }, // 阿弥浜港争乱。スキップで 00、1周目で 04
+  { index: 2, day: '1日目昼' }, // 簀巻き日和
+  { index: 3, day: '1日目昼' }, // 嵐のあと。差分 03 copy → copy 2。Wiki の表記は「嵐の後」
+  { index: 4, day: '1日目昼' }, // 代官所の面々
+  { index: 5, day: '1日目昼' }, // 小公女謁見
+  { index: 6, day: '1日目昼' }, // 志士との出会い。差分 03 copy 2 → copy 3 → copy 4
+  { index: 7, day: '1日目夕' }, // 琴吹光探検隊
+  { index: 8, day: '1日目夕' }, // 電信あり
+  { index: 9, day: '1日目夕' }, // 海兵隊の横暴。差分 03 copy 5 → 04 copy（成功）／04 copy 2（失敗）／04 copy 4（成功）
+  { index: 10, day: '1日目夜' }, // 阿片密売を阻止せよ。差分 04 copy 2 → copy 3
+  { index: 11, day: '1日目夜' }, // 辻斬りを辻斬る。差分 04 copy 4 → copy 5
+  { index: 12, day: '1日目夜' }, // 代官所潜入。差分 04 copy 4 → 03 copy 6
+  { index: 13, day: '2日目昼' }, // 西洋医学お断り
+  { index: 14, day: '2日目昼' }, // 病院廃業の企て
+  { index: 15, day: '2日目昼' }, // 病院占拠事件
+  { index: 16, day: '2日目昼' }, // 祝 病院開業
+  { index: 17, day: '2日目昼' }, // 欺きの代価
+  { index: 18, day: '2日目夕' }, // 講師ご到着
+  { index: 19, day: '2日目夕' }, // 語学所開設
+  { index: 20, day: '2日目夕' }, // お団子物語
+  { index: 21, day: '2日目夕' }, // 語学無用
+  { index: 22, day: '2日目夕' }, // 講師を亡き者に
+  { index: 23, day: '2日目夜' }, // ガイジンとゲイシャ
+  { index: 24, day: '2日目夜' }, // ライジングサン
+  { index: 25, day: '2日目夜' }, // カジノ再建を急げ
+  { index: 26, day: '2日目夜' }, // カジノを破壊せよ
+  { index: 27, day: '2日目夜' }, // カジノ再建断固阻止
+  { index: 28, day: '3日目昼' }, // 大老 鬼怒川怨仙
+  { index: 29, day: '3日目昼' }, // 魔鱗組の力
+  { index: 30, day: '3日目昼' }, // 小公女と大老
+  { index: 31, day: '3日目昼' }, // 血で血を洗う戦い
+  { index: 32, day: '3日目昼' }, // 白昼の激突
+  { index: 33, day: '3日目夕' }, // 大老と三姉妹
+  { index: 34, day: '3日目夕' }, // 小公女倒れる
+  { index: 35, day: '3日目夕' }, // 売国奴を斬れ
+  { index: 36, day: '3日目夜' }, // 剣術大会の準備
+  { index: 37, day: '3日目夜' }, // 危険な賭け
+  { index: 38, day: '3日目夜' }, // 真実
+  { index: 39, day: '3日目夜' }, // 仕組まれた襲撃
+  { index: 40, day: '3日目夜' }, // 罠を破れ
+  { index: 41, day: '4日目以降' }, // 大老の大寄せ
+  { index: 42, day: '4日目以降' }, // 公儀の剣。ユーザーの一覧では「広儀の剣」。docs/event.md の表記に合わせた
+  { index: 43, day: '4日目以降' }, // 東国の騎士
+  { index: 44, day: '4日目以降' }, // 志士の刀
+  { index: 45, day: '4日目以降' }, // 根無し草
+  { index: 46, day: '4日目以降' }, // 剣術大会開催
+  { index: 51, day: '4日目以降' }, // 覇者となる
+  { index: 52, day: '4日目以降' }, // 最後通告
+  { index: 53, day: '幕府ルート' }, // 闇黒の意志
+  { index: 54, day: '幕府ルート' }, // 大老武断
+  { index: 55, day: '幕府ルート' }, // 憂国の士
+  { index: 56, day: '外国ルート' }, // 願い虚しく
+  { index: 57, day: '攘夷ルート' }, // 臆病風
+  { index: 58, day: '攘夷ルート' }, // 同士救出
+  { index: 59, day: '幕府ルート' }, // 般若党壊滅
+  { index: 60, day: '幕府ルート' }, // 黒船を我が手に
+  { index: 61, day: '外国ルート' }, // 鬼怒川の魔手
+  { index: 62, day: '攘夷ルート' }, // 領事館斬り込み
+  { index: 63, day: '攘夷ルート' }, // 武士の魂
+  { index: 64, day: '幕府ルート' }, // 三匹で斬る
+  { index: 65, day: '幕府ルート' }, // 剣客 茂呂茂
+  { index: 66, day: '幕府ルート' }, // 武人 琴吹光
+  { index: 68, day: '外国ルート' }, // 夕暮れの船上
+  { index: 69, day: '外国ルート' }, // 討ち入り
+  { index: 70, day: '真ルート' }, // 三姉妹見参
+  { index: 71, day: '真ルート' }, // お早い到着
+  { index: 72, day: '真ルート' }, // 再起の望み
+  { index: 73, day: '真ルート' }, // 将の器
+  { index: 74, day: '真ルート' }, // 怒りの矛先
+  { index: 75, day: '真ルート' }, // 伯爵に刺激を
+  { index: 76, day: '真ルート' }, // 運命のルーレット
+  { index: 77, day: '真ルート' }, // 闇討ち
+  { index: 78, day: '真ルート' }, // 学問のすすめ
+  { index: 79, day: '真ルート' }, // 刺激が欲しい
+  { index: 80, day: '真ルート' }, // 傷心の帰国船
+  { index: 81, day: '真ルート' }, // 伯爵救出
+  { index: 82, day: '真ルート' }, // 人間湯通しの恐怖
+  { index: 83, day: '真ルート' }, // 大老暗殺計画
+  { index: 85, day: '真ルート' }, // ローラの決意
+  { index: 86, day: '真ルート' }, // 士魂は屈せず
+  { index: 87, day: '真ルート' }, // ローラ奪還
+  { index: 88, day: '真ルート' }, // 鬼怒川を追え
+  { index: 89, day: '真ルート' }, // 黒船の決闘
+  { index: 90, day: 'エンディング' }, // 希望の光
+  { index: 91, day: 'エンディング' }, // 熱き魂
+  { index: 92, day: 'エンディング' }, // 攘夷の炎
+  { index: 93, day: 'エンディング' }, // 破滅への道
+  { index: 94, day: 'エンディング' }, // 変わり往く心
+  { index: 95, day: 'エンディング' }, // 海外雄飛
+  { index: 96, day: 'エンディング' }, // 侍一直線
+  { index: 97, day: 'エンディング' }, // 魔鱗組として。docs/event.md に記載なし。エンディングなのは [U] 2026-10-06
+  { index: 98, day: 'エンディング' }, // 釜茹で侍。同上
+  { index: 99, day: 'エンディング' }, // 大老は生きていた
+  { index: 116, day: '3日目夜' }, // 夜の墓場で。99 以降で初めて見つかった添字
+]
+
+/** NAMED_EVENTS の添字。昇順 */
+export const NAMED_EVENT_INDICES: readonly number[] = NAMED_EVENTS.map((e) => e.index)
+
+/** 添字のイベントの時間帯。名前の付いていない添字は null */
+export function eventDayOf(index: number): string | null {
+  return NAMED_EVENTS.find((e) => e.index === index)?.day ?? null
 }
 
 /** 添字（通し番号）のイベント名。名前の分からない添字は null */
@@ -284,41 +297,6 @@ export function writeEventRecord(bytes: Uint8Array, index: number, value: number
   const problem = validateEventRecord(value, opts)
   if (problem) throw new RangeError(problem)
   writeU8(bytes, EVENT_RECORD_OFFSET + index, value)
-}
-
-/**
- * 名前の付いた添字（0〜99）の間の欠番。チャートに出ない・起きないので、イベント一覧には入れない。
- * フラグ確認用に、イベント一覧とは別に画面の下へまとめて出す（ユーザー判断 2026-10-06）。一括設定の対象にはしない
- *   47〜50 🟢 剣術大会（幕府／外国／攘夷／無所属）。チャートには出ない。
- *          出場した勢力の1つだけが 03 になり、優勝で 04、負け・降参で 05（🟢）
- *   67     悲しみのローラ。未実装のイベントとみられる（[U] 2026-10-06）
- *   84     🟢 名前不明。ローラの決意（85）の前半の導入。人間湯通しの恐怖に続く場面が始まると 04 になり、
- *          85 の開始条件が「84 = 04」。チャートには名前が出ない
- */
-const TOURNAMENT_NOTE = 'チャートには出ない。出場した勢力だけが進行中になり、優勝で成功、負け・降参で失敗になる'
-const LAURA_RESOLVE = 85 // ローラの決意
-export const EVENT_GAP_NOTES: Readonly<Record<number, { name: string | null; note: string }>> = {
-  47: { name: eventNameOf(47), note: TOURNAMENT_NOTE },
-  48: { name: eventNameOf(48), note: TOURNAMENT_NOTE },
-  49: { name: eventNameOf(49), note: TOURNAMENT_NOTE },
-  50: { name: eventNameOf(50), note: TOURNAMENT_NOTE },
-  67: { name: eventNameOf(67), note: '未実装のイベントとみられる（ゲームでは起きない）' },
-  84: {
-    name: `（名前不明。${eventNameOf(LAURA_RESOLVE)}の導入）`,
-    note: `チャートには出ない。場面が始まると成功になり、${eventNameOf(LAURA_RESOLVE)}の開始条件になる`,
-  },
-}
-
-/** EVENT_GAP_NOTES の添字。昇順 */
-export const EVENT_GAP_INDICES: readonly number[] = Object.keys(EVENT_GAP_NOTES)
-  .map(Number)
-  .sort((a, b) => a - b)
-
-/** イベントと対応のついた添字（EVENT_LIST のキー）。昇順 */
-export function namedIndices(): number[] {
-  return Object.keys(EVENT_LIST)
-    .map(Number)
-    .sort((a, b) => a - b)
 }
 
 function writeBulk(bytes: Uint8Array, base: number, indices: readonly number[], value: number, problem: string | null): void {

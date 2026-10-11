@@ -3,7 +3,6 @@ import { CollapsibleCard } from "@/components/collapsible-card";
 import { GameLabel } from "@/components/game-label";
 import { InfoTip } from "@/components/info-tip";
 import { LazySelect } from "@/components/lazy-select";
-import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,14 +54,14 @@ import {
   occupationGroupOf,
   type OccupationEntry,
 } from "@/save/master/occupation-names";
+import { FlagRow } from "@/components/flag-row";
 import {
-  OCCUPATION_FLAG_START,
-  TOWNSFOLK_NOTES,
-  TOWNSFOLK_START,
-  readTownsfolk,
-  writeTownsfolk,
-  type TownsfolkView,
-} from "@/save/townsfolk";
+  OCCUPATION_DLC_FLAGS,
+  OCCUPATION_SECURITY_FLAGS,
+  OCCUPATION_SERIES_FLAGS,
+  type OccupationFlag,
+} from "@/save/flags/occupation";
+import { OCCUPATION_FLAG_START } from "@/save/townsfolk";
 
 import { seriesOptions } from "./series-options";
 
@@ -70,7 +69,6 @@ const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e)
 
 type Views = {
   occupations: OccupationView;
-  townsfolk: TownsfolkView;
   accepted: AcceptedView;
 };
 
@@ -94,23 +92,6 @@ const valueForKind = (kind: StateKind, current: number) =>
       : kindOf(current) === "cleared"
         ? current
         : 1;
-
-/** 連続なりわいなど（なりわいのフラグ）の欄の下に出す、その依頼主のなりわい */
-const FLAG_JOBS: Readonly<Record<number, readonly number[]>> = {
-  [OCCUPATION_FLAG_START + 4]: range(171, 178),
-  [OCCUPATION_FLAG_START + 5]: range(179, 186),
-  [OCCUPATION_FLAG_START + 6]: range(187, 194),
-  [OCCUPATION_FLAG_START + 7]: range(195, 206),
-  [OCCUPATION_FLAG_START + 8]: range(163, 166),
-  [OCCUPATION_FLAG_START + 9]: [167, 168, 169, 170],
-  [OCCUPATION_FLAG_START + 26]: [207, 208],
-};
-
-function range(from: number, to: number): number[] {
-  return Array.from({ length: to - from + 1 }, (_, i) => from + i).filter((id) =>
-    occupationById(id),
-  );
-}
 
 function matches(query: string, ...texts: string[]): boolean {
   const q = query.trim().toLowerCase();
@@ -140,7 +121,6 @@ export function OccupationPage() {
       return {
         views: {
           occupations: readOccupations(save.working),
-          townsfolk: readTownsfolk(save.working),
           accepted: readAccepted(save.working),
         },
       };
@@ -192,9 +172,9 @@ export function OccupationPage() {
         accepted={views?.accepted ?? null}
         write={write}
       />
-      <SeriesCard view={views?.townsfolk ?? null} write={write} />
-      <DlcCard view={views?.townsfolk ?? null} write={write} />
-      <SecurityCard view={views?.townsfolk ?? null} write={write} />
+      <SeriesCard />
+      <DlcCard />
+      <SecurityCard />
       <StatesCard
         key={`${save?.loadId ?? 0}-states`}
         view={views?.occupations ?? null}
@@ -302,19 +282,10 @@ function AcceptRow({
 
 // ---------------------------------------------------------------- 依頼主ごとの進み具合（なりわいのフラグ）
 
-type FlagCardProps = {
-  view: TownsfolkView | null;
-  write: (m: (b: Uint8Array) => void) => void;
-};
-
-/** 連続なりわい（番号 4〜7）、四天王の話（25）、最終なりわい（26） */
-const SERIES_CARD_FLAGS = [4, 5, 6, 7, 25, 26] as const;
-/** 治安なりわい（番号 8・9） */
-const SECURITY_CARD_FLAGS = [8, 9] as const;
-
 const flagOffsetTip = `${formatOffset(OCCUPATION_FLAG_START)} + 番号`;
 
-function SeriesCard({ view, write }: FlagCardProps) {
+/** 連続なりわい・四天王の話・最終なりわい（OCCUPATION_SERIES_FLAGS） */
+function SeriesCard() {
   return (
     <CollapsibleCard
       title="連続なりわい"
@@ -334,14 +305,15 @@ function SeriesCard({ view, write }: FlagCardProps) {
       }
       contentClassName="grid gap-4 sm:grid-cols-2"
     >
-      {SERIES_CARD_FLAGS.map((flag) => (
-        <FlagRow key={flag} flag={flag} view={view} write={write} />
+      {OCCUPATION_SERIES_FLAGS.map((flag) => (
+        <OccupationFlagRow key={flag.offset} flag={flag} />
       ))}
     </CollapsibleCard>
   );
 }
 
-function SecurityCard({ view, write }: FlagCardProps) {
+/** 治安なりわい（OCCUPATION_SECURITY_FLAGS） */
+function SecurityCard() {
   return (
     <CollapsibleCard
       title="治安なりわい"
@@ -354,17 +326,15 @@ function SecurityCard({ view, write }: FlagCardProps) {
       }
       contentClassName="grid gap-4 sm:grid-cols-2"
     >
-      {SECURITY_CARD_FLAGS.map((flag) => (
-        <FlagRow key={flag} flag={flag} view={view} write={write} separator="・" />
+      {OCCUPATION_SECURITY_FLAGS.map((flag) => (
+        <OccupationFlagRow key={flag.offset} flag={flag} separator="・" />
       ))}
     </CollapsibleCard>
   );
 }
 
-/** 汁部（DLC）：知り合ったか（27）と、209〜212 の進み具合（28〜31）🟢 */
-const DLC_CARD_FLAGS = [27, 28, 29, 30, 31] as const;
-
-function DlcCard({ view, write }: FlagCardProps) {
+/** 汁部（DLC）：知り合ったか（27）と、209〜212 の進み具合（28〜31）（OCCUPATION_DLC_FLAGS）。🟢 */
+function DlcCard() {
   return (
     <CollapsibleCard
       title="DLC なりわい"
@@ -380,52 +350,32 @@ function DlcCard({ view, write }: FlagCardProps) {
       }
       contentClassName="grid gap-4 sm:grid-cols-2"
     >
-      {DLC_CARD_FLAGS.map((flag) => (
-        <FlagRow key={flag} flag={flag} view={view} write={write} />
+      {OCCUPATION_DLC_FLAGS.map((flag) => (
+        <FlagRow key={flag.offset} flag={flag} />
       ))}
     </CollapsibleCard>
   );
 }
 
 /**
- * なりわいのフラグ1つの欄。連続なりわい（番号 4〜7）の「受注済」は、そのなりわいの受注も書く。
- * 汁部（27〜31）はフラグだけを書き、受注には触らない
+ * 連続なりわい・治安なりわいのフラグ1つの欄。書き込みは受注の規則（writeSeriesState）を通す。
+ * 連続なりわい（番号 4〜7）の「受注済」は、そのなりわいの受注も書く。
+ * ❓ 書き込みの反映は要ゲーム内確認（番号 4 は受注の書き込みだけ）
  */
-function FlagRow({ flag, view, write, separator = " → " }: FlagCardProps & { flag: number; separator?: string }) {
-  const { advanced } = useAdvancedMode();
-  const offset = OCCUPATION_FLAG_START + flag;
-  const info = TOWNSFOLK_NOTES[offset];
-  const current = view?.values[offset - TOWNSFOLK_START] ?? null;
-  const jobs = FLAG_JOBS[offset];
-  const isSeries = flag >= 4 && flag <= 7;
+function OccupationFlagRow({ flag, separator = " → " }: { flag: OccupationFlag; separator?: string }) {
+  const n = flag.number;
+  const isSeries = n >= 4 && n <= 7;
   return (
-    <SelectRow
-      label={info.name ?? ""}
-      offset={offset}
-      // ❓ 書き込みの反映は要ゲーム内確認（番号 4 は受注の書き込みだけ）
-      value={current === null ? null : String(current)}
-      currentLabel={current === null ? undefined : "不明"}
-      options={isSeries
-        ? seriesOptions(flag, info.values ?? [], jobs ?? [])
-        : (info.values ?? []).map((s) => ({
-          value: String(s.value),
-          label: s.label,
-          group: s.group,
-        }))}
-      problem={view?.problem ?? null}
+    <FlagRow
+      flag={flag}
+      options={isSeries ? seriesOptions(n, flag.values, flag.jobs ?? []) : undefined}
       note={
         isSeries
-          ? `${info.note}。「受注済」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この連続なりわいを受注中なら受注を外します`
-          : info.note
+          ? `${flag.note}。「受注済」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この連続なりわいを受注中なら受注を外します`
+          : undefined
       }
-      hint={jobs && jobList(jobs, separator)}
-      onChange={(v) =>
-        write((b) =>
-          (DLC_CARD_FLAGS as readonly number[]).includes(flag)
-            ? writeTownsfolk(b, offset, Number(v), { advanced })
-            : writeSeriesState(b, [{ flag, value: Number(v) }], seriesAcceptOf(flag, Number(v)), { advanced }),
-        )
-      }
+      hint={flag.jobs && jobList(flag.jobs, separator)}
+      write={(b, value, opts) => writeSeriesState(b, [{ flag: n, value }], seriesAcceptOf(n, value), opts)}
     />
   );
 }

@@ -27,68 +27,35 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { FlagGrid, FlagRow } from "@/components/flag-row";
+import { useFlag } from "@/hooks/use-flag";
+import { flagProblem, readFlag, type ByteFlag } from "@/save/flags/byte-flag";
+import { CHARACTER_FLAGS } from "@/save/flags/characters";
 import {
-  SCENARIO_FLAGS,
-  WORLD_FLAGS,
-  readScenarioFlags,
-  readWorldFlags,
-  writeScenarioFlag,
-  writeWorldFlag,
-  type ScenarioFlagsView,
-  type WorldFlagGroup,
-  type WorldFlagMeaning,
-  type WorldFlagsView,
-} from "@/save/world-flags";
-import {
-  FACTION_EXIT_FLAGS,
-  readFactionExit,
-  writeFactionExit,
-  type FactionExitView,
-} from "@/save/faction-exit";
+  BEST_ROUTE_EVENT_INDEX,
+  BEST_ROUTE_FLAG,
+  EVENT_FLAGS,
+} from "@/save/flags/event-flags";
 import {
   FACILITY_FLAGS,
   facilitiesReadyForLightOfHope,
   facilitySlotEvent,
-  readFacilityFlags,
-  writeFacilityFlag,
-  type FacilityFlagsView,
-} from "@/save/facility-flags";
+  type FacilityFlag,
+} from "@/save/flags/facilities";
+import { FACTION_EXIT_FLAGS } from "@/save/flags/faction-exit";
+import { GATE_CLOSE_FLAGS, GATE_DOOR_FLAGS, GATE_RECRUIT_FLAGS } from "@/save/flags/gates";
+import { NPC_DOJO_FLAGS, NPC_OTHER_FLAGS, NPC_SMITH_FLAGS } from "@/save/flags/npc-events";
 import {
-  CHARACTER_NOTES,
-  CHARACTER_OFFSETS,
-  characterValues,
-  readCharacters,
-  writeCharacter,
-  type CharactersView,
-} from "@/save/characters";
-import {
-  OTHER_TOWNSFOLK_OFFSETS,
-  TOWNSFOLK_FLAG_GROUPS,
-  TOWNSFOLK_NOTES,
   TOWNSFOLK_PEOPLE,
   TOWNSFOLK_START,
   personOffset,
   readTownsfolk,
   reviveNote,
   writePersonDead,
-  writeTownsfolk,
   type TownsfolkView,
 } from "@/save/townsfolk";
 import { Checkbox } from "@/components/ui/checkbox";
 import { WarningTip } from "@/components/warning-tip";
-import {
-  BEST_ROUTE_EVENT_INDEX,
-  BEST_ROUTE_OFFSET,
-  BEST_ROUTE_VALUES,
-  NPC_ROUTE_OFFSETS,
-  RAW_ROUTE_OFFSETS,
-  ROUTE_CANDIDATE_NOTES,
-  ROUTE_CANDIDATE_START,
-  readRouteCandidates,
-  writeBestRoute,
-  writeRouteCandidate,
-  type RouteCandidatesView,
-} from "@/save/route-candidates";
 import {
   PUBLIC_ORDER_LEVELS,
   PUBLIC_ORDER_MAX,
@@ -143,7 +110,7 @@ import {
   type DateView,
 } from "@/save/scenario-date";
 import {
-  namedIndices,
+  NAMED_EVENT_INDICES,
   readEvents,
   stateLabel,
   writeEventRecords,
@@ -162,12 +129,9 @@ type Views = {
   events: EventsView;
   factions: FactionsView;
   route: RouteJudgeView;
-  factionExit: FactionExitView;
-  flags: WorldFlagsView;
-  facilities: FacilityFlagsView;
-  characters: CharactersView;
   townsfolk: TownsfolkView;
-  routeCandidates: RouteCandidatesView;
+  /** 真ルート（BEST_ROUTE_FLAG）の値。イベントチャートの紫の箱に使う */
+  bestRoute: number;
   publicOrder: PublicOrderView;
 };
 
@@ -195,8 +159,8 @@ export function AmihamaPage() {
             publicOrder={views?.publicOrder ?? null}
           />
           <DateCard key={`${k}-date`} view={views?.date ?? null} />
-          <FacilityFlagsCard key={`${k}-facilities`} view={views?.facilities ?? null} />
-          <WorldFlagsCard key={`${k}-flags`} view={views?.flags ?? null} />
+          <FacilityFlagsCard />
+          <GateFlagsCard />
         </>
       )}
     </ViewsPage>
@@ -213,14 +177,10 @@ export function NpcPage() {
     <ViewsPage>
       {(views, k) => (
         <>
-          <FactionExitCard key={`${k}-faction-exit`} view={views?.factionExit ?? null} />
-          <CharactersCard key={`${k}-characters`} view={views?.characters ?? null} />
+          <FactionExitCard />
+          <CharactersCard />
           <PeopleCard key={`${k}-people`} view={views?.townsfolk ?? null} />
-          <NpcFlagsCard
-            key={`${k}-npc-flags`}
-            view={views?.townsfolk ?? null}
-            route={views?.routeCandidates ?? null}
-          />
+          <NpcFlagsCard />
         </>
       )}
     </ViewsPage>
@@ -243,13 +203,8 @@ export function EventsPage() {
             events={views?.events ?? null}
             counts={views?.cycle ?? null}
             stage={views?.date.stage ?? null}
-            bestRoute={views?.routeCandidates.best ?? null}
-            top={
-              <BestRouteRow
-                view={views?.routeCandidates ?? null}
-                sisters={views?.events.entries[BEST_ROUTE_EVENT_INDEX]?.state ?? null}
-              />
-            }
+            bestRoute={views?.bestRoute ?? null}
+            top={<BestRouteRow sisters={views?.events.entries[BEST_ROUTE_EVENT_INDEX]?.state ?? null} />}
             bottom={<BulkEventsPanel problem={views?.events.problem ?? null} disabled={!views} />}
           />
           <FactionCard
@@ -257,7 +212,7 @@ export function EventsPage() {
             view={views?.factions ?? null}
             route={views?.route ?? null}
           />
-          <EventFlagsCard key={`${k}-event-flags`} route={views?.routeCandidates ?? null} />
+          <EventFlagsCard />
         </>
       )}
     </ViewsPage>
@@ -280,12 +235,8 @@ function ViewsPage({ children }: { children: (views: Views | null, k: number) =>
           events: readEvents(b),
           factions: readFactions(b),
           route: readRouteJudge(b),
-          factionExit: readFactionExit(b),
-          flags: readWorldFlags(b),
-          facilities: readFacilityFlags(b),
-          characters: readCharacters(b),
           townsfolk: readTownsfolk(b),
-          routeCandidates: readRouteCandidates(b),
+          bestRoute: readFlag(b, BEST_ROUTE_FLAG).value,
           publicOrder: readPublicOrder(b),
         },
       };
@@ -586,37 +537,9 @@ const publicOrderLevelsText = PUBLIC_ORDER_LEVELS.map(
     `${l.label} ${l.min}〜${i === 0 ? PUBLIC_ORDER_MAX : PUBLIC_ORDER_LEVELS[i - 1].min - 1}`,
 ).join("／");
 
-const flagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
-  close: [
-    { value: "0", label: "開いている" },
-    { value: "1", label: "閉じている" },
-  ],
-  open: [
-    { value: "0", label: "閉じている" },
-    { value: "1", label: "開いている" },
-  ],
-};
-
-// 🟢 閉鎖条件の0は、初期開放・ルート・イベントによる閉鎖を打ち消さない。
-const worldFlagOptions: Record<WorldFlagMeaning, SelectOption[]> = {
-  close: [
-    { value: "0", label: "閉鎖指定なし" },
-    { value: "1", label: "閉じる" },
-  ],
-  open: flagOptions.open,
-};
-
-const factionExitOptions: SelectOption[] = [
-  { value: "0", label: "町にいる" },
-  { value: "1", label: "退場した" },
-];
-
-/** 勢力の退場（0x378F〜0x3791）。view が null ならセーブ未読み込み */
-function FactionExitCard({ view }: { view: FactionExitView | null }) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-
-  // 確度：3つとも ✅ 書き換えで確認。flag.confirmed が false の行は ❓ 書き換えの反映は未確認
+/** 勢力の退場（FACTION_EXIT_FLAGS） */
+function FactionExitCard() {
+  // 確度：3つとも ✅ 書き換えで確認
   return (
     <CollapsibleCard
       title="勢力の退場"
@@ -630,64 +553,15 @@ function FactionExitCard({ view }: { view: FactionExitView | null }) {
         </>
       }
     >
-      {FACTION_EXIT_FLAGS.map((flag, i) => (
-        <SelectRow
-          key={flag.offset}
-          label={flag.label}
-          offset={flag.offset}
-          value={view ? String(view.values[i]) : null}
-          currentLabel={view ? "不明" : undefined}
-          options={factionExitOptions}
-          problem={view?.problem ?? null}
-          note={flag.note}
-          onChange={(v) => update((b) => writeFactionExit(b, i, Number(v), { advanced }))}
-        />
+      {FACTION_EXIT_FLAGS.map((flag) => (
+        <FlagRow key={flag.offset} flag={flag} />
       ))}
     </CollapsibleCard>
   );
 }
 
-/** 門・柵の状態。view が null ならセーブ未読み込み */
-function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-
-  const section = (group: WorldFlagGroup, title?: string) => (
-    <section className="flex flex-col gap-3">
-      {title && <h3 className="text-sm font-medium">{title}</h3>}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {WORLD_FLAGS.map((flag, i) => {
-          if (flag.group !== group) return null;
-          const paired = view?.paired[i] ?? null;
-          // 一緒に書くバイトと値が食い違うときは、どの候補とも一致しない値として出す
-          const mismatch = view !== null && paired !== null && paired !== view.values[i];
-          return (
-            <SelectRow
-              key={flag.offset}
-              label={flag.label}
-              offset={flag.offset}
-              value={
-                view ? (mismatch ? `${view.values[i]}/${paired}` : String(view.values[i])) : null
-              }
-              currentLabel={
-                view
-                  ? mismatch
-                    ? "2つの扉の状態が食い違っています"
-                    : "不明"
-                  : undefined
-              }
-              options={worldFlagOptions[flag.meaning]}
-              problem={view?.problem ?? null}
-              hint={flag.hint}
-              note={flag.note}
-              onChange={(v) => update((b) => writeWorldFlag(b, i, Number(v), { advanced }))}
-            />
-          );
-        })}
-      </div>
-    </section>
-  );
-
+/** 門・柵の状態（GATE_RECRUIT_FLAGS・GATE_CLOSE_FLAGS・GATE_DOOR_FLAGS） */
+function GateFlagsCard() {
   // 確度：洞窟内の柵（0x3761）が 1 で降りて通行を塞ぐのは ✅、0 に戻したときの上昇・通行の回復は ❓ 要ゲーム内確認。
   // 表門（0x37FA）・外門（0x3764）・神社入口の柵（0x37C3）が 1 → 0 で開くのは ✅、裏門（0x37FB）の反映は ❓ 要ゲーム内確認。
   // 閉鎖フラグが大寄せ前にも有効なこと、大寄せ以降のルート分岐 02 で門・柵が閉じることは 🟢
@@ -706,8 +580,8 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
         </>
       }
     >
-      {section("recruit", "初日勧誘（1日目昼のみ影響）")}
-      {section("close", "閉鎖（1日目夕～大老の大寄せまで）")}
+      <FlagSection title="初日勧誘（1日目昼のみ影響）" flags={GATE_RECRUIT_FLAGS} />
+      <FlagSection title="閉鎖（1日目夕～大老の大寄せまで）" flags={GATE_CLOSE_FLAGS} />
       <section className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">大老の大寄せ以降</h3>
         <p className="text-sm text-muted-foreground">
@@ -721,92 +595,26 @@ function WorldFlagsCard({ view }: { view: WorldFlagsView | null }) {
           大寄せ以降は閉鎖指定なしにしても、ルート分岐が「入れない」なら閉じます。
         </p>
       </section>
-      {section("door")}
+      <FlagGrid flags={GATE_DOOR_FLAGS} />
     </CollapsibleCard>
   );
 }
 
-/** 状態が変わる場面の分かったフラグ1つ分の欄（候補から選ぶ）。view が null ならセーブ未読み込み */
-function ScenarioFlagField({ index, view }: { index: number; view: ScenarioFlagsView | null }) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-  const flag = SCENARIO_FLAGS[index];
-
+/** カードの中の見出しつきのまとまり。flags は src/save/flags/ の配列1つ */
+function FlagSection({ title, flags }: { title: string; flags: readonly ByteFlag[] }) {
   return (
-    <SelectRow
-      label={flag.label}
-      offset={flag.offset}
-      value={view ? String(view.values[index]) : null}
-      currentLabel={view ? "不明" : undefined}
-      options={flag.values.map((v) => ({ value: String(v.value), label: v.label }))}
-      problem={view?.problem ?? null}
-      note={flag.note}
-      onChange={(v) => update((b) => writeScenarioFlag(b, index, Number(v), { advanced }))}
-    />
+    <section className="flex flex-col gap-3">
+      <h3 className="text-sm font-medium">{title}</h3>
+      <FlagGrid flags={flags} />
+    </section>
   );
 }
-
-/** 真ルートの範囲（0x378D〜0x37AA）のバイト1つ分の欄。値の表から選ぶ。view が null ならセーブ未読み込み */
-function RouteCandidateField({
-  offset,
-  view,
-  badges,
-}: {
-  offset: number;
-  view: RouteCandidatesView | null;
-  badges?: ReactNode;
-}) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-  const info = ROUTE_CANDIDATE_NOTES[offset];
-  const current = view?.values[offset - ROUTE_CANDIDATE_START] ?? null;
-
-  return (
-    <SelectRow
-      label={info.name ?? "名前のない項目"}
-      offset={offset}
-      badges={badges}
-      value={current === null ? null : String(current)}
-      currentLabel={current === null ? undefined : "不明"}
-      options={info.values.map((v) => ({ value: String(v.value), label: v.label }))}
-      problem={view?.problem ?? null}
-      note={info.note}
-      hint={info.effect}
-      onChange={(v) => update((b) => writeRouteCandidate(b, offset, Number(v), { advanced }))}
-    />
-  );
-}
-
-const NPC_ROUTE_OFFSET_LIST: readonly number[] = Object.values(NPC_ROUTE_OFFSETS);
 
 /**
- * イベントで値が変わる、またはイベントを変えるフラグ（生の値＋候補）。
- * route は真ルートの範囲の生の値（鍛冶屋・道場のバイトは NPCイベントフラグに出す）。
+ * イベントで値が変わる、またはイベントを変えるフラグ（EVENT_FLAGS）。
  * ❓ 書き換えたときのゲームへの反映は要ゲーム内確認
  */
-function EventFlagsCard({ route }: { route: RouteCandidatesView | null }) {
-  const { save } = useSave();
-  const view = useMemo((): ScenarioFlagsView | null => {
-    if (!save) return null;
-    try {
-      return readScenarioFlags(save.working);
-    } catch {
-      return null;
-    }
-  }, [save]);
-
-  // 位置の順に並べる
-  const fields = [
-    ...SCENARIO_FLAGS.map((flag, i) => ({
-      offset: flag.offset,
-      node: <ScenarioFlagField key={flag.offset} index={i} view={view} />,
-    })),
-    ...RAW_ROUTE_OFFSETS.filter((o) => !NPC_ROUTE_OFFSET_LIST.includes(o)).map((offset) => ({
-      offset,
-      node: <RouteCandidateField key={offset} offset={offset} view={route} />,
-    })),
-  ].sort((a, b) => a.offset - b.offset);
-
+function EventFlagsCard() {
   return (
     <Card>
       <CardHeader>
@@ -816,23 +624,22 @@ function EventFlagsCard({ route }: { route: RouteCandidatesView | null }) {
           <br />
           各欄の説明に、状態が変わる場面と、影響するイベントを書いています。
           {/* 通常モードでは、その場面で現れる状態だけを選べる */}
-          {route?.warning && (
-            <>
-              <br />
-              {route.warning}
-            </>
-          )}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">{fields.map((f) => f.node)}</CardContent>
+      <CardContent>
+        <FlagGrid flags={EVENT_FLAGS} />
+      </CardContent>
     </Card>
   );
 }
 
-/** 施設の状態（0x375D〜0x375F。✅ 書き換えで反映を確認）。view が null ならセーブ未読み込み */
-function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
+/** 施設の状態（FACILITY_FLAGS。✅ 書き換えで反映を確認） */
+function FacilityFlagsCard() {
+  const { save } = useSave();
+  const values = useMemo(() => {
+    if (!save || flagProblem(save.working)) return null;
+    return FACILITY_FLAGS.map((f) => readFlag(save.working, f).value);
+  }, [save]);
 
   return (
     <CollapsibleCard
@@ -843,9 +650,8 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
           病院・カジノ・語学所の開閉を切り替えられます。2日目に起きるイベントが変わります。
           <br />
           真ルートで希望の光に進むには、病院・語学所が開き、カジノが閉じている必要があります
-          {view &&
-            !view.problem &&
-            (facilitiesReadyForLightOfHope(view.values)
+          {values &&
+            (facilitiesReadyForLightOfHope(values)
               ? "（今のセーブは満たしています）"
               : "（今のセーブは満たしていません）")}
           。
@@ -853,45 +659,42 @@ function FacilityFlagsCard({ view }: { view: FacilityFlagsView | null }) {
         </>
       }
     >
-      {FACILITY_FLAGS.map((flag, i) => (
+      {FACILITY_FLAGS.map((flag) => (
         <div key={flag.offset} className="grid content-start gap-2">
-          <SelectRow
-            label={flag.label}
-            offset={flag.offset}
-            value={view ? String(view.values[i]) : null}
-            currentLabel={view ? "不明" : undefined}
-            options={flagOptions[flag.meaning]}
-            problem={view?.problem ?? null}
-            note={flag.note}
-            onChange={(v) => update((b) => writeFacilityFlag(b, i, Number(v), { advanced }))}
-          />
-          <ul className="text-muted-foreground list-disc pl-5 text-xs">
-            {flag.slots.map((slot) => {
-              const current = view ? facilitySlotEvent(slot, view.values[i]) : null;
-              return (
-                <li key={slot.label}>
-                  {slot.label}：開いているとき{flag.meaning === "open" ? slot.when1 : slot.when0}、閉じているとき
-                  {flag.meaning === "open" ? slot.when0 : slot.when1}
-                  {current && `（今は${current}）`}
-                </li>
-              );
-            })}
-          </ul>
+          <FlagRow flag={flag} />
+          <FacilitySlots flag={flag} />
         </div>
       ))}
     </CollapsibleCard>
   );
 }
 
+/** 🟢 施設の値で入れ替わる2日目のイベント。選択肢の並びで「〇〇のとき△△」と書く */
+function FacilitySlots({ flag }: { flag: FacilityFlag }) {
+  const current = useFlag(flag)?.state.value ?? null;
+  return (
+    <ul className="text-muted-foreground list-disc pl-5 text-xs">
+      {flag.slots.map((slot) => {
+        const now = current === null ? null : facilitySlotEvent(slot, current);
+        return (
+          <li key={slot.label}>
+            {slot.label}：
+            {flag.values
+              .map((v) => `${v.label}とき${facilitySlotEvent(slot, v.value) ?? "不明"}`)
+              .join("、")}
+            {now && `（今は${now}）`}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /**
- * 🟢 重要人物の状態（0x374E〜0x375C）の生の値。view が null ならセーブ未読み込み。
+ * 🟢 重要人物と寿司屋の状態（CHARACTER_FLAGS）。
  * 朱美・ローラ・J.J. に 1 を書くといなくなるのは ✅。ほかの人物の書き換えの効果は ❓ 要ゲーム内確認
  */
-function CharactersCard({ view }: { view: CharactersView | null }) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-  const offsets = CHARACTER_OFFSETS;
-
+function CharactersCard() {
   return (
     <CollapsibleCard
       title="人物の状態"
@@ -903,62 +706,13 @@ function CharactersCard({ view }: { view: CharactersView | null }) {
           各欄の説明に、状態が変わる場面と、影響するイベントを書いています。
           {/* 周回の始めはすべて生存（通常）。赤城には病院に運ばれて助かった状態、J.J. には伯爵救出の成功・打ち解けた・逮捕された状態がある。
               鬼怒川怨仙は船上の侍で生存になり、大老暗殺計画で倒すと偽物が死亡になる。朱美・ローラ・J.J. は死亡にするといなくなる */}
-          {view?.warning && (
-            <>
-              <br />
-              {view.warning}
-            </>
-          )}
         </>
       }
     >
-      {offsets.map((offset, i) => {
-        const info = CHARACTER_NOTES[offset];
-        const current = view?.values[i] ?? null;
-        return (
-          <SelectRow
-            key={offset}
-            label={info?.name ?? "人物"}
-            offset={offset}
-            value={current === null ? null : String(current)}
-            currentLabel={current === null ? undefined : "不明"}
-            options={characterValues(offset).map((s) => ({
-              value: String(s.value),
-              label: s.label,
-            }))}
-            problem={view?.problem ?? null}
-            note={info?.note}
-            onChange={(v) => update((b) => writeCharacter(b, offset, Number(v), { advanced }))}
-          />
-        );
-      })}
+      {CHARACTER_FLAGS.map((flag) => (
+        <FlagRow key={flag.offset} flag={flag} />
+      ))}
     </CollapsibleCard>
-  );
-}
-
-/** 意味の分かったなりわいのフラグ1つ分の欄。値の表から選ぶ（表にない値は上級者モードで書ける） */
-function TownsfolkField({ offset, view }: { offset: number; view: TownsfolkView | null }) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-  const info = TOWNSFOLK_NOTES[offset];
-  const current = view?.values[offset - TOWNSFOLK_START] ?? null;
-
-  return (
-    <SelectRow
-      label={info.name ?? "名前のない項目"}
-      offset={offset}
-      value={current === null ? null : String(current)}
-      currentLabel={current === null ? undefined : "不明"}
-      options={(info.values ?? []).map((s) => ({
-        value: String(s.value),
-        label: s.label,
-        group: s.group,
-      }))}
-      problem={view?.problem ?? null}
-      note={info.note}
-      hint={info.effect}
-      onChange={(v) => update((b) => writeTownsfolk(b, offset, Number(v), { advanced }))}
-    />
   );
 }
 
@@ -1019,39 +773,10 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
 }
 
 /**
- * 🟢 町の人（鍛冶屋・道場など）のイベントのフラグ。なりわいのフラグのうちなりわいの画面で扱わないものと、
- * 真ルートの範囲の堂島・先生の職（0x3799・0x379A）。view・route が null ならセーブ未読み込み。
+ * 🟢 町の人（鍛冶屋・道場など）のイベントのフラグ（NPC_SMITH_FLAGS・NPC_DOJO_FLAGS・NPC_OTHER_FLAGS）。
  * 鍛冶屋の後継者イベント・鍛冶屋の状態・堂島が鍛冶屋を継いだかは ✅ 書き換えで確認。そのほかは ❓ 要ゲーム内確認
  */
-function NpcFlagsCard({
-  view,
-  route,
-}: {
-  view: TownsfolkView | null;
-  route: RouteCandidatesView | null;
-}) {
-  const grouped: readonly number[] = [
-    ...TOWNSFOLK_FLAG_GROUPS.smith,
-    ...TOWNSFOLK_FLAG_GROUPS.dojo,
-  ];
-  const groups = [
-    {
-      title: "鍛冶屋",
-      townsfolk: TOWNSFOLK_FLAG_GROUPS.smith,
-      route: [NPC_ROUTE_OFFSETS.smith],
-    },
-    {
-      title: "道場・先生",
-      townsfolk: TOWNSFOLK_FLAG_GROUPS.dojo,
-      route: [NPC_ROUTE_OFFSETS.dojo],
-    },
-    {
-      title: "その他",
-      townsfolk: OTHER_TOWNSFOLK_OFFSETS.filter((o) => !grouped.includes(o)),
-      route: [],
-    },
-  ];
-
+function NpcFlagsCard() {
   return (
     <CollapsibleCard
       title="NPCイベントフラグ"
@@ -1065,59 +790,27 @@ function NpcFlagsCard({
         </>
       }
     >
-      {groups.map((g) => (
-        <section key={g.title} className="flex flex-col gap-3">
-          <h3 className="text-sm font-medium">{g.title}</h3>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {g.townsfolk.map((offset) => (
-              <TownsfolkField key={offset} offset={offset} view={view} />
-            ))}
-            {g.route.map((offset) => (
-              <RouteCandidateField key={offset} offset={offset} view={route} />
-            ))}
-          </div>
-        </section>
-      ))}
+      <FlagSection title="鍛冶屋" flags={NPC_SMITH_FLAGS} />
+      <FlagSection title="道場・先生" flags={NPC_DOJO_FLAGS} />
+      <FlagSection title="その他" flags={NPC_OTHER_FLAGS} />
     </CollapsibleCard>
   );
 }
 
-const bestRouteOptions: SelectOption[] = BEST_ROUTE_VALUES.map((v) => ({
-  value: String(v.value),
-  label: v.label,
-}));
-
 /**
- * 真ルート（0x378E）。イベントチャートの上に出す。周りのバイトはイベント関連フラグ・NPCイベントフラグに出す。
- * view が null ならセーブ未読み込み。sisters は三姉妹見参（イベント添字70）の状態 A
+ * 真ルート（BEST_ROUTE_FLAG）。イベントチャートの上に出す。sisters は三姉妹見参（イベント添字70）の状態 A
  */
-function BestRouteRow({
-  view,
-  sisters,
-}: {
-  view: RouteCandidatesView | null;
-  sisters: number | null;
-}) {
-  const { update } = useSave();
-  const { advanced } = useAdvancedMode();
-
+function BestRouteRow({ sisters }: { sisters: number | null }) {
   return (
     <section className="flex flex-col gap-3">
       <div className="grid gap-4 sm:grid-cols-3">
-        <SelectRow
-          label="ルート"
-          offset={BEST_ROUTE_OFFSET}
-          value={view ? String(view.best) : null}
-          currentLabel={view ? "不明" : undefined}
-          options={bestRouteOptions}
-          problem={view?.bestProblem ?? null}
+        <FlagRow
+          flag={BEST_ROUTE_FLAG}
           hint={
             sisters === null
               ? undefined
               : `今の三姉妹見参の状態：${stateLabel(sisters)}${sisters === 0x04 ? "（真ルートに分岐）" : "（成功ではないので、「真ルート」にしても通常ルートのまま）"}`
           }
-          note="「真ルート」にしただけでは通常ルートのまま。三姉妹見参の状態も成功にすると真ルート（お早い到着）に入る。「真ルートに入っていない」にすると通常ルートに戻る。「真ルートを外れた」は、再起の望みで小暮が死ぬ、怒りの矛先の成功、闇討ちの失敗、傷心の帰国船の成功などでなり、周回中は戻らない。この状態で大通りに行くと大老暗殺計画が起きる。真ルートを過去の周回で記録していないと、正規のプレイでもチャートに失敗したイベントや先のイベントの枠が出ない"
-          onChange={(v) => update((b) => writeBestRoute(b, Number(v), { advanced }))}
         />
       </div>
     </section>
@@ -1282,7 +975,7 @@ function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabl
         一括設定（デバッグ用）
       </h3>
       <p className="text-muted-foreground text-xs">
-        名前の付いたイベント（{namedIndices().length}件）すべてに、同じ値をまとめて書きます。
+        名前の付いたイベント（{NAMED_EVENT_INDICES.length}件）すべてに、同じ値をまとめて書きます。
         チャートに出ない項目は対象にしません。
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -1299,7 +992,7 @@ function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabl
             variant="outline"
             disabled={locked || state === ""}
             onClick={() =>
-              run((b) => writeEventStates(b, namedIndices(), Number(state), { advanced }))
+              run((b) => writeEventStates(b, NAMED_EVENT_INDICES, Number(state), { advanced }))
             }
           >
             書く
@@ -1318,7 +1011,7 @@ function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabl
             variant="outline"
             disabled={locked || record === ""}
             onClick={() =>
-              run((b) => writeEventRecords(b, namedIndices(), Number(record), { advanced }))
+              run((b) => writeEventRecords(b, NAMED_EVENT_INDICES, Number(record), { advanced }))
             }
           >
             書く

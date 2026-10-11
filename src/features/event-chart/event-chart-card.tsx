@@ -29,7 +29,7 @@ import {
 } from "@/save/master/event-chart-layout";
 import { eventSummaryOf } from "@/save/master/event-summaries";
 import {
-  EVENT_LIST,
+  eventDayOf,
   eventNameOf,
   EVENT_RECORD_OFFSET,
   EVENT_STATE_OFFSET,
@@ -545,7 +545,7 @@ function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView 
         <div className="text-sm font-medium">
           {eventNameOf(index) ?? frameName(frame)}
         </div>
-        <div className="text-muted-foreground text-xs">{EVENT_LIST[index]?.day}</div>
+        <div className="text-muted-foreground text-xs">{eventDayOf(index)}</div>
         {summary && (
           <p className="text-muted-foreground text-xs wrap-anywhere break-normal line-strict">
             {summary}

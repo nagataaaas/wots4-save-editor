@@ -8,10 +8,10 @@ import {
   EVENT_RECORD_OFFSET,
   EVENT_RECORDS_SEEN,
   EVENT_STATE_OFFSET,
-  EVENT_GAP_INDICES,
-  EVENT_GAP_NOTES,
   eventNameOf,
-  namedIndices,
+  NAMED_EVENT_INDICES,
+  NAMED_EVENTS,
+  eventDayOf,
   readEvents,
   recordLabel,
   stateLabel,
@@ -168,34 +168,38 @@ describe('一括設定（デバッグ用）', () => {
   it('名前の分かる添字だけ、状態の範囲だけを変える', () => {
     const before = makeSave(A_START)
     const after = before.slice()
-    writeEventStates(after, namedIndices(), 0x05, { advanced: false })
+    writeEventStates(after, NAMED_EVENT_INDICES, 0x05, { advanced: false })
     // 名前の分かる添字は 0〜46（✅ [U] 2026-10-05）と、51〜99 のうち 67・84 を除いたもの、116（✅ [U] 2026-10-06、ゲーム内のチャートで確認）。
     // 47〜50・67・84 はチャートに出ない・起きない（一覧に出さない）。もとが 05 の添字はないので、すべて変わる
     const unknown = [47, 48, 49, 50, 67, 84]
     const named = [...Array.from({ length: 100 }, (_, i) => i).filter((i) => !unknown.includes(i)), 116]
-    expect(namedIndices()).toEqual(named)
+    expect(NAMED_EVENT_INDICES).toEqual(named)
     expect(diffOffsets(before, after)).toEqual(named.map((i) => EVENT_STATE_OFFSET + i))
   })
 
   it('一覧の添字は、どれもイベントの表（event.csv）に名前がある', () => {
-    expect(namedIndices().filter((i) => eventNameOf(i) === null)).toEqual([])
+    expect(NAMED_EVENT_INDICES.filter((i) => eventNameOf(i) === null)).toEqual([])
     expect(eventNameOf(6)).toBe('志士との出会い')
     expect(eventNameOf(28)).toBe('大老 鬼怒川怨仙')
     expect(eventNameOf(84)).toBeNull()
   })
 
+  it('名前の付いたイベントは添字の順で、時間帯を持つ', () => {
+    expect(NAMED_EVENTS.map((e) => e.index)).toEqual([...NAMED_EVENT_INDICES].sort((a, b) => a - b))
+    expect(eventDayOf(0)).toBe('1日目昼')
+    expect(eventDayOf(70)).toBe('真ルート')
+    expect(eventDayOf(116)).toBe('3日目夜')
+    expect(eventDayOf(47)).toBeNull()
+  })
+
   it('欠番（47〜50・67・84）は名前の付いた 0〜99 の残りで、一括設定の対象に入らない', () => {
-    const named = new Set(namedIndices())
+    const named = new Set(NAMED_EVENT_INDICES)
     const gaps = Array.from({ length: 100 }, (_, i) => i).filter((i) => !named.has(i))
-    expect(EVENT_GAP_INDICES).toEqual(gaps)
     // 🟢 47〜50 は剣術大会（チャートに出ない。出場した勢力だけ 03、優勝 04、負け・降参 05）。67 は未実装（[U] 2026-10-06）。
     // 🟢 84 は名前不明のローラの決意の導入（始まると 04、85 の開始条件が「84 = 04」）
-    expect(EVENT_GAP_NOTES[47].name).toBe('剣術大会（幕府）')
-    expect(EVENT_GAP_NOTES[50].name).toBe('剣術大会（無所属）')
-    expect(EVENT_GAP_NOTES[50].note).toMatch(/優勝で成功/)
-    expect(EVENT_GAP_NOTES[67].name).toBe('悲しみのローラ')
-    expect(EVENT_GAP_NOTES[84].name).toBe('（名前不明。ローラの決意の導入）')
-    expect(EVENT_GAP_INDICES.some((i) => named.has(i))).toBe(false)
+    expect(gaps).toEqual([47, 48, 49, 50, 67, 84])
+    expect(eventNameOf(47)).toBe('剣術大会（幕府）')
+    expect(eventNameOf(67)).toBe('悲しみのローラ')
     // フラグ確認用に、1件ずつは書ける
     const b = makeSave(A_START)
     writeEventRecord(b, 47, 0x04, { advanced: false })
@@ -205,8 +209,8 @@ describe('一括設定（デバッグ用）', () => {
   it('記録の一括書き込みは、名前の分かる添字の記録だけを変える', () => {
     const before = makeSave(A_START)
     const after = before.slice()
-    writeEventRecords(after, namedIndices(), 0x04, { advanced: false })
-    const named = new Set(namedIndices())
+    writeEventRecords(after, NAMED_EVENT_INDICES, 0x04, { advanced: false })
+    const named = new Set(NAMED_EVENT_INDICES)
     for (const off of diffOffsets(before, after)) {
       expect(off).toBeGreaterThanOrEqual(EVENT_RECORD_OFFSET)
       expect(named.has(off - EVENT_RECORD_OFFSET)).toBe(true)
@@ -221,8 +225,8 @@ describe('一括設定（デバッグ用）', () => {
   it('値が通常モードで許されなければ、1バイトも書かない', () => {
     const before = makeSave(A_START)
     const after = before.slice()
-    expect(() => writeEventStates(after, namedIndices(), 0x06, { advanced: false })).toThrow(RangeError)
-    expect(() => writeEventRecords(after, namedIndices(), 0x00, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventStates(after, NAMED_EVENT_INDICES, 0x06, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventRecords(after, NAMED_EVENT_INDICES, 0x00, { advanced: false })).toThrow(RangeError)
     expect(() => writeEventStates(after, [0, EVENT_COUNT], 0x04, { advanced: false })).toThrow(RangeError)
     expect(diffOffsets(before, after)).toEqual([])
   })
@@ -231,7 +235,7 @@ describe('一括設定（デバッグ用）', () => {
     const b = makeSave(A_START)
     writeU8(b, EVENT_STATE_OFFSET + 20, 0x40)
     const before = b.slice()
-    expect(() => writeEventStates(b, namedIndices(), 0x04, { advanced: false })).toThrow(RangeError)
+    expect(() => writeEventStates(b, NAMED_EVENT_INDICES, 0x04, { advanced: false })).toThrow(RangeError)
     expect(diffOffsets(before, b)).toEqual([])
   })
 })
