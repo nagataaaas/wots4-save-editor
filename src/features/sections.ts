@@ -19,6 +19,7 @@ export type SectionId =
   | 'world'
   | 'npc'
   | 'event-chart'
+  | 'dojo'
   | 'occupation'
   | 'yobai'
   | 'styles'
@@ -104,6 +105,7 @@ export const sectionGroups: SectionGroup[] = [
           { id: 'world', label: '阿弥浜', note: 'difficulty・date-location・gates・facilities（難易度・治安・周回、段階・日数・時間帯、門・柵、施設）' }, // 一部 🔶
           { id: 'npc', label: 'NPC', note: 'factions・characters・townsfolk・best-route（勢力の退場、人物の状態、町の人の生死、NPCイベントフラグ）' }, // 一部 🔶
           { id: 'event-chart', label: 'イベント', note: 'event-chart・best-route・factions・scenario-flags（イベントチャート〈真ルート・一括設定〉、勢力の状態、イベント関連フラグ）', wide: true }, // 一部 🔶
+          { id: 'dojo', label: '道場', note: 'dojo（道場の評判・弟子の名簿・道場破り）' }, // 🟢 要ゲーム内確認
         ],
       },
       { id: 'occupation', label: 'なりわい', icon: ClipboardList, note: 'occupation・townsfolk（なりわいのフラグ）状態の表・クリア数・連続なりわいの進み具合' },

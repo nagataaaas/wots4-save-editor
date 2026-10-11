@@ -48,7 +48,8 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 | `npc/night-visit-partner.csv` | 約束できる相手の種類 | 町の人の種類（0〜796）のうち約束できるもの | u32 LE        | `FFFFFFFF`＝約束なし | [night-visit](../chunks/night-visit/README.md) +0x04 |
 | `npc/npc-look.csv`            | 人物の見た目と声（1〜245） | 人物（容姿）と同じ番号 | u32 LE                 | `FFFFFFFF`＝約束なし | [night-visit](../chunks/night-visit/README.md) +0x20 |
 | `occupation/occupation.csv`   | なりわい（3〜212） | このリストのみ（0〜255） | 状態の表の添字・u16 LE       |              | [occupation](../chunks/occupation/README.md)              |
-| `npc/npc-name.csv`            | 人物の名前         | このリストのみ（1〜8200）| u32 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x1C・記録 +0x04 |
+| `npc/npc-name.csv`            | 人物の名前         | このリストのみ（1〜8200）| u32 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x1C・記録 +0x04、[dojo](../chunks/dojo/README.md) 弟子の +0x04 |
+| `npc/pupil.csv`               | 弟子にできる町の人の種類（60件） | 町の人の種類（0〜796）のうち弟子にできるもの | i32 LE | `FFFFFFFF`＝空き | [dojo](../chunks/dojo/README.md) 弟子の +0x00 |
 | `sect/sect.csv`               | 流派（0〜112）     | このリストのみ           | i16 LE                       |              | [styles](../chunks/styles/README.md)、[sect-scrolls](../chunks/sect-scrolls/README.md) |
 | `sect/stance.csv`             | 構え（0〜12）      | このリストのみ           | i16 LE                       |              | [skill-states](../chunks/skill-states/README.md)          |
 | `sect/skill-sheet.csv`        | 技の表（0〜93）    | このリストのみ           | i16 LE                       | `FFFF`       | [styles](../chunks/styles/README.md) +0x08〜+0x0C         |
@@ -131,6 +132,9 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 - `npc/npc-name.csv`：全行 🟢。`sex` は m＝男、f＝女。`group` は unique＝固有の名前（1〜215）、placeholder＝勢力ごとの仮の名前（1001〜6002）、
   town＝町の人の名前の候補（7001〜7150・8001〜8200）。約束の相手の町の人の名前は town のうち、相手の性別（`sex`）が同じものから選ばれる 🟢。
   7000 台は日本人（女性 7001〜7100、男性 7101〜7150）、8000 台は外国人（女性 8001〜8104、男性 8105〜8200）
+- `npc/pupil.csv`：全行 🟢。弟子にできる町の人の種類。`sex` は m＝男、f＝女。`point` はその弟子の道場の評判の点（1〜5。弟子の +0x0A）、
+  `name` は弟子の名前（`npc-name.csv` の ID。弟子の +0x04）、`looks` は見た目の候補（`npc-look.csv` の ID、`;` 区切り。弟子の +0x08）。
+  `name_ja`・`name_en` は `name` の名前。同じ名前の種類が複数あり、点や強さが違う
 - `place/night-visit-layout.csv`：全行 🟢。配置ごとの夜這いの場の中身。`house` は家の種類（家の人の見た目の組：町人の家・外国人の家・般若党の家・侍の家）、
   `people` はいつもいる家の人、`people_maybe` は確率で出る家の人の数（確率は `name_ja`）、`dog` は犬の数、`futon` は布団の枚数（12 枚まで。相手のほかの布団には寝ている人がいる）、
   `rival` はライバルが出る確率（%、空欄は出ない）、`doshin`・`okappiki` は夜這いに失敗したときに出てくる同心・岡っ引きの数。`name_ja` は家の種類と人数の表記。

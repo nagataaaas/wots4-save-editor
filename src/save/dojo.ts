@@ -1,0 +1,247 @@
+// 道場（主人公が師範の道場）。出典：docs/save_format/chunks/dojo（🟢。実セーブの弟子 19 人・点 74 と構造が一致 ✅）。
+//
+// 0x14064 u8   🟢 道場破りが来ている（0／1）
+// 0x14065 u8   🟢 弟子の数（0〜20）
+// 0x14066 u8   🟢 道場の評判の段階＝☆の数（0〜5）。点を REPUTATION_RANGES で区切った値
+// 0x14067      🟢 詰め物
+// 0x14068 u16  🟢 評判の点。弟子ごとの点（+0x0A）の合計
+// 0x1406A i16  🟢 来ている道場破りの人数（0〜8）
+// 0x1406C      🟢 弟子の名簿 12 B × 20。空きは +0x00 が −1（12 B すべて FF か、+0x0B だけ 0）
+//   +0x00 i32 種類（町の人の種類。datatable/npc/pupil.csv）
+//   +0x04 i32 名前（npc-name.csv。種類の name 列と同じ値）
+//   +0x08 u16 見た目（npc-look.csv。種類の looks 列の候補）
+//   +0x0A u8  その弟子の評判の点（種類の point 列）
+//   +0x0B u8  今いる地域に出した印（地域を移ると 0。セーブではふつう 0）
+// 0x1415C i32 × 8 🟢 来ている道場破りの種類（空きは −1）。どれも名前は「道場破り」
+//
+// ゲームは弟子入り・破門のたびに数・点・段階を決め直す（🟢）。エディタも名簿を書いたら同じ規則で決め直す。
+// 段階 5 になったときにゲームが立てる特典 57（0x43351）は、ここでは書かない（次に弟子が増減したときにゲームが立てる 🟢）。
+// 名簿の書き換え・道場破りを帰す操作がゲームに反映されるかは要ゲーム内確認。
+import { readI16, readU16, readU32, readU8, writeI16, writeU16, writeU32, writeU8 } from "./binary";
+import { checkLayout } from "./hero";
+import { PUPIL_TABLE } from "./master/dataset/pupil";
+import { NPC_LOOK_TABLE } from "./master/dataset/npc-look";
+
+export const DOJO_OFFSET = 0x14064;
+export const DOJO_END = 0x1417b;
+export const RAID_OFFSET = 0x14064;
+export const PUPIL_COUNT_OFFSET = 0x14065;
+export const RANK_OFFSET = 0x14066;
+export const POINTS_OFFSET = 0x14068;
+export const RAIDER_COUNT_OFFSET = 0x1406a;
+export const PUPILS_OFFSET = 0x1406c;
+export const PUPIL_SIZE = 12;
+export const PUPIL_MAX = 20;
+export const RAIDERS_OFFSET = 0x1415c;
+export const RAIDER_MAX = 8;
+export const RANK_MAX = 5;
+
+const EMPTY = 0xffffffff;
+
+/** 🟢 評判の段階ごとの点の範囲（段階 0〜5） */
+export const REPUTATION_RANGES: readonly (readonly [number, number])[] = [
+  [0, 4],
+  [5, 24],
+  [25, 39],
+  [40, 54],
+  [55, 70],
+  [71, 9999],
+];
+
+export type PupilKind = {
+  id: number;
+  label: string;
+  sex: "f" | "m";
+  /** 評判の点（1〜5） */
+  point: number;
+  /** 名前の ID */
+  name: number;
+  /** 見た目の候補 */
+  looks: readonly number[];
+};
+
+/** 🟢 弟子にできる町の人の種類（datatable/npc/pupil.csv） */
+export const PUPIL_KINDS: readonly PupilKind[] = Object.values(PUPIL_TABLE).map((r) => ({
+  id: r.id_dec,
+  label: r.name_ja,
+  sex: r.sex === "f" ? "f" : "m",
+  point: r.point,
+  name: r.name,
+  looks: r.looks.split(";").map((s) => parseInt(s, 16)),
+}));
+
+export function pupilKind(id: number): PupilKind | undefined {
+  return PUPIL_KINDS.find((k) => k.id === id);
+}
+
+/** 🟢 見た目の名前（npc-look.csv）。表にない値は undefined */
+export function lookLabel(look: number): string | undefined {
+  return NPC_LOOK_TABLE[look as keyof typeof NPC_LOOK_TABLE]?.name_ja;
+}
+
+/** 🟢 見た目の一覧（上級者モードで種類の候補以外も選べる） */
+export const ALL_LOOKS: readonly number[] = Object.values(NPC_LOOK_TABLE).map((l) => l.id_dec);
+
+export type PupilView = {
+  kind: number;
+  name: number;
+  look: number;
+  point: number;
+  shown: number;
+};
+
+export type DojoView = {
+  raid: boolean;
+  count: number;
+  rank: number;
+  points: number;
+  raiderCount: number;
+  /** 空きは null */
+  pupils: (PupilView | null)[];
+  /** 検証に落ちた理由。null なら編集可能 */
+  problem: string | null;
+};
+
+export function pupilOffset(index: number): number {
+  return PUPILS_OFFSET + index * PUPIL_SIZE;
+}
+
+/**
+ * 🟢 空きは +0x00 が −1（ゲームはこれだけで空きを判定する）。
+ * 破門すると 12 B すべて FF になるが、地域を移るたびにゲームが空きの枠も含めて全 20 枠の +0x0B を 0 にするので、
+ * 空きの枠は FF ×11 + 00 にもなる（✅ 実セーブ）
+ */
+function isEmptySlot(bytes: Uint8Array, index: number): boolean {
+  return readU32(bytes, pupilOffset(index)) === EMPTY;
+}
+
+/** 点から段階を決める（🟢 ゲームと同じ。どの範囲にも入らなければ今の段階のまま） */
+export function rankForPoints(points: number, current: number): number {
+  const i = REPUTATION_RANGES.findIndex(([lo, hi]) => lo <= points && points <= hi);
+  return i < 0 ? current : i;
+}
+
+export function readDojo(bytes: Uint8Array): DojoView {
+  if (bytes.byteLength <= DOJO_END) throw new RangeError("ファイルが小さすぎて道場の領域を読めません");
+  const pupils = Array.from({ length: PUPIL_MAX }, (_, i): PupilView | null => {
+    if (isEmptySlot(bytes, i)) return null;
+    const o = pupilOffset(i);
+    return {
+      kind: readU32(bytes, o),
+      name: readU32(bytes, o + 4),
+      look: readU16(bytes, o + 8),
+      point: readU8(bytes, o + 0x0a),
+      shown: readU8(bytes, o + 0x0b),
+    };
+  });
+  const view: DojoView = {
+    raid: readU8(bytes, RAID_OFFSET) !== 0,
+    count: readU8(bytes, PUPIL_COUNT_OFFSET),
+    rank: readU8(bytes, RANK_OFFSET),
+    points: readU16(bytes, POINTS_OFFSET),
+    raiderCount: readI16(bytes, RAIDER_COUNT_OFFSET),
+    pupils,
+    problem: null,
+  };
+  view.problem = checkLayout(bytes) ?? validateDojo(bytes, view);
+  return view;
+}
+
+function validateDojo(bytes: Uint8Array, view: DojoView): string | null {
+  const raid = readU8(bytes, RAID_OFFSET);
+  if (raid > 1) return "道場破りの状態が想定外の値です";
+  const occupied = view.pupils.filter((p) => p !== null);
+  if (view.count > PUPIL_MAX) return "弟子の数が多すぎます";
+  if (view.count !== occupied.length) return "弟子の数と名簿の人数が合いません";
+  if (view.rank > RANK_MAX) return "評判の段階が想定外の値です";
+  if (view.raiderCount < 0 || view.raiderCount > RAIDER_MAX) return "道場破りの人数が想定外の値です";
+  if (occupied.some((p) => p.point < 1 || p.point > 5)) return "名簿に想定外の値があります";
+  const sum = occupied.reduce((s, p) => s + p.point, 0);
+  if (sum !== view.points) return "評判の点と名簿の合計が合いません";
+  return null;
+}
+
+function assertEditable(bytes: Uint8Array): DojoView {
+  const view = readDojo(bytes);
+  if (view.problem) throw new RangeError(view.problem);
+  return view;
+}
+
+/** 名簿から数・点・段階を決め直す（🟢 ゲームが弟子入り・破門のたびにすること） */
+function recompute(bytes: Uint8Array): void {
+  let count = 0;
+  let points = 0;
+  for (let i = 0; i < PUPIL_MAX; i++) {
+    if (isEmptySlot(bytes, i)) continue;
+    count++;
+    points += readU8(bytes, pupilOffset(i) + 0x0a);
+  }
+  writeU8(bytes, PUPIL_COUNT_OFFSET, count);
+  writeU16(bytes, POINTS_OFFSET, points);
+  writeU8(bytes, RANK_OFFSET, rankForPoints(points, readU8(bytes, RANK_OFFSET)));
+}
+
+/**
+ * 枠 index の弟子の種類を書く。null なら空きにする。
+ * 名前・評判の点は種類で決まる値を書く。見た目は今の見た目が新しい種類の候補にあれば残し、なければ候補の先頭にする。
+ * 書いたあと、弟子の数・評判の点・段階を決め直す
+ */
+export function writePupilKind(bytes: Uint8Array, index: number, kindId: number | null): void {
+  assertEditable(bytes);
+  if (!Number.isInteger(index) || index < 0 || index >= PUPIL_MAX) throw new RangeError("枠の番号が範囲外です");
+  const o = pupilOffset(index);
+  if (kindId === null) {
+    bytes.fill(0xff, o, o + PUPIL_SIZE);
+    recompute(bytes);
+    return;
+  }
+  const kind = pupilKind(kindId);
+  if (!kind) throw new RangeError("弟子にできない種類です");
+  const current = isEmptySlot(bytes, index) ? null : readU16(bytes, o + 8);
+  const look = current !== null && kind.looks.includes(current) ? current : kind.looks[0];
+  writeU32(bytes, o, kind.id);
+  writeU32(bytes, o + 4, kind.name);
+  writeU16(bytes, o + 8, look);
+  writeU8(bytes, o + 0x0a, kind.point);
+  writeU8(bytes, o + 0x0b, 0);
+  recompute(bytes);
+}
+
+/**
+ * 見た目の検証。通常モードは種類の候補だけ、上級者モードは見た目の表（npc-look.csv）にあるもの。
+ * 今の値の書き戻しは許す
+ */
+export function validatePupilLook(kindId: number, look: number, current: number, opts: { advanced: boolean }): string | null {
+  if (!Number.isInteger(look) || look < 0 || look > 0xffff) return "範囲外の値です";
+  if (look === current) return null;
+  if (opts.advanced) return lookLabel(look) !== undefined ? null : "見た目の表にない値です";
+  return pupilKind(kindId)?.looks.includes(look) ? null : "この種類の見た目ではありません（上級者モードで選べます）";
+}
+
+export function writePupilLook(bytes: Uint8Array, index: number, look: number, opts: { advanced: boolean }): void {
+  const view = assertEditable(bytes);
+  const pupil = view.pupils[index];
+  if (!pupil) throw new RangeError("空きの枠です");
+  const error = validatePupilLook(pupil.kind, look, pupil.look, opts);
+  if (error) throw new RangeError(error);
+  writeU16(bytes, pupilOffset(index) + 8, look);
+}
+
+/**
+ * 道場破りが来ているかを書く。
+ * 来ていないにするときは、ゲームが追い払ったときと同じく来ている印・人数を 0、道場破りの枠を −1 にする（🟢）。
+ * 来ているにするときは印だけを 1 にする。道場破りの種類と人数は、道場に入るたびにゲームが評判の段階ごとの組から
+ * 選び直して書くので（🟢）、ここでは書かない。弟子がいないと、ゲームは場面が変わったときに印を消す（🟢）ので書かない
+ */
+export function writeRaid(bytes: Uint8Array, on: boolean): void {
+  const view = assertEditable(bytes);
+  if (!on) {
+    writeU8(bytes, RAID_OFFSET, 0);
+    writeI16(bytes, RAIDER_COUNT_OFFSET, 0);
+    for (let j = 0; j < RAIDER_MAX; j++) writeU32(bytes, RAIDERS_OFFSET + j * 4, EMPTY);
+    return;
+  }
+  if (view.raid) return;
+  if (view.count === 0) throw new RangeError("弟子がいないと道場破りは来ません");
+  writeU8(bytes, RAID_OFFSET, 1);
+}

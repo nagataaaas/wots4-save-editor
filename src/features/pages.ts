@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import { HeroAppearancePage } from '@/features/hero/hero-appearance-page'
 import { BeltPage } from '@/features/belt/belt-page'
+import { DojoPage } from '@/features/dojo/dojo-page'
 import { HeroPage } from '@/features/hero/hero-page'
 import { MarketWeaponsPage } from '@/features/market-weapons/market-weapons-page'
 import { OccupationPage } from '@/features/occupation/occupation-page'
@@ -35,6 +36,7 @@ export const pages: Partial<Record<SectionId, ComponentType>> = {
   world: AmihamaPage,
   npc: NpcPage,
   'event-chart': EventsPage,
+  dojo: DojoPage,
   occupation: OccupationPage,
   yobai: YobaiPage,
   styles: StylesPage,

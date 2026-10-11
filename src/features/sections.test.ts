@@ -22,14 +22,15 @@ describe('主人公の画面構成', () => {
     expect(pages['hero-appearance']).toBe(HeroAppearancePage)
   })
 
-  it('世界グループに阿弥浜・NPC・イベントを並べ、シナリオの画面を置かない（ユーザー判断 2026-10-11）', () => {
+  it('世界グループに阿弥浜・NPC・イベント・道場を並べ、シナリオの画面を置かない（ユーザー判断 2026-10-11、道場は 2026-10-12）', () => {
     expect(sections.filter((section) => section.folder === '世界').map(({ id, label }) => ({ id, label }))).toEqual([
       { id: 'world', label: '阿弥浜' },
       { id: 'npc', label: 'NPC' },
       { id: 'event-chart', label: 'イベント' },
+      { id: 'dojo', label: '道場' },
     ])
     expect(sections.some((section) => String(section.id) === 'scenario')).toBe(false)
-    for (const id of ['world', 'npc', 'event-chart'] as const) expect(pages[id]).toBeDefined()
+    for (const id of ['world', 'npc', 'event-chart', 'dojo'] as const) expect(pages[id]).toBeDefined()
   })
 
   it('容姿・特典の解放・所持画面は変更しない', () => {

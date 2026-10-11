@@ -55,6 +55,9 @@ export const RAW_REGIONS: readonly RawRegion[] = [
   { start: 0x0129f4, end: 0x0129f6, chunk: 'weapon-record', label: '武器箪笥の本数と容量' }, // 🟢
   { start: 0x0137ec, end: 0x013c2f, chunk: 'night-visit', label: '夜這いの記録' }, // 一部 ✅
   { start: 0x014038, end: 0x014063, chunk: 'night-visit', label: '夜の約束の枠' }, // 一部 ✅
+  { start: 0x014064, end: 0x01406b, chunk: 'dojo', label: '道場の評判・弟子の数・道場破り' }, // 🟢
+  { start: 0x01406c, end: 0x01415b, chunk: 'dojo', label: '弟子の名簿', recordSize: 12 }, // 🟢
+  { start: 0x01415c, end: 0x01417b, chunk: 'dojo', label: '来ている道場破り', recordSize: 4 }, // 🟢
   { start: 0x01417c, end: 0x0189fb, chunk: 'skill-states', label: '技の覚え状況' }, // 🟢 ／ 書き込み ✅
   { start: 0x0189fc, end: 0x01920d, chunk: 'styles', label: '習得技数・腕前点・装備・流派の表' }, // 🟢
   { start: 0x01920e, end: 0x01a60f, chunk: 'custom-style', label: '俺流' }, // 🟢
