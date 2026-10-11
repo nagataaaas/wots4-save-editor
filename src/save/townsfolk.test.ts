@@ -73,7 +73,6 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
     expect([at(22), at(30), at(62)]).toEqual([0x0264, 0x02c4, 0x0444])
     expect([at(11), at(21), at(81)]).toEqual([0x01e0, 0x0258, 0x0528])
     expect([22, 30, 62].map(personName)).toEqual(['堂島', '寿司屋', '鍛冶屋（おやじ）'])
-    expect(TOWNSFOLK_PEOPLE.filter((x) => x.certainty === '✅').map((x) => x.p)).toEqual([22, 30, 62])
     expect(TOWNSFOLK_PEOPLE).toHaveLength(56)
     expect(personName(0)).toBe('人物 0（空き）')
   })
@@ -105,10 +104,10 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
 
   it('🟢 ビットを外すだけでは生き返らない人物（重要人物・寿司屋・薬屋）には一緒に戻す値を示す（要ゲーム内確認）', () => {
     expect(reviveNote(11)).toMatch(/0x374F/)
-    expect(reviveNote(22)).toMatch(/0x3799/)
-    expect(reviveNote(23)).toMatch(/0x379A/)
-    expect(reviveNote(30)).toMatch(/0x37F9/)
-    expect(reviveNote(55)).toMatch(/0x375C/)
+    expect(reviveNote(22)).toMatch(/0x375A/)
+    expect(reviveNote(23)).toMatch(/0x375B/)
+    expect(reviveNote(30)).toMatch(/人物の状態/)
+    expect(reviveNote(55)).toMatch(/人物の状態/)
     expect(reviveNote(62)).toBeNull()
     expect(reviveNote(81)).toBeNull()
   })
@@ -123,7 +122,7 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
     for (const n of [1, 2, 3, 15]) expect(TOWNSFOLK_NOTES[occupationFlagOffset(n)]).toBeUndefined()
     expect(() => writeTownsfolk(b, occupationFlagOffset(1), 5, { advanced: false })).toThrow(RangeError)
     expect(TOWNSFOLK_NOTES[occupationFlagOffset(13)].values?.map((v) => v.value)).toEqual([0, 1, 10, 20, 30, 40, 50, 60, 70])
-    expect(TOWNSFOLK_NOTES[occupationFlagOffset(23)].note).toMatch(/🔶/)
+    expect(TOWNSFOLK_NOTES[occupationFlagOffset(23)].note).not.toMatch(/🔶/) // 🔶 は画面に出さずコメントに残す
     expect(() => writeTownsfolk(b, occupationFlagOffset(21), 3, { advanced: false })).toThrow(RangeError)
     writeTownsfolk(b, occupationFlagOffset(21), 2, { advanced: false })
     expect(b[0x0131]).toBe(2)
@@ -168,7 +167,7 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
     expect(note.note).toContain('流派の段そのものではない')
     expect(note.note).toContain('目録の入手や技の習得は反映されない')
     // 🔶 100 の使われる場面は未確認なので、通常モードには出さない。
-    expect(note.note).toContain('🔶 100')
+    expect(note.note).toContain('100 は通常の会話をしない値') // 🔶 使われる場面は未確認
     expect(() => writeTownsfolk(makeSave(), 0x0129, 100, { advanced: false })).toThrow(RangeError)
     for (const { value } of note.values!) {
       const b = makeSave()

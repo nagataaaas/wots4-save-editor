@@ -60,7 +60,7 @@ export const PROMISE_ROWS: readonly PromiseRow[] = Object.values(NIGHT_VISIT_ROW
   place: r.place,
   layout: r.layout,
   partnerName: r.name_ja,
-  checked: r.備考.includes("確かめた組"),
+  checked: r.checked,
   bytes: r.save_bytes_le.split(" ").map((h) => Number.parseInt(h, 16)),
 }));
 
@@ -82,8 +82,8 @@ export type PromisePartner = {
   group: number;
   /** 名前のある相手の行 */
   row: number | null;
-  /** 🟢 か、ゲームの反映を確かめたもの（✅） */
-  status: string;
+  /** ゲームの反映を確かめたもの（CSV の status が ✅）。false は 🟢 */
+  checked: boolean;
   note: string;
 };
 
@@ -100,8 +100,8 @@ export const PROMISE_PARTNERS: readonly PromisePartner[] = Object.values(NIGHT_V
   blood: p.blood,
   group: p.group,
   row: p.row,
-  status: p.status,
-  note: p.備考,
+  checked: p.checked,
+  note: p.note_ja,
 }));
 
 export function promisePartner(type: number): PromisePartner | undefined {

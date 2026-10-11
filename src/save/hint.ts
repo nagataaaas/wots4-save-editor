@@ -55,7 +55,7 @@ export type HintView = {
 
 /** 値の表示名（例：「6 琴吹光探検隊」「65535 なし」） */
 export function hintLabel(value: number): string {
-  if (value === HINT_NONE) return `${value}（0xFFFF）なし 🔶`;
+  if (value === HINT_NONE) return `${value}（0xFFFF）なし`; // 🔶
   const node = chartNode(value);
   if (!node) return `${value}（ノード表にない値）`;
   return node.labelId !== null ? `${value} ${chartNodeLabel(node)}` : `${value}（イベントに当たらないノード）`;

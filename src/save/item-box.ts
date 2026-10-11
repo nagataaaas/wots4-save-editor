@@ -81,10 +81,11 @@ const ITEM_MARK_OFFSET = 4;
 const U12_IDS = new Set([0x2d, 0x2e]);
 const VALUABLE_IDS = new Set([0x00, 0x29, 0x2a, 0x2b, 0x2c, 0xed, 0xee]);
 
+// 🟢 道具としては手に入らない。❓ 枠に入れたときの動作・表示は要ゲーム内確認
 const KIND_CAUTION: Record<1 | 2 | 3, string> = {
-  1: "料理屋でその場で食べる料理で、道具としては手に入りません（🟢）。枠に入れたときの動作は要ゲーム内確認です",
-  2: "宿の部屋で、道具としては手に入りません（🟢）。枠に入れたときの動作は要ゲーム内確認です",
-  3: "手に入る経路がない ID です（🟢）。ゲーム内での表示・使用は要ゲーム内確認です",
+  1: "料理屋でその場で食べる料理で、道具としては手に入りません",
+  2: "宿の部屋で、道具としては手に入りません",
+  3: "手に入る経路がない ID です",
 };
 
 const ALL_KINDS = [0, 1, 2, 3] as const;
@@ -121,7 +122,7 @@ export function itemLabel(id: number): string | null {
 export function validateItemId(id: number, options: ItemBoxOptions = {}): string | null {
   if (!Number.isInteger(id) || id < 0 || id > 0xffff) return `ID は 0x0000〜0xFFFF です（${id}）`;
   if (id === EMPTY_ID) return null;
-  if (U12_IDS.has(id)) return `${formatHex4(id)} は書くとゲーム内でセーブできなくなる ID です（U-12）`;
+  if (U12_IDS.has(id)) return `${formatHex4(id)} は書くとゲーム内でセーブできなくなる ID です`; // ❓ U-12
   if (VALUABLE_IDS.has(id)) return `${formatHex4(id)} は重要品の画面で扱う ID です`;
   const it = findItem(id);
   if (!it) return `道具の一覧にない ID です（${formatHex4(id)}）`;

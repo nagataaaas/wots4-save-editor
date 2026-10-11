@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { CertaintyBadge } from "@/components/certainty-badge";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { SearchSelectRow } from "@/components/search-select-row";
@@ -89,11 +88,6 @@ export function StatsPage() {
         key={`${k}-${field.key}`}
         label={field.label}
         offset={field.offset}
-        badges={
-          field.certainty === "🔶" || field.certainty === "❓" ? (
-            <CertaintyBadge mark={field.certainty} text={field.certainty === "🔶" ? "推測" : "未確認"} />
-          ) : undefined
-        }
         value={value}
         problem={view?.problem ?? null}
         warning={v?.warning ?? null}

@@ -75,25 +75,29 @@ export const YOBAI_COUNTERS: readonly {
     offset: 0x137ec,
     size: 4,
     label: "夜這い回数",
-    note: "約束の画面の「夜這い回数」（確認済み）。上限 9999。周回で消えない",
+    // ✅ 約束の画面の「夜這い回数」
+    note: "約束の画面の「夜這い回数」。上限 9999。周回で消えない",
   },
   {
     offset: 0x13e30,
     size: 4,
     label: "段階",
-    note: "🟢 0〜3。夜這い回数 10・45・85 で上がる。高いほど家の中の人が多い場所になりやすい",
+    // 🟢
+    note: "0〜3。夜這い回数 10・45・85 で上がる。高いほど家の中の人が多い場所になりやすい",
   },
   {
     offset: 0x13e34,
     size: 4,
     label: "愛の証の回数",
-    note: "🟢 「愛の証をもらった」で終わった夜這いの回数",
+    // 🟢
+    note: "「愛の証をもらった」で終わった夜這いの回数",
   },
   {
     offset: 0x37c8,
     size: 1,
     label: "褒美の順番",
-    note: "🟢 1〜50 を回る。5 回ごとに決まった品、50 回目は緋緋色金",
+    // 🟢
+    note: "1〜50 を回る。5 回ごとに決まった品、50 回目は緋緋色金",
   },
 ];
 
@@ -240,7 +244,7 @@ export const KNOWN_TYPES: readonly (KnownValue & { kind: TypeKind })[] = Object.
   NIGHT_VISIT_PARTNER_TABLE,
 ).map((p) => ({
   value: p.id_dec,
-  label: p.備考 ? `${p.name_ja}（${p.備考}）` : p.name_ja,
+  label: p.note_ja ? `${p.name_ja}（${p.note_ja}）` : p.name_ja,
   kind:
     p.kind === "special" ? "名前のある相手" : p.sex === "f" ? "町の人（女性）" : "町の人（男性）",
 }));
@@ -506,7 +510,7 @@ export function validatePlaceLayout(
   if (opts.advanced || (place === current.place && layout === current.layout)) return null;
   return PLACE_LAYOUTS.some((p) => p.place === place && p.layout === layout)
     ? null
-    : `確認済みの場所と配置の組ではありません（上級者モードで書けます）: 0x${place.toString(16)}・0x${layout.toString(16)}`;
+    : `表にある場所と配置の組ではありません（上級者モードで書けます）: 0x${place.toString(16)}・0x${layout.toString(16)}`;
 }
 
 export function writePromisePlace(

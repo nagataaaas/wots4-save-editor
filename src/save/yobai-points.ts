@@ -23,8 +23,6 @@ export type YobaiPoint = {
   /** 約束になる値。分かっていなければ null */
   threshold: number | null;
   note: string;
-  /** 意味以外に未確認のことがあれば、バッジに出す */
-  pending?: string;
 };
 
 const TORTURE_NOTE =

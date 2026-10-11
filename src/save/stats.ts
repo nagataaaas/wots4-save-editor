@@ -21,7 +21,6 @@ import { readF32, readU16, readU32, writeF32, writeU16, writeU32 } from './binar
 import { checkLayout } from './hero'
 
 export type StatType = 'u16' | 'u32' | 'f32'
-export type StatCertainty = '✅' | '🟢' | '🔶' | '❓'
 
 export type StatField = {
   /** 一意の名前（UI の key） */
@@ -33,7 +32,6 @@ export type StatField = {
   group: StatGroupId
   /** 通常モードの上限（ゲームが値を増やすときの上限など） */
   max: number
-  certainty: StatCertainty
   /** どんな値か・いつ増えるか（UI の丸ハテナ） */
   note: string
   /** 秒・距離など、値の見せ方 */
@@ -71,37 +69,35 @@ export const PLAY_TIME_MAX = 35_999_999
 export const SAMURAI_DEGREE_MAX = 120
 
 /** 🟢 行動の回数 0x0B4C + 4 × i。使われていない i（8・11〜15）は載せない */
-export const ACTION_COUNTS: readonly { index: number; label: string; certainty: StatCertainty; note: string }[] = [
-  { index: 0, label: '人が落とした持ち物を拾った', certainty: '🟢', note: '主人公が拾ったときだけ数える。不適切な行動に数える' },
+export const ACTION_COUNTS: readonly { index: number; label: string; note: string }[] = [
+  { index: 0, label: '人が落とした持ち物を拾った', note: '主人公が拾ったときだけ数える。不適切な行動に数える' },
   {
     index: 1,
     label: '主人公の体が人に当たった',
-    certainty: '🔶',
-    note: '🔶 主人公の体が当たる動作（どの動作かは未確認）で人に当たると、持ち物を落とさせようとして数える。落ちなくても数える。不適切な行動に数える',
+    // 🔶 どの動作で数えるかは未確認
+    note: '主人公の体が当たる動作で人に当たると、持ち物を落とさせようとして数える。落ちなくても数える。不適切な行動に数える',
   },
   {
     index: 2,
     label: '戦わない町の人を倒した',
-    certainty: '🔶',
-    note: '🔶 戦わない町の人とみられる属性の人を倒したとき。イベント中は数えない。寿司屋の店主を殺して +1 した。不適切な行動に数える',
+    // 🔶 戦わない町の人とみられる属性
+    note: '戦わない町の人の属性の人を倒したとき。イベント中は数えない。寿司屋の店主を殺して +1 した。不適切な行動に数える',
   },
-  { index: 3, label: '代金を踏み倒した', certainty: '🟢', note: '治安 −10 と同時に増える。不適切な行動に数える' },
-  { index: 4, label: '侍らしい選択', certainty: '🟢', note: '侍度の分子と分母に 10 ずつ入る' },
-  { index: 5, label: '恥ずかしい選択', certainty: '🟢', note: '侍度の分母に 10 ずつ入る' },
+  { index: 3, label: '代金を踏み倒した', note: '治安 −10 と同時に増える。不適切な行動に数える' },
+  { index: 4, label: '侍らしい選択', note: '侍度の分子と分母に 10 ずつ入る' },
+  { index: 5, label: '恥ずかしい選択', note: '侍度の分母に 10 ずつ入る' },
   {
     index: 6,
     label: 'イベント中に抜刀したまま相手に近づいた',
-    certainty: '🟢',
     note: 'イベントの途中で、抜刀していると話が変わる場面で数える。侍度の分子と分母に 1 ずつ入る。結果画面には出ない',
   },
   {
     index: 7,
     label: 'イベント中に相手に攻撃を当てた',
-    certainty: '🟢',
     note: 'イベントの途中で、攻撃すると話が変わる場面で数える。侍度の分母に 1 ずつ入る。結果画面には出ない',
   },
-  { index: 9, label: '善良ななりわいを成功', certainty: '🟢', note: '侍度の分子に 3 ずつ入る' },
-  { index: 10, label: '悪質ななりわいを成功', certainty: '🟢', note: '侍度の分母に 3 ずつ入る' },
+  { index: 9, label: '善良ななりわいを成功', note: '侍度の分子に 3 ずつ入る' },
+  { index: 10, label: '悪質ななりわいを成功', note: '侍度の分母に 3 ずつ入る' },
 ]
 
 /** 🟢 称号（0x0B9C + 2 × 番号）。侍度が高い順 */
@@ -155,7 +151,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '侍度の最高値',
     group: 'evaluation',
     max: SAMURAI_DEGREE_MAX,
-    certainty: '🟢',
     note: '評価のたびに大きいほうを残す。周回をまたいで残る',
   },
   {
@@ -165,7 +160,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '侍度（最後の評価）',
     group: 'evaluation',
     max: SAMURAI_DEGREE_MAX,
-    certainty: '🟢',
     note: '0〜120。称号はこの値で決まる',
   },
   {
@@ -175,7 +169,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '今回の評価で得る侍点',
     group: 'evaluation',
     max: 999_999,
-    certainty: '🟢',
     note: '評価の結果画面で侍点に足して 0 に戻す',
   },
   {
@@ -185,7 +178,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '侍度の分子',
     group: 'evaluation',
     max: ACTION_COUNT_MAX,
-    certainty: '🟢',
     note: '評価のときに行動の回数から計算し直す。周回の終わりに 0',
   },
   {
@@ -195,7 +187,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '侍度の分母',
     group: 'evaluation',
     max: ACTION_COUNT_MAX,
-    certainty: '🟢',
     note: '評価のときに行動の回数から計算し直す。周回の終わりに 0',
   },
   {
@@ -205,7 +196,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '死亡したときの段階',
     group: 'evaluation',
     max: 999,
-    certainty: '🟢',
     note: '死亡で周回を終えたときに、そのときの段階を写す。死亡の侍度の係数に使う。周回の終わりに 0',
   },
   ...ACTION_COUNTS.map(
@@ -216,7 +206,6 @@ export const STAT_FIELDS: readonly StatField[] = [
       label: `i ${a.index}：${a.label}`,
       group: 'actions',
       max: ACTION_COUNT_MAX,
-      certainty: a.certainty,
       note: a.note,
     }),
   ),
@@ -228,7 +217,6 @@ export const STAT_FIELDS: readonly StatField[] = [
       label: `${i}：${name}`,
       group: 'titles',
       max: 999,
-      certainty: '🟢',
       note: `称号「${name}」を得た回数`,
     }),
   ),
@@ -239,7 +227,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: 'プレイ時間（周回中）',
     group: 'time',
     max: PLAY_TIME_MAX,
-    certainty: '🟢',
     note: 'メニュー画面にいる間も進む。周回の終わりに 0',
     unit: 'seconds',
   },
@@ -250,7 +237,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: 'プレイ時間（累計）',
     group: 'time',
     max: PLAY_TIME_MAX,
-    certainty: '🟢',
     note: '周回中のプレイ時間と同じだけ増える',
     unit: 'seconds',
   },
@@ -261,7 +247,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '最短クリア時間',
     group: 'time',
     max: PLAY_TIME_MAX,
-    certainty: '🟢',
     note: 'クリアしたとき、0 か今回のプレイ時間より大きければ書き換える',
     unit: 'seconds',
   },
@@ -272,7 +257,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '移動距離（周回中）',
     group: 'combat',
     max: 9_999_999,
-    certainty: '🟢',
     note: '記録の画面では ÷1000 して km で表示する',
     unit: 'distance',
   },
@@ -283,7 +267,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '総移動距離（累計）',
     group: 'combat',
     max: 9_999_999,
-    certainty: '🟢',
     note: '記録の画面では ÷1000 して km で表示する',
     unit: 'distance',
   },
@@ -294,7 +277,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '斬殺数（周回中）',
     group: 'combat',
     max: 9_999_999,
-    certainty: '🟢',
     note: '主人公がとどめを刺すと +1',
   },
   {
@@ -304,7 +286,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '総斬殺数（累計）',
     group: 'combat',
     max: 9_999_999,
-    certainty: '🟢',
     note: '主人公がとどめを刺すと +1',
   },
   {
@@ -314,7 +295,6 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '最高連斬数（周回中）',
     group: 'combat',
     max: 999,
-    certainty: '🟢',
     note: '連斬が終わったときに大きいほうを残す',
   },
   {
@@ -324,11 +304,9 @@ export const STAT_FIELDS: readonly StatField[] = [
     label: '最高連斬数（累計）',
     group: 'combat',
     max: 999,
-    certainty: '🟢',
     note: '連斬が終わったときに大きいほうを残す',
   },
   ...DAMAGE_KINDS.flatMap((who, c): StatField[] => {
-    const certainty: StatCertainty = '🟢'
     return [
       {
         key: `damageCycle${c}`,
@@ -337,8 +315,7 @@ export const STAT_FIELDS: readonly StatField[] = [
         label: `${who}（周回中）`,
         group: 'damage',
         max: DAMAGE_MAX,
-        certainty,
-        note: `${who}に与えた痛手の合計。周回の終わりに 0。上限は ❓（エディタの目安）`,
+        note: `${who}に与えた痛手の合計。周回の終わりに 0。上限はエディタの目安`,
       },
       {
         key: `damageTotal${c}`,
@@ -347,8 +324,7 @@ export const STAT_FIELDS: readonly StatField[] = [
         label: `${who}（累計）`,
         group: 'damage',
         max: DAMAGE_MAX,
-        certainty,
-        note: `${who}に与えた痛手の合計。周回をまたいで残る。上限は ❓（エディタの目安）`,
+        note: `${who}に与えた痛手の合計。周回をまたいで残る。上限はエディタの目安`,
       },
     ]
   }),

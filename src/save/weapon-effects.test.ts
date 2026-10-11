@@ -15,7 +15,7 @@ describe('銘の効果（[W] p20）', () => {
 
   it('斬殺数の銘には攻撃力が変わらない注意、つま斬りの銘には二刀流の注意が付く', () => {
     expect(titleEffect(0x04)).toMatchObject({ effect: '攻撃力 +250' })
-    expect(titleEffect(0x04)?.note).toContain('要ゲーム内確認')
+    expect(titleEffect(0x04)?.note).toContain('攻撃力の値は変わらない') // 🔶 ゲーム内でどう扱われるかは要ゲーム内確認
     expect(titleEffect(0x09)?.note).toBeUndefined()
     expect(titleEffect(0x13)).toMatchObject({ effect: 'つま斬り時の攻撃力 +250%' })
     expect(titleEffect(0x13)?.note).toContain('二刀流')

@@ -360,7 +360,7 @@ function ViewsPage({
 
 const difficultyOptions: SelectOption[] = DIFFICULTIES.map((d) => ({
   value: String(d.value),
-  label: d.certainty === "✅" ? d.label : `${d.label}（🟢）`,
+  label: d.label,
 }));
 
 const CYCLE_END_LABELS: Record<CycleEnd, string> = {

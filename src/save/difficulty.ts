@@ -14,11 +14,11 @@ import { checkLayout } from './hero'
 /** u8 ✅ [U] 難易度の位置 */
 export const DIFFICULTY_OFFSET = 0x0
 
-export const DIFFICULTIES: readonly { value: number; label: string; certainty: '✅' | '🟢' }[] = [
-  { value: 0, label: '易しい', certainty: '✅' },
-  { value: 1, label: '普通', certainty: '🟢' },
-  { value: 2, label: '難しい', certainty: '🟢' },
-  { value: 3, label: '超難しい', certainty: '✅' },
+export const DIFFICULTIES: readonly { value: number; label: string }[] = [
+  { value: 0, label: '易しい' }, // ✅
+  { value: 1, label: '普通' }, // 🟢
+  { value: 2, label: '難しい' }, // 🟢
+  { value: 3, label: '超難しい' }, // ✅
 ]
 
 export type DifficultyView = {

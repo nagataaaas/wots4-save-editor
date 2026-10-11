@@ -509,15 +509,15 @@ export function readWeapon(
     const warning = !hit
       ? special && kind !== "blade"
         ? null
-        : `ID 表にない${noun}です（U-10）。既知の${noun}への変更だけができます`
+        : `ID 表にない${noun}です。既知の${noun}への変更だけができます` // U-10
       : partName(hit.option).includes("？")
-        ? `ゲーム内での名前が未確認の ID です（U-13）。ゲーム内の表示を教えてください`
+        ? `名前に「？」が付いた ID です。ゲーム内では別の名前で表示されることがあります` // U-13 ゲーム内の名前が未確認
         : xDiffers
           ? `鞘（X ${formatHex4(sheathValue)}）がこの刃の標準の鞘（${formatHex4(standardX)}）と違います。刃を選び直すと標準の鞘に戻ります`
           : isXUnknown(kind, hit.option)
-            ? `この刃の X（鞘）は不明で、元の値のままです（U-3 案B）。ゲーム内で分解→組み立てると正しい X になります`
+            ? `この刃の X（鞘）は不明で、元の値のままです。ゲーム内で分解→組み立てると正しい X になります` // U-3 案B
             : hit.option.xExtended
-              ? `X は規則を確かめた範囲の外に延ばして計算した値です（U-3）。ゲーム内の名前・外観を確認してください`
+              ? `X は規則を延ばして計算した値です。ゲーム内の名前・外観が違うことがあります` // U-3 規則を確かめた範囲の外
               : null;
     return f(view, kind === "blade" ? null : specialProblem, warning);
   };
@@ -532,7 +532,7 @@ export function readWeapon(
       nameLength > WEAPON_NAME_MAX_CHARS
         ? `${WEAPON_NAME_MAX_CHARS}文字を超えています（${nameLength}文字）`
         : nameNo >= 0
-          ? `完成武器の名前の番号（${nameNo}）が入っているので、ゲームでは完成武器の名前が表示され、この名前は使われません（🟢）`
+          ? `完成武器の名前の番号（${nameNo}）が入っているので、ゲームでは完成武器の名前が表示され、この名前は使われません` // 🟢
           : null,
     ),
     nameNo,

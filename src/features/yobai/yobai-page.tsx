@@ -525,7 +525,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
               setSpec(defaultSpec(promisePartner(Number(v))!, stage));
             }}
           />
-          {!blocked && (!partner.status.startsWith("✅") || PARTNER_NOTES[spec.type]) && (
+          {!blocked && (!partner.checked || PARTNER_NOTES[spec.type]) && (
             <p className="text-muted-foreground text-xs">{PARTNER_NOTES[spec.type] ?? ""}</p>
           )}
         </div>
@@ -759,11 +759,6 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
             key={p.offset}
             label={p.label}
             offset={p.offset}
-            badges={
-              p.pending ? (
-                <CertaintyBadge mark={p.threshold === null ? "❓" : "🔶"} text={p.pending} />
-              ) : undefined
-            }
             value={current}
             problem={problem}
             format={String}

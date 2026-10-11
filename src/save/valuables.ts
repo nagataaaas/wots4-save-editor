@@ -56,7 +56,8 @@ export const VALUABLES: readonly Valuable[] = [
   {
     id: 0x0000,
     label: item(0x0000),
-    caution: '表示は確認済み（U-14）。ゲーム内でセーブできるか・イベントで使えるかは未確認です',
+    // ✅ 表示（U-14）。❓ ゲーム内でセーブできるか・イベントで使えるか
+    caution: 'イベントで使えない、またはゲーム内でセーブできなくなることがあります',
   },
   { id: 0x0029, label: item(0x0029) },
   { id: 0x002a, label: item(0x002a) },
@@ -65,19 +66,21 @@ export const VALUABLES: readonly Valuable[] = [
   {
     id: 0x00ed,
     label: item(0x00ed),
-    caution: 'ID は 🟢（U-14）。ゲーム内での表示・イベントで使えるかは未確認です',
+    // 🟢 ID（U-14）。❓ ゲーム内での表示・イベントで使えるか
+    caution: 'ゲーム内で表示されない、またはイベントで使えないことがあります',
   },
   {
     id: 0x00ee,
     label: item(0x00ee),
-    caution: 'ID は 🟢（U-14）。ゲーム内での表示・ローラの部屋の扉で使えるかは未確認です',
+    // 🟢 ID（U-14）。❓ ゲーム内での表示・ローラの部屋の扉で使えるか
+    caution: 'ゲーム内で表示されない、またはローラの部屋の扉で使えないことがあります',
   },
 ]
 
 /** ❓ U-12：PS3版での意味 [SE-BBS]。PC版では未確認のため、表示だけに使い書き込まない */
 const U12_LABELS: Record<number, string> = {
-  0x002d: 'チップ？（U-12）',
-  0x002e: '木札？（U-12）',
+  0x002d: 'チップ？',
+  0x002e: '木札？',
 }
 
 /**
@@ -213,10 +216,10 @@ export function validateValuableId(id: number, options: ValuableOptions = {}): s
   if (!Number.isInteger(id) || id < 0 || id > 0xffff) return `ID は 0x0000〜0xFFFF です（${id}）`
   if (id === EMPTY_ID || findValuable(id)) return null
   if (id in U12_LABELS) {
-    return `${formatHex4(id)} は判定待ち（U-12）で、Steam版で書き込むとゲーム内でセーブできなくなったため書き込めません`
+    return `${formatHex4(id)} は書き込むとゲーム内でセーブできなくなるため書き込めません` // ❓ U-12
   }
   if (options.investigate) return null
-  if (id in PROBED_LABELS) return `${PROBED_LABELS[id]}（${formatHex4(id)}）は重要品として確認されていません（U-14）`
+  if (id in PROBED_LABELS) return `${PROBED_LABELS[id]}（${formatHex4(id)}）は重要品の枠には書けません` // ❓ U-14
   return `未知の ID です（${formatHex4(id)}）`
 }
 
@@ -247,8 +250,8 @@ export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}):
       if (idProblem) warning = `${idProblem}。ほかの値に変更してください`
       const caution = findValuable(id)?.caution
       if (caution) warning = caution
-      if (!idProblem && id in PROBED_LABELS) warning = `${PROBED_LABELS[id]} は重要品として確認されていない ID です（U-14）`
-      if (!idProblem && valuableLabel(id) === null) warning = `未知の ID です（${formatHex4(id)}）。ゲーム内の表示を確認してください（U-14）`
+      if (!idProblem && id in PROBED_LABELS) warning = `${PROBED_LABELS[id]} は重要品ではない ID です` // ❓ U-14
+      if (!idProblem && valuableLabel(id) === null) warning = `未知の ID です（${formatHex4(id)}）。ゲーム内の表示を確認してください` // ❓ U-14
     }
 
     slots.push({

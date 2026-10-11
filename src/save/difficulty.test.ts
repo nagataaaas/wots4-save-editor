@@ -32,12 +32,12 @@ describe('難易度 0x0000', () => {
     expect(readDifficulty(makeSave(SEEN.harakiri))).toEqual({ value: 3, label: '超難しい', warning: null, problem: null })
   })
 
-  it('🟢 普通＝1・難しい＝2（確度を残す）', () => {
-    expect(DIFFICULTIES.map((d) => [d.value, d.label, d.certainty])).toEqual([
-      [0, '易しい', '✅'],
-      [1, '普通', '🟢'],
-      [2, '難しい', '🟢'],
-      [3, '超難しい', '✅'],
+  it('✅ 易しい＝0・超難しい＝3、🟢 普通＝1・難しい＝2', () => {
+    expect(DIFFICULTIES.map((d) => [d.value, d.label])).toEqual([
+      [0, '易しい'], // ✅
+      [1, '普通'], // 🟢
+      [2, '難しい'], // 🟢
+      [3, '超難しい'], // ✅
     ])
   })
 

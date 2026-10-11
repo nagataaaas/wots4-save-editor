@@ -83,8 +83,9 @@ describe("門・柵の状態 chunks/gates", () => {
     expect(WORLD_FLAGS.find((f) => f.offset === 0x377f)?.label).toContain("神社入口の柵");
     const cave = WORLD_FLAGS.find((f) => f.offset === 0x3761)!;
     expect(cave.label).toContain("神社の洞窟内の柵");
-    expect(cave.note).toContain("✅ 1 で柵が降り");
-    expect(cave.note).toContain("0 に戻したときの上昇・通行の回復は要ゲーム内確認");
+    expect(cave.note).toContain("1 で柵が降り"); // ✅
+    // ❓ 0 に戻したときの上昇・通行の回復は要ゲーム内確認（画面には確度を出さない）
+    expect(cave.note).not.toMatch(/✅|🟢|🔶|❓|要ゲーム内確認|確認済み/);
     expect(
       WORLD_FLAGS.filter((f) => f.label.includes("神社")).every((f) => !f.label.includes("門")),
     ).toBe(true);
@@ -200,11 +201,8 @@ describe("そのほかのフラグ chunks/scenario-flags", () => {
       { value: 0, label: "0 入れる" },
       { value: 1, label: "1 入れない" },
     ]);
-    expect(consulate.certainty).toBe("🟢");
-    // 🔶 意味に推測が入るのは 0x37C0
-    expect(SCENARIO_FLAGS.filter((f) => f.certainty === "🔶").map((f) => f.offset)).toEqual([
-      0x37c0,
-    ]);
+    // 🔶 意味に推測が入るのは 0x37C0、❓ 0x3760。確度は画面に出さない
+    for (const f of SCENARIO_FLAGS) expect(f.note).not.toMatch(/✅|🟢|🔶|❓|要ゲーム内確認/);
     // 剣術大会の 0x37AB・0x37F7・0x37F8 は出さない
     for (const o of [0x37ab, 0x37f7, 0x37f8])
       expect(SCENARIO_FLAGS.some((f) => f.offset === o)).toBe(false);

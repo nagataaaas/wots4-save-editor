@@ -65,18 +65,18 @@ describe('侍評価・活動記録 0x0B34〜0x0C63', () => {
     expect(readStats(b).problem).toBeNull()
   })
 
-  it('確度を残す：行動の回数 i 1・2 は 🔶。🟢 人物の種類 15 暗闇脳天・16 魔鱗組', () => {
-    expect(ACTION_COUNTS.map((a) => [a.index, a.certainty])).toEqual([
-      [0, '🟢'],
-      [1, '🔶'],
-      [2, '🔶'],
-      [3, '🟢'],
-      [4, '🟢'],
-      [5, '🟢'],
-      [6, '🟢'],
-      [7, '🟢'],
-      [9, '🟢'],
-      [10, '🟢'],
+  it('行動の回数（i 1・2 は 🔶、ほかは 🟢）。🟢 人物の種類 15 暗闇脳天・16 魔鱗組', () => {
+    expect(ACTION_COUNTS.map((a) => a.index)).toEqual([
+      0, // 🟢
+      1, // 🔶
+      2, // 🔶
+      3, // 🟢
+      4, // 🟢
+      5, // 🟢
+      6, // 🟢
+      7, // 🟢
+      9, // 🟢
+      10, // 🟢
     ])
     expect(statField('damageCycle15').label).toBe('暗闇脳天（周回中）')
     expect(statField('damageTotal16').label).toBe('魔鱗組（累計）')

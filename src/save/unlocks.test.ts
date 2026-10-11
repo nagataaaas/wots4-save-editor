@@ -196,7 +196,7 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     invalid[0x43318 + 40] = 3;
     const before = invalid.slice();
     expect(readUnlockStates(invalid).values[40]).toBe(3);
-    expect(readUnlockStates(invalid).layoutProblem).toMatch(/U-17/);
+    expect(readUnlockStates(invalid).layoutProblem).toMatch(/読み取り専用/); // 🔶 U-17
     expect(() => writeUnlockState(invalid, 0, 2, { advanced: true })).toThrow();
     expect(invalid).toEqual(before);
   });

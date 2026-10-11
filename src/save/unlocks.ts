@@ -152,7 +152,7 @@ export function readUnlockStates(bytes: Uint8Array): UnlockStatesView {
   return {
     values,
     offset,
-    layoutProblem: layoutProblem ?? (!readable ? "ファイルが小さすぎて特典を読めません" : bad >= 0 ? `特典番号 ${bad} の値が0〜2以外のため読み取り専用です（U-17）` : null),
+    layoutProblem: layoutProblem ?? (!readable ? "ファイルが小さすぎて特典を読めません" : bad >= 0 ? `特典番号 ${bad} の値が0〜2以外のため読み取り専用です` : null), // 🔶 U-17
     warning: null,
   };
 }

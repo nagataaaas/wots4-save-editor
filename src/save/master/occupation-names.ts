@@ -43,7 +43,7 @@ export const OCCUPATIONS: readonly OccupationEntry[] = ROWS.map((r) => ({
   reward: Number(r.reward),
   bonus: Number(r.bonus),
   deadlineDays: r.deadline_days,
-  noteJa: r.備考,
+  noteJa: r.note_ja,
 }));
 
 /** なりわいの表示名（日本語・英語） */

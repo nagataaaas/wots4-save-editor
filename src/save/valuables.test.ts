@@ -62,9 +62,9 @@ describe('readValuables', () => {
     writeU16(b, slotOffset(2) + 2, 1)
     writeU16(b, slotOffset(3), 0x2e)
     const v = readValuables(b)
-    expect(v.slots[2]).toMatchObject({ label: 'チップ？（U-12）', problem: null, idWritable: false })
+    expect(v.slots[2]).toMatchObject({ label: 'チップ？', problem: null, idWritable: false })
     expect(v.slots[2].warning).not.toBeNull()
-    expect(v.slots[3]).toMatchObject({ label: '木札？（U-12）', problem: null, idWritable: false })
+    expect(v.slots[3]).toMatchObject({ label: '木札？', problem: null, idWritable: false })
     // 個数だけの変更（ID 0x2D のまま）はできず、書ける ID には変えられる
     expect(() => writeValuable(b, 2, 0x2d, 2)).toThrow()
     writeValuable(b, 2, 0x29, 1)
@@ -206,7 +206,7 @@ describe('❓ U-14：ID調査モード', () => {
     expect(() => writeValuable(b, 5, 0x30, 1)).toThrow()
     const inv = readValuables(b, { investigate: true })
     expect(inv.slots[2]).toMatchObject({ label: 'チラシ', idWritable: true })
-    expect(inv.slots[2].warning).toContain('U-14')
+    expect(inv.slots[2].warning).toContain('重要品ではない ID')
   })
 
   it('空き枠だけに候補 ID を個数 1 で入れ、既存の枠は変えない', () => {
@@ -245,8 +245,8 @@ describe('🟢 U-14：拷問部屋の鍵（0xED）・謎の鍵（0xEE）', () =>
     const v = readValuables(b)
     expect(v.slots[2]).toMatchObject({ id: 0xed, count: 1, label: '拷問部屋の鍵', problem: null, idWritable: true })
     expect(v.slots[3]).toMatchObject({ id: 0xee, count: 1, label: '謎の鍵', problem: null, idWritable: true })
-    expect(v.slots[2].warning).toContain('U-14')
-    expect(v.slots[3].warning).toContain('U-14')
+    expect(v.slots[2].warning).toContain('イベントで使えない')
+    expect(v.slots[3].warning).toContain('ローラの部屋の扉')
   })
 
   it('読み出し→書き戻しでバイト一致する', () => {
@@ -272,6 +272,6 @@ describe('[U] 2026-10-05 U-14：会談の手紙（0x00。7回目の訂正で 0x0
     expect(() => writeValuable(b, 3, 0x01, 1)).toThrow()
     const v = readValuables(b)
     expect(v.slots[2]).toMatchObject({ id: 0x00, count: 1, label: '会談の手紙', problem: null, idWritable: true })
-    expect(v.slots[2].warning).toContain('U-14')
+    expect(v.slots[2].warning).toContain('セーブできなくなる')
   })
 })

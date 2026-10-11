@@ -217,7 +217,7 @@ function RawEditor({
 
       <CollapsibleCard
         title="領域の一覧"
-        description="解析ドキュメント（docs/save_format/README.md §3）の領域です。終了が ❓ のものは色分けしません。行をクリックすると、その位置へ移動します。"
+        description="解析ドキュメント（docs/save_format/README.md §3）の領域です。終了が分からないものは色分けしません。行をクリックすると、その位置へ移動します。"
         contentClassName="overflow-x-auto"
       >
         <RegionTable onJump={goTo} />
@@ -449,10 +449,10 @@ function SelectionCard({
         <CardTitle className="font-mono">{formatOffset(offset)}</CardTitle>
         <CardDescription>
           {regions.length === 0
-            ? '解析ドキュメントの領域に入っていない位置です（❓）'
+            ? '解析ドキュメントの領域に入っていない位置です'
             : regions.map((r) => (
                 <span key={`${r.start}-${r.chunk}-${r.label}`} className="block">
-                  {r.label} {positionInRegion(r, offset)}（{r.chunk}、{r.certainty}）
+                  {r.label} {positionInRegion(r, offset)}（{r.chunk}）
                 </span>
               ))}
         </CardDescription>
@@ -495,7 +495,7 @@ function SelectionCard({
           </div>
           {advanced ? (
             <p className="text-muted-foreground text-xs">
-              16進のバイト列（例：01 00 FF）を、選択中の位置から上書きします（最大 {RAW_WRITE_MAX} B）。値の意味は確かめないので、ゲームで読めるかは要ゲーム内確認です。
+              16進のバイト列（例：01 00 FF）を、選択中の位置から上書きします（最大 {RAW_WRITE_MAX} B）。値の意味は確かめないので、書いた値によってはゲームで読めなくなることがあります。
             </p>
           ) : (
             <p className="text-muted-foreground text-xs">サイドバーの上級者モードをオンにすると、バイト列を直接書き換えられます。</p>
@@ -682,7 +682,6 @@ function RegionTable({ onJump }: { onJump: (offset: number) => void }) {
           <th className="px-2 py-1 font-normal">終了</th>
           <th className="px-2 py-1 font-normal">内容</th>
           <th className="px-2 py-1 font-normal">まとまり</th>
-          <th className="px-2 py-1 font-normal">確度</th>
         </tr>
       </thead>
       <tbody>
@@ -692,13 +691,12 @@ function RegionTable({ onJump }: { onJump: (offset: number) => void }) {
               <span className={`mr-1.5 inline-block size-2.5 rounded-sm align-middle ${r.end === null ? 'border' : REGION_TINTS[i % REGION_TINTS.length]}`} />
               {formatOffset(r.start)}
             </td>
-            <td className="px-2 py-1 font-mono">{r.end === null ? '❓' : formatOffset(r.end)}</td>
+            <td className="px-2 py-1 font-mono">{r.end === null ? '—' : formatOffset(r.end)}</td>
             <td className="px-2 py-1">
               {r.label}
               {r.recordSize ? `（${r.recordSize === 0xa0 ? '0xA0' : r.recordSize} B × ${((r.end ?? r.start) - r.start + 1) / r.recordSize} 件）` : ''}
             </td>
             <td className="px-2 py-1 font-mono">{r.chunk}</td>
-            <td className="px-2 py-1">{r.certainty}</td>
           </tr>
         ))}
       </tbody>
@@ -836,7 +834,7 @@ function PatchCard({
           {applyError && <p className="text-destructive text-xs">{applyError}</p>}
         </div>
         <p className="text-muted-foreground text-xs">
-          値の意味は確かめずにそのまま書きます。ゲームで読めるかは要ゲーム内確認です。ダウンロードするまでファイルは変わりません（サイドバーの「保存」で書き出します）。
+          値の意味は確かめずにそのまま書きます。書いた値によってはゲームで読めなくなることがあります。ダウンロードするまでファイルは変わりません（サイドバーの「保存」で書き出します）。
         </p>
       </CardContent>
     </Card>

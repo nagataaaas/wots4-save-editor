@@ -255,7 +255,7 @@ function hex(v: number): string {
 
 function validateU8(value: number, known: readonly { value: number }[], opts: { advanced: boolean }): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 0xff) return `u8 の範囲外です: ${value}`
-  if (!opts.advanced && !known.some((s) => s.value === value)) return `確認済みの値ではありません（0x${hex(value)}）`
+  if (!opts.advanced && !known.some((s) => s.value === value)) return `通常モードで選べる値ではありません（0x${hex(value)}）`
   return null
 }
 
