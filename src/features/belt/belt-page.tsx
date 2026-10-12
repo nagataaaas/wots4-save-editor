@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { AnchorLink, CARD_ANCHOR_LINK_CLASS } from "@/components/anchor-link";
+import { AnchorLink, ScopeAnchorLink, ToggleChevron } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
@@ -24,7 +24,7 @@ import {
 import { charmLabel, type NumberKey, type WeaponView } from "@/save/weapon";
 import { BELT_ANCHORS, WEAPON_ANCHORS } from "./anchors";
 import { WeaponEditor } from "./weapon-editor";
-import { Chevron, SwitchRow, WeaponImage } from "./weapon-rows";
+import { SwitchRow, WeaponImage } from "./weapon-rows";
 import { COLLAPSIBLE_ANIMATION, NONE, isOnButton, type WeaponUpdate } from "./weapon-ui";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -132,6 +132,7 @@ function StateCard({
     <AnchoredCard anchor={BELT_ANCHORS.state}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
+          <ScopeAnchorLink />
           帯刀の状態
           {/* 位置は [U] の差分、ロード時の扱いは 🟢。🔶 書き換えたときのゲーム内の反映は未確認（要ゲーム内確認） */}
           <InfoTip offset={`${formatOffset(BELT_STATE.count)}〜0xA6AF`} />
@@ -271,10 +272,10 @@ function WeaponCard({
 
   if (weapon?.empty) {
     return (
-      <Card id={id} className="relative scroll-mt-4">
-        <AnchorLink id={id} className={CARD_ANCHOR_LINK_CLASS} />
+      <Card id={id} className="scroll-mt-4">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <AnchorLink id={id} />
             {weaponTitle(weapon, index)}
             <InfoTip offset={base} />
           </CardTitle>
@@ -297,14 +298,13 @@ function WeaponCard({
       render={
         <Card
           id={id}
-          className={open ? "relative scroll-mt-4 gap-0" : "hover:bg-muted/40 relative scroll-mt-4 cursor-pointer gap-0"}
+          className={open ? "scroll-mt-4 gap-0" : "hover:bg-muted/40 scroll-mt-4 cursor-pointer gap-0"}
           onClick={(e) => {
             if (!open && !isOnButton(e)) setOpen(true);
           }}
         />
       }
     >
-        <AnchorLink id={id} className={CARD_ANCHOR_LINK_CLASS} />
         <CardHeader
           className={open ? "cursor-pointer" : undefined}
           onClick={(e) => {
@@ -312,8 +312,10 @@ function WeaponCard({
           }}
         >
           <CardTitle className="flex flex-wrap items-center gap-2">
-            <CollapsibleTrigger className="group flex flex-wrap items-center gap-2 text-left hover:underline">
-              <Chevron />
+            {/* 三角の開閉はカード・見出しの欄のクリックに任せる */}
+            <ToggleChevron open={open} />
+            <AnchorLink id={id} />
+            <CollapsibleTrigger className="flex flex-wrap items-center gap-2 text-left hover:underline">
               {`${index + 1}本目`}
               <span className="text-muted-foreground text-xs font-normal">
                 {open ? "編集を閉じる" : "編集する"}

@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnchorLink } from "@/components/anchor-link";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { FlagGrid, FlagRow } from "@/components/flag-row";
@@ -353,7 +354,7 @@ function CycleCard({
   return (
     <AnchoredCard anchor={AMIHAMA_ANCHORS.cycle}>
       <CardHeader>
-        <CardTitle>難易度・治安・周回</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />難易度・治安・周回</CardTitle>
         <CardDescription>
           難易度・治安・周回数を編集できます。「新しい周回」で、物語を終えたときと同じように次の周回を始められます。
           {/* 新しい周回：物語を終えたときにゲームが行う引き継ぎと初期化を同じ順序で行う。終わり方はクリアか立ち去り。
@@ -606,8 +607,8 @@ function FlagSection({ anchor, title, flags }: { anchor: string; title: string; 
   const { id } = useAnchor(anchor);
   return (
     <section id={id} className="flex scroll-mt-4 flex-col gap-3">
-      <h3 className="relative text-sm font-medium">
-        <AnchorLink id={id} className="absolute top-0.5 -left-5" />
+      <h3 className="flex items-center gap-2 text-sm font-medium">
+        <AnchorLink id={id} />
         {title}
       </h3>
       <FlagGrid flags={flags} />
@@ -623,7 +624,7 @@ function EventFlagsCard() {
   return (
     <AnchoredCard anchor={EVENTS_ANCHORS.flags}>
       <CardHeader>
-        <CardTitle>イベント関連フラグ</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />イベント関連フラグ</CardTitle>
         <CardDescription>
           イベントで変わる状態や、イベントの起き方を変えるフラグを編集できます。
           <br />
@@ -903,7 +904,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
   return (
     <AnchoredCard anchor={EVENTS_ANCHORS.factions}>
       <CardHeader>
-        <CardTitle>勢力の状態</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />勢力の状態</CardTitle>
         <CardDescription>
           幕府・外国・攘夷との友好・対立の記録を編集できます。どの勢力のルートに入れるかが変わります。
           <br />

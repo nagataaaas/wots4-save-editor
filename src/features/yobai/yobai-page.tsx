@@ -8,6 +8,7 @@ import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
@@ -653,7 +654,7 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
   return (
     <AnchoredCard anchor={YOBAI_ANCHORS.currentPromise}>
       <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">夜の約束</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />夜の約束</CardTitle>
         <CardDescription>
           約束中の相手・場所・名前・見た目などを書き換えられます。約束がないときは新しく作れます。
           <br />

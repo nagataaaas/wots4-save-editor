@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -195,7 +196,7 @@ function SummaryCard({
   return (
     <AnchoredCard anchor={OCCUPATION_ANCHORS.current}>
       <CardHeader>
-        <CardTitle>受注中・クリア数</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />受注中・クリア数</CardTitle>
         <CardDescription>
           {/* ❓ 揃っていないときのゲームの動作は未確認。クリアしたなりわいの数も周回をまたぐ統計で、下の記録のクリア回数の合計と揃える */}
           受注中のなりわいと、これまでにクリアしたなりわいの数を編集できます。

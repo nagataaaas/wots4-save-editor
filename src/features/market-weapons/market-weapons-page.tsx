@@ -1,10 +1,10 @@
 import { useMemo, type ReactNode } from "react";
-import { ChevronRight } from "lucide-react";
 import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AnchorLink } from "@/components/anchor-link";
+import { AnchorLink, ToggleChevron } from "@/components/anchor-link";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { MARKET_ANCHORS } from "./anchors";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -70,6 +70,7 @@ export function MarketWeaponsPage() {
       <AnchoredCard anchor={MARKET_ANCHORS.summary}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             流通
             <InfoTip offset={MARKET_WEAPON_OFFSET} />
             {/* 武器は 0xA4 B × MARKET_WEAPON_SLOTS 件（武器レコード＋持っている町の人の番号）。続けて道具・刃・鍔・柄の記録 */}
@@ -132,10 +133,10 @@ function Group({
   return (
     <Card id={id} className="scroll-mt-4 py-0">
       <Collapsible open={open} onOpenChange={setOpen}>
-        <div className="relative flex items-center gap-2 px-6 py-4">
-          <AnchorLink id={id} className="absolute top-1/2 left-1 -translate-y-1/2" />
-          <CollapsibleTrigger className="group flex flex-1 items-center gap-2 text-left font-medium">
-            <ChevronRight className="size-4 shrink-0 transition-transform group-data-panel-open:rotate-90" aria-hidden />
+        <div className="flex items-center gap-2 px-6 py-4">
+          <ToggleChevron open={open} onToggle={() => setOpen(!open)} />
+          <AnchorLink id={id} />
+          <CollapsibleTrigger className="flex flex-1 items-center gap-2 text-left font-medium">
             {title}
             <span className="text-muted-foreground text-sm font-normal">
               {filled ?? "—"} / {slots}

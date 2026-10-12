@@ -4,6 +4,7 @@ import { ItemSlotRow } from "@/components/item-slot-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { ITEM_ANCHORS } from "@/features/tools/anchors";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,7 @@ export function ValuablesPage() {
       <AnchoredCard anchor={ITEM_ANCHORS.items}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             重要品
             {/* チップ・木札は ❓ U-12 */}
             <InfoTip offset={`${formatOffset(VALUABLES_OFFSET)}〜${formatOffset(VALUABLES_OFFSET + VALUABLE_SLOT_BYTES * VALUABLE_SLOT_COUNT - 1)}`}>
@@ -168,6 +170,7 @@ function ProbeCard({
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             ID調査モード
             <Badge variant="outline" className="font-normal">上級者向け</Badge>
           </CardTitle>

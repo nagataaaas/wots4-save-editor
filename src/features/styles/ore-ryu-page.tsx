@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,6 +99,7 @@ export function OreRyuPage() {
       <AnchoredCard anchor={ORE_RYU_ANCHORS.overview}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             俺流
             {/* 並びは 🟢。🔶 書き換えたセーブをゲームで読めるかは要ゲーム内確認 */}
             {/* chunks/custom-style・belt-copy（俺流の技の表）・sect-scrolls */}
@@ -388,6 +390,7 @@ function CreateCard({
     <AnchoredCard anchor={ORE_RYU_ANCHORS.create}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
+          <ScopeAnchorLink />
           俺流を新しく作る
           {/* 🔶 要ゲーム内確認 */}
         </CardTitle>

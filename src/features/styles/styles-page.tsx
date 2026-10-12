@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -156,6 +157,7 @@ export function StylesPage() {
       <AnchoredCard anchor={STYLES_ANCHORS.overview}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             流派
             {/* chunks/skill-states・styles・sect-scrolls */}
             <InfoTip offset="0x1417C〜0x1920D、0x48CC〜0x58BD" />

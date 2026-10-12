@@ -4,6 +4,7 @@ import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { DOJO_ANCHORS } from "./anchors";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
@@ -123,7 +124,7 @@ function ReputationCard({ view }: { view: DojoView | null }) {
   return (
     <AnchoredCard anchor={DOJO_ANCHORS.reputation}>
       <CardHeader>
-        <CardTitle>道場の評判</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />道場の評判</CardTitle>
         <CardDescription>
           弟子の評判の合計で道場の評判（☆）が決まります。☆5 で鍛冶屋の「強く」「硬く」が安くなります。
           <br />
@@ -212,6 +213,7 @@ function PupilsCard({ view }: { view: DojoView | null }) {
     <AnchoredCard anchor={DOJO_ANCHORS.pupils}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
+          <ScopeAnchorLink />
           弟子
           {/* 1人 PUPIL_SIZE（12）B × 20 枠 */}
           <InfoTip offset={`${formatOffset(pupilOffset(0))}〜${formatOffset(pupilOffset(PUPIL_MAX) - 1)}`} />

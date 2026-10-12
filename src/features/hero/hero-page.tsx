@@ -3,6 +3,7 @@ import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { HERO_ANCHORS } from "./anchors";
 import { Label } from "@/components/ui/label";
@@ -172,7 +173,7 @@ export function HeroPage() {
 
       <AnchoredCard anchor={HERO_ANCHORS.name}>
         <CardHeader>
-          <CardTitle>名前</CardTitle>
+          <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />名前</CardTitle>
         </CardHeader>
         <CardContent>
           <FieldRow
@@ -193,7 +194,7 @@ export function HeroPage() {
 
       <AnchoredCard anchor={HERO_ANCHORS.money}>
         <CardHeader>
-          <CardTitle>所持金・侍点</CardTitle>
+          <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />所持金・侍点</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           {amountRow("money", "所持金")}
@@ -204,7 +205,7 @@ export function HeroPage() {
 
       <AnchoredCard anchor={HERO_ANCHORS.vitals}>
         <CardHeader>
-          <CardTitle>HP・活力・つま斬り</CardTitle>
+          <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />HP・活力・つま斬り</CardTitle>
           <CardDescription>
             HP・活力・つま斬りの現在値と最大値を編集できます。
             <br />
@@ -250,7 +251,7 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
   return (
     <AnchoredCard anchor={HERO_ANCHORS.difficulty}>
       <CardHeader>
-        <CardTitle>難易度・主人公設定のやり直し</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />難易度・主人公設定のやり直し</CardTitle>
         <CardDescription>
           今の周回のまま、難易度と主人公の設定だけをやり直せます。
           <br />
@@ -304,7 +305,7 @@ function LocationCard({
   return (
     <AnchoredCard anchor={HERO_ANCHORS.location}>
       <CardHeader>
-        <CardTitle>現在地（開始地点）</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />現在地（開始地点）</CardTitle>
         <CardDescription>
           次にロードしたときに出現する場所を選べます。
           {/* クラッシュが報告されている値は選択肢に出さない */}

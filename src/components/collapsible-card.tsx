@@ -1,6 +1,5 @@
-import { ChevronRight } from 'lucide-react'
 import { type MouseEvent, type ReactNode } from 'react'
-import { AnchorLink, CARD_ANCHOR_LINK_CLASS } from '@/components/anchor-link'
+import { AnchorLink, ToggleChevron } from '@/components/anchor-link'
 import { AnchorScope, useAnchoredOpen } from '@/lib/navigation-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -47,14 +46,13 @@ export function CollapsibleCard({
       render={
         <Card
           id={id}
-          className={open ? 'relative scroll-mt-4 gap-0' : 'hover:bg-muted/40 relative scroll-mt-4 cursor-pointer gap-0'}
+          className={open ? 'scroll-mt-4 gap-0' : 'hover:bg-muted/40 scroll-mt-4 cursor-pointer gap-0'}
           onClick={(e) => {
             if (!open && !isOnButton(e)) setOpen(true)
           }}
         />
       }
     >
-      <AnchorLink id={id} className={CARD_ANCHOR_LINK_CLASS} />
       <CardHeader
         className={open ? 'cursor-pointer' : undefined}
         onClick={(e) => {
@@ -62,13 +60,10 @@ export function CollapsibleCard({
         }}
       >
         <CardTitle className="flex flex-wrap items-center gap-2">
-          <CollapsibleTrigger className="group flex flex-wrap items-center gap-2 text-left hover:underline">
-            <ChevronRight
-              className="size-4 shrink-0 transition-transform group-data-panel-open:rotate-90"
-              aria-hidden
-            />
-            {title}
-          </CollapsibleTrigger>
+          {/* 三角の開閉はカード・見出しの欄のクリックに任せる */}
+          <ToggleChevron open={open} />
+          <AnchorLink id={id} />
+          <CollapsibleTrigger className="flex flex-wrap items-center gap-2 text-left hover:underline">{title}</CollapsibleTrigger>
           {extra}
         </CardTitle>
         {description && <CardDescription>{description}</CardDescription>}

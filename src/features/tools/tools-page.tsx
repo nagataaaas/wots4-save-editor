@@ -4,6 +4,7 @@ import { ItemSlotRow } from '@/components/item-slot-row'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ScopeAnchorLink } from '@/components/anchor-link'
 import { AnchoredCard } from '@/components/anchored-card'
 import { ITEM_ANCHORS } from './anchors'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
@@ -118,6 +119,7 @@ function ItemBoxPage({
       <AnchoredCard anchor={ITEM_ANCHORS.items}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             {title}
             {/* チップ・木札は ❓ U-12 */}
             <InfoTip offset={`${formatOffset(area.offset)}〜${formatOffset(area.offset + ITEM_SLOT_BYTES * area.slotCount - 1)}`}>

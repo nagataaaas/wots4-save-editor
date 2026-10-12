@@ -1,6 +1,6 @@
 import { createElement, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { AnchorLink } from "@/components/anchor-link";
+import { AnchorLink, ToggleChevron } from "@/components/anchor-link";
 import { InfoTip } from "@/components/info-tip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAnchoredOpen } from "@/lib/navigation-context";
@@ -10,7 +10,6 @@ import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import { charmIcon, titleIcon } from "./effect-icons";
 import { useWeaponRows } from "./use-weapon-rows";
 import { CharmEditor } from "./charm-editor";
-import { Chevron } from "./weapon-rows";
 import { COLLAPSIBLE_ANIMATION, type WeaponUpdate } from "./weapon-ui";
 
 // 武器1件分の編集欄（帯刀・武器袋・刀箪笥で共通。開いたときの中身）。
@@ -46,12 +45,12 @@ function Section({
 }) {
   const { id, open, setOpen } = useAnchoredOpen(anchor, defaultOpen);
   return (
-    <Collapsible id={id} open={open} onOpenChange={setOpen} className="relative flex scroll-mt-4 flex-col">
-      <AnchorLink id={id} className="absolute top-0.5 -left-5" />
-      <CollapsibleTrigger className="group hover:text-foreground text-muted-foreground flex items-center gap-1 border-b pb-1 text-left text-sm font-medium">
-        <Chevron />
-        {title}
-      </CollapsibleTrigger>
+    <Collapsible id={id} open={open} onOpenChange={setOpen} className="flex scroll-mt-4 flex-col">
+      <div className="text-muted-foreground flex items-center gap-1 border-b pb-1 text-sm font-medium">
+        <ToggleChevron open={open} onToggle={() => setOpen(!open)} />
+        <AnchorLink id={id} />
+        <CollapsibleTrigger className="hover:text-foreground flex-1 text-left">{title}</CollapsibleTrigger>
+      </div>
       {/* overflow-hidden で入力欄のフォーカスリングが切れないよう、-mx-1 px-1 で少し広げる */}
       <CollapsibleContent className={`${COLLAPSIBLE_ANIMATION} -mx-1 px-1`}>
         <div className="flex flex-col gap-4 pt-4 pb-1">{children}</div>

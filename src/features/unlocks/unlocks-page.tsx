@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { UNLOCKS_ANCHORS } from "./anchors";
 import { Input } from "@/components/ui/input";
@@ -130,6 +131,7 @@ export function AccessoriesPage() {
       <AnchoredCard anchor={UNLOCKS_ANCHORS.accessories}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             装飾品
             <InfoTip offset={`${formatOffset(ACCESSORY_FLAGS_OFFSET)}〜${formatOffset(ACCESSORY_FLAGS_OFFSET + ACCESSORY_COUNT - 1)}`}>
               {/* ✅ 書き換えが装飾品設定に反映されることを確認。並びがゲーム内の一覧の順なのは 🔶 */}
@@ -312,6 +314,7 @@ function AppearanceUnlocksCard() {
       <AnchoredCard anchor={UNLOCKS_ANCHORS.faces}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             顔・髪型などの特典
             <InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)}〜${formatOffset(UNLOCK_STATES_OFFSET + UNLOCK_COUNT - 1)}`}>
               {/* 🔶 U-17：多くの番号の対応と書き込みの反映は要ゲーム内確認。J.J. の顔は ✅ 解除前後の差分で対応を確認（書き込みは ❓） */}
@@ -370,6 +373,7 @@ export function AppearancePage() {
       <AnchoredCard anchor={UNLOCKS_ANCHORS.clothes}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             容姿の服
             {/* 服の番号ごとに1ビット（番号 n は APPEARANCE_OFFSET + n/8 の bit n%8）。
                 APPEARANCE_CONFIRMED の番号は ✅ ゲーム内で書き換えを確認、ほかは 🟢 */}
@@ -474,6 +478,7 @@ export function UnlocksPage() {
       <AnchoredCard anchor={UNLOCKS_ANCHORS.unlocks}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             特典解除
             {/* 0＝非表示、1＝表示中・未取得、2＝取得済み。
                 先頭16件と J.J. の顔は ✅ ゲーム内の状態と照合、ライフルの免許は ✅ 2 への変更の反映を確認。ほかは 🔶 U-17（書き込みは要ゲーム内確認） */}

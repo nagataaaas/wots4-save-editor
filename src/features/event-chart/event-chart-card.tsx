@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { SelectRow } from "@/components/select-row";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { EVENTS_ANCHORS } from "@/features/scenario/anchors";
 import { Label } from "@/components/ui/label";
@@ -123,7 +124,7 @@ export function EventChartCard({
   return (
     <AnchoredCard anchor={EVENTS_ANCHORS.chart}>
       <CardHeader>
-        <CardTitle>イベントチャート</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />イベントチャート</CardTitle>
         <CardDescription>
           ゲーム内の「状況」のチャートを、セーブの内容から再現した図です。
           {loaded ? "枠をクリックすると、そのイベントの状態を編集できます。" : "セーブを読み込むまでは、全部の枠を名前つきで描いています。"}

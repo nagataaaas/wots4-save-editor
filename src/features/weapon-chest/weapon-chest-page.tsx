@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { WEAPON_LIST_ANCHORS } from "@/features/belt/anchors";
 import { Label } from "@/components/ui/label";
@@ -95,6 +96,7 @@ export function WeaponChestPage() {
       <AnchoredCard anchor={WEAPON_LIST_ANCHORS.capacity}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             刀箪笥の本数と容量
             <InfoTip offset={`${formatOffset(WEAPON_CHEST_COUNT)}〜${formatOffset(WEAPON_CHEST_CAPACITY)}`} />
             {/* 箪笥の武器は WEAPON_CHEST_OFFSET から 0xA0 B × 200 枠。その直後に本数（2 B）と容量÷10（1 B） */}
@@ -146,6 +148,7 @@ export function WeaponChestPage() {
       <AnchoredCard anchor={WEAPON_LIST_ANCHORS.weapons} className="gap-2">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             刀箪笥の武器
             <span className="text-muted-foreground text-sm font-normal">
               {view ? view.filled.length : "—"} 本

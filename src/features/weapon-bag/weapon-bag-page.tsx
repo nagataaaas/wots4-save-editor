@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { WEAPON_LIST_ANCHORS } from "@/features/belt/anchors";
 import { useSave } from "@/lib/save-context";
@@ -49,6 +50,7 @@ export function WeaponBagPage() {
       <AnchoredCard anchor={WEAPON_LIST_ANCHORS.weapons} className="gap-2">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             武器袋
             <span className="text-muted-foreground text-sm font-normal">
               {filled} / {WEAPON_BAG_COUNT} 本

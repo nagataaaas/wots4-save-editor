@@ -4,6 +4,7 @@ import { CollapsibleCard } from '@/components/collapsible-card'
 import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ScopeAnchorLink } from '@/components/anchor-link'
 import { AnchoredCard } from '@/components/anchored-card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -137,6 +138,7 @@ function RawEditor({
         <AnchoredCard anchor={RAW_ANCHORS.hex} className="min-w-0">
           <CardHeader>
             <CardTitle className="flex flex-wrap items-center gap-2">
+              <ScopeAnchorLink />
               16進表示
               <InfoTip offset={`0x0〜0x${(bytes.byteLength - 1).toString(16).toUpperCase()}（${bytes.byteLength.toLocaleString()} B）`}>
                 背景色は既知の領域（下の「領域の一覧」）、赤字は差分の基準と違うバイトです。クリックで選択し、矢印キー・PageUp/PageDown で移動できます。
@@ -163,7 +165,7 @@ function RawEditor({
 
       <AnchoredCard anchor={RAW_ANCHORS.diff}>
         <CardHeader>
-          <CardTitle>差分</CardTitle>
+          <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />差分</CardTitle>
           <CardDescription>
             読み込み時から変わった範囲を一覧します。
             <br />
@@ -445,7 +447,7 @@ function SelectionCard({
   return (
     <AnchoredCard anchor={RAW_ANCHORS.byte} className="min-w-0">
       <CardHeader>
-        <CardTitle className="font-mono">{formatOffset(offset)}</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2 font-mono"><ScopeAnchorLink />{formatOffset(offset)}</CardTitle>
         <CardDescription>
           {regions.length === 0
             ? '既知の領域に入っていない位置です'
@@ -587,7 +589,7 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
   return (
     <AnchoredCard anchor={RAW_ANCHORS.search}>
       <CardHeader>
-        <CardTitle>検索</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />検索</CardTitle>
         {/* 今のバイト列（編集を含む）から探す。数値はリトルエンディアンのバイト列として探す */}
         <CardDescription>セーブの中から値や文字列を探せます。編集中の内容も対象です。</CardDescription>
       </CardHeader>
@@ -745,6 +747,7 @@ function PatchCard({
     <AnchoredCard anchor={RAW_ANCHORS.bulkWrite}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
+          <ScopeAnchorLink />
           まとめて書き込む
           <InfoTip>
             1行に「オフセット（16進、0x は省略可） バイト列（16進）」を書きます。オフセットの後の「:」とバイト間の空白は省略できます。範囲が重なる行は後の行の値が残ります。

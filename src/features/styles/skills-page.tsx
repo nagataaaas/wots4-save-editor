@@ -4,6 +4,7 @@ import { LazyTip } from "@/components/lazy-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { SKILLS_ANCHORS } from "./anchors";
 import { useAnchor } from "@/lib/navigation-context";
@@ -143,6 +144,7 @@ export function SkillsPage() {
       <AnchoredCard anchor={SKILLS_ANCHORS.overview}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
+            <ScopeAnchorLink />
             技
             {/* 構えごとの技の覚え状況（chunks/skill-states）。状態は構えごとの状態を出す */}
             <InfoTip offset="0x1837C〜0x189FB、0x1417C〜" />

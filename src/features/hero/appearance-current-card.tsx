@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { SelectRow } from "@/components/select-row";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { HERO_APPEARANCE_ANCHORS } from "./anchors";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
@@ -44,7 +45,7 @@ export function AppearanceCurrentCard() {
   return (
     <AnchoredCard anchor={HERO_APPEARANCE_ANCHORS.current}>
       <CardHeader>
-        <CardTitle>体</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />体</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
         {selectRows.map(({ key, label, names, hint }) => {
