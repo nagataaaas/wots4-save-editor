@@ -1,6 +1,6 @@
 # 侍道4 セーブデータエディタ
 
-Steam版「侍道4」(AppID 312780) のセーブデータを、ブラウザで編集できる非公式ツールです。
+[Steam版「侍道4」](https://store.steampowered.com/app/312780/4/?l=japanese)のセーブデータを、ブラウザで編集できる非公式ツールです。
 
 **https://wots4-save-editor.nagata.pro**
 
