@@ -1,3 +1,4 @@
+import { STYLES_ANCHORS } from "./anchors";
 import { useMemo, useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { InfoTip } from "@/components/info-tip";
@@ -279,6 +280,7 @@ function SectCard({
 
   return (
     <CollapsibleCard
+      anchor={STYLES_ANCHORS.sect(sect.id)}
       title={
         // 流派名・構え・段・修練度・技の数は、流派のカードどうしで縦に揃うように幅を決めておく
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1">

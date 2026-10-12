@@ -1,4 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { useAnchor } from "@/lib/navigation-context";
+import { AMIHAMA_ANCHORS, NPC_ANCHORS } from "./anchors";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
@@ -471,6 +473,7 @@ function DateCard({ view }: { view: DateView | null }) {
 
   return (
     <CollapsibleCard
+      anchor={AMIHAMA_ANCHORS.progress}
       title="段階・日数・時間帯"
       contentClassName="grid gap-4 sm:grid-cols-3"
       description={
@@ -536,6 +539,7 @@ function FactionExitCard() {
   // 確度：3つとも ✅ 書き換えで確認
   return (
     <CollapsibleCard
+      anchor={NPC_ANCHORS.factionExit}
       title="勢力の退場"
       contentClassName="grid gap-4 sm:grid-cols-3"
       description={
@@ -561,6 +565,7 @@ function GateFlagsCard() {
   // 閉鎖フラグが大寄せ前にも有効なこと、大寄せ以降のルート分岐 02 で門・柵が閉じることは 🟢
   return (
     <CollapsibleCard
+      anchor={AMIHAMA_ANCHORS.gates.card}
       title="門・柵の状態"
       contentClassName="flex flex-col gap-6"
       description={
@@ -574,8 +579,8 @@ function GateFlagsCard() {
         </>
       }
     >
-      <FlagSection title="初日勧誘（1日目昼のみ影響）" flags={GATE_RECRUIT_FLAGS} />
-      <FlagSection title="閉鎖（1日目夕～大老の大寄せまで）" flags={GATE_CLOSE_FLAGS} />
+      <FlagSection anchor={AMIHAMA_ANCHORS.gates.recruit} title="初日勧誘（1日目昼のみ影響）" flags={GATE_RECRUIT_FLAGS} />
+      <FlagSection anchor={AMIHAMA_ANCHORS.gates.close} title="閉鎖（1日目夕～大老の大寄せまで）" flags={GATE_CLOSE_FLAGS} />
       <section className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">大老の大寄せ以降</h3>
         <p className="text-sm text-muted-foreground">
@@ -594,10 +599,11 @@ function GateFlagsCard() {
   );
 }
 
-/** カードの中の見出しつきのまとまり。flags は src/save/flags/ の配列1つ */
-function FlagSection({ title, flags }: { title: string; flags: readonly ByteFlag[] }) {
+/** カードの中の見出しつきのまとまり。flags は src/save/flags/ の配列1つ。anchor はリンク先にするときの名前（useAnchor） */
+function FlagSection({ anchor, title, flags }: { anchor: string; title: string; flags: readonly ByteFlag[] }) {
+  const { id } = useAnchor(anchor);
   return (
-    <section className="flex flex-col gap-3">
+    <section id={id} className="flex scroll-mt-4 flex-col gap-3">
       <h3 className="text-sm font-medium">{title}</h3>
       <FlagGrid flags={flags} />
     </section>
@@ -637,6 +643,7 @@ function FacilityFlagsCard() {
 
   return (
     <CollapsibleCard
+      anchor={AMIHAMA_ANCHORS.facilities}
       title="施設"
       contentClassName="grid gap-4 sm:grid-cols-3"
       description={
@@ -692,6 +699,7 @@ function FacilitySlots({ flag }: { flag: FacilityFlag }) {
 function CharactersCard() {
   return (
     <CollapsibleCard
+      anchor={NPC_ANCHORS.characters}
       title="人物の状態"
       contentClassName="grid gap-4 sm:grid-cols-3 lg:grid-cols-5"
       description={
@@ -726,6 +734,7 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
 
   return (
     <CollapsibleCard
+      anchor={NPC_ANCHORS.townsfolk}
       title="町の人の生死"
       contentClassName="flex flex-col gap-4"
       description={
@@ -772,8 +781,10 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
  * 鍛冶屋の後継者イベント・鍛冶屋の状態・堂島が鍛冶屋を継いだかは ✅ 書き換えで確認。そのほかは ❓ 要ゲーム内確認
  */
 function NpcFlagsCard() {
+  // 道場の画面から「道場・先生」（NPC_LINKS.dojoFlags）へリンクしている
   return (
     <CollapsibleCard
+      anchor={NPC_ANCHORS.flags.card}
       title="NPCイベントフラグ"
       contentClassName="flex flex-col gap-6"
       description={
@@ -785,9 +796,9 @@ function NpcFlagsCard() {
         </>
       }
     >
-      <FlagSection title="鍛冶屋" flags={NPC_SMITH_FLAGS} />
-      <FlagSection title="道場・先生" flags={NPC_DOJO_FLAGS} />
-      <FlagSection title="その他" flags={NPC_OTHER_FLAGS} />
+      <FlagSection anchor={NPC_ANCHORS.flags.smith} title="鍛冶屋" flags={NPC_SMITH_FLAGS} />
+      <FlagSection anchor={NPC_ANCHORS.flags.dojo} title="道場・先生" flags={NPC_DOJO_FLAGS} />
+      <FlagSection anchor={NPC_ANCHORS.flags.other} title="その他" flags={NPC_OTHER_FLAGS} />
     </CollapsibleCard>
   );
 }

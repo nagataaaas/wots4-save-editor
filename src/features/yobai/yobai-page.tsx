@@ -1,3 +1,4 @@
+import { YOBAI_ANCHORS } from "./anchors";
 import { useMemo, useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
@@ -713,6 +714,7 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
 
   return (
     <CollapsibleCard
+      anchor={YOBAI_ANCHORS.records}
       title="夜這いの記録"
       description={
         <>
@@ -745,6 +747,7 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
 
   return (
     <CollapsibleCard
+      anchor={YOBAI_ANCHORS.promise}
       title="夜這いの約束の条件"
       description={
         <>
@@ -786,6 +789,7 @@ function PointsCard({ view }: { view: YobaiPointsView | null }) {
 function CountersCard({ view }: { view: YobaiView | null }) {
   return (
     <CollapsibleCard
+      anchor={YOBAI_ANCHORS.counts}
       title="夜這いの回数（表示だけ）"
       description={
         <>

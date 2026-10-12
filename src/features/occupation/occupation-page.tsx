@@ -1,3 +1,4 @@
+import { OCCUPATION_ANCHORS } from "./anchors";
 import { useMemo, useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { GameLabel } from "@/components/game-label";
@@ -280,6 +281,7 @@ const flagOffsetTip = `${formatOffset(OCCUPATION_FLAG_START)} + 番号`;
 function SeriesCard() {
   return (
     <CollapsibleCard
+      anchor={OCCUPATION_ANCHORS.chain}
       title="連続なりわい"
       extra={
         <InfoTip offset={flagOffsetTip}>
@@ -308,6 +310,7 @@ function SeriesCard() {
 function SecurityCard() {
   return (
     <CollapsibleCard
+      anchor={OCCUPATION_ANCHORS.security}
       title="治安なりわい"
       extra={<InfoTip offset={flagOffsetTip}>なりわいのフラグ</InfoTip>}
       description={
@@ -329,6 +332,7 @@ function SecurityCard() {
 function DlcCard() {
   return (
     <CollapsibleCard
+      anchor={OCCUPATION_ANCHORS.dlc}
       title="DLC なりわい"
       extra={<InfoTip offset={flagOffsetTip}>なりわいのフラグ</InfoTip>}
       description={
@@ -418,6 +422,7 @@ function StatesCard({
 
   return (
     <CollapsibleCard
+      anchor={OCCUPATION_ANCHORS.records}
       title="なりわいの記録（周回をまたぐ統計）"
       extra={
         <InfoTip offset={formatOffset(OCCUPATION_STATE_OFFSET)}>

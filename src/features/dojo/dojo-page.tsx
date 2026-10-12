@@ -6,6 +6,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatOffset } from "@/lib/format";
+import { NPC_LINKS } from "@/features/scenario/anchors";
+import { useNavigation } from "@/lib/navigation-context";
 import { useSave } from "@/lib/save-context";
 import {
   ALL_LOOKS,
@@ -88,6 +90,27 @@ function lookOptions(pupil: PupilView | null, advanced: boolean): SelectOption[]
 
 function stars(rank: number): string {
   return "★".repeat(rank) + "☆".repeat(RANK_MAX - rank);
+}
+
+/**
+ * 道場に関わるフラグ（NPC_DOJO_FLAGS：先生の段階 0x0126・道場主との話 0x0129・授業料の話 0x012E・
+ * 師範になったことがある 0x0130・先生と道場 0x0131・先生が師範代 0x379A）は 世界 / NPC にあるのでリンクする
+ */
+function RelatedFlagsNote() {
+  const { go } = useNavigation();
+  return (
+    <p className="text-muted-foreground text-sm">
+      師範になったか、道場主との話、先生が師範代かなど、道場に関わるフラグは
+      <button
+        type="button"
+        className="text-primary mx-1 underline underline-offset-4"
+        onClick={() => go("npc", NPC_LINKS.dojoFlags)}
+      >
+        世界 / NPC の「道場・先生」
+      </button>
+      で編集できます。
+    </p>
+  );
 }
 
 function ReputationCard({ view }: { view: DojoView | null }) {
@@ -235,6 +258,7 @@ export function DojoPage() {
           <AlertDescription>{view.problem}</AlertDescription>
         </Alert>
       )}
+      <RelatedFlagsNote />
       <ReputationCard view={view} />
       <PupilsCard view={view} />
     </div>

@@ -1,3 +1,4 @@
+import { HERO_APPEARANCE_ANCHORS } from './anchors'
 import { CollapsibleCard } from '@/components/collapsible-card'
 import { AccessoryEquipmentPage } from '@/features/accessory-equipment/accessory-equipment-page'
 import { AppearanceCurrentCard } from './appearance-current-card'
@@ -8,7 +9,7 @@ export function HeroAppearancePage() {
     <div className="flex flex-col gap-4">
       <AppearanceCurrentCard />
       <AppearancePartsCard />
-      <CollapsibleCard title="装飾品">
+      <CollapsibleCard anchor={HERO_APPEARANCE_ANCHORS.accessories} title="装飾品">
         <AccessoryEquipmentPage />
       </CollapsibleCard>
     </div>

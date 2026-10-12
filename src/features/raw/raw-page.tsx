@@ -1,3 +1,4 @@
+import { RAW_ANCHORS } from './anchors'
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { CollapsibleCard } from '@/components/collapsible-card'
 import { InfoTip } from '@/components/info-tip'
@@ -211,6 +212,7 @@ function RawEditor({
       <SearchCard bytes={bytes} onJump={goTo} />
 
       <CollapsibleCard
+        anchor={RAW_ANCHORS.regions}
         title="領域の一覧"
         // 終了が分からない領域は色分けしない
         description="分かっている領域の一覧です。行をクリックすると、その位置へ移動します。"

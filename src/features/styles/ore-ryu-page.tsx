@@ -1,3 +1,4 @@
+import { ORE_RYU_ANCHORS } from "./anchors";
 import { useMemo, useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow } from "@/components/field-row";
@@ -157,6 +158,7 @@ function StyleCard({
 
   return (
     <CollapsibleCard
+      anchor={ORE_RYU_ANCHORS.style(style.id)}
       defaultOpen={style.kind === "player"}
       title={
         <span className="flex flex-wrap items-center gap-2">

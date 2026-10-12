@@ -1,3 +1,4 @@
+import { STATS_ANCHORS } from "./anchors";
 import { useMemo, useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
@@ -116,6 +117,7 @@ export function StatsPage() {
       {STAT_GROUPS.map((g) => (
         <CollapsibleCard
           key={`${k}-${g.id}`}
+          anchor={STATS_ANCHORS.group(g.id)}
           title={g.label}
           description={g.note}
           defaultOpen={OPEN_GROUPS.includes(g.id)}
@@ -195,7 +197,7 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
   );
 
   return (
-    <CollapsibleCard title={t.label} description={SCORE_NOTES[table]} contentClassName="flex flex-col gap-4">
+    <CollapsibleCard anchor={STATS_ANCHORS.scoreTable(table)} title={t.label} description={SCORE_NOTES[table]} contentClassName="flex flex-col gap-4">
       {(!view || top.length > 0) && (
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="text-muted-foreground">累計の上位：</span>

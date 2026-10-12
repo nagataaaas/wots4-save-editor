@@ -1,3 +1,4 @@
+import { HERO_APPEARANCE_ANCHORS } from "./anchors";
 import { useMemo, useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { InfoTip } from "@/components/info-tip";
@@ -248,6 +249,7 @@ export function AppearancePartsCard() {
   const kinds = PART_KINDS.filter((kind) => advanced || kind !== "body");
   return (
     <CollapsibleCard
+      anchor={HERO_APPEARANCE_ANCHORS.parts}
       title="容姿"
       description={
         <>

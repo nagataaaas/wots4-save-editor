@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import { useState, type MouseEvent, type ReactNode } from 'react'
+import { AnchorScope, useAnchor } from '@/lib/navigation-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
@@ -11,6 +12,8 @@ const COLLAPSIBLE_ANIMATION =
 const isOnButton = (e: MouseEvent<HTMLElement>) => e.target instanceof Element && e.target.closest('button') !== null
 
 type Props = {
+  /** リンク先にするときの名前（useAnchor）。リンク先がこのカードかその中なら開き、このカードならスクロールする */
+  anchor: string
   /** 開閉の Trigger に入れる見出し */
   title: ReactNode
   /** 見出しの横に置く丸ハテナ・バッジなど（Trigger の外） */
@@ -25,15 +28,32 @@ type Props = {
  * 開閉できるカード（帯刀の武器カードと同じ動き）。
  * 閉じているときはカード全体、開いているときは見出しの欄で開閉する。キーボードでは見出しの Trigger で開閉できる
  */
-export function CollapsibleCard({ title, extra, description, defaultOpen = false, contentClassName, children }: Props) {
-  const [open, setOpen] = useState(defaultOpen)
+export function CollapsibleCard({
+  anchor,
+  title,
+  extra,
+  description,
+  defaultOpen = false,
+  contentClassName,
+  children,
+}: Props) {
+  const { id, targeted, seq } = useAnchor(anchor)
+  const [open, setOpen] = useState(defaultOpen || targeted)
+  // 画面にいるまま同じカードの中へもう一度リンクしたときも開く（リンクごとに1回）
+  const [openedFor, setOpenedFor] = useState(seq)
+  if (targeted && openedFor !== seq) {
+    setOpenedFor(seq)
+    setOpen(true)
+  }
+
   return (
     <Collapsible
       open={open}
       onOpenChange={setOpen}
       render={
         <Card
-          className={open ? 'gap-0' : 'hover:bg-muted/40 cursor-pointer gap-0'}
+          id={id}
+          className={open ? 'scroll-mt-4 gap-0' : 'hover:bg-muted/40 scroll-mt-4 cursor-pointer gap-0'}
           onClick={(e) => {
             if (!open && !isOnButton(e)) setOpen(true)
           }}
@@ -59,7 +79,9 @@ export function CollapsibleCard({ title, extra, description, defaultOpen = false
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CollapsibleContent className={COLLAPSIBLE_ANIMATION}>
-        <CardContent className={`pt-6 ${contentClassName ?? ''}`}>{children}</CardContent>
+        <CardContent className={`pt-6 ${contentClassName ?? ''}`}>
+          <AnchorScope.Provider value={id}>{children}</AnchorScope.Provider>
+        </CardContent>
       </CollapsibleContent>
     </Collapsible>
   )
