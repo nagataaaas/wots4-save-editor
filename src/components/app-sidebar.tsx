@@ -73,10 +73,19 @@ export function AppSidebar({ active, onSelect }: Props) {
   )
 }
 
-/** 子項目をまとめる親項目。開閉でき、最初は閉じている。閉じている間は、開いている画面を含むなら親項目を選択中の表示にする */
+/**
+ * 子項目をまとめる親項目。開閉でき、最初は閉じている。閉じている間は、開いている画面を含むなら親項目を選択中の表示にする。
+ * 検索やリンクで中の画面に移ったときは開く
+ */
 function FolderItem({ folder, active, onSelect }: { folder: SectionFolder } & Props) {
   const [open, setOpen] = useState(false)
   const containsActive = folder.sections.some((s) => s.id === active)
+  // 最初に開いている画面では開かない（最初は閉じておく）
+  const [openedFor, setOpenedFor] = useState<SectionId | null>(containsActive ? active : null)
+  if (containsActive && openedFor !== active) {
+    setOpenedFor(active)
+    setOpen(true)
+  }
   return (
     <Collapsible open={open} onOpenChange={setOpen} render={<SidebarMenuItem />}>
       <CollapsibleTrigger render={<SidebarMenuButton isActive={!open && containsActive} />}>

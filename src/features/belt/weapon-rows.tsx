@@ -6,6 +6,7 @@ import { SelectRow } from "@/components/select-row";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { SearchField } from "@/lib/search-context";
 import { weaponIdLabel } from "@/save/weapon";
 import { weaponImageUrl } from "@/save/master/weapon-images";
 
@@ -35,11 +36,11 @@ export function SwitchRow({
   onChange: (on: boolean) => void;
 }) {
   return (
-    <div className="flex items-center gap-2">
+    <SearchField label={label} className="flex items-center gap-2">
       <Switch checked={checked} disabled={disabled} onCheckedChange={onChange} aria-label={label} />
       <Label>{label}</Label>
       <InfoTip offset={offset} />
-    </div>
+    </SearchField>
   );
 }
 

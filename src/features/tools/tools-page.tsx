@@ -116,7 +116,7 @@ function ItemBoxPage({
         </Alert>
       )}
 
-      <AnchoredCard anchor={ITEM_ANCHORS.items}>
+      <AnchoredCard anchor={ITEM_ANCHORS.items} searchLabel={title}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />

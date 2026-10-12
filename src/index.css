@@ -375,8 +375,26 @@
   }
 }
 
+/* 検索から飛んだ欄・小見出し（App が data-search-hit を付け、少しあとに外す） */
+[data-search-hit] {
+  border-radius: var(--radius-md);
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+  animation: search-hit 2s ease-out;
+}
+
+@keyframes search-hit {
+  from {
+    background-color: color-mix(in oklab, var(--primary) 15%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .image-shimmer {
+  .image-shimmer,
+  [data-search-hit] {
     animation: none;
   }
 }

@@ -1,0 +1,7380 @@
+[
+ {
+  "section": "hero",
+  "anchor": "name",
+  "path": [],
+  "label": "名前",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "name",
+  "path": [
+   "名前"
+  ],
+  "label": "主人公名",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "money",
+  "path": [],
+  "label": "所持金・侍点",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "money",
+  "path": [
+   "所持金・侍点"
+  ],
+  "label": "所持金",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "money",
+  "path": [
+   "所持金・侍点"
+  ],
+  "label": "金庫",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "money",
+  "path": [
+   "所持金・侍点"
+  ],
+  "label": "侍点",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [],
+  "label": "HP・活力・つま斬り",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP・活力・つま斬り"
+  ],
+  "label": "HP",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP・活力・つま斬り",
+   "HP"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP・活力・つま斬り",
+   "HP"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP・活力・つま斬り"
+  ],
+  "label": "活力",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP・活力・つま斬り",
+   "活力"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP・活力・つま斬り",
+   "活力"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP・活力・つま斬り"
+  ],
+  "label": "つま斬りゲージ",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP・活力・つま斬り",
+   "つま斬りゲージ"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP・活力・つま斬り",
+   "つま斬りゲージ"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "location",
+  "path": [],
+  "label": "現在地（開始地点）",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "location",
+  "path": [
+   "現在地（開始地点）"
+  ],
+  "label": "場所",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "difficulty",
+  "path": [],
+  "label": "難易度・主人公設定のやり直し",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "difficulty",
+  "path": [
+   "難易度・主人公設定のやり直し"
+  ],
+  "label": "難易度と主人公設定",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [],
+  "label": "体",
+  "box": true
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [
+   "体"
+  ],
+  "label": "体型",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [
+   "体"
+  ],
+  "label": "肌色",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [
+   "体"
+  ],
+  "label": "身長の選択肢",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [
+   "体"
+  ],
+  "label": "身長（cm）",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [],
+  "label": "容姿",
+  "box": true
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "人物",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "タイプ",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "髪の色",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "裸",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "上半身",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "下半身",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "顔・声",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "髪型",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "足元",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "手甲",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "脚絆",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "前掛け",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "合羽",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [],
+  "label": "装飾品",
+  "box": true
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "装飾品"
+  ],
+  "label": "装飾品",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "装飾品"
+  ],
+  "label": "取り付け先",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "装飾品"
+  ],
+  "label": "位置 X",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "装飾品"
+  ],
+  "label": "位置 Y",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "装飾品"
+  ],
+  "label": "位置 Z",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "装飾品"
+  ],
+  "label": "回転 X（度）",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "装飾品"
+  ],
+  "label": "回転 Y（度）",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "装飾品"
+  ],
+  "label": "回転 Z（度）",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "装飾品"
+  ],
+  "label": "大きさ",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [],
+  "label": "侍評価",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "侍評価"
+  ],
+  "label": "侍度の最高値",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "侍評価"
+  ],
+  "label": "侍度（最後の評価）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "侍評価"
+  ],
+  "label": "今回の評価で得る侍点",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "侍評価"
+  ],
+  "label": "侍度の分子",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "侍評価"
+  ],
+  "label": "侍度の分母",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "侍評価"
+  ],
+  "label": "死亡したときの段階",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [],
+  "label": "行動の回数",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "人が落とした持ち物を拾った",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "主人公の体が人に当たった",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "戦わない町の人を倒した",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "代金を踏み倒した",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "侍らしい選択",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "恥ずかしい選択",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "イベント中に抜刀したまま相手に近づいた",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "イベント中に相手に攻撃を当てた",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "善良ななりわいを成功",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "行動の回数"
+  ],
+  "label": "悪質ななりわいを成功",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [],
+  "label": "称号ごとの獲得回数",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "侍王",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "真の侍",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "優れた侍",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "立派な侍",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "もうすぐ侍",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "侍もどき",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "見習い",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "半端者",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "馬の骨",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "ろくでなし",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "ちんぴら",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "恥知らず",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "人で無し",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "腐れ外道",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "称号ごとの獲得回数"
+  ],
+  "label": "鬼畜王",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-time",
+  "path": [],
+  "label": "プレイ時間",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-time",
+  "path": [
+   "プレイ時間"
+  ],
+  "label": "プレイ時間（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-time",
+  "path": [
+   "プレイ時間"
+  ],
+  "label": "プレイ時間（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-time",
+  "path": [
+   "プレイ時間"
+  ],
+  "label": "最短クリア時間",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [],
+  "label": "移動距離・斬殺数",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "移動距離・斬殺数"
+  ],
+  "label": "移動距離（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "移動距離・斬殺数"
+  ],
+  "label": "総移動距離（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "移動距離・斬殺数"
+  ],
+  "label": "斬殺数（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "移動距離・斬殺数"
+  ],
+  "label": "総斬殺数（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "移動距離・斬殺数"
+  ],
+  "label": "最高連斬数（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "移動距離・斬殺数"
+  ],
+  "label": "最高連斬数（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [],
+  "label": "人物ごとに与えた痛手",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "J.J（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "J.J（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "琴吹（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "琴吹（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "茂呂（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "茂呂（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "鬼怒川（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "鬼怒川（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "赤城（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "赤城（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "小暮（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "小暮（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "堂島（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "堂島（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "万由（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "万由（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "千佳（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "千佳（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "百合（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "百合（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "メリンダ（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "メリンダ（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "まだら（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "まだら（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "先生（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "先生（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "とぐろ（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "とぐろ（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "チャールズ（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "チャールズ（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "暗闇脳天（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "暗闇脳天（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "魔鱗組（周回中）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "人物ごとに与えた痛手"
+  ],
+  "label": "魔鱗組（累計）",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-arts",
+  "path": [],
+  "label": "技ごとの斬殺数",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "score-arts",
+  "path": [
+   "技ごとの斬殺数"
+  ],
+  "label": "技",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-arts",
+  "path": [
+   "技ごとの斬殺数"
+  ],
+  "label": "周回中",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-arts",
+  "path": [
+   "技ごとの斬殺数"
+  ],
+  "label": "累計",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-items",
+  "path": [],
+  "label": "道具の使用回数",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "score-items",
+  "path": [
+   "道具の使用回数"
+  ],
+  "label": "道具",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-items",
+  "path": [
+   "道具の使用回数"
+  ],
+  "label": "周回中",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-items",
+  "path": [
+   "道具の使用回数"
+  ],
+  "label": "累計",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "state",
+  "path": [],
+  "label": "帯刀の状態",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "state",
+  "path": [
+   "帯刀の状態"
+  ],
+  "label": "二刀流",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "state",
+  "path": [
+   "帯刀の状態"
+  ],
+  "label": "右手（選んでいる武器）",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [],
+  "label": "1本目",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "1本目"
+  ],
+  "label": "武器名",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "1本目"
+  ],
+  "label": "完成武器",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "1本目"
+  ],
+  "label": "武器種",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "1本目"
+  ],
+  "label": "名前を隠す（「*****」と表示）",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "1本目"
+  ],
+  "label": "指定武器に変更",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "1本目"
+  ],
+  "label": "刃",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "1本目"
+  ],
+  "label": "鞘",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "1本目"
+  ],
+  "label": "鍔",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "1本目"
+  ],
+  "label": "柄",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "1本目"
+  ],
+  "label": "攻撃力・耐久・質",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "1本目",
+   "攻撃力・耐久・質"
+  ],
+  "label": "攻撃力",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "1本目",
+   "攻撃力・耐久・質"
+  ],
+  "label": "耐久",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "1本目",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "1本目",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "1本目",
+   "攻撃力・耐久・質"
+  ],
+  "label": "質",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "1本目",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "1本目",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "1本目"
+  ],
+  "label": "銘・魅力",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "1本目",
+   "銘・魅力"
+  ],
+  "label": "銘",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "1本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 1",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "1本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 2",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "1本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 3",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/kills",
+  "path": [
+   "1本目"
+  ],
+  "label": "斬殺数・つま斬り数",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/kills",
+  "path": [
+   "1本目",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "斬殺数",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/kills",
+  "path": [
+   "1本目",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "つま斬り数",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/durability",
+  "path": [
+   "1本目"
+  ],
+  "label": "耐久回復の累積値・手に持っていた時間",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/durability",
+  "path": [
+   "1本目",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "耐久回復の累積値",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/durability",
+  "path": [
+   "1本目",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "手に持っていた時間（秒）",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [],
+  "label": "2本目",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "2本目"
+  ],
+  "label": "武器名",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "2本目"
+  ],
+  "label": "完成武器",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "2本目"
+  ],
+  "label": "武器種",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "2本目"
+  ],
+  "label": "名前を隠す（「*****」と表示）",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "2本目"
+  ],
+  "label": "指定武器に変更",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "2本目"
+  ],
+  "label": "刃",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "2本目"
+  ],
+  "label": "鞘",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "2本目"
+  ],
+  "label": "鍔",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "2本目"
+  ],
+  "label": "柄",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "2本目"
+  ],
+  "label": "攻撃力・耐久・質",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "2本目",
+   "攻撃力・耐久・質"
+  ],
+  "label": "攻撃力",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "2本目",
+   "攻撃力・耐久・質"
+  ],
+  "label": "耐久",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "2本目",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "2本目",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "2本目",
+   "攻撃力・耐久・質"
+  ],
+  "label": "質",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "2本目",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "2本目",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "2本目"
+  ],
+  "label": "銘・魅力",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "2本目",
+   "銘・魅力"
+  ],
+  "label": "銘",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "2本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 1",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "2本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 2",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "2本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 3",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/kills",
+  "path": [
+   "2本目"
+  ],
+  "label": "斬殺数・つま斬り数",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/kills",
+  "path": [
+   "2本目",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "斬殺数",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/kills",
+  "path": [
+   "2本目",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "つま斬り数",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/durability",
+  "path": [
+   "2本目"
+  ],
+  "label": "耐久回復の累積値・手に持っていた時間",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/durability",
+  "path": [
+   "2本目",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "耐久回復の累積値",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/durability",
+  "path": [
+   "2本目",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "手に持っていた時間（秒）",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [],
+  "label": "3本目",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "3本目"
+  ],
+  "label": "武器名",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "3本目"
+  ],
+  "label": "完成武器",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "3本目"
+  ],
+  "label": "武器種",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "3本目"
+  ],
+  "label": "名前を隠す（「*****」と表示）",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "3本目"
+  ],
+  "label": "指定武器に変更",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "3本目"
+  ],
+  "label": "刃",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "3本目"
+  ],
+  "label": "鞘",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "3本目"
+  ],
+  "label": "鍔",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "3本目"
+  ],
+  "label": "柄",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "3本目"
+  ],
+  "label": "攻撃力・耐久・質",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "3本目",
+   "攻撃力・耐久・質"
+  ],
+  "label": "攻撃力",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "3本目",
+   "攻撃力・耐久・質"
+  ],
+  "label": "耐久",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "3本目",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "3本目",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "3本目",
+   "攻撃力・耐久・質"
+  ],
+  "label": "質",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "3本目",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "3本目",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "3本目"
+  ],
+  "label": "銘・魅力",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "3本目",
+   "銘・魅力"
+  ],
+  "label": "銘",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "3本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 1",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "3本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 2",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "3本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 3",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/kills",
+  "path": [
+   "3本目"
+  ],
+  "label": "斬殺数・つま斬り数",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/kills",
+  "path": [
+   "3本目",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "斬殺数",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/kills",
+  "path": [
+   "3本目",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "つま斬り数",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/durability",
+  "path": [
+   "3本目"
+  ],
+  "label": "耐久回復の累積値・手に持っていた時間",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/durability",
+  "path": [
+   "3本目",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "耐久回復の累積値",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/durability",
+  "path": [
+   "3本目",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "手に持っていた時間（秒）",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons",
+  "path": [],
+  "label": "武器袋",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "capacity",
+  "path": [],
+  "label": "刀箪笥の本数と容量",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "capacity",
+  "path": [
+   "刀箪笥の本数と容量"
+  ],
+  "label": "容量",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons",
+  "path": [],
+  "label": "刀箪笥の武器",
+  "box": true
+ },
+ {
+  "section": "tools",
+  "anchor": "items",
+  "path": [],
+  "label": "道具",
+  "box": true
+ },
+ {
+  "section": "chest",
+  "anchor": "items",
+  "path": [],
+  "label": "箪笥",
+  "box": true
+ },
+ {
+  "section": "valuables",
+  "anchor": "probe",
+  "path": [],
+  "label": "ID調査モード",
+  "box": true
+ },
+ {
+  "section": "valuables",
+  "anchor": "items",
+  "path": [],
+  "label": "重要品",
+  "box": true
+ },
+ {
+  "section": "accessories",
+  "anchor": "accessories",
+  "path": [],
+  "label": "装飾品",
+  "box": true
+ },
+ {
+  "section": "appearance",
+  "anchor": "faces",
+  "path": [],
+  "label": "顔・髪型などの特典",
+  "box": true
+ },
+ {
+  "section": "appearance",
+  "anchor": "clothes",
+  "path": [],
+  "label": "容姿の服",
+  "box": true
+ },
+ {
+  "section": "unlocks",
+  "anchor": "unlocks",
+  "path": [],
+  "label": "特典解除",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [],
+  "label": "難易度・治安・周回",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [
+   "難易度・治安・周回"
+  ],
+  "label": "難易度",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [
+   "難易度・治安・周回"
+  ],
+  "label": "治安",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [
+   "難易度・治安・周回"
+  ],
+  "label": "周回数",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [
+   "難易度・治安・周回"
+  ],
+  "label": "新しい周回",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [],
+  "label": "段階・日数・時間帯",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [
+   "段階・日数・時間帯"
+  ],
+  "label": "段階",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [
+   "段階・日数・時間帯"
+  ],
+  "label": "日数",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [
+   "段階・日数・時間帯"
+  ],
+  "label": "時間帯",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [
+   "段階・日数・時間帯"
+  ],
+  "label": "時間帯を進める保留量",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "facilities",
+  "path": [],
+  "label": "施設",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "facilities",
+  "path": [
+   "施設"
+  ],
+  "label": "病院",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "facilities",
+  "path": [
+   "施設"
+  ],
+  "label": "カジノ",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "facilities",
+  "path": [
+   "施設"
+  ],
+  "label": "語学所",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates",
+  "path": [],
+  "label": "門・柵の状態",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "gates/recruit",
+  "path": [
+   "門・柵の状態"
+  ],
+  "label": "初日勧誘（1日目昼のみ影響）",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "gates/recruit",
+  "path": [
+   "門・柵の状態",
+   "初日勧誘（1日目昼のみ影響）"
+  ],
+  "label": "代官所の門",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/recruit",
+  "path": [
+   "門・柵の状態",
+   "初日勧誘（1日目昼のみ影響）"
+  ],
+  "label": "居留地の門",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/recruit",
+  "path": [
+   "門・柵の状態",
+   "初日勧誘（1日目昼のみ影響）"
+  ],
+  "label": "神社入口の柵",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "門・柵の状態"
+  ],
+  "label": "閉鎖（1日目夕～大老の大寄せまで）",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "門・柵の状態",
+   "閉鎖（1日目夕～大老の大寄せまで）"
+  ],
+  "label": "代官所の表門",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "門・柵の状態",
+   "閉鎖（1日目夕～大老の大寄せまで）"
+  ],
+  "label": "代官所の裏門",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "門・柵の状態",
+   "閉鎖（1日目夕～大老の大寄せまで）"
+  ],
+  "label": "居留地の外門",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "門・柵の状態",
+   "閉鎖（1日目夕～大老の大寄せまで）"
+  ],
+  "label": "神社入口の柵",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "門・柵の状態",
+   "閉鎖（1日目夕～大老の大寄せまで）"
+  ],
+  "label": "神社の洞窟内の柵",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates",
+  "path": [
+   "門・柵の状態"
+  ],
+  "label": "大老の大寄せ以降",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates",
+  "path": [
+   "門・柵の状態"
+  ],
+  "label": "代官所 拷問部屋の扉",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "faction-exit",
+  "path": [],
+  "label": "勢力の退場",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "faction-exit",
+  "path": [
+   "勢力の退場"
+  ],
+  "label": "幕府",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "faction-exit",
+  "path": [
+   "勢力の退場"
+  ],
+  "label": "外国",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "faction-exit",
+  "path": [
+   "勢力の退場"
+  ],
+  "label": "攘夷",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [],
+  "label": "人物の状態",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "赤城",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "小暮",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "朱美",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "琴吹",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "茂呂",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "万由",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "千佳",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "百合",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "鬼怒川怨仙",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "ローラ",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "J.J.",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "メリンダ",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "堂島",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "先生",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "薬屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "人物の状態"
+  ],
+  "label": "寿司屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [],
+  "label": "町の人の生死",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死"
+  ],
+  "label": "重要人物",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "赤城",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "小暮",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "朱美・まだら",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "琴吹",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "茂呂",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "万由",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "千佳",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "百合",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "鬼怒川",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "ローラ",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "J.J",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "メリンダ",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "堂島",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "先生（女剣士）",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "重要人物"
+  ],
+  "label": "とぐろ",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死"
+  ],
+  "label": "店主",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "寿司屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "旅籠",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "そば屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "めし屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "レストラン",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "酒場",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "病院",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "呉服屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "交換所",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "胴元",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "珍品屋（DLCの幽霊）",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "土産屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "珍品屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "南蛮蕎麦屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "万屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "下州屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "薬屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "スイーツ屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "雑貨屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "茶屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "おにぎり屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "道具屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "落し物屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "店主"
+  ],
+  "label": "鍛冶屋（おやじ）",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死"
+  ],
+  "label": "依頼主・四天王など",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "佐古津",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "親分・女将",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "野戸仏",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "小鳩",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "泥棒さん・大蛇",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "おっつぁん・熊神",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "疑惑の浪人・虎鉄",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "霧鮫",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "緋横",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "鈴目",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "百舌・まんまる",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "依頼主・四天王など"
+  ],
+  "label": "指揮官",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死"
+  ],
+  "label": "その他",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "その他"
+  ],
+  "label": "ぢぢい（道場主）",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "その他"
+  ],
+  "label": "坂本",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "その他"
+  ],
+  "label": "汁部",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "その他"
+  ],
+  "label": "さよ",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "町の人の生死",
+   "その他"
+  ],
+  "label": "チャールズ",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags",
+  "path": [],
+  "label": "NPCイベントフラグ",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/smith",
+  "path": [
+   "NPCイベントフラグ"
+  ],
+  "label": "鍛冶屋",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/smith",
+  "path": [
+   "NPCイベントフラグ",
+   "鍛冶屋"
+  ],
+  "label": "鍛冶屋の後継者イベント・鍛冶屋の状態",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/smith",
+  "path": [
+   "NPCイベントフラグ",
+   "鍛冶屋"
+  ],
+  "label": "堂島が鍛冶屋",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/smith",
+  "path": [
+   "NPCイベントフラグ",
+   "鍛冶屋"
+  ],
+  "label": "堂島が鍛冶屋（イベント判定用）",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPCイベントフラグ"
+  ],
+  "label": "道場・先生",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPCイベントフラグ",
+   "道場・先生"
+  ],
+  "label": "先生の段階（仕事探し・道場）",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPCイベントフラグ",
+   "道場・先生"
+  ],
+  "label": "ぢぢいとの話の段階",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPCイベントフラグ",
+   "道場・先生"
+  ],
+  "label": "道場破りで弟子が一度倒れた",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPCイベントフラグ",
+   "道場・先生"
+  ],
+  "label": "ぢぢいが授業料で買った物の話",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPCイベントフラグ",
+   "道場・先生"
+  ],
+  "label": "師範になったことがある",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPCイベントフラグ",
+   "道場・先生"
+  ],
+  "label": "先生が道場の師範代",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPCイベントフラグ",
+   "道場・先生"
+  ],
+  "label": "先生が道場の師範代（イベント判定用）",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/other",
+  "path": [
+   "NPCイベントフラグ"
+  ],
+  "label": "その他",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/other",
+  "path": [
+   "NPCイベントフラグ",
+   "その他"
+  ],
+  "label": "写真家の初回の説明を聞いた",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/other",
+  "path": [
+   "NPCイベントフラグ",
+   "その他"
+  ],
+  "label": "辻斬りと復讐の馬",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/other",
+  "path": [
+   "NPCイベントフラグ",
+   "その他"
+  ],
+  "label": "夜這い仲間の初回の説明を聞いた",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "chart",
+  "path": [],
+  "label": "イベントチャート",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "chart",
+  "path": [
+   "イベントチャート"
+  ],
+  "label": "ルート",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "chart",
+  "path": [
+   "イベントチャート"
+  ],
+  "label": "一括設定（デバッグ用）",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions",
+  "path": [],
+  "label": "勢力の状態",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions",
+  "path": [
+   "勢力の状態"
+  ],
+  "label": "幕府",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions",
+  "path": [
+   "勢力の状態"
+  ],
+  "label": "外国",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions",
+  "path": [
+   "勢力の状態"
+  ],
+  "label": "攘夷",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions",
+  "path": [
+   "勢力の状態"
+  ],
+  "label": "無所属",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [],
+  "label": "イベント関連フラグ",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "イベント関連フラグ"
+  ],
+  "label": "隠しルートでまだらが味方につく",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "イベント関連フラグ"
+  ],
+  "label": "小公女の薬",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "イベント関連フラグ"
+  ],
+  "label": "般若党の本拠",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "イベント関連フラグ"
+  ],
+  "label": "会談の手紙",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "イベント関連フラグ"
+  ],
+  "label": "黒船",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "イベント関連フラグ"
+  ],
+  "label": "最後通告に逆らった",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "イベント関連フラグ"
+  ],
+  "label": "黒船の大砲を譲った",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "イベント関連フラグ"
+  ],
+  "label": "領事館の中に入れない",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "reputation",
+  "path": [],
+  "label": "道場の評判",
+  "box": true
+ },
+ {
+  "section": "dojo",
+  "anchor": "reputation",
+  "path": [
+   "道場の評判"
+  ],
+  "label": "道場破り",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [],
+  "label": "弟子",
+  "box": true
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 1",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 1"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 2",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 2"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 3",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 3"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 4",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 4"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 5",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 5"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 6",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 6"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 7",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 7"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 8",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 8"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 9",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 9"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 10",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 10"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 11",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 11"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 12",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 12"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 13",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 13"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 14",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 14"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 15",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 15"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 16",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 16"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 17",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 17"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 18",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 18"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 19",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 19"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子"
+  ],
+  "label": "弟子 20",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "弟子",
+   "弟子 20"
+  ],
+  "label": "見た目",
+  "box": false
+ },
+ {
+  "section": "skills",
+  "anchor": "overview",
+  "path": [],
+  "label": "技",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "overview",
+  "path": [],
+  "label": "流派",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "overview",
+  "path": [
+   "流派"
+  ],
+  "label": "腕前点",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-15",
+  "path": [],
+  "label": "無心流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-15",
+  "path": [
+   "無心流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-15",
+  "path": [
+   "無心流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-15",
+  "path": [
+   "無心流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-16",
+  "path": [],
+  "label": "激勝流槍術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-16",
+  "path": [
+   "激勝流槍術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-16",
+  "path": [
+   "激勝流槍術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-16",
+  "path": [
+   "激勝流槍術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-17",
+  "path": [],
+  "label": "金剛流体術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-17",
+  "path": [
+   "金剛流体術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-17",
+  "path": [
+   "金剛流体術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-17",
+  "path": [
+   "金剛流体術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-18",
+  "path": [],
+  "label": "アルスター式銃術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-18",
+  "path": [
+   "アルスター式銃術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-18",
+  "path": [
+   "アルスター式銃術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-18",
+  "path": [
+   "アルスター式銃術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-19",
+  "path": [],
+  "label": "セイラー式長銃術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-19",
+  "path": [
+   "セイラー式長銃術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-19",
+  "path": [
+   "セイラー式長銃術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-19",
+  "path": [
+   "セイラー式長銃術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-20",
+  "path": [],
+  "label": "二示現流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-20",
+  "path": [
+   "二示現流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-20",
+  "path": [
+   "二示現流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-20",
+  "path": [
+   "二示現流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-22",
+  "path": [],
+  "label": "矢統流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-22",
+  "path": [
+   "矢統流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-22",
+  "path": [
+   "矢統流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-22",
+  "path": [
+   "矢統流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-23",
+  "path": [],
+  "label": "浅比黒生流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-23",
+  "path": [
+   "浅比黒生流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-23",
+  "path": [
+   "浅比黒生流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-23",
+  "path": [
+   "浅比黒生流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-24",
+  "path": [],
+  "label": "綾手流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-24",
+  "path": [
+   "綾手流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-24",
+  "path": [
+   "綾手流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-24",
+  "path": [
+   "綾手流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-25",
+  "path": [],
+  "label": "久土井上段",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-25",
+  "path": [
+   "久土井上段"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-25",
+  "path": [
+   "久土井上段"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-25",
+  "path": [
+   "久土井上段"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-26",
+  "path": [],
+  "label": "貞破流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-26",
+  "path": [
+   "貞破流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-26",
+  "path": [
+   "貞破流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-26",
+  "path": [
+   "貞破流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-27",
+  "path": [],
+  "label": "無頼流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-27",
+  "path": [
+   "無頼流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-27",
+  "path": [
+   "無頼流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-27",
+  "path": [
+   "無頼流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-28",
+  "path": [],
+  "label": "発素流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-28",
+  "path": [
+   "発素流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-28",
+  "path": [
+   "発素流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-28",
+  "path": [
+   "発素流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-29",
+  "path": [],
+  "label": "不敗流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-29",
+  "path": [
+   "不敗流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-29",
+  "path": [
+   "不敗流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-29",
+  "path": [
+   "不敗流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-30",
+  "path": [],
+  "label": "剛志流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-30",
+  "path": [
+   "剛志流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-30",
+  "path": [
+   "剛志流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-30",
+  "path": [
+   "剛志流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-31",
+  "path": [],
+  "label": "寂尊流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-31",
+  "path": [
+   "寂尊流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-31",
+  "path": [
+   "寂尊流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-31",
+  "path": [
+   "寂尊流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-32",
+  "path": [],
+  "label": "無心流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-32",
+  "path": [
+   "無心流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-32",
+  "path": [
+   "無心流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-32",
+  "path": [
+   "無心流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-33",
+  "path": [],
+  "label": "座備流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-33",
+  "path": [
+   "座備流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-33",
+  "path": [
+   "座備流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-33",
+  "path": [
+   "座備流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-34",
+  "path": [],
+  "label": "玩流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-34",
+  "path": [
+   "玩流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-34",
+  "path": [
+   "玩流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-34",
+  "path": [
+   "玩流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-35",
+  "path": [],
+  "label": "捨命流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-35",
+  "path": [
+   "捨命流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-35",
+  "path": [
+   "捨命流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-35",
+  "path": [
+   "捨命流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-36",
+  "path": [],
+  "label": "久土井流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-36",
+  "path": [
+   "久土井流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-36",
+  "path": [
+   "久土井流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-36",
+  "path": [
+   "久土井流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-37",
+  "path": [],
+  "label": "鬼怒川中段",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-37",
+  "path": [
+   "鬼怒川中段"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-37",
+  "path": [
+   "鬼怒川中段"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-37",
+  "path": [
+   "鬼怒川中段"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-38",
+  "path": [],
+  "label": "無敵流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-38",
+  "path": [
+   "無敵流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-38",
+  "path": [
+   "無敵流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-38",
+  "path": [
+   "無敵流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-39",
+  "path": [],
+  "label": "坪内流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-39",
+  "path": [
+   "坪内流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-39",
+  "path": [
+   "坪内流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-39",
+  "path": [
+   "坪内流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-40",
+  "path": [],
+  "label": "鷹舎流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-40",
+  "path": [
+   "鷹舎流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-40",
+  "path": [
+   "鷹舎流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-40",
+  "path": [
+   "鷹舎流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-41",
+  "path": [],
+  "label": "夢誠流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-41",
+  "path": [
+   "夢誠流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-41",
+  "path": [
+   "夢誠流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-41",
+  "path": [
+   "夢誠流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-42",
+  "path": [],
+  "label": "卜念流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-42",
+  "path": [
+   "卜念流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-42",
+  "path": [
+   "卜念流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-42",
+  "path": [
+   "卜念流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-43",
+  "path": [],
+  "label": "天神御影流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-43",
+  "path": [
+   "天神御影流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-43",
+  "path": [
+   "天神御影流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-43",
+  "path": [
+   "天神御影流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-44",
+  "path": [],
+  "label": "九忌流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-44",
+  "path": [
+   "九忌流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-44",
+  "path": [
+   "九忌流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-44",
+  "path": [
+   "九忌流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-45",
+  "path": [],
+  "label": "瀬古井流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-45",
+  "path": [
+   "瀬古井流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-45",
+  "path": [
+   "瀬古井流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-45",
+  "path": [
+   "瀬古井流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-46",
+  "path": [],
+  "label": "常勝流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-46",
+  "path": [
+   "常勝流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-46",
+  "path": [
+   "常勝流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-46",
+  "path": [
+   "常勝流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-47",
+  "path": [],
+  "label": "富良野流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-47",
+  "path": [
+   "富良野流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-47",
+  "path": [
+   "富良野流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-47",
+  "path": [
+   "富良野流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-48",
+  "path": [],
+  "label": "東急流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-48",
+  "path": [
+   "東急流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-48",
+  "path": [
+   "東急流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-48",
+  "path": [
+   "東急流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-49",
+  "path": [],
+  "label": "武業流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-49",
+  "path": [
+   "武業流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-49",
+  "path": [
+   "武業流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-49",
+  "path": [
+   "武業流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-50",
+  "path": [],
+  "label": "ウィンザー流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-50",
+  "path": [
+   "ウィンザー流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-50",
+  "path": [
+   "ウィンザー流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-50",
+  "path": [
+   "ウィンザー流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-51",
+  "path": [],
+  "label": "鬼怒川流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-51",
+  "path": [
+   "鬼怒川流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-51",
+  "path": [
+   "鬼怒川流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-51",
+  "path": [
+   "鬼怒川流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-52",
+  "path": [],
+  "label": "磯部流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-52",
+  "path": [
+   "磯部流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-52",
+  "path": [
+   "磯部流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-52",
+  "path": [
+   "磯部流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-53",
+  "path": [],
+  "label": "埴磨流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-53",
+  "path": [
+   "埴磨流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-53",
+  "path": [
+   "埴磨流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-53",
+  "path": [
+   "埴磨流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-54",
+  "path": [],
+  "label": "高尚流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-54",
+  "path": [
+   "高尚流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-54",
+  "path": [
+   "高尚流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-54",
+  "path": [
+   "高尚流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-55",
+  "path": [],
+  "label": "佐村一刀流居合術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-55",
+  "path": [
+   "佐村一刀流居合術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-55",
+  "path": [
+   "佐村一刀流居合術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-55",
+  "path": [
+   "佐村一刀流居合術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-56",
+  "path": [],
+  "label": "半左流居合術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-56",
+  "path": [
+   "半左流居合術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-56",
+  "path": [
+   "半左流居合術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-56",
+  "path": [
+   "半左流居合術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-57",
+  "path": [],
+  "label": "乗嫡流居合術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-57",
+  "path": [
+   "乗嫡流居合術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-57",
+  "path": [
+   "乗嫡流居合術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-57",
+  "path": [
+   "乗嫡流居合術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-58",
+  "path": [],
+  "label": "活慎流居合術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-58",
+  "path": [
+   "活慎流居合術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-58",
+  "path": [
+   "活慎流居合術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-58",
+  "path": [
+   "活慎流居合術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-59",
+  "path": [],
+  "label": "隻車流居合術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-59",
+  "path": [
+   "隻車流居合術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-59",
+  "path": [
+   "隻車流居合術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-59",
+  "path": [
+   "隻車流居合術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-60",
+  "path": [],
+  "label": "起念流居合術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-60",
+  "path": [
+   "起念流居合術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-60",
+  "path": [
+   "起念流居合術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-60",
+  "path": [
+   "起念流居合術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-61",
+  "path": [],
+  "label": "勝決流居合術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-61",
+  "path": [
+   "勝決流居合術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-61",
+  "path": [
+   "勝決流居合術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-61",
+  "path": [
+   "勝決流居合術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-62",
+  "path": [],
+  "label": "完璧流居合術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-62",
+  "path": [
+   "完璧流居合術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-62",
+  "path": [
+   "完璧流居合術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-62",
+  "path": [
+   "完璧流居合術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-63",
+  "path": [],
+  "label": "鳥片流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-63",
+  "path": [
+   "鳥片流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-63",
+  "path": [
+   "鳥片流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-63",
+  "path": [
+   "鳥片流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-64",
+  "path": [],
+  "label": "智慧流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-64",
+  "path": [
+   "智慧流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-64",
+  "path": [
+   "智慧流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-64",
+  "path": [
+   "智慧流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-65",
+  "path": [],
+  "label": "仙羽流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-65",
+  "path": [
+   "仙羽流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-65",
+  "path": [
+   "仙羽流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-65",
+  "path": [
+   "仙羽流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-66",
+  "path": [],
+  "label": "アルスター流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-66",
+  "path": [
+   "アルスター流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-66",
+  "path": [
+   "アルスター流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-66",
+  "path": [
+   "アルスター流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-67",
+  "path": [],
+  "label": "凶慈流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-67",
+  "path": [
+   "凶慈流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-67",
+  "path": [
+   "凶慈流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-67",
+  "path": [
+   "凶慈流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-68",
+  "path": [],
+  "label": "南山流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-68",
+  "path": [
+   "南山流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-68",
+  "path": [
+   "南山流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-68",
+  "path": [
+   "南山流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-69",
+  "path": [],
+  "label": "伍要流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-69",
+  "path": [
+   "伍要流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-69",
+  "path": [
+   "伍要流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-69",
+  "path": [
+   "伍要流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-70",
+  "path": [],
+  "label": "犀賀流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-70",
+  "path": [
+   "犀賀流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-70",
+  "path": [
+   "犀賀流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-70",
+  "path": [
+   "犀賀流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-71",
+  "path": [],
+  "label": "裏波羅流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-71",
+  "path": [
+   "裏波羅流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-71",
+  "path": [
+   "裏波羅流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-71",
+  "path": [
+   "裏波羅流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-72",
+  "path": [],
+  "label": "玄蕃流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-72",
+  "path": [
+   "玄蕃流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-72",
+  "path": [
+   "玄蕃流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-72",
+  "path": [
+   "玄蕃流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-73",
+  "path": [],
+  "label": "明日香流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-73",
+  "path": [
+   "明日香流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-73",
+  "path": [
+   "明日香流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-73",
+  "path": [
+   "明日香流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-74",
+  "path": [],
+  "label": "東邦流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-74",
+  "path": [
+   "東邦流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-74",
+  "path": [
+   "東邦流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-74",
+  "path": [
+   "東邦流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-75",
+  "path": [],
+  "label": "鬼倭流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-75",
+  "path": [
+   "鬼倭流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-75",
+  "path": [
+   "鬼倭流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-75",
+  "path": [
+   "鬼倭流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-76",
+  "path": [],
+  "label": "腐毛流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-76",
+  "path": [
+   "腐毛流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-76",
+  "path": [
+   "腐毛流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-76",
+  "path": [
+   "腐毛流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-77",
+  "path": [],
+  "label": "絶頂流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-77",
+  "path": [
+   "絶頂流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-77",
+  "path": [
+   "絶頂流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-77",
+  "path": [
+   "絶頂流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-78",
+  "path": [],
+  "label": "梅見家流槍術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-78",
+  "path": [
+   "梅見家流槍術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-78",
+  "path": [
+   "梅見家流槍術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-78",
+  "path": [
+   "梅見家流槍術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-79",
+  "path": [],
+  "label": "愛怒流槍術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-79",
+  "path": [
+   "愛怒流槍術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-79",
+  "path": [
+   "愛怒流槍術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-79",
+  "path": [
+   "愛怒流槍術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-80",
+  "path": [],
+  "label": "福王流槍術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-80",
+  "path": [
+   "福王流槍術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-80",
+  "path": [
+   "福王流槍術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-80",
+  "path": [
+   "福王流槍術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-81",
+  "path": [],
+  "label": "升尾流槍術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-81",
+  "path": [
+   "升尾流槍術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-81",
+  "path": [
+   "升尾流槍術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-81",
+  "path": [
+   "升尾流槍術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-82",
+  "path": [],
+  "label": "経蔵院流槍術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-82",
+  "path": [
+   "経蔵院流槍術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-82",
+  "path": [
+   "経蔵院流槍術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-82",
+  "path": [
+   "経蔵院流槍術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-83",
+  "path": [],
+  "label": "混御流槍術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-83",
+  "path": [
+   "混御流槍術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-83",
+  "path": [
+   "混御流槍術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-83",
+  "path": [
+   "混御流槍術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-84",
+  "path": [],
+  "label": "大導流槍術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-84",
+  "path": [
+   "大導流槍術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-84",
+  "path": [
+   "大導流槍術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-84",
+  "path": [
+   "大導流槍術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-85",
+  "path": [],
+  "label": "激勝流槍術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-85",
+  "path": [
+   "激勝流槍術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-85",
+  "path": [
+   "激勝流槍術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-85",
+  "path": [
+   "激勝流槍術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-86",
+  "path": [],
+  "label": "和合流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-86",
+  "path": [
+   "和合流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-86",
+  "path": [
+   "和合流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-86",
+  "path": [
+   "和合流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-87",
+  "path": [],
+  "label": "覇天流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-87",
+  "path": [
+   "覇天流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-87",
+  "path": [
+   "覇天流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-87",
+  "path": [
+   "覇天流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-88",
+  "path": [],
+  "label": "貫鉄流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-88",
+  "path": [
+   "貫鉄流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-88",
+  "path": [
+   "貫鉄流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-88",
+  "path": [
+   "貫鉄流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-89",
+  "path": [],
+  "label": "合魂流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-89",
+  "path": [
+   "合魂流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-89",
+  "path": [
+   "合魂流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-89",
+  "path": [
+   "合魂流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-90",
+  "path": [],
+  "label": "二示現流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-90",
+  "path": [
+   "二示現流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-90",
+  "path": [
+   "二示現流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-90",
+  "path": [
+   "二示現流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-91",
+  "path": [],
+  "label": "弁財流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-91",
+  "path": [
+   "弁財流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-91",
+  "path": [
+   "弁財流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-91",
+  "path": [
+   "弁財流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-92",
+  "path": [],
+  "label": "小鴉流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-92",
+  "path": [
+   "小鴉流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-92",
+  "path": [
+   "小鴉流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-92",
+  "path": [
+   "小鴉流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-93",
+  "path": [],
+  "label": "喪巣流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-93",
+  "path": [
+   "喪巣流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-93",
+  "path": [
+   "喪巣流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-93",
+  "path": [
+   "喪巣流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-94",
+  "path": [],
+  "label": "波羅流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-94",
+  "path": [
+   "波羅流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-94",
+  "path": [
+   "波羅流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-94",
+  "path": [
+   "波羅流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-95",
+  "path": [],
+  "label": "金剛流体術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-95",
+  "path": [
+   "金剛流体術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-95",
+  "path": [
+   "金剛流体術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-95",
+  "path": [
+   "金剛流体術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-96",
+  "path": [],
+  "label": "我珍固流体術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-96",
+  "path": [
+   "我珍固流体術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-96",
+  "path": [
+   "我珍固流体術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-96",
+  "path": [
+   "我珍固流体術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-97",
+  "path": [],
+  "label": "松寺流体術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-97",
+  "path": [
+   "松寺流体術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-97",
+  "path": [
+   "松寺流体術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-97",
+  "path": [
+   "松寺流体術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-98",
+  "path": [],
+  "label": "適闘流体術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-98",
+  "path": [
+   "適闘流体術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-98",
+  "path": [
+   "適闘流体術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-98",
+  "path": [
+   "適闘流体術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-99",
+  "path": [],
+  "label": "夕張流体術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-99",
+  "path": [
+   "夕張流体術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-99",
+  "path": [
+   "夕張流体術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-99",
+  "path": [
+   "夕張流体術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-105",
+  "path": [],
+  "label": "アルスター式銃術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-105",
+  "path": [
+   "アルスター式銃術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-105",
+  "path": [
+   "アルスター式銃術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-105",
+  "path": [
+   "アルスター式銃術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-106",
+  "path": [],
+  "label": "セイラー式長銃術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-106",
+  "path": [
+   "セイラー式長銃術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-106",
+  "path": [
+   "セイラー式長銃術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-106",
+  "path": [
+   "セイラー式長銃術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-108",
+  "path": [],
+  "label": "夜杯流体術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-108",
+  "path": [
+   "夜杯流体術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-108",
+  "path": [
+   "夜杯流体術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-108",
+  "path": [
+   "夜杯流体術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-109",
+  "path": [],
+  "label": "コモン流剣術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-109",
+  "path": [
+   "コモン流剣術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-109",
+  "path": [
+   "コモン流剣術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-109",
+  "path": [
+   "コモン流剣術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-110",
+  "path": [],
+  "label": "チャーリー式長銃術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-110",
+  "path": [
+   "チャーリー式長銃術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-110",
+  "path": [
+   "チャーリー式長銃術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-110",
+  "path": [
+   "チャーリー式長銃術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-111",
+  "path": [],
+  "label": "阿佐翔流体術",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-111",
+  "path": [
+   "阿佐翔流体術"
+  ],
+  "label": "修練度",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-111",
+  "path": [
+   "阿佐翔流体術"
+  ],
+  "label": "段",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-111",
+  "path": [
+   "阿佐翔流体術"
+  ],
+  "label": "この流派で倒した数",
+  "box": false
+ },
+ {
+  "section": "ore-ryu",
+  "anchor": "overview",
+  "path": [],
+  "label": "俺流",
+  "box": true
+ },
+ {
+  "section": "ore-ryu",
+  "anchor": "create",
+  "path": [],
+  "label": "俺流を新しく作る",
+  "box": true
+ },
+ {
+  "section": "ore-ryu",
+  "anchor": "create",
+  "path": [
+   "俺流を新しく作る"
+  ],
+  "label": "名前",
+  "box": false
+ },
+ {
+  "section": "ore-ryu",
+  "anchor": "create",
+  "path": [
+   "俺流を新しく作る"
+  ],
+  "label": "構え",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "current",
+  "path": [],
+  "label": "受注中・クリア数",
+  "box": true
+ },
+ {
+  "section": "occupation",
+  "anchor": "current",
+  "path": [
+   "受注中・クリア数"
+  ],
+  "label": "クリアしたなりわいの数",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "current",
+  "path": [
+   "受注中・クリア数"
+  ],
+  "label": "受注中のなりわい",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [],
+  "label": "連続なりわい",
+  "box": true
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "連続なりわい"
+  ],
+  "label": "【岡っ引き】野戸仏",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "連続なりわい"
+  ],
+  "label": "【極道】小鳩",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "連続なりわい"
+  ],
+  "label": "【泥棒】泥棒さん",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "連続なりわい"
+  ],
+  "label": "【宿無し】おっつぁん",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "連続なりわい"
+  ],
+  "label": "四天王の話",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "連続なりわい"
+  ],
+  "label": "最終なりわい",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [],
+  "label": "DLC なりわい",
+  "box": true
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC なりわい"
+  ],
+  "label": "汁部（DLC）と知り合ったか",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC なりわい"
+  ],
+  "label": "汁部の「今宵の虎徹は」",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC なりわい"
+  ],
+  "label": "汁部の「薬売り」",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC なりわい"
+  ],
+  "label": "汁部の「食い逃げ外国人」",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC なりわい"
+  ],
+  "label": "汁部の「おにぎり屋の用心棒」",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "security",
+  "path": [],
+  "label": "治安なりわい",
+  "box": true
+ },
+ {
+  "section": "occupation",
+  "anchor": "security",
+  "path": [
+   "治安なりわい"
+  ],
+  "label": "【同心頭】佐古津",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "security",
+  "path": [
+   "治安なりわい"
+  ],
+  "label": "【賭場】女将",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "records",
+  "path": [],
+  "label": "なりわいの記録（周回をまたぐ統計）",
+  "box": true
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [],
+  "label": "夜の約束",
+  "box": true
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "夜の約束"
+  ],
+  "label": "相手の種類（セリフと戦闘力）",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "夜の約束"
+  ],
+  "label": "場所",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "夜の約束"
+  ],
+  "label": "配置（家の中の人）",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "夜の約束"
+  ],
+  "label": "約束した日",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "夜の約束"
+  ],
+  "label": "名前",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "夜の約束"
+  ],
+  "label": "見た目と声",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "夜の約束"
+  ],
+  "label": "年齢",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "夜の約束"
+  ],
+  "label": "血液型",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [],
+  "label": "夜這いの約束の条件",
+  "box": true
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "夜這いの約束の条件"
+  ],
+  "label": "朱美の好感度",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "夜這いの約束の条件"
+  ],
+  "label": "ローラの好感度",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "夜這いの約束の条件"
+  ],
+  "label": "万由の拷問のポイント",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "夜這いの約束の条件"
+  ],
+  "label": "千佳の拷問のポイント",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "夜這いの約束の条件"
+  ],
+  "label": "百合の拷問のポイント",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "夜這いの約束の条件"
+  ],
+  "label": "メリンダの峰打ちの点数",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "records",
+  "path": [],
+  "label": "夜這いの記録",
+  "box": true
+ },
+ {
+  "section": "yobai",
+  "anchor": "counts",
+  "path": [],
+  "label": "夜這いの回数（表示だけ）",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "summary",
+  "path": [],
+  "label": "流通",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "weapons",
+  "path": [],
+  "label": "武器",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "item",
+  "path": [],
+  "label": "道具",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "blade",
+  "path": [],
+  "label": "刃",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "guard",
+  "path": [],
+  "label": "鍔",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "grip",
+  "path": [],
+  "label": "柄",
+  "box": true
+ }
+]

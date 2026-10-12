@@ -1,6 +1,8 @@
 import { type MouseEvent, type ReactNode } from 'react'
 import { AnchorLink, ToggleChevron } from '@/components/anchor-link'
 import { AnchorScope, useAnchoredOpen } from '@/lib/navigation-context'
+import { SearchPath } from '@/lib/search-context'
+import { useSearchBox } from '@/lib/search-hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
@@ -16,6 +18,8 @@ type Props = {
   anchor: string
   /** 開閉の Trigger に入れる見出し */
   title: ReactNode
+  /** 検索で引く名前。title が文字列でないときに渡す（文字列ならそれを使う） */
+  searchLabel?: string
   /** 見出しの横に置く丸ハテナ・バッジなど（Trigger の外） */
   extra?: ReactNode
   description?: ReactNode
@@ -31,6 +35,7 @@ type Props = {
 export function CollapsibleCard({
   anchor,
   title,
+  searchLabel = typeof title === 'string' ? title : undefined,
   extra,
   description,
   defaultOpen = false,
@@ -38,6 +43,7 @@ export function CollapsibleCard({
   children,
 }: Props) {
   const { id, open, setOpen } = useAnchoredOpen(anchor, defaultOpen)
+  useSearchBox(id, searchLabel)
 
   return (
     <Collapsible
@@ -70,7 +76,9 @@ export function CollapsibleCard({
       </CardHeader>
       <CollapsibleContent className={COLLAPSIBLE_ANIMATION}>
         <CardContent className={`pt-6 ${contentClassName ?? ''}`}>
-          <AnchorScope.Provider value={id}>{children}</AnchorScope.Provider>
+          <AnchorScope.Provider value={id}>
+            <SearchPath label={searchLabel}>{children}</SearchPath>
+          </AnchorScope.Provider>
         </CardContent>
       </CollapsibleContent>
     </Collapsible>

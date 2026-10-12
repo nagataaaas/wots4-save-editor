@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
+import { SearchField } from "@/lib/search-context";
 import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import {
@@ -194,7 +195,7 @@ function SummaryCard({
   const mismatch = view !== null && view.clearCount !== view.stateSum;
 
   return (
-    <AnchoredCard anchor={OCCUPATION_ANCHORS.current}>
+    <AnchoredCard anchor={OCCUPATION_ANCHORS.current} searchLabel="受注中・クリア数">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />受注中・クリア数</CardTitle>
         <CardDescription>
@@ -203,7 +204,7 @@ function SummaryCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
+        <SearchField label="クリアしたなりわいの数" className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <Label>クリアしたなりわいの数</Label>
             <InfoTip offset={OCCUPATION_CLEAR_COUNT_OFFSET}>下の記録のクリア回数の合計と同じ値にしておきます</InfoTip>
@@ -225,7 +226,7 @@ function SummaryCard({
           {mismatch && (
             <p className="text-destructive text-xs">クリア数と状態の表の合計が違います</p>
           )}
-        </div>
+        </SearchField>
         <AcceptRow view={accepted} write={write} />
       </CardContent>
     </AnchoredCard>

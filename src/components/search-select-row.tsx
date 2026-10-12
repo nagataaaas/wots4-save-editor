@@ -16,6 +16,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { matchesSearch } from '@/lib/search'
+import { SearchField } from '@/lib/search-context'
 
 type Props = {
   label: string
@@ -78,7 +79,7 @@ export function SearchSelectRow({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <SearchField label={label} className="flex flex-col gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
         <Label>{label}</Label>
         <InfoTip offset={offset}>{note}</InfoTip>
@@ -142,6 +143,6 @@ export function SearchSelectRow({
           {error && <p className="text-destructive text-xs">{error}</p>}
         </>
       )}
-    </div>
+    </SearchField>
   )
 }

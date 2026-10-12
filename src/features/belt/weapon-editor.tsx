@@ -3,7 +3,9 @@ import type { LucideIcon } from "lucide-react";
 import { AnchorLink, ToggleChevron } from "@/components/anchor-link";
 import { InfoTip } from "@/components/info-tip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useAnchoredOpen } from "@/lib/navigation-context";
+import { AnchorScope, useAnchoredOpen } from "@/lib/navigation-context";
+import { SearchPath, SearchScope } from "@/lib/search-context";
+import { useSearchBox } from "@/lib/search-hooks";
 import { WEAPON_FIELDS, type WeaponView } from "@/save/weapon";
 import { WEAPON_EDITOR_ANCHORS } from "./anchors";
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
@@ -44,6 +46,7 @@ function Section({
   children: ReactNode;
 }) {
   const { id, open, setOpen } = useAnchoredOpen(anchor, defaultOpen);
+  useSearchBox(id, title);
   return (
     <Collapsible id={id} open={open} onOpenChange={setOpen} className="flex scroll-mt-4 flex-col">
       <div className="text-muted-foreground flex items-center gap-1 border-b pb-1 text-sm font-medium">
@@ -53,7 +56,12 @@ function Section({
       </div>
       {/* overflow-hidden で入力欄のフォーカスリングが切れないよう、-mx-1 px-1 で少し広げる */}
       <CollapsibleContent className={`${COLLAPSIBLE_ANIMATION} -mx-1 px-1`}>
-        <div className="flex flex-col gap-4 pt-4 pb-1">{children}</div>
+        <div className="flex flex-col gap-4 pt-4 pb-1">
+          {/* 検索から中の欄へ飛んだときにこのまとまりも開くよう、中の欄の anchor をこのまとまりにする */}
+          <AnchorScope.Provider value={id}>
+            <SearchPath label={title}>{children}</SearchPath>
+          </AnchorScope.Provider>
+        </div>
       </CollapsibleContent>
     </Collapsible>
   );
@@ -62,10 +70,10 @@ function Section({
 /** 現在値と最大値のように、2つで1組の数値をまとめる枠 */
 function NumberPair({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-3 rounded-md border p-3">
+    <SearchScope title={title} className="flex flex-col gap-3 rounded-md border p-3">
       <span className="text-sm font-medium">{title}</span>
       <div className="grid gap-4 sm:grid-cols-2">{children}</div>
-    </div>
+    </SearchScope>
   );
 }
 

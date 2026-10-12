@@ -4,6 +4,7 @@ import { LazySelect } from "@/components/lazy-select";
 import { groupOptions, type SelectOption } from "@/components/select-options";
 import { WarningTip } from "@/components/warning-tip";
 import { Label } from "@/components/ui/label";
+import { SearchField } from "@/lib/search-context";
 import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from "@/components/ui/select";
 
 function OptionContent({ option: o }: { option: SelectOption }) {
@@ -71,7 +72,7 @@ export function SelectRow({
   if (!listed && value !== null) items[value] = `${currentLabel ?? "不明"}（現在の値）`;
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <SearchField label={label} className="flex flex-col gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
         <Label>{label}</Label>
         <InfoTip offset={offset}>{note}</InfoTip>
@@ -123,6 +124,6 @@ export function SelectRow({
           {error && <p className="text-destructive text-xs">{error}</p>}
         </>
       )}
-    </div>
+    </SearchField>
   );
 }

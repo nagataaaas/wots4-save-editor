@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { SearchField } from "@/lib/search-context";
 import {
   CUSTOM_COUNT_OFFSET,
   CUSTOM_SHEET_COUNT_OFFSET,
@@ -96,7 +97,7 @@ export function OreRyuPage() {
           <AlertDescription>{view.problem}</AlertDescription>
         </Alert>
       )}
-      <AnchoredCard anchor={ORE_RYU_ANCHORS.overview}>
+      <AnchoredCard anchor={ORE_RYU_ANCHORS.overview} searchLabel="俺流">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />
@@ -163,6 +164,7 @@ function StyleCard({
     <CollapsibleCard
       anchor={ORE_RYU_ANCHORS.style(style.id)}
       defaultOpen={style.kind === "player"}
+      searchLabel={style.name || "（名前なし）"}
       title={
         <span className="flex flex-wrap items-center gap-2">
           {style.name || "（名前なし）"}
@@ -387,7 +389,7 @@ function CreateCard({
   const skillProblem = view ? validateSkillSelection(view, s, [...selected], { advanced }) : null;
 
   return (
-    <AnchoredCard anchor={ORE_RYU_ANCHORS.create}>
+    <AnchoredCard anchor={ORE_RYU_ANCHORS.create} searchLabel="俺流を新しく作る">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           <ScopeAnchorLink />
@@ -403,11 +405,11 @@ function CreateCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1.5">
+          <SearchField label="名前" className="flex flex-col gap-1.5">
             <Label htmlFor="ore-ryu-new-name">名前</Label>
             <Input id="ore-ryu-new-name" className="w-56" value={name} onChange={(e) => setName(e.target.value)} disabled={readOnly} />
-          </div>
-          <div className="flex flex-col gap-1.5">
+          </SearchField>
+          <SearchField label="構え" className="flex flex-col gap-1.5">
             <Label>構え</Label>
             <Select
               value={stance}
@@ -430,7 +432,7 @@ function CreateCard({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </SearchField>
         </div>
         <SkillPicker
           stance={s}

@@ -86,7 +86,7 @@ export function ValuablesPage() {
         }}
       />
 
-      <AnchoredCard anchor={ITEM_ANCHORS.items}>
+      <AnchoredCard anchor={ITEM_ANCHORS.items} searchLabel="重要品">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />
@@ -166,7 +166,7 @@ function ProbeCard({
   }
 
   return (
-    <AnchoredCard anchor={ITEM_ANCHORS.probe}>
+    <AnchoredCard anchor={ITEM_ANCHORS.probe} searchLabel="ID調査モード">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex flex-wrap items-center gap-2">

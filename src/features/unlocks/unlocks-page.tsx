@@ -128,7 +128,7 @@ export function AccessoriesPage() {
   return (
     <div className="flex flex-col gap-4">
       {banner}
-      <AnchoredCard anchor={UNLOCKS_ANCHORS.accessories}>
+      <AnchoredCard anchor={UNLOCKS_ANCHORS.accessories} searchLabel="装飾品">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />
@@ -311,7 +311,7 @@ function AppearanceUnlocksCard() {
   return (
     <>
       {banner}
-      <AnchoredCard anchor={UNLOCKS_ANCHORS.faces}>
+      <AnchoredCard anchor={UNLOCKS_ANCHORS.faces} searchLabel="顔・髪型などの特典">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />
@@ -370,7 +370,7 @@ export function AppearancePage() {
     <div className="flex flex-col gap-4">
       {banner}
       <AppearanceUnlocksCard />
-      <AnchoredCard anchor={UNLOCKS_ANCHORS.clothes}>
+      <AnchoredCard anchor={UNLOCKS_ANCHORS.clothes} searchLabel="容姿の服">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />
@@ -475,7 +475,7 @@ export function UnlocksPage() {
   return (
     <div className="flex flex-col gap-4">
       {banner}
-      <AnchoredCard anchor={UNLOCKS_ANCHORS.unlocks}>
+      <AnchoredCard anchor={UNLOCKS_ANCHORS.unlocks} searchLabel="特典解除">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />

@@ -43,7 +43,7 @@ export function AppearanceCurrentCard() {
   const { advanced } = useAdvancedMode();
   const view = useMemo(() => (save ? readAppearanceCurrent(save.working) : null), [save]);
   return (
-    <AnchoredCard anchor={HERO_APPEARANCE_ANCHORS.current}>
+    <AnchoredCard anchor={HERO_APPEARANCE_ANCHORS.current} searchLabel="体">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />体</CardTitle>
       </CardHeader>

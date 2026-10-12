@@ -122,7 +122,7 @@ export function EventChartCard({
   const [revealNames, setRevealNames] = useState(false);
 
   return (
-    <AnchoredCard anchor={EVENTS_ANCHORS.chart}>
+    <AnchoredCard anchor={EVENTS_ANCHORS.chart} searchLabel="イベントチャート">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />イベントチャート</CardTitle>
         <CardDescription>

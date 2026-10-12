@@ -154,7 +154,7 @@ export function StylesPage() {
         </Alert>
       )}
 
-      <AnchoredCard anchor={STYLES_ANCHORS.overview}>
+      <AnchoredCard anchor={STYLES_ANCHORS.overview} searchLabel="流派">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />
@@ -284,6 +284,7 @@ function SectCard({
   return (
     <CollapsibleCard
       anchor={STYLES_ANCHORS.sect(sect.id)}
+      searchLabel={sect.nameJa}
       title={
         // 流派名・構え・段・修練度・技の数は、流派のカードどうしで縦に揃うように幅を決めておく
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1">

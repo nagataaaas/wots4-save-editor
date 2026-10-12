@@ -10,6 +10,7 @@ import { MARKET_ANCHORS } from "./anchors";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { WeaponPanel } from "@/features/belt/belt-page";
 import { useAnchoredOpen } from "@/lib/navigation-context";
+import { useSearchBox } from "@/lib/search-hooks";
 import { useSave } from "@/lib/save-context";
 import {
   MARKET_ELAPSED,
@@ -67,7 +68,7 @@ export function MarketWeaponsPage() {
         </Alert>
       )}
 
-      <AnchoredCard anchor={MARKET_ANCHORS.summary}>
+      <AnchoredCard anchor={MARKET_ANCHORS.summary} searchLabel="流通">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />
@@ -130,6 +131,7 @@ function Group({
   children?: ReactNode;
 }) {
   const { id, open, setOpen } = useAnchoredOpen(anchor);
+  useSearchBox(id, title);
   return (
     <Card id={id} className="scroll-mt-4 py-0">
       <Collapsible open={open} onOpenChange={setOpen}>

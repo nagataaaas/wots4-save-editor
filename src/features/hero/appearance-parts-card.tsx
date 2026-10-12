@@ -9,6 +9,7 @@ import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { SearchField } from "@/lib/search-context";
 import {
   APPEARANCE_PARTS_OFFSETS,
   BODY_KIND_CRASH,
@@ -195,7 +196,7 @@ function NudeButtons({
     }
   };
   return (
-    <div className="flex flex-col gap-1.5 sm:col-span-2">
+    <SearchField label="裸" className="flex flex-col gap-1.5 sm:col-span-2">
       <div className="flex flex-wrap items-center gap-2">
         <Label>裸</Label>
         <InfoTip offset={APPEARANCE_PARTS_OFFSETS.parts}>
@@ -214,7 +215,7 @@ function NudeButtons({
         タイプが男・女のときだけ使えます。足元は変えません
       </p>
       {error && <p className="text-destructive text-xs">{error}</p>}
-    </div>
+    </SearchField>
   );
 }
 

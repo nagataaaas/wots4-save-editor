@@ -141,7 +141,7 @@ export function SkillsPage() {
         </Alert>
       )}
 
-      <AnchoredCard anchor={SKILLS_ANCHORS.overview}>
+      <AnchoredCard anchor={SKILLS_ANCHORS.overview} searchLabel="技">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />

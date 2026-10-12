@@ -1,16 +1,20 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { SectionId } from '@/features/sections'
+import { useIndexing } from '@/lib/search-collector'
 
 /**
  * 画面の切り替え。ほかの画面の項目へのリンクに使う。
  * anchor を渡すと、切り替えた先の画面で、その anchor を持つ箱（CollapsibleCard・FlagSection など）が自分で開いてスクロールする（useAnchor）
  */
 export type NavigationValue = {
-  go: (section: SectionId, anchor?: string) => void
+  /** field は検索から欄・小見出しへ飛ぶときの data-search-key。箱を開いたあと、箱ではなくその要素までスクロールする（App） */
+  go: (section: SectionId, anchor?: string, field?: string) => void
   /** いま開いている画面 */
   section: SectionId
   /** 直前の go で渡された anchor。サイドバーで切り替えたときは null */
   anchor: string | null
+  /** 直前の go で渡された field。URL には残さない */
+  field: string | null
   /** go を呼ぶたびに増える。同じ anchor へもう一度飛んだときにも開いてスクロールし直すために使う */
   seq: number
 }
@@ -51,9 +55,10 @@ export type AnchorState = {
 export function useAnchor(name: string): AnchorState {
   const parent = useContext(AnchorScope)
   const id = anchorPath(parent, name)
-  const { anchor, seq } = useNavigation()
-  const self = anchor === id
-  const targeted = anchor !== null && (self || anchor.startsWith(`${id}/`))
+  const { anchor, field, seq } = useNavigation()
+  // 欄へ飛ぶときは、箱ではなく欄までスクロールする
+  const self = anchor === id && field === null
+  const targeted = anchor !== null && (anchor === id || anchor.startsWith(`${id}/`))
 
   useEffect(() => {
     if (!self) return
@@ -69,9 +74,11 @@ export function useAnchor(name: string): AnchorState {
 
 /**
  * 開閉できる箱の anchor と開閉の状態。リンク先がこの箱かその中なら開く（リンクごとに1回。画面にいるまま同じ箱へもう一度リンクしたときも開く）。
- * 箱の要素には id と scroll-mt-4 を付け、中身は `<AnchorScope.Provider value={id}>` で包む
+ * 箱の要素には id と scroll-mt-4 を付け、中身は `<AnchorScope.Provider value={id}>` で包む。
+ * 検索の索引を作るとき（useIndexing）は、中の欄を拾うために常に開いて描く
  */
 export function useAnchoredOpen(name: string, defaultOpen = false) {
+  const indexing = useIndexing()
   const { id, targeted, seq } = useAnchor(name)
   const [open, setOpen] = useState(defaultOpen || targeted)
   const [openedFor, setOpenedFor] = useState(seq)
@@ -79,5 +86,5 @@ export function useAnchoredOpen(name: string, defaultOpen = false) {
     setOpenedFor(seq)
     setOpen(true)
   }
-  return { id, open, setOpen }
+  return { id, open: open || indexing, setOpen }
 }

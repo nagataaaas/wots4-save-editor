@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input'
 import { InfoTip } from '@/components/info-tip'
 import { WarningTip } from '@/components/warning-tip'
 import { Label } from '@/components/ui/label'
+import { SearchField } from '@/lib/search-context'
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string }
 
@@ -57,7 +58,7 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <SearchField label={label} className="flex flex-col gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
         <Label htmlFor={id}>{label}</Label>
         <InfoTip offset={offset}>{note}</InfoTip>
@@ -97,6 +98,6 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
           {error && <p className="text-destructive text-xs">{error}</p>}
         </>
       )}
-    </div>
+    </SearchField>
   )
 }

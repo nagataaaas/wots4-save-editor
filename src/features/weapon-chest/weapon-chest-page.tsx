@@ -93,7 +93,7 @@ export function WeaponChestPage() {
         </Alert>
       )}
 
-      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.capacity}>
+      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.capacity} searchLabel="刀箪笥の本数と容量">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />
@@ -145,7 +145,7 @@ export function WeaponChestPage() {
       </AnchoredCard>
 
       {/* 未読み込みのときは枠だけを描き、一覧は「—」にする */}
-      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.weapons} className="gap-2">
+      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.weapons} searchLabel="刀箪笥の武器" className="gap-2">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <ScopeAnchorLink />

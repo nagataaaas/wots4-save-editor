@@ -135,7 +135,7 @@ function RawEditor({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-[max-content_minmax(16rem,1fr)]">
-        <AnchoredCard anchor={RAW_ANCHORS.hex} className="min-w-0">
+        <AnchoredCard anchor={RAW_ANCHORS.hex} searchLabel="16進表示" className="min-w-0">
           <CardHeader>
             <CardTitle className="flex flex-wrap items-center gap-2">
               <ScopeAnchorLink />
@@ -163,7 +163,7 @@ function RawEditor({
 
       <PatchCard bytes={bytes} advanced={advanced} onApply={(patches) => update((b) => applyPatches(b, patches))} onJump={goTo} />
 
-      <AnchoredCard anchor={RAW_ANCHORS.diff}>
+      <AnchoredCard anchor={RAW_ANCHORS.diff} searchLabel="差分">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />差分</CardTitle>
           <CardDescription>
@@ -445,7 +445,7 @@ function SelectionCard({
   }
 
   return (
-    <AnchoredCard anchor={RAW_ANCHORS.byte} className="min-w-0">
+    <AnchoredCard anchor={RAW_ANCHORS.byte} searchLabel="選んだバイト" className="min-w-0">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2 font-mono"><ScopeAnchorLink />{formatOffset(offset)}</CardTitle>
         <CardDescription>
@@ -587,7 +587,7 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
   const placeholder = SEARCH_KINDS.find((s) => s.kind === kind)?.placeholder
 
   return (
-    <AnchoredCard anchor={RAW_ANCHORS.search}>
+    <AnchoredCard anchor={RAW_ANCHORS.search} searchLabel="検索">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />検索</CardTitle>
         {/* 今のバイト列（編集を含む）から探す。数値はリトルエンディアンのバイト列として探す */}
@@ -744,7 +744,7 @@ function PatchCard({
   }
 
   return (
-    <AnchoredCard anchor={RAW_ANCHORS.bulkWrite}>
+    <AnchoredCard anchor={RAW_ANCHORS.bulkWrite} searchLabel="まとめて書き込む">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           <ScopeAnchorLink />

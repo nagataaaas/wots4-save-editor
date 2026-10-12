@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatOffset } from "@/lib/format";
 import { AnchorScope, useAnchoredOpen } from "@/lib/navigation-context";
+import { SearchPath } from "@/lib/search-context";
+import { useSearchBox } from "@/lib/search-hooks";
 import { useSave } from "@/lib/save-context";
 import {
   BELT_COUNT,
@@ -129,7 +131,7 @@ function StateCard({
   }
 
   return (
-    <AnchoredCard anchor={BELT_ANCHORS.state}>
+    <AnchoredCard anchor={BELT_ANCHORS.state} searchLabel="帯刀の状態">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           <ScopeAnchorLink />
@@ -266,6 +268,8 @@ function WeaponCard({
   const base = beltOffset(index);
   // 最初は閉じておく（ユーザー判断 2026-10-05）。リンク先なら開く
   const { id, open, setOpen } = useAnchoredOpen(WEAPON_ANCHORS.weapon(index));
+  const searchLabel = `${index + 1}本目`;
+  useSearchBox(id, searchLabel);
   const roles = [state?.right === index && "右手", state?.left === index && "左手"].filter(
     Boolean,
   ) as string[];
@@ -316,7 +320,7 @@ function WeaponCard({
             <ToggleChevron open={open} />
             <AnchorLink id={id} />
             <CollapsibleTrigger className="flex flex-wrap items-center gap-2 text-left hover:underline">
-              {`${index + 1}本目`}
+              {searchLabel}
               <span className="text-muted-foreground text-xs font-normal">
                 {open ? "編集を閉じる" : "編集する"}
               </span>
@@ -341,7 +345,9 @@ function WeaponCard({
         <CollapsibleContent className={COLLAPSIBLE_ANIMATION}>
           <CardContent className="pt-6">
             <AnchorScope.Provider value={id}>
-              <WeaponEditor weapon={weapon} base={base} update={update} />
+              <SearchPath label={searchLabel}>
+                <WeaponEditor weapon={weapon} base={base} update={update} />
+              </SearchPath>
             </AnchorScope.Provider>
           </CardContent>
         </CollapsibleContent>

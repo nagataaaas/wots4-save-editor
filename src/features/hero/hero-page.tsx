@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSave } from "@/lib/save-context";
+import { SearchField, SearchScope } from "@/lib/search-context";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import {
   AMOUNT_LIMITS,
@@ -152,13 +153,13 @@ export function HeroPage() {
       ? `0〜${GAUGE_MAX.toLocaleString()}（上級者モード）`
       : `0〜最大値`;
     return (
-      <section key={kind} className="flex flex-col gap-2">
+      <SearchScope key={kind} title={name} className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">{name}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           {gaugeRow(current, "現在", currentHint, GAUGE_CURRENT_NOTES[kind])}
           {gaugeRow(max, "最大", `0〜${GAUGE_MAX.toLocaleString()}`, "上限は暫定")}
         </div>
-      </section>
+      </SearchScope>
     );
   };
 
@@ -171,7 +172,7 @@ export function HeroPage() {
         </Alert>
       )}
 
-      <AnchoredCard anchor={HERO_ANCHORS.name}>
+      <AnchoredCard anchor={HERO_ANCHORS.name} searchLabel="名前">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />名前</CardTitle>
         </CardHeader>
@@ -192,7 +193,7 @@ export function HeroPage() {
         </CardContent>
       </AnchoredCard>
 
-      <AnchoredCard anchor={HERO_ANCHORS.money}>
+      <AnchoredCard anchor={HERO_ANCHORS.money} searchLabel="所持金・侍点">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />所持金・侍点</CardTitle>
         </CardHeader>
@@ -203,7 +204,7 @@ export function HeroPage() {
         </CardContent>
       </AnchoredCard>
 
-      <AnchoredCard anchor={HERO_ANCHORS.vitals}>
+      <AnchoredCard anchor={HERO_ANCHORS.vitals} searchLabel="HP・活力・つま斬り">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />HP・活力・つま斬り</CardTitle>
           <CardDescription>
@@ -249,7 +250,7 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
   };
 
   return (
-    <AnchoredCard anchor={HERO_ANCHORS.difficulty}>
+    <AnchoredCard anchor={HERO_ANCHORS.difficulty} searchLabel="難易度・主人公設定のやり直し">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />難易度・主人公設定のやり直し</CardTitle>
         <CardDescription>
@@ -259,24 +260,26 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
           {/* 次のロードの「続きから」で難易度と主人公の設定に進む。イベントの状態は今の周回のままなので、序章のイベントは始まらず、セーブした場所から続く */}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <Label>難易度と主人公設定</Label>
-          <InfoTip offset={DATE_OFFSETS.dayTime}>
-            次のロードで難易度と主人公の設定に進む状態にします。元の状態に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください
-          </InfoTip>
-        </div>
-        <Button
-          variant={armed ? "destructive" : "outline"}
-          size="sm"
-          className="w-fit"
-          disabled={!view || view.layoutProblem !== null}
-          onClick={run}
-          onBlur={() => setArmed(false)}
-        >
-          {armed ? "もう一度押すと書き込みます" : "難易度と主人公設定を行えるようにする"}
-        </Button>
-        {error && <p className="text-destructive text-xs">{error}</p>}
+      <CardContent>
+        <SearchField label="難易度と主人公設定" className="flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Label>難易度と主人公設定</Label>
+            <InfoTip offset={DATE_OFFSETS.dayTime}>
+              次のロードで難易度と主人公の設定に進む状態にします。元の状態に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください
+            </InfoTip>
+          </div>
+          <Button
+            variant={armed ? "destructive" : "outline"}
+            size="sm"
+            className="w-fit"
+            disabled={!view || view.layoutProblem !== null}
+            onClick={run}
+            onBlur={() => setArmed(false)}
+          >
+            {armed ? "もう一度押すと書き込みます" : "難易度と主人公設定を行えるようにする"}
+          </Button>
+          {error && <p className="text-destructive text-xs">{error}</p>}
+        </SearchField>
       </CardContent>
     </AnchoredCard>
   );
@@ -303,7 +306,7 @@ function LocationCard({
     locationItems[String(current)] = `${currentLoc?.label ?? "不明"}（現在の値）`;
 
   return (
-    <AnchoredCard anchor={HERO_ANCHORS.location}>
+    <AnchoredCard anchor={HERO_ANCHORS.location} searchLabel="現在地（開始地点）">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />現在地（開始地点）</CardTitle>
         <CardDescription>
@@ -311,50 +314,52 @@ function LocationCard({
           {/* クラッシュが報告されている値は選択肢に出さない */}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <Label>場所</Label>
-          <InfoTip offset={HERO_OFFSETS.location}></InfoTip>
-        </div>
-        <Select
-          // null でプレースホルダー表示になる（undefined だと非制御扱いになる）
-          value={current === null ? null : String(current)}
-          items={locationItems}
-          disabled={current === null || problem !== null}
-          onValueChange={(s) => {
-            if (s === null) return;
-            setError(null);
-            try {
-              onChange(Number(s));
-            } catch (e) {
-              setError(e instanceof Error ? e.message : String(e));
-            }
-          }}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="未読み込み" />
-          </SelectTrigger>
-          <SelectContent>
-            {!isSelectable && current !== null && (
-              <SelectItem value={String(current)} disabled>
-                {currentLoc?.label ?? "不明"}（現在の値）
-              </SelectItem>
-            )}
-            {selectableLocations.map((l) => (
-              <SelectItem key={l.value} value={String(l.value)}>
-                {l.label}
-                {l.warning && " ⚠"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {problem ? (
-          <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>
-        ) : error ? (
-          <p className="text-destructive text-xs">{error}</p>
-        ) : (
-          warning && <p className="text-xs text-amber-600 dark:text-amber-400">⚠ {warning}</p>
-        )}
+      <CardContent>
+        <SearchField label="場所" className="flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Label>場所</Label>
+            <InfoTip offset={HERO_OFFSETS.location}></InfoTip>
+          </div>
+          <Select
+            // null でプレースホルダー表示になる（undefined だと非制御扱いになる）
+            value={current === null ? null : String(current)}
+            items={locationItems}
+            disabled={current === null || problem !== null}
+            onValueChange={(s) => {
+              if (s === null) return;
+              setError(null);
+              try {
+                onChange(Number(s));
+              } catch (e) {
+                setError(e instanceof Error ? e.message : String(e));
+              }
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="未読み込み" />
+            </SelectTrigger>
+            <SelectContent>
+              {!isSelectable && current !== null && (
+                <SelectItem value={String(current)} disabled>
+                  {currentLoc?.label ?? "不明"}（現在の値）
+                </SelectItem>
+              )}
+              {selectableLocations.map((l) => (
+                <SelectItem key={l.value} value={String(l.value)}>
+                  {l.label}
+                  {l.warning && " ⚠"}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {problem ? (
+            <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>
+          ) : error ? (
+            <p className="text-destructive text-xs">{error}</p>
+          ) : (
+            warning && <p className="text-xs text-amber-600 dark:text-amber-400">⚠ {warning}</p>
+          )}
+        </SearchField>
       </CardContent>
     </AnchoredCard>
   );

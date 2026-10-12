@@ -1,5 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { useAnchor } from "@/lib/navigation-context";
+import { AnchorScope, useAnchor } from "@/lib/navigation-context";
+import { SearchField, SearchPath, SearchScope } from "@/lib/search-context";
+import { useSearchBox } from "@/lib/search-hooks";
 import { AMIHAMA_ANCHORS, EVENTS_ANCHORS, NPC_ANCHORS } from "./anchors";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
@@ -345,7 +347,7 @@ function CycleCard({
   // 普通＝1・難しい＝2 は 0 と 3 の間を埋めた 🔶 推測。治安の 1日目 0 の例と初期値 50 の食い違いは ❓。
   // 周回数が PLAY_COUNT_REVEALS_BEST_ROUTE 以上で真ルートの枠と線が全部出るのは ❓ 要ゲーム内確認、死亡で増えるかは ❓
   return (
-    <AnchoredCard anchor={AMIHAMA_ANCHORS.cycle}>
+    <AnchoredCard anchor={AMIHAMA_ANCHORS.cycle} searchLabel="難易度・治安・周回">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />難易度・治安・周回</CardTitle>
         <CardDescription>
@@ -408,7 +410,7 @@ function CycleCard({
           hint={advanced ? "0〜4,294,967,295" : `0〜${PLAY_COUNT_MAX.toLocaleString()}`}
           note={`終えた周回の数で、クリアでも立ち去りでも物語を終えるたびにゲームが1つ増やします。新しい周回の初期化では 0 になりません。${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上だと、イベントチャートに真ルートの枠と線が全部出ます`}
         />
-        <div className="flex flex-col gap-1.5">
+        <SearchField label="新しい周回" className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <Label>新しい周回</Label>
             <InfoTip offset={DATE_OFFSETS.dayTime}>
@@ -438,7 +440,7 @@ function CycleCard({
           </div>
           {report && <p className="text-muted-foreground text-xs">{report}</p>}
           {error && <p className="text-destructive text-xs">{error}</p>}
-        </div>
+        </SearchField>
       </CardContent>
     </AnchoredCard>
   );
@@ -577,7 +579,7 @@ function GateFlagsCard() {
     >
       <FlagSection anchor={AMIHAMA_ANCHORS.gates.recruit} title="初日勧誘（1日目昼のみ影響）" flags={GATE_RECRUIT_FLAGS} />
       <FlagSection anchor={AMIHAMA_ANCHORS.gates.close} title="閉鎖（1日目夕～大老の大寄せまで）" flags={GATE_CLOSE_FLAGS} />
-      <section className="flex flex-col gap-2">
+      <SearchScope title="大老の大寄せ以降" className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">大老の大寄せ以降</h3>
         <p className="text-sm text-muted-foreground">
           <a href="#post-tournament-route" className="text-primary underline underline-offset-4">
@@ -589,7 +591,7 @@ function GateFlagsCard() {
           グループ名は進行時期の目安です。初日勧誘は序章にも影響し、閉鎖の指定は初日昼以前・大寄せ以降にも有効です。
           大寄せ以降は閉鎖指定なしにしても、ルート分岐が「入れない」なら閉じます。
         </p>
-      </section>
+      </SearchScope>
       <FlagGrid flags={GATE_DOOR_FLAGS} />
     </CollapsibleCard>
   );
@@ -598,13 +600,18 @@ function GateFlagsCard() {
 /** カードの中の見出しつきのまとまり。flags は src/save/flags/ の配列1つ。anchor はリンク先にするときの名前（useAnchor） */
 function FlagSection({ anchor, title, flags }: { anchor: string; title: string; flags: readonly ByteFlag[] }) {
   const { id } = useAnchor(anchor);
+  useSearchBox(id, title);
   return (
     <section id={id} className="flex scroll-mt-4 flex-col gap-3">
       <h3 className="flex items-center gap-2 text-sm font-medium">
         <AnchorLink id={id} />
         {title}
       </h3>
-      <FlagGrid flags={flags} />
+      <AnchorScope.Provider value={id}>
+        <SearchPath label={title}>
+          <FlagGrid flags={flags} />
+        </SearchPath>
+      </AnchorScope.Provider>
     </section>
   );
 }
@@ -615,7 +622,7 @@ function FlagSection({ anchor, title, flags }: { anchor: string; title: string; 
  */
 function EventFlagsCard() {
   return (
-    <AnchoredCard anchor={EVENTS_ANCHORS.flags}>
+    <AnchoredCard anchor={EVENTS_ANCHORS.flags} searchLabel="イベント関連フラグ">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />イベント関連フラグ</CardTitle>
         <CardDescription>
@@ -747,14 +754,14 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
       }
     >
       {groups.map((g) => (
-        <div key={g} className="flex flex-col gap-2">
+        <SearchScope key={g} title={g} className="flex flex-col gap-2">
           <p className="text-sm font-medium">{g}</p>
           <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
             {TOWNSFOLK_PEOPLE.filter((x) => x.group === g).map((x) => {
               const dead = deadOf(x.p);
               const revive = reviveNote(x.p);
               return (
-                <div key={x.p} className="flex items-center gap-1">
+                <SearchField key={x.p} label={x.name} className="flex items-center gap-1">
                   <Label className="flex items-center gap-2 font-normal">
                     <Checkbox
                       checked={dead ?? false}
@@ -765,11 +772,11 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
                   </Label>
                   <InfoTip offset={personOffset(x.p)} />
                   {revive && <WarningTip warning={`外すだけでは生き返りません：${revive}`} />}
-                </div>
+                </SearchField>
               );
             })}
           </div>
-        </div>
+        </SearchScope>
       ))}
     </CollapsibleCard>
   );
@@ -895,7 +902,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
   const max = advanced ? FACTION_VALUE_MAX.system : FACTION_VALUE_MAX.normal;
 
   return (
-    <AnchoredCard anchor={EVENTS_ANCHORS.factions}>
+    <AnchoredCard anchor={EVENTS_ANCHORS.factions} searchLabel="勢力の状態">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />勢力の状態</CardTitle>
         <CardDescription>
@@ -974,7 +981,7 @@ function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabl
   };
 
   return (
-    <section className="flex flex-col gap-3">
+    <SearchScope title="一括設定（デバッグ用）" className="flex flex-col gap-3">
       <h3 className="flex flex-wrap items-center gap-2 text-sm font-medium">
         {/* ❓ ゲームへの影響は未確認 */}
         一括設定（デバッグ用）
@@ -1025,7 +1032,7 @@ function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabl
       </div>
       {problem && <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>}
       {error && <p className="text-destructive text-xs">{error}</p>}
-    </section>
+    </SearchScope>
   );
 }
 

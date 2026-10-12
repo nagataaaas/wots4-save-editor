@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
+import { SearchPath } from "@/lib/search-context";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
@@ -122,7 +123,7 @@ function ReputationCard({ view }: { view: DojoView | null }) {
   const next = view && view.rank < RANK_MAX ? REPUTATION_RANGES[view.rank + 1][0] : null;
 
   return (
-    <AnchoredCard anchor={DOJO_ANCHORS.reputation}>
+    <AnchoredCard anchor={DOJO_ANCHORS.reputation} searchLabel="道場の評判">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />道場の評判</CardTitle>
         <CardDescription>
@@ -193,24 +194,27 @@ function PupilRow({ index, view }: { index: number; view: DojoView | null }) {
         note="種類で性別と評判の上がり方が決まります。名前は種類の名前になります"
         onChange={(v) => update((b) => writePupilKind(b, index, v === EMPTY_VALUE ? null : Number(v)))}
       />
-      <SelectRow
-        label="見た目"
-        offset={offset + 8}
-        value={view === null ? null : pupil ? String(pupil.look) : null}
-        currentLabel={pupil ? (lookLabel(pupil.look) ?? "不明") : undefined}
-        options={lookOptions(pupil, advanced)}
-        problem={problem}
-        disabled={view !== null && pupil === null}
-        hint={view !== null && pupil === null ? "空きの枠です" : undefined}
-        onChange={(v) => update((b) => writePupilLook(b, index, Number(v), { advanced }))}
-      />
+      {/* 検索では「弟子 n > 見た目」で引く */}
+      <SearchPath label={`弟子 ${index + 1}`}>
+        <SelectRow
+          label="見た目"
+          offset={offset + 8}
+          value={view === null ? null : pupil ? String(pupil.look) : null}
+          currentLabel={pupil ? (lookLabel(pupil.look) ?? "不明") : undefined}
+          options={lookOptions(pupil, advanced)}
+          problem={problem}
+          disabled={view !== null && pupil === null}
+          hint={view !== null && pupil === null ? "空きの枠です" : undefined}
+          onChange={(v) => update((b) => writePupilLook(b, index, Number(v), { advanced }))}
+        />
+      </SearchPath>
     </div>
   );
 }
 
 function PupilsCard({ view }: { view: DojoView | null }) {
   return (
-    <AnchoredCard anchor={DOJO_ANCHORS.pupils}>
+    <AnchoredCard anchor={DOJO_ANCHORS.pupils} searchLabel="弟子">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ScopeAnchorLink />

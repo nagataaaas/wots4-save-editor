@@ -652,7 +652,7 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
   const problem = view?.promiseProblem ?? null;
 
   return (
-    <AnchoredCard anchor={YOBAI_ANCHORS.currentPromise}>
+    <AnchoredCard anchor={YOBAI_ANCHORS.currentPromise} searchLabel="夜の約束">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />夜の約束</CardTitle>
         <CardDescription>
