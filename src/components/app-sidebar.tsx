@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -18,6 +19,7 @@ import {
   SidebarMenuSubItem,
   SidebarSeparator,
 } from '@/components/ui/sidebar'
+import { LicensesDialog } from '@/components/licenses-dialog'
 import { RestoreDialog } from '@/components/restore-dialog'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -61,6 +63,9 @@ export function AppSidebar({ active, onSelect }: Props) {
           </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarFooter>
+        <LicensesDialog />
+      </SidebarFooter>
     </Sidebar>
   )
 }
