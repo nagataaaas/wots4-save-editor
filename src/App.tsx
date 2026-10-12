@@ -9,7 +9,6 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { pages } from '@/features/pages'
 import { sections, type SectionId } from '@/features/sections'
 import { AdvancedModeProvider } from '@/lib/advanced-mode-provider'
-import { PartOrderProvider } from '@/lib/part-order-provider'
 import { SaveProvider } from '@/lib/save-provider'
 
 export default function App() {
@@ -32,27 +31,25 @@ export default function App() {
     <NavigationContext.Provider value={navigation}>
       <SaveProvider>
         <AdvancedModeProvider>
-          <PartOrderProvider>
-            <TooltipProvider>
-              <SidebarProvider>
-                <AppSidebar active={active} onSelect={(id) => navigation.go(id)} />
-                <SidebarInset className="min-w-0">
-                  <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-                    <h1 className="font-semibold">
-                      {section.folder && <span className="text-muted-foreground font-normal">{section.folder} / </span>}
-                      {section.label}
-                    </h1>
-                  </header>
-                  <div className={`mx-auto w-full p-4 ${section.wide ? 'min-w-0' : 'max-w-5xl'}`}>
-                    <NoSaveNotice />
-                    {Page ? <Page /> : <SectionPlaceholder section={section} />}
-                  </div>
-                </SidebarInset>
-              </SidebarProvider>
-            </TooltipProvider>
-          </PartOrderProvider>
+          <TooltipProvider>
+            <SidebarProvider>
+              <AppSidebar active={active} onSelect={(id) => navigation.go(id)} />
+              <SidebarInset className="min-w-0">
+                <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+                  <h1 className="font-semibold">
+                    {section.folder && <span className="text-muted-foreground font-normal">{section.folder} / </span>}
+                    {section.label}
+                  </h1>
+                </header>
+                <div className={`mx-auto w-full p-4 ${section.wide ? 'min-w-0' : 'max-w-5xl'}`}>
+                  <NoSaveNotice />
+                  {Page ? <Page /> : <SectionPlaceholder section={section} />}
+                </div>
+              </SidebarInset>
+            </SidebarProvider>
+          </TooltipProvider>
         </AdvancedModeProvider>
       </SaveProvider>
     </NavigationContext.Provider>

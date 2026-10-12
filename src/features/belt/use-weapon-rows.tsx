@@ -3,7 +3,6 @@ import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { usePartOrder } from "@/lib/part-order-context";
 import {
   TITLES,
   COMPLETE_WEAPONS,
@@ -15,7 +14,6 @@ import {
   formatRange,
   WEAPON_NAME_MAX_CHARS,
   isXUnknown,
-  partId,
   partKey,
   partOptions,
   validateWeaponName,
@@ -144,7 +142,6 @@ export function useWeaponRows({
   update: WeaponUpdate;
 }) {
   const { advanced } = useAdvancedMode();
-  const { order: partOrder } = usePartOrder();
 
   const number = (key: NumberKey, label = NUMBER_LABELS[key]) => (
     <FieldRow
@@ -167,16 +164,14 @@ export function useWeaponRows({
   const part = (kind: PartKind) => {
     const field = weapon?.[kind] ?? null;
     const special = weapon?.special ?? false;
-    // 通常パーツは刀・槍の順に分け、その中を読みの五十音順か ID 順（サイドバーで選ぶ）に並べる（ユーザー判断 2026-10-05）。
+    // 通常パーツは刀・槍の順に分け、その中を読みの五十音順に並べる（ユーザー判断 2026-10-05。ID 順の切り替えは 2026-10-12 にやめた）。
     // 特殊武器の刃は ID 順のまま
     const list = special
       ? partOptions(kind, special)
       : [...partOptions(kind, special)].sort(
           (a, b) =>
             Number(weaponKind(a.name) === "spear") - Number(weaponKind(b.name) === "spear") ||
-            (partOrder === "reading"
-              ? compareWeaponNames(a.name, b.name)
-              : partId(kind, a.value, a.source) - partId(kind, b.value, b.source)),
+            compareWeaponNames(a.name, b.name),
         );
     const options = list.map((p) => {
       const name = partName(p);
@@ -219,16 +214,14 @@ export function useWeaponRows({
     );
   };
 
-  // 指定武器に変更する。刀・槍・特殊に分け、その中を部品と同じ順（サイドバーで選ぶ）に並べる
+  // 指定武器に変更する。刀・槍・特殊に分け、その中を部品と同じ読みの五十音順に並べる（名前のないものは ID 順）
   const completeOptions: SelectOption[] = [...COMPLETE_WEAPONS]
     .sort((a, b) => {
       const rank = (w: (typeof COMPLETE_WEAPONS)[number]) =>
         w.build.kind === "special" ? 2 : w.build.type;
       return (
         rank(a) - rank(b) ||
-        (partOrder === "reading" && a.name && b.name
-          ? compareWeaponNames(a.name, b.name)
-          : a.id - b.id)
+        (a.name && b.name ? compareWeaponNames(a.name, b.name) : a.id - b.id)
       );
     })
     .map((w) => {

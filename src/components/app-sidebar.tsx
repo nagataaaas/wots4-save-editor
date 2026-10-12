@@ -22,7 +22,6 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { isFolder, sectionGroups, type SectionId } from '@/features/sections'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
-import { usePartOrder } from '@/lib/part-order-context'
 import { useSave } from '@/lib/save-context'
 
 type Props = {
@@ -133,26 +132,7 @@ function FilePanel() {
           <AlertDescription className="text-xs">{error}</AlertDescription>
         </Alert>
       )}
-      <PartOrderSwitch />
       <AdvancedModeSwitch />
-    </div>
-  )
-}
-
-/** パーツ（刃・鍔・柄）の選択肢を、読みの五十音順と ID 順のどちらで並べるか */
-function PartOrderSwitch() {
-  const { order, setOrder } = usePartOrder()
-  return (
-    <div className="flex flex-col gap-1 rounded-md border p-2">
-      <div className="flex items-center justify-between gap-2">
-        <Label htmlFor="part-order" className="text-xs">
-          パーツを ID 順に並べる
-        </Label>
-        <Switch id="part-order" checked={order === 'id'} onCheckedChange={(on) => setOrder(on ? 'id' : 'reading')} />
-      </div>
-      <p className="text-muted-foreground text-xs">
-        {order === 'id' ? '刃・鍔・柄を刀・槍ごとに ID 順で並べます' : '刃・鍔・柄を刀・槍ごとに読みの五十音順で並べます'}
-      </p>
     </div>
   )
 }
