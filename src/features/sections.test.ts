@@ -38,3 +38,12 @@ describe('主人公の画面構成', () => {
       .toEqual(['accessories', 'appearance', 'unlocks'])
   })
 })
+
+describe('サイドバーの並び', () => {
+  it('各グループで、子項目をまとめる親項目を単独の項目より先に並べる', () => {
+    for (const group of sectionGroups) {
+      const kinds = group.items.map((node) => isFolder(node))
+      expect(kinds).toEqual([...kinds].sort((a, b) => Number(b) - Number(a)))
+    }
+  })
+})

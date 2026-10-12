@@ -108,8 +108,6 @@ export const sectionGroups: SectionGroup[] = [
           { id: 'dojo', label: '道場', note: 'dojo（道場の評判・弟子の名簿・道場破り）' }, // 🟢 要ゲーム内確認
         ],
       },
-      { id: 'occupation', label: 'なりわい', icon: ClipboardList, note: 'occupation・townsfolk（なりわいのフラグ）状態の表・クリア数・連続なりわいの進み具合' },
-      { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit（夜の約束の場所・人物と、夜這いの記録）' }, // 一部 🔶
       {
         label: '流派',
         icon: ScrollText,
@@ -119,6 +117,8 @@ export const sectionGroups: SectionGroup[] = [
           { id: 'ore-ryu', label: '俺流', note: 'custom-style・belt-copy（俺流の技の表）' }, // 🟢 要ゲーム内確認
         ],
       },
+      { id: 'occupation', label: 'なりわい', icon: ClipboardList, note: 'occupation・townsfolk（なりわいのフラグ）状態の表・クリア数・連続なりわいの進み具合' },
+      { id: 'yobai', label: '夜這い', icon: Moon, note: 'night-visit（夜の約束の場所・人物と、夜這いの記録）' }, // 一部 🔶
       { id: 'circulating', label: '流通', icon: Store, note: 'market-weapons（持ち去られた武器・道具・部品。読み取り専用）' }, // 🟢
     ],
   },

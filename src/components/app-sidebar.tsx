@@ -1,7 +1,8 @@
-import { useRef } from 'react'
-import { Download, FileUp } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { ChevronRight, Download, FileUp } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   Sidebar,
   SidebarContent,
@@ -20,7 +21,7 @@ import {
 import { RestoreDialog } from '@/components/restore-dialog'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { isFolder, sectionGroups, type SectionId } from '@/features/sections'
+import { isFolder, sectionGroups, type SectionFolder, type SectionId } from '@/features/sections'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { useSave } from '@/lib/save-context'
 
@@ -45,24 +46,7 @@ export function AppSidebar({ active, onSelect }: Props) {
               <SidebarMenu>
                 {group.items.map((node) =>
                   isFolder(node) ? (
-                    <SidebarMenuItem key={node.label}>
-                      <SidebarMenuButton render={<div />} className="pointer-events-none">
-                        <node.icon />
-                        <span>{node.label}</span>
-                      </SidebarMenuButton>
-                      <SidebarMenuSub>
-                        {node.sections.map((s) => (
-                          <SidebarMenuSubItem key={s.id}>
-                            <SidebarMenuSubButton
-                              render={<button type="button" className="w-full" onClick={() => onSelect(s.id)} />}
-                              isActive={s.id === active}
-                            >
-                              <span>{s.label}</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </SidebarMenuItem>
+                    <FolderItem key={node.label} folder={node} active={active} onSelect={onSelect} />
                   ) : (
                     <SidebarMenuItem key={node.id}>
                       <SidebarMenuButton isActive={node.id === active} onClick={() => onSelect(node.id)}>
@@ -78,6 +62,35 @@ export function AppSidebar({ active, onSelect }: Props) {
         ))}
       </SidebarContent>
     </Sidebar>
+  )
+}
+
+/** 子項目をまとめる親項目。開閉でき、最初は閉じている。閉じている間は、開いている画面を含むなら親項目を選択中の表示にする */
+function FolderItem({ folder, active, onSelect }: { folder: SectionFolder } & Props) {
+  const [open, setOpen] = useState(false)
+  const containsActive = folder.sections.some((s) => s.id === active)
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} render={<SidebarMenuItem />}>
+      <CollapsibleTrigger render={<SidebarMenuButton isActive={!open && containsActive} />}>
+        <folder.icon />
+        <span>{folder.label}</span>
+        <ChevronRight className={`ml-auto transition-transform ${open ? 'rotate-90' : ''}`} />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <SidebarMenuSub>
+          {folder.sections.map((s) => (
+            <SidebarMenuSubItem key={s.id}>
+              <SidebarMenuSubButton
+                render={<button type="button" className="w-full" onClick={() => onSelect(s.id)} />}
+                isActive={s.id === active}
+              >
+                <span>{s.label}</span>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
