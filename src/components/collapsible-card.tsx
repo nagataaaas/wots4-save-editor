@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import { type MouseEvent, type ReactNode } from 'react'
+import { AnchorLink, CARD_ANCHOR_LINK_CLASS } from '@/components/anchor-link'
 import { AnchorScope, useAnchoredOpen } from '@/lib/navigation-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -46,13 +47,14 @@ export function CollapsibleCard({
       render={
         <Card
           id={id}
-          className={open ? 'scroll-mt-4 gap-0' : 'hover:bg-muted/40 scroll-mt-4 cursor-pointer gap-0'}
+          className={open ? 'relative scroll-mt-4 gap-0' : 'hover:bg-muted/40 relative scroll-mt-4 cursor-pointer gap-0'}
           onClick={(e) => {
             if (!open && !isOnButton(e)) setOpen(true)
           }}
         />
       }
     >
+      <AnchorLink id={id} className={CARD_ANCHOR_LINK_CLASS} />
       <CardHeader
         className={open ? 'cursor-pointer' : undefined}
         onClick={(e) => {

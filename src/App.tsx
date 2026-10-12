@@ -40,6 +40,7 @@ export default function App() {
   const navigation = useMemo(
     () => ({
       ...target,
+      section: active,
       go: (id: SectionId, to?: string) => {
         const route = { section: id, anchor: to ?? null }
         const hash = formatHash(route)
@@ -47,7 +48,7 @@ export default function App() {
         open(route)
       },
     }),
-    [target, open],
+    [target, active, open],
   )
 
   return (

@@ -4,6 +4,7 @@ import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { MARKET_ANCHORS } from "./anchors";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -131,7 +132,8 @@ function Group({
   return (
     <Card id={id} className="scroll-mt-4 py-0">
       <Collapsible open={open} onOpenChange={setOpen}>
-        <div className="flex items-center gap-2 px-6 py-4">
+        <div className="relative flex items-center gap-2 px-6 py-4">
+          <AnchorLink id={id} className="absolute top-1/2 left-1 -translate-y-1/2" />
           <CollapsibleTrigger className="group flex flex-1 items-center gap-2 text-left font-medium">
             <ChevronRight className="size-4 shrink-0 transition-transform group-data-panel-open:rotate-90" aria-hidden />
             {title}

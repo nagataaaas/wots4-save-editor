@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { AnchorLink, CARD_ANCHOR_LINK_CLASS } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
@@ -270,7 +271,8 @@ function WeaponCard({
 
   if (weapon?.empty) {
     return (
-      <Card id={id} className="scroll-mt-4">
+      <Card id={id} className="relative scroll-mt-4">
+        <AnchorLink id={id} className={CARD_ANCHOR_LINK_CLASS} />
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             {weaponTitle(weapon, index)}
@@ -295,13 +297,14 @@ function WeaponCard({
       render={
         <Card
           id={id}
-          className={open ? "scroll-mt-4 gap-0" : "hover:bg-muted/40 scroll-mt-4 cursor-pointer gap-0"}
+          className={open ? "relative scroll-mt-4 gap-0" : "hover:bg-muted/40 relative scroll-mt-4 cursor-pointer gap-0"}
           onClick={(e) => {
             if (!open && !isOnButton(e)) setOpen(true);
           }}
         />
       }
     >
+        <AnchorLink id={id} className={CARD_ANCHOR_LINK_CLASS} />
         <CardHeader
           className={open ? "cursor-pointer" : undefined}
           onClick={(e) => {

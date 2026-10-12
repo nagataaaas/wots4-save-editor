@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { FlagGrid, FlagRow } from "@/components/flag-row";
@@ -605,7 +606,10 @@ function FlagSection({ anchor, title, flags }: { anchor: string; title: string; 
   const { id } = useAnchor(anchor);
   return (
     <section id={id} className="flex scroll-mt-4 flex-col gap-3">
-      <h3 className="text-sm font-medium">{title}</h3>
+      <h3 className="relative text-sm font-medium">
+        <AnchorLink id={id} className="absolute top-0.5 -left-5" />
+        {title}
+      </h3>
       <FlagGrid flags={flags} />
     </section>
   );

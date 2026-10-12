@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { AnchorLink } from "@/components/anchor-link";
 import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -10,6 +11,9 @@ import { Chevron, WeaponImage } from "./weapon-rows";
 import { COLLAPSIBLE_ANIMATION, isOnButton, type WeaponUpdate } from "./weapon-ui";
 
 // 武器袋・刀箪笥のように件数の多い武器の一覧。1枠＝1行の細い表示で、開くと帯刀と同じ編集欄を出す。
+
+/** 行へのリンクは、行の左（カードの左の余白）に置く */
+const ROW_ANCHOR_LINK_CLASS = "absolute top-1/2 -left-5 -translate-y-1/2";
 
 /** 桁数ぶんの幅を取った数値（右寄せ）。武器ごとに列がずれないようにする。桁があふれたらはみ出して見せる */
 function Num({ value, digits }: { value: number; digits: number }) {
@@ -52,7 +56,8 @@ function CompactWeaponRow({
 
   if (weapon.empty) {
     return (
-      <li id={id} className="text-muted-foreground flex scroll-mt-4 items-center gap-2 border-b px-2 py-1 text-xs last:border-b-0">
+      <li id={id} className="text-muted-foreground relative flex scroll-mt-4 items-center gap-2 border-b px-2 py-1 text-xs last:border-b-0">
+        <AnchorLink id={id} className={ROW_ANCHOR_LINK_CLASS} />
         <span className="size-4 shrink-0" aria-hidden />
         {no}
         <span>空き</span>
@@ -66,11 +71,12 @@ function CompactWeaponRow({
   return (
     <Collapsible open={open} onOpenChange={setOpen} render={<li id={id} className="scroll-mt-4 border-b last:border-b-0" />}>
       <div
-        className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 px-2 py-1"
+        className="hover:bg-muted/40 relative flex cursor-pointer items-center gap-2 px-2 py-1"
         onClick={(e) => {
           if (!isOnButton(e)) setOpen(!open);
         }}
       >
+        <AnchorLink id={id} className={ROW_ANCHOR_LINK_CLASS} />
         <CollapsibleTrigger className="group flex shrink-0 items-center gap-2" aria-label={`${index + 1}：${name} を編集`}>
           <Chevron />
           {no}

@@ -1,5 +1,6 @@
 import { createElement, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
+import { AnchorLink } from "@/components/anchor-link";
 import { InfoTip } from "@/components/info-tip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAnchoredOpen } from "@/lib/navigation-context";
@@ -45,7 +46,8 @@ function Section({
 }) {
   const { id, open, setOpen } = useAnchoredOpen(anchor, defaultOpen);
   return (
-    <Collapsible id={id} open={open} onOpenChange={setOpen} className="flex scroll-mt-4 flex-col">
+    <Collapsible id={id} open={open} onOpenChange={setOpen} className="relative flex scroll-mt-4 flex-col">
+      <AnchorLink id={id} className="absolute top-0.5 -left-5" />
       <CollapsibleTrigger className="group hover:text-foreground text-muted-foreground flex items-center gap-1 border-b pb-1 text-left text-sm font-medium">
         <Chevron />
         {title}

@@ -7,6 +7,8 @@ import type { SectionId } from '@/features/sections'
  */
 export type NavigationValue = {
   go: (section: SectionId, anchor?: string) => void
+  /** いま開いている画面 */
+  section: SectionId
   /** 直前の go で渡された anchor。サイドバーで切り替えたときは null */
   anchor: string | null
   /** go を呼ぶたびに増える。同じ anchor へもう一度飛んだときにも開いてスクロールし直すために使う */
