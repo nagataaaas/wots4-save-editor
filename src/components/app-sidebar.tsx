@@ -17,6 +17,7 @@ import {
   SidebarMenuSubItem,
   SidebarSeparator,
 } from '@/components/ui/sidebar'
+import { RestoreDialog } from '@/components/restore-dialog'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { isFolder, sectionGroups, type SectionId } from '@/features/sections'
@@ -84,7 +85,7 @@ export function AppSidebar({ active, onSelect }: Props) {
 /** セーブファイルの読み込み・書き出し */
 function FilePanel() {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { save, error, changedBytes, unsavedBytes, load, downloadBackup, downloadEdited } = useSave()
+  const { save, error, changedBytes, unsavedBytes, load, downloadEdited } = useSave()
 
   return (
     <div className="flex flex-col gap-2 p-2">
@@ -113,10 +114,7 @@ function FilePanel() {
         <p className="text-muted-foreground text-xs">S4-DATA_00〜04 を選択。ファイルはブラウザ内でのみ処理されます。</p>
       )}
       <div className="grid grid-cols-2 gap-2">
-        <Button size="sm" variant="outline" disabled={!save} onClick={downloadBackup}>
-          <Download />
-          バックアップ
-        </Button>
+        <RestoreDialog />
         <Button size="sm" variant="outline" disabled={!save} onClick={downloadEdited}>
           <Download />
           保存

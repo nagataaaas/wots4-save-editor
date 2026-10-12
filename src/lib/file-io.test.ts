@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assertSameSize, backupFileName } from './file-io'
-
-describe('backupFileName', () => {
-  it('元の名前に .bak.<ISO日時> を付ける', () => {
-    const now = new Date('2026-10-04T12:34:56.789Z')
-    expect(backupFileName('S4-DATA_00', now)).toBe('S4-DATA_00.bak.2026-10-04T12-34-56.789Z')
-  })
-})
+import { assertSameSize } from './file-io'
 
 describe('assertSameSize', () => {
   it('同じサイズなら通す', () => {

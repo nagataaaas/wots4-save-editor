@@ -18,11 +18,6 @@ export function assertSameSize(original: Uint8Array, edited: Uint8Array): void {
   }
 }
 
-/** バックアップ用のファイル名 `<元の名前>.bak.<ISO日時>` を作る（`:` はファイル名に使えないので `-` に置換） */
-export function backupFileName(name: string, now: Date = new Date()): string {
-  return `${name}.bak.${now.toISOString().replace(/:/g, '-')}`
-}
-
 /** メモリ上のバイト列をファイルとしてダウンロードさせる */
 export function downloadBytes(bytes: Uint8Array, fileName: string): void {
   const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' })
