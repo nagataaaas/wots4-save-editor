@@ -873,13 +873,6 @@ export function YobaiPage() {
         確度（docs: night-visit）：約束の場所・名前・見た目と声・セリフと戦闘力・年齢・血液型は ✅ 書き換えでゲームに反映。
         夜這いの記録は 🔶 差分からの推定で、書き換えの反映は未確認
       */}
-      <Alert>
-        <AlertTitle>検証用</AlertTitle>
-        <AlertDescription>
-          配置はその場所で使えるものだけを選べます。
-          書き換える前のセーブを残してから試してください。
-        </AlertDescription>
-      </Alert>
 
       <PromiseCard key={`${k}-promise`} view={view} />
       <PointsCard key={`${k}-points`} view={result?.points ?? null} />

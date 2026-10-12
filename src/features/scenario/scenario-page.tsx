@@ -271,13 +271,6 @@ function ViewsPage({ children }: { children: (views: Views | null, k: number) =>
         </Alert>
       )}
 
-      <Alert>
-        <AlertTitle>検証用</AlertTitle>
-        <AlertDescription>
-          この画面の値は、書き換える前のセーブを残してから試してください。
-        </AlertDescription>
-      </Alert>
-
       {children(views, k)}
     </div>
   );
