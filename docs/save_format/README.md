@@ -111,16 +111,19 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x0033A4`      | `0x0035A3`   | [occupation](chunks/occupation/README.md)         | なりわいの状態の表                             | ✅                            |
 | `0x0035A4`      | `0x0035BF`   | [vitals](chunks/vitals/README.md)                 | HP・活力・つま斬りゲージ（現在／最大）         | 一部 ✅ ／ 🟢                  |
 | `0x003634`      | `0x0036A7`   | [item-effects](chunks/item-effects/README.md)     | 時間で切れる道具の効果（残り時間・倍率。読み込みでは使われない） | 🟢                            |
-| `0x0036A8`      | `0x00374D`   | [event-chart](chunks/event-chart/README.md)       | イベントの状態 A（周回中）                     | ✅                            |
+| `0x0036A8`      | `0x00374D`   | [event-chart](chunks/event-chart/README.md)       | イベントの状態 A（周回中）                     | 🟢範囲 ／ 一部 ✅              |
 | `0x00374E`      | `0x003837`   | [scenario-flags](chunks/scenario-flags/README.md) | シナリオのフラグ列（下の5つを含む）            | 🟢範囲 ／ 一部 ✅              |
 | `0x00374E`      | `0x00375C`   | [characters](chunks/characters/README.md)         | 重要人物の状態                                 | 🟢人物 ／ 一部 ✅              |
 | `0x00375D`      | `0x00375F`   | [facilities](chunks/facilities/README.md)         | 施設（病院・カジノ・語学所）                   | ✅                            |
-| `0x003764`      | `0x0037FB`   | [gates](chunks/gates/README.md)                   | 門の開閉（飛び飛びの7バイト）                  | ✅ ／ `0x37FB` 🟢              |
-| `0x003780`      | `0x00378C`   | [factions](chunks/factions/README.md)             | 勢力の友好度・敵対状態・ルート分岐             | ✅                            |
-| `0x00378D`      | `0x0037AA`   | [best-route](chunks/best-route/README.md)         | 真ルートと、その周りの好感度・職など           | ✅ 0x378E ／ 一部 🟢 ／ ほか ❓ |
-| `0x003838`      | `0x0038FF`   | [event-chart](chunks/event-chart/README.md)       | イベントの記録 B（周回をまたぐ）               | ✅                            |
-| `0x003900`      | `0x003901`   | [hint](chunks/hint/README.md)                     | 次のイベントのヒント（最後に進めたイベントのノード番号） | ✅位置 ／ 🟢値 ／ ❓文との対応 |
+| `0x003761`      | `0x0037FB`   | [gates](chunks/gates/README.md)                   | 門・柵の開閉の条件（飛び飛びの8バイト）        | ✅ ／ `0x37FB` 🟢              |
+| `0x003780`      | `0x00378C`   | [factions](chunks/factions/README.md)             | 勢力の友好度・敵対状態・ルート分岐             | ✅値 ／ 🔶範囲                 |
+| `0x00378D`      | `0x0037AA`   | [best-route](chunks/best-route/README.md)         | 真ルートと、その周りの好感度・職・勢力の退場など | ✅ 0x378E・退場の効果 ／ ほか 🟢 ／ 🔶範囲 |
+| `0x0037C8`      | `0x0037C8`   | [night-visit](chunks/night-visit/README.md)       | 夜這いの褒美の順番                             | 🟢                            |
+| `0x003838`      | `0x0038FF`   | [event-chart](chunks/event-chart/README.md)       | イベントの記録 B（周回をまたぐ）               | 🟢範囲 ／ 一部 ✅              |
+| `0x003900`      | `0x003901`   | [hint](chunks/hint/README.md)                     | 次のイベントのヒント（最後に進めたイベントのノード番号） | ✅位置 ／ 🟢値 ／ ❓文との対応 ／ 終了 🔶 |
 | `0x003902`      | `0x00399F`   | [accessories](chunks/accessories/README.md)       | 装飾品の所持フラグ（ID 0〜157 の順に 1 B ずつ） | ✅                            |
+| `0x0039CC`      | `0x003C4B`   | [accessories](chunks/accessories/README.md)       | 付けている装飾品（64 B × 10枠）                | 🟢                            |
+| `0x003C4C`      | `0x0048CB`   | [accessories](chunks/accessories/README.md)       | 俺のおしゃれ（0x280 B × 5組）                  | 🟢                            |
 | `0x0048CC`      | `0x0058BD`   | [sect-scrolls](chunks/sect-scrolls/README.md)     | 流派の書（持ち歩き 20 枠・道場の箪笥 150 枠・箪笥の件数） | 🟢                            |
 | `0x0058C0`      | `0x005BDF`   | [items](chunks/items/README.md)                   | 箪笥・手持ち・貴重品のアイテム                 | ✅                            |
 | `0x005C3C`      | `0x006197`   | [memory-garbage](chunks/memory-garbage/README.md) | アドレス風の値（0x7C 刻み12か所）              | 🔶                            |
@@ -134,12 +137,14 @@ IDの一覧（パーツ、アイテム、銘など）は `datatable/` に置く�
 | `0x01920E`      | `0x01A60F`   | [custom-style](chunks/custom-style/README.md)     | 俺流（件数・80 B × 64 枠）                     | 🟢                            |
 | `0x01A610`      | `0x03AA11`   | [belt-copy](chunks/belt-copy/README.md)           | 俺流の技の表（件数・0x408 B × 128 枠。後半はゲームの状態ではない値） | 🟢                            |
 | `0x03AA12`      | `0x03AAD1`   | [skill-kills](chunks/skill-kills/README.md)       | 技ごとの斬殺数（6 B × 32 枠。俺流に組み込む条件）    | 🟢                            |
-| `0x03AAD4`      | `0x03AB5B`   | [appearance](chunks/appearance/README.md)         | 主人公の見た目（人物・肌色・タイプ・体型・身長・部品の番号） | ✅肌色・体型・身長 ／ 🟢部品 ／ 一部 ❓ |
+| `0x03AAD4`      | `0x03AB5B`   | [appearance](chunks/appearance/README.md)         | 主人公の見た目（人物・肌色・タイプ・体型・身長・部品の番号） | ✅肌色・髪の色・体型・身長・手甲〜合羽 ／ 🟢部品 ／ 🔶タイプ ／ 一部 ❓ |
 | `0x03AB5C`      | `0x03AB7A`   | [appearance](chunks/appearance/README.md)         | 容姿の解放ビット（服の番号 0〜241 ごとに1ビット） | ✅位置 ／ 🟢服の対応          |
-| `0x043318`      | `0x043381`   | [unlocks](chunks/unlocks/README.md)               | 特典解除の状態（1 B × 106）                    | 先頭16件・101 ✅ [U]／ほか 🔶 U-17 |
-| `0x0433A6`      | `0x0433A7`   | [occupation](chunks/occupation/README.md)         | クリアしたなりわいの数                         | 🔶                            |
+| `0x043318`      | `0x043381`   | [unlocks](chunks/unlocks/README.md)               | 特典解除の状態（1 B × 106）                    | 先頭16件・31・101 ✅ [U]／ほか 🔶 U-17 |
+| `0x0433A6`      | `0x0433A7`   | [occupation](chunks/occupation/README.md)         | クリアしたなりわいの数                         | 🟢                            |
 | `0x0440D8`      | `0x045F3B`   | [market-weapons](chunks/market-weapons/README.md) | 流通中の武器（15件 × 0xA4 B）・道具・刃・鍔・柄 | 🟢                            |
-| `0x045F40`      | `0x045F55`   | [occupation](chunks/occupation/README.md)         | 受注中のなりわい                               | 🔶                            |
+| `0x045F3C`      | `0x045F3F`   | [money](chunks/money/README.md)                   | 死亡したときの所持金                           | 🟢 ／ 取り戻せる額か 🔶        |
+| `0x045F40`      | `0x04626D`   | [occupation](chunks/occupation/README.md)         | なりわいのクリアで変わる値（`0x45F40`〜`0x45F4D`）と受注中のなりわい（16 B × 50件） | ❓ 先頭 14 B ／ 🟢 表 ／ ✅ 1件目の項目 |
+| `0x046338`      | `0x04633F`   | [appearance](chunks/appearance/README.md)         | 基準の身長・身長の選択肢                       | 🟢                            |
 
 ## 4. PS3版でだけ分かっている位置
 

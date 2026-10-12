@@ -23,7 +23,7 @@
 |---|---|---|
 | `0x374E`〜`0x375C` | 重要人物の状態 | [characters](../characters/README.md) |
 | `0x375D`〜`0x375F` | 施設（病院・カジノ・語学所） | [facilities](../facilities/README.md) |
-| `0x3764`、`0x377D`〜`0x377F`、`0x37C3`、`0x37FA`、`0x37FB` | 門 | [gates](../gates/README.md) |
+| `0x3761`、`0x3764`、`0x377D`〜`0x377F`、`0x37C3`、`0x37FA`、`0x37FB` | 門・柵 | [gates](../gates/README.md) |
 | `0x3780`〜`0x378C` | 勢力の 3×3 表とルート分岐 | [factions](../factions/README.md) |
 | `0x378D`〜`0x37AA` | 真ルートのフラグとその周り（好感度・職なども含む） | [best-route](../best-route/README.md) |
 | `0x37C8` | 🟢 夜這いの褒美の順番（1〜50 を回る）。「愛の証」「掘り出し物」の結果のときだけ進むので、夜這いの回数とは合わない | [night-visit](../night-visit/README.md) |

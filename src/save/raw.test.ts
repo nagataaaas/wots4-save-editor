@@ -33,6 +33,16 @@ describe('領域の一覧（docs/save_format/README.md §3）', () => {
     }
   })
 
+  it('領域どうしは、離れているか片方がもう片方を含む（一部だけ重なるものはない）', () => {
+    const known = RAW_REGIONS.filter((r) => r.end !== null) as { start: number; end: number; label: string }[]
+    for (const a of known)
+      for (const b of known) {
+        if (a === b || a.end < b.start || b.end < a.start) continue
+        const nested = (a.start <= b.start && b.end <= a.end) || (b.start <= a.start && a.end <= b.end)
+        expect(nested, `${a.label} と ${b.label}`).toBe(true)
+      }
+  })
+
   it('レコードの並ぶ領域は、長さが1件のバイト数で割り切れる', () => {
     for (const r of RAW_REGIONS) {
       if (r.recordSize && r.end !== null) expect((r.end - r.start + 1) % r.recordSize).toBe(0)
@@ -41,7 +51,7 @@ describe('領域の一覧（docs/save_format/README.md §3）', () => {
 
   it('重なる領域ではいちばん狭いものを返す（🟢 シナリオのフラグ列の中の勢力）', () => {
     expect(innermostRegion(0x3780)?.chunk).toBe('factions')
-    // 門の開閉（0x3764〜0x37FB、飛び飛び）も範囲としては重なる
+    // 門・柵の開閉の条件（0x3761〜0x37FB、飛び飛び）も範囲としては重なる
     expect(regionsAt(0x3780).map((r) => r.chunk)).toEqual(['scenario-flags', 'gates', 'factions'])
   })
 

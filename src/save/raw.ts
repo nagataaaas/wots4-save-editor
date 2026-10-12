@@ -1,6 +1,7 @@
 // 生データ画面のための、セーブ全体のバイト列に対する操作。
 // 領域の一覧は docs/save_format/README.md §3（まとまりの一覧）と §2.1（武器・アイテムの並び）を写したもの。
 // §3 の表の確度の欄は各行のコメントに写す（画面には出さない）。終了が ❓ の領域は end を null にし、色分けには使わない。
+// ラベルは画面（生データ・履歴の変わった領域）に出すので、アドレスや格納のしかたは書かずにコメントへ回す。
 // 位置は固定オフセット（サイズ 0x48BB0）。
 import { readF32 } from './binary'
 
@@ -18,7 +19,7 @@ export type RawRegion = {
 export const RAW_REGIONS: readonly RawRegion[] = [
   { start: 0x000000, end: 0x000000, chunk: 'difficulty', label: '難易度' }, // ✅ 0・3 ／ 🟢 1・2
   { start: 0x000008, end: 0x00000f, chunk: 'money', label: '所持金・金庫' }, // ✅
-  { start: 0x000010, end: 0x0000db, chunk: 'date-location', label: 'シナリオの段階・時間帯・現在地・治安・踏み倒した店（0x001C〜 は予約）' }, // ✅位置 ／ 🟢 ／ 一部 🔶❓
+  { start: 0x000010, end: 0x0000db, chunk: 'date-location', label: 'シナリオの段階・時間帯・現在地・治安・踏み倒した店' }, // 0x001C〜 は予約。✅位置 ／ 🟢 ／ 一部 🔶❓
   { start: 0x0000dc, end: 0x00011b, chunk: 'player-name', label: '主人公名' }, // ✅
   { start: 0x00011c, end: 0x00015b, chunk: 'townsfolk', label: 'なりわいのフラグ' }, // 🟢 ／ 一部 ✅
   { start: 0x00015c, end: 0x000b33, chunk: 'townsfolk', label: '町の人のレコード（死亡のビット）', recordSize: 12 }, // 🟢 ／ 一部 ✅
@@ -29,17 +30,22 @@ export const RAW_REGIONS: readonly RawRegion[] = [
   { start: 0x002fa4, end: 0x0033a3, chunk: 'item-uses', label: '道具の使用回数（累計）', recordSize: 4 }, // 🟢
   { start: 0x0033a4, end: 0x0035a3, chunk: 'occupation', label: 'なりわいの状態の表' }, // ✅
   { start: 0x0035a4, end: 0x0035bf, chunk: 'vitals', label: 'HP・活力・つま斬りゲージ' }, // 一部 ✅ ／ 🟢
-  { start: 0x00363c, end: 0x0036a3, chunk: 'memory-garbage', label: 'ゲームの状態ではない値' }, // 🔶
-  { start: 0x0036a8, end: 0x00374d, chunk: 'event-chart', label: 'イベントの状態 A（周回中）' }, // ✅
+  // 🟢 読み込みでは使われない。各枠の +0x08〜+0x0F はゲームの状態ではない値（memory-garbage）
+  { start: 0x003634, end: 0x0036a3, chunk: 'item-effects', label: '時間で切れる道具の効果', recordSize: 0x10 }, // 🟢
+  { start: 0x0036a4, end: 0x0036a7, chunk: 'item-effects', label: '時間で切れる道具の効果（効いている枠）' }, // 🟢
+  { start: 0x0036a8, end: 0x00374d, chunk: 'event-chart', label: 'イベントの状態 A（周回中）' }, // 🟢範囲 ／ 一部 ✅
   { start: 0x00374e, end: 0x003837, chunk: 'scenario-flags', label: 'シナリオのフラグ列' }, // 🟢範囲 ／ 一部 ✅
   { start: 0x00374e, end: 0x00375c, chunk: 'characters', label: '重要人物の状態' }, // 🟢人物 ／ 一部 ✅
   { start: 0x00375d, end: 0x00375f, chunk: 'facilities', label: '施設（病院・カジノ・語学所）' }, // ✅
-  { start: 0x003764, end: 0x0037fb, chunk: 'gates', label: '門の開閉（飛び飛びの7バイト）' }, // ✅ ／ 0x37FB 🟢
-  { start: 0x003780, end: 0x00378c, chunk: 'factions', label: '勢力の友好度・敵対状態・ルート分岐' }, // ✅
-  { start: 0x00378d, end: 0x0037aa, chunk: 'best-route', label: '真ルートと、その周りの好感度・職など' }, // ✅ 0x378E ／ 一部 🟢 ／ ほか ❓
-  { start: 0x003838, end: 0x0038ff, chunk: 'event-chart', label: 'イベントの記録 B（周回をまたぐ）' }, // ✅
-  { start: 0x003900, end: 0x003901, chunk: 'hint', label: '次のイベントのヒント' }, // ✅位置 ／ 🟢値
+  { start: 0x003761, end: 0x0037fb, chunk: 'gates', label: '門・柵の開閉の条件' }, // 飛び飛びの u8 × 8。✅ ／ 0x37FB 🟢
+  { start: 0x003780, end: 0x00378c, chunk: 'factions', label: '勢力の友好度・敵対状態・ルート分岐' }, // ✅値 ／ 🔶範囲
+  { start: 0x00378d, end: 0x0037aa, chunk: 'best-route', label: '真ルートと、その周りの好感度・職・勢力の退場など' }, // ✅ 0x378E・退場の効果 ／ ほか 🟢 ／ 🔶範囲
+  { start: 0x0037c8, end: 0x0037c8, chunk: 'night-visit', label: '夜這いの褒美の順番' }, // 🟢
+  { start: 0x003838, end: 0x0038ff, chunk: 'event-chart', label: 'イベントの記録 B（周回をまたぐ）' }, // 🟢範囲 ／ 一部 ✅
+  { start: 0x003900, end: 0x003901, chunk: 'hint', label: '次のイベントのヒント' }, // ✅位置 ／ 🟢値 ／ ❓文との対応 ／ 終了 🔶
   { start: 0x003902, end: 0x00399f, chunk: 'accessories', label: '装飾品の所持フラグ' }, // ✅
+  { start: 0x0039cc, end: 0x003c4b, chunk: 'accessories', label: '付けている装飾品', recordSize: 0x40 }, // 🟢
+  { start: 0x003c4c, end: 0x0048cb, chunk: 'accessories', label: '俺のおしゃれ（5組）', recordSize: 0x40 }, // 🟢 1組 0x280 B（64 B × 10枠）
   { start: 0x0048cc, end: 0x004aab, chunk: 'sect-scrolls', label: '流派の書（持ち歩き）', recordSize: 24 }, // 🟢
   { start: 0x004aac, end: 0x0058bb, chunk: 'sect-scrolls', label: '流派の書（道場の箪笥）', recordSize: 24 }, // 🟢
   { start: 0x0058bc, end: 0x0058bd, chunk: 'sect-scrolls', label: '流派の書（箪笥の件数）' }, // 🟢
@@ -53,27 +59,38 @@ export const RAW_REGIONS: readonly RawRegion[] = [
   { start: 0x00a6b0, end: 0x00acef, chunk: 'weapon-record', label: '武器袋', recordSize: 0xa0 }, // ✅ ／ 🟢境界
   { start: 0x00acf4, end: 0x0129f3, chunk: 'weapon-record', label: '武器箪笥', recordSize: 0xa0 }, // ✅ ／ 🟢境界
   { start: 0x0129f4, end: 0x0129f6, chunk: 'weapon-record', label: '武器箪笥の本数と容量' }, // 🟢
-  { start: 0x0137ec, end: 0x013c2f, chunk: 'night-visit', label: '夜這いの記録' }, // 一部 ✅
-  { start: 0x014038, end: 0x014063, chunk: 'night-visit', label: '夜の約束の枠' }, // 一部 ✅
+  { start: 0x0137ec, end: 0x0137ef, chunk: 'night-visit', label: '夜這いの回数' }, // ✅
+  { start: 0x0137f0, end: 0x013e2f, chunk: 'night-visit', label: '夜這いの記録', recordSize: 0x10 }, // 🟢
+  { start: 0x013e30, end: 0x013e37, chunk: 'night-visit', label: '夜這いの段階・愛の証の回数' }, // 🟢
+  { start: 0x013e38, end: 0x013e6f, chunk: 'night-visit', label: '相手ごとの夜這いの回数', recordSize: 4 }, // 🟢
+  { start: 0x013e70, end: 0x014037, chunk: 'night-visit', label: '使われない値' }, // 🟢 いつも 0
+  { start: 0x014038, end: 0x014063, chunk: 'night-visit', label: '夜の約束の枠' }, // ✅
   { start: 0x014064, end: 0x01406b, chunk: 'dojo', label: '道場の評判・弟子の数・道場破り' }, // 🟢
   { start: 0x01406c, end: 0x01415b, chunk: 'dojo', label: '弟子の名簿', recordSize: 12 }, // 🟢
   { start: 0x01415c, end: 0x01417b, chunk: 'dojo', label: '来ている道場破り', recordSize: 4 }, // 🟢
-  { start: 0x01417c, end: 0x0189fb, chunk: 'skill-states', label: '技の覚え状況' }, // 🟢 ／ 書き込み ✅
-  { start: 0x0189fc, end: 0x01920d, chunk: 'styles', label: '習得技数・腕前点・装備・流派の表' }, // 🟢
-  { start: 0x01920e, end: 0x01a60f, chunk: 'custom-style', label: '俺流' }, // 🟢
-  { start: 0x01a610, end: 0x03aa11, chunk: 'belt-copy', label: '俺流の技の表' }, // 🟢
+  { start: 0x01417c, end: 0x01837b, chunk: 'skill-states', label: '技の覚え状況（技の表ごと）', recordSize: 0x84 }, // 🟢 ／ 書き込み ✅
+  { start: 0x01837c, end: 0x0189fb, chunk: 'skill-states', label: '技の覚え状況（構えごと）', recordSize: 0x80 }, // 🟢 ／ 書き込み ✅
+  { start: 0x0189fc, end: 0x018a0d, chunk: 'styles', label: '習得技数・腕前点・装備' }, // 🟢
+  { start: 0x018a0e, end: 0x01920d, chunk: 'styles', label: '流派の表', recordSize: 16 }, // 🟢
+  { start: 0x01920e, end: 0x01920f, chunk: 'custom-style', label: '俺流の件数' }, // 🟢
+  { start: 0x019210, end: 0x01a60f, chunk: 'custom-style', label: '俺流', recordSize: 80 }, // 🟢
+  { start: 0x01a610, end: 0x01a611, chunk: 'belt-copy', label: '俺流の技の表の件数' }, // 🟢
+  { start: 0x01a612, end: 0x03aa11, chunk: 'belt-copy', label: '俺流の技の表', recordSize: 0x408 }, // 🟢 後半はゲームの状態ではない値
   { start: 0x03aa12, end: 0x03aad1, chunk: 'skill-kills', label: '技ごとの斬殺数', recordSize: 6 }, // 🟢
-  { start: 0x03aad4, end: 0x03ab5b, chunk: 'appearance', label: '主人公の見た目' }, // ✅肌色・体型・身長 ／ 🟢部品 ／ 一部 ❓
+  { start: 0x03aad4, end: 0x03ab5b, chunk: 'appearance', label: '主人公の見た目' }, // ✅肌色・髪の色・体型・身長・手甲〜合羽 ／ 🟢部品 ／ 🔶タイプ ／ 一部 ❓
   { start: 0x03ab5c, end: 0x03ab7a, chunk: 'appearance', label: '容姿の解放ビット' }, // ✅位置 ／ 🟢服の対応
-  { start: 0x043318, end: 0x043381, chunk: 'unlocks', label: '特典解除の状態' }, // 先頭16件・101 ✅ ／ ほか 🔶 U-17
-  { start: 0x0433a6, end: 0x0433a7, chunk: 'occupation', label: 'クリアしたなりわいの数' }, // 🔶
+  { start: 0x043318, end: 0x043381, chunk: 'unlocks', label: '特典解除の状態' }, // 先頭16件・31・101 ✅ ／ ほか 🔶 U-17
+  { start: 0x0433a6, end: 0x0433a7, chunk: 'occupation', label: 'クリアしたなりわいの数' }, // 🟢
   // 🟢 流通の記録。武器は武器レコード 0xA0 B ＋ 持っている町の人の番号 4 B
   { start: 0x0440d8, end: 0x044a73, chunk: 'market-weapons', label: '流通中の武器', recordSize: 0xa4 }, // 🟢
   { start: 0x044a74, end: 0x044aeb, chunk: 'market-weapons', label: '流通中の道具', recordSize: 0x0c }, // 🟢
   { start: 0x044aec, end: 0x0452bb, chunk: 'market-weapons', label: '流通中の刃', recordSize: 0x14 }, // 🟢
   { start: 0x0452bc, end: 0x0458fb, chunk: 'market-weapons', label: '流通中の鍔', recordSize: 0x10 }, // 🟢
   { start: 0x0458fc, end: 0x045f3b, chunk: 'market-weapons', label: '流通中の柄', recordSize: 0x10 }, // 🟢
-  { start: 0x045f40, end: 0x045f55, chunk: 'occupation', label: '受注中のなりわい' }, // 🔶
+  { start: 0x045f3c, end: 0x045f3f, chunk: 'money', label: '死亡したときの所持金' }, // 🟢 ／ 取り戻せる額か 🔶
+  { start: 0x045f40, end: 0x045f4d, chunk: 'occupation', label: 'なりわいのクリアで変わる値' }, // ❓
+  { start: 0x045f4e, end: 0x04626d, chunk: 'occupation', label: '受注中のなりわい', recordSize: 0x10 }, // 🟢 ／ 1件目の項目 ✅
+  { start: 0x046338, end: 0x04633f, chunk: 'appearance', label: '基準の身長・身長の選択肢' }, // 🟢
 ]
 
 /** offset を含む領域（終了の分かっているもの）のうち、いちばん狭いもの。どこにも入らなければ null */
