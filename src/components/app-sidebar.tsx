@@ -19,6 +19,7 @@ import {
   SidebarMenuSubItem,
   SidebarSeparator,
 } from '@/components/ui/sidebar'
+import { DeveloperContact } from '@/components/developer-contact'
 import { LicensesDialog } from '@/components/licenses-dialog'
 import { RestoreDialog } from '@/components/restore-dialog'
 import { Label } from '@/components/ui/label'
@@ -63,7 +64,9 @@ export function AppSidebar({ active, onSelect }: Props) {
           </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarSeparator />
       <SidebarFooter>
+        <DeveloperContact />
         <LicensesDialog />
       </SidebarFooter>
     </Sidebar>
