@@ -8,7 +8,7 @@ import { useNavigation } from '@/lib/navigation-context'
 /** 一覧に出す上限。これより多いときは語を足して絞ってもらう */
 const MAX_RESULTS = 100
 
-const itemKey = (item: SearchItem) => `${item.section}\u001e${item.anchor}\u001e${item.field ?? ''}\u001e${item.crumbs.join('\u001f')}`
+const itemKey = (item: SearchItem) => `${item.section}\u001e${item.anchor}\u001e${item.field?.join('') ?? ''}\u001e${item.crumbs.join('\u001f')}`
 
 /** トップバー右の虫眼鏡。箱の見出し・小見出し・欄の名前を部分一致で探し、選ぶとそこへ移動する。Ctrl+K（⌘K）でも開く */
 export function SearchDialog() {

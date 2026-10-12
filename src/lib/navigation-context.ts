@@ -7,14 +7,17 @@ import { useIndexing } from '@/lib/search-collector'
  * anchor を渡すと、切り替えた先の画面で、その anchor を持つ箱（CollapsibleCard・FlagSection など）が自分で開いてスクロールする（useAnchor）
  */
 export type NavigationValue = {
-  /** field は検索から欄・小見出しへ飛ぶときの data-search-key。箱を開いたあと、箱ではなくその要素までスクロールする（App） */
-  go: (section: SectionId, anchor?: string, field?: string) => void
+  /**
+   * field は欄・小見出しへ飛ぶときの、いちばん内側の箱より内側の名前の並び（Route の field）。
+   * 箱を開いたあと、箱ではなくその要素までスクロールして枠で目立たせる（App）
+   */
+  go: (section: SectionId, anchor?: string, field?: readonly string[]) => void
   /** いま開いている画面 */
   section: SectionId
   /** 直前の go で渡された anchor。サイドバーで切り替えたときは null */
   anchor: string | null
-  /** 直前の go で渡された field。URL には残さない */
-  field: string | null
+  /** 直前の go・URL で渡された field */
+  field: readonly string[] | null
   /** go を呼ぶたびに増える。同じ anchor へもう一度飛んだときにも開いてスクロールし直すために使う */
   seq: number
 }

@@ -375,11 +375,15 @@
   }
 }
 
-/* 検索から飛んだ欄・小見出し（App が data-search-hit を付け、少しあとに外す） */
+/* 検索・URL から飛んだ欄・小見出し・箱（App が data-search-hit を付け、少しあとに外す） */
 [data-search-hit] {
-  border-radius: var(--radius-md);
   outline: 2px solid var(--primary);
   outline-offset: 4px;
+}
+
+/* 箱（カード）は角の丸みと背景をそのままにして、枠だけを出す */
+[data-search-hit='field'] {
+  border-radius: var(--radius-md);
   animation: search-hit 2s ease-out;
 }
 

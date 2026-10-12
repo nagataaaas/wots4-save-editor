@@ -1,14 +1,14 @@
 import { sections, type SectionId } from '@/features/sections'
-import { searchKey, type SearchEntry } from '@/lib/search-collector'
+import type { SearchEntry } from '@/lib/search-collector'
 import { normalizeForSearch } from '@/lib/search'
 
-/** 検索の1件。選ぶと go(section, anchor, field) で飛ぶ */
+/** 検索の1件。選ぶと go(section, anchor, field) で飛ぶ（URL も #/section/anchor/~/field… になる） */
 export type SearchItem = {
   section: SectionId
   /** 箱の anchor。画面そのもの・箱の外の欄なら空 */
   anchor: string
-  /** 欄・小見出しの data-search-key。箱・画面なら null（箱は自分でスクロールする） */
-  field: string | null
+  /** 欄・小見出しの、いちばん内側の箱より内側の名前の並び（最後が欄の名前。Route の field）。箱・画面なら null（箱は自分でスクロールする） */
+  field: string[] | null
   /** フォルダ > 画面 > 箱・小見出し … > 名前 */
   crumbs: string[]
   /** crumbs を normalizeForSearch したもの（検索のたびに作り直さない） */
@@ -18,14 +18,22 @@ export type SearchItem = {
 /** 集めた名前（search-index.generated.json）に、画面そのものと、フォルダ・画面の名前のパンくずを足す */
 export function toSearchItems(entries: readonly SearchEntry[]): SearchItem[] {
   const items: SearchItem[] = []
-  const add = (section: SectionId, anchor: string, field: string | null, crumbs: string[]) =>
+  // 箱の anchor → 箱の名前までのパンくず。欄のパンくずからこれを除いたものを URL に書く
+  const boxCrumbs = new Map<string, string[]>()
+  for (const e of entries) if (e.box) boxCrumbs.set(`${e.section}${e.anchor}`, [...e.path, e.label])
+  const relative = (e: SearchEntry) => {
+    const box = boxCrumbs.get(`${e.section}${e.anchor}`) ?? []
+    const inside = box.every((b, i) => e.path[i] === b) ? e.path.slice(box.length) : e.path
+    return [...inside, e.label]
+  }
+  const add = (section: SectionId, anchor: string, field: string[] | null, crumbs: string[]) =>
     items.push({ section, anchor, field, crumbs, normalized: crumbs.map(normalizeForSearch) })
   for (const s of sections) {
     const head = s.folder ? [s.folder, s.label] : [s.label]
     add(s.id, '', null, head)
     for (const e of entries)
       if (e.section === s.id)
-        add(s.id, e.anchor, e.box ? null : searchKey(e.anchor, e.path, e.label), [...head, ...e.path, e.label])
+        add(s.id, e.anchor, e.box ? null : relative(e), [...head, ...e.path, e.label])
   }
   return items
 }

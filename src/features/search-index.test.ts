@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { collectSearchEntries } from './search-index-collect'
 import { searchItems, toSearchItems, type SearchItem } from './search-index'
 import { sections } from './sections'
+import { matchFieldKey } from '@/lib/route'
 import { searchKey } from '@/lib/search-collector'
 
 const entries = collectSearchEntries(renderToStaticMarkup)
@@ -21,7 +22,7 @@ describe('検索の索引', () => {
     expect(plain).toContainEqual({
       section: 'hero',
       anchor: 'name',
-      field: searchKey('name', ['名前'], '主人公名'),
+      field: ['主人公名'],
       crumbs: ['主人公', '基本情報', '名前', '主人公名'],
     })
   })
@@ -39,8 +40,20 @@ describe('検索の索引', () => {
     expect(new Set(keys).size).toBe(keys.length)
   })
 
-  it('欄の移動先は、その欄の外側の箱の anchor でつながる', () => {
-    for (const i of items) if (i.field !== null) expect(i.field.startsWith(i.anchor)).toBe(true)
+  it('欄の URL（箱の anchor と、箱より内側の名前の並び）から、その欄の data-search-key がひとつに決まる', () => {
+    const keys = entries.filter((e) => !e.box).map((e) => ({ section: e.section, key: searchKey(e.anchor, e.path, e.label) }))
+    for (const e of entries) {
+      if (e.box) continue
+      const item = items.find((i) => i.section === e.section && i.anchor === e.anchor && i.crumbs.join('').endsWith([...e.path, e.label].join('')) && i.field !== null)
+      expect(item).toBeDefined()
+      const sectionKeys = keys.filter((k) => k.section === e.section).map((k) => k.key)
+      expect(matchFieldKey(sectionKeys, e.anchor || null, item!.field!)).toBe(searchKey(e.anchor, e.path, e.label))
+    }
+  })
+
+  it('欄の URL には箱の名前を含めない', () => {
+    const vitals = items.find((i) => i.crumbs.join(' > ') === '主人公 > 基本情報 > HP・活力・つま斬り > HP > 現在')
+    expect(vitals).toMatchObject({ anchor: 'vitals', field: ['HP', '現在'] })
   })
 
   it('名前に確度・内部の値を含めない（AGENTS.md「UI に確度を出さない」「UI には使う人が気にすることだけを書く」）', () => {
