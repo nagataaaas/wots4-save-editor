@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { HERO_ANCHORS } from "./anchors";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -168,7 +170,7 @@ export function HeroPage() {
         </Alert>
       )}
 
-      <Card>
+      <AnchoredCard anchor={HERO_ANCHORS.name}>
         <CardHeader>
           <CardTitle>名前</CardTitle>
         </CardHeader>
@@ -187,9 +189,9 @@ export function HeroPage() {
             note="長すぎる名前はロードできなくなる原因になります"
           />
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
-      <Card>
+      <AnchoredCard anchor={HERO_ANCHORS.money}>
         <CardHeader>
           <CardTitle>所持金・侍点</CardTitle>
         </CardHeader>
@@ -198,9 +200,9 @@ export function HeroPage() {
           {amountRow("cashbox", "金庫")}
           {amountRow("samuraiPoint", "侍点")}
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
-      <Card>
+      <AnchoredCard anchor={HERO_ANCHORS.vitals}>
         <CardHeader>
           <CardTitle>HP・活力・つま斬り</CardTitle>
           <CardDescription>
@@ -215,7 +217,7 @@ export function HeroPage() {
           {gaugeGroup("vitality")}
           {gaugeGroup("tsuma")}
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
       <LocationCard
         key={`${k}-location`}
@@ -246,7 +248,7 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
   };
 
   return (
-    <Card>
+    <AnchoredCard anchor={HERO_ANCHORS.difficulty}>
       <CardHeader>
         <CardTitle>難易度・主人公設定のやり直し</CardTitle>
         <CardDescription>
@@ -275,7 +277,7 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
         </Button>
         {error && <p className="text-destructive text-xs">{error}</p>}
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }
 
@@ -300,7 +302,7 @@ function LocationCard({
     locationItems[String(current)] = `${currentLoc?.label ?? "不明"}（現在の値）`;
 
   return (
-    <Card>
+    <AnchoredCard anchor={HERO_ANCHORS.location}>
       <CardHeader>
         <CardTitle>現在地（開始地点）</CardTitle>
         <CardDescription>
@@ -353,6 +355,6 @@ function LocationCard({
           warning && <p className="text-xs text-amber-600 dark:text-amber-400">⚠ {warning}</p>
         )}
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }

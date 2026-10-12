@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavigationContext } from '@/lib/navigation-context'
 import { AppSidebar } from '@/components/app-sidebar'
 import { NoSaveNotice } from '@/components/no-save-notice'
@@ -9,22 +9,45 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { pages } from '@/features/pages'
 import { sections, type SectionId } from '@/features/sections'
 import { AdvancedModeProvider } from '@/lib/advanced-mode-provider'
+import { formatHash, parseHash, type Route } from '@/lib/route'
 import { SaveProvider } from '@/lib/save-provider'
 
+const DEFAULT_SECTION: SectionId = 'hero'
+
 export default function App() {
-  const [active, setActive] = useState<SectionId>('hero')
-  const [target, setTarget] = useState<{ anchor: string | null; seq: number }>({ anchor: null, seq: 0 })
+  // 開いた時点の URL のハッシュ（#/画面/箱）の画面を開き、その箱を開いてスクロールする
+  const [initial] = useState(() => parseHash(window.location.hash))
+  const [active, setActive] = useState<SectionId>(initial?.section ?? DEFAULT_SECTION)
+  const [target, setTarget] = useState<{ anchor: string | null; seq: number }>({ anchor: initial?.anchor ?? null, seq: 0 })
   const section = sections.find((s) => s.id === active) ?? sections[0]
   const Page = pages[section.id]
+
+  const open = useCallback((route: Route) => {
+    setActive(route.section)
+    setTarget((t) => ({ anchor: route.anchor, seq: t.seq + 1 }))
+  }, [])
+
+  // ハッシュを書き換えたとき・戻る／進むで、その画面と箱を開く（go が pushState で書いたときは hashchange は起きない）
+  useEffect(() => {
+    const onHashChange = () => {
+      const route = parseHash(window.location.hash)
+      if (route) open(route)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [open])
+
   const navigation = useMemo(
     () => ({
       ...target,
       go: (id: SectionId, to?: string) => {
-        setActive(id)
-        setTarget((t) => ({ anchor: to ?? null, seq: t.seq + 1 }))
+        const route = { section: id, anchor: to ?? null }
+        const hash = formatHash(route)
+        if (window.location.hash !== hash) window.history.pushState(null, '', hash)
+        open(route)
       },
     }),
-    [target],
+    [target, open],
   )
 
   return (

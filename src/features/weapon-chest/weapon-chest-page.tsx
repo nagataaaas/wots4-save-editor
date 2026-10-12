@@ -5,7 +5,9 @@ import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { WEAPON_LIST_ANCHORS } from "@/features/belt/anchors";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
@@ -90,7 +92,7 @@ export function WeaponChestPage() {
         </Alert>
       )}
 
-      <Card>
+      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.capacity}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             刀箪笥の本数と容量
@@ -138,10 +140,10 @@ export function WeaponChestPage() {
             <p className="text-muted-foreground text-xs sm:col-span-2">読み取り専用：{problem}</p>
           )}
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
       {/* 未読み込みのときは枠だけを描き、一覧は「—」にする */}
-      <Card className="gap-2">
+      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.weapons} className="gap-2">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             刀箪笥の武器
@@ -178,7 +180,7 @@ export function WeaponChestPage() {
             <p className="text-muted-foreground text-sm">—</p>
           )}
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
       <p className="text-muted-foreground text-xs">
         空き枠は編集できず、武器を作る・消す機能はないので、武器の欄を書き換えても本数は変わりません。

@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { SelectRow } from "@/components/select-row";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { HERO_APPEARANCE_ANCHORS } from "./anchors";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
 import {
@@ -40,7 +42,7 @@ export function AppearanceCurrentCard() {
   const { advanced } = useAdvancedMode();
   const view = useMemo(() => (save ? readAppearanceCurrent(save.working) : null), [save]);
   return (
-    <Card>
+    <AnchoredCard anchor={HERO_APPEARANCE_ANCHORS.current}>
       <CardHeader>
         <CardTitle>体</CardTitle>
       </CardHeader>
@@ -115,6 +117,6 @@ export function AppearanceCurrentCard() {
           );
         })}
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }

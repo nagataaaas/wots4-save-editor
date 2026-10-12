@@ -3,7 +3,9 @@ import { InfoTip } from '@/components/info-tip'
 import { ItemSlotRow } from '@/components/item-slot-row'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AnchoredCard } from '@/components/anchored-card'
+import { ITEM_ANCHORS } from './anchors'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { formatOffset } from '@/lib/format'
 import { useSave } from '@/lib/save-context'
@@ -113,7 +115,7 @@ function ItemBoxPage({
         </Alert>
       )}
 
-      <Card>
+      <AnchoredCard anchor={ITEM_ANCHORS.items}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             {title}
@@ -146,7 +148,7 @@ function ItemBoxPage({
             )
           })}
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
       {/* 各枠の +0x00〜+0x03（ID・個数）を書き換える。空き枠にアイテムを入れるときは +0x04〜+0x07 に 06 00 00 00
           （+0x04 はアイテムの種類で、道具は 0x06 は 🟢）、「なし」にするときは 00 00 00 00 を書く。

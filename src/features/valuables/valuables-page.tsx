@@ -3,7 +3,9 @@ import { InfoTip } from "@/components/info-tip";
 import { ItemSlotRow } from "@/components/item-slot-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { ITEM_ANCHORS } from "@/features/tools/anchors";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -83,7 +85,7 @@ export function ValuablesPage() {
         }}
       />
 
-      <Card>
+      <AnchoredCard anchor={ITEM_ANCHORS.items}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             重要品
@@ -119,7 +121,7 @@ export function ValuablesPage() {
             );
           })}
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
       {/* 各枠の +0x00〜+0x03（ID・個数）だけを書き換える。❓ +0x04〜+0x07 の用途は不明なので変えない。
           🔶 個数の上限は推測（chunks/items）で、ゲーム内の上限は未確認 */}
@@ -162,7 +164,7 @@ function ProbeCard({
   }
 
   return (
-    <Card>
+    <AnchoredCard anchor={ITEM_ANCHORS.probe}>
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex flex-wrap items-center gap-2">
@@ -222,6 +224,6 @@ function ProbeCard({
           </p>
         </CardContent>
       )}
-    </Card>
+    </AnchoredCard>
   );
 }

@@ -4,7 +4,9 @@ import { ItemInformation, OwnershipStateButton, UnlockStateButton } from "./unlo
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { UNLOCKS_ANCHORS } from "./anchors";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
@@ -125,7 +127,7 @@ export function AccessoriesPage() {
   return (
     <div className="flex flex-col gap-4">
       {banner}
-      <Card>
+      <AnchoredCard anchor={UNLOCKS_ANCHORS.accessories}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             装飾品
@@ -229,7 +231,7 @@ export function AccessoriesPage() {
             })}
           </div>
         </CardContent>
-      </Card>
+      </AnchoredCard>
       {/* 各装飾品の 1 B だけを書き換える（0＝なし、1＝所持）。❓ 2 以上の値の意味は未確認 */}
       <p className="text-muted-foreground text-xs">
         状態不明の装飾品は、上級者モードでだけ切り替えられます。
@@ -307,7 +309,7 @@ function AppearanceUnlocksCard() {
   return (
     <>
       {banner}
-      <Card>
+      <AnchoredCard anchor={UNLOCKS_ANCHORS.faces}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             顔・髪型などの特典
@@ -339,7 +341,7 @@ function AppearanceUnlocksCard() {
           </div>
           <UnlockStateRows rows={rows} view={view} readOnly={readOnly} advanced={advanced} write={write} appearance />
         </CardContent>
-      </Card>
+      </AnchoredCard>
     </>
   );
 }
@@ -365,7 +367,7 @@ export function AppearancePage() {
     <div className="flex flex-col gap-4">
       {banner}
       <AppearanceUnlocksCard />
-      <Card>
+      <AnchoredCard anchor={UNLOCKS_ANCHORS.clothes}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             容姿の服
@@ -446,7 +448,7 @@ export function AppearancePage() {
             })}
           </div>
         </CardContent>
-      </Card>
+      </AnchoredCard>
       {/* 各服のビットだけを書き換える（同じバイトのほかのビットは変えない）。服のない番号（47 など）のビットは扱わない */}
     </div>
   );
@@ -469,7 +471,7 @@ export function UnlocksPage() {
   return (
     <div className="flex flex-col gap-4">
       {banner}
-      <Card>
+      <AnchoredCard anchor={UNLOCKS_ANCHORS.unlocks}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             特典解除
@@ -509,7 +511,7 @@ export function UnlocksPage() {
           </div>
           <UnlockStateRows rows={rows} view={view} readOnly={readOnly} advanced={advanced} write={write} />
         </CardContent>
-      </Card>
+      </AnchoredCard>
       {/* 各特典の 1 B だけを書き換える。値は 0〜2 の範囲。
           ❓ ライフルの免許以外の書き込み後の反映は要ゲーム内確認。装飾品の所持フラグと連動するかは ❓ */}
       <p className="text-muted-foreground text-xs">

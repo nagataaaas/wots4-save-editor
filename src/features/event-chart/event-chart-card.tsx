@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { SelectRow } from "@/components/select-row";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { EVENTS_ANCHORS } from "@/features/scenario/anchors";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent } from "@/components/ui/popover";
@@ -119,7 +121,7 @@ export function EventChartCard({
   const [revealNames, setRevealNames] = useState(false);
 
   return (
-    <Card>
+    <AnchoredCard anchor={EVENTS_ANCHORS.chart}>
       <CardHeader>
         <CardTitle>イベントチャート</CardTitle>
         <CardDescription>
@@ -167,7 +169,7 @@ export function EventChartCard({
         />
         {bottom}
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }
 

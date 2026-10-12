@@ -7,7 +7,8 @@ import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
 import {
@@ -650,7 +651,7 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
   const problem = view?.promiseProblem ?? null;
 
   return (
-    <Card>
+    <AnchoredCard anchor={YOBAI_ANCHORS.currentPromise}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">夜の約束</CardTitle>
         <CardDescription>
@@ -681,7 +682,7 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
           </div>
         )}
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }
 

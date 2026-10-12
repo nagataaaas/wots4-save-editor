@@ -6,7 +6,8 @@ import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -94,7 +95,7 @@ export function OreRyuPage() {
           <AlertDescription>{view.problem}</AlertDescription>
         </Alert>
       )}
-      <Card>
+      <AnchoredCard anchor={ORE_RYU_ANCHORS.overview}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             俺流
@@ -114,7 +115,7 @@ export function OreRyuPage() {
             <p className={message.error ? "text-destructive text-sm" : "text-muted-foreground text-sm"}>{message.text}</p>
           </CardContent>
         )}
-      </Card>
+      </AnchoredCard>
 
       {view?.styles.map((style) => (
         <StyleCard key={`${k}-${style.id}`} style={style} view={view} readOnly={readOnly} advanced={advanced} run={run} update={update} />
@@ -384,7 +385,7 @@ function CreateCard({
   const skillProblem = view ? validateSkillSelection(view, s, [...selected], { advanced }) : null;
 
   return (
-    <Card>
+    <AnchoredCard anchor={ORE_RYU_ANCHORS.create}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           俺流を新しく作る
@@ -450,6 +451,6 @@ function CreateCard({
           {(nameProblem ?? skillProblem) && <span className="text-destructive text-xs">{nameProblem ?? skillProblem}</span>}
         </div>
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }

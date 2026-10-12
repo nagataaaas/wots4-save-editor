@@ -1,8 +1,10 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { AnchorScope, useAnchoredOpen } from "@/lib/navigation-context";
 import { charmLabel, type WeaponView } from "@/save/weapon";
+import { WEAPON_ANCHORS } from "./anchors";
 import { WeaponEditor } from "./weapon-editor";
 import { Chevron, WeaponImage } from "./weapon-rows";
 import { COLLAPSIBLE_ANIMATION, isOnButton, type WeaponUpdate } from "./weapon-ui";
@@ -44,13 +46,13 @@ function CompactWeaponRow({
   update: WeaponUpdate;
   badges?: ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
+  const { id, open, setOpen } = useAnchoredOpen(WEAPON_ANCHORS.weapon(index));
   const no = <span className="text-muted-foreground w-7 shrink-0 text-right text-xs tabular-nums">{index + 1}</span>;
   const offsetTip = <InfoTip offset={weapon.offset} />;
 
   if (weapon.empty) {
     return (
-      <li className="text-muted-foreground flex items-center gap-2 border-b px-2 py-1 text-xs last:border-b-0">
+      <li id={id} className="text-muted-foreground flex scroll-mt-4 items-center gap-2 border-b px-2 py-1 text-xs last:border-b-0">
         <span className="size-4 shrink-0" aria-hidden />
         {no}
         <span>空き</span>
@@ -62,7 +64,7 @@ function CompactWeaponRow({
 
   const name = weapon.nameHidden.value ? "*****" : weapon.name.value || "（名前なし）";
   return (
-    <Collapsible open={open} onOpenChange={setOpen} render={<li className="border-b last:border-b-0" />}>
+    <Collapsible open={open} onOpenChange={setOpen} render={<li id={id} className="scroll-mt-4 border-b last:border-b-0" />}>
       <div
         className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 px-2 py-1"
         onClick={(e) => {
@@ -90,7 +92,9 @@ function CompactWeaponRow({
       {/* 閉じているあいだは中身を描画しない（Base UI の Panel の既定）ので、200枠でも重くならない */}
       <CollapsibleContent className={COLLAPSIBLE_ANIMATION}>
         <div className="px-2 pt-4 pb-6 sm:pl-17">
-          <WeaponEditor weapon={weapon} base={weapon.offset} update={update} sectionsOpen={false} />
+          <AnchorScope.Provider value={id}>
+            <WeaponEditor weapon={weapon} base={weapon.offset} update={update} sectionsOpen={false} />
+          </AnchorScope.Provider>
         </div>
       </CollapsibleContent>
     </Collapsible>

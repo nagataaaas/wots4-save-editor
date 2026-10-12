@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useAnchor } from "@/lib/navigation-context";
-import { AMIHAMA_ANCHORS, NPC_ANCHORS } from "./anchors";
+import { AMIHAMA_ANCHORS, EVENTS_ANCHORS, NPC_ANCHORS } from "./anchors";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
@@ -27,7 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { FlagGrid, FlagRow } from "@/components/flag-row";
 import { useFlag } from "@/hooks/use-flag";
@@ -349,7 +350,7 @@ function CycleCard({
   // 普通＝1・難しい＝2 は 0 と 3 の間を埋めた 🔶 推測。治安の 1日目 0 の例と初期値 50 の食い違いは ❓。
   // 周回数が PLAY_COUNT_REVEALS_BEST_ROUTE 以上で真ルートの枠と線が全部出るのは ❓ 要ゲーム内確認、死亡で増えるかは ❓
   return (
-    <Card>
+    <AnchoredCard anchor={AMIHAMA_ANCHORS.cycle}>
       <CardHeader>
         <CardTitle>難易度・治安・周回</CardTitle>
         <CardDescription>
@@ -444,7 +445,7 @@ function CycleCard({
           {error && <p className="text-destructive text-xs">{error}</p>}
         </div>
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }
 
@@ -616,7 +617,7 @@ function FlagSection({ anchor, title, flags }: { anchor: string; title: string; 
  */
 function EventFlagsCard() {
   return (
-    <Card>
+    <AnchoredCard anchor={EVENTS_ANCHORS.flags}>
       <CardHeader>
         <CardTitle>イベント関連フラグ</CardTitle>
         <CardDescription>
@@ -629,7 +630,7 @@ function EventFlagsCard() {
       <CardContent>
         <FlagGrid flags={EVENT_FLAGS} />
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }
 
@@ -896,7 +897,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
   const max = advanced ? FACTION_VALUE_MAX.system : FACTION_VALUE_MAX.normal;
 
   return (
-    <Card>
+    <AnchoredCard anchor={EVENTS_ANCHORS.factions}>
       <CardHeader>
         <CardTitle>勢力の状態</CardTitle>
         <CardDescription>
@@ -949,7 +950,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
           </div>
         ))}
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }
 

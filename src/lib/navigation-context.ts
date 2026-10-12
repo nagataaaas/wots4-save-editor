@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import type { SectionId } from '@/features/sections'
 
 /**
@@ -63,4 +63,19 @@ export function useAnchor(name: string): AnchorState {
   }, [self, id, seq])
 
   return { id, targeted, seq }
+}
+
+/**
+ * 開閉できる箱の anchor と開閉の状態。リンク先がこの箱かその中なら開く（リンクごとに1回。画面にいるまま同じ箱へもう一度リンクしたときも開く）。
+ * 箱の要素には id と scroll-mt-4 を付け、中身は `<AnchorScope.Provider value={id}>` で包む
+ */
+export function useAnchoredOpen(name: string, defaultOpen = false) {
+  const { id, targeted, seq } = useAnchor(name)
+  const [open, setOpen] = useState(defaultOpen || targeted)
+  const [openedFor, setOpenedFor] = useState(seq)
+  if (targeted && openedFor !== seq) {
+    setOpenedFor(seq)
+    setOpen(true)
+  }
+  return { id, open, setOpen }
 }

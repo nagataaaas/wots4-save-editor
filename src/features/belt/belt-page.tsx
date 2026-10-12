@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { AnchoredCard } from "@/components/anchored-card";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatOffset } from "@/lib/format";
+import { AnchorScope, useAnchoredOpen } from "@/lib/navigation-context";
 import { useSave } from "@/lib/save-context";
 import {
   BELT_COUNT,
@@ -19,6 +21,7 @@ import {
   type BeltView,
 } from "@/save/belt";
 import { charmLabel, type NumberKey, type WeaponView } from "@/save/weapon";
+import { BELT_ANCHORS, WEAPON_ANCHORS } from "./anchors";
 import { WeaponEditor } from "./weapon-editor";
 import { Chevron, SwitchRow, WeaponImage } from "./weapon-rows";
 import { COLLAPSIBLE_ANIMATION, NONE, isOnButton, type WeaponUpdate } from "./weapon-ui";
@@ -125,7 +128,7 @@ function StateCard({
   }
 
   return (
-    <Card>
+    <AnchoredCard anchor={BELT_ANCHORS.state}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           帯刀の状態
@@ -180,7 +183,7 @@ function StateCard({
           error && <p className="text-destructive text-xs sm:col-span-2">{error}</p>
         )}
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }
 
@@ -259,15 +262,15 @@ function WeaponCard({
   update: WeaponUpdate;
 }) {
   const base = beltOffset(index);
-  // 最初は閉じておく（ユーザー判断 2026-10-05）
-  const [open, setOpen] = useState(false);
+  // 最初は閉じておく（ユーザー判断 2026-10-05）。リンク先なら開く
+  const { id, open, setOpen } = useAnchoredOpen(WEAPON_ANCHORS.weapon(index));
   const roles = [state?.right === index && "右手", state?.left === index && "左手"].filter(
     Boolean,
   ) as string[];
 
   if (weapon?.empty) {
     return (
-      <Card>
+      <Card id={id} className="scroll-mt-4">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             {weaponTitle(weapon, index)}
@@ -291,7 +294,8 @@ function WeaponCard({
       onOpenChange={setOpen}
       render={
         <Card
-          className={open ? "gap-0" : "hover:bg-muted/40 cursor-pointer gap-0"}
+          id={id}
+          className={open ? "scroll-mt-4 gap-0" : "hover:bg-muted/40 scroll-mt-4 cursor-pointer gap-0"}
           onClick={(e) => {
             if (!open && !isOnButton(e)) setOpen(true);
           }}
@@ -331,7 +335,9 @@ function WeaponCard({
         </CardHeader>
         <CollapsibleContent className={COLLAPSIBLE_ANIMATION}>
           <CardContent className="pt-6">
-            <WeaponEditor weapon={weapon} base={base} update={update} />
+            <AnchorScope.Provider value={id}>
+              <WeaponEditor weapon={weapon} base={base} update={update} />
+            </AnchorScope.Provider>
           </CardContent>
         </CollapsibleContent>
     </Collapsible>

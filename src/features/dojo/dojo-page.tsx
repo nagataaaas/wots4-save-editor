@@ -3,7 +3,9 @@ import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { DOJO_ANCHORS } from "./anchors";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatOffset } from "@/lib/format";
 import { NPC_LINKS } from "@/features/scenario/anchors";
@@ -119,7 +121,7 @@ function ReputationCard({ view }: { view: DojoView | null }) {
   const next = view && view.rank < RANK_MAX ? REPUTATION_RANGES[view.rank + 1][0] : null;
 
   return (
-    <Card>
+    <AnchoredCard anchor={DOJO_ANCHORS.reputation}>
       <CardHeader>
         <CardTitle>道場の評判</CardTitle>
         <CardDescription>
@@ -166,7 +168,7 @@ function ReputationCard({ view }: { view: DojoView | null }) {
           />
         </div>
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }
 
@@ -207,7 +209,7 @@ function PupilRow({ index, view }: { index: number; view: DojoView | null }) {
 
 function PupilsCard({ view }: { view: DojoView | null }) {
   return (
-    <Card>
+    <AnchoredCard anchor={DOJO_ANCHORS.pupils}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           弟子
@@ -225,7 +227,7 @@ function PupilsCard({ view }: { view: DojoView | null }) {
           <PupilRow key={i} index={i} view={view} />
         ))}
       </CardContent>
-    </Card>
+    </AnchoredCard>
   );
 }
 

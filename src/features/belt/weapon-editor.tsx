@@ -2,7 +2,9 @@ import { createElement, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { InfoTip } from "@/components/info-tip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAnchoredOpen } from "@/lib/navigation-context";
 import { WEAPON_FIELDS, type WeaponView } from "@/save/weapon";
+import { WEAPON_EDITOR_ANCHORS } from "./anchors";
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import { charmIcon, titleIcon } from "./effect-icons";
 import { useWeaponRows } from "./use-weapon-rows";
@@ -29,18 +31,21 @@ function EffectBox({ children }: { children: ReactNode }) {
   );
 }
 
-/** 武器の編集欄の中の、開閉できるひとまとまり */
+/** 武器の編集欄の中の、開閉できるひとまとまり。anchor はリンク先にするときの名前（useAnchoredOpen） */
 function Section({
+  anchor,
   title,
   defaultOpen,
   children,
 }: {
+  anchor: string;
   title: string;
   defaultOpen: boolean;
   children: ReactNode;
 }) {
+  const { id, open, setOpen } = useAnchoredOpen(anchor, defaultOpen);
   return (
-    <Collapsible defaultOpen={defaultOpen} className="flex flex-col">
+    <Collapsible id={id} open={open} onOpenChange={setOpen} className="flex scroll-mt-4 flex-col">
       <CollapsibleTrigger className="group hover:text-foreground text-muted-foreground flex items-center gap-1 border-b pb-1 text-left text-sm font-medium">
         <Chevron />
         {title}
@@ -104,7 +109,7 @@ export function WeaponEditor({
         {rows.part("grip")}
       </div>
 
-      <Section title="攻撃力・耐久・質" defaultOpen={sectionsOpen}>
+      <Section anchor={WEAPON_EDITOR_ANCHORS.numbers} title="攻撃力・耐久・質" defaultOpen={sectionsOpen}>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{rows.number("attack")}</div>
         <div className="grid gap-4 lg:grid-cols-2">
           <NumberPair title="耐久">
@@ -118,7 +123,7 @@ export function WeaponEditor({
         </div>
       </Section>
 
-      <Section title="銘・魅力" defaultOpen={sectionsOpen}>
+      <Section anchor={WEAPON_EDITOR_ANCHORS.titleCharms} title="銘・魅力" defaultOpen={sectionsOpen}>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
             {rows.title}
@@ -183,14 +188,14 @@ export function WeaponEditor({
         </div>
       </Section>
 
-      <Section title="斬殺数・つま斬り数" defaultOpen={sectionsOpen}>
+      <Section anchor={WEAPON_EDITOR_ANCHORS.kills} title="斬殺数・つま斬り数" defaultOpen={sectionsOpen}>
         <div className="grid gap-4 sm:grid-cols-2">
           {rows.number("kills")}
           {rows.number("tsumaKills")}
         </div>
       </Section>
 
-      <Section title="耐久回復の累積値・手に持っていた時間" defaultOpen={sectionsOpen}>
+      <Section anchor={WEAPON_EDITOR_ANCHORS.durability} title="耐久回復の累積値・手に持っていた時間" defaultOpen={sectionsOpen}>
         <div className="grid gap-4 sm:grid-cols-2">
           {rows.number("durabilityRecovery")}
           {rows.number("heldTime")}

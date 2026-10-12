@@ -4,8 +4,11 @@ import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { MARKET_ANCHORS } from "./anchors";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { WeaponPanel } from "@/features/belt/belt-page";
+import { useAnchoredOpen } from "@/lib/navigation-context";
 import { useSave } from "@/lib/save-context";
 import {
   MARKET_ELAPSED,
@@ -63,7 +66,7 @@ export function MarketWeaponsPage() {
         </Alert>
       )}
 
-      <Card>
+      <AnchoredCard anchor={MARKET_ANCHORS.summary}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             流通
@@ -79,17 +82,17 @@ export function MarketWeaponsPage() {
             {/* 周回の終わりごとに古くなる。道具・部品は消えない */}
           </CardDescription>
         </CardHeader>
-      </Card>
+      </AnchoredCard>
 
       {view ? (
         <>
-          <Group title="武器" filled={view.weapons.length} slots={MARKET_WEAPON_SLOTS} offset={MARKET_WEAPON_OFFSET}>
+          <Group anchor={MARKET_ANCHORS.weapons} title="武器" filled={view.weapons.length} slots={MARKET_WEAPON_SLOTS} offset={MARKET_WEAPON_OFFSET}>
             {view.weapons.map((entry) => (
               <MarketWeaponItem key={entry.index} entry={entry} />
             ))}
           </Group>
           {view.others.map((o) => (
-            <Group key={o.key} title={o.label} filled={o.filled} slots={o.slots} offset={o.offset}>
+            <Group key={o.key} anchor={o.key} title={o.label} filled={o.filled} slots={o.slots} offset={o.offset}>
               <OtherTable summary={o} />
             </Group>
           ))}
@@ -97,9 +100,9 @@ export function MarketWeaponsPage() {
       ) : (
         // 未読み込みのときはグループの枠だけを描き、件数と中身を「—」にする
         <>
-          <Group title="武器" filled={null} slots={MARKET_WEAPON_SLOTS} offset={MARKET_WEAPON_OFFSET} />
+          <Group anchor={MARKET_ANCHORS.weapons} title="武器" filled={null} slots={MARKET_WEAPON_SLOTS} offset={MARKET_WEAPON_OFFSET} />
           {MARKET_OTHERS.map((o) => (
-            <Group key={o.key} title={o.label} filled={null} slots={o.slots} offset={o.offset} />
+            <Group key={o.key} anchor={o.key} title={o.label} filled={null} slots={o.slots} offset={o.offset} />
           ))}
         </>
       )}
@@ -107,14 +110,16 @@ export function MarketWeaponsPage() {
   );
 }
 
-/** 1つのグループ（武器・道具・刃・鍔・柄）。はじめは閉じておく */
+/** 1つのグループ（武器・道具・刃・鍔・柄）。はじめは閉じておく。anchor はリンク先にするときの名前（useAnchoredOpen） */
 function Group({
+  anchor,
   title,
   filled,
   slots,
   offset,
   children,
 }: {
+  anchor: string;
   title: string;
   /** null はセーブ未読み込み */
   filled: number | null;
@@ -122,9 +127,10 @@ function Group({
   offset: number;
   children?: ReactNode;
 }) {
+  const { id, open, setOpen } = useAnchoredOpen(anchor);
   return (
-    <Card className="py-0">
-      <Collapsible>
+    <Card id={id} className="scroll-mt-4 py-0">
+      <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex items-center gap-2 px-6 py-4">
           <CollapsibleTrigger className="group flex flex-1 items-center gap-2 text-left font-medium">
             <ChevronRight className="size-4 shrink-0 transition-transform group-data-panel-open:rotate-90" aria-hidden />

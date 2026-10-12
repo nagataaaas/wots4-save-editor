@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { WEAPON_LIST_ANCHORS } from "@/features/belt/anchors";
 import { useSave } from "@/lib/save-context";
 import { WEAPON_BAG_COUNT, WEAPON_BAG_OFFSET, readWeaponBag, weaponBagOffset, type WeaponBagView } from "@/save/weapon-bag";
 import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
@@ -44,7 +46,7 @@ export function WeaponBagPage() {
       )}
 
       {/* 未読み込みのときは枠だけを描き、一覧は「—」にする */}
-      <Card className="gap-2">
+      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.weapons} className="gap-2">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             武器袋
@@ -66,7 +68,7 @@ export function WeaponBagPage() {
             <p className="text-muted-foreground text-sm">—</p>
           )}
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
       {/* ❓ 用途不明の領域。🟢 レコードの先頭は完成武器ID（既存エディタ [TS] の位置より 6 B 後ろ） */}
       <p className="text-muted-foreground text-xs">

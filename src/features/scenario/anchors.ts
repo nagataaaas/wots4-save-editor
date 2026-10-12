@@ -4,6 +4,7 @@ import { anchorPath } from '@/lib/navigation-context'
 
 /** 世界 / 阿弥浜 */
 export const AMIHAMA_ANCHORS = {
+  cycle: 'cycle',
   progress: 'progress',
   facilities: 'facilities',
   gates: { card: 'gates', recruit: 'recruit', close: 'close' },
@@ -15,6 +16,13 @@ export const NPC_ANCHORS = {
   characters: 'characters',
   townsfolk: 'townsfolk',
   flags: { card: 'npc-flags', smith: 'smith', dojo: 'dojo', other: 'other' },
+} as const
+
+/** 世界 / イベント */
+export const EVENTS_ANCHORS = {
+  chart: 'chart',
+  factions: 'factions',
+  flags: 'event-flags',
 } as const
 
 /** ほかの画面からのリンク先 */

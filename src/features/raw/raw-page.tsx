@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { CollapsibleCard } from '@/components/collapsible-card'
 import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AnchoredCard } from '@/components/anchored-card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -133,7 +134,7 @@ function RawEditor({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-[max-content_minmax(16rem,1fr)]">
-        <Card className="min-w-0">
+        <AnchoredCard anchor={RAW_ANCHORS.hex} className="min-w-0">
           <CardHeader>
             <CardTitle className="flex flex-wrap items-center gap-2">
               16進表示
@@ -147,7 +148,7 @@ function RawEditor({
             <JumpForm size={bytes.byteLength} onJump={goTo} />
             <HexView bytes={bytes} base={base} selected={selected} onSelect={setSelected} jump={jump} />
           </CardContent>
-        </Card>
+        </AnchoredCard>
 
         <SelectionCard
           key={selected}
@@ -160,7 +161,7 @@ function RawEditor({
 
       <PatchCard bytes={bytes} advanced={advanced} onApply={(patches) => update((b) => applyPatches(b, patches))} onJump={goTo} />
 
-      <Card>
+      <AnchoredCard anchor={RAW_ANCHORS.diff}>
         <CardHeader>
           <CardTitle>差分</CardTitle>
           <CardDescription>
@@ -207,7 +208,7 @@ function RawEditor({
           </p>
           <DiffList ranges={diff.ranges} base={base} bytes={bytes} onJump={goTo} />
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
       <SearchCard bytes={bytes} onJump={goTo} />
 
@@ -442,7 +443,7 @@ function SelectionCard({
   }
 
   return (
-    <Card className="min-w-0">
+    <AnchoredCard anchor={RAW_ANCHORS.byte} className="min-w-0">
       <CardHeader>
         <CardTitle className="font-mono">{formatOffset(offset)}</CardTitle>
         <CardDescription>
@@ -502,7 +503,7 @@ function SelectionCard({
           {done && <p className="text-xs text-emerald-600 dark:text-emerald-400">{done}</p>}
         </form>
       </CardContent>
-    </Card>
+    </AnchoredCard>
   )
 }
 
@@ -584,7 +585,7 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
   const placeholder = SEARCH_KINDS.find((s) => s.kind === kind)?.placeholder
 
   return (
-    <Card>
+    <AnchoredCard anchor={RAW_ANCHORS.search}>
       <CardHeader>
         <CardTitle>検索</CardTitle>
         {/* 今のバイト列（編集を含む）から探す。数値はリトルエンディアンのバイト列として探す */}
@@ -668,7 +669,7 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
           </>
         )}
       </CardContent>
-    </Card>
+    </AnchoredCard>
   )
 }
 
@@ -741,7 +742,7 @@ function PatchCard({
   }
 
   return (
-    <Card>
+    <AnchoredCard anchor={RAW_ANCHORS.bulkWrite}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           まとめて書き込む
@@ -836,6 +837,6 @@ function PatchCard({
           値の意味は確かめずにそのまま書きます。書いた値によってはゲームで読めなくなることがあります。ダウンロードするまでファイルは変わりません（サイドバーの「保存」で書き出します）。
         </p>
       </CardContent>
-    </Card>
+    </AnchoredCard>
   )
 }

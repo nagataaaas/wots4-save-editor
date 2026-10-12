@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react'
-import { useState, type MouseEvent, type ReactNode } from 'react'
-import { AnchorScope, useAnchor } from '@/lib/navigation-context'
+import { type MouseEvent, type ReactNode } from 'react'
+import { AnchorScope, useAnchoredOpen } from '@/lib/navigation-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
@@ -37,14 +37,7 @@ export function CollapsibleCard({
   contentClassName,
   children,
 }: Props) {
-  const { id, targeted, seq } = useAnchor(anchor)
-  const [open, setOpen] = useState(defaultOpen || targeted)
-  // 画面にいるまま同じカードの中へもう一度リンクしたときも開く（リンクごとに1回）
-  const [openedFor, setOpenedFor] = useState(seq)
-  if (targeted && openedFor !== seq) {
-    setOpenedFor(seq)
-    setOpen(true)
-  }
+  const { id, open, setOpen } = useAnchoredOpen(anchor, defaultOpen)
 
   return (
     <Collapsible

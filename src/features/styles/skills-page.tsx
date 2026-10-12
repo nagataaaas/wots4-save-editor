@@ -3,7 +3,10 @@ import { InfoTip } from "@/components/info-tip";
 import { LazyTip } from "@/components/lazy-tip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
+import { SKILLS_ANCHORS } from "./anchors";
+import { useAnchor } from "@/lib/navigation-context";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -79,6 +82,8 @@ export function SkillsPage() {
   const { advanced } = useAdvancedMode();
   const [filter, setFilter] = useState<SkillFilter>(EMPTY_FILTER);
   const [minAttackText, setMinAttackText] = useState("");
+  // 構えのタブの箱（リンク先にするときの名前）
+  const { id: stancesId } = useAnchor(SKILLS_ANCHORS.stances);
   const [sort, setSort] = useState<SkillSort>("id-asc");
   const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
   const rowsByStance = useMemo(() => STANCES.map((s) => stanceRows(s.id)), []);
@@ -135,7 +140,7 @@ export function SkillsPage() {
         </Alert>
       )}
 
-      <Card>
+      <AnchoredCard anchor={SKILLS_ANCHORS.overview}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             技
@@ -241,9 +246,9 @@ export function SkillsPage() {
           </div>
           {message && <p className={message.error ? "text-destructive text-xs" : "text-muted-foreground text-xs"}>{message.text}</p>}
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
-      <Tabs defaultValue="0" className="bg-card rounded-xl border p-3 shadow-xs">
+      <Tabs id={stancesId} defaultValue="0" className="bg-card scroll-mt-4 rounded-xl border p-3 shadow-xs">
         {/* 構えは「刀」と「刀以外」の 2 段に、同じ幅の枠で並べる。数は 習得済/技の数、絞り込み中は条件に合う技の数 */}
         <TabsList className="h-auto w-full flex-col items-stretch gap-1.5 p-2 group-data-horizontal/tabs:h-auto">
           {STANCE_ROWS.map((row) => (

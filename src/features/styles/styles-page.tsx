@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnchoredCard } from "@/components/anchored-card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -152,7 +153,7 @@ export function StylesPage() {
         </Alert>
       )}
 
-      <Card>
+      <AnchoredCard anchor={STYLES_ANCHORS.overview}>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             流派
@@ -214,7 +215,7 @@ export function StylesPage() {
           </div>
           {message && <p className={message.error ? "text-destructive text-xs" : "text-muted-foreground text-xs"}>{message.text}</p>}
         </CardContent>
-      </Card>
+      </AnchoredCard>
 
       {sects.map((sect) => (
         <SectCard

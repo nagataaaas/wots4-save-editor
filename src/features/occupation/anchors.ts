@@ -2,6 +2,7 @@
 
 /** なりわい */
 export const OCCUPATION_ANCHORS = {
+  current: 'current',
   chain: 'chain',
   security: 'security',
   dlc: 'dlc',
