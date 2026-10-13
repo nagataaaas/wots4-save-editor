@@ -22,6 +22,7 @@ import {
   RANK_MAX,
   SCROLL_STORED_COUNT_OFFSET,
   readSects,
+  sectValueOffset,
   type ScrollSlot,
   type SectsView,
 } from './sects'
@@ -31,6 +32,12 @@ export const CUSTOM_OFFSET = 0x19210
 export const CUSTOM_BYTES = 80
 export const CUSTOM_SLOTS = 64
 export const CUSTOM_NAME_BYTES = 64
+/** 🟢 俺流レコードの名前欄（chunks/custom-style）。 */
+export const CUSTOM_NAME_REL = 8
+
+export function customNameOffset(base: number): number {
+  return base + CUSTOM_NAME_REL
+}
 
 export const CUSTOM_SHEET_COUNT_OFFSET = 0x1a610
 export const CUSTOM_SHEET_OFFSET = 0x1a612
@@ -155,10 +162,10 @@ export function readCustomStyles(bytes: Uint8Array): CustomStylesView {
       offset,
       id,
       kind: styleKind(id),
-      mastery: readI16(bytes, offset + 2),
-      rank: readI16(bytes, offset + 4),
-      kills: readI16(bytes, offset + 6),
-      name: readUtf16Fixed(bytes, offset + 8, CUSTOM_NAME_BYTES).text,
+      mastery: readI16(bytes, sectValueOffset(offset, 'mastery')),
+      rank: readI16(bytes, sectValueOffset(offset, 'rank')),
+      kills: readI16(bytes, sectValueOffset(offset, 'kills')),
+      name: readUtf16Fixed(bytes, customNameOffset(offset), CUSTOM_NAME_BYTES).text,
       sheetIds,
       scroll: scrolls.find((s) => s.scrollNo < 0 && s.customId === id) ?? null,
       equipped: sects.equipped.includes(id),
@@ -192,7 +199,7 @@ export function validateCustomName(name: string, options: EditOptions = {}): str
 }
 
 function writeName(bytes: Uint8Array, style: CustomStyle, name: string): void {
-  for (let i = 0; i < CUSTOM_NAME_BYTES / 2; i++) writeU16(bytes, style.offset + 8 + 2 * i, i < name.length ? name.charCodeAt(i) : 0)
+  for (let i = 0; i < CUSTOM_NAME_BYTES / 2; i++) writeU16(bytes, customNameOffset(style.offset) + 2 * i, i < name.length ? name.charCodeAt(i) : 0)
   // 🟢 流派の書の枠に、名前の先頭 10 文字の写しがある
   if (style.scroll) {
     for (let i = 0; i < SCROLL_NAME_CHARS; i++) {
@@ -221,9 +228,9 @@ export function writeCustomValues(bytes: Uint8Array, id: number, v: CustomValues
   const problem = validateCustomValues(v)
   if (problem) throw new RangeError(problem)
   const style = findStyle(assertWritable(bytes), id)
-  writeI16(bytes, style.offset + 2, v.mastery)
-  writeI16(bytes, style.offset + 4, v.rank)
-  writeI16(bytes, style.offset + 6, v.kills)
+  writeI16(bytes, sectValueOffset(style.offset, 'mastery'), v.mastery)
+  writeI16(bytes, sectValueOffset(style.offset, 'rank'), v.rank)
+  writeI16(bytes, sectValueOffset(style.offset, 'kills'), v.kills)
 }
 
 /**

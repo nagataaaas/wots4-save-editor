@@ -36,6 +36,12 @@ export const EQUIP_OFFSET = 0x18a00
 export const SECT_COUNT_OFFSET = 0x18a0c
 export const SECT_RECORDS_OFFSET = 0x18a0e
 export const SECT_RECORD_BYTES = 16
+/** 🟢 通常の流派と俺流に共通する数値欄（chunks/styles・custom-style）。 */
+export const SECT_VALUE_RELS = { mastery: 2, rank: 4, kills: 6 } as const
+
+export function sectValueOffset(base: number, key: keyof typeof SECT_VALUE_RELS): number {
+  return base + SECT_VALUE_RELS[key]
+}
 export const SECT_RECORD_SLOTS = 128
 
 // 流派の書 🟢（chunks/sect-scrolls）
@@ -157,9 +163,9 @@ export function readSects(bytes: Uint8Array): SectsView {
       index: i,
       offset,
       id,
-      mastery: readI16(bytes, offset + 2),
-      rank: readI16(bytes, offset + 4),
-      kills: readI16(bytes, offset + 6),
+      mastery: readI16(bytes, sectValueOffset(offset, 'mastery')),
+      rank: readI16(bytes, sectValueOffset(offset, 'rank')),
+      kills: readI16(bytes, sectValueOffset(offset, 'kills')),
       sect,
     })
   }
@@ -382,9 +388,9 @@ export function writeSectValues(bytes: Uint8Array, sectId: number, v: SectValues
   const view = assertWritable(bytes)
   const rec = view.records.find((r) => r.id === sectId)
   if (!rec) throw new RangeError('この流派が流派の表にありません')
-  writeI16(bytes, rec.offset + 2, v.mastery)
-  writeI16(bytes, rec.offset + 4, v.rank)
-  writeI16(bytes, rec.offset + 6, v.kills)
+  writeI16(bytes, sectValueOffset(rec.offset, 'mastery'), v.mastery)
+  writeI16(bytes, sectValueOffset(rec.offset, 'rank'), v.rank)
+  writeI16(bytes, sectValueOffset(rec.offset, 'kills'), v.kills)
 }
 
 /** 腕前点のゲーム上の上限 🟢（chunks/styles。9999 で止まる） */

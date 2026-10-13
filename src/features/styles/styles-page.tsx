@@ -33,6 +33,7 @@ import {
 } from "@/save/master/sect-data";
 import {
   I16_MAX,
+  sectValueOffset,
   LEARNED_COUNT_OFFSET,
   MASTERY_MAX,
   SKILL_POINTS_MAX,
@@ -312,7 +313,7 @@ function SectCard({
         <div className="grid gap-4 sm:grid-cols-3">
           <IntField
             label="修練度"
-            offset={rec?.offset ? rec.offset + 2 : 0}
+            offset={rec ? sectValueOffset(rec.offset, 'mastery') : 0}
             value={values?.mastery ?? null}
             problem={valueProblem}
             min={0}
@@ -322,7 +323,7 @@ function SectCard({
             // 🟢 要ゲーム内確認
           />
           <RankField
-            offset={rec?.offset ? rec.offset + 4 : 0}
+            offset={rec ? sectValueOffset(rec.offset, 'rank') : 0}
             value={values?.rank ?? null}
             problem={valueProblem}
             apply={(r) => values && onValues({ ...values, rank: r })}
@@ -330,7 +331,7 @@ function SectCard({
           />
           <IntField
             label="この流派で倒した数"
-            offset={rec?.offset ? rec.offset + 6 : 0}
+            offset={rec ? sectValueOffset(rec.offset, 'kills') : 0}
             value={values?.kills ?? null}
             problem={valueProblem}
             min={0}

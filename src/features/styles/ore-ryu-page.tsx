@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { formatOffset } from "@/lib/format";
+import { sectValueOffset } from "@/save/sects";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
@@ -26,6 +28,7 @@ import { WriteResult } from "@/components/write-error";
 import { SearchField } from "@/lib/search-context";
 import {
   CUSTOM_COUNT_OFFSET,
+  customNameOffset,
   CUSTOM_SHEET_COUNT_OFFSET,
   NAME_MAX,
   NAME_MAX_ADVANCED,
@@ -68,7 +71,7 @@ export function OreRyuPage() {
             俺流
             {/* 並びは 🟢。🔶 書き換えたセーブをゲームで読めるかは要ゲーム内確認 */}
             {/* chunks/custom-style・belt-copy（俺流の技の表）・sect-scrolls */}
-            <InfoTip offset={`0x${CUSTOM_COUNT_OFFSET.toString(16).toUpperCase()}、0x${CUSTOM_SHEET_COUNT_OFFSET.toString(16).toUpperCase()}`} />
+            <InfoTip offset={`${formatOffset(CUSTOM_COUNT_OFFSET)}、${formatOffset(CUSTOM_SHEET_COUNT_OFFSET)}`} />
           </CardTitle>
           <CardDescription>
             俺流の名前・修練度・技の構成を書き換えたり、新しく作ったりできます。
@@ -151,7 +154,7 @@ function StyleCard({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <FieldRow
             label="名前"
-            offset={style.offset + 8}
+            offset={customNameOffset(style.offset)}
             value={style.name}
             problem={lockReason}
             format={(s) => s}
@@ -165,7 +168,7 @@ function StyleCard({
           />
           <IntField
             label="修練度"
-            offset={style.offset + 2}
+            offset={sectValueOffset(style.offset, 'mastery')}
             value={values.mastery}
             problem={lockReason}
             min={0}
@@ -173,7 +176,7 @@ function StyleCard({
             apply={(m) => update((b) => writeCustomValues(b, style.id, { ...values, mastery: m }))}
           />
           <RankField
-            offset={style.offset + 4}
+            offset={sectValueOffset(style.offset, 'rank')}
             value={values.rank}
             problem={lockReason}
             apply={(r) => update((b) => writeCustomValues(b, style.id, { ...values, rank: r }))}
@@ -181,7 +184,7 @@ function StyleCard({
           />
           <IntField
             label="この流派で倒した数"
-            offset={style.offset + 6}
+            offset={sectValueOffset(style.offset, 'kills')}
             value={values.kills}
             problem={lockReason}
             min={0}
