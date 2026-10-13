@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import { readI16, readU16, writeI16, writeU16, writeU8 } from './binary'
 import { TS_SAVE_SIZE } from './layout'
-import { stanceSkills } from './master/sect-data'
+import { SKILL_NO_COUNT, findStanceSkill, stanceSkills } from './master/sect-data'
 import {
   CUSTOM_COUNT_OFFSET,
   CUSTOM_OFFSET,
@@ -14,6 +14,7 @@ import {
   createCustomStyle,
   deleteCustomStyle,
   findSkillConflicts,
+  initialStanceSkills,
   pickWithoutConflicts,
   readCustomStyles,
   removeCustomStance,
@@ -247,5 +248,28 @@ describe('編集と削除', () => {
     expect(v.sheets.map((s) => s.id)).toEqual([4003])
     expect(readI16(b, SCROLL_HELD_OFFSET + 2)).toBe(-1)
     expect(b.slice(CUSTOM_OFFSET + 80, CUSTOM_OFFSET + 160).every((x) => x === 0)).toBe(true)
+  })
+})
+
+describe('initialStanceSkills', () => {
+  // 構えの技の表から、初段の技 2 つと初段でない技 1 つを選んで使う
+  const STANCE = 2
+  const nos = Array.from({ length: SKILL_NO_COUNT }, (_, no) => no)
+  const [usableFirst, unusableFirst] = nos.filter((no) => findStanceSkill(STANCE, no)?.first)
+  const notFirst = nos.find((no) => findStanceSkill(STANCE, no) && !findStanceSkill(STANCE, no)?.first)!
+
+  it('🟢 構えを足すときは、俺流で使える（状態 1・2）初段の技だけを選ぶ。上級者モードでは状態を問わない', () => {
+    const states = Array<number>(SKILL_NO_COUNT).fill(0)
+    states[usableFirst] = 1
+    states[unusableFirst] = 3
+    states[notFirst] = 2
+    const before = [...states]
+    expect(initialStanceSkills(states, STANCE, { advanced: false })).toEqual([usableFirst])
+    const advanced = initialStanceSkills(states, STANCE, { advanced: true })
+    expect(advanced).toContain(usableFirst)
+    expect(advanced).toContain(unusableFirst)
+    // 初段でない技は、使える状態でも上級者モードでも選ばない
+    expect(advanced).not.toContain(notFirst)
+    expect(states).toEqual(before)
   })
 })

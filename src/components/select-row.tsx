@@ -1,12 +1,8 @@
 import { type ReactNode } from "react";
-import { InfoTip } from "@/components/info-tip";
+import { FieldShell } from "@/components/field-shell";
 import { LazySelect } from "@/components/lazy-select";
 import { groupOptions, type SelectOption } from "@/components/select-options";
-import { WarningTip } from "@/components/warning-tip";
-import { Label } from "@/components/ui/label";
-import { SearchField } from "@/lib/search-context";
-import { errorMessage } from "@/lib/error-message";
-import { useScopedError } from "@/lib/use-scoped-error";
+import { useFieldAction } from "@/lib/use-field-action";
 import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from "@/components/ui/select";
 
 function OptionContent({ option: o }: { option: SelectOption }) {
@@ -63,7 +59,7 @@ export function SelectRow({
   note,
   onChange,
 }: Props) {
-  const [error, setError] = useScopedError();
+  const { error, run } = useFieldAction(offset);
   const listed = value === null || options.some((o) => o.value === value);
   // トリガーに出す名前（Base UI の Select は閉じている間は選択肢を描かないので、items から引く）
   const items: Record<string, ReactNode> = {};
@@ -74,13 +70,7 @@ export function SelectRow({
   if (!listed && value !== null) items[value] = `${currentLabel ?? "不明"}（現在の値）`;
 
   return (
-    <SearchField label={label} className="flex flex-col gap-1.5">
-      <div className="flex flex-wrap items-center gap-2">
-        <Label>{label}</Label>
-        <InfoTip offset={offset}>{note}</InfoTip>
-        {!problem && <WarningTip warning={warning} />}
-        {badges}
-      </div>
+    <FieldShell label={label} offset={offset} note={note} warning={warning} badges={badges} problem={problem} hint={hint} error={error}>
       <LazySelect
         // null でプレースホルダー表示になる
         value={value}
@@ -90,12 +80,7 @@ export function SelectRow({
         disabled={disabled || value === null || problem !== null || options.length === 0}
         onValueChange={(v) => {
           if (v === value) return;
-          setError(null);
-          try {
-            onChange(v);
-          } catch (e) {
-            setError(errorMessage(e));
-          }
+          run(() => onChange(v));
         }}
       >
         {!listed && value !== null && (
@@ -117,15 +102,6 @@ export function SelectRow({
           ),
         )}
       </LazySelect>
-      {problem ? (
-        <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>
-      ) : (
-        // hint は常に出し、エラーはその下に足す。警告は項目名の横のアイコン（FieldRow と同じ）
-        <>
-          {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
-          {error && <p className="text-destructive text-xs">{error}</p>}
-        </>
-      )}
-    </SearchField>
+    </FieldShell>
   );
 }

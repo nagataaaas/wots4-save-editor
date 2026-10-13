@@ -3,6 +3,7 @@
 // §3 の表の確度の欄は各行のコメントに写す（画面には出さない）。終了が ❓ の領域は end を null にし、色分けには使わない。
 // ラベルは画面（生データ・履歴の変わった領域）に出すので、アドレスや格納のしかたは書かずにコメントへ回す。
 // 位置は固定オフセット（サイズ 0x48BB0）。
+import { integerValue } from '@/lib/parse'
 import { readF32 } from './binary'
 import { assertWritable } from './layout'
 
@@ -273,9 +274,8 @@ export const SEARCH_KINDS: readonly { kind: SearchKind; label: string; placehold
 export type SearchPattern = (number | null)[]
 
 function parseUint(input: string, max: number): number | null {
-  const s = input.trim()
-  const value = /^0x[0-9a-f]+$/i.test(s) ? parseInt(s.slice(2), 16) : /^\d+$/.test(s) ? Number(s) : NaN
-  return Number.isInteger(value) && value >= 0 && value <= max ? value : null
+  const value = integerValue(input, { hex: true })
+  return value !== null && value <= max ? value : null
 }
 
 /** 検索の入力を、バイトの並び（リトルエンディアン）に直す */

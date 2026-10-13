@@ -479,3 +479,21 @@ export function forgetStanceSkill(bytes: Uint8Array, stance: number, skillNo: nu
   }
   writeU8(bytes, STANCE_STATES_OFFSET + stance * SKILL_NO_COUNT + skillNo, 0)
 }
+
+/** 🟢 状態1・2の技を俺流で選べる（chunks/skill-states）。 */
+export function isUsableInOreRyu(state: number): boolean {
+  return state === 1 || state === 2
+}
+
+/**
+ * 技の行に出す操作（chunks/skill-states）。
+ * 🟢 固有技は 0 →「習得する」（3）→「俺流で表示」（1）の 2 段階。ほかの技は 0・3 から「習得する」（1）。
+ * state が null（未読み込み）のときも「習得する」を出す（画面で無効にする）。❓ 忘れさせる操作は上級者モードで、習得後だけに出す
+ */
+export function skillActions(state: number | null, unique: boolean, advanced: boolean) {
+  return {
+    learn: state === null || state === 0 || (state === 3 && !unique),
+    showInOreRyu: state === 3 && unique,
+    forget: advanced && state !== null && state !== 0,
+  }
+}

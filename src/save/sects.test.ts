@@ -17,6 +17,7 @@ import {
   forgetSheetSkill,
   forgetStanceSkill,
   isUniqueStanceSkill,
+  isUsableInOreRyu,
   learnStanceSkill,
   showStanceSkillInOreRyu,
   stanceSkillSheets,
@@ -30,6 +31,7 @@ import {
   sectHasUniqueSkill,
   sectSheetSkills,
   sheetStateOffset,
+  skillActions,
   writeSectValues,
   writeSkillPoints,
 } from './sects'
@@ -338,5 +340,25 @@ describe('learnStanceSkill', () => {
     forgetStanceSkill(b, STANCE, 3)
     for (const sheet of stanceSkillSheets(STANCE, 3)) expect(stateIn(b, sheet.id, 3)).toBe(0)
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 3]).toBe(0)
+  })
+})
+
+describe('技の操作の候補', () => {
+  it('🟢 未習得と通常技の状態3は習得、固有技の状態3は俺流への表示を選ぶ', () => {
+    expect(skillActions(null, false, false)).toMatchObject({ learn: true, showInOreRyu: false })
+    expect(skillActions(0, true, false)).toMatchObject({ learn: true, showInOreRyu: false })
+    expect(skillActions(3, false, false)).toMatchObject({ learn: true, showInOreRyu: false })
+    expect(skillActions(3, true, false)).toMatchObject({ learn: false, showInOreRyu: true })
+    for (const state of [1, 2]) expect(skillActions(state, true, false)).toEqual({ learn: false, showInOreRyu: false, forget: false })
+  })
+  it('❓ 忘れさせる操作は上級者モードで習得後だけに出す', () => {
+    for (const state of [1, 2, 3]) {
+      expect(skillActions(state, true, true).forget).toBe(true)
+      expect(skillActions(state, true, false).forget).toBe(false)
+    }
+    for (const state of [null, 0]) expect(skillActions(state, false, true).forget).toBe(false)
+  })
+  it('🟢 俺流で使えるのは状態1・2だけ', () => {
+    expect([0, 1, 2, 3, 255].map(isUsableInOreRyu)).toEqual([false, true, true, false, false])
   })
 })

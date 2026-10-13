@@ -20,6 +20,7 @@ import {
 } from './master/sect-data'
 import {
   I16_MAX,
+  isUsableInOreRyu,
   MASTERY_MAX,
   RANK_MAX,
   SCROLL_STORED_COUNT_OFFSET,
@@ -528,3 +529,13 @@ export function customSkillLabel(stance: number, skillNo: number): string {
 }
 
 export { SKILL_NO_COUNT }
+
+/**
+ * 🟢 構えを足した直後に入れておく技（あとで選び直す）。states はその構えの技の状態（番号順）。
+ * 初段の技のうち、俺流に入れられるもの（上級者モードでは状態を問わない）を選ぶ
+ */
+export function initialStanceSkills(states: readonly number[], stance: number, { advanced }: EditOpts): number[] {
+  return states.flatMap((state, no) =>
+    (advanced || isUsableInOreRyu(state)) && findStanceSkill(stance, no)?.first ? [no] : [],
+  )
+}

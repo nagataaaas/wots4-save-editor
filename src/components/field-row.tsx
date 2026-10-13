@@ -1,9 +1,6 @@
 import { useId, type ReactNode } from 'react'
+import { FieldShell } from '@/components/field-shell'
 import { Input } from '@/components/ui/input'
-import { InfoTip } from '@/components/info-tip'
-import { WarningTip } from '@/components/warning-tip'
-import { Label } from '@/components/ui/label'
-import { SearchField } from '@/lib/search-context'
 import { useFieldDraft, type ParseResult } from '@/lib/use-field-draft'
 
 export type { ParseResult } from '@/lib/use-field-draft'
@@ -41,13 +38,7 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
   const { error, focused } = draft
 
   return (
-    <SearchField label={label} className="flex flex-col gap-1.5">
-      <div className="flex flex-wrap items-center gap-2">
-        <Label htmlFor={id}>{label}</Label>
-        <InfoTip offset={offset}>{note}</InfoTip>
-        {!problem && <WarningTip warning={warning} />}
-        {badges}
-      </div>
+    <FieldShell label={label} offset={offset} htmlFor={id} note={note} warning={warning} badges={badges} problem={problem} hint={hint} error={error}>
       <Input
         id={id}
         value={
@@ -62,15 +53,6 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
         onFocus={draft.focus}
         onBlur={draft.blur}
       />
-      {problem ? (
-        <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>
-      ) : (
-        // hint（範囲など）は常に出し、エラーはその下に足す。警告は項目名の横のアイコン（WarningTip）
-        <>
-          {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
-          {error && <p className="text-destructive text-xs">{error}</p>}
-        </>
-      )}
-    </SearchField>
+    </FieldShell>
   )
 }
