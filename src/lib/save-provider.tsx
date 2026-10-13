@@ -2,15 +2,12 @@ import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { assertSameSize, downloadBytes, readFileAsBytes } from '@/lib/file-io'
 import { addLoaded, addSaved, clearAll, getBytes, getSnapshot } from '@/lib/history-db'
 import { SaveContext, type LoadedSave } from '@/lib/save-context'
+import { errorMessage } from '@/lib/error-message'
 
 function countChangedBytes(a: Uint8Array, b: Uint8Array): number {
   let n = 0
   for (let i = 0; i < a.byteLength; i++) if (a[i] !== b[i]) n++
   return n
-}
-
-function message(e: unknown): string {
-  return e instanceof Error ? e.message : String(e)
 }
 
 /** 読み込んだセーブをメモリ上に保持し、画面全体に共有する。読み込み時と保存のたびに履歴（IndexedDB）へ残す */
@@ -35,7 +32,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
     try {
       action()
     } catch (e) {
-      setError(message(e))
+      setError(errorMessage(e))
     }
   }
 
@@ -45,7 +42,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
       await action()
       setHistoryVersion((v) => v + 1)
     } catch (e) {
-      setError(`履歴に残せませんでした: ${message(e)}`)
+      setError(`履歴に残せませんでした: ${errorMessage(e)}`)
     }
   }
 
@@ -55,7 +52,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
     try {
       original = await readFileAsBytes(file)
     } catch (e) {
-      setError(message(e))
+      setError(errorMessage(e))
       return
     }
     const loadId = ++loadSeq.current
@@ -103,7 +100,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
         sessionId: snapshot.sessionId,
       })
     } catch (e) {
-      setError(`履歴から復元できませんでした: ${message(e)}`)
+      setError(`履歴から復元できませんでした: ${errorMessage(e)}`)
     }
   }
 

@@ -4,6 +4,7 @@ import { LazyTip } from '@/components/lazy-tip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { errorMessage } from '@/lib/error-message'
 import { listSnapshots, type SnapshotRecord } from '@/lib/history-db'
 import { useSave } from '@/lib/save-context'
 
@@ -33,7 +34,7 @@ export function RestoreDialog() {
     let alive = true
     listSnapshots()
       .then((rs) => alive && (setRecords(rs), setError(null)))
-      .catch((e: unknown) => alive && setError(`履歴を読めませんでした: ${e instanceof Error ? e.message : String(e)}`))
+      .catch((e: unknown) => alive && setError(`履歴を読めませんでした: ${errorMessage(e)}`))
     return () => {
       alive = false
     }

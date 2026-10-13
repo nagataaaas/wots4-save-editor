@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { matchesSearch } from '@/lib/search'
 import { SearchField } from '@/lib/search-context'
+import { errorMessage } from '@/lib/error-message'
 
 type Props = {
   label: string
@@ -74,7 +75,7 @@ export function SearchSelectRow({
     try {
       onChange(v)
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(errorMessage(e))
     }
   }
 

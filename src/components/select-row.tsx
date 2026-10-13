@@ -5,6 +5,7 @@ import { groupOptions, type SelectOption } from "@/components/select-options";
 import { WarningTip } from "@/components/warning-tip";
 import { Label } from "@/components/ui/label";
 import { SearchField } from "@/lib/search-context";
+import { errorMessage } from "@/lib/error-message";
 import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from "@/components/ui/select";
 
 function OptionContent({ option: o }: { option: SelectOption }) {
@@ -92,7 +93,7 @@ export function SelectRow({
           try {
             onChange(v);
           } catch (e) {
-            setError(e instanceof Error ? e.message : String(e));
+            setError(errorMessage(e));
           }
         }}
       >

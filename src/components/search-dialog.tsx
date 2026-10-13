@@ -3,6 +3,7 @@ import { ChevronRight, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { loadSearchIndex, searchItems, type SearchItem } from '@/features/search-index'
+import { errorMessage } from '@/lib/error-message'
 import { useNavigation } from '@/lib/navigation-context'
 
 /** 一覧に出す上限。これより多いときは語を足して絞ってもらう */
@@ -46,7 +47,7 @@ export function SearchDialog() {
     let alive = true
     loadSearchIndex().then(
       (items) => alive && setIndex(items),
-      (e: unknown) => alive && setError(e instanceof Error ? e.message : String(e)),
+      (e: unknown) => alive && setError(errorMessage(e)),
     )
     return () => {
       alive = false

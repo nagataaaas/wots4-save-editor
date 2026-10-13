@@ -4,6 +4,7 @@ import { InfoTip } from '@/components/info-tip'
 import { WarningTip } from '@/components/warning-tip'
 import { Label } from '@/components/ui/label'
 import { SearchField } from '@/lib/search-context'
+import { errorMessage } from '@/lib/error-message'
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string }
 
@@ -53,7 +54,7 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
     try {
       apply(result.value)
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(errorMessage(e))
     }
   }
 

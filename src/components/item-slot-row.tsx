@@ -14,13 +14,12 @@ import {
 } from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { errorMessage } from '@/lib/error-message'
 import { matchesSearch } from '@/lib/search'
 import { cn } from '@/lib/utils'
 import { EMPTY_ID, validateItemCount, type ItemOptionGroup, type ItemSlot } from '@/save/item-slot'
 
 // アイテムの枠（ID＋個数、8 B）を1件編集する行。道具・箪笥・重要品で共通（chunks/items）。
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 /** ID を 16進4桁（0x なし）で表示する */
 const hexId = (id: number) => id.toString(16).toUpperCase().padStart(4, '0')

@@ -3,7 +3,7 @@ import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { useFlag } from "@/hooks/use-flag";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { useSave } from "@/lib/save-context";
+import { useWrite } from "@/lib/use-write";
 import { cn } from "@/lib/utils";
 import { writeFlag, type ByteFlag } from "@/save/flags/byte-flag";
 
@@ -27,7 +27,7 @@ export function FlagRow({
   /** 既定は writeFlag。例外はその場で表示する */
   write?: (bytes: Uint8Array, value: number, opts: { advanced: boolean }) => void;
 }) {
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const current = useFlag(flag);
   const state = current?.state ?? null;
