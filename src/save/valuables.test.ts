@@ -1,7 +1,7 @@
 // [TS] のレイアウトに沿って合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   EMPTY_ID,
   VALUABLE_COUNT_MAX,
@@ -34,9 +34,28 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 }
 
 describe('readValuables', () => {
+  it('重複と個数0の警告を両方残す', () => {
+    const bytes = makeSave()
+    writeU16(bytes, slotOffset(1), 0x29)
+    writeU16(bytes, slotOffset(1) + 2, 0)
+    expect(readValuables(bytes).slots[1].warnings).toEqual(['1件目と同じ重要品です', '個数が 0 です'])
+  })
+
+  it('🔶 個数の通常上限999：上級者モードでu16の上限を書き、元の値へ戻すとバイトが一致する', () => {
+    const bytes = makeSave()
+    const before = bytes.slice()
+    const original = readValuables(bytes).slots[0]
+    expect(() => writeValuable(bytes, 0, original.id, 0xffff)).toThrow(RangeError)
+    expect(bytes.every((value, index) => value === before[index])).toBe(true)
+    writeValuable(bytes, 0, original.id, 0xffff, { advanced: true })
+    expect(readValuables(bytes).slots[0]).toMatchObject({ count: 0xffff, problem: null })
+    expect(readValuables(bytes).slots[0].warnings).toContainEqual(expect.stringContaining('上限'))
+    writeValuable(bytes, 0, original.id, original.count)
+    expect(bytes.every((value, index) => value === before[index])).toBe(true)
+  })
   it('✅ [TS][I-3] 0x5B90 から 8 B × 10件を ID・個数として読む', () => {
     const v = readValuables(makeSave())
-    expect(v.layoutProblem).toBeNull()
+    expect(v.problem).toBeNull()
     expect(v.slots).toHaveLength(10)
     expect(v.slots[0]).toMatchObject({ offset: 0x5b90, id: 0x29, count: 5, label: 'くず鉄', problem: null })
     expect(v.slots[1]).toMatchObject({ offset: 0x5b98, id: 0x2b, count: 2, label: '堂島鋼(どうじまはがね)', problem: null })
@@ -51,7 +70,7 @@ describe('readValuables', () => {
 
   it('サイズが 0x48BB0 でなければ全枠を読み取り専用にする', () => {
     const v = readValuables(makeSave(TS_SAVE_SIZE + 8))
-    expect(v.layoutProblem).not.toBeNull()
+    expect(v.problem).not.toBeNull()
     expect(v.slots[0].count).toBe(5)
     expect(v.slots.every((s) => s.problem !== null)).toBe(true)
   })
@@ -63,7 +82,7 @@ describe('readValuables', () => {
     writeU16(b, slotOffset(3), 0x2e)
     const v = readValuables(b)
     expect(v.slots[2]).toMatchObject({ label: 'チップ？', problem: null, idWritable: false })
-    expect(v.slots[2].warning).not.toBeNull()
+    expect((v.slots[2].warnings.join('。') || null)).not.toBeNull()
     expect(v.slots[3]).toMatchObject({ label: '木札？', problem: null, idWritable: false })
     // 個数だけの変更（ID 0x2D のまま）はできず、書ける ID には変えられる
     expect(() => writeValuable(b, 2, 0x2d, 2)).toThrow()
@@ -79,13 +98,15 @@ describe('readValuables', () => {
     writeU16(b, slotOffset(3), 0x1234)
     const v = readValuables(b)
     expect(v.slots[3]).toMatchObject({ label: null, problem: null, idWritable: false })
-    expect(v.slots[3].warning).not.toBeNull()
+    expect((v.slots[3].warnings.join('。') || null)).not.toBeNull()
   })
 
-  it('🔶 個数が妥当性の上限（999、推測）を超える枠は読み取り専用にする', () => {
+  it('🔶 個数が通常の上限（999、推測）を超える枠は警告し、モードを問わず読み取る', () => {
     const b = makeSave()
     writeU16(b, slotOffset(0) + 2, VALUABLE_COUNT_MAX + 1)
-    expect(readValuables(b).slots[0].problem).not.toBeNull()
+    expect(readValuables(b).slots[0].problem).toBeNull()
+    expect(readValuables(b).slots[0].warnings).toContainEqual(expect.stringContaining('上限'))
+    expect(readValuables(b, { advanced: true }).slots[0].problem).toBeNull()
   })
 
   it('同じ重要品が複数の枠にあれば警告する', () => {
@@ -94,7 +115,7 @@ describe('readValuables', () => {
     writeU16(b, slotOffset(4) + 2, 1)
     const v = readValuables(b)
     expect(v.slots[4].problem).toBeNull()
-    expect(v.slots[4].warning).not.toBeNull()
+    expect((v.slots[4].warnings.join('。') || null)).not.toBeNull()
   })
 })
 
@@ -139,17 +160,17 @@ describe('❓ U-14：ID調査モード', () => {
   it('通常モードでは未知の ID を拒否し、調査モードでは書ける', () => {
     const b = makeSave()
     expect(() => writeValuable(b, 2, 0x35, 1)).toThrow()
-    writeValuable(b, 2, 0xd7, 1, { investigate: true })
+    writeValuable(b, 2, 0xd7, 1, { advanced: true })
     expect(readValuables(b).slots[2].idWritable).toBe(false)
-    const v = readValuables(b, { investigate: true })
+    const v = readValuables(b, { advanced: true })
     expect(v.slots[2]).toMatchObject({ id: 0xd7, count: 1, label: null, problem: null, idWritable: true })
-    expect(v.slots[2].warning).not.toBeNull()
+    expect((v.slots[2].warnings.join('。') || null)).not.toBeNull()
   })
 
   it('U-12 の ID（0x2D／0x2E）は調査モードでも拒否する', () => {
     const b = makeSave()
-    expect(() => writeValuable(b, 2, 0x2d, 1, { investigate: true })).toThrow()
-    expect(() => writeValuable(b, 2, 0x2e, 1, { investigate: true })).toThrow()
+    expect(() => writeValuable(b, 2, 0x2d, 1, { advanced: true })).toThrow()
+    expect(() => writeValuable(b, 2, 0x2e, 1, { advanced: true })).toThrow()
   })
 
   it('🔶 候補は 0xD7〜0xFF（🟢 の鍵 0xED・0xEE を除く）、続いて未調査の 0x9F〜0xBF', () => {
@@ -167,46 +188,46 @@ describe('❓ U-14：ID調査モード', () => {
 
   it('[U] 2026-10-04／05：0x2F〜0x3E は調査で分かった名前を表示し、通常モードでは書けない', () => {
     const b = makeSave()
-    writeValuable(b, 2, 0x2f, 1, { investigate: true })
-    writeValuable(b, 3, 0x34, 1, { investigate: true })
+    writeValuable(b, 2, 0x2f, 1, { advanced: true })
+    writeValuable(b, 3, 0x34, 1, { advanced: true })
     const v = readValuables(b)
     expect(v.slots[2]).toMatchObject({ label: 'チラシ', idWritable: false })
     expect(v.slots[3]).toMatchObject({ label: 'ししゃも', idWritable: false })
-    writeValuable(b, 4, 0x3e, 1, { investigate: true })
+    writeValuable(b, 4, 0x3e, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('ビッグステーキ')
-    writeValuable(b, 4, 0x49, 1, { investigate: true })
+    writeValuable(b, 4, 0x49, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('丼')
-    writeValuable(b, 4, 0x70, 1, { investigate: true })
+    writeValuable(b, 4, 0x70, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('竹の間')
-    writeValuable(b, 4, 0x7b, 1, { investigate: true })
+    writeValuable(b, 4, 0x7b, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('茶器')
-    writeValuable(b, 4, 0x99, 1, { investigate: true })
+    writeValuable(b, 4, 0x99, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('茶器')
-    writeValuable(b, 4, 0x18, 1, { investigate: true })
+    writeValuable(b, 4, 0x18, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('がらくた')
     // 7回目の訂正（[U] 2026-10-05）：対応づけが1つずれていた
-    writeValuable(b, 4, 0x01, 1, { investigate: true })
+    writeValuable(b, 4, 0x01, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('伯爵の寿司')
-    writeValuable(b, 4, 0x0f, 1, { investigate: true })
+    writeValuable(b, 4, 0x0f, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('部品箱（柄？）')
-    writeValuable(b, 4, 0x14, 1, { investigate: true })
+    writeValuable(b, 4, 0x14, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('お金袋小')
-    writeValuable(b, 4, 0x17, 1, { investigate: true })
+    writeValuable(b, 4, 0x17, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('お金袋特大')
-    writeValuable(b, 4, 0x21, 1, { investigate: true })
+    writeValuable(b, 4, 0x21, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('オレ流目録')
-    writeValuable(b, 4, 0x9e, 1, { investigate: true })
+    writeValuable(b, 4, 0x9e, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('茶器')
-    writeValuable(b, 4, 0xbf, 1, { investigate: true })
+    writeValuable(b, 4, 0xbf, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('茶器')
-    writeValuable(b, 4, 0x6f, 1, { investigate: true })
+    writeValuable(b, 4, 0x6f, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('梅の間')
-    writeValuable(b, 4, 0xd6, 1, { investigate: true })
+    writeValuable(b, 4, 0xd6, 1, { advanced: true })
     expect(readValuables(b).slots[4].label).toBe('あんころもち（セット）（開発用？）')
     expect(() => writeValuable(b, 5, 0x30, 1)).toThrow()
-    const inv = readValuables(b, { investigate: true })
+    const inv = readValuables(b, { advanced: true })
     expect(inv.slots[2]).toMatchObject({ label: 'チラシ', idWritable: true })
-    expect(inv.slots[2].warning).toContain('重要品ではありません')
+    expect((inv.slots[2].warnings.join('。') || null)).toContain('重要品ではありません')
   })
 
   it('空き枠だけに候補 ID を個数 1 で入れ、既存の枠は変えない', () => {
@@ -214,7 +235,7 @@ describe('❓ U-14：ID調査モード', () => {
     const b = before.slice()
     const filled = fillEmptySlotsWithProbes(b, 0xd7)
     expect(filled).toEqual([0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde])
-    const v = readValuables(b, { investigate: true })
+    const v = readValuables(b, { advanced: true })
     expect(v.slots[0]).toMatchObject({ id: 0x29, count: 5 })
     expect(v.slots[1]).toMatchObject({ id: 0x2b, count: 2 })
     expect(v.slots.slice(2).map((s) => [s.id, s.count])).toEqual(filled.map((id) => [id, 1]))
@@ -245,8 +266,8 @@ describe('🟢 U-14：拷問部屋の鍵（0xED）・謎の鍵（0xEE）', () =>
     const v = readValuables(b)
     expect(v.slots[2]).toMatchObject({ id: 0xed, count: 1, label: '拷問部屋の鍵', problem: null, idWritable: true })
     expect(v.slots[3]).toMatchObject({ id: 0xee, count: 1, label: '謎の鍵', problem: null, idWritable: true })
-    expect(v.slots[2].warning).toContain('イベントで使えない')
-    expect(v.slots[3].warning).toContain('ローラの部屋の扉')
+    expect((v.slots[2].warnings.join('。') || null)).toContain('イベントで使えない')
+    expect((v.slots[3].warnings.join('。') || null)).toContain('ローラの部屋の扉')
   })
 
   it('読み出し→書き戻しでバイト一致する', () => {
@@ -272,6 +293,6 @@ describe('[U] 2026-10-05 U-14：会談の手紙（0x00。7回目の訂正で 0x0
     expect(() => writeValuable(b, 3, 0x01, 1)).toThrow()
     const v = readValuables(b)
     expect(v.slots[2]).toMatchObject({ id: 0x00, count: 1, label: '会談の手紙', problem: null, idWritable: true })
-    expect(v.slots[2].warning).toContain('セーブできなくなる')
+    expect((v.slots[2].warnings.join('。') || null)).toContain('セーブできなくなる')
   })
 })

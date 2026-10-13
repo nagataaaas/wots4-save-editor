@@ -46,7 +46,7 @@ export function SwitchRow({
 
 /**
  * ふだんは変更不可にし、武器ごとに「○○を上書き」を押したときだけ選べる欄（鞘・武器種。ユーザー判断 2026-10-05）。
- * 押したことを、書き込み関数の「明示した」印（AdvancedOptions）として渡す。どちらも 🔶 データ破損のおそれ
+ * 押したことを、書き込み関数の「明示した」印（EditOpts）として渡す。どちらも 🔶 データ破損のおそれ
  */
 export function OverrideRow({
   label,

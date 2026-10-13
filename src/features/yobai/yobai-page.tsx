@@ -48,6 +48,7 @@ import {
   type YobaiView,
 } from "@/save/yobai";
 import { readU16 } from "@/save/binary";
+import type { EditOpts } from "@/save/field";
 import { DATE_OFFSETS } from "@/save/scenario-date";
 import {
   createPromise,
@@ -231,7 +232,7 @@ function PersonFieldEditor({
   offset: number;
   current: number | null;
   problem: string | null;
-  write: (bytes: Uint8Array, value: number, opts: { advanced: boolean }) => void;
+  write: (bytes: Uint8Array, value: number, opts: EditOpts) => void;
 }) {
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
@@ -650,7 +651,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
 
 function PromiseCard({ view }: { view: YobaiView | null }) {
   const promise = view?.promise ?? null;
-  const problem = view?.promiseProblem ?? null;
+  const problem = view?.promise.problem ?? null;
 
   return (
     <AnchoredCard anchor={YOBAI_ANCHORS.currentPromise} searchLabel="夜の約束">
@@ -713,7 +714,7 @@ function RecordRow({ record, problem }: { record: RecordView; problem: string | 
 
 /** 夜這いの記録。🔶 差分からの推定で、書き換えの反映は未確認 */
 function RecordsCard({ view }: { view: YobaiView | null }) {
-  const problem = view?.recordsProblem ?? null;
+  const problem = view?.recordsStatus.problem ?? null;
 
   return (
     <CollapsibleCard
@@ -840,7 +841,7 @@ export function YobaiPage() {
   const { save } = useSave();
 
   const { view: result, error: readError, problem } = useSaveView(readYobaiViews, {
-    problem: (v) => v.view.promiseProblem,
+    problem: (v) => v.view.promise.problem,
   });
 
   const view = result?.view ?? null;

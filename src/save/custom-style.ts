@@ -7,6 +7,8 @@
 // 書き込みはすべて 🟢（要ゲーム内確認）。
 // 固定オフセットを使い、ファイルサイズ・件数・相互参照を検証する。検証に落ちたら読み取り専用。
 import { readI16, readU16, readUtf16Fixed, writeI16, writeU16, writeU8 } from './binary'
+import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from './field'
+import { assertWritable } from './layout'
 import {
   SKILL_NO_COUNT,
   STANCE_COUNT,
@@ -99,8 +101,7 @@ export type CustomStyle = {
   equipped: boolean
 }
 
-export type CustomStylesView = {
-  problem: string | null
+export type CustomStylesView = ViewStatus & {
   styles: CustomStyle[]
   sheets: CustomSheet[]
   sects: SectsView
@@ -171,12 +172,12 @@ export function readCustomStyles(bytes: Uint8Array): CustomStylesView {
       equipped: sects.equipped.includes(id),
     })
   }
-  return { problem: problems.length ? [...new Set(problems)].join(' ／ ') : null, styles, sheets, sects }
+  return { warnings: [], problem: problems.length ? [...new Set(problems)].join(' ／ ') : null, styles, sheets, sects }
 }
 
 // 書き込み。不正な値は例外にして、バイト列を変えない（呼び出し側は save-context の update で包む）。
 
-function assertWritable(bytes: Uint8Array): CustomStylesView {
+function requireEditable(bytes: Uint8Array): CustomStylesView {
   const view = readCustomStyles(bytes)
   if (view.problem) throw new RangeError(view.problem)
   return view
@@ -188,9 +189,7 @@ function findStyle(view: CustomStylesView, id: number): CustomStyle {
   return s
 }
 
-export type EditOptions = { advanced?: boolean }
-
-export function validateCustomName(name: string, options: EditOptions = {}): string | null {
+export function validateCustomName(name: string, options: EditOpts = NORMAL_EDIT_OPTS): string | null {
   const max = options.advanced ? NAME_MAX_ADVANCED : NAME_MAX
   if (name.length === 0) return '名前が空です'
   if (name.length > max) return `名前は${max}文字までです`
@@ -208,10 +207,11 @@ function writeName(bytes: Uint8Array, style: CustomStyle, name: string): void {
   }
 }
 
-export function writeCustomName(bytes: Uint8Array, id: number, name: string, options: EditOptions = {}): void {
+export function writeCustomName(bytes: Uint8Array, id: number, name: string, options: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes)
   const problem = validateCustomName(name, options)
   if (problem) throw new RangeError(problem)
-  const view = assertWritable(bytes)
+  const view = requireEditable(bytes)
   writeName(bytes, findStyle(view, id), name)
 }
 
@@ -225,9 +225,10 @@ export function validateCustomValues(v: CustomValues): string | null {
 }
 
 export function writeCustomValues(bytes: Uint8Array, id: number, v: CustomValues): void {
+  assertWritable(bytes)
   const problem = validateCustomValues(v)
   if (problem) throw new RangeError(problem)
-  const style = findStyle(assertWritable(bytes), id)
+  const style = findStyle(requireEditable(bytes), id)
   writeI16(bytes, sectValueOffset(style.offset, 'mastery'), v.mastery)
   writeI16(bytes, sectValueOffset(style.offset, 'rank'), v.rank)
   writeI16(bytes, sectValueOffset(style.offset, 'kills'), v.kills)
@@ -330,7 +331,7 @@ export function validateSkillSelection(
   view: CustomStylesView,
   stance: number,
   skillNos: readonly number[],
-  options: EditOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): string | null {
   if (skillNos.length === 0) return '技が 1 つもありません'
   if (skillNos.length > CUSTOM_SHEET_SKILL_MAX) return `技は ${CUSTOM_SHEET_SKILL_MAX} 個までです`
@@ -377,8 +378,9 @@ function writeSheetBody(bytes: Uint8Array, offset: number, id: number, stance: n
 }
 
 /** 俺流の技の表の技を入れ替える */
-export function writeCustomSheetSkills(bytes: Uint8Array, sheetId: number, skillNos: readonly number[], options: EditOptions = {}): void {
-  const view = assertWritable(bytes)
+export function writeCustomSheetSkills(bytes: Uint8Array, sheetId: number, skillNos: readonly number[], options: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes)
+  const view = requireEditable(bytes)
   const sheet = view.sheets.find((s) => s.id === sheetId)
   if (!sheet) throw new RangeError('その構えの技の表がありません')
   const problem = validateSkillSelection(view, sheet.stance, skillNos, options)
@@ -398,8 +400,9 @@ function newSheetId(view: CustomStylesView): number {
 }
 
 /** 俺流に構え（技の表）を足す。同じ構えの組で、まだ入っていない構えだけ 🟢 */
-export function addCustomStance(bytes: Uint8Array, id: number, stance: number, skillNos: readonly number[], options: EditOptions = {}): void {
-  const view = assertWritable(bytes)
+export function addCustomStance(bytes: Uint8Array, id: number, stance: number, skillNos: readonly number[], options: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes)
+  const view = requireEditable(bytes)
   const style = findStyle(view, id)
   const free = style.sheetIds.indexOf(-1)
   if (free < 0) throw new RangeError('構えは 3 つまでです')
@@ -428,7 +431,8 @@ function removeSheet(bytes: Uint8Array, view: CustomStylesView, sheetId: number)
 
 /** 俺流から構えを外す（最後の 1 つは外せない） */
 export function removeCustomStance(bytes: Uint8Array, id: number, sheetId: number): void {
-  const view = assertWritable(bytes)
+  assertWritable(bytes)
+  const view = requireEditable(bytes)
   const style = findStyle(view, id)
   const ids = style.sheetIds.filter((s) => s >= 0)
   if (!ids.includes(sheetId)) throw new RangeError('この俺流にその構えはありません')
@@ -452,8 +456,9 @@ export type NewCustomStyle = { name: string; stance: number; skillNos: readonly 
  * 俺流を新しく作る 🟢（要ゲーム内確認）。ゲームと同じく、流派 ID・技の表 ID は空いている最小の番号、
  * 流派の書は持ち歩きの最初の空き（なければ箪笥）に入れる。白紙目録は使わない。作った流派 ID を返す
  */
-export function createCustomStyle(bytes: Uint8Array, spec: NewCustomStyle, options: EditOptions = {}): number {
-  const view = assertWritable(bytes)
+export function createCustomStyle(bytes: Uint8Array, spec: NewCustomStyle, options: EditOpts = NORMAL_EDIT_OPTS): number {
+  assertWritable(bytes)
+  const view = requireEditable(bytes)
   const nameProblem = validateCustomName(spec.name, options)
   if (nameProblem) throw new RangeError(nameProblem)
   if (view.styles.length >= CUSTOM_SLOTS) throw new RangeError('俺流に空きがありません')
@@ -502,8 +507,9 @@ function removeScroll(bytes: Uint8Array, view: SectsView, scroll: ScrollSlot): v
 }
 
 /** 俺流を消す（ゲームで捨てたときと同じく、俺流・技の表・流派の書を消す 🟢）。装備中は消せない */
-export function deleteCustomStyle(bytes: Uint8Array, id: number, options: EditOptions = {}): void {
-  const view = assertWritable(bytes)
+export function deleteCustomStyle(bytes: Uint8Array, id: number, options: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes)
+  const view = requireEditable(bytes)
   const style = findStyle(view, id)
   if (style.equipped) throw new RangeError('装備している俺流は消せません')
   if (style.kind !== 'player' && !options.advanced) throw new RangeError('生きた証の写しは上級者モードでだけ消せます')

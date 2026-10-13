@@ -2,7 +2,7 @@
 // 値は docs/save_format/chunks/occupation（受注・クリアの差分 2026-10-06・2026-10-07）で見たもの。
 import { describe, expect, it } from "vitest";
 import { writeU16 } from "./binary";
-import { TS_SAVE_SIZE } from "./hero";
+import { TS_SAVE_SIZE } from './layout'
 import { OCCUPATIONS, OCCUPATION_GROUPS, occupationById, occupationGroupOf } from "./master/occupation-names";
 import { occupationLabel } from "./master/labels";
 import {
@@ -78,7 +78,7 @@ describe("なりわいの状態の表 0x33A4〜 chunks/occupation", () => {
 
   it("✅ 1 以上はクリア回数。🟢 合計がクリア数 0x433A6 に等しい", () => {
     const view = readOccupations(makeSave());
-    expect(view.layoutProblem).toBeNull();
+    expect(view.problem).toBeNull();
     expect(view.states[209]).toBe(1);
     expect(view.states[3]).toBe(OCCUPATION_NOT_APPEARED);
     expect(view.stateSum).toBe(4);
@@ -128,14 +128,14 @@ describe("なりわいの状態の表 0x33A4〜 chunks/occupation", () => {
   it("🔶 状態が FFFF か 0〜999 でない（位置がずれた）セーブは読み取り専用", () => {
     const b = makeSave();
     writeU16(b, occupationStateOffset(50), 0x1234);
-    expect(readOccupations(b).layoutProblem).not.toBeNull();
+    expect(readOccupations(b).problem).not.toBeNull();
     expect(() => writeOccupationState(b, 209, 2, { advanced: true })).toThrow(RangeError);
     expect(() => syncClearCount(b)).toThrow(RangeError);
   });
 
   it("サイズが 0x48BB0 でなければ読み取り専用にする", () => {
     const b = makeSave(TS_SAVE_SIZE + 4);
-    expect(readOccupations(b).layoutProblem).not.toBeNull();
+    expect(readOccupations(b).problem).not.toBeNull();
     expect(() => writeOccupationState(b, 209, 2, { advanced: true })).toThrow(RangeError);
   });
 

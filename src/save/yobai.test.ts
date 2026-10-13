@@ -5,7 +5,7 @@
 // 🟢 +0x02（group）は町の人の種類ごとのまとまり（日付ではない ✅ [U] 2026-10-07）。書き換えの効果は未確認。
 // 🟢 名前の ID は master/npc-names.ts の表にあるものだけを通常モードで書ける。
 import { describe, expect, it } from 'vitest'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   PLACES,
   PLACE_LAYOUTS,
@@ -56,9 +56,11 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 
 describe('夜の約束 0x14038〜 chunks/night-visit', () => {
   it('かえでの約束を読む', () => {
-    const { promise, promiseProblem } = readYobai(makeSave())
-    expect(promiseProblem).toBeNull()
+    const { promise } = readYobai(makeSave())
+    expect(promise.problem).toBeNull()
     expect(promise).toEqual({
+      problem: null,
+      warnings: [],
       active: true,
       group: 1, // ✅ [U] 2026-10-07 日付ではない。❓ 町の人は 1〜3
       day: 1, // 🔶 +0x28 約束した日（2日目）
@@ -168,8 +170,8 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
   it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     const b = makeSave({ size: TS_SAVE_SIZE + 4 })
     const view = readYobai(b)
-    expect(view.promiseProblem).not.toBeNull()
-    expect(view.recordsProblem).not.toBeNull()
+    expect(view.promise.problem).not.toBeNull()
+    expect(view.recordsStatus.problem).not.toBeNull()
     expect(() => writePromiseField(b, 'age', 30, { advanced: true })).toThrow(RangeError)
     expect(() => writeRecordField(b, 0, 'age', 30, { advanced: true })).toThrow(RangeError)
   })
@@ -178,7 +180,7 @@ describe('夜の約束 0x14038〜 chunks/night-visit', () => {
 describe('🟢 夜這いの記録 0x137F0〜0x13E2F（16 B × 100件、最初の空きに書く）chunks/night-visit', () => {
   it('先頭から続く使用中の記録を読む', () => {
     const view = readYobai(makeSave())
-    expect(view.recordsProblem).toBeNull()
+    expect(view.recordsStatus.problem).toBeNull()
     expect(view.count).toBe(2)
     // 🟢 +0x08 は建物の番号（さよ＝お屋敷 0x218、かえで＝稲荷前 0x217）
     expect(view.records[0]).toEqual({ index: 0, type: 0x031b, name: 0xd7, building: 0x218, day: 0, age: 0xff, blood: 5 })
@@ -192,13 +194,13 @@ describe('🟢 夜這いの記録 0x137F0〜0x13E2F（16 B × 100件、最初の
     const b = makeSave()
     new DataView(b.buffer).setUint32(0x13e34, 48, true)
     const view = readYobai(b)
-    expect(view.recordsProblem).toBeNull()
+    expect(view.recordsStatus.problem).toBeNull()
     expect(view.count).toBe(2)
   })
 
   it('🟢 100件すべて使用中でも読める', () => {
     const view = readYobai(makeSave({ records: Array.from({ length: 100 }, () => RECORD_KAEDE) }))
-    expect(view.recordsProblem).toBeNull()
+    expect(view.recordsStatus.problem).toBeNull()
     expect(view.count).toBe(100)
   })
 
@@ -224,19 +226,19 @@ describe('🟢 夜這いの記録 0x137F0〜0x13E2F（16 B × 100件、最初の
     const b = makeSave({ records: [RECORD_LAURA] })
     new DataView(b.buffer).setUint32(0x137ec, 2, true)
     const view = readYobai(b)
-    expect(view.recordsProblem).toBeNull()
+    expect(view.recordsStatus.problem).toBeNull()
     expect(view.records[0]).toEqual({ index: 0, type: 0x01c6, name: 0x0b, building: 0x221, day: 2, age: 0xff, blood: 1 })
     expect(view.counters[0].value).toBe(2)
   })
 
   it('🟢 途中に空きがある並びはゲームが作らないので読み取り専用', () => {
     const view = readYobai(makeSave({ records: [RECORD_SAYO, null, RECORD_KAEDE] }))
-    expect(view.recordsProblem).not.toBeNull()
+    expect(view.recordsStatus.problem).not.toBeNull()
     expect(view.count).toBe(1)
     expect(() => writeRecordField(makeSave({ records: [RECORD_SAYO, null, RECORD_KAEDE] }), 0, 'age', 30, { advanced: true })).toThrow(
       RangeError,
     )
-    expect(readYobai(makeSave({ records: [] })).recordsProblem).toBeNull()
+    expect(readYobai(makeSave({ records: [] })).recordsStatus.problem).toBeNull()
     expect(readYobai(makeSave({ records: [] })).count).toBe(0)
   })
 

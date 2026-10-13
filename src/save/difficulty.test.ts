@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
 import { DIFFICULTIES, DIFFICULTY_OFFSET, readDifficulty, writeDifficulty } from './difficulty'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 
 /** 0x0000〜0x0003（実セーブで見た並び） */
 const SEEN = {
@@ -28,8 +28,8 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 
 describe('難易度 0x0000', () => {
   it('✅ [U] 易しい＝0・超難しい＝3 を読む', () => {
-    expect(readDifficulty(makeSave(SEEN.easy))).toEqual({ value: 0, label: '易しい', warning: null, problem: null })
-    expect(readDifficulty(makeSave(SEEN.harakiri))).toEqual({ value: 3, label: '超難しい', warning: null, problem: null })
+    expect(readDifficulty(makeSave(SEEN.easy))).toEqual({ value: 0, label: '易しい', warnings: [], problem: null })
+    expect(readDifficulty(makeSave(SEEN.harakiri))).toEqual({ value: 3, label: '超難しい', warnings: [], problem: null })
   })
 
   it('✅ 易しい＝0・超難しい＝3、🟢 普通＝1・難しい＝2', () => {
@@ -45,12 +45,12 @@ describe('難易度 0x0000', () => {
     const b = makeSave(SEEN.easy)
     writeU8(b, DIFFICULTY_OFFSET, 4)
     expect(readDifficulty(b)).toMatchObject({ label: null, problem: null })
-    expect(readDifficulty(b).warning).toMatch(/想定外/)
-    expect(readDifficulty(b).warning).not.toMatch(/0x|[0-9]/)
+    expect((readDifficulty(b).warnings.join('。') || null)).toMatch(/想定外/)
+    expect((readDifficulty(b).warnings.join('。') || null)).not.toMatch(/0x|[0-9]/)
     for (const offset of [1, 2, 7]) {
       const c = makeSave(SEEN.easy)
       writeU8(c, offset, 1)
-      expect(readDifficulty(c).warning).toMatch(/使われていない/)
+      expect((readDifficulty(c).warnings.join('。') || null)).toMatch(/使われていない/)
     }
   })
 

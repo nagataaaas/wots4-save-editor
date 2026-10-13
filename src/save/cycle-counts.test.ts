@@ -13,7 +13,7 @@ import {
   validatePlayCount,
   writePlayCount,
 } from './cycle-counts'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 
 /** 実セーブ1件の値：クリア回数（難易度ごと）・立ち去った回数・周回数 */
 const CLEARS = [3, 1, 2, 0]
@@ -44,7 +44,7 @@ describe('🟢 周回数 0x0B8C', () => {
       clears: [3, 1, 2, 0],
       clearTotal: 6,
       goneCount: 32,
-      warning: null,
+      warnings: [],
       problem: null,
     })
   })
@@ -82,7 +82,7 @@ describe('🟢 周回数 0x0B8C', () => {
     const b = makeSave()
     writeU32(b, PLAY_COUNT_OFFSET, PLAY_COUNT_MAX + 1)
     const v = readCycleCounts(b)
-    expect(v.warning).not.toBeNull()
+    expect((v.warnings.join('。') || null)).not.toBeNull()
     expect(v.problem).toBeNull()
   })
 

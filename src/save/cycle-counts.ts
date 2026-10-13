@@ -9,7 +9,8 @@
 // クリア回数・立ち去った回数はここでは読むだけ（新しい周回の書き込みが増やす。new-cycle.ts）。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, writeU32 } from './binary'
-import { checkLayout } from './hero'
+import { warningsOf, type EditOpts, type ViewStatus } from './field'
+import { assertWritable, checkLayout } from './layout'
 
 /** 🟢 周回数（u32） */
 export const PLAY_COUNT_OFFSET = 0x0b8c
@@ -23,16 +24,13 @@ export const CLEAR_COUNTS_OFFSET = 0x43398
 /** 🟢 立ち去った回数（u32） */
 export const GONE_COUNT_OFFSET = 0x46340
 
-export type CycleCountsView = {
+/** warnings は、周回数が通常の上限を超えているなど、編集はできるが注意が必要な理由 */
+export type CycleCountsView = ViewStatus & {
   playCount: number
   /** 難易度 0〜3 のクリア回数 */
   clears: readonly number[]
   clearTotal: number
   goneCount: number
-  /** 周回数が通常の上限を超えているなど、編集はできるが注意が必要な理由 */
-  warning: string | null
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null
 }
 
 export function readCycleCounts(bytes: Uint8Array): CycleCountsView {
@@ -44,16 +42,15 @@ export function readCycleCounts(bytes: Uint8Array): CycleCountsView {
     clears,
     clearTotal: clears.reduce((a, b) => a + b, 0),
     goneCount: readU32(bytes, GONE_COUNT_OFFSET),
-    warning:
-      playCount > PLAY_COUNT_MAX
-        ? `周回数がゲームの上限（${PLAY_COUNT_MAX.toLocaleString()}）を超えています`
-        : null,
+    warnings: warningsOf(
+      playCount > PLAY_COUNT_MAX ? `周回数がゲームの上限（${PLAY_COUNT_MAX.toLocaleString()}）を超えています` : null,
+    ),
     problem: checkLayout(bytes),
   }
 }
 
 /** 通常モードは 0〜99,999、上級者モードは任意の u32。問題がなければ null */
-export function validatePlayCount(value: number, opts: { advanced: boolean }): string | null {
+export function validatePlayCount(value: number, opts: EditOpts): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 0xffff_ffff) return `値が範囲外です: ${value}`
   if (!opts.advanced && value > PLAY_COUNT_MAX)
     return `通常モードでは 0〜${PLAY_COUNT_MAX.toLocaleString()} を指定してください: ${value}`
@@ -61,9 +58,8 @@ export function validatePlayCount(value: number, opts: { advanced: boolean }): s
 }
 
 /** 0x0B8C の4バイトだけを書く（🟢。ゲーム内での反映は要確認） */
-export function writePlayCount(bytes: Uint8Array, value: number, opts: { advanced: boolean }): void {
-  const problem = checkLayout(bytes)
-  if (problem) throw new RangeError(problem)
+export function writePlayCount(bytes: Uint8Array, value: number, opts: EditOpts): void {
+  assertWritable(bytes)
   const error = validatePlayCount(value, opts)
   if (error) throw new RangeError(error)
   writeU32(bytes, PLAY_COUNT_OFFSET, value)
@@ -71,8 +67,7 @@ export function writePlayCount(bytes: Uint8Array, value: number, opts: { advance
 
 /** 🟢 周回を終えたときにゲームが行う +1（99,999 で止まる）。新しい周回の書き込みと一緒に使う */
 export function countFinishedCycle(bytes: Uint8Array): void {
-  const problem = checkLayout(bytes)
-  if (problem) throw new RangeError(problem)
+  assertWritable(bytes)
   const n = readU32(bytes, PLAY_COUNT_OFFSET)
   if (n < PLAY_COUNT_MAX) writeU32(bytes, PLAY_COUNT_OFFSET, n + 1)
 }

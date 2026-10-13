@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { errorMessage } from '@/lib/error-message'
+import { formatWarnings } from '@/lib/format'
 import { matchesSearch } from '@/lib/search'
 import { cn } from '@/lib/utils'
 import { EMPTY_ID, validateItemCount, type ItemOptionGroup, type ItemSlot } from '@/save/item-slot'
@@ -73,6 +74,7 @@ export function ItemSlotRow({
   const [error, setError] = useState<string | null>(null)
 
   const readOnly = slot === null || slot.problem !== null
+  const warning = formatWarnings(slot?.warnings)
   const isEmpty = slot?.id === EMPTY_ID
   // 現在の ID が書けない値（未知など）なら、ID の変更だけを許し、個数は変えられない
   const countLocked = slot === null || slot.problem !== null || isEmpty || !slot.idWritable
@@ -268,7 +270,7 @@ export function ItemSlotRow({
       ) : error ? (
         <p className="text-destructive col-start-2 text-xs">{error}</p>
       ) : (
-        slot?.warning && <p className="col-start-2 text-xs text-amber-600 dark:text-amber-400">⚠ {slot.warning}</p>
+        warning && <p className="col-start-2 text-xs text-amber-600 dark:text-amber-400">⚠ {warning}</p>
       )}
     </div>
   )

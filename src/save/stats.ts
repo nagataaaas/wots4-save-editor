@@ -18,7 +18,8 @@
 // 上限はゲームが値を増やすときの上限（🟢）。通常モードはそこまで、上級者モードは型で書ける範囲まで受け付ける。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readF32, readU16, readU32, writeF32, writeU16, writeU32 } from './binary'
-import { checkLayout } from './hero'
+import { warningsOf, type EditOpts, type ViewStatus } from './field'
+import { assertWritable, checkLayout } from './layout'
 
 export type StatType = 'u16' | 'u32' | 'f32'
 
@@ -349,13 +350,11 @@ export type StatValue = {
   field: StatField
   value: number
   /** 通常の上限を超えているなど、編集はできるが注意が必要な理由 */
-  warning: string | null
+  warnings: string[]
 }
 
-export type StatsView = {
+export type StatsView = ViewStatus & {
   values: readonly StatValue[]
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null
 }
 
 function readField(bytes: Uint8Array, f: StatField): number {
@@ -367,6 +366,7 @@ function readField(bytes: Uint8Array, f: StatField): number {
 export function readStats(bytes: Uint8Array): StatsView {
   if (bytes.byteLength < 0x0c64) throw new RangeError('ファイルが小さすぎて記録を読めません')
   return {
+    warnings: [],
     values: STAT_FIELDS.map((field) => {
       const value = readField(bytes, field)
       const warning = !Number.isFinite(value)
@@ -374,14 +374,14 @@ export function readStats(bytes: Uint8Array): StatsView {
         : value < 0 || value > field.max
           ? `現在の値（${value.toLocaleString()}）は通常の範囲（0〜${field.max.toLocaleString()}）の外です`
           : null
-      return { field, value, warning }
+      return { field, value, warnings: warningsOf(warning) }
     }),
     problem: checkLayout(bytes),
   }
 }
 
 /** 通常モードは 0〜上限、上級者モードは型で書ける範囲。問題がなければ null */
-export function validateStat(field: StatField, value: number, opts: { advanced: boolean }): string | null {
+export function validateStat(field: StatField, value: number, opts: EditOpts): string | null {
   if (field.type === 'f32') {
     if (!Number.isFinite(value) || Math.abs(value) > F32_MAX) return '数値を入力してください'
     if (opts.advanced) return null
@@ -396,9 +396,8 @@ export function validateStat(field: StatField, value: number, opts: { advanced: 
 }
 
 /** 1項目の幅（2 B か 4 B）だけを書く */
-export function writeStat(bytes: Uint8Array, key: string, value: number, opts: { advanced: boolean }): void {
-  const problem = checkLayout(bytes)
-  if (problem) throw new RangeError(problem)
+export function writeStat(bytes: Uint8Array, key: string, value: number, opts: EditOpts): void {
+  assertWritable(bytes)
   const field = statField(key)
   const error = validateStat(field, value, opts)
   if (error) throw new RangeError(error)

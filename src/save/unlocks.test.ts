@@ -5,7 +5,7 @@
 // 特典解除は ✅ [U] 2026-10-07 先頭16件の表示、31（J.J. の顔）の解除前後の差分、101（ライフルの免許）への2の書き込みを確認。ほかは 🔶 U-17。
 import { describe, expect, it } from "vitest";
 import { writeU8 } from "./binary";
-import { TS_SAVE_SIZE } from "./hero";
+import { TS_SAVE_SIZE } from './layout'
 import {
   ACCESSORY_FLAGS_OFFSET,
   APPEARANCE_REWARDS,
@@ -55,8 +55,8 @@ describe("✅ 装飾品の所持フラグ chunks/accessories", () => {
     const v = readAccessoryFlags(makeSave());
     expect(v.values.length).toBe(158);
     expect(v.values.flatMap((x, i) => (x ? [i] : []))).toEqual(OWNED);
-    expect(v.layoutProblem).toBeNull();
-    expect(v.warning).toBeNull();
+    expect(v.problem).toBeNull();
+    expect((v.warnings.join('。') || null)).toBeNull();
   });
 
   it("1 B だけを書き、書き戻すと元に戻る（往復）", () => {
@@ -80,13 +80,13 @@ describe("✅ 装飾品の所持フラグ chunks/accessories", () => {
     const b = makeSave();
     expect(() => writeAccessoryFlag(b, 1, 2, { advanced: false })).toThrow();
     writeAccessoryFlag(b, 1, 2, { advanced: true });
-    expect(readAccessoryFlags(b).warning).toContain("想定外");
+    expect((readAccessoryFlags(b).warnings.join('。') || null)).toContain("想定外");
     expect(() => writeAccessoryFlag(b, 158, 1, { advanced: true })).toThrow();
   });
 
   it("ファイルサイズが違うと読み取り専用", () => {
     const b = makeSave(TS_SAVE_SIZE + 4);
-    expect(readAccessoryFlags(b).layoutProblem === null).toBe(false);
+    expect(readAccessoryFlags(b).problem === null).toBe(false);
     expect(() => writeAccessoryFlag(b, 1, 1, { advanced: false })).toThrow();
   });
 });
@@ -168,7 +168,7 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     expect(v.offset).toBe(0x43318);
     expect(v.values.slice(0, 16)).toEqual([2, 2, 2, 0, 2, 2, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0]);
     expect(Object.fromEntries(v.values.flatMap((x, i) => (x ? [[i, x]] : [])))).toEqual(UNLOCK_SEEN);
-    expect(v.warning).toBeNull();
+    expect((v.warnings.join('。') || null)).toBeNull();
   });
 
   it("✅ [U] 番号31の J.J. の顔は解除前後で 01→02。書き込み反映は 🔶 U-17", () => {
@@ -190,7 +190,7 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     for (const [i, v] of [3, 1, 2, 0, 2, 2, 3, 12].entries()) writeU8(ambiguous, 0x43418 + 128 + i * 2, v);
     ambiguous.fill(0xaa, 0x43308, 0x43318);
     ambiguous.fill(0xbb, 0x43382, 0x433a8);
-    expect(readUnlockStates(ambiguous).layoutProblem).toBeNull();
+    expect(readUnlockStates(ambiguous).problem).toBeNull();
     const before = ambiguous.slice();
     writeUnlockState(ambiguous, 3, 2, { advanced: false });
     expect(diffOffsets(before, ambiguous)).toEqual([0x4331b]);
@@ -199,7 +199,8 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
   it("🔶 U-17 サイズ・境界・状態値の検証に落ちたら書き込まない", () => {
     for (const bytes of [new Uint8Array(16), makeSave(TS_SAVE_SIZE + 4)]) {
       const before = bytes.slice();
-      expect(readUnlockStates(bytes).layoutProblem).not.toBeNull();
+      if (bytes.length < 0x43318 + 106) expect(() => readUnlockStates(bytes)).toThrow(RangeError);
+      else expect(readUnlockStates(bytes).problem).not.toBeNull();
       expect(() => writeUnlockState(bytes, 0, 2, { advanced: false })).toThrow();
       expect(bytes).toEqual(before);
     }
@@ -209,14 +210,14 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     const b = makeSave();
     writeUnlockState(b, 40, 3, { advanced: true });
     expect(readUnlockStates(b).values[40]).toBe(3);
-    expect(readUnlockStates(b).layoutProblem).toBeNull();
-    expect(readUnlockStates(b).warning).toContain("想定外");
+    expect(readUnlockStates(b).problem).toBeNull();
+    expect((readUnlockStates(b).warnings.join('。') || null)).toContain("想定外");
     // 別の特典も書け、上級者モードでなくても 0〜2 に戻せる
     writeUnlockState(b, 0, 2, { advanced: false });
     writeUnlockState(b, 40, 1, { advanced: false });
     expect(readUnlockStates(b).values[0]).toBe(2);
     expect(readUnlockStates(b).values[40]).toBe(1);
-    expect(readUnlockStates(b).warning).toBeNull();
+    expect((readUnlockStates(b).warnings.join('。') || null)).toBeNull();
   });
 
   it("1 B だけを書き、書き戻すと元に戻る（往復）", () => {

@@ -76,7 +76,7 @@ describe('useSaveView', () => {
   })
   it('problem で取り出した理由で読み取り専用にする', () => {
     load()
-    const ok = render(() => useSaveView(() => ({ layoutProblem: null }), { problem: v => v.layoutProblem }))
+    const ok = render(() => useSaveView(() => ({ problem: null }), { problem: v => v.problem }))
     expect(ok).toMatchObject({ problem: null, readOnly: false })
     state.slots = []
     const ng = render(() => useSaveView(() => ({ inner: { problem: 'サイズが違います' } }), { problem: v => v.inner.problem }))

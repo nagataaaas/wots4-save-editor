@@ -72,7 +72,7 @@ export function AppearanceCurrentCard() {
                 hint={hint}
                 note={APPEARANCE_CURRENT_NOTES[key]}
                 onChange={(v) =>
-                  update((bytes) => writeAppearanceCurrent(bytes, key, Number(v), advanced))
+                  update((bytes) => writeAppearanceCurrent(bytes, key, Number(v), { advanced }))
                 }
               />
             </div>
@@ -84,7 +84,7 @@ export function AppearanceCurrentCard() {
             const text = input.trim();
             if (!/^\d+(\.\d+)?$/.test(text)) return { ok: false, error: "数値を入力してください" };
             const value = Number(text);
-            const error = validateAppearanceCurrent(key, value, advanced);
+            const error = validateAppearanceCurrent(key, value, { advanced });
             return error ? { ok: false, error } : { ok: true, value };
           };
           return (
@@ -102,7 +102,7 @@ export function AppearanceCurrentCard() {
                 }
                 parse={parse}
                 apply={(value) =>
-                  update((bytes) => writeAppearanceCurrent(bytes, key, value, advanced))
+                  update((bytes) => writeAppearanceCurrent(bytes, key, value, { advanced }))
                 }
                 inputMode={key === "height" ? "decimal" : "numeric"}
                 hint={

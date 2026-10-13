@@ -59,8 +59,8 @@ function readUnlockView(bytes: Uint8Array) {
  * 読み取り専用・エラーの表示と、書き込み（未読み込みの案内は NoSaveNotice が出す）。
  * ボタンの書き込みは失敗を受け止めて error に入れるので、カードの中の操作の近くに出す
  */
-function usePageState<T extends { layoutProblem: string | null }>(read: (bytes: Uint8Array) => T) {
-  const { view, error: readError, problem, readOnly } = useSaveView(read, { problem: (v) => v.layoutProblem });
+function usePageState<T extends { problem: string | null; }>(read: (bytes: Uint8Array) => T) {
+  const { view, error: readError, problem, readOnly } = useSaveView(read, { problem: (v) => v.problem });
   const { tryWrite: write, error } = useWrite();
   const banner = <PageBanner error={readError} problem={problem} />;
   return { view, readOnly, write, error, banner };
@@ -115,7 +115,7 @@ export function AccessoriesPage() {
             <br />
             所持 {ownedCount} / {ACCESSORY_COUNT}
           </CardDescription>
-          {view?.warning && <p className="text-destructive text-xs">{view.warning}</p>}
+          {view?.warnings.map((warning) => <p key={warning} className="text-destructive text-xs">{warning}</p>)}
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -299,7 +299,7 @@ function AppearanceUnlocksCard({ view, readOnly }: { view: UnlockStatesView | nu
             <br />
             クリックするたびに 非表示 → 未取得 → 取得済み の順に切り替わります。
           </CardDescription>
-          {view?.warning && <p className="text-destructive text-xs">{view.warning}</p>}
+          {view?.warnings.map((warning) => <p key={warning} className="text-destructive text-xs">{warning}</p>)}
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -328,8 +328,8 @@ type ClothFilter = "all" | "on" | "off";
 
 export function AppearancePage() {
   // 服と顔・髪型などの特典は別の領域なので別々に読み、片方が読めなくてももう片方は編集できるようにする
-  const clothes = useSaveView(readAppearance, { problem: (v) => v.layoutProblem });
-  const unlocks = useSaveView(readUnlockView, { problem: (v) => v.layoutProblem });
+  const clothes = useSaveView(readAppearance, { problem: (v) => v.problem });
+  const unlocks = useSaveView(readUnlockView, { problem: (v) => v.problem });
   const { view, readOnly } = clothes;
   const { tryWrite: write, error } = useWrite();
   // 同じ理由（ファイルが短い・サイズが違うなど）で両方が落ちたときは1つにまとめて出す
@@ -473,7 +473,7 @@ export function UnlocksPage() {
             全部を解除すると Steam の実績が取れることがあります（取れた実績は戻せません）。
             {/* 実績の例：すべての容姿設定を解除 */}
           </CardDescription>
-          {view?.warning && <p className="text-destructive text-xs">{view.warning}</p>}
+          {view?.warnings.map((warning) => <p key={warning} className="text-destructive text-xs">{warning}</p>)}
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">

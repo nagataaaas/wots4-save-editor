@@ -5,7 +5,7 @@
 // なりわいのフラグの値の表は src/save/flags/（flags.test.ts）。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   OCCUPATION_FLAG_COUNT,
   OCCUPATION_FLAG_START,

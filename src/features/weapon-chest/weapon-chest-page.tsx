@@ -11,7 +11,7 @@ import { WEAPON_LIST_ANCHORS } from "@/features/belt/anchors";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
-import { formatOffset } from "@/lib/format";
+import { formatOffset, formatWarnings } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
@@ -42,7 +42,7 @@ export function WeaponChestPage() {
   const showEmptyId = useId();
 
   const { view: result, error: readError, problem: layoutProblem } = useSaveView(readChest, {
-    problem: (v) => v.view.layoutProblem,
+    problem: (v) => v.view.problem,
   });
 
   const view = result?.view ?? null;
@@ -101,9 +101,9 @@ export function WeaponChestPage() {
             <span className="text-sm">
               {view ? `${view.count} 本（武器が入っている枠：${view.filled.length}）` : "—"}
             </span>
-            {view?.countWarning && !problem && (
+            {view && view.count !== view.filled.length && !problem && (
               <div className="flex flex-col items-start gap-2">
-                <p className="text-xs text-amber-600 dark:text-amber-400">{view.countWarning}</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400">{formatWarnings(view.warnings)}</p>
                 <Button variant="outline" size="sm" onClick={fixCount}>
                   {/* 🔶 */}
                   本数を枠の数に合わせる

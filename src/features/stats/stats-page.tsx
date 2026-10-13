@@ -16,6 +16,7 @@ import {
   type ScoreTableId,
 } from "@/save/score-tables";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { formatWarnings } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
@@ -73,7 +74,7 @@ export function StatsPage() {
         offset={field.offset}
         value={value}
         problem={view?.problem ?? null}
-        warning={v?.warning ?? null}
+        warning={formatWarnings(v?.warnings)}
         format={formatValue(field)}
         parse={(input) => parseValue(field, input, advanced)}
         apply={(n) => update((b) => writeStat(b, field.key, n, { advanced }))}

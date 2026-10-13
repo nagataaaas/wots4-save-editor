@@ -9,7 +9,8 @@
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
-import { checkLayout } from "./hero";
+import { warningsOf, type EditOpts, type ViewStatus } from "./field";
+import { assertWritable, checkLayout } from "./layout";
 
 /** ✅ [U] 治安の位置 */
 export const PUBLIC_ORDER_OFFSET = 0x15;
@@ -26,14 +27,11 @@ export const PUBLIC_ORDER_LEVELS: readonly { min: number; label: string }[] = [
   { min: 0, label: "とても悪い" },
 ];
 
-export type PublicOrderView = {
+/** warnings は、範囲外の値のとき。編集はできる */
+export type PublicOrderView = ViewStatus & {
   value: number;
   /** 🔶 段階の候補。範囲外なら null */
   level: string | null;
-  /** 範囲外の値なら理由。編集はできる */
-  warning: string | null;
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null;
 };
 
 export function publicOrderLevel(value: number): string | null {
@@ -47,13 +45,13 @@ export function readPublicOrder(bytes: Uint8Array): PublicOrderView {
   return {
     value,
     level: publicOrderLevel(value),
-    warning: value > PUBLIC_ORDER_MAX ? `治安がゲームの範囲（0〜${PUBLIC_ORDER_MAX}）を超えています` : null,
+    warnings: warningsOf(value > PUBLIC_ORDER_MAX ? `治安がゲームの範囲（0〜${PUBLIC_ORDER_MAX}）を超えています` : null),
     problem: checkLayout(bytes),
   };
 }
 
 /** 通常モードは 0〜99、上級者モードは任意の u8。問題がなければ null */
-export function validatePublicOrder(value: number, opts: { advanced: boolean }): string | null {
+export function validatePublicOrder(value: number, opts: EditOpts): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 0xff) return `値が範囲外です: ${value}`;
   if (!opts.advanced && value > PUBLIC_ORDER_MAX)
     return `通常モードでは 0〜${PUBLIC_ORDER_MAX} を指定してください: ${value}`;
@@ -61,9 +59,8 @@ export function validatePublicOrder(value: number, opts: { advanced: boolean }):
 }
 
 /** 0x0015 の1バイトだけを書く（✅ [U] 書き換えはゲームに反映される） */
-export function writePublicOrder(bytes: Uint8Array, value: number, opts: { advanced: boolean }): void {
-  const view = readPublicOrder(bytes);
-  if (view.problem) throw new RangeError(view.problem);
+export function writePublicOrder(bytes: Uint8Array, value: number, opts: EditOpts): void {
+  assertWritable(bytes);
   const error = validatePublicOrder(value, opts);
   if (error) throw new RangeError(error);
   writeU8(bytes, PUBLIC_ORDER_OFFSET, value);

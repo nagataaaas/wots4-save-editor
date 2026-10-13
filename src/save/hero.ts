@@ -5,10 +5,9 @@
 //   1. ファイルサイズが [TS] の構造体サイズ 0x48BB0 と一致する
 //   2. 各フィールドの値が妥当な範囲にある
 import { readF32, readU32, readU8, readUtf16Fixed, writeF32, writeU32, writeU8, writeUtf16Fixed } from './binary'
+import { warningsOf, type EditOpts, NORMAL_EDIT_OPTS, type Field, type ViewStatus, fixedStringProblem, validateText } from './field'
+import { assertWritable, checkLayout } from './layout'
 import { findLocation } from './locations'
-
-/** [TS] が扱うファイルサイズ（docs/save_format/README.md §2） */
-export const TS_SAVE_SIZE = 0x48bb0
 
 export const HERO_OFFSETS = {
   money: 0x08, // u32 ✅
@@ -80,17 +79,8 @@ function isCurrentKey(key: F32Key): key is CurrentKey {
   return key in MAX_OF
 }
 
-export type Field<T> = {
-  value: T
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null
-  /** 編集はできるが、現在の値に注意が必要な理由（正規範囲外など） */
-  warning?: string | null
-}
-
-export type HeroView = {
-  /** ファイル全体のレイアウト検証に落ちた理由。null なら通過 */
-  layoutProblem: string | null
+/** problem は、ファイル全体のレイアウト検証に落ちた理由。項目ごとの理由は各 Field にある */
+export type HeroView = ViewStatus & {
   name: Field<string>
   money: Field<number>
   cashbox: Field<number>
@@ -104,23 +94,8 @@ export type HeroView = {
   location: Field<number>
 }
 
-export function checkLayout(bytes: Uint8Array): string | null {
-  if (bytes.byteLength !== TS_SAVE_SIZE) {
-    return 'ファイルサイズが想定と異なります。読み取り専用にしています。'
-  }
-  return null
-}
-
-function hasControlChar(text: string): boolean {
-  for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) < 0x20) return true
-  return false
-}
-
 export function validateName(text: string): string | null {
-  if (text.length === 0) return '名前が空です'
-  if (text.length > NAME_MAX_CHARS) return `名前は${NAME_MAX_CHARS}文字までです（${text.length}文字）`
-  if (hasControlChar(text)) return '制御文字は使えません'
-  return null
+  return validateText(text, NAME_MAX_CHARS)
 }
 
 /** 入力値の検証（正規の上限まで） */
@@ -141,10 +116,10 @@ export function validateGauge(value: number): string | null {
  * 現在値の検証。最大値を超える値は正規範囲外として、上級者モードのときだけ受け付ける。
  * 🟢 ゲームはロード時に現在値を最大値で頭打ちにする（chunks/vitals「編集時の注意」）。
  */
-export function validateCurrent(value: number, max: number, allowOverMax = false): string | null {
+export function validateCurrent(value: number, max: number, opts: EditOpts = NORMAL_EDIT_OPTS): string | null {
   const base = validateGauge(value)
   if (base) return base
-  if (!allowOverMax && value > max) return `最大値（${Number(max.toPrecision(7)).toLocaleString()}）以下で入力してください`
+  if (!opts.advanced && value > max) return `最大値（${Number(max.toPrecision(7)).toLocaleString()}）以下で入力してください`
   return null
 }
 
@@ -156,7 +131,7 @@ export function validateLocation(value: number): string | null {
 }
 
 function field<T>(layoutProblem: string | null, value: T, problem: string | null): Field<T> {
-  return { value, problem: layoutProblem ?? problem }
+  return { warnings: [], value, problem: layoutProblem ?? problem }
 }
 
 export function readHero(bytes: Uint8Array): HeroView {
@@ -166,18 +141,14 @@ export function readHero(bytes: Uint8Array): HeroView {
   if (!canRead) throw new RangeError('ファイルが小さすぎて主人公の情報を読めません')
 
   const name = readUtf16Fixed(bytes, HERO_OFFSETS.name, NAME_BYTES)
-  const nameProblem = !name.terminated
-    ? '名前の終わりが見つかりません'
-    : !name.paddingClean
-      ? '名前の後ろに余計なデータがあります'
-      : validateName(name.text)
+  const nameProblem = fixedStringProblem(name, '名前') ?? validateName(name.text)
 
   const u32 = (key: U32Key) => {
     const v = readU32(bytes, HERO_OFFSETS[key])
     const implausible = v > AMOUNT_PLAUSIBLE_MAX ? `値が大きすぎます（${v.toLocaleString()}）` : null
     const outOfRange =
       v > AMOUNT_LIMITS[key] ? `現在の値（${v.toLocaleString()}）は正規の上限（${AMOUNT_LIMITS[key].toLocaleString()}）を超えています` : null
-    return { ...field(layoutProblem, v, implausible), warning: outOfRange }
+    return { ...field(layoutProblem, v, implausible), warnings: warningsOf(outOfRange) }
   }
   const f32 = (key: MaxKey) => {
     const v = readF32(bytes, HERO_OFFSETS[key])
@@ -187,12 +158,13 @@ export function readHero(bytes: Uint8Array): HeroView {
     const v = readF32(bytes, HERO_OFFSETS[key])
     const max = readF32(bytes, HERO_OFFSETS[MAX_OF[key]])
     const overMax = v > max ? `現在値が最大値（${Number(max.toPrecision(7)).toLocaleString()}）を超えています` : null
-    return { ...field(layoutProblem, v, validateGauge(v)), warning: overMax }
+    return { ...field(layoutProblem, v, validateGauge(v)), warnings: warningsOf(overMax) }
   }
   const location = readU8(bytes, HERO_OFFSETS.location)
 
   return {
-    layoutProblem,
+    warnings: [],
+    problem: layoutProblem,
     name: field(layoutProblem, name.text, nameProblem),
     money: u32('money'),
     cashbox: u32('cashbox'),
@@ -211,12 +183,14 @@ export function readHero(bytes: Uint8Array): HeroView {
 // 不正な値は例外にして、バイト列を変えない。
 
 export function writeName(bytes: Uint8Array, text: string): void {
+  assertWritable(bytes)
   const problem = validateName(text)
   if (problem) throw new RangeError(problem)
   writeUtf16Fixed(bytes, HERO_OFFSETS.name, NAME_BYTES, text)
 }
 
 export function writeAmount(bytes: Uint8Array, key: U32Key, value: number): void {
+  assertWritable(bytes)
   const problem = validateAmount(key, value)
   if (problem) throw new RangeError(problem)
   writeU32(bytes, HERO_OFFSETS[key], value)
@@ -224,11 +198,12 @@ export function writeAmount(bytes: Uint8Array, key: U32Key, value: number): void
 
 /**
  * HP・活力・つま斬りゲージの現在値・最大値（0x35A4〜0x35BB の float32）のうち、1つの4バイトだけを書く。
- * 現在値は最大値（セーブ上の値）以下に限る。allowOverMax（上級者モード）のときだけ超えてよい。
+ * 現在値は最大値（セーブ上の値）以下に限る。opts.advanced のときだけ超えてよい。
  */
-export function writeGauge(bytes: Uint8Array, key: F32Key, value: number, allowOverMax = false): void {
+export function writeGauge(bytes: Uint8Array, key: F32Key, value: number, opts: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes)
   const problem = isCurrentKey(key)
-    ? validateCurrent(value, readF32(bytes, HERO_OFFSETS[MAX_OF[key]]), allowOverMax)
+    ? validateCurrent(value, readF32(bytes, HERO_OFFSETS[MAX_OF[key]]), opts)
     : validateGauge(value)
   if (problem) throw new RangeError(problem)
   writeF32(bytes, HERO_OFFSETS[key], value)
@@ -236,6 +211,7 @@ export function writeGauge(bytes: Uint8Array, key: F32Key, value: number, allowO
 
 /** 0x13 の1バイトだけを書く（✅ U-7 案A） */
 export function writeLocation(bytes: Uint8Array, value: number): void {
+  assertWritable(bytes)
   const problem = validateLocation(value)
   if (problem) throw new RangeError(problem)
   writeU8(bytes, HERO_OFFSETS.location, value)

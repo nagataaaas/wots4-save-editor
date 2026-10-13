@@ -4,7 +4,7 @@
 // 貴重品を前に詰めるのは 🔶。現在地 0x27 は値が 🟢・意味が 🔶。
 import { describe, expect, it } from 'vitest'
 import { readF32, readU16, readU32, writeF32, writeU16, writeU32 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   NEW_CYCLE_CLEARED_OCCUPATION_FLAGS,
   NEW_CYCLE_KEEP_FLAGS,

@@ -118,7 +118,7 @@ const readViews = (bytes: Uint8Array) => ({ occupations: readOccupations(bytes),
 export function OccupationPage() {
   const { save } = useSave();
   const { view: views, error: readError, problem } = useSaveView(readViews, {
-    problem: (v) => v.occupations.layoutProblem,
+    problem: (v) => v.occupations.problem,
   });
 
   return (
@@ -137,7 +137,7 @@ export function OccupationPage() {
 
 function SummaryCard({ view, accepted }: { view: OccupationView | null; accepted: AcceptedView | null }) {
   const { tryWrite, error } = useWrite();
-  const readOnly = !view || view.layoutProblem !== null;
+  const readOnly = !view || view.problem !== null;
   const mismatch = view !== null && view.clearCount !== view.stateSum;
 
   return (
@@ -331,7 +331,7 @@ type KindFilter = "all" | StateKind;
 function StatesCard({ view }: { view: OccupationView | null }) {
   const { write, attempt, error } = useWrite();
   const { advanced } = useAdvancedMode();
-  const readOnly = !view || view.layoutProblem !== null;
+  const readOnly = !view || view.problem !== null;
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState("all");
   const [filter, setFilter] = useState<KindFilter>("all");

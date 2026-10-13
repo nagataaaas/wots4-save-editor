@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { formatWarnings } from "@/lib/format";
 import { CHARMS, WEAPON_FIELDS, writeWeaponCharms, type WeaponView } from "@/save/weapon";
 import { charmIcon } from "./effect-icons";
 import {
@@ -55,7 +56,7 @@ export function CharmEditor({
               options={OPTIONS}
               problem={field?.problem ?? null}
               disabled={advancedOnly}
-              warning={field?.warning}
+              warning={formatWarnings(field?.warnings)}
               badges={
                 !advanced ? (
                   <span className="text-muted-foreground text-xs">×{row.count}</span>

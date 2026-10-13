@@ -33,6 +33,7 @@ import { AnchorLink } from "@/components/anchor-link";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { formatWarnings } from "@/lib/format";
 import { FlagGrid, FlagRow } from "@/components/flag-row";
 import { useFlag } from "@/hooks/use-flag";
 import { flagProblem, readFlag, type ByteFlag } from "@/save/flags/byte-flag";
@@ -243,7 +244,7 @@ const readViews = (b: Uint8Array): Views => ({
 /** セーブを読み、共通の注意書きを出して、children に各欄を描かせる。views が null ならセーブ未読み込み、k は読み込みごとの key */
 function ViewsPage({ children }: { children: (views: Views | null, k: number) => ReactNode }) {
   const { save } = useSave();
-  const { view: views, error: readError, problem } = useSaveView(readViews, { problem: (v) => v.date.layoutProblem });
+  const { view: views, error: readError, problem } = useSaveView(readViews, { problem: (v) => v.date.problem });
   const k = save?.loadId ?? 0;
 
   return (
@@ -351,7 +352,7 @@ function CycleCard({
           currentLabel={view ? "不明" : undefined}
           options={difficultyOptions}
           problem={view?.problem ?? null}
-          warning={view?.warning}
+          warning={formatWarnings(view?.warnings)}
           note="書き換えはゲーム内の難易度に反映されます"
           onChange={(v) => update((b) => writeDifficulty(b, Number(v)))}
         />
@@ -360,7 +361,7 @@ function CycleCard({
           offset={PUBLIC_ORDER_OFFSET}
           value={publicOrder?.value ?? null}
           problem={publicOrder?.problem ?? null}
-          warning={publicOrder?.warning}
+          warning={formatWarnings(publicOrder?.warnings)}
           format={String}
           parse={(input) => parseInteger(input, (v) => validatePublicOrder(v, { advanced }))}
           apply={(v) => update((b) => writePublicOrder(b, v, { advanced }))}
@@ -373,7 +374,7 @@ function CycleCard({
           offset={PLAY_COUNT_OFFSET}
           value={counts?.playCount ?? null}
           problem={counts?.problem ?? null}
-          warning={counts?.warning}
+          warning={formatWarnings(counts?.warnings)}
           format={String}
           parse={(input) => parseInteger(input, (v) => validatePlayCount(v, { advanced }))}
           apply={(n) => update((b) => writePlayCount(b, n, { advanced }))}
@@ -469,7 +470,7 @@ function DateCard({ view }: { view: DateView | null }) {
         offset={DATE_OFFSETS.dayIndex}
         value={view?.day ?? null}
         problem={problem}
-        warning={view?.warning}
+        warning={formatWarnings(view?.warnings)}
         format={String}
         parse={(input) => parseInteger(input, (v) => validateDay(v, { advanced }))}
         apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
@@ -866,7 +867,7 @@ function RouteJudgeRows({
               currentLabel={view ? current() : undefined}
               options={noneOptions}
               problem={problem}
-              warning={view?.warning}
+              warning={formatWarnings(view?.warnings)}
               note="大寄せで3勢力とも「入れない」のとき「根無し草」になる。勢力のどれかが「ルートに入れる」だと、ここが「根無し草」でも根無し草にはならない"
               onChange={(v) =>
                 update((b) => writeRouteJudge(b, FACTIONS.length, Number(v), { advanced }))

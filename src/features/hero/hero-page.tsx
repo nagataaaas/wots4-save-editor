@@ -20,6 +20,7 @@ import { PageBanner } from "@/components/page-banner";
 import { WriteError } from "@/components/write-error";
 import { SearchField, SearchScope } from "@/lib/search-context";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { formatWarnings } from "@/lib/format";
 import {
   AMOUNT_LIMITS,
   GAUGE_MAX,
@@ -94,7 +95,7 @@ export function HeroPage() {
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
 
-  const { view, error: readError, problem } = useSaveView(readHero, { problem: (v) => v.layoutProblem });
+  const { view, error: readError, problem } = useSaveView(readHero, { problem: (v) => v.problem });
 
   // 未読み込みのときは view が null。同じ項目を無効状態で表示し、何を編集できるかを見せる
   const k = save?.loadId ?? 0;
@@ -106,7 +107,7 @@ export function HeroPage() {
       offset={HERO_OFFSETS[key]}
       value={view?.[key].value ?? null}
       problem={view?.[key].problem ?? null}
-      warning={view?.[key].warning ?? null}
+      warning={formatWarnings(view?.[key].warnings)}
       format={formatAmount}
       parse={(input) => parseAmount(key, input)}
       apply={(v) => update((b) => writeAmount(b, key, v))}
@@ -123,10 +124,10 @@ export function HeroPage() {
       offset={HERO_OFFSETS[key]}
       value={view?.[key].value ?? null}
       problem={view?.[key].problem ?? null}
-      warning={view?.[key].warning ?? null}
+      warning={formatWarnings(view?.[key].warnings)}
       format={formatGauge}
       parse={parseGauge}
-      apply={(v) => update((b) => writeGauge(b, key, v, advanced))}
+      apply={(v) => update((b) => writeGauge(b, key, v, { advanced }))}
       inputMode="decimal"
       hint={hint}
       note={note}
@@ -248,7 +249,7 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
             variant={armed ? "destructive" : "outline"}
             size="sm"
             className="w-fit"
-            disabled={!view || view.layoutProblem !== null}
+            disabled={!view || view.problem !== null}
             onClick={run}
             onBlur={() => setArmed(false)}
           >

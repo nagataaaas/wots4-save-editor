@@ -22,7 +22,9 @@
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU8, writeU16, writeU8 } from './binary'
-import { checkLayout } from './hero'
+import { type EditOpts, type ViewStatus } from './field'
+import { validateKnownValue } from './flags/byte-flag'
+import { assertWritable, checkLayout } from './layout'
 
 export const DATE_OFFSETS = {
   /** u16 シナリオの段階 */
@@ -50,6 +52,7 @@ export const DAY_TIME_AFTER_DAY3 = 400
 
 /** 保留量の正規の値。🔶 差分で見たのは 0 と 10 だけ */
 export const PENDING_VALUES = [0, 10] as const
+const PENDING_KNOWN = PENDING_VALUES.map((value) => ({ value }))
 
 export type Stage = {
   value: number
@@ -88,8 +91,7 @@ export function stageOf(value: number): Stage | null {
   return STAGES.find((s) => s.value === value) ?? null
 }
 
-export type DateView = {
-  layoutProblem: string | null
+export type DateView = ViewStatus & {
   /** 0x0BD8＋1 */
   day: number
   /** 0x0014。0＝昼（朝）、1＝夕、2＝夜 */
@@ -98,10 +100,6 @@ export type DateView = {
   /** 0x0010 */
   stage: number
   raw: { dayTime: number; slot: number; dayIndex: number }
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null
-  /** 編集はできるが注意が必要な理由 */
-  warning: string | null
 }
 
 export function readDate(bytes: Uint8Array): DateView {
@@ -123,18 +121,17 @@ export function readDate(bytes: Uint8Array): DateView {
   if (day > DAY_SEEN_MAX) warnings.push(`${DAY_SEEN_MAX}日目より後の値は確かめていません`)
 
   return {
-    layoutProblem,
     day,
     slot,
     pending,
     stage,
     raw: { dayTime: stage, slot, dayIndex },
     problem: layoutProblem ?? problem,
-    warning: warnings.length ? warnings.join('。') : null,
+    warnings,
   }
 }
 
-export function validateDay(day: number, opts: { advanced: boolean }): string | null {
+export function validateDay(day: number, opts: EditOpts): string | null {
   const r = opts.advanced ? DAY_RANGE.system : DAY_RANGE.normal
   if (!Number.isInteger(day)) return '整数を入力してください'
   if (day < r.min || day > r.max) return `${r.min}〜${r.max} の範囲で入力してください`
@@ -151,7 +148,8 @@ function editable(bytes: Uint8Array): DateView {
  * 日数と時間帯を書く。0x0BD8（u16）・0x0014（u8）だけを書き、段階（0x0010）と保留量（0x0012）は変えない（[U] 2026-10-10）。
  * 時間帯・日数とも ✅ [U] ゲーム内で反映を確認。日を進めると、過ぎた時間帯の未処理イベントはチャートで失敗と表示される
  */
-export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts: { advanced: boolean }): void {
+export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts: EditOpts): void {
+  assertWritable(bytes)
   editable(bytes)
   const problem = validateDay(day, opts)
   if (problem) throw new RangeError(problem)
@@ -167,6 +165,7 @@ export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts:
  * 0 にするときは new-cycle.ts の startNewCycle（周回の初期化）か enableCharacterSetup（0x0010 だけ）を使う
  */
 export function writeStage(bytes: Uint8Array, value: number): void {
+  assertWritable(bytes)
   editable(bytes)
   if (!stageOf(value)) throw new RangeError('一覧にない段階です')
   if (value === STAGE_PROLOGUE)
@@ -176,7 +175,9 @@ export function writeStage(bytes: Uint8Array, value: number): void {
 
 /** 保留量（0x0012）の1バイトだけを書く。0 か 10 だけ（✅ [U] 10 → 0 で反映を確認） */
 export function writePending(bytes: Uint8Array, value: number): void {
+  assertWritable(bytes)
   editable(bytes)
-  if (!(PENDING_VALUES as readonly number[]).includes(value)) throw new RangeError('保留量は「なし」か「あり」のどちらかです')
+  const problem = validateKnownValue(value, PENDING_KNOWN, { advanced: false }, 0xff, '保留量は「なし」か「あり」のどちらかです')
+  if (problem) throw new RangeError(problem)
   writeU8(bytes, DATE_OFFSETS.pending, value)
 }

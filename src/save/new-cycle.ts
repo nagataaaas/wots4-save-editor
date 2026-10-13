@@ -27,7 +27,8 @@
 //
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readI16, readI8, readU16, readU32, readU8, writeF32, writeU16, writeU32, writeU8 } from './binary'
-import { HERO_OFFSETS, AMOUNT_LIMITS, checkLayout } from './hero'
+import { assertWritable } from './layout'
+import { HERO_OFFSETS, AMOUNT_LIMITS } from './hero'
 import { DIFFICULTY_OFFSET } from './difficulty'
 import { CLEAR_COUNTS_OFFSET, GONE_COUNT_OFFSET } from './cycle-counts'
 import { HINT_OFFSET, HINT_NONE } from './hint'
@@ -123,14 +124,9 @@ export type NewCycleReport = {
   vaultAdded: number
 }
 
-function assertLayout(bytes: Uint8Array): void {
-  const problem = checkLayout(bytes)
-  if (problem) throw new RangeError(problem)
-}
-
 /** 0x0010（u16）だけを 0 にする。✅ [U] 次のロードで難易度と主人公の設定に進む */
 export function enableCharacterSetup(bytes: Uint8Array): void {
-  assertLayout(bytes)
+  assertWritable(bytes)
   writeU16(bytes, DATE_OFFSETS.dayTime, 0)
 }
 
@@ -362,7 +358,7 @@ function resetCycle(bytes: Uint8Array, report: NewCycleReport): void {
 
 /** 物語を終えたときの処理（冒頭のコメント）を行い、新しい周回の開始前の状態にする */
 export function startNewCycle(bytes: Uint8Array, end: CycleEnd = 'clear'): NewCycleReport {
-  assertLayout(bytes)
+  assertWritable(bytes)
   const report: NewCycleReport = {
     end,
     weaponsMoved: 0,

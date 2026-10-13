@@ -6,7 +6,7 @@
 // 段階と日数・時間帯は別々に書く（[U] 2026-10-10 のユーザー判断）
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32, writeU8 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { DATE_OFFSETS, STAGES, readDate, writeDayTime, writePending, writeStage } from './scenario-date'
 
 /** 0x0010〜0x0014 の5バイトと 0x0BD8 の u32（差分で見た実際の値） */
@@ -42,13 +42,13 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 
 describe('readDate chunks/date-location', () => {
   it('差分で見た値を日数・時間帯として読む', () => {
-    expect(readDate(makeSave(SEEN.day1Evening))).toMatchObject({ day: 1, slot: 1, pending: 0, problem: null, warning: null })
+    expect(readDate(makeSave(SEEN.day1Evening))).toMatchObject({ day: 1, slot: 1, pending: 0, problem: null, warnings: [] })
     expect(readDate(makeSave(SEEN.day1Night))).toMatchObject({ day: 1, slot: 2, problem: null })
     expect(readDate(makeSave(SEEN.day2Noon))).toMatchObject({ day: 2, slot: 0, problem: null })
   })
 
   it('4日目以降は 0x0010 が 400 のままで、日数は 0x0BD8、時間帯は 0x0014 から読む', () => {
-    expect(readDate(makeSave(SEEN.day5Noon))).toMatchObject({ day: 5, slot: 0, problem: null, warning: null })
+    expect(readDate(makeSave(SEEN.day5Noon))).toMatchObject({ day: 5, slot: 0, problem: null, warnings: [] })
     expect(readDate(makeSave(SEEN.day5Evening))).toMatchObject({ day: 5, slot: 1, problem: null })
     expect(readDate(makeSave(SEEN.day6Noon))).toMatchObject({ day: 6, slot: 0, problem: null })
   })
@@ -56,20 +56,20 @@ describe('readDate chunks/date-location', () => {
   it('保留量が入っていれば警告する', () => {
     const v = readDate(makeSave(SEEN.day1NoonPending))
     expect(v).toMatchObject({ day: 1, slot: 0, pending: 10, problem: null })
-    expect(v.warning).toMatch(/保留量/)
+    expect((v.warnings.join('。') || null)).toMatch(/保留量/)
   })
 
   it('段階が日数・時間帯と合わなくても警告しない', () => {
     const b = makeSave(SEEN.day1Evening)
     writeU8(b, DATE_OFFSETS.slot, 2)
-    expect(readDate(b)).toMatchObject({ stage: 110, slot: 2, problem: null, warning: null })
+    expect(readDate(b)).toMatchObject({ stage: 110, slot: 2, problem: null, warnings: [] })
     const c = makeSave(SEEN.day5Noon)
     writeU32(c, DATE_OFFSETS.dayIndex, 2)
-    expect(readDate(c)).toMatchObject({ stage: 400, day: 3, problem: null, warning: null })
+    expect(readDate(c)).toMatchObject({ stage: 400, day: 3, problem: null, warnings: [] })
     for (const v of [0, 410, 500, 999]) {
       const d = makeSave(SEEN.day6Noon)
       writeU16(d, DATE_OFFSETS.dayTime, v)
-      expect(readDate(d)).toMatchObject({ stage: v, problem: null, warning: null })
+      expect(readDate(d)).toMatchObject({ stage: v, problem: null, warnings: [] })
     }
   })
 
@@ -78,7 +78,7 @@ describe('readDate chunks/date-location', () => {
       const b = makeSave(SEEN.day1Evening)
       writeU16(b, DATE_OFFSETS.dayTime, v)
       expect(readDate(b)).toMatchObject({ problem: null })
-      expect(readDate(b).warning).toMatch(/一覧にない/)
+      expect((readDate(b).warnings.join('。') || null)).toMatch(/一覧にない/)
     }
   })
 
@@ -150,10 +150,10 @@ describe('書き込み', () => {
     expect(() => writeDayTime(b, 0, 0, { advanced: true })).toThrow(RangeError)
     expect(() => writeDayTime(b, 1, 3, { advanced: true })).toThrow(RangeError)
     writeDayTime(b, 6, 0, { advanced: false })
-    expect(readDate(b).warning).toBeNull()
+    expect((readDate(b).warnings.join('。') || null)).toBeNull()
     writeDayTime(b, 7, 0, { advanced: false })
     expect(readDate(b)).toMatchObject({ day: 7, slot: 0, problem: null })
-    expect(readDate(b).warning).toMatch(/確かめていません/)
+    expect((readDate(b).warnings.join('。') || null)).toMatch(/確かめていません/)
     writeDayTime(b, 99, 2, { advanced: false })
     expect(readDate(b)).toMatchObject({ day: 99, slot: 2, problem: null })
     writeDayTime(b, 100, 0, { advanced: true })

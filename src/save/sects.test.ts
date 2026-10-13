@@ -1,7 +1,7 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
 import { readI16, readU16, writeI16, writeU16, writeU8 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   EQUIP_OFFSET,
   SCROLL_HELD_OFFSET,

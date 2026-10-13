@@ -9,7 +9,8 @@
 //                ゲームは先頭から「容量」件の中だけで空きを探し、本数が容量以上なら入れない
 // 書き込みの反映は要ゲーム内確認。
 import { readI16, readI8, writeI16, writeU8 } from './binary'
-import { checkLayout } from './hero'
+import { warningsOf, type ViewStatus } from './field'
+import { assertWritable, checkLayout } from './layout'
 import { WEAPON_RECORD_BYTES, isEmptyWeapon, readWeapon, type WeaponView } from './weapon'
 
 export const WEAPON_CHEST_OFFSET = 0xacf4
@@ -26,18 +27,14 @@ export function weaponChestOffset(index: number): number {
   return WEAPON_CHEST_OFFSET + index * WEAPON_RECORD_BYTES
 }
 
-export type WeaponChestView = {
-  layoutProblem: string | null
+/** warnings は、本数が空きでないレコードの数と合わないとき */
+export type WeaponChestView = ViewStatus & {
   /** 本数（0x129F4） */
   count: number
   /** 容量 ÷ 10（0x129F6、符号付き） */
   capacity: number
   /** 空きでないレコードの番号（200件すべてから） */
   filled: number[]
-  /** 読み取り専用にする理由。null なら編集可能 */
-  problem: string | null
-  /** 本数が、空きでないレコードの数と合わないとき */
-  countWarning: string | null
 }
 
 export function readWeaponChest(bytes: Uint8Array): WeaponChestView {
@@ -53,7 +50,7 @@ export function readWeaponChest(bytes: Uint8Array): WeaponChestView {
   else if (count < 0 || count > WEAPON_CHEST_SLOTS) problem = "本数が想定外です"
   const countWarning =
     count === filled.length ? null : `本数（${count}）が、武器が入っている枠の数（${filled.length}）と合いません`
-  return { layoutProblem, count, capacity, filled, problem: layoutProblem ?? problem, countWarning }
+  return { count, capacity, filled, problem: layoutProblem ?? problem, warnings: warningsOf(countWarning) }
 }
 
 /** 200枠すべての武器（容量の外の枠も含む）。各武器の書き込みは weapon.ts の関数に weaponChestOffset(i) を渡す */
@@ -76,6 +73,7 @@ export function validateWeaponChestCapacity(view: WeaponChestView, capacity: num
 
 /** 🟢 容量（0x129F6 の i8。値は容量 ÷ 10）を書く。反映は要ゲーム内確認 */
 export function writeWeaponChestCapacity(bytes: Uint8Array, capacity: number): void {
+  assertWritable(bytes)
   const view = readWeaponChest(bytes)
   if (view.problem) throw new RangeError(view.problem)
   const error = validateWeaponChestCapacity(view, capacity)
@@ -85,6 +83,7 @@ export function writeWeaponChestCapacity(bytes: Uint8Array, capacity: number): v
 
 /** 🔶 本数（0x129F4）を、武器が入っている枠の数に合わせる。反映は要ゲーム内確認 */
 export function writeWeaponChestCountToFilled(bytes: Uint8Array): void {
+  assertWritable(bytes)
   const view = readWeaponChest(bytes)
   if (view.problem) throw new RangeError(view.problem)
   if (view.filled.length > view.capacity * CAPACITY_UNIT) throw new RangeError('武器が入っている枠の数が容量を超えています')

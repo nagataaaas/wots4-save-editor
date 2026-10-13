@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useSaveView } from "@/lib/use-save-view";
+import { PageBanner } from "@/components/page-banner";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { SelectRow } from "@/components/select-row";
 import { Button } from "@/components/ui/button";
@@ -64,9 +66,10 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
   const [pending, setPending] = useState<"common" | "reset" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
-  const current = save ? readAccessorySlot(save.working, group, slot, advanced) : null;
+  const read = useCallback((bytes: Uint8Array) => readAccessorySlot(bytes, group, slot), [group, slot]);
+  const { view: current, error: readError } = useSaveView(read);
   const offset = current?.offset ?? accessorySlotOffset(group, slot);
-  const problem = current?.problem ?? null;
+  const problem = readError ?? current?.problem ?? null;
   const selected = ACCESSORIES.find((a) => a.id === current?.id);
   const disabled = !current || Boolean(problem) || !selected;
   const unowned = selected && save?.working[ACCESSORY_FLAGS_OFFSET + selected.id] !== 1;
@@ -75,10 +78,10 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
   function confirm() {
     try {
       if (pending === "common") {
-        update((b) => copySheathedAccessoryToDrawn(b, group, slot, advanced));
+        update((b) => copySheathedAccessoryToDrawn(b, group, slot, { advanced }));
         setMode("common");
       } else if (pending === "reset")
-        update((b) => resetAccessoryDefaults(b, group, slot, advanced));
+        update((b) => resetAccessoryDefaults(b, group, slot));
       setRevision((n) => n + 1);
       setPending(null);
       setError(null);
@@ -89,6 +92,8 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
 
   return (
     <>
+      <PageBanner error={readError} problem={current?.problem ?? null} />
+      {current?.warnings.map((warning) => <p key={warning} className="text-xs text-amber-600 dark:text-amber-400">⚠ {warning}</p>)}
       <div className="grid gap-6 sm:grid-cols-[minmax(0,5fr)_minmax(0,2fr)] sm:gap-0">
         <section className="min-w-0 space-y-4 sm:pr-6">
           <div className="space-y-2">
@@ -114,7 +119,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
                   : null
               }
               onChange={(v) => {
-                update((b) => equipAccessory(b, group, slot, Number(v), advanced));
+                update((b) => equipAccessory(b, group, slot, Number(v), { advanced }));
                 setRevision((n) => n + 1);
                 setMode("A");
               }}
@@ -129,7 +134,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
               // 🟢
               note="標準の位置・回転からさらに補正して配置します。頭は顔、胸は背中も含みます。"
               onChange={(v) =>
-                update((b) => writeAccessoryField(b, group, slot, "joint", Number(v), advanced))
+                update((b) => writeAccessoryField(b, group, slot, "joint", Number(v), { advanced }))
               }
             />
           </div>
@@ -194,7 +199,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
           )}
           <div className="grid gap-4 sm:grid-cols-3">
             {ACCESSORY_FLOAT_FIELDS.filter((f) => f.state === state).map((field) => {
-              const { min, max } = accessoryFloatRange(field.key, advanced);
+              const { min, max } = accessoryFloatRange(field.key, { advanced });
               return (
                 <FieldRow
                   key={`${revision}-${mode}-${advanced}-${field.key}`}
@@ -207,8 +212,8 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
                   apply={(v) =>
                     update((b) =>
                       mode === "common"
-                        ? writeCommonAccessoryField(b, group, slot, field.key, v, advanced)
-                        : writeAccessoryField(b, group, slot, field.key, v, advanced),
+                        ? writeCommonAccessoryField(b, group, slot, field.key, v, { advanced })
+                        : writeAccessoryField(b, group, slot, field.key, v, { advanced }),
                     )
                   }
                   inputMode="decimal"
@@ -278,13 +283,14 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
 }
 
 function AccessorySlotList({ group, slot, onSelectSlot }: { group: number; slot: number; onSelectSlot: (slot: number) => void }) {
-  const { save } = useSave();
+  const read = useCallback((bytes: Uint8Array) => Array.from({ length: 10 }, (_, i) => readAccessorySlot(bytes, group, i)), [group]);
+  const { view: entries } = useSaveView(read);
   return (
     <fieldset className="min-w-0 space-y-2">
       <legend className="text-sm">編集する枠</legend>
       <div className="grid gap-1">
         {Array.from({ length: 10 }, (_, i) => {
-          const entry = save ? readAccessorySlot(save.working, group, i) : null;
+          const entry = entries?.[i] ?? null;
           const name = entry?.id === -1 ? "空き" : (ACCESSORIES.find((a) => a.id === entry?.id)?.ja ?? (entry ? "不明" : "—"));
           return (
             <Button

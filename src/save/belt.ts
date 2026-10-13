@@ -16,7 +16,8 @@
 //   0xA6AE〜0xA6AF  🟢 使われない（0）
 // 右手・左手・二刀流の書き込みの反映は要ゲーム内確認。峰打・無手はエディタに出さない（ユーザー判断 2026-10-08）。
 import { readU8, writeU8 } from './binary'
-import { checkLayout } from './hero'
+import { type ViewStatus } from './field'
+import { assertWritable, checkLayout } from './layout'
 import { WEAPON_RECORD_BYTES, readWeapon, type WeaponView } from './weapon'
 
 export const BELT_OFFSET = 0xa4c8 // ✅ [TS][I-2][I-3] の 0xA4C2 ＋ 🟢 0x06
@@ -38,21 +39,17 @@ export function beltOffset(index: number): number {
   return BELT_OFFSET + index * WEAPON_RECORD_BYTES
 }
 
-export type BeltState = {
+/** warnings は、編集はできるが、ゲームの読み込みと食い違う点 */
+export type BeltState = ViewStatus & {
   /** 🟢 帯刀している本数。ロード時は帯刀[0]〜[count−1] だけが読まれる */
   count: number
   /** 右手（選んでいる武器）。何も選んでいなければ null（0xFF） */
   right: number | null
   /** 二刀流の左手。二刀流でなければ null */
   left: number | null
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null
-  /** 編集はできるが、ゲームの読み込みと食い違う点 */
-  warnings: string[]
 }
 
-export type BeltView = {
-  layoutProblem: string | null
+export type BeltView = ViewStatus & {
   weapons: WeaponView[]
   state: BeltState
 }
@@ -96,7 +93,7 @@ export function readBelt(bytes: Uint8Array): BeltView {
   if (bytes.byteLength < BELT_STATE.dual + 1) throw new RangeError('ファイルが小さすぎて帯刀を読めません')
   const layoutProblem = checkLayout(bytes)
   const weapons = Array.from({ length: BELT_COUNT }, (_, i) => readWeapon(bytes, beltOffset(i), layoutProblem))
-  return { layoutProblem, weapons, state: readState(bytes, weapons, layoutProblem) }
+  return { warnings: [], problem: layoutProblem, weapons, state: readState(bytes, weapons, layoutProblem) }
 }
 
 // 帯刀の状態の書き込み。❓ 書き込みの反映はゲーム内で未確認（要ゲーム内確認）。
@@ -120,6 +117,7 @@ function assertUsable(view: BeltView, index: number, hand: string): void {
  * 二刀流の左手と同じ番号と、二刀流のまま何も選ばないことは拒否する
  */
 export function writeBeltRight(bytes: Uint8Array, index: number | null): void {
+  assertWritable(bytes)
   const view = editableState(bytes)
   if (index === null) {
     if (view.state.left !== null) throw new RangeError('二刀流のままでは右手を空にできません。先に二刀流をやめてください')
@@ -137,6 +135,7 @@ export function writeBeltRight(bytes: Uint8Array, index: number | null): void {
  * 🟢 左手に持てない武器ならロード時に二刀流が解除される。🔶 どの武器の組み合わせで二刀流にできるか（武器の種類の制限）は未確認。
  */
 export function writeBeltDual(bytes: Uint8Array, left: number | null): void {
+  assertWritable(bytes)
   const view = editableState(bytes)
   if (left === null) {
     writeU8(bytes, BELT_STATE.left, NO_LEFT)

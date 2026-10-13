@@ -6,7 +6,7 @@
 // 固定オフセットで読む。書き込みの反映は要ゲーム内確認。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32, writeU8 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   ACCEPT_OFFSETS,
   ACCEPT_RULES,

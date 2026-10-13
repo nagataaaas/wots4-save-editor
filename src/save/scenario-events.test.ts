@@ -2,7 +2,7 @@
 // 値は docs/save_format/chunks/event-chart の調査記録のシナリオ差分（[U] 2026-10-05）で見たもの。周回中の状態の FF・05 はゲーム内で表示を確認（✅ [U]）、ほかは 🔶（要ゲーム内確認）
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   EVENT_COUNT,
   EVENT_RECORD_OFFSET,

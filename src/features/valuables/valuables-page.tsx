@@ -43,8 +43,8 @@ export function ValuablesPage() {
   // 一覧にない ID を書ける上級者モード（U-14 の調査用に作った）。明示的に有効にしたときだけ使える
   const [investigate, setInvestigate] = useState(false);
 
-  const read = useCallback((bytes: Uint8Array) => readValuables(bytes, { investigate }), [investigate]);
-  const { view, error: readError, problem, readOnly } = useSaveView(read, { problem: (v) => v.layoutProblem });
+  const read = useCallback((bytes: Uint8Array) => readValuables(bytes, { advanced: investigate }), [investigate]);
+  const { view, error: readError, problem, readOnly } = useSaveView(read, { problem: (v) => v.problem });
 
   const k = save?.loadId ?? 0;
 
@@ -83,9 +83,10 @@ export function ValuablesPage() {
                 noun="重要品"
                 investigate={investigate}
                 // 🔶 個数の上限は推測（chunks/items）。既存の検証と同じ上限を右側に表示する。
-                countMaxFor={() => VALUABLE_COUNT_MAX}
+                countMaxFor={() => investigate ? 0xffff : VALUABLE_COUNT_MAX}
+                normalCountMaxFor={() => VALUABLE_COUNT_MAX}
                 onChange={(id, count) =>
-                  update((b) => writeValuable(b, i, id, count, { investigate }))
+                  update((b) => writeValuable(b, i, id, count, { advanced: investigate }))
                 }
               />
             );

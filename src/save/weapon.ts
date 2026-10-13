@@ -34,8 +34,16 @@ import {
   type WeaponBuild,
   type WeaponIdOption,
 } from "./weapon-ids";
-
-import { checkLayout } from "./hero";
+import {
+  fixedStringProblem,
+  NORMAL_EDIT_OPTS,
+  validateText,
+  warningsOf,
+  type EditOpts,
+  type Field,
+  type ViewStatus,
+} from "./field";
+import { assertWritable, checkLayout } from "./layout";
 
 export const WEAPON_RECORD_BYTES = 0xa0;
 
@@ -169,13 +177,6 @@ export const WEAPON_TYPES: readonly { id: number; label: string }[] = [
   { id: 4, label: "ライフル" },
 ];
 
-/**
- * 上級者モード（ユーザー判断 2026-10-05）。鞘（X）と武器種を書けるようにする。
- * 鞘：表にある鞘だけを書き換えると反映された（[U] 2026-10-05）。表にない X（規則を延ばした見栄春の 0xD9）では、ロード時にエラーが出て鞘が表示されなかった（ゲーム内で分解・再組み立てすると直った）。
- * 武器種：パーツと合わない武器種にしたときの動作は未確認（要ゲーム内確認）。
- */
-export type AdvancedOptions = { advanced?: boolean };
-
 // ---- 魅力（chunks/weapon-record ✅） ----
 
 export const CHARM_SLOTS = 3;
@@ -222,14 +223,6 @@ export const TITLES: readonly { no: number; label: string }[] = [
   { no: 0x13, label: "散華" },
 ];
 
-export type Field<T> = {
-  value: T;
-  /** 読み取り専用にする理由。null なら編集可能 */
-  problem: string | null;
-  /** 編集はできるが注意が必要な理由 */
-  warning?: string | null;
-};
-
 export type PartView = {
   /** 読んだ値（刃・鍔は 3 B、柄は 2 B を LE で読んだもの） */
   value: number;
@@ -239,13 +232,12 @@ export type PartView = {
   key: string | null;
 };
 
-export type WeaponView = {
+/** problem はレコード全体の妥当性検証に落ちた理由。空き枠は problem ではなく empty で示す */
+export type WeaponView = ViewStatus & {
   /** レコードの先頭位置 */
   offset: number;
   /** 🟢 空き枠（刃・X・鍔・柄がすべて 0xFFFF）。編集しない */
   empty: boolean;
-  /** レコード全体の妥当性検証に落ちた理由。null なら通過 */
-  problem: string | null;
   name: Field<string>;
   /** 🟢 完成武器の名前の番号（i32）。0 以上なら name は表示されない */
   nameNo: number;
@@ -338,24 +330,15 @@ export function encodeTitle(no: number | null): number {
   return (0x6a + no) | (0x01 << 8) | (no << 16);
 }
 
-function hasControlChar(text: string): boolean {
-  for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) < 0x20) return true;
-  return false;
-}
-
 export function validateWeaponName(text: string): string | null {
-  if (text.length === 0) return "名前が空です";
-  if (text.length > WEAPON_NAME_MAX_CHARS)
-    return `武器名は${WEAPON_NAME_MAX_CHARS}文字までです（${text.length}文字）`;
-  if (hasControlChar(text)) return "制御文字は使えません";
-  return null;
+  return validateText(text, WEAPON_NAME_MAX_CHARS, "武器名");
 }
 
 /** ゲーム上の範囲で検証する。上級者モード（options.advanced）ではシステム上の範囲で検証する */
 export function validateWeaponNumber(
   key: NumberKey,
   value: number,
-  options: AdvancedOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): string | null {
   const { game, system } = WEAPON_NUMBER_RANGES[key];
   if (!Number.isInteger(value)) return "整数を入力してください";
@@ -369,7 +352,7 @@ export function validateWeaponNumber(
 /** 同じIDは保存時に合算する。🟢 1組の個数は1〜3、異なるIDは最大3種類 */
 export function validateCharms(
   charms: readonly (number | null)[],
-  options: AdvancedOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): string | null {
   if (!options.advanced && charms.length > CHARM_SLOTS) return `魅力は${CHARM_SLOTS}つまでです`;
   const counts = new Map<number, number>();
@@ -405,7 +388,7 @@ function readCharms(bytes: Uint8Array, base: number): Field<(number | null)[]> {
   }
   const value: (number | null)[] = [...list];
   while (value.length < CHARM_SLOTS) value.push(null);
-  return { value, problem };
+  return { warnings: [], value, problem };
 }
 
 /** 🟢 空き枠：刃・X・鍔・柄（+0x02〜+0x09 の u16 × 4）がすべて 0xFFFF。ゲームはこのレコードから武器を作らない */
@@ -431,25 +414,19 @@ export function readWeapon(
 
   const nameRaw = readUtf16Fixed(bytes, at("name"), WEAPON_NAME_BYTES);
   // レコード全体の妥当性（位置がずれていないか）。名前の終端と魅力で判定する
-  const nameProblem = !nameRaw.terminated
-    ? "武器名の終わりが見つかりません"
-    : !nameRaw.paddingClean
-      ? "武器名の後ろに余計なデータがあります"
-      : hasControlChar(nameRaw.text)
-        ? "武器名に制御文字があります"
-        : null;
+  const nameProblem = fixedStringProblem(nameRaw, '武器名');
   const charms = readCharms(bytes, at("charms"));
   const recordProblem =
     layoutProblem ??
-    (empty ? "空き枠です" : (nameProblem ?? (charms.problem ? `魅力：${charms.problem}` : null)));
+    (empty ? null : (nameProblem ?? (charms.problem ? `魅力：${charms.problem}` : null)));
   const f = <T>(
     value: T,
     problem: string | null = null,
     warning: string | null = null,
   ): Field<T> => ({
     value,
-    problem: recordProblem ?? problem,
-    warning,
+    problem: recordProblem ?? (empty ? "空き枠です" : problem),
+    warnings: warningsOf(warning),
   });
 
   const numbers = {} as Record<NumberKey, Field<number>>;
@@ -464,12 +441,12 @@ export function readWeapon(
         : `現在の値（${v.toLocaleString()}）はゲーム上の範囲（${formatRange(game)}）の外です`,
     );
   }
-  if (!numbers.durability.warning && numbers.durability.value > numbers.durabilityMax.value) {
-    numbers.durability.warning = "最大耐久より大きい値です";
+  if (numbers.durability.value > numbers.durabilityMax.value) {
+    numbers.durability.warnings.push("最大耐久より大きい値です");
   }
   const heldTime2 = readU32(bytes, at("heldTime2"));
   if (heldTime2 !== numbers.heldTime.value) {
-    numbers.heldTime.warning = "別の場所に持っている同じ値と食い違っています。書き込むと両方を同じ値にします";
+    numbers.heldTime.warnings.push("別の場所に持っている同じ値と食い違っています。書き込むと両方を同じ値にします");
   }
 
   const titleRaw = readU24(bytes, at("title"));
@@ -523,6 +500,7 @@ export function readWeapon(
   };
 
   return {
+    warnings: [],
     offset,
     empty,
     problem: recordProblem,
@@ -550,7 +528,7 @@ export function readWeapon(
     guard: part("guard", readU24(bytes, at("guard"))),
     grip: part("grip", readU16(bytes, at("grip"))),
     numbers,
-    charms: { ...charms, problem: recordProblem ?? charms.problem },
+    charms: { ...charms, problem: recordProblem ?? (empty ? "空き枠です" : charms.problem) },
     title: {
       ...f(
         titleNo ?? null,
@@ -579,12 +557,15 @@ export function readWeapon(
 // 不正な値は例外にして、バイト列を変えない。
 
 function assertEditable(bytes: Uint8Array, offset: number): void {
+  assertWritable(bytes, offset, WEAPON_RECORD_BYTES);
   // ファイルサイズが想定と違えば書かない
   const view = readWeapon(bytes, offset, checkLayout(bytes));
   if (view.problem) throw new RangeError(view.problem);
+  if (view.empty) throw new RangeError("空き枠です");
 }
 
 export function writeWeaponName(bytes: Uint8Array, offset: number, text: string): void {
+  assertWritable(bytes);
   const problem = validateWeaponName(text);
   if (problem) throw new RangeError(problem);
   assertEditable(bytes, offset);
@@ -596,8 +577,9 @@ export function writeWeaponNumber(
   offset: number,
   key: NumberKey,
   value: number,
-  options: AdvancedOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): void {
+  assertWritable(bytes);
   const problem = validateWeaponNumber(key, value, options);
   if (problem) throw new RangeError(problem);
   assertEditable(bytes, offset);
@@ -611,6 +593,7 @@ export function writeWeaponNumber(
 
 /** 完成武器ID（+0x00 の 2 B）だけを書く。名前・パーツは変えない */
 export function writeWeaponId(bytes: Uint8Array, offset: number, id: number): void {
+  assertWritable(bytes);
   if (!weaponIdLabel(id)) throw new RangeError("未知の完成武器です");
   assertEditable(bytes, offset);
   writeU16(bytes, offset + WEAPON_FIELDS.weaponId, id);
@@ -653,10 +636,12 @@ function completeWeaponWords(id: number, build: WeaponBuild): [number, number][]
  * - 通常の武器と特殊武器の間でも変更できる。書いた値はゲームが書く値と同じ（✅ 読み）だが、ゲーム内で読めるかは要ゲーム内確認
  */
 export function writeCompleteWeapon(bytes: Uint8Array, offset: number, id: number): void {
+  assertWritable(bytes, offset, WEAPON_RECORD_BYTES);
   const option = COMPLETE_WEAPONS.find((w) => w.id === id);
   if (!option) throw new RangeError("構成が分からない完成武器です");
   const view = readWeapon(bytes, offset);
   if (view.problem) throw new RangeError(view.problem);
+  if (view.empty) throw new RangeError("空き枠です");
   for (const [at, value] of completeWeaponWords(option.id, option.build))
     writeU16(bytes, offset + at, value);
 }
@@ -747,8 +732,10 @@ export function writeWeaponPart(
   kind: PartKind,
   key: string,
 ): void {
+  assertWritable(bytes, offset, WEAPON_RECORD_BYTES);
   const view = readWeapon(bytes, offset);
   if (view.problem) throw new RangeError(view.problem);
+  if (view.empty) throw new RangeError("空き枠です");
   const option = partOptions(kind, view.special).find((p) => partKey(p) === key);
   if (!option) throw new RangeError("書き込めないパーツです");
 
@@ -769,8 +756,9 @@ export function writeWeaponCharms(
   bytes: Uint8Array,
   offset: number,
   charms: readonly (number | null)[],
-  options: AdvancedOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): void {
+  assertWritable(bytes);
   const problem = validateCharms(charms, options);
   if (problem) throw new RangeError(problem);
   assertEditable(bytes, offset);
@@ -791,34 +779,41 @@ export function writeWeaponCharms(
 
 /** 銘（+0x90 の 3 B）だけを書く。null は銘なし */
 export function writeWeaponTitle(bytes: Uint8Array, offset: number, no: number | null): void {
+  assertWritable(bytes);
   const raw = encodeTitle(no);
   assertEditable(bytes, offset);
   writeU24(bytes, offset + WEAPON_FIELDS.title, raw);
 }
 
 /**
- * ✅ 鞘（X、+0x04〜+0x05 の u16）を書く。上級者モード専用（AdvancedOptions）。
- * 表にある鞘だけを書ける（表にない X ではロード時にエラーが出て鞘が表示されなかった。[U] 2026-10-05）
+ * ✅ 鞘（X、+0x04〜+0x05 の u16）を書く。上級者モード専用（options.advanced。ユーザー判断 2026-10-05）。
+ * 表にある鞘だけを書ける。表にある鞘に書き換えると反映された（[U] 2026-10-05）。表にない X（規則を延ばした見栄春の 0xD9）では、
+ * ロード時にエラーが出て鞘が表示されなかった（ゲーム内で分解・再組み立てすると直った）
  */
 export function writeWeaponSheath(
   bytes: Uint8Array,
   offset: number,
   x: number,
-  options: AdvancedOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): void {
+  assertWritable(bytes);
   if (!options.advanced) throw new RangeError("鞘は上級者モードでだけ変更できます");
   if (!SHEATHS.some((s) => s.id === x)) throw new RangeError("表にない鞘です");
   assertEditable(bytes, offset);
   writeU16(bytes, offset + WEAPON_FIELDS.sheath, x);
 }
 
-/** 武器種（+0x18 の u16 🟢）を書く。上級者モード専用（AdvancedOptions）。パーツは変えない */
+/**
+ * 武器種（+0x18 の u16 🟢）を書く。上級者モード専用（options.advanced。ユーザー判断 2026-10-05）。パーツは変えない。
+ * パーツと合わない武器種にしたときの動作は未確認（要ゲーム内確認）
+ */
 export function writeWeaponType(
   bytes: Uint8Array,
   offset: number,
   type: number,
-  options: AdvancedOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): void {
+  assertWritable(bytes);
   if (!options.advanced) throw new RangeError("武器種は上級者モードでだけ変更できます");
   if (!WEAPON_TYPES.some((t) => t.id === type)) throw new RangeError("未知の武器種です");
   assertEditable(bytes, offset);
@@ -827,6 +822,7 @@ export function writeWeaponType(
 
 /** 🟢 名前を隠す（+0x93 の u8）を書く。オンは 1、オフは 0。1 以上だと武器名が「*****」と表示される（要ゲーム内確認） */
 export function writeWeaponNameHidden(bytes: Uint8Array, offset: number, hidden: boolean): void {
+  assertWritable(bytes);
   assertEditable(bytes, offset);
   writeU8(bytes, offset + WEAPON_FIELDS.nameHidden, hidden ? 1 : 0);
 }

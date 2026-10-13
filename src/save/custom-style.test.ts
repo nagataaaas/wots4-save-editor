@@ -2,7 +2,7 @@
 // 実セーブで読んだ俺流の技の表のバイト列は、定数として埋め込む。
 import { describe, expect, it } from 'vitest'
 import { readI16, readU16, writeI16, writeU16, writeU8 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { stanceSkills } from './master/sect-data'
 import {
   CUSTOM_COUNT_OFFSET,

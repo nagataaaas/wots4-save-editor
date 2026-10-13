@@ -71,10 +71,10 @@ function partLabel(p: PartEntry): string {
  */
 function partOptions(kind: PartKind, heroBodyKind: number, advanced: boolean): SelectOption[] {
   const none: SelectOption[] =
-    validatePart(kind, -1, heroBodyKind, advanced) === null
+    validatePart(kind, -1, heroBodyKind, { advanced }) === null
       ? [{ value: "-1", label: "なし", group: advanced ? "なし" : undefined }]
       : [];
-  const parts = PARTS[kind].filter((p) => validatePart(kind, p.id, heroBodyKind, advanced) === null);
+  const parts = PARTS[kind].filter((p) => validatePart(kind, p.id, heroBodyKind, { advanced }) === null);
   if (!advanced)
     return [
       ...none,
@@ -301,7 +301,7 @@ export function AppearancePartsCard() {
         }
         // 🔶 0＝男、1＝女。2＝ローラ・3＝子供は ✅ [U] 人物として表示を確認。4＝動物のクラッシュは ✅ [U]
         note="男・女のほか、ローラ・子供がある。動物はロードでゲームが止まるので出さない"
-        onChange={(v) => update((b) => writeBodyKind(b, Number(v), advanced))}
+        onChange={(v) => update((b) => writeBodyKind(b, Number(v), { advanced }))}
       />
       <SelectRow
         key={`${k}-hair-color-${advanced}`}
@@ -318,7 +318,7 @@ export function AppearancePartsCard() {
         }
         // ✅ [U] 0〜4。🔶 5＝赤・6〜9（U-19）
         note="主人公設定の髪の色の一覧と同じ順に並ぶ"
-        onChange={(v) => update((b) => writeHairColor(b, Number(v), advanced))}
+        onChange={(v) => update((b) => writeHairColor(b, Number(v), { advanced }))}
       />
       <NudeButtons
         disabled={view === null || problem !== null || (view.bodyKind !== 0 && view.bodyKind !== 1)}
@@ -357,14 +357,14 @@ export function AppearancePartsCard() {
               warning={part ? partNoneWarning(kind, part.id) : null}
               note={PART_NOTES[kind]}
               searchPlaceholder={`${PART_KIND_LABELS[kind]}を検索`}
-              onChange={(v) => update((b) => writePart(b, kind, Number(v), advanced))}
+              onChange={(v) => update((b) => writePart(b, kind, Number(v), { advanced }))}
             />
             {advanced && part && (
               <LayerEditor
                 kind={kind}
                 part={part}
                 problem={problem}
-                onChange={(layer, v) => update((b) => writeLayer(b, kind, layer, v, advanced))}
+                onChange={(layer, v) => update((b) => writeLayer(b, kind, layer, v, { advanced }))}
               />
             )}
           </div>

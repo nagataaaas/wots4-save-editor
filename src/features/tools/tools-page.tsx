@@ -76,7 +76,7 @@ function ItemBoxPage({
     (bytes: Uint8Array) => ({ view: readItemBox(bytes, area, { advanced }), missingMark: slotsMissingMark(bytes, area) }),
     [area, advanced],
   )
-  const { view: result, error: readError, problem } = useSaveView(read, { problem: (v) => v.view.layoutProblem })
+  const { view: result, error: readError, problem } = useSaveView(read, { problem: (v) => v.view.problem })
   const view = result?.view ?? null
   const missingMark = result?.missingMark ?? []
   const k = save?.loadId ?? 0

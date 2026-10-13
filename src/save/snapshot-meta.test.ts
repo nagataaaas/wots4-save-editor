@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU8, writeUtf16Fixed } from './binary'
-import { HERO_OFFSETS, NAME_BYTES, TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
+import { HERO_OFFSETS, NAME_BYTES } from './hero'
 import { CHART_FRAMES } from './master/event-chart-layout'
 import { DATE_OFFSETS } from './scenario-date'
 import { EVENT_STATE_OFFSET, eventNameOf } from './scenario-events'

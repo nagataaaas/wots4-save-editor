@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { ACCESSORY_EQUIPMENT_BASES, ACCESSORY_FLOAT_FIELDS, accessorySlotOffset, copySheathedAccessoryToDrawn, equipAccessory, readAccessorySlot, resetAccessoryDefaults, writeAccessoryField, writeCommonAccessoryField } from './accessory-equipment'
 import { ACCESSORIES } from './master/accessory-names'
 
@@ -10,26 +10,31 @@ function syntheticSave() {
   return bytes
 }
 
+// 300 KB を toEqual で比べると遅いので、長さと各バイトを直接比べる
+function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index])
+}
+
 describe('装飾品の装着 🟢（固定位置、未知バイトの意味は未確認）', () => {
   it('上級者モードのユーザー指定範囲：位置−100〜100、表示サイズ0〜100', () => {
     const b = syntheticSave()
     for (const key of ['positionAX', 'positionAY', 'positionAZ', 'positionBX', 'positionBY', 'positionBZ'] as const) {
       for (const value of [-100, 100]) {
-        writeAccessoryField(b, 0, 0, key, value, true)
-        expect(readAccessorySlot(b, 0, 0, true).values[key]).toBe(value)
+        writeAccessoryField(b, 0, 0, key, value, { advanced: true })
+        expect(readAccessorySlot(b, 0, 0).values[key]).toBe(value)
       }
     }
     for (const key of ['sizeA', 'sizeB'] as const) for (const value of [0, 100]) {
-      writeAccessoryField(b, 0, 0, key, value, true)
-      expect(readAccessorySlot(b, 0, 0, true).values[key]).toBe(value)
+      writeAccessoryField(b, 0, 0, key, value, { advanced: true })
+      expect(readAccessorySlot(b, 0, 0).values[key]).toBe(value)
     }
     expect(new DataView(b.buffer).getFloat32(0x3a00, true)).toBe(99)
-    expect(readAccessorySlot(b, 0, 0).problem).not.toBeNull()
-    expect(readAccessorySlot(b, 0, 0, true).problem).toBeNull()
+    expect(readAccessorySlot(b, 0, 0).warnings.length).toBeGreaterThan(0)
+    expect(readAccessorySlot(b, 0, 0).problem).toBeNull()
     const original = b.slice()
     for (const [key, value] of [['positionAX', -101], ['positionBX', 101], ['sizeA', -0.1], ['sizeB', 101], ['rotationAX', 181], ['sizeA', NaN], ['positionAZ', Infinity]] as const) {
-      expect(() => writeAccessoryField(b, 0, 0, key, value, true)).toThrow()
-      expect(b).toEqual(original)
+      expect(() => writeAccessoryField(b, 0, 0, key, value, { advanced: true })).toThrow()
+      expect(sameBytes(b, original)).toBe(true)
     }
     expect(() => writeAccessoryField(b, 0, 0, 'positionAX', 20)).toThrow()
   })
@@ -37,18 +42,18 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
   it('拡張範囲でも共通・部位変更・標準への復帰・ID変更を継続できる', () => {
     const b = syntheticSave()
     equipAccessory(b, 0, 0, 8)
-    writeAccessoryField(b, 0, 0, 'positionAX', -100, true)
-    writeAccessoryField(b, 0, 0, 'sizeA', 0, true)
+    writeAccessoryField(b, 0, 0, 'positionAX', -100, { advanced: true })
+    writeAccessoryField(b, 0, 0, 'sizeA', 0, { advanced: true })
     expect(new DataView(b.buffer).getFloat32(0x3a00, true)).toBe(-1)
-    copySheathedAccessoryToDrawn(b, 0, 0, true)
-    expect(readAccessorySlot(b, 0, 0, true).values.sizeB).toBe(0)
-    writeCommonAccessoryField(b, 0, 0, 'sizeA', 100, true)
-    expect(readAccessorySlot(b, 0, 0, true).values.sizeB).toBe(100)
-    writeAccessoryField(b, 0, 0, 'joint', 0, true)
-    resetAccessoryDefaults(b, 0, 0, true)
+    copySheathedAccessoryToDrawn(b, 0, 0, { advanced: true })
+    expect(readAccessorySlot(b, 0, 0).values.sizeB).toBe(0)
+    writeCommonAccessoryField(b, 0, 0, 'sizeA', 100, { advanced: true })
+    expect(readAccessorySlot(b, 0, 0).values.sizeB).toBe(100)
+    writeAccessoryField(b, 0, 0, 'joint', 0, { advanced: true })
+    resetAccessoryDefaults(b, 0, 0)
     expect(readAccessorySlot(b, 0, 0).problem).toBeNull()
-    writeCommonAccessoryField(b, 0, 0, 'positionAX', 100, true)
-    equipAccessory(b, 0, 0, 1, true)
+    writeCommonAccessoryField(b, 0, 0, 'positionAX', 100, { advanced: true })
+    equipAccessory(b, 0, 0, 1, { advanced: true })
     expect(readAccessorySlot(b, 0, 0).values.positionAX).toBe(0)
     expect(readAccessorySlot(b, 0, 0).joint).toBe(0)
   })
@@ -57,7 +62,7 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
     const b = syntheticSave(), original = b.slice()
     for (const [key, value] of [['positionAX', -100], ['positionBX', 100], ['sizeA', 0], ['sizeB', 100]] as const) {
       expect(() => writeAccessoryField(b, 0, 0, key, value)).toThrow()
-      expect(b).toEqual(original)
+      expect(sameBytes(b, original)).toBe(true)
     }
   })
 
@@ -76,7 +81,7 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
     expect(entry.values.rotationBZ).toBe(-30)
     expect(entry.values.sizeB).toBe(1.5)
     for (const [start, end] of [[16, 28], [40, 52], [56, 60]]) b.set(original.subarray(0x39cc + start, 0x39cc + end), 0x39cc + start)
-    expect(b).toEqual(original)
+    expect(sameBytes(b, original)).toBe(true)
   })
 
   it('共通編集は両方に適用し、失敗時はどちらにも書かない', () => {
@@ -92,7 +97,7 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
     const original = b.slice()
     expect(() => writeCommonAccessoryField(b, 0, 0, 'sizeA', 9)).toThrow()
     expect(() => writeCommonAccessoryField(b, 0, 0, 'positionBX', 1)).toThrow()
-    expect(b).toEqual(original)
+    expect(sameBytes(b, original)).toBe(true)
   })
 
   it.each([[1, 0], [8, 1], [157, 1], [155, 11], [151, 12]])('🟢 ID %sの標準部位%sを適用し、補正だけを0へ戻す', (id, joint) => {
@@ -108,8 +113,8 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
     for (const f of ACCESSORY_FLOAT_FIELDS) expect(e.values[f.key]).toBe(f.key.startsWith('size') ? 1 : 0)
     expect(b[0x39cc]).toBe(0xab)
     expect(b[0x3a09]).toBe(0xcd)
-    expect(b.subarray(0, 0x39cc)).toEqual(original.subarray(0, 0x39cc))
-    expect(b.subarray(0x3a0c)).toEqual(original.subarray(0x3a0c))
+    expect(sameBytes(b.subarray(0, 0x39cc), original.subarray(0, 0x39cc))).toBe(true)
+    expect(sameBytes(b.subarray(0x3a0c), original.subarray(0x3a0c))).toBe(true)
     writeAccessoryField(b, 0, 0, 'joint', 10)
     writeAccessoryField(b, 0, 0, 'rotationBY', 45)
     resetAccessoryDefaults(b, 0, 0)
@@ -141,7 +146,7 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
     expect(() => copySheathedAccessoryToDrawn(b, 0, 0)).toThrow()
     expect(() => equipAccessory(b, 0, 0, 1)).toThrow()
     expect(() => resetAccessoryDefaults(b, 0, 0)).toThrow()
-    expect(b).toEqual(original)
+    expect(sameBytes(b, original)).toBe(true)
   })
   it('合成した標準のおんぶさよ人形を読み取る', () => {
     const b = syntheticSave()
@@ -179,7 +184,7 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
         writeAccessoryField(b, group, slot, f.key, f.key.startsWith('size') ? 0.2 : value)
       }
     }
-    expect(b).toEqual(original)
+    expect(sameBytes(b, original)).toBe(true)
   })
 
   it('1項目だけを変更し、所持・他の枠・未知領域・ファイルサイズを維持', () => {
@@ -190,7 +195,7 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
     expect(new DataView(b.buffer).getFloat32(offset + 56, true)).toBe(0.5)
     expect(readAccessorySlot(b, 5, 9).values.sizeB).toBe(1.5)
     b.set(original.subarray(offset + 56, offset + 60), offset + 56)
-    expect(b).toEqual(original)
+    expect(sameBytes(b, original)).toBe(true)
     expect(b.length).toBe(TS_SAVE_SIZE)
   })
 
@@ -206,12 +211,13 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
   it.each([['id', 158], ['id', -2], ['joint', 13], ['joint', 0.5], ['positionAX', 11], ['rotationBY', -181], ['sizeA', 0.1], ['sizeB', 6], ['sizeA', NaN], ['positionBX', Infinity]] as const)('範囲外の%s=%sは書かない', (key, value) => {
     const b = syntheticSave(), original = b.slice()
     expect(() => writeAccessoryField(b, 0, 0, key, value)).toThrow()
-    expect(b).toEqual(original)
+    expect(sameBytes(b, original)).toBe(true)
   })
 
   it('サイズ・境界・既存値の検証失敗では読み取り専用', () => {
     for (const b of [syntheticSave().subarray(0, 100), new Uint8Array(TS_SAVE_SIZE + 1)]) {
-      expect(readAccessorySlot(b, 0, 0).problem).not.toBeNull()
+      if (b.length < 0x39cc + 64) expect(() => readAccessorySlot(b, 0, 0)).toThrow(RangeError)
+      else expect(readAccessorySlot(b, 0, 0).problem).not.toBeNull()
       expect(() => writeAccessoryField(b, 0, 0, 'id', 1)).toThrow()
     }
     for (const corrupt of [(b: Uint8Array) => { b[0x3a0a] = 200 }, (b: Uint8Array) => { b[0x3a08] = 255 }, (b: Uint8Array) => { new DataView(b.buffer).setFloat32(0x39d0, NaN, true) }]) {
@@ -219,7 +225,7 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
       const original = b.slice()
       expect(readAccessorySlot(b, 0, 0).problem).not.toBeNull()
       expect(() => writeAccessoryField(b, 0, 0, 'id', -1)).toThrow()
-      expect(b).toEqual(original)
+      expect(sameBytes(b, original)).toBe(true)
     }
     for (const [group, slot] of [[-1, 0], [6, 0], [0, 10], [0, 0.5]]) expect(() => accessorySlotOffset(group, slot)).toThrow()
   })

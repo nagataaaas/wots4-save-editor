@@ -33,7 +33,9 @@
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from './binary'
-import { checkLayout } from './hero'
+import { type EditOpts, type ViewStatus } from './field'
+import { validateKnownValue } from './flags/byte-flag'
+import { assertWritable, checkLayout } from './layout'
 import { eventLabelId } from './master/label-types'
 import { eventLabel, findLabel } from './master/labels'
 
@@ -214,11 +216,9 @@ export type EventEntry = {
   record: number
 }
 
-export type EventsView = {
-  layoutProblem: string | null
+/** problem は、ファイルサイズかイベントの状態が想定外のとき（位置がずれている可能性がある） */
+export type EventsView = ViewStatus & {
   entries: EventEntry[]
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null
 }
 
 export function stateLabel(value: number): string {
@@ -259,17 +259,11 @@ export function readEvents(bytes: Uint8Array): EventsView {
   let problem: string | null = null
   const bad = entries.find((e) => !PLAUSIBLE_STATES.has(e.state) || !PLAUSIBLE_STATES.has(e.record))
   if (bad) problem = '一部のイベントの状態が想定外です。位置がずれている可能性があります'
-  return { layoutProblem, entries, problem: layoutProblem ?? problem }
+  return { warnings: [], entries, problem: layoutProblem ?? problem }
 }
 
-function validateU8(value: number, known: readonly { value: number }[], opts: { advanced: boolean }): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `値が範囲外です: ${value}`
-  if (!opts.advanced && !known.some((s) => s.value === value)) return '通常モードで選べない状態です'
-  return null
-}
-
-export const validateEventState = (value: number, opts: { advanced: boolean }) => validateU8(value, EVENT_STATES, opts)
-export const validateEventRecord = (value: number, opts: { advanced: boolean }) => validateU8(value, EVENT_RECORDS, opts)
+export const validateEventState = (value: number, opts: EditOpts) => validateKnownValue(value, EVENT_STATES, opts)
+export const validateEventRecord = (value: number, opts: EditOpts) => validateKnownValue(value, EVENT_RECORDS, opts)
 
 function editable(bytes: Uint8Array, index: number): void {
   const view = readEvents(bytes)
@@ -281,7 +275,8 @@ function editable(bytes: Uint8Array, index: number): void {
  * 添字 index の周回中の状態（0x36A8＋index）の1バイトだけを書く。
  * 通常モードでは EVENT_STATES の値だけ。上級者モードでは任意の u8
  */
-export function writeEventState(bytes: Uint8Array, index: number, value: number, opts: { advanced: boolean }): void {
+export function writeEventState(bytes: Uint8Array, index: number, value: number, opts: EditOpts): void {
+  assertWritable(bytes)
   editable(bytes, index)
   const problem = validateEventState(value, opts)
   if (problem) throw new RangeError(problem)
@@ -292,7 +287,8 @@ export function writeEventState(bytes: Uint8Array, index: number, value: number,
  * 添字 index の周回をまたぐ記録（0x3838＋index）の1バイトだけを書く。
  * 通常モードでは FF・04 だけ（✅ [U]）。上級者モードでは任意の u8
  */
-export function writeEventRecord(bytes: Uint8Array, index: number, value: number, opts: { advanced: boolean }): void {
+export function writeEventRecord(bytes: Uint8Array, index: number, value: number, opts: EditOpts): void {
+  assertWritable(bytes)
   editable(bytes, index)
   const problem = validateEventRecord(value, opts)
   if (problem) throw new RangeError(problem)
@@ -300,18 +296,22 @@ export function writeEventRecord(bytes: Uint8Array, index: number, value: number
 }
 
 function writeBulk(bytes: Uint8Array, base: number, indices: readonly number[], value: number, problem: string | null): void {
-  // 先に全部を検証してから書く。途中で止まって一部だけ書かれることがないようにする
+  // 領域を1回だけ検査し、すべての添字を検証してから書く（直接呼び出しても途中まで書かれない）。
+  assertWritable(bytes)
+  const view = readEvents(bytes)
+  if (view.problem) throw new RangeError(view.problem)
   if (problem) throw new RangeError(problem)
-  for (const i of indices) editable(bytes, i)
+  for (const i of indices)
+    if (!Number.isInteger(i) || i < 0 || i >= EVENT_COUNT) throw new RangeError('イベントの指定が範囲外です')
   for (const i of indices) writeU8(bytes, base + i, value)
 }
 
 /** デバッグ用：indices の周回中の状態（0x36A8＋添字）をすべて value にする。値の制限は writeEventState と同じ */
-export function writeEventStates(bytes: Uint8Array, indices: readonly number[], value: number, opts: { advanced: boolean }): void {
+export function writeEventStates(bytes: Uint8Array, indices: readonly number[], value: number, opts: EditOpts): void {
   writeBulk(bytes, EVENT_STATE_OFFSET, indices, value, validateEventState(value, opts))
 }
 
 /** デバッグ用：indices の周回をまたぐ記録（0x3838＋添字）をすべて value にする。値の制限は writeEventRecord と同じ */
-export function writeEventRecords(bytes: Uint8Array, indices: readonly number[], value: number, opts: { advanced: boolean }): void {
+export function writeEventRecords(bytes: Uint8Array, indices: readonly number[], value: number, opts: EditOpts): void {
   writeBulk(bytes, EVENT_RECORD_OFFSET, indices, value, validateEventRecord(value, opts))
 }

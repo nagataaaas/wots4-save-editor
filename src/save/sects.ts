@@ -7,7 +7,8 @@
 //
 // 固定オフセットを使い、ファイルサイズと各値の範囲を検証する。検証に落ちたら読み取り専用。
 import { readI16, readU16, writeI16, writeU16, writeU8 } from './binary'
-import { checkLayout } from './hero'
+import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from './field'
+import { assertWritable, checkLayout } from './layout'
 import {
   SECTS,
   SKILL_NO_COUNT,
@@ -96,9 +97,7 @@ export type SheetStateSlot = {
   states: number[]
 }
 
-export type SectsView = {
-  /** 検証に落ちた理由。あれば読み取り専用 */
-  problem: string | null
+export type SectsView = ViewStatus & {
   learnedCount: number
   skillPoints: number
   /** 構えの組 0〜5 に装備している流派 ID */
@@ -186,6 +185,7 @@ export function readSects(bytes: Uint8Array): SectsView {
   )
 
   return {
+    warnings: [],
     problem: problems.length ? [...new Set(problems)].join(' ／ ') : null,
     learnedCount: readU16(bytes, LEARNED_COUNT_OFFSET),
     skillPoints: readU16(bytes, SKILL_POINTS_OFFSET),
@@ -214,7 +214,7 @@ export function sheetStates(view: SectsView, sheetId: number): number[] {
 
 // 書き込み。不正な値は例外にして、バイト列を変えない。
 
-function assertWritable(bytes: Uint8Array): SectsView {
+function requireEditable(bytes: Uint8Array): SectsView {
   const view = readSects(bytes)
   if (view.problem) throw new RangeError(view.problem)
   return view
@@ -252,9 +252,10 @@ function writeSheetStates(bytes: Uint8Array, slot: SheetStateSlot, states: numbe
  * 構えごとの状態にも同じ値をゲームの規則で書く。覚えた技の数を返す（新しく覚えた数ではない）。
  */
 export function learnSheetSkills(bytes: Uint8Array, sheetId: number, skillNos?: readonly number[]): number {
+  assertWritable(bytes)
   const sheet = findSkillSheet(sheetId)
   if (!sheet) throw new RangeError('知らない技の表です')
-  const view = assertWritable(bytes)
+  const view = requireEditable(bytes)
   const targets = new Set<number>(
     (skillNos ?? sheet.skills.filter((s) => !isUniqueSkill(s)).map((s) => s.skillNo)).filter(
       (no) => sheet.skills.some((s) => s.skillNo === no),
@@ -298,9 +299,10 @@ export function learnSheetSkills(bytes: Uint8Array, sheetId: number, skillNos?: 
  * 「俺流で表示」（状態 1）にするときは learnSheetSkills を使う（3 → 1）
  */
 export function learnUniqueSkills(bytes: Uint8Array, sheetId: number, skillNos: readonly number[]): void {
+  assertWritable(bytes)
   const sheet = findSkillSheet(sheetId)
   if (!sheet) throw new RangeError('知らない技の表です')
-  const view = assertWritable(bytes)
+  const view = requireEditable(bytes)
   const targets = skillNos.filter((no) => sheet.skills.some((s) => s.skillNo === no))
   if (targets.length === 0) return
   const states = [...sheetStates(view, sheetId)]
@@ -336,6 +338,7 @@ export const isUniqueSkill = (s: SheetSkill) => isSpecialCond(s.cond) || uniqueS
  * 固有技（覚えられる流派でだけ残る）は、状態 3（習得済・俺流には未組み込み。learnUniqueSkills）にする
  */
 export function learnSectSkills(bytes: Uint8Array, sectId: number): void {
+  assertWritable(bytes)
   const sect = findSect(sectId)
   if (!sect) throw new RangeError('知らない流派です')
   for (const id of sect.sheets) {
@@ -354,9 +357,10 @@ export function learnSectSkills(bytes: Uint8Array, sectId: number): void {
  * 派生先がなくなった派生元は 1 に戻す。構えごとの状態は、同じ構えのほかの技の表で覚えていなければ 0 にする。
  */
 export function forgetSheetSkill(bytes: Uint8Array, sheetId: number, skillNo: number): void {
+  assertWritable(bytes)
   const sheet = findSkillSheet(sheetId)
   if (!sheet) throw new RangeError('知らない技の表です')
-  const view = assertWritable(bytes)
+  const view = requireEditable(bytes)
   const slot = view.sheetSlots.find((s) => s.sheetId === sheetId)
   if (!slot || slot.states[skillNo] === 0) return
   const states = [...slot.states]
@@ -383,9 +387,10 @@ export function validateSectValues(v: SectValues): string | null {
 
 /** 流派の表の修練度・段・倒した数を書く 🟢（要ゲーム内確認） */
 export function writeSectValues(bytes: Uint8Array, sectId: number, v: SectValues): void {
+  assertWritable(bytes)
   const problem = validateSectValues(v)
   if (problem) throw new RangeError(problem)
-  const view = assertWritable(bytes)
+  const view = requireEditable(bytes)
   const rec = view.records.find((r) => r.id === sectId)
   if (!rec) throw new RangeError('この流派が流派の表にありません')
   writeI16(bytes, sectValueOffset(rec.offset, 'mastery'), v.mastery)
@@ -401,10 +406,11 @@ const U16_MAX = 0xffff
  * 腕前点（0x189FE、u16）を書く 🟢（要ゲーム内確認）。通常は 0〜9999、上級者モードでは u16 の範囲（0〜65535）まで。
  * 俺流を作る画面は、開いたときにこの値を写して使う（技の腕前点の合計がこれ以下である必要がある）
  */
-export function writeSkillPoints(bytes: Uint8Array, value: number, options: { advanced?: boolean } = {}): void {
+export function writeSkillPoints(bytes: Uint8Array, value: number, options: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes)
   const max = options.advanced ? U16_MAX : SKILL_POINTS_MAX
   if (!Number.isInteger(value) || value < 0 || value > max) throw new RangeError(`腕前点は 0〜${max} です`)
-  assertWritable(bytes)
+  requireEditable(bytes)
   writeU16(bytes, SKILL_POINTS_OFFSET, value)
 }
 
@@ -445,6 +451,7 @@ function sheetSkillOf(sheet: SkillSheet, skillNo: number): SheetSkill {
  * 固有技は状態 3（習得済・俺流には未組み込み。learnUniqueSkills 🟢 要ゲーム内確認）。どの技の表にもない技は拒否する
  */
 export function learnStanceSkill(bytes: Uint8Array, stance: number, skillNo: number): void {
+  assertWritable(bytes)
   const sheets = stanceSkillSheets(stance, skillNo)
   if (sheets.length === 0) throw new RangeError('この技が入っている流派がないので習得できません')
   for (const sheet of sheets) {
@@ -455,6 +462,7 @@ export function learnStanceSkill(bytes: Uint8Array, stance: number, skillNo: num
 
 /** 状態 3 の固有技を、入っている技の表すべてで 1（俺流に組み込める）にする（3 → 1） */
 export function showStanceSkillInOreRyu(bytes: Uint8Array, stance: number, skillNo: number): void {
+  assertWritable(bytes)
   const sheets = stanceSkillSheets(stance, skillNo)
   if (sheets.length === 0) throw new RangeError('この技が入っている流派がありません')
   for (const sheet of sheets) learnSheetSkills(bytes, sheet.id, [skillNo])

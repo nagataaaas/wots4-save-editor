@@ -18,6 +18,8 @@
 // 書き込みの反映は要ゲーム内確認。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU8, writeU16, writeU8 } from "./binary";
+import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from "./field";
+import { assertWritable } from "./layout";
 import { occupationById } from "./master/occupation-names";
 import { OCCUPATION_SERIES, SHIRUBE_SERIES } from "./master/occupation-series";
 import { OCCUPATION_NOT_APPEARED, OCCUPATION_ACCEPTED_OFFSET, occupationStateOffset, readOccupations } from "./occupation";
@@ -88,23 +90,22 @@ export function seriesAcceptOf(flag: number, value: number): number | undefined 
   return i >= 0 && i < series.writesUntil ? series.ids[i] : undefined;
 }
 
-export type AcceptedView = {
+export type AcceptedView = ViewStatus & {
   id: number;
   day: number;
   slot: number;
   active: number;
-  /** 妥当性検証に落ちた理由。あれば読み取り専用 */
-  problem: string | null;
 };
 
 export function readAccepted(bytes: Uint8Array): AcceptedView {
   if (bytes.byteLength < ACCEPT_OFFSETS.active + 1) throw new RangeError("ファイルが小さすぎて受注中のなりわいを読めません");
   return {
+    warnings: [],
     id: readU16(bytes, ACCEPT_OFFSETS.id),
     day: readU16(bytes, ACCEPT_OFFSETS.day),
     slot: readU8(bytes, ACCEPT_OFFSETS.slot),
     active: readU8(bytes, ACCEPT_OFFSETS.active),
-    problem: readOccupations(bytes).layoutProblem ?? readTownsfolk(bytes).problem,
+    problem: readOccupations(bytes).problem ?? readTownsfolk(bytes).problem,
   };
 }
 
@@ -113,7 +114,7 @@ function assertEditable(bytes: Uint8Array): void {
   if (problem) throw new RangeError(problem);
 }
 
-function writeFlags(bytes: Uint8Array, writes: readonly FlagWrite[], opts = { advanced: false }): void {
+function writeFlags(bytes: Uint8Array, writes: readonly FlagWrite[], opts: EditOpts = NORMAL_EDIT_OPTS): void {
   for (const w of writes) writeFlag(bytes, occupationFlag(w.flag), w.value, opts);
 }
 
@@ -166,8 +167,9 @@ export function writeSeriesState(
   bytes: Uint8Array,
   flags: readonly FlagWrite[],
   accept: number | undefined,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): void {
+  assertWritable(bytes);
   assertEditable(bytes);
   if (accept !== undefined) {
     acceptOccupation(bytes, accept);

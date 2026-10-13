@@ -14,7 +14,7 @@ import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
 export function WeaponBagPage() {
   const { save } = useSave();
   const { write: update } = useWrite();
-  const { view, error: readError, problem } = useSaveView(readWeaponBag, { problem: (v) => v.layoutProblem });
+  const { view, error: readError, problem } = useSaveView(readWeaponBag, { problem: (v) => v.problem });
 
   const k = save?.loadId ?? 0;
   const filled = view ? view.weapons.filter((w) => !w.empty).length : "—";

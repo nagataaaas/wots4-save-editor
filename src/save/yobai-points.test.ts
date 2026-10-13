@@ -5,7 +5,7 @@
 // ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { describe, expect, it } from "vitest";
 import { writeU8 } from "./binary";
-import { TS_SAVE_SIZE } from "./hero";
+import { TS_SAVE_SIZE } from './layout'
 import { POINT_NORMAL_MAX, YOBAI_POINTS, readYobaiPoints, validateYobaiPoint, writeYobaiPoint } from "./yobai-points";
 
 /** 0x3792〜0x3797（ローラ・朱美・万由・千佳・百合・メリンダ） */

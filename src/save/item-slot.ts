@@ -3,6 +3,8 @@
 // 1枠は 8 B：+0x00 ID（u16）、+0x02 個数（u16）、+0x04 用途不明（4 B ❓）。
 // 書き込むのは ID と個数の 4 B だけで、+0x04 の 4 B は変えない。
 import { readU16, readU32, writeU16 } from './binary'
+import type { ViewStatus } from './field'
+import { assertWritable } from './layout'
 
 export const ITEM_SLOT_BYTES = 8
 
@@ -11,7 +13,7 @@ export const EMPTY_ID = 0xffff
 
 /**
  * 個数の上限。🔶 推測：chunks/items のアンカー探索の目安（個数≤999）。ゲーム内の上限は未確認。
- * 入力の上限と、読み込み時の妥当性の上限を兼ねる。
+ * 通常モードの入力の上限。超えた値は読み込み時に警告するだけで、読み取り専用にはしない。
  */
 export const ITEM_COUNT_MAX = 999
 
@@ -33,7 +35,8 @@ export type ItemOptionGroup = {
   items: readonly ItemOption[]
 }
 
-export type ItemSlot = {
+/** warnings は、編集はできるが注意が必要な理由 */
+export type ItemSlot = ViewStatus & {
   index: number
   offset: number
   id: number
@@ -42,16 +45,12 @@ export type ItemSlot = {
   unknown: number
   /** 既知の ID なら名前、未知の ID は null */
   label: string | null
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null
   /**
    * 現在の ID をそのまま書き戻せるか。false（書けない ID や未知の ID）の枠も、
    * 書ける ID に変えることはできる（不正な値から抜け出せるようにするため。ユーザー判断、2026-10-04）。
    * ただし、個数だけの変更はできない
    */
   idWritable: boolean
-  /** 編集はできるが注意が必要な理由 */
-  warning: string | null
 }
 
 export function validateItemCount(count: number, max: number = ITEM_COUNT_MAX): string | null {
@@ -78,6 +77,7 @@ export function writeItemSlotRaw(
   count: number,
   max: number = ITEM_COUNT_MAX,
 ): void {
+  assertWritable(bytes, offset, ITEM_SLOT_BYTES)
   if (id === EMPTY_ID) {
     if (count !== 0) throw new RangeError('「なし」の個数は 0 です')
   } else {

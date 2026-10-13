@@ -1,6 +1,6 @@
 // 道場（🟢 chunks/dojo）。名簿の書き換え・道場破りを帰す操作のゲームへの反映は要ゲーム内確認。
 import { describe, expect, it } from "vitest";
-import { TS_SAVE_SIZE } from "./hero";
+import { TS_SAVE_SIZE } from './layout'
 import {
   PUPIL_KINDS,
   RAIDERS_OFFSET,

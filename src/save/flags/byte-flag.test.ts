@@ -2,7 +2,7 @@
 // src/save/flags/ のどの配列にも共通の読み書きの規則。
 import { describe, expect, it } from "vitest";
 import { writeU8 } from "../binary";
-import { TS_SAVE_SIZE } from "../hero";
+import { TS_SAVE_SIZE } from '../layout'
 import { readFlag, validateFlag, writeFlag, yesNo, type ByteFlag } from "./byte-flag";
 
 const SINGLE: ByteFlag = { offset: 0x3760, label: "一つ", values: yesNo("なし", "あり") };

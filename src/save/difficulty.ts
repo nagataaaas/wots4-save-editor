@@ -9,7 +9,8 @@
 // 新しい周回を始める状態（0x0010＝0）は段階の一つとして scenario-date.ts で扱う。
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from './binary'
-import { checkLayout } from './hero'
+import { type ViewStatus } from './field'
+import { assertWritable, checkLayout } from './layout'
 
 /** u8 ✅ [U] 難易度の位置 */
 export const DIFFICULTY_OFFSET = 0x0
@@ -21,14 +22,11 @@ export const DIFFICULTIES: readonly { value: number; label: string }[] = [
   { value: 3, label: '超難しい' }, // ✅
 ]
 
-export type DifficultyView = {
+/** warnings は、0〜3 の外の値や、0x0001〜0x0007 が 0 でないなど、編集はできるが注意が必要な理由 */
+export type DifficultyView = ViewStatus & {
   value: number
   /** 難易度の名前。0〜3 以外なら null */
   label: string | null
-  /** 0〜3 の外の値や、0x0001〜0x0003 が 0 でないなど、編集はできるが注意が必要な理由 */
-  warning: string | null
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null
 }
 
 export function readDifficulty(bytes: Uint8Array): DifficultyView {
@@ -42,15 +40,14 @@ export function readDifficulty(bytes: Uint8Array): DifficultyView {
   return {
     value,
     label: known?.label ?? null,
-    warning: warnings.length ? warnings.join('。') : null,
+    warnings,
     problem: checkLayout(bytes),
   }
 }
 
 /** 0x0000 の1バイトだけを書く。0〜3 のみ（✅ 0・3 ／ 🟢 1・2。書き換えの反映は ✅ [U]） */
 export function writeDifficulty(bytes: Uint8Array, value: number): void {
-  const view = readDifficulty(bytes)
-  if (view.problem) throw new RangeError(view.problem)
+  assertWritable(bytes)
   if (!DIFFICULTIES.some((d) => d.value === value)) throw new RangeError(`難易度を選び直してください: ${value}`)
   writeU8(bytes, DIFFICULTY_OFFSET, value)
 }

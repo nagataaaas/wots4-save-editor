@@ -1,7 +1,7 @@
 // [TS] のレイアウトに沿って合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU32 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   CHEST_AREA,
   ITEM_COUNT_SYSTEM_MAX,
@@ -64,36 +64,46 @@ describe('位置', () => {
 })
 
 describe('readItemBox', () => {
+  it('個数0と売却時の危険の警告を両方残す', () => {
+    const bytes = makeSave()
+    const offset = itemBoxSlotOffset(TOOLS_AREA, 0)
+    writeU16(bytes, offset + 2, 0)
+    writeU32(bytes, offset + 4, 0)
+    const warnings = readItemBox(bytes, TOOLS_AREA).slots[0].warnings
+    expect(warnings).toContain('個数が 0 です')
+    expect(warnings).toContainEqual(expect.stringContaining('売却一覧'))
+  })
   it('ID・個数・名前を読む', () => {
     const v = readItemBox(makeSave(), TOOLS_AREA)
-    expect(v.layoutProblem).toBeNull()
+    expect(v.problem).toBeNull()
     expect(v.slots).toHaveLength(10)
-    expect(v.slots[0]).toMatchObject({ offset: 0x5b40, id: 0x09, count: 1, label: '秘薬', problem: null, warning: null })
+    expect(v.slots[0]).toMatchObject({ offset: 0x5b40, id: 0x09, count: 1, label: '秘薬', problem: null, warnings: [] })
     expect(v.slots[1]).toMatchObject({ id: 0x10, label: '砥石' })
     expect(v.slots[2]).toMatchObject({ id: EMPTY_ID, label: 'なし', problem: null })
     expect(v.slots[0].unknown).toBe(0x50e8ee06)
     const c = readItemBox(makeSave(), CHEST_AREA)
     expect(c.slots).toHaveLength(80)
-    expect(c.slots[0]).toMatchObject({ id: 0x13, count: 13, label: '刀油', problem: null, warning: null })
+    expect(c.slots[0]).toMatchObject({ id: 0x13, count: 13, label: '刀油', problem: null, warnings: [] })
   })
 
   it('サイズが 0x48BB0 でなければ全枠を読み取り専用にする', () => {
     const v = readItemBox(makeSave(TS_SAVE_SIZE + 8), TOOLS_AREA)
-    expect(v.layoutProblem).not.toBeNull()
+    expect(v.problem).not.toBeNull()
     expect(v.slots.every((s) => s.problem !== null)).toBe(true)
   })
 
-  it('🟢 手持ちで最大数を超える個数は警告する。🔶 max(999, 最大数) を超えると読み取り専用（上級者モードでは u16 まで読む）', () => {
+  it('🟢 手持ちで最大数を超える個数は警告する。読み取り専用の判定はモードに依存しない', () => {
     const b = makeSave()
     const o = itemBoxSlotOffset(TOOLS_AREA, 0)
     writeU16(b, o + 2, 5)
-    expect(readItemBox(b, TOOLS_AREA).slots[0].warning).toContain('最大数 1')
+    expect((readItemBox(b, TOOLS_AREA).slots[0].warnings.join('。') || null)).toContain('最大数 1')
     writeU16(b, o + 2, 1000)
-    expect(readItemBox(b, TOOLS_AREA).slots[0].problem).not.toBeNull()
+    expect(readItemBox(b, TOOLS_AREA).slots[0].problem).toBeNull()
+    expect(readItemBox(b, TOOLS_AREA).slots[0].warnings).toContainEqual(expect.stringContaining('最大数 1'))
     expect(readItemBox(b, TOOLS_AREA, ADV).slots[0].problem).toBeNull()
     // コインは最大数 9999 なので 1000 は正常
     writeU16(b, o, 0x74)
-    expect(readItemBox(b, TOOLS_AREA).slots[0]).toMatchObject({ problem: null, warning: null })
+    expect(readItemBox(b, TOOLS_AREA).slots[0]).toMatchObject({ problem: null, warnings: [] })
   })
 
   it('一覧にない ID・重要品の ID・チップの枠は、ほかの ID への変更だけを許す', () => {
@@ -105,7 +115,7 @@ describe('readItemBox', () => {
     const v = readItemBox(b, TOOLS_AREA, ADV)
     for (const i of [3, 4, 5]) {
       expect(v.slots[i]).toMatchObject({ problem: null, idWritable: false })
-      expect(v.slots[i].warning).not.toBeNull()
+      expect((v.slots[i].warnings.join('。') || null)).not.toBeNull()
     }
     expect(v.slots[3].label).toBe('くず鉄')
     expect(v.slots[4].label).toBeNull()
@@ -120,9 +130,9 @@ describe('readItemBox', () => {
     expect(readItemBox(b, TOOLS_AREA).slots[2]).toMatchObject({ label: 'うなぎ丼', idWritable: false })
     const v = readItemBox(b, TOOLS_AREA, ADV)
     expect(v.slots[2]).toMatchObject({ label: 'うなぎ丼', idWritable: true })
-    expect(v.slots[2].warning).toContain('料理屋')
-    expect(v.slots[3].warning).toContain('手に入る経路がない')
-    expect(v.slots[4].warning).toContain('宿')
+    expect((v.slots[2].warnings.join('。') || null)).toContain('料理屋')
+    expect((v.slots[3].warnings.join('。') || null)).toContain('手に入る経路がない')
+    expect((v.slots[4].warnings.join('。') || null)).toContain('宿')
   })
 })
 
@@ -176,7 +186,7 @@ describe('個数の上限', () => {
     expect(readItemBox(b, CHEST_AREA, ADV).slots[0].count).toBe(0xffff)
     expect(() => writeItemBoxSlot(b, TOOLS_AREA, 0, 0x09, 0x10000, ADV)).toThrow()
     writeItemBoxSlot(b, TOOLS_AREA, 1, 0x18, 10)
-    expect(readItemBox(b, TOOLS_AREA).slots[1]).toMatchObject({ id: 0x18, count: 10, warning: null })
+    expect(readItemBox(b, TOOLS_AREA).slots[1]).toMatchObject({ id: 0x18, count: 10, warnings: [] })
   })
 })
 
@@ -197,7 +207,7 @@ describe('writeItemBoxSlot', () => {
     expect(slotBytes(b, TOOLS_AREA, 2)).toEqual([0x02, 0, 1, 0, 0x06, 0, 0, 0])
     writeItemBoxSlot(b, CHEST_AREA, 5, 0x13, 20)
     expect(slotBytes(b, CHEST_AREA, 5)).toEqual([0x13, 0, 20, 0, 0x06, 0, 0, 0])
-    expect(readItemBox(b, CHEST_AREA).slots[5].warning).toBeNull()
+    expect((readItemBox(b, CHEST_AREA).slots[5].warnings.join('。') || null)).toBeNull()
   })
 
   it('🔶 「なし」にするときは個数 0 と、+0x04〜+0x07 に 00 00 00 00 を書く（普通の空き枠と同じ [U]）', () => {
@@ -233,7 +243,7 @@ describe('[U] 2026-10-05：+0x04 が 0x06 でない枠', () => {
     const o = itemBoxSlotOffset(TOOLS_AREA, 3)
     writeU16(before, o, 0x02)
     writeU16(before, o + 2, 1)
-    expect(readItemBox(before, TOOLS_AREA).slots[3].warning).toContain('売却一覧')
+    expect((readItemBox(before, TOOLS_AREA).slots[3].warnings.join('。') || null)).toContain('売却一覧')
     expect(slotsMissingMark(before, TOOLS_AREA)).toEqual([3])
     const after = before.slice()
     expect(repairItemMarks(after, TOOLS_AREA)).toEqual([3])

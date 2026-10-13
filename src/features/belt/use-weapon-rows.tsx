@@ -3,6 +3,7 @@ import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { formatWarnings } from "@/lib/format";
 import {
   TITLES,
   COMPLETE_WEAPONS,
@@ -150,7 +151,7 @@ export function useWeaponRows({
       offset={base + WEAPON_FIELDS[key]}
       value={weapon?.numbers[key].value ?? null}
       problem={weapon?.numbers[key].problem ?? null}
-      warning={weapon?.numbers[key].warning ?? null}
+      warning={formatWarnings(weapon?.numbers[key].warnings)}
       format={String}
       parse={(input) => parseNumber(key, input, advanced)}
       apply={(v) => update((b, o) => writeWeaponNumber(b, o, key, v, { advanced }))}
@@ -200,7 +201,7 @@ export function useWeaponRows({
         }
         options={options}
         problem={field?.problem ?? null}
-        warning={field?.warning ?? null}
+        warning={formatWarnings(field?.warnings)}
         note={
           kind !== "blade"
             ? undefined
@@ -244,7 +245,7 @@ export function useWeaponRows({
         offset={base + WEAPON_FIELDS.name}
         value={weapon?.name.value ?? null}
         problem={weapon?.name.problem ?? null}
-        warning={weapon?.name.warning ?? null}
+        warning={formatWarnings(weapon?.name.warnings)}
         format={(v) => v}
         parse={parseName}
         apply={(v) => update((b, o) => writeWeaponName(b, o, v))}
@@ -262,7 +263,7 @@ export function useWeaponRows({
         currentLabel={weapon ? "未知" : undefined}
         options={WEAPON_ID_OPTIONS}
         problem={weapon?.weaponId.problem ?? null}
-        warning={weapon?.weaponId.warning ?? null}
+        warning={formatWarnings(weapon?.weaponId.warnings)}
         note="名前・パーツは変わりません"
         onChange={(v) => update((b, o) => writeWeaponId(b, o, Number(v)))}
       />
@@ -276,7 +277,7 @@ export function useWeaponRows({
         currentLabel={weapon ? "未知" : undefined}
         options={TYPE_OPTIONS}
         problem={weapon?.weaponType.problem ?? null}
-        warning={weapon?.weaponType.warning ?? null}
+        warning={formatWarnings(weapon?.weaponType.warnings)}
         note="パーツは変わりません"
         idleHint="パーツに合わせて決まります"
         overrideHint="バックアップを取ってから試してください"
@@ -322,7 +323,7 @@ export function useWeaponRows({
         options={SHEATH_OPTIONS}
         searchPlaceholder="刃の読み・名前・英語名で検索"
         problem={weapon?.sheath.problem ?? null}
-        warning={weapon?.sheath.warning ?? null}
+        warning={formatWarnings(weapon?.sheath.warnings)}
         // 一覧にない値ではロード時にエラーが出たので、一覧にあるものだけ選べる
         note="名前は同じ鞘を使う刃。一覧にない鞘ではロード時にエラーが出て鞘が表示されませんでした（ゲーム内で分解・再組み立てすると直りました）"
         idleHint="刃を選び直すと、刃に合わせて書き換わります"
@@ -341,7 +342,7 @@ export function useWeaponRows({
         }
         options={TITLE_OPTIONS}
         problem={weapon?.title.problem ?? null}
-        warning={weapon?.title.warning ?? null}
+        warning={formatWarnings(weapon?.title.warnings)}
         onChange={(v) => update((b, o) => writeWeaponTitle(b, o, v === NONE ? null : Number(v)))}
       />
     ),

@@ -23,7 +23,8 @@
 //
 // 書くのは +0x04 が FFFFFFFF（約束なし）の枠だけ。ファイルサイズが 0x48BB0 のときだけ書く。
 import { readU16, readU32, readU8 } from "./binary";
-import { checkLayout } from "./hero";
+import { type EditOpts } from "./field";
+import { assertWritable, checkLayout } from "./layout";
 import { DATE_OFFSETS } from "./scenario-date";
 import { characterStatusForPromise, CHARACTER_DEAD } from "./flags/characters";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
@@ -120,7 +121,7 @@ export function currentStage(bytes: Uint8Array): number {
 }
 
 /** 選べる組。名前のある相手は決まった1行。町の人はまとまりの行のうち、通常モードでは段階 stage 以下のもの */
-export function rowsFor(partner: PromisePartner, stage: number, opts: { advanced: boolean }): PromiseRow[] {
+export function rowsFor(partner: PromisePartner, stage: number, opts: EditOpts): PromiseRow[] {
   if (partner.row !== null) return PROMISE_ROWS.filter((r) => r.index === partner.row);
   return PROMISE_ROWS.filter((r) => r.group === partner.group && r.stage !== null && (opts.advanced || r.stage <= stage));
 }
@@ -215,7 +216,7 @@ export function createProblem(bytes: Uint8Array): string | null {
  * 組：通常モードは段階 0x13E30 以下、上級者モードはまとまりの全行。
  * 名前・見た目・年齢・血液型：validatePersonField と同じ（通常モードは表にある値、上級者モードは型の範囲で任意）
  */
-export function validateSpec(spec: PromiseSpec, stage: number, opts: { advanced: boolean }): string | null {
+export function validateSpec(spec: PromiseSpec, stage: number, opts: EditOpts): string | null {
   const partner = promisePartner(spec.type);
   if (!partner) return "約束できる相手の種類ではありません";
   if (!rowsFor(partner, stage, opts).some((r) => r.index === spec.row))
@@ -250,7 +251,8 @@ export function buildPromiseBytes(spec: PromiseSpec, day: number): Uint8Array {
 }
 
 /** 空の枠に約束を作る。約束した日はいまの経過日数 0x0BD8。+0x2A 以降は変えない */
-export function createPromise(bytes: Uint8Array, spec: PromiseSpec, opts: { advanced: boolean }): void {
+export function createPromise(bytes: Uint8Array, spec: PromiseSpec, opts: EditOpts): void {
+  assertWritable(bytes);
   const problem = createProblem(bytes);
   if (problem) throw new RangeError(problem);
   const error = validateSpec(spec, currentStage(bytes), opts);

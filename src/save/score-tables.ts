@@ -8,7 +8,8 @@
 // 通常モードは表にある技・道具だけ、0〜9,999,999。上級者モードは任意の添字・u32。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU32, writeU32 } from './binary'
-import { checkLayout } from './hero'
+import { type EditOpts, type ViewStatus } from './field'
+import { assertWritable, checkLayout } from './layout'
 import { ITEMS } from './master/item-names'
 import { itemLabel } from './master/labels'
 import { findSkillInfo, skillName } from './master/sect-data'
@@ -56,21 +57,20 @@ export function scoreEntries(table: ScoreTableId): readonly { index: number; nam
   return out
 }
 
-export type ScoreTableView = {
+export type ScoreTableView = ViewStatus & {
   cycle: readonly number[]
   total: readonly number[]
-  problem: string | null
 }
 
 export function readScoreTable(bytes: Uint8Array, table: ScoreTableId): ScoreTableView {
   const t = SCORE_TABLES[table]
   if (bytes.byteLength < t.totalStart + 4 * t.count) throw new RangeError(`ファイルが小さすぎて${t.label}を読めません`)
   const read = (start: number) => Array.from({ length: t.count }, (_, i) => readU32(bytes, start + 4 * i))
-  return { cycle: read(t.cycleStart), total: read(t.totalStart), problem: checkLayout(bytes) }
+  return { warnings: [], cycle: read(t.cycleStart), total: read(t.totalStart), problem: checkLayout(bytes) }
 }
 
 /** 問題がなければ null */
-export function validateScore(table: ScoreTableId, index: number, value: number, opts: { advanced: boolean }): string | null {
+export function validateScore(table: ScoreTableId, index: number, value: number, opts: EditOpts): string | null {
   const t = SCORE_TABLES[table]
   if (!Number.isInteger(index) || index < 0 || index >= t.count) return "範囲外の技・道具です"
   if (!Number.isInteger(value) || value < 0 || value > 0xffff_ffff) return `書ける範囲を超えています: ${value}`
@@ -87,10 +87,9 @@ export function writeScore(
   scope: ScoreScope,
   index: number,
   value: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): void {
-  const problem = checkLayout(bytes)
-  if (problem) throw new RangeError(problem)
+  assertWritable(bytes)
   const error = validateScore(table, index, value, opts)
   if (error) throw new RangeError(error)
   writeU32(bytes, scoreOffset(table, scope, index), value)

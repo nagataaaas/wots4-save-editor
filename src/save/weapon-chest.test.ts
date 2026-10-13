@@ -1,6 +1,6 @@
 // 武器箪笥の本数と容量（🟢）。合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { writeWeaponNumber } from './weapon'
 import {
   WEAPON_CHEST_CAPACITY,
@@ -34,9 +34,9 @@ describe('🟢 武器箪笥の本数と容量', () => {
 
   it('本数・容量・武器が入っている枠を読む。本数が枠の数と合わなければ警告する', () => {
     const b = makeSave([0, 3, 7], 3, 14)
-    expect(readWeaponChest(b)).toMatchObject({ count: 3, capacity: 14, filled: [0, 3, 7], problem: null, countWarning: null })
+    expect(readWeaponChest(b)).toMatchObject({ count: 3, capacity: 14, filled: [0, 3, 7], problem: null, warnings: [] })
     b[WEAPON_CHEST_COUNT] = 5
-    expect(readWeaponChest(b).countWarning).not.toBeNull()
+    expect((readWeaponChest(b).warnings.join('。') || null)).not.toBeNull()
   })
 
   it('容量を書く：20〜200本（値 2〜20）。武器が入っている枠と本数が収まらなければ拒否し、バイト列を変えない', () => {
@@ -65,7 +65,7 @@ describe('🟢 武器箪笥の本数と容量', () => {
     const b = before.slice()
     writeWeaponChestCountToFilled(b)
     expect(diff(before, b)).toEqual([WEAPON_CHEST_COUNT])
-    expect(readWeaponChest(b)).toMatchObject({ count: 2, countWarning: null })
+    expect(readWeaponChest(b)).toMatchObject({ count: 2, warnings: [] })
   })
 
   it('200枠すべての武器を読む（容量の外の枠も）。武器の欄を書くとそのレコードの中だけが変わり、本数・容量は変わらない', () => {

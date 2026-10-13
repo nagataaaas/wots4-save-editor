@@ -3,7 +3,7 @@
 // 位置は固定オフセット（サイズ 0x48BB0）。
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU16, writeU32 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   RAW_REGIONS,
   RAW_WRITE_MAX,

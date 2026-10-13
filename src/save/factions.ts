@@ -37,8 +37,10 @@
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
-import { checkLayout } from "./hero";
+import { warningsOf, type EditOpts, type ViewStatus } from "./field";
+import { validateFlag, writeFlag, type ByteFlag } from "./flags/byte-flag";
 import { CHARACTER_STATUS, CHARACTER_DEAD } from "./flags/characters";
+import { assertWritable, checkLayout } from "./layout";
 
 export const FACTION_TABLE_OFFSET = 0x3780; // 🔶 chunks/factions
 
@@ -81,13 +83,11 @@ export function factionOffset(row: number, col: number): number {
   return FACTION_TABLE_OFFSET + row * FACTIONS.length + col;
 }
 
-export type FactionsView = {
-  layoutProblem: string | null;
+export type FactionsView = ViewStatus & {
   /** values[行][列] */
   values: number[][];
   /** 茂呂の状態（0x3752）。大寄せで幕府ルートに入れるかの判定に使う（🟢） */
   moro: number;
-  problem: string | null;
 };
 
 export function readFactions(bytes: Uint8Array): FactionsView {
@@ -101,19 +101,23 @@ export function readFactions(bytes: Uint8Array): FactionsView {
   const problem =
     max > PLAUSIBLE_MAX ? "値が大きすぎます。位置がずれている可能性があります" : null;
   const moro = readU8(bytes, MORO_OFFSET);
-  return { layoutProblem, values, moro, problem: layoutProblem ?? problem };
+  return { warnings: [], values, moro, problem: layoutProblem ?? problem };
 }
 
+/** 勢力 col の敵対状態（行2）。表にある 0・1 だけを通す ByteFlag */
+export function hostileFlag(col: number): ByteFlag {
+  return { offset: factionOffset(HOSTILE_ROW, col), label: FACTIONS[col], values: HOSTILE_VALUES };
+}
+
+/** 行2（敵対状態）は hostileFlag と同じ検証。それ以外の行は通常モード 0〜9、上級者モード 0〜255 */
 export function validateFactionValue(
   value: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
   row = 0,
+  col = 0,
 ): string | null {
-  const max = opts.advanced
-    ? FACTION_VALUE_MAX.system
-    : row === HOSTILE_ROW
-      ? 1
-      : FACTION_VALUE_MAX.normal;
+  if (row === HOSTILE_ROW) return validateFlag(hostileFlag(col), value, opts);
+  const max = opts.advanced ? FACTION_VALUE_MAX.system : FACTION_VALUE_MAX.normal;
   if (!Number.isInteger(value)) return "整数を入力してください";
   if (value < 0 || value > max) return `0〜${max} の範囲で入力してください`;
   return null;
@@ -160,13 +164,17 @@ export const ROUTE_NONE_VALUES = [
   { value: 0x01, label: "根無し草" },
 ] as const;
 
-export type RouteJudgeView = {
+/** ✅ [U] 勢力3つと無所属のルート分岐。 */
+export const ROUTE_JUDGE_FLAGS: readonly ByteFlag[] = [
+  ...FACTIONS.map((label, col) => ({ offset: ROUTE_JUDGE_OFFSET + col, label, values: ROUTE_JUDGE_VALUES })),
+  { offset: ROUTE_NONE_OFFSET, label: "無所属", values: ROUTE_NONE_VALUES },
+];
+
+/** warnings は、無所属が 01 でも効かない組み合わせのとき */
+export type RouteJudgeView = ViewStatus & {
   /** 幕府・外国・攘夷の順 */
   judges: number[];
   none: number;
-  problem: string | null;
-  /** 無所属が 01 でも効かない組み合わせのとき */
-  warning: string | null;
 };
 
 export function readRouteJudge(bytes: Uint8Array): RouteJudgeView {
@@ -184,7 +192,7 @@ export function readRouteJudge(bytes: Uint8Array): RouteJudgeView {
     none === 0x01 && judges.includes(0x01)
       ? "勢力のどれかが「ルートに入れる」なので、無所属（根無し草）にはなりません"
       : null;
-  return { judges, none, problem: layoutProblem ?? problem, warning };
+  return { judges, none, problem: layoutProblem ?? problem, warnings: warningsOf(warning) };
 }
 
 /**
@@ -195,18 +203,14 @@ export function writeRouteJudge(
   bytes: Uint8Array,
   col: number,
   value: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): void {
+  assertWritable(bytes);
   const view = readRouteJudge(bytes);
   if (view.problem) throw new RangeError(view.problem);
   if (!Number.isInteger(col) || col < 0 || col > FACTIONS.length)
     throw new RangeError(`列が範囲外です: ${col}`);
-  if (!Number.isInteger(value) || value < 0 || value > 0xff)
-    throw new RangeError(`値が範囲外です: ${value}`);
-  const list = col === FACTIONS.length ? ROUTE_NONE_VALUES : ROUTE_JUDGE_VALUES;
-  if (!opts.advanced && !list.some((x) => x.value === value))
-    throw new RangeError("通常モードでは指定できない状態です");
-  writeU8(bytes, col === FACTIONS.length ? ROUTE_NONE_OFFSET : ROUTE_JUDGE_OFFSET + col, value);
+  writeFlag(bytes, ROUTE_JUDGE_FLAGS[col], value, opts);
 }
 
 /** 1マス（1バイト）だけを書く。✅ [U] 3行とも書き換えがゲームに効くことを確認 */
@@ -215,12 +219,13 @@ export function writeFactionValue(
   row: number,
   col: number,
   value: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): void {
+  assertWritable(bytes);
   const view = readFactions(bytes);
   if (view.problem) throw new RangeError(view.problem);
   const offset = factionOffset(row, col);
-  const problem = validateFactionValue(value, opts, row);
+  const problem = validateFactionValue(value, opts, row, col);
   if (problem) throw new RangeError(problem);
   writeU8(bytes, offset, value);
 }

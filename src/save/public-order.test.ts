@@ -3,7 +3,7 @@
 // 段階の境目は [W] の仕様（docs/save_format/chunks/date-location「治安の段階」）。
 import { describe, expect, it } from 'vitest'
 import { writeU8 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   PUBLIC_ORDER_OFFSET,
   publicOrderLevel,
@@ -32,7 +32,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 
 describe('✅ [U] 治安 0x0015', () => {
   it('u8 で読み、[W] の段階を付ける', () => {
-    expect(readPublicOrder(makeSave(BEFORE_RUNOFF))).toEqual({ value: 44, level: '普通', warning: null, problem: null })
+    expect(readPublicOrder(makeSave(BEFORE_RUNOFF))).toEqual({ value: 44, level: '普通', warnings: [], problem: null })
   })
 
   it('[W] 段階の境目', () => {
@@ -44,7 +44,7 @@ describe('✅ [U] 治安 0x0015', () => {
 
   it('範囲外の値は警告する（編集はできる）', () => {
     const view = readPublicOrder(makeSave(150))
-    expect(view.warning).not.toBeNull()
+    expect((view.warnings.join('。') || null)).not.toBeNull()
     expect(view.level).toBeNull()
     expect(view.problem).toBeNull()
   })

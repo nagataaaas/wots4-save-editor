@@ -2,7 +2,7 @@
 // 🟢 レコード内の位置は本当の先頭（[TS] の配置の +0x06）から数える。[TS] の配置での位置は +0x06 を足したもの。
 import { describe, expect, it } from 'vitest'
 import { BELT_OFFSET, BELT_STATE, NO_LEFT, beltOffset, readBelt, writeBeltDual, writeBeltRight } from './belt'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { WEAPON_NAMES, weaponKind } from './master/weapon-names'
 import {
   BLADES,
@@ -92,7 +92,8 @@ describe('武器レコード（合成）', () => {
     const b = makeSave()
     const v = readBelt(b)
     expect(v.weapons[1].empty).toBe(true)
-    expect(v.weapons[1].problem).not.toBeNull()
+    expect(v.weapons[1].problem).toBeNull()
+    expect(v.weapons[1].name.problem).toBe('空き枠です')
     expect(() => writeWeaponNumber(b, beltOffset(1), 'attack', 1)).toThrow()
     expect(() => writeBeltRight(b, 1)).toThrow()
     expect(() => writeBeltDual(b, 1)).toThrow()
@@ -139,7 +140,7 @@ describe('武器レコード（合成）', () => {
     expect(weapon.problem).toBeNull()
     expect(weapon.charms.value).toEqual(charms)
     // 合計4以上の注意は画面（CharmEditor）で出すので、読み出しの値には警告を付けない
-    expect(weapon.charms.warning).toBeFalsy()
+    expect((weapon.charms.warnings.join('。') || null)).toBeFalsy()
     const saved = b.slice()
     writeWeaponCharms(b, o, weapon.charms.value, { advanced: true })
     expect(b).toEqual(saved)
@@ -208,7 +209,7 @@ describe('武器レコード（合成）', () => {
     const o = beltOffset(0)
     writeWeaponNumber(b, o, 'attack', -1, { advanced: true })
     expect([...b.subarray(o + WEAPON_FIELDS.attack, o + WEAPON_FIELDS.attack + 2)]).toEqual([0xff, 0xff])
-    expect(readWeapon(b, o).numbers.attack).toMatchObject({ value: -1, warning: expect.any(String) })
+    expect(readWeapon(b, o).numbers.attack).toMatchObject({ value: -1, warnings: [expect.any(String)] })
     writeWeaponNumber(b, o, 'attack', 32767, { advanced: true })
     expect(readWeapon(b, o).numbers.attack.value).toBe(32767)
     // ✅ 質・質の最大値も int16
@@ -243,8 +244,8 @@ describe('武器レコード（合成）', () => {
     writeWeaponPart(b, o, 'blade', ts(0xcd012a))
     expect([...b.subarray(o + 0x02, o + 0x06)]).toEqual([0x2a, 0x01, 0xcd, 0x00])
     const w = readWeapon(b, o)
-    expect(w.sheath).toMatchObject({ value: 0xcd, label: '柾重', warning: null })
-    expect(w.blade.warning).toBeNull()
+    expect(w.sheath).toMatchObject({ value: 0xcd, label: '柾重', warnings: [] })
+    expect((w.blade.warnings.join('。') || null)).toBeNull()
   })
 
   it('鞘が 0x100 以上の [TS] の刃は X の上位バイトまで書き、鍔を変えても X は変わらない', () => {
@@ -258,7 +259,7 @@ describe('武器レコード（合成）', () => {
     expect(readWeapon(b, o).guard.value.label).toBe('中道刀')
     // 刃の標準の鞘と違えば警告する
     b.set([0x39, 0x00], o + 0x04)
-    expect(readWeapon(b, o).blade.warning).toContain('標準の鞘')
+    expect((readWeapon(b, o).blade.warnings.join('。') || null)).toContain('標準の鞘')
   })
 
   it('定義のないパーツは名前なしで表示し、警告を出す。既知のパーツへの変更はできる（U-3・U-10）', () => {
@@ -268,7 +269,7 @@ describe('武器レコード（合成）', () => {
     const v = readWeapon(b, o)
     expect(v.guard.value).toEqual({ value: 0x123400, label: null, key: null })
     expect(v.guard.problem).toBeNull()
-    expect(v.guard.warning).not.toBeNull()
+    expect((v.guard.warnings.join('。') || null)).not.toBeNull()
     writeWeaponPart(b, o, 'guard', ts(0x015400)) // 霊禍（[U] 2026-10-05）
     expect(readWeapon(b, o).guard.value.label).toBe('霊禍')
   })
@@ -342,7 +343,7 @@ describe('武器レコード（合成）', () => {
       expect([...b.subarray(o + 0x02, o + 0x06)]).toEqual([id & 0xff, id >> 8, x & 0xff, x >> 8])
       expect(onlyChanged(before, b, o + 0x02, 4)).toBe(true)
       const w = readWeapon(b, o)
-      expect(w.blade).toMatchObject({ value: { label }, warning: null })
+      expect(w.blade).toMatchObject({ value: { label }, warnings: [] })
       expect(w.sheath.label).toBe(label)
     }
   })
@@ -363,7 +364,7 @@ describe('武器レコード（合成）', () => {
       [[0x3e, 0x01, 0x28], '残月'],
     ] as const) {
       b.set(bytes, o + 0x02)
-      expect(readWeapon(b, o).blade).toMatchObject({ value: { label }, warning: null })
+      expect(readWeapon(b, o).blade).toMatchObject({ value: { label }, warnings: [] })
       expect(readWeapon(b, o).sheath.label).toContain(label)
     }
   })
@@ -385,7 +386,7 @@ describe('武器レコード（合成）', () => {
     const o = beltOffset(0)
     writeWeaponPart(b, o, 'blade', ts(0x260136))
     expect([...b.subarray(o + 0x02, o + 0x05)]).toEqual([0x36, 0x01, 0x26])
-    expect(readWeapon(b, o).blade).toMatchObject({ value: { label: '見栄春', key: ts(0x260136) }, warning: null })
+    expect(readWeapon(b, o).blade).toMatchObject({ value: { label: '見栄春', key: ts(0x260136) }, warnings: [] })
     expect(() => writeWeaponPart(b, o, 'blade', ct(0x136))).toThrow()
   })
 
@@ -400,7 +401,7 @@ describe('武器レコード（合成）', () => {
       const b = makeSave()
       const o = beltOffset(0)
       writeWeaponPart(b, o, 'blade', ts(value))
-      expect(readWeapon(b, o).blade).toMatchObject({ value: { value, label }, warning: null })
+      expect(readWeapon(b, o).blade).toMatchObject({ value: { value, label }, warnings: [] })
     }
   })
 
@@ -408,16 +409,16 @@ describe('武器レコード（合成）', () => {
     const b = makeSave()
     const o = beltOffset(0)
     b.set([0x33, 0x01, 0xd6], o + 0x02)
-    expect(readWeapon(b, o).blade).toMatchObject({ value: { label: '焔魔' }, warning: null })
+    expect(readWeapon(b, o).blade).toMatchObject({ value: { label: '焔魔' }, warnings: [] })
     writeWeaponPart(b, o, 'blade', ts(0xd70134))
     expect(readWeapon(b, o).blade.value.label).toBe('霜柱')
     writeWeaponPart(b, o, 'blade', ts(0x390138))
     expect(readWeapon(b, o).blade.value.label).toBe('クルセイダー')
     writeWeaponPart(b, o, 'blade', ts(0x18013b))
-    expect(readWeapon(b, o).blade).toMatchObject({ value: { label: 'なまくら刀' }, warning: null })
+    expect(readWeapon(b, o).blade).toMatchObject({ value: { label: 'なまくら刀' }, warnings: [] })
     // U-15：組み立てた夜葬のバイト列 01 6A 01 を読むと夜葬の鍔。0x167 は夜葬の鞘なので選択肢にない
     b.set([0x68, 0x01, 0x67, 0x01, 0x6a, 0x01], o + 0x02)
-    expect(readWeapon(b, o).guard).toMatchObject({ value: { label: '夜葬' }, warning: null })
+    expect(readWeapon(b, o).guard).toMatchObject({ value: { label: '夜葬' }, warnings: [] })
     writeWeaponPart(b, o, 'guard', ts(0x15a01))
     writeWeaponPart(b, o, 'guard', ts(0x16a01))
     expect([...b.subarray(o + 0x06, o + 0x08)]).toEqual([0x6a, 0x01])
@@ -454,12 +455,12 @@ describe('武器レコード（合成）', () => {
     const o = beltOffset(0)
     b.set([0x0b, 0x00, 0xff, 0xff, 0xff, 0xff], o + 0x02) // M2リボルバーの刃、鍔なし
     // [U] 2026-10-05：X 0xFFFF は鞘なし
-    expect(readWeapon(b, o).sheath).toMatchObject({ value: 0xffff, label: '鞘なし', warning: null })
+    expect(readWeapon(b, o).sheath).toMatchObject({ value: 0xffff, label: '鞘なし', warnings: [] })
     writeWeaponSheath(b, o, 0xffff, { advanced: true })
     writeWeaponPart(b, o, 'blade', ts(0xff0006))
-    expect(readWeapon(b, o).blade).toMatchObject({ value: { label: '鬼ヶ島' }, warning: null })
+    expect(readWeapon(b, o).blade).toMatchObject({ value: { label: '鬼ヶ島' }, warnings: [] })
     writeWeaponId(b, o, 0x006a) // 完成武器 0x006A も鬼ヶ島（[U] 2026-10-05）
-    expect(readWeapon(b, o).weaponId).toMatchObject({ value: 0x006a, label: '鬼ヶ島', warning: null })
+    expect(readWeapon(b, o).weaponId).toMatchObject({ value: 0x006a, label: '鬼ヶ島', warnings: [] })
     // [U] 2026-10-05：0x01・0x02・0x03・0x05・0x07・0x09 も名前が分かった
     writeWeaponPart(b, o, 'blade', ts(0xff0003))
     expect(readWeapon(b, o).blade.value.label).toBe('竹富士')
@@ -483,7 +484,7 @@ describe('武器レコード（合成）', () => {
     const b = new Uint8Array(TS_SAVE_SIZE + 8)
     b.set(makeSave())
     const v = readBelt(b)
-    expect(v.layoutProblem).not.toBeNull()
+    expect(v.problem).not.toBeNull()
     expect(v.state.problem).not.toBeNull()
     expect(v.weapons[0].name.problem).not.toBeNull()
     expect(() => writeBeltRight(b, 0)).toThrow()
@@ -585,9 +586,9 @@ describe('耐久回復の累積値（✅ +0x88 の u32）・手に持ってい�
     writeWeaponNumber(b, o, 'heldTime', 693)
     expect(onlyChanged(before, b, o + 0x80, 8)).toBe(true)
     expect([...b.subarray(o + 0x80, o + 0x88)]).toEqual([0xb5, 0x02, 0, 0, 0xb5, 0x02, 0, 0])
-    expect(readWeapon(b, o).numbers.heldTime).toMatchObject({ value: 693, warning: null })
+    expect(readWeapon(b, o).numbers.heldTime).toMatchObject({ value: 693, warnings: [] })
     b[o + 0x84] = 0
-    expect(readWeapon(b, o).numbers.heldTime.warning).toContain('食い違っています') // 写し（+0x84）との不一致
+    expect((readWeapon(b, o).numbers.heldTime.warnings.join('。') || null)).toContain('食い違っています') // 写し（+0x84）との不一致
   })
 })
 
@@ -595,10 +596,10 @@ describe('🟢 武器名の扱い', () => {
   it('名前の番号（+0x6C の i32）が 0 以上なら、名前は使われないと警告する', () => {
     const b = makeSave()
     const o = beltOffset(0)
-    expect(readWeapon(b, o)).toMatchObject({ nameNo: -1, name: { warning: null } })
+    expect(readWeapon(b, o)).toMatchObject({ nameNo: -1, name: { warnings: [] } })
     b.set([0x02, 0x00, 0x00, 0x00], o + WEAPON_FIELDS.nameNo)
     expect(readWeapon(b, o).nameNo).toBe(2)
-    expect(readWeapon(b, o).name.warning).toContain('使われません')
+    expect((readWeapon(b, o).name.warnings.join('。') || null)).toContain('使われません')
   })
 
   it('名前を隠す（+0x93）は 0／1 を書き、そのバイトだけを変える。読み出し→書き戻しで一致する', () => {
@@ -621,7 +622,7 @@ describe('🟢 武器名の扱い', () => {
     const v = readWeapon(b, o)
     expect(v.problem).toBeNull()
     expect(v.name.value).toBe('A'.repeat(18))
-    expect(v.name.warning).not.toBeNull() // 17文字を超える（U-5）
+    expect((v.name.warnings.join('。') || null)).not.toBeNull() // 17文字を超える（U-5）
   })
 })
 
@@ -666,7 +667,7 @@ describe('指定武器に変更する（完成武器の構成で置き換える�
     const v = readWeapon(b, o)
     expect(v.weaponId.label).toBe('夜葬')
     expect([v.blade.value.label, v.guard.value.label, v.grip.value.label, v.sheath.label]).toEqual(['夜葬', '夜葬', '夜葬', '夜葬'])
-    expect(v.blade.warning).toBeNull()
+    expect((v.blade.warnings.join('。') || null)).toBeNull()
     expect(matchesCompleteWeapon(b, o, 0x0074)).toBe(true)
     expect(v.matchesComplete).toBe(true)
 
@@ -686,7 +687,7 @@ describe('指定武器に変更する（完成武器の構成で置き換える�
       writeCompleteWeapon(b, o, w.id)
       const v = readWeapon(b, o)
       expect(v.blade.value.label, w.name ?? '').not.toBeNull()
-      expect(v.blade.warning, w.name ?? '').toBeNull()
+      expect((v.blade.warnings.join('。') || null), w.name ?? '').toBeNull()
       expect(v.weaponType.label, w.name ?? '').not.toBeNull()
       if (w.build.kind === 'normal') {
         expect(v.guard.value.label, w.name ?? '').not.toBeNull()

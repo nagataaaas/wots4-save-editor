@@ -3,7 +3,7 @@
 // 行動の回数の i 1・2 の場面の細部は 🔶（確度をテストでも確かめる）。
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU16, writeU32 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   ACTION_COUNTS,
   STAT_FIELDS,
@@ -120,7 +120,7 @@ describe('侍評価・活動記録 0x0B34〜0x0C63', () => {
     const b = makeSave()
     writeU32(b, 0x0b4c, 20000)
     const v = readStats(b).values.find((x) => x.field.key === 'action0')!
-    expect(v.warning).toMatch(/通常の範囲/)
+    expect((v.warnings.join('。') || null)).toMatch(/通常の範囲/)
   })
 
   it('読み出し→書き戻しでバイト列が一致する', () => {

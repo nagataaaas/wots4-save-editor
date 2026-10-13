@@ -15,7 +15,8 @@
 // 通常モードの上限 POINT_NORMAL_MAX は、しきい値（10）と攻略手順どおりの点数（11）より少し上に取った値（🔶 ゲームの上限ではない）。
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
-import { checkLayout } from "./hero";
+import { type EditOpts, type ViewStatus } from "./field";
+import { assertWritable, checkLayout } from "./layout";
 
 export type YobaiPoint = {
   offset: number;
@@ -77,23 +78,22 @@ export const YOBAI_POINTS: readonly YobaiPoint[] = [
 /** 通常モードで書ける上限（🔶 しきい値 10・攻略手順どおりの 11 より少し上。ゲームの上限ではない） */
 export const POINT_NORMAL_MAX = 20;
 
-export type YobaiPointsView = {
+export type YobaiPointsView = ViewStatus & {
   values: { offset: number; value: number }[];
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null;
 };
 
 export function readYobaiPoints(bytes: Uint8Array): YobaiPointsView {
   const last = Math.max(...YOBAI_POINTS.map((p) => p.offset));
   if (bytes.byteLength <= last) throw new RangeError("ファイルが小さすぎて好感度・ポイントを読めません");
   return {
+    warnings: [],
     values: YOBAI_POINTS.map((p) => ({ offset: p.offset, value: readU8(bytes, p.offset) })),
     problem: checkLayout(bytes),
   };
 }
 
 /** 通常モードは 0〜POINT_NORMAL_MAX、上級者モードは任意の u8。問題がなければ null */
-export function validateYobaiPoint(value: number, opts: { advanced: boolean }): string | null {
+export function validateYobaiPoint(value: number, opts: EditOpts): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 0xff) return "0〜255 の整数を指定してください";
   if (!opts.advanced && value > POINT_NORMAL_MAX)
     return `通常モードでは 0〜${POINT_NORMAL_MAX} を指定してください（上級者モードで 255 まで書けます）`;
@@ -101,7 +101,8 @@ export function validateYobaiPoint(value: number, opts: { advanced: boolean }): 
 }
 
 /** offset の1バイトだけを書く */
-export function writeYobaiPoint(bytes: Uint8Array, offset: number, value: number, opts: { advanced: boolean }): void {
+export function writeYobaiPoint(bytes: Uint8Array, offset: number, value: number, opts: EditOpts): void {
+  assertWritable(bytes);
   const view = readYobaiPoints(bytes);
   if (view.problem) throw new RangeError(view.problem);
   if (!YOBAI_POINTS.some((p) => p.offset === offset))

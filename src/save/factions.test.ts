@@ -8,14 +8,17 @@ import {
   MORO_OFFSET,
   ROUTE_JUDGE_OFFSET,
   ROUTE_NONE_OFFSET,
+  hostileFlag,
   predictRouteJudge,
   readFactions,
   readRouteJudge,
   routeEligible,
+  validateFactionValue,
   writeFactionValue,
   writeRouteJudge,
 } from "./factions";
-import { TS_SAVE_SIZE } from "./hero";
+import { validateFlag } from "./flags/byte-flag";
+import { TS_SAVE_SIZE } from "./layout";
 
 /** 0x3780〜0x3788。04 copy 3（志士との出会い完了、海兵隊の横暴で赤城と戦って失敗、阿片密売で密売人を斬る） */
 const AFTER_OPIUM = [0x01, 0x00, 0x01, 0x00, 0x01, 0x01, 0x00, 0x01, 0x01];
@@ -36,8 +39,7 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 
 describe("readFactions 🔶 chunks/factions", () => {
   it("3行 × 3列（幕府・外国・攘夷）に並べて読む", () => {
-    expect(readFactions(makeSave(AFTER_SNEAK))).toMatchObject({
-      values: [
+    expect(readFactions(makeSave(AFTER_SNEAK))).toMatchObject({ values: [
         [0, 0, 3],
         [0, 0, 0],
         [1, 0, 0],
@@ -88,6 +90,17 @@ describe("書き込み 🔶 要ゲーム内確認", () => {
     expect(readFactions(b).values[2][2]).toBe(5);
   });
 
+  it("敵対状態の入力の検証は、書き込みと同じ値の表で行う", () => {
+    for (const opts of [{ advanced: false }, { advanced: true }])
+      for (const value of [0, 1, 2, 255, 256, -1, 0.5]) {
+        const flagProblem = validateFlag(hostileFlag(1), value, opts);
+        expect(validateFactionValue(value, opts, 2, 1)).toBe(flagProblem);
+        const b = makeSave(AFTER_SNEAK);
+        if (flagProblem) expect(() => writeFactionValue(b, 2, 1, value, opts)).toThrow(RangeError);
+        else expect(() => writeFactionValue(b, 2, 1, value, opts)).not.toThrow();
+      }
+  });
+
   it("通常モードは 9 まで。上級者モードでは 255 まで", () => {
     const b = makeSave(AFTER_SNEAK);
     expect(() => writeFactionValue(b, 0, 0, 10, { advanced: false })).toThrow(RangeError);
@@ -109,24 +122,24 @@ describe("剣術大会以後のルート分岐 chunks/factions（0x3789〜0x378C
       judges: [1, 2, 2],
       none: 0,
       problem: null,
-      warning: null,
+      warnings: [],
     });
     const b = makeSave(BAKUFU_ROUTE);
     b.set(NO_ROUTE, ROUTE_JUDGE_OFFSET);
-    expect(readRouteJudge(b)).toEqual({ judges: [2, 2, 2], none: 1, problem: null, warning: null });
+    expect(readRouteJudge(b)).toEqual({ judges: [2, 2, 2], none: 1, problem: null, warnings: [] });
     // 大寄せ前はすべて 00
     expect(readRouteJudge(makeSave(AFTER_SNEAK))).toEqual({
       judges: [0, 0, 0],
       none: 0,
       problem: null,
-      warning: null,
+      warnings: [],
     });
   });
 
   it("✅ [U] 無所属が 01 でも、勢力のどれかが 01 なら根無し草にならないので警告する", () => {
     const b = makeSave(BAKUFU_ROUTE);
     writeU8(b, ROUTE_NONE_OFFSET, 0x01);
-    expect(readRouteJudge(b).warning).toMatch(/根無し草/);
+    expect((readRouteJudge(b).warnings.join('。') || null)).toMatch(/根無し草/);
   });
 
   it("剣術大会の準備で攘夷と戦った回数は 2 として読む（行1）", () => {

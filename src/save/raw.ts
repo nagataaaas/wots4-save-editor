@@ -4,6 +4,7 @@
 // ラベルは画面（生データ・履歴の変わった領域）に出すので、アドレスや格納のしかたは書かずにコメントへ回す。
 // 位置は固定オフセット（サイズ 0x48BB0）。
 import { readF32 } from './binary'
+import { assertWritable } from './layout'
 
 export type RawRegion = {
   start: number
@@ -248,6 +249,7 @@ export function applyPatches(bytes: Uint8Array, patches: readonly RawPatch[]): v
  * 値の意味は確かめない。呼び出し側で上級者モードのときだけ使う
  */
 export function writeRawBytes(bytes: Uint8Array, offset: number, values: readonly number[]): void {
+  assertWritable(bytes)
   if (!Number.isInteger(offset) || offset < 0 || offset + values.length > bytes.byteLength) {
     throw new RangeError(`範囲外の書き込みです（0x${offset.toString(16).toUpperCase()} から ${values.length} B）`)
   }

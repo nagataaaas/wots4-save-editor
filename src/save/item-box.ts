@@ -2,13 +2,13 @@
 // docs/save_format/datatable/item/item.csv、check-diff.md D-11（手持ち 0x5B40、8 B × 10件。PS3 の値とも一致）。
 //
 // [TS] の固定オフセットを使い、
-// 次の2段階の妥当性検証を通った枠だけを編集可能にする。
-//   1. ファイルサイズが [TS] の構造体サイズ 0x48BB0 と一致する
-//   2. 各枠の ID が既知の一覧にあり、個数が妥当な範囲にある
+// ファイルサイズが [TS] の構造体サイズ 0x48BB0 と一致するときだけ編集可能にする。
+// 一覧にない ID・最大数を超える個数は警告にとどめ、書き込みのときにモードで制限する。
 //
 // 枠の構造（8 B）は重要品と共通（item-slot.ts）。+0x04 の1バイトは 0x06（ITEM_MARK）。
 import { readU8, writeU32 } from "./binary";
-import { checkLayout } from "./hero";
+import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from "./field";
+import { assertWritable, checkLayout } from "./layout";
 import {
   EMPTY_ID,
   ITEM_COUNT_MAX,
@@ -21,9 +21,6 @@ import {
 } from "./item-slot";
 import { labelKeywords, labelOf } from "./master/labels";
 import { ITEMS, ITEM_KIND_LABELS, findItem, type ItemEntry } from "./master/item-names";
-
-/** 上級者モード。種別が料理・宿・なし（手に入る経路がない）の ID と、最大数を超える個数を書ける */
-export type ItemBoxOptions = { advanced?: boolean };
 
 /** 個数として書ける値の上限（u16）。上級者モードで使う */
 export const ITEM_COUNT_SYSTEM_MAX = 0xffff;
@@ -105,8 +102,11 @@ function toOption(it: ItemEntry): ItemOption {
 const SELECTABLE = ITEMS.filter((it) => !U12_IDS.has(it.id) && !VALUABLE_IDS.has(it.id));
 const OPTIONS_BY_KIND = ALL_KINDS.map((k) => SELECTABLE.filter((it) => it.kind === k).map(toOption));
 
-/** 通常モードは「道具」だけ。上級者モードは「料理」「宿」「なし」も、種別の見出しをつけて出す */
-export function itemOptionGroups(options: ItemBoxOptions = {}): ItemOptionGroup[] {
+/**
+ * 通常モードは「道具」だけ。上級者モードは「料理」「宿」「なし」（手に入る経路がない種別）も、種別の見出しをつけて出す。
+ * 上級者モードでは、最大数を超える個数も書ける（itemCountMax）
+ */
+export function itemOptionGroups(options: EditOpts = NORMAL_EDIT_OPTS): ItemOptionGroup[] {
   if (!options.advanced) return [{ items: OPTIONS_BY_KIND[0] }];
   return ALL_KINDS.map((k) => ({ label: ITEM_KIND_LABELS[k], items: OPTIONS_BY_KIND[k] }));
 }
@@ -118,7 +118,7 @@ export function itemLabel(id: number): string | null {
 }
 
 /** 書き込める ID。選択肢にある道具か、なし */
-export function validateItemId(id: number, options: ItemBoxOptions = {}): string | null {
+export function validateItemId(id: number, options: EditOpts = NORMAL_EDIT_OPTS): string | null {
   if (!Number.isInteger(id) || id < 0 || id > 0xffff) return "道具の一覧から選んでください";
   if (id === EMPTY_ID) return null;
   if (U12_IDS.has(id)) return "チップ・木札は書くとゲーム内でセーブできなくなるため選べません"; // ❓ U-12
@@ -138,7 +138,7 @@ export function itemNormalCountMax(area: ItemBoxArea, id: number): number {
 }
 
 /** その ID に書ける個数の上限。通常モードは area の上限、上級者モードは u16 の上限 */
-export function itemCountMax(area: ItemBoxArea, id: number, options: ItemBoxOptions = {}): number {
+export function itemCountMax(area: ItemBoxArea, id: number, options: EditOpts = NORMAL_EDIT_OPTS): number {
   return options.advanced ? ITEM_COUNT_SYSTEM_MAX : itemNormalCountMax(area, id);
 }
 
@@ -146,7 +146,7 @@ export function validateItemBoxCount(
   area: ItemBoxArea,
   id: number,
   count: number,
-  options: ItemBoxOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): string | null {
   if (!Number.isInteger(count)) return "整数を入力してください";
   const max = itemCountMax(area, id, options);
@@ -158,8 +158,7 @@ export function validateItemBoxCount(
   return null;
 }
 
-export type ItemBoxView = {
-  layoutProblem: string | null;
+export type ItemBoxView = ViewStatus & {
   slots: ItemSlot[];
 };
 
@@ -174,7 +173,7 @@ const MISSING_MARK_WARNING =
   // +0x04 が 0x06 でない枠。手持ちで売却一覧が落ちたのは [U]
   "道具として扱えない状態です。このままだと店で売却一覧を開くときにゲームが落ちることがあります。「修復」で直せます";
 
-export function readItemBox(bytes: Uint8Array, area: ItemBoxArea, options: ItemBoxOptions = {}): ItemBoxView {
+export function readItemBox(bytes: Uint8Array, area: ItemBoxArea, options: EditOpts = NORMAL_EDIT_OPTS): ItemBoxView {
   const end = area.offset + ITEM_SLOT_BYTES * area.slotCount;
   if (bytes.byteLength < end) throw new RangeError(`ファイルが小さすぎて${area.noun}を読めません`);
   const layoutProblem = checkLayout(bytes);
@@ -185,24 +184,17 @@ export function readItemBox(bytes: Uint8Array, area: ItemBoxArea, options: ItemB
     const item = findItem(id);
 
     const idProblem = validateItemId(id, options);
-    // 🔶 妥当性の上限：位置のずれを見分けるための目安。通常モードは max(999, 最大数)、上級者モードは u16 の上限
-    const sanityMax = options.advanced
-      ? ITEM_COUNT_SYSTEM_MAX
-      : Math.max(ITEM_COUNT_MAX, item ? area.normalCountMax(item) : 0);
-    let problem: string | null = null;
-    if (id !== EMPTY_ID && item && count > sanityMax) {
-      problem = "個数が大きすぎるため編集できません"; // 位置がずれている可能性
-    }
-
-    let warning: string | null = null;
+    // 個数は u16。正規範囲を超えていても位置の異常とはみなさず、入力時にモードで制限する。
+    // 上級者モードでは u16 の上限まで書けるので、モードに依存しない上限で読み取り専用にすると、書いた値が編集できなくなる。
+    const warnings: string[] = [];
     if (id !== EMPTY_ID) {
       if (item && count > area.normalCountMax(item)) {
-        warning = `個数が最大数 ${area.normalCountMax(item)} を超えています（上級者モードでだけ書けます）`;
+        warnings.push(`個数が最大数 ${area.normalCountMax(item)} を超えています（上級者モードでだけ書けます）`);
       }
-      if (count === 0) warning = "個数が 0 です";
-      if (item && item.kind !== 0) warning = KIND_CAUTION[item.kind];
-      if (!hasItemMark(bytes, area, index)) warning = MISSING_MARK_WARNING;
-      if (idProblem) warning = `${idProblem}。ほかの値に変更できます`;
+      if (count === 0) warnings.push("個数が 0 です");
+      if (item && item.kind !== 0) warnings.push(KIND_CAUTION[item.kind]);
+      if (!hasItemMark(bytes, area, index)) warnings.push(MISSING_MARK_WARNING);
+      if (idProblem) warnings.push(`${idProblem}。ほかの値に変更できます`);
     }
 
     slots.push({
@@ -212,12 +204,12 @@ export function readItemBox(bytes: Uint8Array, area: ItemBoxArea, options: ItemB
       count,
       unknown,
       label: itemLabel(id),
-      problem: layoutProblem ?? problem,
+      problem: layoutProblem,
       idWritable: idProblem === null,
-      warning,
+      warnings,
     });
   }
-  return { layoutProblem, slots };
+  return { warnings: [], problem: layoutProblem, slots };
 }
 
 function hasItemMark(bytes: Uint8Array, area: ItemBoxArea, index: number): boolean {
@@ -249,8 +241,9 @@ export function writeItemBoxSlot(
   index: number,
   id: number,
   count: number,
-  options: ItemBoxOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): void {
+  assertWritable(bytes);
   const offset = itemBoxSlotOffset(area, index);
   const idProblem = validateItemId(id, options);
   if (idProblem) throw new RangeError(idProblem);
@@ -265,8 +258,7 @@ export function writeItemBoxSlot(
 
 /** アイテムが入っているのに +0x04 が 0x06 でない枠に 06 00 00 00 を書く。直した枠の番号を返す */
 export function repairItemMarks(bytes: Uint8Array, area: ItemBoxArea): number[] {
-  const layoutProblem = checkLayout(bytes);
-  if (layoutProblem) throw new RangeError(layoutProblem);
+  assertWritable(bytes);
   const targets = slotsMissingMark(bytes, area);
   for (const i of targets) writeU32(bytes, itemBoxSlotOffset(area, i) + ITEM_MARK_OFFSET, ITEM_MARK);
   return targets;

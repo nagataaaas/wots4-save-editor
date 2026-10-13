@@ -12,7 +12,8 @@
 // 周回の終わりの処理（🟢。ゲーム内では未確認）：経過の数 +1 → 武器が消える → 精錬 → 銘。
 // 確率は「+1 したあとの経過の数」で決まる。道具・部品は経過では消えない。
 import { readI16, readU16, readU32 } from './binary'
-import { checkLayout } from './hero'
+import { type ViewStatus } from './field'
+import { checkLayout } from './layout'
 import { itemLabel } from './item-box'
 import { WEAPON_RECORD_BYTES, isEmptyWeapon, partId, readWeapon, type WeaponView } from './weapon'
 import { BLADES, GRIPS, GUARDS, partName, type PartOption } from './weapon-ids'
@@ -114,9 +115,8 @@ function readOther(bytes: Uint8Array, o: (typeof MARKET_OTHERS)[number], index: 
   }
 }
 
-export type MarketView = {
-  /** ファイルサイズが想定と違う。値は表示するが位置がずれている可能性がある */
-  layoutProblem: string | null
+/** problem はファイルサイズが想定と違うとき。値は表示するが位置がずれている可能性がある */
+export type MarketView = ViewStatus & {
   /** 空きでない武器 */
   weapons: MarketWeaponEntry[]
   others: MarketOtherSummary[]
@@ -145,5 +145,5 @@ export function readMarket(bytes: Uint8Array): MarketView {
     for (let i = 0; i < o.slots; i++) if (readI16(bytes, o.offset + i * o.bytes) >= 0) entries.push(readOther(bytes, o, i))
     return { key: o.key, label: o.label, offset: o.offset, slots: o.slots, filled: entries.length, entries }
   })
-  return { layoutProblem, weapons, others }
+  return { warnings: [], problem: layoutProblem, weapons, others }
 }

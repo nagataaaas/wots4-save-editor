@@ -41,7 +41,9 @@
 // 空の枠に新しく約束を作るのは yobai-create.ts。記録を作る・消す機能は持たない。
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, readSized, writeU16, writeSized, recordCodec, type SizedField } from "./binary";
-import { checkLayout } from "./hero";
+import { type EditOpts, type ViewStatus } from "./field";
+import { validateKnownValue } from "./flags/byte-flag";
+import { assertWritable, checkLayout } from "./layout";
 import { DAY_RANGE } from "./scenario-date";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_LAYOUT_TABLE } from "./master/dataset/night-visit-layout";
@@ -315,7 +317,8 @@ export function recordFieldOffset(index: number, field: RecordField): number {
   return recordOffset(index) + RECORD_FIELDS[field].rel;
 }
 
-export type PromiseView = {
+/** problem は約束の枠の検証に落ちた理由 */
+export type PromiseView = ViewStatus & {
   active: boolean;
   place: number;
   layout: number;
@@ -323,7 +326,7 @@ export type PromiseView = {
 
 export type RecordView = { index: number; building: number } & Record<RecordField, number>;
 
-export type YobaiView = {
+export type YobaiView = ViewStatus & {
   promise: PromiseView;
   /** 使用中の記録の数（先頭から続く空でない件） */
   count: number;
@@ -331,10 +334,8 @@ export type YobaiView = {
   counters: { offset: number; value: number; label: string; note: string }[];
   /** 🟢 特別な相手ごとの夜這い回数 */
   partners: { offset: number; npc: number; label: string; value: number }[];
-  /** 約束の枠の検証に落ちた理由。null なら編集可能 */
-  promiseProblem: string | null;
-  /** 記録の検証に落ちた理由。null なら編集可能 */
-  recordsProblem: string | null;
+  /** 記録の状態。problem があれば記録は読み取り専用 */
+  recordsStatus: ViewStatus;
 };
 
 function isEmptyRecord(bytes: Uint8Array, index: number): boolean {
@@ -349,6 +350,8 @@ export function readYobai(bytes: Uint8Array): YobaiView {
 
   const fields = PROMISE_PERSON_CODEC.read(bytes, PROMISE_OFFSET);
   const promise: PromiseView = {
+    problem: layoutProblem,
+    warnings: [],
     ...fields,
     active: fields.type !== PROMISE_EMPTY,
     place: PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, 'place'),
@@ -383,13 +386,14 @@ export function readYobai(bytes: Uint8Array): YobaiView {
   });
 
   return {
+    problem: layoutProblem,
+    warnings: [],
     promise,
     count,
     records,
     counters,
     partners,
-    promiseProblem: layoutProblem,
-    recordsProblem,
+    recordsStatus: { problem: recordsProblem, warnings: [] },
   };
 }
 
@@ -410,7 +414,7 @@ export function validatePersonField(
   field: PersonField,
   value: number,
   current: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): string | null {
   return validatePersonValue(field, value, { advanced: opts.advanced || value === current });
 }
@@ -419,7 +423,7 @@ export function validatePersonField(
 export function validatePersonValue(
   field: PersonField,
   value: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): string | null {
   const size = PROMISE_FIELDS[field].size;
   const max = size === 1 ? 0xff : size === 2 ? 0xffff : 0xffffffff;
@@ -428,9 +432,7 @@ export function validatePersonValue(
   if (opts.advanced) return null;
   const known = knownList(field);
   if (known)
-    return known.some((k) => k.value === value)
-      ? null
-      : "表にない値です（上級者モードで書けます）";
+    return validateKnownValue(value, known, opts, max, "表にない値です（上級者モードで書けます）");
   if (field === "age")
     return value <= AGE_NORMAL_MAX || value === AGE_UNKNOWN
       ? null
@@ -448,7 +450,7 @@ export function validatePersonValue(
 
 function assertPromiseEditable(bytes: Uint8Array): void {
   const view = readYobai(bytes);
-  if (view.promiseProblem) throw new RangeError(view.promiseProblem);
+  if (view.promise.problem) throw new RangeError(view.promise.problem);
   if (!view.promise.active) throw new RangeError("約束がありません（空の枠には書きません）");
 }
 
@@ -457,8 +459,9 @@ export function writePromiseField(
   bytes: Uint8Array,
   field: PersonField,
   value: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): void {
+  assertWritable(bytes);
   assertPromiseEditable(bytes);
   const { size } = PROMISE_FIELDS[field];
   const offset = promiseFieldOffset(field);
@@ -475,7 +478,7 @@ export function validatePlaceLayout(
   place: number,
   layout: number,
   current: { place: number; layout: number },
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): string | null {
   for (const v of [place, layout])
     if (!Number.isInteger(v) || v < 0 || v > 0xffff) return "範囲外の値です";
@@ -489,8 +492,9 @@ export function writePromisePlace(
   bytes: Uint8Array,
   place: number,
   layout: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): void {
+  assertWritable(bytes);
   assertPromiseEditable(bytes);
   const current = {
     place: readU16(bytes, PROMISE_OFFSET + PROMISE_PLACE_REL),
@@ -508,10 +512,11 @@ export function writeRecordField(
   index: number,
   field: RecordField,
   value: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): void {
+  assertWritable(bytes);
   const view = readYobai(bytes);
-  if (view.recordsProblem) throw new RangeError(view.recordsProblem);
+  if (view.recordsStatus.problem) throw new RangeError(view.recordsStatus.problem);
   if (!Number.isInteger(index) || index < 0 || index >= view.records.length)
     throw new RangeError(`使用中の記録ではありません: ${index + 1}件目`);
   const { size } = RECORD_FIELDS[field];

@@ -1,7 +1,7 @@
 // 武器袋。合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
 import { BELT_STATE } from './belt'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { WEAPON_FIELDS, writeWeaponName, writeWeaponNumber } from './weapon'
 import { WEAPON_BAG_COUNT, WEAPON_BAG_OFFSET, readWeaponBag, weaponBagOffset } from './weapon-bag'
 import { WEAPON_CHEST_OFFSET } from './weapon-chest'
@@ -37,7 +37,7 @@ describe('武器袋', () => {
 
   it('10 枠を読み、空き枠を見分ける', () => {
     const v = readWeaponBag(makeSave([0, 9]))
-    expect(v.layoutProblem).toBeNull()
+    expect(v.problem).toBeNull()
     expect(v.weapons.map((w) => w.empty)).toEqual([false, true, true, true, true, true, true, true, true, false])
     expect(v.weapons[0]).toMatchObject({ offset: 0xa6b0, problem: null, name: { value: 'A' } })
   })
@@ -68,7 +68,7 @@ describe('武器袋', () => {
     const b = new Uint8Array(TS_SAVE_SIZE + 4)
     b.set(makeSave([0]))
     const v = readWeaponBag(b)
-    expect(v.layoutProblem).not.toBeNull()
+    expect(v.problem).not.toBeNull()
     expect(v.weapons[0].problem).not.toBeNull()
     expect(() => writeWeaponNumber(b, weaponBagOffset(0), 'attack', 1)).toThrow()
   })

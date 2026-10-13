@@ -1,12 +1,12 @@
 // 重要品（貴重品）。出典：docs/save_format/chunks/items（[TS][I-3]）、docs/save_format/datatable/item/valuable.csv（貴重品ID ✅ [TS][I-3]、D-12）。
 //
 // [TS] の固定オフセットを使い、
-// 次の2段階の妥当性検証を通った枠だけを編集可能にする。
-//   1. ファイルサイズが [TS] の構造体サイズ 0x48BB0 と一致する
-//   2. 各枠の ID が既知の一覧にあり、個数が妥当な範囲にある
+// ファイルサイズが [TS] の構造体サイズ 0x48BB0 と一致するときだけ編集可能にする。
+// 一覧にない ID・通常の上限を超える個数は警告にとどめ、書き込みのときにモードで制限する。
 //
 // 枠の構造（8 B）と書き込み方は手持ちの道具と共通（item-slot.ts）。
-import { checkLayout } from './hero'
+import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from './field'
+import { assertWritable, checkLayout } from './layout'
 import {
   EMPTY_ID,
   ITEM_COUNT_MAX,
@@ -150,14 +150,6 @@ const PROBED_LABELS: Record<number, string> = {
 }
 
 /**
- * ID調査モード（上級者モード）。U-14 で謎の鍵・拷問部屋の鍵・会談の手紙の ID を探すために作った。
- * 3つとも判明したあとも、一覧にない ID をゲーム内で調べるために残している。
- * ゲーム内で名前を見て ID を特定したら VALUABLES に昇格させる。
- * U-12 の ID（0x2D／0x2E）はセーブできなくなることが分かっているので、このモードでも拒否する。
- */
-export type ValuableOptions = { investigate?: boolean }
-
-/**
  * ❓ U-14：調査の候補 ID。🔶 推測。この順に調べる（ID の昇順ではない）。
  * 貴重品と通常アイテムは共通の ID 空間（datatable/README.md のアイテムの ID 空間。PS3版の一覧でも 0x22 白紙目録・0x29 くず鉄・0x74 コインが同じ空間）。
  * 0x00〜0x9E のうち、通常アイテムとして名前のない ID はすべて調査済み（PROBED_LABELS）。0x73〜0x9E は「茶器」（仮データ）が続いた。
@@ -181,8 +173,7 @@ export const VALUABLE_COUNT_MAX = ITEM_COUNT_MAX
  */
 export type ValuableSlot = ItemSlot
 
-export type ValuablesView = {
-  layoutProblem: string | null
+export type ValuablesView = ViewStatus & {
   slots: ValuableSlot[]
 }
 
@@ -204,22 +195,29 @@ export function valuableLabel(id: number): string | null {
 
 /**
  * 書き込める ID。通常は選択肢にある貴重品か、なし。
- * ID調査モードでは u16 の任意の ID（U-12 の ID を除く）。
+ * ID調査モード（画面の切り替えを EditOpts.advanced で受ける）では u16 の任意の ID（U-12 の ID を除く）。
+ *
+ * ID調査モードは、U-14 で謎の鍵・拷問部屋の鍵・会談の手紙の ID を探すために作った。
+ * 3つとも判明したあとも、一覧にない ID をゲーム内で調べるために残している。
+ * ゲーム内で名前を見て ID を特定したら VALUABLES に昇格させる。
+ * U-12 の ID（0x2D／0x2E）はセーブできなくなることが分かっているので、このモードでも拒否する。
  */
-export function validateValuableId(id: number, options: ValuableOptions = {}): string | null {
+export function validateValuableId(id: number, options: EditOpts = NORMAL_EDIT_OPTS): string | null {
   if (!Number.isInteger(id) || id < 0 || id > 0xffff) return '重要品の一覧から選んでください'
   if (id === EMPTY_ID || findValuable(id)) return null
   if (id in U12_LABELS) {
     return `${U12_LABELS[id]}は書き込むとゲーム内でセーブできなくなるため書き込めません` // ❓ U-12
   }
-  if (options.investigate) return null
+  if (options.advanced) return null
   if (id in PROBED_LABELS) return `${PROBED_LABELS[id]}は重要品の枠には書けません` // ❓ U-14
   return '重要品の一覧にない値です'
 }
 
-export const validateValuableCount = validateItemCount
+export function validateValuableCount(count: number, opts: EditOpts = NORMAL_EDIT_OPTS): string | null {
+  return validateItemCount(count, opts.advanced ? 0xffff : VALUABLE_COUNT_MAX)
+}
 
-export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}): ValuablesView {
+export function readValuables(bytes: Uint8Array, options: EditOpts = NORMAL_EDIT_OPTS): ValuablesView {
   const end = VALUABLES_OFFSET + VALUABLE_SLOT_BYTES * VALUABLE_SLOT_COUNT
   if (bytes.byteLength < end) throw new RangeError('ファイルが小さすぎて重要品を読めません')
   const layoutProblem = checkLayout(bytes)
@@ -230,22 +228,19 @@ export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}):
     const { offset, id, count, unknown } = readItemSlotRaw(bytes, slotOffset(index))
 
     const idProblem = validateValuableId(id, options)
-    let problem: string | null = null
-    if (!idProblem && id !== EMPTY_ID && count > VALUABLE_COUNT_MAX) {
-      problem = '個数が大きすぎるため編集できません' // 位置がずれている可能性
-    }
-
-    let warning: string | null = null
+    const warnings: string[] = []
     if (id !== EMPTY_ID) {
       const first = seen.get(id)
-      if (first !== undefined) warning = `${first + 1}件目と同じ重要品です`
+      if (first !== undefined) warnings.push(`${first + 1}件目と同じ重要品です`)
       else seen.set(id, index)
-      if (count === 0) warning = '個数が 0 です'
-      if (idProblem) warning = `${idProblem}。ほかの値に変更してください`
+      if (count === 0) warnings.push('個数が 0 です')
+      // 🔶 個数の正規上限は item-slot.ts の ITEM_COUNT_MAX。位置の検査とは分ける。
+      if (count > VALUABLE_COUNT_MAX) warnings.push('個数が通常の上限を超えています（上級者モードでだけ書けます）')
+      if (idProblem) warnings.push(`${idProblem}。ほかの値に変更してください`)
       const caution = findValuable(id)?.caution
-      if (caution) warning = caution
-      if (!idProblem && id in PROBED_LABELS) warning = `${PROBED_LABELS[id]} は重要品ではありません` // ❓ U-14
-      if (!idProblem && valuableLabel(id) === null) warning = '重要品の一覧にない値です。ゲーム内の表示を確認してください' // ❓ U-14
+      if (caution) warnings.push(caution)
+      if (!idProblem && id in PROBED_LABELS) warnings.push(`${PROBED_LABELS[id]} は重要品ではありません`) // ❓ U-14
+      if (!idProblem && valuableLabel(id) === null) warnings.push('重要品の一覧にない値です。ゲーム内の表示を確認してください') // ❓ U-14
     }
 
     slots.push({
@@ -255,12 +250,12 @@ export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}):
       count,
       unknown,
       label: valuableLabel(id),
-      problem: layoutProblem ?? problem,
+      problem: layoutProblem,
       idWritable: idProblem === null,
-      warning,
+      warnings,
     })
   }
-  return { layoutProblem, slots }
+  return { warnings: [], problem: layoutProblem, slots }
 }
 
 // 書き込み。呼び出し側で妥当性検証を通した枠に対してだけ使う。
@@ -275,12 +270,13 @@ export function writeValuable(
   index: number,
   id: number,
   count: number,
-  options: ValuableOptions = {},
+  options: EditOpts = NORMAL_EDIT_OPTS,
 ): void {
+  assertWritable(bytes)
   const offset = slotOffset(index)
   const idProblem = validateValuableId(id, options)
   if (idProblem) throw new RangeError(idProblem)
-  writeItemSlotRaw(bytes, offset, id, count)
+  writeItemSlotRaw(bytes, offset, id, count, options.advanced ? 0xffff : VALUABLE_COUNT_MAX)
 }
 
 /**
@@ -289,8 +285,9 @@ export function writeValuable(
  * 1回のゲーム内確認で最大10件の ID を調べるための機能。
  */
 export function fillEmptySlotsWithProbes(bytes: Uint8Array, start: number): number[] {
-  const view = readValuables(bytes, { investigate: true })
-  if (view.layoutProblem) throw new RangeError(view.layoutProblem)
+  assertWritable(bytes)
+  const view = readValuables(bytes, { advanced: true })
+  if (view.problem) throw new RangeError(view.problem)
   const used = new Set(view.slots.map((s) => s.id))
   const from = PROBE_CANDIDATES.indexOf(start)
   if (from < 0) throw new RangeError('開始 ID が調査の候補にありません')
@@ -300,7 +297,7 @@ export function fillEmptySlotsWithProbes(bytes: Uint8Array, start: number): numb
     if (slot.id !== EMPTY_ID || slot.problem) continue
     const id = ids.shift()
     if (id === undefined) break
-    writeValuable(bytes, slot.index, id, 1, { investigate: true })
+    writeValuable(bytes, slot.index, id, 1, { advanced: true })
     filled.push(id)
   }
   return filled

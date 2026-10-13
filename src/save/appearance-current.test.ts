@@ -1,7 +1,7 @@
 // ✅ [U] 体型・身長・肌色、🟢 身長の選択肢、差分で観測した値を固定位置に合成する。sample/ のファイルは読まない。
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU32, writeUtf16Fixed } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { HEIGHT_CHOICES, heightWarning, readAppearanceCurrent, writeAppearanceCurrent } from './appearance-current'
 
 // relatedHeader：0x46338 基準の身長（float32）、0x4633C 身長の選択肢（int32）を含む領域。
@@ -24,11 +24,11 @@ describe('現在の見た目（固定位置）', () => {
     writeF32(bytes, 0x46338, 175)
     const before = bytes.slice()
     const view = readAppearanceCurrent(bytes)
-    expect(Object.values(view).every(field => field.problem === null)).toBe(true)
+    expect([view.skin, view.body, view.height, view.heightChoice].every(field => field.problem === null)).toBe(true)
     expect(view.height.value).toBe(175)
     writeAppearanceCurrent(bytes, 'body', 2)
     writeAppearanceCurrent(bytes, 'height', 176)
-    expect(Object.values(readAppearanceCurrent(bytes)).every(field => field.problem === null)).toBe(true)
+    expect(readAppearanceCurrent(bytes).problem).toBeNull()
     expect(bytes[0x3aadc]).toBe(0)
     expect(readAppearanceCurrent(bytes).heightChoice.value).toBe(0)
     writeAppearanceCurrent(bytes, 'body', 0)
@@ -120,10 +120,10 @@ describe('現在の見た目（固定位置）', () => {
     expect(() => writeAppearanceCurrent(bytes, 'body', 3)).toThrow()
     expect(() => writeAppearanceCurrent(bytes, 'heightChoice', 3)).toThrow()
     expect(bytes).toEqual(before)
-    writeAppearanceCurrent(bytes, 'skin', 8, true)
-    writeAppearanceCurrent(bytes, 'body', 3, true)
+    writeAppearanceCurrent(bytes, 'skin', 8, { advanced: true })
+    writeAppearanceCurrent(bytes, 'body', 3, { advanced: true })
     expect(readAppearanceCurrent(bytes).body.value).toBe(3)
-    expect(() => writeAppearanceCurrent(bytes, 'heightChoice', 256, true)).toThrow()
+    expect(() => writeAppearanceCurrent(bytes, 'heightChoice', 256, { advanced: true })).toThrow()
   })
 
   it('身長は有限の数値なら書き込み、135〜220cmの外では警告だけ出す', () => {
@@ -135,7 +135,7 @@ describe('現在の見た目（固定位置）', () => {
     }
     for (const value of [135, 160, 220]) expect(heightWarning(value)).toBeNull()
     expect(() => writeAppearanceCurrent(bytes, 'height', Infinity)).toThrow()
-    expect(() => writeAppearanceCurrent(bytes, 'height', NaN, true)).toThrow()
+    expect(() => writeAppearanceCurrent(bytes, 'height', NaN, { advanced: true })).toThrow()
   })
 
   it('サイズ違い・短いファイルと、有限でない身長では書き込まない', () => {
@@ -143,7 +143,7 @@ describe('現在の見た目（固定位置）', () => {
     expect(readAppearanceCurrent(wrongSize).body.problem).toMatch(/ファイルサイズ/)
     expect(() => writeAppearanceCurrent(wrongSize, 'body', 1)).toThrow()
     const short = new Uint8Array(16)
-    expect(readAppearanceCurrent(short).body.value).toBeNull()
+    expect(() => readAppearanceCurrent(short)).toThrow(RangeError)
     expect(() => writeAppearanceCurrent(short, 'body', 1)).toThrow()
     for (const value of [NaN, Infinity]) {
       const invalid = makeSave()

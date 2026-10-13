@@ -5,6 +5,7 @@ import { useFlag } from "@/hooks/use-flag";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useWrite } from "@/lib/use-write";
 import { cn } from "@/lib/utils";
+import type { EditOpts } from "@/save/field";
 import { writeFlag, type ByteFlag } from "@/save/flags/byte-flag";
 
 const MISMATCH = "mismatch";
@@ -25,7 +26,7 @@ export function FlagRow({
   note?: ReactNode;
   hint?: ReactNode;
   /** 既定は writeFlag。例外はその場で表示する */
-  write?: (bytes: Uint8Array, value: number, opts: { advanced: boolean }) => void;
+  write?: (bytes: Uint8Array, value: number, opts: EditOpts) => void;
 }) {
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();

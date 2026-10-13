@@ -1,7 +1,7 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // src/save/flags/ の、画面のブロックごとの配列。配列1つ＝画面の1ブロック。
 import { describe, expect, it } from "vitest";
-import { TS_SAVE_SIZE } from "../hero";
+import { TS_SAVE_SIZE } from '../layout'
 import { occupationFlagOffset } from "../townsfolk";
 import { ALIVE_DEAD, readFlag, writeFlag, type ByteFlag } from "./byte-flag";
 import { CHARACTER_FLAGS } from "./characters";

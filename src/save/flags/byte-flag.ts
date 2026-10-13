@@ -11,7 +11,8 @@
 //   - values にない値は、画面では「不明」と出して警告を付ける。編集はできる（AGENTS.md「未確認データの扱い」）
 //   - alsoAt があれば、同じ値をそこにも書く（通常のプレイで必ず同じ値になるバイト）。食い違っていたら「不明」と同じ扱い
 import { readU8, writeU8 } from "../binary";
-import { checkLayout } from "../hero";
+import { type EditOpts } from "../field";
+import { assertWritable, checkLayout } from "../layout";
 
 export type FlagValue = {
   value: number;
@@ -70,10 +71,20 @@ export function flagProblem(bytes: Uint8Array): string | null {
 }
 
 /** 通常モードは values の値だけ、上級者モードは任意の u8。問題がなければ null */
-export function validateFlag(flag: ByteFlag, value: number, opts: { advanced: boolean }): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `値が範囲外です: ${value}`;
-  if (!opts.advanced && !flag.values.some((v) => v.value === value))
-    return `通常モードでは「${flag.label}」に指定できない状態です`;
+export function validateFlag(flag: ByteFlag, value: number, opts: EditOpts): string | null {
+  return validateKnownValue(value, flag.values, opts, 0xff, `通常モードでは「${flag.label}」に指定できない状態です`);
+}
+
+/** 値の表と整数の格納範囲を共通に検証する。上級者モードでも格納範囲は超えられない。 */
+export function validateKnownValue(
+  value: number,
+  known: readonly { value: number }[],
+  opts: EditOpts,
+  max = 0xff,
+  unknownProblem = "通常モードでは指定できない状態です",
+): string | null {
+  if (!Number.isInteger(value) || value < 0 || value > max) return `値が範囲外です: ${value}`;
+  if (!opts.advanced && !known.some((v) => v.value === value)) return unknownProblem;
   return null;
 }
 
@@ -82,10 +93,12 @@ export function writeFlag(
   bytes: Uint8Array,
   flag: ByteFlag,
   value: number,
-  opts: { advanced: boolean },
+  opts: EditOpts,
 ): void {
-  readFlag(bytes, flag);
-  const problem = flagProblem(bytes) ?? validateFlag(flag, value, opts);
+  assertWritable(bytes);
+  const positions = positionsOf(flag);
+  for (const offset of positions) assertWritable(bytes, offset, 1);
+  const problem = validateFlag(flag, value, opts);
   if (problem) throw new RangeError(problem);
-  for (const o of positionsOf(flag)) writeU8(bytes, o, value);
+  for (const o of positions) writeU8(bytes, o, value);
 }

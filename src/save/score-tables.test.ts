@@ -2,7 +2,7 @@
 // 位置は docs/save_format/chunks/kill-counts・item-uses（🟢）。技の斬殺数の上限は ❓（エディタの目安）。
 import { describe, expect, it } from 'vitest'
 import { writeU32 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { readScoreTable, scoreEntries, scoreEntryName, scoreOffset, validateScore, writeScore } from './score-tables'
 
 function makeSave(size = TS_SAVE_SIZE): Uint8Array {

@@ -5,7 +5,7 @@
 // 固定オフセット。
 import { describe, expect, it } from 'vitest'
 import { writeU16, writeU8 } from './binary'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { chartNodeLabel } from './master/labels'
 import {
   HINT_DEFAULT_TEXT,
@@ -41,7 +41,7 @@ describe('次のイベントのヒント 0x3900（🟢 チャートのノード�
     const view = readHint(makeSave(COPY6_HINT))
     expect(view.value).toBe(9)
     expect(view.node && chartNodeLabel(view.node)).toBe('阿片密売を阻止せよ')
-    expect(view.warning).toBeNull()
+    expect((view.warnings.join('。') || null)).toBeNull()
     expect(view.problem).toBeNull()
   })
 
@@ -62,7 +62,7 @@ describe('次のイベントのヒント 0x3900（🟢 チャートのノード�
     for (const [value, name] of seen) {
       const view = readHint(makeSave(value))
       expect(view.node && chartNodeLabel(view.node)).toBe(name)
-      expect(view.warning).toBeNull()
+      expect((view.warnings.join('。') || null)).toBeNull()
     }
   })
 
@@ -78,7 +78,7 @@ describe('次のイベントのヒント 0x3900（🟢 チャートのノード�
     const view = readHint(makeSave(HINT_NONE))
     expect(view.value).toBe(0xffff)
     expect(view.node).toBeNull()
-    expect(view.warning).toBeNull()
+    expect((view.warnings.join('。') || null)).toBeNull()
     expect(hintLabel(HINT_NONE)).toContain('なし')
   })
 
@@ -86,7 +86,7 @@ describe('次のイベントのヒント 0x3900（🟢 チャートのノード�
     for (const v of [0, 1, 53, 113, 114, 118]) expect(hintWarning(v)).toContain('イベントに当たらない')
     const view = readHint(makeSave(119))
     expect(view.node).toBeNull()
-    expect(view.warning).toContain('一覧にない')
+    expect((view.warnings.join('。') || null)).toContain('一覧にない')
     expect(view.problem).toBeNull()
   })
 

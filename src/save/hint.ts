@@ -10,7 +10,8 @@
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, writeU16 } from "./binary";
-import { checkLayout } from "./hero";
+import { warningsOf, type EditOpts, type ViewStatus } from "./field";
+import { assertWritable, checkLayout } from "./layout";
 import { CHART_NODE_MAX, chartNode, type ChartNodeEntry } from "./master/chart-nodes";
 import { chartNodeLabel } from "./master/labels";
 
@@ -41,16 +42,13 @@ export const HINT_TEXTS: ReadonlyMap<number, string> = new Map([
   [10, "ローラは元気にしているだろうか"],
 ]);
 
-export type HintView = {
+/** warnings は、表にない値・イベントに当たらないノードのとき。編集はできる */
+export type HintView = ViewStatus & {
   value: number;
   /** 値に当たるノード。0xFFFF や表にない値は null */
   node: ChartNodeEntry | null;
   /** 🔶 ノードのヒントの文。分かっていなければ null（❓） */
   text: string | null;
-  /** 表にない値・イベントに当たらないノードなら理由。編集はできる */
-  warning: string | null;
-  /** 妥当性検証に落ちた理由。null なら編集可能 */
-  problem: string | null;
 };
 
 /** 値の表示名（例：「6 琴吹光探検隊」「65535 なし」） */
@@ -77,13 +75,13 @@ export function readHint(bytes: Uint8Array): HintView {
     value,
     node: value === HINT_NONE ? null : (chartNode(value) ?? null),
     text: HINT_TEXTS.get(value) ?? null,
-    warning: hintWarning(value),
+    warnings: warningsOf(hintWarning(value)),
     problem: checkLayout(bytes),
   };
 }
 
 /** 通常モードは 0〜118（ノード）と 0xFFFF、上級者モードは任意の u16。問題がなければ null */
-export function validateHint(value: number, opts: { advanced: boolean }): string | null {
+export function validateHint(value: number, opts: EditOpts): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 0xffff) return `値が範囲外です: ${value}`;
   if (!opts.advanced && value > HINT_NORMAL_MAX && value !== HINT_NONE)
     return "通常モードでは指定できないイベントです";
@@ -91,9 +89,8 @@ export function validateHint(value: number, opts: { advanced: boolean }): string
 }
 
 /** 0x3900 の2バイトだけを書く */
-export function writeHint(bytes: Uint8Array, value: number, opts: { advanced: boolean }): void {
-  const view = readHint(bytes);
-  if (view.problem) throw new RangeError(view.problem);
+export function writeHint(bytes: Uint8Array, value: number, opts: EditOpts): void {
+  assertWritable(bytes);
   const error = validateHint(value, opts);
   if (error) throw new RangeError(error);
   writeU16(bytes, HINT_OFFSET, value);

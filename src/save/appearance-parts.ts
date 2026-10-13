@@ -14,7 +14,8 @@
 //   （ユーザー判断 2026-10-08）。足元の層を外した書き込みの反映 ✅ [U] 2026-10-08
 // 固定オフセットを使う。ファイルサイズを検証する。
 import { readU16, readU8, writeF32, writeU16, writeU32, writeU8, readF32 } from "./binary";
-import { checkLayout } from "./hero";
+import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from "./field";
+import { assertWritable, checkLayout } from "./layout";
 import { APPEARANCE_CURRENT_OFFSETS, HEIGHT_RATIOS } from "./appearance-current";
 import {
   BODY_KINDS,
@@ -95,9 +96,7 @@ export type PartValue = {
   raw: string;
 };
 
-export type AppearancePartsView = {
-  /** レイアウトの検証に落ちた理由。あれば読み取り専用 */
-  problem: string | null;
+export type AppearancePartsView = ViewStatus & {
   /** 0xFFFF は個別に設定 */
   person: number;
   secondId: number;
@@ -114,9 +113,9 @@ const hex = (bytes: Uint8Array, offset: number, length: number) =>
 
 const i16 = (u: number) => (u === 0xffff ? -1 : u);
 
-export function readAppearanceParts(bytes: Uint8Array): AppearancePartsView | null {
+export function readAppearanceParts(bytes: Uint8Array): AppearancePartsView {
   const end = APPEARANCE_PARTS_OFFSETS.parts + PART_RECORD_SIZE * PART_KINDS.length;
-  if (bytes.length < end) return null;
+  if (bytes.length < end) throw new RangeError("ファイルが小さすぎて容姿を読めません");
   const parts = {} as Record<PartKind, PartValue>;
   for (const kind of PART_KINDS) {
     const offset = partOffset(kind);
@@ -130,6 +129,7 @@ export function readAppearanceParts(bytes: Uint8Array): AppearancePartsView | nu
     };
   }
   return {
+    warnings: [],
     problem: checkLayout(bytes),
     person: readU16(bytes, APPEARANCE_PARTS_OFFSETS.person),
     secondId: readU16(bytes, APPEARANCE_PARTS_OFFSETS.secondId),
@@ -187,14 +187,14 @@ export function validatePart(
   kind: PartKind,
   id: number,
   heroBodyKind: number,
-  advanced: boolean,
+  opts: EditOpts = NORMAL_EDIT_OPTS,
 ): string | null {
   if (id === -1)
-    return advanced || NONE_ALLOWED[kind] ? null : "通常モードでは「なし」にできません";
+    return opts.advanced || NONE_ALLOWED[kind] ? null : "通常モードでは「なし」にできません";
   const part = findPart(kind, id);
   if (!part) return "部品の表にありません";
   if (part.crash) return "この部品はロードでクラッシュします";
-  if (advanced) return null;
+  if (opts.advanced) return null;
   const only = BODY_KIND_PARTS[heroBodyKind];
   if (only)
     return only[kind]?.includes(id)
@@ -254,6 +254,7 @@ export function isNude(view: AppearancePartsView, kind: "upper" | "lower"): bool
 
 /** 上半身・下半身を裸にし、人物の番号を「個別に設定」にする。タイプが男・女のときだけ */
 export function writeNude(bytes: Uint8Array, kind: "upper" | "lower"): void {
+  assertWritable(bytes);
   const view = requireWritable(bytes);
   const p = nudePreset(view.bodyKind, kind);
   if (!p) throw new RangeError("裸にできるのはタイプが男・女のときだけです");
@@ -269,9 +270,10 @@ export function partNoneWarning(kind: PartKind, id: number): string | null {
 }
 
 /** 部品1つを書き、人物の番号を「個別に設定」にする（✅ [U] 2026-10-08 の手順） */
-export function writePart(bytes: Uint8Array, kind: PartKind, id: number, advanced = false): void {
+export function writePart(bytes: Uint8Array, kind: PartKind, id: number, opts: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes);
   const view = requireWritable(bytes);
-  const error = validatePart(kind, id, view.bodyKind, advanced);
+  const error = validatePart(kind, id, view.bodyKind, opts);
   if (error) throw new RangeError(error);
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM);
   writePartRecord(bytes, kind, id);
@@ -290,9 +292,9 @@ export function validateLayer(
   partId: number,
   layer: number,
   value: number,
-  advanced: boolean,
+  opts: EditOpts = NORMAL_EDIT_OPTS,
 ): string | null {
-  if (!advanced) return "層の組み合わせは上級者モードでだけ変更できます";
+  if (!opts.advanced) return "層の組み合わせは上級者モードでだけ変更できます";
   if (!Number.isInteger(layer) || layer < 0 || layer >= LAYER_COUNT)
     return "指定できない層です";
   if (partId === -1) return "部品が「なし」のときは層を選べません。先に部品を選んでください";
@@ -313,10 +315,11 @@ export function writeLayer(
   kind: PartKind,
   layer: number,
   value: number,
-  advanced = false,
+  opts: EditOpts = NORMAL_EDIT_OPTS,
 ): void {
+  assertWritable(bytes);
   const view = requireWritable(bytes);
-  const error = validateLayer(kind, view.parts[kind].id, layer, value, advanced);
+  const error = validateLayer(kind, view.parts[kind].id, layer, value, opts);
   if (error) throw new RangeError(error);
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM);
   writeU16(bytes, partLayerOffset(kind, layer), value === -1 ? 0xffff : value);
@@ -329,26 +332,28 @@ export function layersCustomized(kind: PartKind, part: PartValue): boolean {
   return entry !== undefined && part.models.some((m, i) => m !== entry.models[i]);
 }
 
-export function validateHairColor(value: number, advanced: boolean): string | null {
+export function validateHairColor(value: number, opts: EditOpts = NORMAL_EDIT_OPTS): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 255) return "0〜255の整数を入力してください";
-  if (!advanced && (value < HAIR_COLOR_MIN || value > HAIR_COLOR_MAX))
+  if (!opts.advanced && (value < HAIR_COLOR_MIN || value > HAIR_COLOR_MAX))
     return "通常モードでは名前のある色だけ選べます";
   return null;
 }
 
 /** 髪の色を書き、人物の番号を「個別に設定」にする（人物を指している間は人物の色で表示されるため ✅ [U]） */
-export function writeHairColor(bytes: Uint8Array, value: number, advanced = false): void {
+export function writeHairColor(bytes: Uint8Array, value: number, opts: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes);
   requireWritable(bytes);
-  const error = validateHairColor(value, advanced);
+  const error = validateHairColor(value, opts);
   if (error) throw new RangeError(error);
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM);
   writeU8(bytes, APPEARANCE_PARTS_OFFSETS.hairColor, value);
 }
 
 /** タイプだけを書く。上級者モードだけ（ユーザー判断 2026-10-08）。🔶 タイプに合わない部品と組み合わさると表示が崩れるおそれがある */
-export function writeBodyKind(bytes: Uint8Array, value: number, advanced: boolean): void {
+export function writeBodyKind(bytes: Uint8Array, value: number, opts: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes);
   requireWritable(bytes);
-  if (!advanced)
+  if (!opts.advanced)
     throw new RangeError("タイプは上級者モードでだけ変更できます。通常は人物を選んでください");
   if (!Number.isInteger(value) || value < 0 || value > 255)
     throw new RangeError("0〜255の整数を入力してください");
@@ -364,6 +369,7 @@ export function writeBodyKind(bytes: Uint8Array, value: number, advanced: boolea
  * 主人公設定に出ない見た目の組（ローラ・男の子・女の子 ✅ [U]）も、どのモードでも選べる（ユーザー判断 2026-10-09）。
  */
 export function writePerson(bytes: Uint8Array, personId: number): void {
+  assertWritable(bytes);
   const view = requireWritable(bytes);
   const person = findPerson(personId);
   if (!person) throw new RangeError("人物の表にありません");

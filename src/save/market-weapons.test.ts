@@ -1,7 +1,7 @@
 // 流通中の武器・道具・部品（🟢、読み取り専用）。合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 位置は固定オフセット（サイズ 0x48BB0）。
 import { describe, expect, it } from 'vitest'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import {
   MARKET_END,
   MARKET_OTHERS,
@@ -55,7 +55,7 @@ describe('🟢 流通中の武器・道具・部品', () => {
 
   it('空きの記録だけなら、武器も道具・部品も 0 件', () => {
     const view = readMarket(makeSave())
-    expect(view.layoutProblem).toBeNull()
+    expect(view.problem).toBeNull()
     expect(view.weapons).toEqual([])
     expect(view.others.map((o) => o.filled)).toEqual([0, 0, 0, 0])
   })
@@ -113,7 +113,7 @@ describe('🟢 流通中の武器・道具・部品', () => {
   it('サイズが違うファイルは、値を読んだうえで問題として示す', () => {
     const b = new Uint8Array(TS_SAVE_SIZE + 2)
     b.set(makeSave())
-    expect(readMarket(b).layoutProblem).not.toBeNull()
+    expect(readMarket(b).problem).not.toBeNull()
     expect(() => readMarket(new Uint8Array(MARKET_END))).toThrow(RangeError)
   })
 

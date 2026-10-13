@@ -6,7 +6,7 @@ import { EMPTY_ID, type ItemSlot } from '@/save/item-slot'
 
 const slot: ItemSlot = {
   index: 0, offset: 0x58c0, id: 1, count: 2, unknown: 0,
-  label: '道具', problem: null, idWritable: true, warning: null,
+  label: '道具', problem: null, idWritable: true, warnings: [],
 }
 
 function render(overrides: Partial<Parameters<typeof ItemSlotRow>[0]> = {}) {

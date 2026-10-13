@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { SaveContext, type SaveContextValue } from '@/lib/save-context'
 import { AdvancedModeContext } from '@/lib/advanced-mode-context'
-import { TS_SAVE_SIZE } from '@/save/hero'
+import { TS_SAVE_SIZE } from '@/save/layout'
 import { ACCESSORY_EQUIPMENT_BASES } from '@/save/accessory-equipment'
 import { pages } from '@/features/pages'
 import { sectionGroups, sections } from '@/features/sections'
@@ -40,7 +40,8 @@ describe('装飾品の装着画面', () => {
     view.setFloat32(0x39d0, 100, true)
     view.setFloat32(0x3a00, 99, true) // 表示サイズ100
     const normal = render(bytes)
-    expect(normal).toContain('読み取り専用')
+    expect(normal).not.toContain('読み取り専用')
+    expect(normal).toContain('-10〜10')
     const advanced = render(bytes, true)
     expect(advanced).toContain('-100〜100')
     expect(advanced).toContain('0〜100')

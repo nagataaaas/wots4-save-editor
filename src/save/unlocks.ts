@@ -18,19 +18,18 @@
 //
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
-import { checkLayout } from "./hero";
+import { warningsOf, type EditOpts, type ViewStatus } from "./field";
+import { validateKnownValue } from "./flags/byte-flag";
+import { assertWritable, checkLayout } from "./layout";
 
 // ---------------------------------------------------------------- 装飾品
 
 export const ACCESSORY_FLAGS_OFFSET = 0x3902;
 export const ACCESSORY_COUNT = 158;
 
-export type FlagBytesView = {
+/** warnings は通常モードの範囲外の値があるときの説明（読み取り専用にはしない） */
+export type FlagBytesView = ViewStatus & {
   values: number[];
-  /** 妥当性検証に落ちた理由。あれば読み取り専用 */
-  layoutProblem: string | null;
-  /** 通常モードの範囲外の値があるときの説明（読み取り専用にはしない） */
-  warning: string | null;
 };
 
 function readBytes(bytes: Uint8Array, offset: number, count: number): number[] {
@@ -43,32 +42,35 @@ export function readAccessoryFlags(bytes: Uint8Array): FlagBytesView {
   const bad = values.findIndex((v) => v > 1);
   return {
     values,
-    layoutProblem: checkLayout(bytes),
-    warning: bad >= 0 ? "所持の状態が想定外の装飾品があります。切り替えは上級者モードでだけできます" : null,
+    problem: checkLayout(bytes),
+    warnings: warningsOf(bad >= 0 ? "所持の状態が想定外の装飾品があります。切り替えは上級者モードでだけできます" : null),
   };
 }
 
-function assertEditable(bytes: Uint8Array): void {
-  const problem = checkLayout(bytes);
+/** 通常モードで書ける値。所持フラグは 0・1、特典の状態は 0〜2（🔶 U-17） */
+const ACCESSORY_FLAG_VALUES = [{ value: 0 }, { value: 1 }] as const;
+const UNLOCK_STATE_VALUES = [{ value: 0 }, { value: 1 }, { value: 2 }] as const;
+
+function assertValue(value: number, known: readonly { value: number }[], opts: EditOpts): void {
+  const problem = validateKnownValue(value, known, opts);
   if (problem) throw new RangeError(problem);
 }
 
-function assertValue(value: number, max: number, advanced: boolean): void {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) throw new RangeError("指定できない値です");
-  if (!advanced && value > max) throw new RangeError("通常モードでは指定できない値です");
-}
-
 /** 装飾品 id の所持フラグを書く。通常モードでは 0・1、上級者モードでは任意の u8 */
-export function writeAccessoryFlag(bytes: Uint8Array, id: number, value: number, opts: { advanced: boolean }): void {
-  assertEditable(bytes);
+export function writeAccessoryFlag(bytes: Uint8Array, id: number, value: number, opts: EditOpts): void {
+  assertWritable(bytes);
   if (!Number.isInteger(id) || id < 0 || id >= ACCESSORY_COUNT) throw new RangeError("装飾品が範囲外です");
-  assertValue(value, 1, opts.advanced);
+  assertValue(value, ACCESSORY_FLAG_VALUES, opts);
   writeU8(bytes, ACCESSORY_FLAGS_OFFSET + id, value);
 }
 
 /** ids の装飾品の所持フラグをまとめて書く（0・1） */
 export function writeAccessoryFlags(bytes: Uint8Array, ids: readonly number[], value: 0 | 1): void {
-  for (const id of ids) writeAccessoryFlag(bytes, id, value, { advanced: false });
+  assertWritable(bytes);
+  assertValue(value, ACCESSORY_FLAG_VALUES, { advanced: false });
+  for (const id of ids)
+    if (!Number.isInteger(id) || id < 0 || id >= ACCESSORY_COUNT) throw new RangeError("装飾品が範囲外です");
+  for (const id of ids) writeU8(bytes, ACCESSORY_FLAGS_OFFSET + id, value);
 }
 
 // ---------------------------------------------------------------- 容姿
@@ -92,14 +94,13 @@ export function appearanceBitPosition(bit: number): { offset: number; mask: numb
   return { offset: APPEARANCE_OFFSET + (bit >> 3), mask: 1 << (bit & 7) };
 }
 
-export type AppearanceView = {
+export type AppearanceView = ViewStatus & {
   /** APPEARANCE_BYTES 個のバイト */
   bytes: number[];
-  layoutProblem: string | null;
 };
 
 export function readAppearance(bytes: Uint8Array): AppearanceView {
-  return { bytes: readBytes(bytes, APPEARANCE_OFFSET, APPEARANCE_BYTES), layoutProblem: checkLayout(bytes) };
+  return { warnings: [], bytes: readBytes(bytes, APPEARANCE_OFFSET, APPEARANCE_BYTES), problem: checkLayout(bytes) };
 }
 
 export function isAppearanceBitSet(view: AppearanceView, bit: number): boolean {
@@ -109,7 +110,7 @@ export function isAppearanceBitSet(view: AppearanceView, bit: number): boolean {
 
 /** ビットを1つだけ立てる・消す。同じバイトのほかのビットは変えない */
 export function writeAppearanceBit(bytes: Uint8Array, bit: number, on: boolean): void {
-  assertEditable(bytes);
+  assertWritable(bytes);
   const { offset, mask } = appearanceBitPosition(bit);
   const old = readU8(bytes, offset);
   writeU8(bytes, offset, on ? old | mask : old & ~mask);
@@ -117,7 +118,12 @@ export function writeAppearanceBit(bytes: Uint8Array, bit: number, on: boolean):
 
 /** bits のビットをまとめて立てる・消す */
 export function writeAppearanceBits(bytes: Uint8Array, bits: readonly number[], on: boolean): void {
-  for (const bit of bits) writeAppearanceBit(bytes, bit, on);
+  assertWritable(bytes);
+  const positions = bits.map(appearanceBitPosition);
+  for (const { offset, mask } of positions) {
+    const old = readU8(bytes, offset);
+    writeU8(bytes, offset, on ? old | mask : old & ~mask);
+  }
 }
 
 // ---------------------------------------------------------------- 特典解除
@@ -139,27 +145,30 @@ export type UnlockStatesView = FlagBytesView & { offset: number };
 export function readUnlockStates(bytes: Uint8Array): UnlockStatesView {
   const layoutProblem = checkLayout(bytes);
   const offset = UNLOCK_STATES_OFFSET;
-  const readable = offset + UNLOCK_COUNT <= bytes.length;
-  const values = readable ? readBytes(bytes, offset, UNLOCK_COUNT) : [];
+  const values = readBytes(bytes, offset, UNLOCK_COUNT);
   const bad = values.findIndex(value => value > 2);
   return {
     values,
     offset,
-    layoutProblem: layoutProblem ?? (!readable ? "ファイルが小さすぎて特典を読めません" : null),
+    problem: layoutProblem,
     // 🔶 U-17：0〜2 以外の値は上級者モードで書けるので、読み取り専用にはせず注意だけ出す
-    warning: bad >= 0 ? "状態が想定外の特典があります。切り替えは上級者モードでだけできます" : null,
+    warnings: warningsOf(bad >= 0 ? "状態が想定外の特典があります。切り替えは上級者モードでだけできます" : null),
   };
 }
 
 /** 🔶 U-17 特典 index の状態を書く。固定位置でサイズ・境界・値の範囲を検証する。 */
-export function writeUnlockState(bytes: Uint8Array, index: number, value: number, opts: { advanced: boolean }): void {
-  assertEditable(bytes);
+export function writeUnlockState(bytes: Uint8Array, index: number, value: number, opts: EditOpts): void {
+  assertWritable(bytes);
   if (!Number.isInteger(index) || index < 0 || index >= UNLOCK_COUNT) throw new RangeError("特典が範囲外です");
-  assertValue(value, 2, opts.advanced); // 🔶 U-17：3 以上は上級者モードだけ
+  assertValue(value, UNLOCK_STATE_VALUES, opts); // 🔶 U-17：3 以上は上級者モードだけ
   writeU8(bytes, UNLOCK_STATES_OFFSET + index, value);
 }
 
 /** indexes の特典の状態をまとめて書く（0〜2） */
 export function writeUnlockStates(bytes: Uint8Array, indexes: readonly number[], value: 0 | 1 | 2): void {
-  for (const i of indexes) writeUnlockState(bytes, i, value, { advanced: false });
+  assertWritable(bytes);
+  assertValue(value, UNLOCK_STATE_VALUES, { advanced: false });
+  for (const i of indexes)
+    if (!Number.isInteger(i) || i < 0 || i >= UNLOCK_COUNT) throw new RangeError("特典が範囲外です");
+  for (const i of indexes) writeU8(bytes, UNLOCK_STATES_OFFSET + i, value);
 }

@@ -2,7 +2,8 @@
 // 🟢 0x4633C は容姿設定で選んだ身長の選択肢（int32 LE）。
 // 固定オフセットを使う。サイズ・境界・身長が有限の数値であることを検証する。
 import { readF32, readU32, readU8, writeF32, writeU32, writeU8 } from './binary'
-import { checkLayout } from './hero'
+import { type ViewStatus, type EditOpts, NORMAL_EDIT_OPTS } from './field'
+import { assertWritable, checkLayout } from './layout'
 
 export type AppearanceCurrentKey = 'skin' | 'body' | 'height' | 'heightChoice'
 // ✅ 体型・身長・肌色の位置、🟢 身長の選択肢。差分：04 copy 2〜5。
@@ -51,27 +52,31 @@ export const APPEARANCE_CURRENT_NOTES = {
 } as const
 
 export type AppearanceCurrentField = {
+  warnings: string[]
   offset: number | null
   value: number | null
   raw: string
   problem: string | null
 }
-export type AppearanceCurrentView = Record<AppearanceCurrentKey, AppearanceCurrentField>
+export type AppearanceCurrentView = ViewStatus & Record<AppearanceCurrentKey, AppearanceCurrentField>
 
 export function readAppearanceCurrent(bytes: Uint8Array): AppearanceCurrentView {
   const layoutProblem = checkLayout(bytes)
+  if (bytes.length < APPEARANCE_CURRENT_OFFSETS.heightChoice + 4) throw new RangeError('ファイルが小さすぎて容姿を読めません')
   const makeField = (offset: number, kind: 'u8' | 'u32' | 'f32'): AppearanceCurrentField => {
     const width = kind === 'u8' ? 1 : 4
-    if (offset + width > bytes.length) return { offset, value: null, raw: '', problem: layoutProblem ?? 'ファイルが小さすぎて読めません' }
     const value = kind === 'f32' ? readF32(bytes, offset) : kind === 'u32' ? readU32(bytes, offset) : readU8(bytes, offset)
     const problem = kind === 'f32' && !Number.isFinite(value) ? '身長が有限の数値ではありません' : null
     return {
+      warnings: [],
       offset, value,
       raw: Array.from(bytes.subarray(offset, offset + width), b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '),
       problem: layoutProblem ?? problem,
     }
   }
   return {
+    problem: layoutProblem,
+    warnings: [],
     skin: makeField(APPEARANCE_CURRENT_OFFSETS.skin, 'u8'),
     body: makeField(APPEARANCE_CURRENT_OFFSETS.body, 'u8'),
     height: makeField(APPEARANCE_CURRENT_OFFSETS.height, 'f32'),
@@ -80,21 +85,22 @@ export function readAppearanceCurrent(bytes: Uint8Array): AppearanceCurrentView 
 }
 
 /** 通常モードは意味の分かる値だけ。身長は有限の数値なら許可する。上級者モードでは 0〜255 を許可する（身長の選択肢も 0〜255）。 */
-export function validateAppearanceCurrent(key: AppearanceCurrentKey, value: number, advanced: boolean): string | null {
+export function validateAppearanceCurrent(key: AppearanceCurrentKey, value: number, opts: EditOpts = NORMAL_EDIT_OPTS): string | null {
   if (!Number.isFinite(value)) return '有限の数値を入力してください'
   if (key === 'height') {
     // 範囲外は heightWarning で警告するだけ（ユーザー判断 2026-10-07）。
     return null
   }
   if (!Number.isInteger(value) || value < 0 || value > 255) return '0〜255の整数を入力してください'
-  if (advanced) return null
+  if (opts.advanced) return null
   const max = (key === 'skin' ? SKIN_COLORS : key === 'body' ? BODY_TYPES : HEIGHT_CHOICES).length - 1
   return value <= max ? null : `通常モードでは0〜${max}を入力してください`
 }
 
 /** 指定した1項目だけ上書きする。体型・身長・肌色は ✅、身長の選択肢は 🟢。 */
-export function writeAppearanceCurrent(bytes: Uint8Array, key: AppearanceCurrentKey, value: number, advanced = false): void {
-  const error = validateAppearanceCurrent(key, value, advanced)
+export function writeAppearanceCurrent(bytes: Uint8Array, key: AppearanceCurrentKey, value: number, opts: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes)
+  const error = validateAppearanceCurrent(key, value, opts)
   if (error) throw new RangeError(error)
   const field = readAppearanceCurrent(bytes)[key]
   if (field.problem || field.offset === null) throw new RangeError(field.problem ?? '固定位置を読めません')

@@ -3,7 +3,7 @@
 //   かえで（女中 0x25）はゲームが作った約束の実データ（[U] 2026-10-06）、先生はゲームが作った約束の実データ（[U] 2026-10-07）、
 //   朱美・町人（男性）は書き込みでゲーム内確認（✅ [U] 2026-10-10）。名前のある男性7人は 🟢 だけ（要ゲーム内確認）。
 import { describe, expect, it } from "vitest";
-import { TS_SAVE_SIZE } from "./hero";
+import { TS_SAVE_SIZE } from './layout'
 import { DATE_OFFSETS } from "./scenario-date";
 import {
   PROMISE_PARTNERS,

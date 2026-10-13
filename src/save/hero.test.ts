@@ -1,17 +1,8 @@
 // [TS] のレイアウトに沿って合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 import { describe, expect, it } from 'vitest'
 import { writeF32, writeU32, writeU8, writeUtf16Fixed } from './binary'
-import {
-  AMOUNT_PLAUSIBLE_MAX,
-  HERO_OFFSETS,
-  NAME_BYTES,
-  TS_SAVE_SIZE,
-  readHero,
-  writeAmount,
-  writeGauge,
-  writeLocation,
-  writeName,
-} from './hero'
+import { TS_SAVE_SIZE } from './layout'
+import { AMOUNT_PLAUSIBLE_MAX, HERO_OFFSETS, NAME_BYTES, readHero, writeAmount, writeGauge, writeLocation, writeName } from './hero'
 
 function makeSave(size = TS_SAVE_SIZE): Uint8Array {
   const b = new Uint8Array(size)
@@ -39,25 +30,25 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 describe('readHero', () => {
   it('✅ 所持金・金庫・侍点・名前を読む', () => {
     const v = readHero(makeSave())
-    expect(v.layoutProblem).toBeNull()
-    expect(v.money).toEqual({ value: 1234, problem: null, warning: null })
-    expect(v.cashbox).toEqual({ value: 5678, problem: null, warning: null })
-    expect(v.samuraiPoint).toEqual({ value: 42, problem: null, warning: null })
-    expect(v.name).toEqual({ value: '侍', problem: null })
+    expect(v.problem).toBeNull()
+    expect(v.money).toEqual({ value: 1234, problem: null, warnings: [] })
+    expect(v.cashbox).toEqual({ value: 5678, problem: null, warnings: [] })
+    expect(v.samuraiPoint).toEqual({ value: 42, problem: null, warnings: [] })
+    expect(v.name).toEqual({ warnings: [], value: '侍', problem: null })
   })
 
   it('✅ [U] 最大HP（0x35A8）と最大活力（0x35B0）を読む', () => {
     const v = readHero(makeSave())
-    expect(v.hpMax).toEqual({ value: 250.5, problem: null })
-    expect(v.vitalityMax).toEqual({ value: 1000, problem: null })
+    expect(v.hpMax).toEqual({ warnings: [], value: 250.5, problem: null })
+    expect(v.vitalityMax).toEqual({ warnings: [], value: 1000, problem: null })
   })
 
   it('🟢 現在HP（0x35A4、U-4 案A）・✅ 活力の現在値（0x35AC）・🟢 つま斬りゲージ（0x35B4・0x35B8）を読む', () => {
     const v = readHero(makeSave())
-    expect(v.hpCurrent).toEqual({ value: 200, problem: null, warning: null })
-    expect(v.vitalityCurrent).toEqual({ value: 991, problem: null, warning: null })
-    expect(v.tsumaCurrent).toEqual({ value: 81, problem: null, warning: null })
-    expect(v.tsumaMax).toEqual({ value: 1000, problem: null })
+    expect(v.hpCurrent).toEqual({ value: 200, problem: null, warnings: [] })
+    expect(v.vitalityCurrent).toEqual({ value: 991, problem: null, warnings: [] })
+    expect(v.tsumaCurrent).toEqual({ value: 81, problem: null, warnings: [] })
+    expect(v.tsumaMax).toEqual({ warnings: [], value: 1000, problem: null })
   })
 
   it('現在値が最大値を超えていれば、編集可能のまま警告を出す', () => {
@@ -65,17 +56,17 @@ describe('readHero', () => {
     writeF32(b, HERO_OFFSETS.hpCurrent, 300)
     const v = readHero(b)
     expect(v.hpCurrent.problem).toBeNull()
-    expect(v.hpCurrent.warning).not.toBeNull()
+    expect((v.hpCurrent.warnings.join('。') || null)).not.toBeNull()
   })
 
   it('✅ U-7：開始地点を 0x13 の u8 として読む', () => {
     const v = readHero(makeSave())
-    expect(v.location).toEqual({ value: 0x06, problem: null })
+    expect(v.location).toEqual({ warnings: [], value: 0x06, problem: null })
   })
 
   it('サイズが 0x48BB0 でなければ全フィールドを読み取り専用にする', () => {
     const v = readHero(makeSave(TS_SAVE_SIZE + 4))
-    expect(v.layoutProblem).not.toBeNull()
+    expect(v.problem).not.toBeNull()
     expect(v.money.value).toBe(1234)
     expect(v.money.problem).not.toBeNull()
     expect(v.name.problem).not.toBeNull()
@@ -99,8 +90,8 @@ describe('readHero', () => {
     writeU32(b, HERO_OFFSETS.money, 150_000)
     const v = readHero(b)
     expect(v.money.problem).toBeNull()
-    expect(v.money.warning).toMatch(/上限/)
-    expect(v.cashbox.warning).toBeNull()
+    expect((v.money.warnings.join('。') || null)).toMatch(/上限/)
+    expect((v.cashbox.warnings.join('。') || null)).toBeNull()
   })
 
   it('名前の終わりがない・その後ろに余計なデータがある場合は読み取り専用にする', () => {
@@ -207,9 +198,9 @@ describe('書き込み', () => {
     expect(() => writeGauge(b, 'hpCurrent', 250.5)).not.toThrow()
     expect(() => writeGauge(b, 'hpCurrent', 251)).toThrow(RangeError)
     expect(() => writeGauge(b, 'tsumaCurrent', 1001)).toThrow(RangeError)
-    expect(() => writeGauge(b, 'tsumaCurrent', 1001, true)).not.toThrow()
+    expect(() => writeGauge(b, 'tsumaCurrent', 1001, { advanced: true })).not.toThrow()
     expect(readHero(b).tsumaCurrent.value).toBe(1001)
-    expect(() => writeGauge(b, 'hpCurrent', 100_000, true)).toThrow(RangeError)
+    expect(() => writeGauge(b, 'hpCurrent', 100_000, { advanced: true })).toThrow(RangeError)
   })
 
   it('最大値は 99,999 まで（ユーザー指定の暫定上限）', () => {

@@ -18,7 +18,8 @@
 // 段階 5 になったときにゲームが立てる特典 57（0x43351）は、ここでは書かない（次に弟子が増減したときにゲームが立てる 🟢）。
 // 名簿の書き換え・道場破りを帰す操作がゲームに反映されるかは要ゲーム内確認。
 import { readI16, readU16, readU32, readU8, writeI16, writeU16, writeU32, writeU8, recordCodec } from "./binary";
-import { checkLayout } from "./hero";
+import { type EditOpts, type ViewStatus } from "./field";
+import { assertWritable, checkLayout } from "./layout";
 import { PUPIL_TABLE } from "./master/dataset/pupil";
 import { NPC_LOOK_TABLE } from "./master/dataset/npc-look";
 
@@ -99,7 +100,7 @@ export type PupilView = {
   shown: number;
 };
 
-export type DojoView = {
+export type DojoView = ViewStatus & {
   raid: boolean;
   count: number;
   rank: number;
@@ -107,8 +108,6 @@ export type DojoView = {
   raiderCount: number;
   /** 空きは null */
   pupils: (PupilView | null)[];
-  /** 検証に落ちた理由。null なら編集可能 */
-  problem: string | null;
 };
 
 export function pupilOffset(index: number): number {
@@ -138,6 +137,7 @@ export function readDojo(bytes: Uint8Array): DojoView {
     return PUPIL_CODEC.read(bytes, o);
   });
   const view: DojoView = {
+    warnings: [],
     raid: readU8(bytes, RAID_OFFSET) !== 0,
     count: readU8(bytes, PUPIL_COUNT_OFFSET),
     rank: readU8(bytes, RANK_OFFSET),
@@ -190,6 +190,7 @@ function recompute(bytes: Uint8Array): void {
  * 書いたあと、弟子の数・評判の点・段階を決め直す
  */
 export function writePupilKind(bytes: Uint8Array, index: number, kindId: number | null): void {
+  assertWritable(bytes);
   assertEditable(bytes);
   if (!Number.isInteger(index) || index < 0 || index >= PUPIL_MAX) throw new RangeError("枠の番号が範囲外です");
   const o = pupilOffset(index);
@@ -214,14 +215,15 @@ export function writePupilKind(bytes: Uint8Array, index: number, kindId: number 
  * 見た目の検証。通常モードは種類の候補だけ、上級者モードは見た目の表（npc-look.csv）にあるもの。
  * 今の値の書き戻しは許す
  */
-export function validatePupilLook(kindId: number, look: number, current: number, opts: { advanced: boolean }): string | null {
+export function validatePupilLook(kindId: number, look: number, current: number, opts: EditOpts): string | null {
   if (!Number.isInteger(look) || look < 0 || look > 0xffff) return "範囲外の値です";
   if (look === current) return null;
   if (opts.advanced) return lookLabel(look) !== undefined ? null : "見た目の表にない値です";
   return pupilKind(kindId)?.looks.includes(look) ? null : "この種類の見た目ではありません（上級者モードで選べます）";
 }
 
-export function writePupilLook(bytes: Uint8Array, index: number, look: number, opts: { advanced: boolean }): void {
+export function writePupilLook(bytes: Uint8Array, index: number, look: number, opts: EditOpts): void {
+  assertWritable(bytes);
   const view = assertEditable(bytes);
   const pupil = view.pupils[index];
   if (!pupil) throw new RangeError("空きの枠です");
@@ -237,6 +239,7 @@ export function writePupilLook(bytes: Uint8Array, index: number, look: number, o
  * 選び直して書くので（🟢）、ここでは書かない。弟子がいないと、ゲームは場面が変わったときに印を消す（🟢）ので書かない
  */
 export function writeRaid(bytes: Uint8Array, on: boolean): void {
+  assertWritable(bytes);
   const view = assertEditable(bytes);
   if (!on) {
     writeU8(bytes, RAID_OFFSET, 0);

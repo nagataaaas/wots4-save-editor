@@ -16,8 +16,9 @@
 //
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
+import { type ViewStatus } from "./field";
 import { CHARACTER_STATUS, characterStatusForTown } from "./flags/characters";
-import { checkLayout } from "./hero";
+import { assertWritable, checkLayout } from "./layout";
 import { nameOf } from "./master/labels";
 
 /** 🟢 主人公名（〜0x011B）の直後 */
@@ -152,9 +153,8 @@ export function personName(p: number): string {
   return PERSON_BY_NUMBER.get(p)?.name ?? `人物 ${p}（空き）`;
 }
 
-export type TownsfolkView = {
+export type TownsfolkView = ViewStatus & {
   values: number[];
-  problem: string | null;
 };
 
 export function readTownsfolk(bytes: Uint8Array): TownsfolkView {
@@ -163,7 +163,7 @@ export function readTownsfolk(bytes: Uint8Array): TownsfolkView {
   const values = Array.from({ length: TOWNSFOLK_LENGTH }, (_, i) =>
     readU8(bytes, TOWNSFOLK_START + i),
   );
-  return { values, problem: checkLayout(bytes) };
+  return { warnings: [], values, problem: checkLayout(bytes) };
 }
 
 export type PersonState = TownsfolkPerson & {
@@ -193,8 +193,7 @@ export function readPeople(bytes: Uint8Array): PersonState[] {
 
 /** 人物 p（0〜209）の死亡のビット（+0x00 の bit0）だけを書く。ほかのビットは変えない */
 export function writePersonDead(bytes: Uint8Array, p: number, dead: boolean): void {
-  const problem = checkLayout(bytes);
-  if (problem) throw new RangeError(problem);
+  assertWritable(bytes);
   if (!Number.isInteger(p) || p < 0 || p >= PERSON_COUNT)
     throw new RangeError("人物の指定が正しくありません");
   const offset = personOffset(p);

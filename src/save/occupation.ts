@@ -15,7 +15,8 @@
 //
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, writeU16 } from "./binary";
-import { checkLayout } from "./hero";
+import { type EditOpts, type ViewStatus } from "./field";
+import { assertWritable, checkLayout } from "./layout";
 import { occupationById } from "./master/occupation-names";
 
 export const OCCUPATION_STATE_OFFSET = 0x33a4;
@@ -35,15 +36,14 @@ export function occupationStateOffset(id: number): number {
   return OCCUPATION_STATE_OFFSET + id * 2;
 }
 
-export type OccupationView = {
+/** problem は、ファイルサイズか状態の表の値が想定外のとき（位置がずれている可能性がある） */
+export type OccupationView = ViewStatus & {
   /** ID ごとの状態（OCCUPATION_STATE_COUNT 個） */
   states: number[];
   clearCount: number;
   /** 状態の表の合計（FFFF を除く） */
   stateSum: number;
   accepted: number;
-  /** 妥当性検証に落ちた理由。あれば読み取り専用 */
-  layoutProblem: string | null;
 };
 
 const isValidState = (v: number) => v === OCCUPATION_NOT_APPEARED || v <= OCCUPATION_CLEAR_MAX;
@@ -62,11 +62,12 @@ export function readOccupations(bytes: Uint8Array): OccupationView {
       ? `なりわいの記録に想定外の値があります。位置がずれている可能性があるため読み取り専用にしています。`
       : null);
   return {
+    warnings: [],
     states,
     clearCount: readU16(bytes, OCCUPATION_CLEAR_COUNT_OFFSET),
     stateSum: sumClears(states),
     accepted: readU16(bytes, OCCUPATION_ACCEPTED_OFFSET),
-    layoutProblem,
+    problem: layoutProblem,
   };
 }
 
@@ -74,7 +75,7 @@ export function readOccupations(bytes: Uint8Array): OccupationView {
  * 通常モードは、表にある ID に FFFF か 0〜999 だけ。上級者モードは任意の ID・u16。
  * 今の値と同じ値の書き戻しは許す。問題がなければ null
  */
-export function validateOccupationState(id: number, value: number, current: number, opts: { advanced: boolean }): string | null {
+export function validateOccupationState(id: number, value: number, current: number, opts: EditOpts): string | null {
   if (!Number.isInteger(value) || value < 0 || value > 0xffff) return `指定できる範囲を超えています: ${value}`;
   if (opts.advanced || value === current) return null;
   if (!occupationById(id)) return `表にないなりわいです`;
@@ -83,12 +84,13 @@ export function validateOccupationState(id: number, value: number, current: numb
 }
 
 function assertEditable(bytes: Uint8Array): void {
-  const problem = readOccupations(bytes).layoutProblem;
+  const problem = readOccupations(bytes).problem;
   if (problem) throw new RangeError(problem);
 }
 
 /** id の状態（2 B）だけを書く */
-export function writeOccupationState(bytes: Uint8Array, id: number, value: number, opts: { advanced: boolean }): void {
+export function writeOccupationState(bytes: Uint8Array, id: number, value: number, opts: EditOpts): void {
+  assertWritable(bytes);
   assertEditable(bytes);
   const offset = occupationStateOffset(id);
   const error = validateOccupationState(id, value, readU16(bytes, offset), opts);
@@ -98,7 +100,15 @@ export function writeOccupationState(bytes: Uint8Array, id: number, value: numbe
 
 /** ids の状態をまとめて書く（通常モードの範囲） */
 export function writeOccupationStates(bytes: Uint8Array, ids: readonly number[], value: number): void {
-  for (const id of ids) writeOccupationState(bytes, id, value, { advanced: false });
+  assertWritable(bytes);
+  const view = readOccupations(bytes);
+  if (view.problem) throw new RangeError(view.problem);
+  const offsets = ids.map(occupationStateOffset);
+  for (const id of ids) {
+    const problem = validateOccupationState(id, value, view.states[id], { advanced: false });
+    if (problem) throw new RangeError(problem);
+  }
+  for (const offset of offsets) writeU16(bytes, offset, value);
 }
 
 /** クリア数（0x433A6）を状態の表の合計に揃える */

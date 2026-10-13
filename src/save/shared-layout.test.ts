@@ -1,6 +1,6 @@
 // 固定位置の定義を共有するモジュール間の対応。合成したバイト列だけを使う。
 import { describe, expect, it } from 'vitest'
-import { TS_SAVE_SIZE } from './hero'
+import { TS_SAVE_SIZE } from './layout'
 import { CHARACTER_FLAGS, CHARACTER_STATUS, characterStatusForPromise, characterStatusForTown } from './flags/characters'
 import { MORO_OFFSET, MORO_DEAD, readFactions, routeEligible } from './factions'
 import { partnerDeathWarning } from './yobai-create'
