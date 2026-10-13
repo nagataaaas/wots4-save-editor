@@ -4,6 +4,7 @@ import { InfoTip } from "@/components/info-tip";
 import { LazyTip } from "@/components/lazy-tip";
 import { Badge } from "@/components/ui/badge";
 import { nextUnlockState } from "./unlock-state";
+import { UNLOCK_STATE_LABELS } from "@/save/unlocks";
 
 export function ItemInformation({
   name, category, description, offset, condition, children,
@@ -76,7 +77,7 @@ export function UnlockStateButton({ value, name, disabled, onChange }: {
   onChange: (value: number) => void;
 }) {
   if (value === null) return <UnloadedStateButton />;
-  const label = ["非表示", "未取得", "取得済み"][value] ?? "不明";
+  const label = UNLOCK_STATE_LABELS[value] ?? "不明";
   const Icon = [Minus, LockKeyhole, Check][value] ?? CircleHelp;
   const iconColor = [
     "text-muted-foreground",

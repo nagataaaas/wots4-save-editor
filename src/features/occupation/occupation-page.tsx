@@ -38,7 +38,6 @@ import { TIME_SLOTS } from "@/save/scenario-date";
 import {
   OCCUPATION_CLEAR_COUNT_OFFSET,
   OCCUPATION_CLEAR_MAX,
-  OCCUPATION_NOT_APPEARED,
   OCCUPATION_STATE_OFFSET,
   occupationStateOffset,
   readOccupations,
@@ -47,6 +46,9 @@ import {
   writeOccupationState,
   writeOccupationStates,
   type OccupationView,
+  occupationStateKind as kindOf,
+  occupationValueForKind as valueForKind,
+  type OccupationStateKind as StateKind,
 } from "@/save/occupation";
 import { labelKeywords, occupationGroupLabel, occupationLabel } from "@/save/master/labels";
 import {
@@ -67,27 +69,13 @@ import {
 import { OCCUPATION_FLAG_START } from "@/save/townsfolk";
 
 import { seriesOptions } from "./series-options";
-
-type StateKind = "hidden" | "open" | "cleared";
-
-const kindOf = (v: number): StateKind =>
-  v === OCCUPATION_NOT_APPEARED ? "hidden" : v === 0 ? "open" : "cleared";
+import { OCCUPATION_SERIES } from "@/save/master/occupation-series";
 
 const KIND_LABELS: Record<StateKind, string> = {
   hidden: "まだ出ていない",
   open: "出た・未クリア",
   cleared: "クリア済み",
 };
-
-/** 種類を選んだときに書く値。クリア済みは今の回数を残し、0 回なら 1 にする */
-const valueForKind = (kind: StateKind, current: number) =>
-  kind === "hidden"
-    ? OCCUPATION_NOT_APPEARED
-    : kind === "open"
-      ? 0
-      : kindOf(current) === "cleared"
-        ? current
-        : 1;
 
 const entryLabel = (entry: OccupationEntry) => occupationLabel(entry.labelId);
 const entryKeywords = (entry: OccupationEntry) => labelKeywords({ kind: "occupation", id: entry.labelId });
@@ -292,7 +280,7 @@ function DlcCard() {
  */
 function OccupationFlagRow({ flag, separator = " → " }: { flag: OccupationFlag; separator?: string }) {
   const n = flag.number;
-  const isSeries = n >= 4 && n <= 7;
+  const isSeries = Object.values(OCCUPATION_SERIES).some(series => series.flag === n);
   return (
     <FlagRow
       flag={flag}
@@ -399,8 +387,7 @@ function StatesCard({ view }: { view: OccupationView | null }) {
                 attempt(() =>
                   writeStates((b) => {
                     // クリア済みは、すでにクリアしたものの回数を残す
-                    for (const o of rows)
-                      writeOccupationStates(b, [o.id], valueForKind(k, view?.states[o.id] ?? 0));
+                    writeOccupationStates(b, rows.map(o => o.id), k);
                   }),
                 )
               }

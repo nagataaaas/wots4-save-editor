@@ -11,6 +11,10 @@ import {
   buildPromiseBytes,
   createPromise,
   createProblem,
+  choosePromisePlace,
+  choosePromiseAt,
+  layoutForPlace,
+  initialPromiseSpec,
   nameCandidates,
   partnerDeathWarning,
   promisePartner,
@@ -50,6 +54,31 @@ const TOWNSMAN: PromiseSpec = { type: 0x47, row: 18, name: 7101, look: 0x3a, age
 const SENSEI: PromiseSpec = { type: 592, row: 13, name: 15, look: 0x57, age: 0xff, blood: 5 };
 
 describe("夜の約束を作る chunks/night-visit「約束の作り方」", () => {
+  it("🟢 読み出した今日・段階・死亡の注意を画面で再利用できる", () => {
+    const bytes = makeSave({ day: 5, stage: 2 });
+    const context = readYobai(bytes).context;
+    expect(context.today).toBe(5);
+    expect(context.stage).toBe(2);
+    expect(context.createProblem).toBeNull();
+    expect(initialPromiseSpec(context.stage).type).toBe(0x25);
+    createPromise(bytes, KAEDE, { advanced: false });
+    expect(readYobai(bytes).context.createProblem).toContain("すでに約束");
+  });
+  it("🟢 場所と配置が候補にあるなら組を選び、なければ上書きする", () => {
+    const partner = promisePartner(KAEDE.type)!;
+    const rows = rowsFor(partner, 2, { advanced: false });
+    const row = rows[0];
+    expect(choosePromisePlace({ ...KAEDE, place: 1, layout: 1 }, rows, row.place, row.layout))
+      .toMatchObject({ row: row.index, place: undefined, layout: undefined });
+    const nearest = rows.filter(r => r.place === row.place)
+      .sort((a, b) => Math.abs((a.stage ?? 0) - 2) - Math.abs((b.stage ?? 0) - 2))[0];
+    expect(choosePromiseAt(KAEDE, rows, row.place, 2)?.row).toBe(nearest.index);
+    // 組も配置もない場所は選べない（例外にせず null）
+    expect(choosePromiseAt(KAEDE, rows, -1, 2)).toBeNull();
+    expect(layoutForPlace(row.place, row.layout)).toBe(row.layout);
+    expect(choosePromisePlace(KAEDE, [], row.place, row.layout)).toMatchObject({ place: row.place, layout: row.layout });
+    expect(() => layoutForPlace(-1, 0)).toThrow();
+  });
   it("組の表は 75 行で、+0x0C〜+0x1B はどれも同じ（🟢）", () => {
     expect(PROMISE_ROWS).toHaveLength(75);
     const tail = PROMISE_ROWS[0].bytes.slice(0x0c);
@@ -171,7 +200,8 @@ describe("夜の約束を作る chunks/night-visit「約束の作り方」", () 
     const b = makeSave();
     expect(partnerDeathWarning(b, 442)).toBeNull();
     b[0x3750] = 1;
-    expect(partnerDeathWarning(b, 442)).toMatch(/朱美/);
+    // 名前だけを出す（場所・姿の注記は付けない）。❓ 死んだ相手が夜這いの場に出るかは書かない
+    expect(partnerDeathWarning(b, 442)).toBe("朱美 は死亡しています。約束は消えずに残ります");
     expect(partnerDeathWarning(b, 0x25)).toBeNull();
   });
 });

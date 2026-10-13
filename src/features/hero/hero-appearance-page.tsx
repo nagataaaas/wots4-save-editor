@@ -1,6 +1,6 @@
 import { HERO_APPEARANCE_ANCHORS } from './anchors'
 import { CollapsibleCard } from '@/components/collapsible-card'
-import { AccessoryEquipmentPage } from '@/features/accessory-equipment/accessory-equipment-page'
+import { AccessoryEquipmentEditor } from '@/features/accessory-equipment/accessory-equipment-page'
 import { AppearanceCurrentCard } from './appearance-current-card'
 import { AppearancePartsCard } from './appearance-parts-card'
 
@@ -10,7 +10,7 @@ export function HeroAppearancePage() {
       <AppearanceCurrentCard />
       <AppearancePartsCard />
       <CollapsibleCard anchor={HERO_APPEARANCE_ANCHORS.accessories} title="装飾品">
-        <AccessoryEquipmentPage />
+        <AccessoryEquipmentEditor />
       </CollapsibleCard>
     </div>
   )

@@ -1,5 +1,5 @@
 import { RAW_ANCHORS } from './anchors'
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { memo, useImperativeHandle, useMemo, useRef, useState, type KeyboardEvent, type Ref } from 'react'
 import { CollapsibleCard } from '@/components/collapsible-card'
 import { FilterSelect } from '@/components/filter-select'
 import { InfoTip } from '@/components/info-tip'
@@ -22,6 +22,8 @@ import {
   buildSearchPattern,
   diffRanges,
   innermostRegion,
+  regionIndexTable,
+  type RawRegion,
   inspectAt,
   parseHexBytes,
   parseOffset,
@@ -49,10 +51,9 @@ const LIST_LIMIT = 500
 /** 領域の色（RAW_REGIONS の並び順で順に割り当てる） */
 const REGION_TINTS = ['bg-sky-500/15', 'bg-emerald-500/15', 'bg-violet-500/15', 'bg-amber-500/15', 'bg-rose-500/15']
 
-const regionTint = (offset: number) => {
-  const r = innermostRegion(offset)
-  return r ? REGION_TINTS[RAW_REGIONS.indexOf(r) % REGION_TINTS.length] : ''
-}
+const regionLabel = (region: RawRegion, offset: number) => `${region.label} ${positionInRegion(region, offset)}`
+const previewBytes = (bytes: Uint8Array | readonly number[], offset: number, length: number, limit = 8) =>
+  Array.from(bytes.slice(offset, offset + Math.min(length, limit)), hex2).join(' ') + (length > limit ? ' …' : '')
 
 const hex2 = (v: number) => v.toString(16).toUpperCase().padStart(2, '0')
 
@@ -61,8 +62,7 @@ type DiffBase = 'original' | 'compare'
 
 type CompareFile = { name: string; bytes: Uint8Array }
 
-/** 一覧からの移動の指示。同じ位置へ続けて移動できるよう、毎回新しいオブジェクトにする */
-type Jump = { offset: number }
+type HexHandle = { reveal: (offset: number) => void }
 
 export function RawPage() {
   const { save } = useSave()
@@ -108,7 +108,7 @@ function RawEditor({
   const { update } = useSave()
   const { advanced } = useAdvancedMode()
   const [selected, setSelected] = useState(0)
-  const [jump, setJump] = useState<Jump | null>(null)
+  const hexRef = useRef<HexHandle>(null)
   const [compareError, setCompareError] = useState<string | null>(null)
 
   const base = diffBase === 'compare' && compare ? compare.bytes : original
@@ -116,7 +116,7 @@ function RawEditor({
 
   function goTo(offset: number) {
     setSelected(offset)
-    setJump({ offset })
+    hexRef.current?.reveal(offset)
   }
 
   async function openCompare(file: File) {
@@ -146,7 +146,7 @@ function RawEditor({
         >
           <CardContent className="flex flex-col gap-3">
             <JumpForm size={bytes.byteLength} onJump={goTo} />
-            <HexView bytes={bytes} base={base} selected={selected} onSelect={setSelected} jump={jump} />
+            <HexView bytes={bytes} base={base} selected={selected} onSelect={setSelected} ref={hexRef} />
           </CardContent>
         </AnchoredCard>
 
@@ -160,47 +160,8 @@ function RawEditor({
 
       <PatchCard bytes={bytes} advanced={advanced} onApply={(patches) => update((b) => applyPatches(b, patches))} onJump={goTo} />
 
-      <AnchoredCard
-        anchor={RAW_ANCHORS.diff}
-        title="差分"
-        description={
-          <>
-            読み込み時から変わった範囲を一覧します。
-            <br />
-            比較用のファイルを開くと、別のセーブとの違いも見られます。
-            {/* 時間で進む値などは操作と関係なく変わる */}
-          </>
-        }
-      >
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label>基準</Label>
-              <FilterSelect<DiffBase>
-                options={[
-                  { value: 'original', label: '読み込み時' },
-                  { value: 'compare', label: compare ? `比較用：${compare.name}` : '比較用のファイル（未選択）', disabled: !compare },
-                ]}
-                value={diffBase}
-                onChange={onDiffBaseChange}
-                className="w-64"
-              />
-            </div>
-            <CompareFileButton onOpen={openCompare} />
-          </div>
-          {compareError && <p className="text-destructive text-xs">{compareError}</p>}
-          {sizeMismatch && compare && (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              比較用のファイルのサイズ（{compare.bytes.byteLength.toLocaleString()} B）が今のファイルと違います。短いほうの長さまで比べています。
-            </p>
-          )}
-          <p className="text-muted-foreground text-xs">
-            違うバイト：{diff.total.toLocaleString()} B（{diff.ranges.length.toLocaleString()}
-            {diff.truncated ? ` 範囲まで表示。${LIST_LIMIT} 範囲を超えた分は省略` : ' 範囲'}）
-          </p>
-          <DiffList ranges={diff.ranges} base={base} bytes={bytes} onJump={goTo} />
-        </CardContent>
-      </AnchoredCard>
+      <DiffCard bytes={bytes} base={base} diff={diff} diffBase={diffBase} onDiffBaseChange={onDiffBaseChange}
+        compare={compare} compareError={compareError} sizeMismatch={Boolean(sizeMismatch)} openCompare={openCompare} onJump={goTo} />
 
       <SearchCard bytes={bytes} onJump={goTo} />
 
@@ -214,6 +175,56 @@ function RawEditor({
         <RegionTable onJump={goTo} />
       </CollapsibleCard>
     </div>
+  )
+}
+
+function DiffCard({ bytes, base, diff, diffBase, onDiffBaseChange, compare, compareError, sizeMismatch, openCompare, onJump }: {
+  bytes: Uint8Array; base: Uint8Array; diff: ReturnType<typeof diffRanges>; diffBase: DiffBase;
+  onDiffBaseChange: (base: DiffBase) => void; compare: CompareFile | null; compareError: string | null;
+  sizeMismatch: boolean; openCompare: (file: File) => Promise<void>; onJump: (offset: number) => void;
+}) {
+  return (
+    <AnchoredCard
+      anchor={RAW_ANCHORS.diff}
+      title="差分"
+      description={
+        <>
+          読み込み時から変わった範囲を一覧します。
+          <br />
+          比較用のファイルを開くと、別のセーブとの違いも見られます。
+          {/* 時間で進む値などは操作と関係なく変わる */}
+        </>
+      }
+    >
+      <CardContent className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1.5">
+            <Label>基準</Label>
+            <FilterSelect<DiffBase>
+              options={[
+                { value: 'original', label: '読み込み時' },
+                { value: 'compare', label: compare ? `比較用：${compare.name}` : '比較用のファイル（未選択）', disabled: !compare },
+              ]}
+              value={diffBase}
+              onChange={onDiffBaseChange}
+              className="w-64"
+            />
+          </div>
+          <CompareFileButton onOpen={openCompare} />
+        </div>
+        {compareError && <p className="text-destructive text-xs">{compareError}</p>}
+        {sizeMismatch && compare && (
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            比較用のファイルのサイズ（{compare.bytes.byteLength.toLocaleString()} B）が今のファイルと違います。短いほうの長さまで比べています。
+          </p>
+        )}
+        <p className="text-muted-foreground text-xs">
+          違うバイト：{diff.total.toLocaleString()} B（{diff.ranges.length.toLocaleString()}
+          {diff.truncated ? ` 範囲まで表示。${LIST_LIMIT} 範囲を超えた分は省略` : ' 範囲'}）
+        </p>
+        <DiffList ranges={diff.ranges} base={base} bytes={bytes} onJump={onJump} />
+      </CardContent>
+    </AnchoredCard>
   )
 }
 
@@ -259,13 +270,13 @@ function HexView({
   base,
   selected,
   onSelect,
-  jump,
+  ref: handleRef,
 }: {
   bytes: Uint8Array
   base: Uint8Array
   selected: number
   onSelect: (offset: number) => void
-  jump: Jump | null
+  ref: Ref<HexHandle>
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [scrollTop, setScrollTop] = useState(0)
@@ -280,9 +291,8 @@ function HexView({
     if (force || !visible) el.scrollTop = Math.max(0, top - 4 * ROW_HEIGHT)
   }
 
-  useEffect(() => {
-    if (jump) reveal(jump.offset, false)
-  }, [jump])
+  useImperativeHandle(handleRef, () => ({ reveal: (offset) => reveal(offset, false) }))
+  const regions = useMemo(() => regionIndexTable(bytes.byteLength), [bytes.byteLength])
 
   function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const step: Record<string, number> = {
@@ -331,25 +341,27 @@ function HexView({
       </div>
       <div className="relative w-max" style={{ height: rowCount * ROW_HEIGHT }}>
         {rows.map((r) => (
-          <HexRow key={r} row={r} bytes={bytes} base={base} selected={selected} onSelect={onSelect} />
+          <HexRow key={r} row={r} bytes={bytes} base={base} regions={regions} selected={selected >= r * BYTES_PER_ROW && selected < (r + 1) * BYTES_PER_ROW ? selected : -1} onSelect={onSelect} />
         ))}
       </div>
     </div>
   )
 }
 
-function HexRow({
+const HexRow = memo(function HexRow({
   row,
   bytes,
   base,
   selected,
   onSelect,
+  regions,
 }: {
   row: number
   bytes: Uint8Array
   base: Uint8Array
   selected: number
   onSelect: (offset: number) => void
+  regions: Int16Array
 }) {
   const start = row * BYTES_PER_ROW
   const end = Math.min(bytes.byteLength, start + BYTES_PER_ROW)
@@ -358,16 +370,17 @@ function HexRow({
     const i = start + col
     const v = bytes[i]
     const isSel = i === selected
-    const region = innermostRegion(i)
+    const regionIndex = regions[i]
+    const region = RAW_REGIONS[regionIndex]
     return (
       <span
         key={i}
-        title={`${formatOffset(i)}${region ? `　${region.label} ${positionInRegion(region, i)}` : ''}`}
+        title={`${formatOffset(i)}${region ? `　${regionLabel(region, i)}` : ''}`}
         onClick={() => onSelect(i)}
         className={[
           'w-6 shrink-0 cursor-pointer text-center',
           col === 8 ? 'ml-2' : '',
-          isSel ? 'bg-primary text-primary-foreground' : regionTint(i),
+          isSel ? 'bg-primary text-primary-foreground' : regionIndex >= 0 ? REGION_TINTS[regionIndex % REGION_TINTS.length] : '',
           isSel ? '' : changed(i) ? 'font-bold text-red-600 dark:text-red-400' : v === 0 ? 'text-muted-foreground/60' : '',
         ].join(' ')}
       >
@@ -396,7 +409,7 @@ function HexRow({
       <span className="ml-3 w-34 shrink-0 pr-2">{chars}</span>
     </div>
   )
-}
+})
 
 /** 選択中のバイトの位置・領域・値と、上書きの入力（上級者モードのときだけ） */
 function SelectionCard({
@@ -422,7 +435,7 @@ function SelectionCard({
           ? '既知の領域に入っていない位置です'
           : regions.map((r) => (
               <span key={`${r.start}-${r.chunk}-${r.label}`} className="block">
-                {r.label} {positionInRegion(r, offset)}
+                {regionLabel(r, offset)}
               </span>
             ))
       }
@@ -452,7 +465,7 @@ function SelectionForm({ bytes, offset, advanced, onWrite }: {
 }) {
   // 選んだ位置から 1 行分の今の値を、入力の初期値にする
   const [draft, setDraft] = useState(() =>
-    Array.from(bytes.subarray(offset, Math.min(bytes.byteLength, offset + 4)), hex2).join(' '),
+    previewBytes(bytes, offset, Math.min(bytes.byteLength - offset, 4)),
   )
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
@@ -546,11 +559,7 @@ function DiffList({
   onJump: (offset: number) => void
 }) {
   if (ranges.length === 0) return <p className="text-muted-foreground text-sm">違いはありません。</p>
-  // 長い範囲は先頭の数バイトだけ値を出す
-  const preview = (b: Uint8Array, r: ByteRange) => {
-    const n = Math.min(r.end - r.start + 1, 8)
-    return Array.from(b.subarray(r.start, r.start + n), hex2).join(' ') + (r.end - r.start + 1 > n ? ' …' : '')
-  }
+  // 長い範囲は先頭の数バイトだけ値を出す（previewBytes）
   return (
     <div className="max-h-80 overflow-auto rounded-md border">
       <table className="w-full text-xs">
@@ -570,9 +579,9 @@ function DiffList({
               <tr key={r.start} className="hover:bg-muted/50 cursor-pointer border-b last:border-0" onClick={() => onJump(r.start)}>
                 <td className="px-2 py-1 font-mono">{formatOffset(r.start)}</td>
                 <td className="px-2 py-1">{r.end - r.start + 1} B</td>
-                <td className="px-2 py-1 font-mono">{preview(base, r)}</td>
-                <td className="px-2 py-1 font-mono">{preview(bytes, r)}</td>
-                <td className="px-2 py-1">{region ? `${region.label} ${positionInRegion(region, r.start)}` : '—'}</td>
+                <td className="px-2 py-1 font-mono">{previewBytes(base, r.start, r.end - r.start + 1)}</td>
+                <td className="px-2 py-1 font-mono">{previewBytes(bytes, r.start, r.end - r.start + 1)}</td>
+                <td className="px-2 py-1">{region ? regionLabel(region, r.start) : '—'}</td>
               </tr>
             )
           })}
@@ -652,7 +661,7 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
                       variant="ghost"
                       size="xs"
                       className="font-mono"
-                      title={region ? `${region.label} ${positionInRegion(region, o)}` : undefined}
+                      title={region ? regionLabel(region, o) : undefined}
                       onClick={() => onJump(o)}
                     >
                       {formatOffset(o)}
@@ -688,7 +697,7 @@ function RegionTable({ onJump }: { onJump: (offset: number) => void }) {
             <td className="px-2 py-1 font-mono">{r.end === null ? '—' : formatOffset(r.end)}</td>
             <td className="px-2 py-1">
               {r.label}
-              {r.recordSize ? `（${r.recordSize === 0xa0 ? '0xA0' : r.recordSize} B × ${((r.end ?? r.start) - r.start + 1) / r.recordSize} 件）` : ''}
+              {r.recordSize ? `（0x${r.recordSize.toString(16).toUpperCase()} B × ${((r.end ?? r.start) - r.start + 1) / r.recordSize} 件）` : ''}
             </td>
           </tr>
         ))}
@@ -718,10 +727,6 @@ function PatchCard({
   const [done, setDone] = useState<string | null>(null)
   const parsed = useMemo(() => (text.trim() === '' ? null : parsePatchScript(text, bytes.byteLength)), [text, bytes.byteLength])
   const canApply = advanced && parsed !== null && parsed.errors.length === 0 && parsed.patches.length > 0
-  const preview = (b: Uint8Array, p: RawPatch) => {
-    const n = Math.min(p.values.length, 8)
-    return Array.from(b.subarray(p.offset, p.offset + n), hex2).join(' ') + (p.values.length > n ? ' …' : '')
-  }
 
   function apply() {
     if (!parsed || !canApply) return
@@ -808,12 +813,12 @@ function PatchCard({
                       <td className="text-muted-foreground px-2 py-1">{p.line}</td>
                       <td className="px-2 py-1 font-mono">{formatOffset(p.offset)}</td>
                       <td className="px-2 py-1">{p.values.length} B</td>
-                      <td className="px-2 py-1 font-mono">{preview(bytes, p)}</td>
+                      <td className="px-2 py-1 font-mono">{previewBytes(bytes, p.offset, p.values.length)}</td>
                       <td className={`px-2 py-1 font-mono ${same ? 'text-muted-foreground' : 'font-bold'}`}>
-                        {Array.from(p.values.slice(0, 8), hex2).join(' ') + (p.values.length > 8 ? ' …' : '')}
+                        {previewBytes(p.values, 0, p.values.length)}
                         {same && '（同じ）'}
                       </td>
-                      <td className="px-2 py-1">{region ? `${region.label} ${positionInRegion(region, p.offset)}` : '—'}</td>
+                      <td className="px-2 py-1">{region ? regionLabel(region, p.offset) : '—'}</td>
                     </tr>
                   )
                 })}

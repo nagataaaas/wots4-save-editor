@@ -105,6 +105,17 @@ export function innermostRegion(offset: number, regions: readonly RawRegion[] = 
   return best
 }
 
+/** 固定領域の探索結果を一覧化する。-1 は領域外。同じ広さなら先に定義した領域を優先する。 */
+export function regionIndexTable(size: number, regions: readonly RawRegion[] = RAW_REGIONS): Int16Array {
+  const table = new Int16Array(size).fill(-1);
+  const order = regions.map((region, index) => ({ region, index }))
+    .filter((entry): entry is { region: RawRegion & { end: number }; index: number } => entry.region.end !== null)
+    .sort((a, b) => (b.region.end - b.region.start) - (a.region.end - a.region.start) || b.index - a.index);
+  for (const { region, index } of order)
+    table.fill(index, Math.min(size, Math.max(0, region.start)), Math.min(size, Math.max(0, region.end + 1)));
+  return table;
+}
+
 /** offset を含む領域（終了の分かっているもの）をすべて、広い順に返す */
 export function regionsAt(offset: number, regions: readonly RawRegion[] = RAW_REGIONS): RawRegion[] {
   return regions

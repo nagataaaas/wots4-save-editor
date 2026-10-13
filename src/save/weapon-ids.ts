@@ -5,9 +5,9 @@
 //
 // source の意味（CSV の save_bytes_le があれば 'ts'、なければ 'ct'）：
 //   'ts'：[TS] の定義値（✅ [TS][I-3]。U-3 案A：この値のまま書けば正しく動く）、または実セーブのバイト列をゲーム内の表示で確認した値（✅ [U]）。
-//         value は save_bytes_le（刃・鍔が 3 B、柄が 2 B）を LE で読んだ値
+//         tsRaw は save_bytes_le（刃・鍔が 3 B、柄が 2 B）を LE で読んだ値。id は共通の u16 ID
 //   'ct'：Cheat Engine テーブル [CT] の ID（u16）だけが分かっているもの。🟢（2026-10-07。ゲーム内では未確認）。
-//         value は ID。刃は X（chunks/weapon-record のパーツ）を規則で計算して書く（計算した値は 🟢）（U-3 案C、ユーザー判断 2026-10-05）。規則外の刃は x が null で、
+//         id は ID。刃は X（chunks/weapon-record のパーツ）を規則で計算して書く（計算した値は 🟢）（U-3 案C、ユーザー判断 2026-10-05）。規則外の刃は x が null で、
 //         ID だけを書き X は元の値のまま残す（U-3 案B。ゲーム内で分解→組み立てると正しい X になるので、それで X を調べる。ユーザー判断 2026-10-05）
 // U-13 は案A（CT の刃 305〜316 は +1 ずれている）で決着した（ユーザー判断 2026-10-05）。CSV の ID は −1 した値
 // 正道刀の鍔（[TS] の定義値 0xAC0109）は作者が異常値と注記しており I-3 の対象外なので載せない。
@@ -28,13 +28,18 @@ import {
 
 export type PartOption = {
   source: "ts" | "ct";
-  value: number;
+  id: number;
+  /**
+   * 'ts' だけ：save_bytes_le を LE で読んだ保存値（刃・鍔は 3 B、柄は 2 B）。
+   * 読んだ値と完全一致する選択肢を優先して引くのと、特殊武器の刃（3バイト目が FF）の判定に使う。選択肢の識別子・書き込みは id を使う
+   */
+  tsRaw?: number;
   /** 武器名のマスターのキー */
   name: WeaponKey;
   /**
    * 刃だけ：X（鞘の ID、u16）。
    * 'ct' は 🟢 規則で計算した X、または ✅ 実セーブで確かめた X。null は規則外で X 不明（ID だけ書く。U-3 案B）。
-   * 'ts' は鞘が 0x100 以上のときだけ持つ（3 B 値には X の下位バイトしかない）。ないときは X ＝ 3 B 値の3バイト目
+   * 'ts' も完全な X を持つ（3 B 値には X の下位バイトしかない）。
    */
   x?: number | null;
   /** x が、規則を確かめた範囲（0x3F〜0x51、0x109〜0x134）の外に規則を延ばして計算した値（ユーザー判断 2026-10-05、ゲーム内で確認待ち） */
@@ -65,22 +70,22 @@ function partOptions<R extends PartRow>(
     .filter((r) => r.id_dec !== NONE_ID)
     .map((r) => {
       const source = r.save_bytes_le === "" ? "ct" : "ts";
-      const value = source === "ts" ? bytesLe(r.save_bytes_le) : r.id_dec;
-      return { source, value, name: weaponKeyOf(r.name_ja, file), ...extra(r, source) };
+      const tsRaw = source === "ts" ? bytesLe(r.save_bytes_le) : undefined;
+      return { source, id: r.id_dec, tsRaw, name: weaponKeyOf(r.name_ja, file), ...extra(r, source) };
     });
 }
 
-/** 刃（+0x08〜）。ts は 3 B（3バイト目は 🟢 X の下位バイト）、ct は ID（u16）＋規則で計算した X（u16） */
+/** 刃（+0x02）。🟢 ID と鞘を別々に持つ。 */
 export const BLADES: readonly PartOption[] = partOptions(BLADE_TABLE, "blade.csv", (r, source) => {
   if (source === "ct") return { x: r.sheath_x };
-  // X が 0x100 以上だと 3 B 値に収まらないので、X を別に持つ（U-3）
-  return r.sheath_x !== null && r.sheath_x >= 0x100 ? { x: r.sheath_x } : {};
+  // 3 B 値には X の下位バイトしかない（X が 0x100 以上だと収まらない。U-3）ので、表の sheath_x を優先し、ないときだけ 3 B 値の先頭を使う
+  return { x: r.sheath_x ?? (bytesLe(r.save_bytes_le) >>> 16) };
 });
 
-/** 鍔。ts は +0x0B〜+0x0D の 3 B（1バイト目は 🔶 X の上位バイト）、ct は +0x0C〜+0x0D の ID（u16） */
+/** 鍔の ID（+0x06 の u16）。'ts' の tsRaw は +0x05〜+0x07 の 3 B（1バイト目は 🔶 X の上位バイト） */
 export const GUARDS: readonly PartOption[] = partOptions(GUARD_TABLE, "guard.csv");
 
-/** 柄（+0x0E〜+0x0F の 2 B）。ts・ct とも ID（u16） */
+/** 柄の ID（+0x08 の u16）。 */
 export const GRIPS: readonly PartOption[] = partOptions(GRIP_TABLE, "grip.csv");
 
 /**
@@ -96,7 +101,7 @@ const SPECIAL_KEYS = new Map<number, WeaponKey>(
 export const SPECIAL_BLADES: readonly PartOption[] = Object.values(BLADE_SPECIAL_TABLE).map((r) => {
   const name = SPECIAL_KEYS.get(r.id_dec);
   if (!name) throw new Error(`blade-special.csv の ${r.id_dec} を使う完成武器がありません`);
-  return { source: "ts", value: 0xff0000 | r.id_dec, name };
+  return { source: "ts", id: r.id_dec, tsRaw: 0xff0000 | r.id_dec, x: 0xffff, name };
 });
 
 /** パーツの表示名 */
@@ -105,7 +110,7 @@ export function partName(option: PartOption, lang: Lang = "ja"): string {
 }
 
 /**
- * 鞘（X、+0x0A〜+0x0B の u16。chunks/weapon-record のパーツ、datatable/weapon/blade.csv の sheath_x）。✅ X は鞘の ID（[U] 2026-10-05）。names は同じ X を使う刃（刃の ID 順）。0xFFFF は鞘なし（[U] 2026-10-05）。
+ * 鞘（X、+0x04〜+0x05 の u16。chunks/weapon-record のパーツ、datatable/weapon/blade.csv の sheath_x）。✅ X は鞘の ID（[U] 2026-10-05）。names は同じ X を使う刃（刃の ID 順）。0xFFFF は鞘なし（[U] 2026-10-05）。
  * U-3 案C の行は、[CT] の刃の X を規則（ID＋0x17／ID−0x5D）で計算した値から逆算して足した鞘（ユーザー判断 2026-10-05）。値は 🟢 で裏付けた（2026-10-07）。
  * どの刃にも使われない鞘（0x29・0x2A など）は載せない
  */
@@ -145,15 +150,15 @@ export function sheathName(sheath: SheathOption, lang: Lang = "ja"): string {
  * サンプルのセーブの14種（特殊武器4種を含む）で、すべての値が一致した（✅ reserch/2026-10-07_special-weapons.md）
  */
 type BuildCommon = {
-  /** +0x1E 武器種 */
+  /** +0x18 武器種 */
   type: number;
-  /** +0x08 刃の ID。特殊武器は特殊武器の刃の ID */
+  /** +0x02 刃の ID。特殊武器は特殊武器の刃の ID */
   blade: number;
-  /** +0x72 名前の番号（特殊武器は +0x20 にも入る） */
+  /** +0x6C 名前の番号（特殊武器は +0x1A にも入る） */
   nameNo: number;
-  /** +0x22 の値（意味は ❓） */
+  /** +0x1C の値（意味は ❓） */
   flag22: number;
-  /** +0x10〜+0x15 固有武器の6バイト（u16 × 3）。null は固有武器でない（FF × 6） */
+  /** +0x0A〜+0x0F 固有武器の6バイト（u16 × 3）。null は固有武器でない（FF × 6） */
   unique: readonly [number, number, number] | null;
 };
 export type WeaponBuild =

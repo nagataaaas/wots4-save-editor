@@ -21,6 +21,12 @@ export function readI8(bytes: Uint8Array, offset: number): number {
   return view(bytes).getInt8(offset)
 }
 
+export function writeI8(bytes: Uint8Array, offset: number, value: number): void {
+  assertRange(bytes, offset, 1)
+  if (!Number.isInteger(value) || value < -128 || value > 127) throw new RangeError("入力できる範囲を超えています")
+  view(bytes).setInt8(offset, value)
+}
+
 export type SizedField = { rel: number; size: 1 | 2 | 4 }
 
 export function readSized(bytes: Uint8Array, offset: number, size: SizedField['size']): number {

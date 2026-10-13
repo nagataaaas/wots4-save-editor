@@ -40,17 +40,18 @@
 //
 // 空の枠に新しく約束を作るのは yobai-create.ts。記録を作る・消す機能は持たない。
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
-import { readU16, readU32, readSized, writeU16, writeSized, recordCodec, type SizedField } from "./binary";
+import { readU16, readU32, readU8, readSized, writeU16, writeSized, recordCodec, type SizedField } from "./binary";
 import { type EditOpts, type ViewStatus } from "./field";
 import { validateKnownValue } from "./flags/byte-flag";
 import { assertWritable, checkLayout } from "./layout";
-import { DAY_RANGE } from "./scenario-date";
+import { DAY_RANGE, DATE_OFFSETS } from "./scenario-date";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_LAYOUT_TABLE } from "./master/dataset/night-visit-layout";
 import { NIGHT_VISIT_PLACE_TABLE } from "./master/dataset/night-visit-place";
 import { NPC_LOOK_TABLE } from "./master/dataset/npc-look";
 import { labelOf, nameOf } from "./master/labels";
 import { npcName } from "./master/npc-names";
+import { characterStatusForPromise, CHARACTER_DEAD } from "./flags/characters";
 
 export const PROMISE_OFFSET = 0x14038;
 export const PROMISE_LENGTH = 0x2c;
@@ -60,6 +61,8 @@ export const PROMISE_EMPTY = 0xffffffff;
 export const YOBAI_TOTAL_OFFSET = 0x137ec;
 /** 🟢 夜這いの段階と愛の証の回数 */
 export const STAGE_OFFSET = 0x13e30;
+/** 🟢 夜這いの段階の上限（chunks/night-visit）。 */
+export const STAGE_MAX = 3;
 export const LOVE_COUNT_OFFSET = 0x13e34;
 export const RECORDS_OFFSET = 0x137f0;
 export const RECORD_SIZE = 0x10;
@@ -76,6 +79,7 @@ export const YOBAI_COUNTERS: readonly {
   size: 1 | 4;
   label: string;
   note: string;
+  hidden?: boolean;
 }[] = [
   {
     offset: YOBAI_TOTAL_OFFSET,
@@ -86,6 +90,7 @@ export const YOBAI_COUNTERS: readonly {
   },
   {
     offset: STAGE_OFFSET,
+    hidden: true,
     size: 4,
     label: "段階",
     // 🟢
@@ -326,7 +331,37 @@ export type PromiseView = ViewStatus & {
 
 export type RecordView = { index: number; building: number } & Record<RecordField, number>;
 
+/**
+ * 名前のある相手が死んでいれば警告を返す（🟢 ゲームは約束を止めない）。
+ * ❓ 死んだ相手が夜這いの場に出るかはゲーム内で確かめていないので、画面には約束が残ることだけを書く
+ */
+export function partnerDeathWarning(bytes: Uint8Array, type: number): string | null {
+  const status = characterStatusForPromise(type);
+  if (!status || readU8(bytes, status.offset) !== CHARACTER_DEAD) return null;
+  const name = NIGHT_VISIT_PARTNER_TABLE[type as keyof typeof NIGHT_VISIT_PARTNER_TABLE]?.name_ja ?? "相手";
+  return `${name} は死亡しています。約束は消えずに残ります`;
+}
+export function currentStage(bytes: Uint8Array): number {
+  return Math.min(readU32(bytes, STAGE_OFFSET), STAGE_MAX);
+}
+export function createProblem(bytes: Uint8Array): string | null {
+  return checkLayout(bytes) ?? (PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, 'type') !== PROMISE_EMPTY
+    ? "すでに約束があります（空の枠にだけ作れます）" : null);
+}
+export type PromiseContext = {
+  today: number; stage: number; createProblem: string | null; deathWarnings: ReadonlyMap<number, string>;
+};
+function readPromiseContext(bytes: Uint8Array): PromiseContext {
+  const deathWarnings = new Map<number, string>();
+  for (const partner of KNOWN_TYPES) {
+    const warning = partnerDeathWarning(bytes, partner.value);
+    if (warning) deathWarnings.set(partner.value, warning);
+  }
+  return { today: readU16(bytes, DATE_OFFSETS.dayIndex), stage: currentStage(bytes), createProblem: createProblem(bytes), deathWarnings };
+}
+
 export type YobaiView = ViewStatus & {
+  context: PromiseContext;
   promise: PromiseView;
   /** 使用中の記録の数（先頭から続く空でない件） */
   count: number;
@@ -386,6 +421,7 @@ export function readYobai(bytes: Uint8Array): YobaiView {
   });
 
   return {
+    context: readPromiseContext(bytes),
     problem: layoutProblem,
     warnings: [],
     promise,

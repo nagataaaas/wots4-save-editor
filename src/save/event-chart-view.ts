@@ -29,13 +29,14 @@ import {
   CHART_DIRS,
   CHART_FRAMES,
   CHART_NEIGHBORS,
+  DIR,
   OPPOSITE,
   type ChartCell,
   type ChartDir,
   type ChartFrame,
 } from './master/event-chart-layout'
 import { PLAY_COUNT_REVEALS_BEST_ROUTE } from './cycle-counts'
-import type { EventEntry } from './scenario-events'
+import { EVENT_RECORD_SHOWN, EVENT_STATE_VALUES, type EventEntry } from './scenario-events'
 
 /** 線の腕の描き方。none は形にない腕、hidden はゲームで出ない腕 */
 export type ArmLook = 'none' | 'hidden' | 'black' | 'red'
@@ -82,7 +83,9 @@ export type ChartInput = {
   bestRoute: number | null
 }
 
-const RECORD_SHOWN = 0x04
+const SHOWN = { name: 1, record: 2, inProgress: 4 } as const
+const HIDDEN_BRANCH = 2
+const isReached = (work: Work) => (work.shown & (SHOWN.name | SHOWN.inProgress)) !== 0 || work.failed
 const OTHER_ROUTE = 'other'
 const PHASE_STEP = 10
 /** 🟢 結末の段階 */
@@ -126,10 +129,10 @@ export function computeChartView({ entries, playCount, clearTotal, stage, bestRo
       const e = entries[c.eventId]
       if (e) {
         // ゲームの枠の状態のビット：1 名前、2 記録、4 進行中（4 だけを見る処理はない）
-        if (e.state === 0x03) shown = 1 | 4
-        else if (e.state === 0x04) shown = 1
-        else if (e.state === 0x05 || e.state === 0x06) failed = true
-        if (shown === 0 && e.record === RECORD_SHOWN) shown = 2
+        if (e.state === EVENT_STATE_VALUES.inProgress) shown = SHOWN.name | SHOWN.inProgress
+        else if (e.state === EVENT_STATE_VALUES.success) shown = SHOWN.name
+        else if (e.state === EVENT_STATE_VALUES.failed || e.state === EVENT_STATE_VALUES.failedAlternate) failed = true
+        if (shown === 0 && e.record === EVENT_RECORD_SHOWN) shown = SHOWN.record
       }
     }
     // 枠は真ルートの升（隠し 1）、線は隠し 1 のときだけ隠れた状態で始まる
@@ -149,7 +152,7 @@ export function computeChartView({ entries, playCount, clearTotal, stage, bestRo
 
   markMissedSlots(w)
 
-  const reached = (f: ChartFrame) => (w(f).shown & (1 | 4)) !== 0 || w(f).failed
+  const reached = (f: ChartFrame) => isReached(w(f))
   const revealed = new Map<number, boolean[]>()
   const red = new Map<number, boolean[]>()
   const flags = (m: Map<number, boolean[]>, c: ChartCell) => {
@@ -158,59 +161,49 @@ export function computeChartView({ entries, playCount, clearTotal, stage, bestRo
     return v
   }
 
-  /** 出ている真ルートの枠から左へ、出ている枠に着く道の腕を出す */
-  const reveal = (c: ChartCell | null, mask: number, arrival: ChartDir): ChartFrame | null => {
+  /**
+   * 条件に合う枠まで探索し、そこへ至る道の腕を mark で印付けする。
+   * onFound は升の4方向を調べ終えてから呼ぶ（升を出すのを探索の途中にすると、同じ升に戻る道の判定が変わる）
+   */
+  const traverse = (c: ChartCell | null, mask: number, arrival: ChartDir, accept: (frame: ChartFrame) => boolean,
+    mark: (cell: ChartCell, dir: ChartDir) => void, onFound?: (cell: ChartCell) => void): ChartFrame | null => {
     if (!c) return null
     let found: ChartFrame | null = null
     for (const k of CHART_DIRS) {
       if (mask & (1 << k)) continue
       const n = CHART_NEIGHBORS.get(c.id)![k]
       if (!n) continue
-      const f = n.type === 'frame' ? n : reveal(n, mask | (1 << OPPOSITE[k]), OPPOSITE[k])
-      if (f && !w(f).hidden) {
-        flags(revealed, c)[k] = true
+      const f = n.type === 'frame' ? n : traverse(n, mask | (1 << OPPOSITE[k]), OPPOSITE[k], accept, mark, onFound)
+      if (f && accept(f)) {
+        mark(c, k)
         found = f
       }
     }
     if (found) {
-      flags(revealed, c)[arrival] = true
-      w(c).hidden = false
+      mark(c, arrival)
+      onFound?.(c)
     }
-    return found
-  }
-
-  /** 到達した枠から右へ、到達した別の枠に着く道の腕を赤くする */
-  const paint = (c: ChartCell | null, mask: number, arrival: ChartDir): ChartFrame | null => {
-    if (!c) return null
-    let found: ChartFrame | null = null
-    for (const k of CHART_DIRS) {
-      if (mask & (1 << k)) continue
-      const n = CHART_NEIGHBORS.get(c.id)![k]
-      if (!n) continue
-      const f = n.type === 'frame' ? n : paint(n, mask | (1 << OPPOSITE[k]), OPPOSITE[k])
-      if (f && !w(f).hidden && reached(f)) {
-        flags(red, c)[k] = true
-        found = f
-      }
-    }
-    if (found) flags(red, c)[arrival] = true
     return found
   }
 
   const anyBestFrameShown = CHART_FRAMES.some((f) => f.hidden !== 0 && !w(f).hidden)
   for (const c of CHART_CELLS) {
     if (c.type === 'line') {
-      if (c.hidden === 2) {
+      if (c.hidden === HIDDEN_BRANCH) {
         const v = flags(revealed, c)
-        v[1] = v[2] = true
-        if (anyBestFrameShown) v[3] = true
+        v[DIR.right] = v[DIR.up] = true
+        if (anyBestFrameShown) v[DIR.down] = true
       }
       continue
     }
     if (w(c).hidden) continue
     const [left, right] = CHART_NEIGHBORS.get(c.id)!
-    if (c.hidden !== 0) reveal(left, 1 << 1, 1)
-    if (reached(c)) paint(right, 1 << 0, 0)
+    if (c.hidden !== 0) traverse(left, 1 << DIR.right, DIR.right, f => !w(f).hidden,
+      (cell, dir) => { flags(revealed, cell)[dir] = true },
+      (cell) => { w(cell).hidden = false })
+    if (reached(c)) traverse(right, 1 << DIR.left, DIR.left, f => !w(f).hidden && reached(f), (cell, dir) => {
+      flags(red, cell)[dir] = true
+    })
   }
 
   const frames = new Map<number, FrameLook>()
@@ -221,8 +214,8 @@ export function computeChartView({ entries, playCount, clearTotal, stage, bestRo
       named: s.shown !== 0,
       failed: s.failed,
       missed: s.missed,
-      inProgress: (s.shown & 4) !== 0,
-      lit: (s.shown & (1 | 4)) !== 0,
+      inProgress: (s.shown & SHOWN.inProgress) !== 0,
+      lit: (s.shown & (SHOWN.name | SHOWN.inProgress)) !== 0,
       reached: reached(f),
     })
   }
@@ -259,15 +252,15 @@ function stageFramesOf(stage: number | null, bestRoute: number | null): number[]
 
 /** 🟢 時間帯を過ぎた枠に失敗の印を付ける（冒頭のコメント） */
 function markMissedSlots(w: (c: ChartCell) => Work): void {
-  const isReached = (f: ChartFrame) => (w(f).shown & (1 | 4)) !== 0 || w(f).failed
+  const reached = (f: ChartFrame) => isReached(w(f))
   let last = 0
-  for (const f of CHART_FRAMES) if (isReached(f) && f.phase !== null) last = Math.max(last, f.phase)
+  for (const f of CHART_FRAMES) if (reached(f) && f.phase !== null) last = Math.max(last, f.phase)
   let route: ChartFrame['route'] = OTHER_ROUTE
   for (let p = 0; p < last; p += PHASE_STEP) {
     const inPhase = CHART_FRAMES.filter((f) => f.phase === p).slice(0, FRAMES_PER_PHASE)
     let chosen: ChartFrame | null = null
     for (const f of inPhase) {
-      if (!isReached(f)) continue
+      if (!reached(f)) continue
       if (f.route !== OTHER_ROUTE || chosen === null) chosen = f
     }
     if (chosen) {

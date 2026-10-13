@@ -8,6 +8,7 @@ import {
   MORO_OFFSET,
   ROUTE_JUDGE_OFFSET,
   ROUTE_NONE_OFFSET,
+  factionRouteStatus,
   hostileFlag,
   predictRouteJudge,
   readFactions,
@@ -238,6 +239,24 @@ describe("🟢 大寄せの判定（茂呂・無所属）", () => {
     const v = readFactions(b);
     expect(v.moro).toBe(1);
     expect(routeEligible(v.values, 0, v.moro)).toBe(false);
+  });
+
+  it("factionRouteStatus は友好度の差（✅）と茂呂の死亡（🟢）を合わせて返す", () => {
+    const b = makeSave(BAKUFU_ROUTE);
+    const alive = readFactions(b);
+    const [friendly, opposed] = [alive.values[0][0], alive.values[1][0]];
+    expect(factionRouteStatus(alive, 0)).toEqual({
+      eligible: routeEligible(alive.values, 0, alive.moro),
+      friendly,
+      opposed,
+      affinity: friendly - opposed,
+      moroDead: false,
+    });
+    writeU8(b, MORO_OFFSET, MORO_DEAD);
+    const dead = readFactions(b);
+    expect(factionRouteStatus(dead, 0)).toMatchObject({ eligible: false, moroDead: true });
+    // 茂呂の死亡は幕府（列0）にだけ付ける
+    expect(factionRouteStatus(dead, 1).moroDead).toBe(false);
   });
 
   it("3勢力とも 02 なら無所属 01、どれかが入れるなら 00", () => {

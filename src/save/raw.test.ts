@@ -17,12 +17,24 @@ import {
   parsePatchScript,
   positionInRegion,
   regionsAt,
+  regionIndexTable,
   searchBytes,
   utf16Char,
   writeRawBytes,
 } from './raw'
 
 describe('領域の一覧（docs/save_format/README.md §3）', () => {
+  it('探索表は各領域の境界・重なり・範囲外で元の探索と一致する', () => {
+    const table = regionIndexTable(TS_SAVE_SIZE)
+    const offsets = new Set([0, TS_SAVE_SIZE - 1])
+    for (const region of RAW_REGIONS) for (const boundary of [region.start, region.end ?? region.start])
+      for (const offset of [boundary - 1, boundary, boundary + 1]) if (offset >= 0 && offset < TS_SAVE_SIZE) offsets.add(offset)
+    for (const offset of offsets) expect(RAW_REGIONS[table[offset]] ?? null).toBe(innermostRegion(offset))
+    const regions = [{ start: 1, end: 5, label: '広い', chunk: '' },
+      { start: 2, end: 3, label: '先', chunk: '' }, { start: 2, end: 3, label: '後', chunk: '' },
+      { start: 0, end: null, label: '終端なし', chunk: '' }]
+    expect([...regionIndexTable(7, regions)]).toEqual([-1, 0, 1, 1, 0, 0, -1])
+  })
   it('終了は開始以上で、ファイルの範囲に収まる', () => {
     for (const r of RAW_REGIONS) {
       expect(r.start).toBeGreaterThanOrEqual(0)

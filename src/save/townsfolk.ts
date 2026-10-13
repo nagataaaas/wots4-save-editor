@@ -157,6 +157,11 @@ export type TownsfolkView = ViewStatus & {
   values: number[];
 };
 
+/** 🟢 人物レコード先頭の死亡ビット。 */
+export function isPersonDead(view: TownsfolkView, p: number): boolean {
+  return (view.values[personOffset(p) - TOWNSFOLK_START] & 1) === 1;
+}
+
 export function readTownsfolk(bytes: Uint8Array): TownsfolkView {
   if (bytes.byteLength <= TOWNSFOLK_END)
     throw new RangeError("ファイルが小さすぎて町の人の状態を読めません");
@@ -175,17 +180,17 @@ export type PersonState = TownsfolkPerson & {
 
 /** 🟢 名前の分かっている人物の死亡のビット */
 export function readPeople(bytes: Uint8Array): PersonState[] {
-  const { values } = readTownsfolk(bytes);
+  const view = readTownsfolk(bytes);
   return TOWNSFOLK_PEOPLE.map((x) => {
     const offset = personOffset(x.p);
-    const rec = values.slice(
+    const rec = view.values.slice(
       offset - TOWNSFOLK_START,
       offset - TOWNSFOLK_START + PERSON_RECORD_SIZE,
     );
     return {
       ...x,
       offset,
-      dead: (rec[0] & 1) === 1,
+      dead: isPersonDead(view, x.p),
       unusedBitsSet: (rec[0] & 0xfe) !== 0 || rec.slice(1).some((b) => b !== 0),
     };
   });

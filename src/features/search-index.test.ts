@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { collectSearchEntries } from './search-index-collect'
-import { searchItems, toSearchItems, type SearchItem } from './search-index'
+import { itemsForMode, searchItems, toSearchItems, type SearchItem } from './search-index'
 import { sections } from './sections'
 import { matchFieldKey } from '@/lib/route'
 import { searchKey } from '@/lib/search-collector'
@@ -21,6 +21,16 @@ describe('検索の索引', () => {
       crumbs: ['世界', 'イベント', '勢力の状態', '剣術大会以後のルート分岐'],
     })
   })
+  it('上級者モードだけで描かれる箱・欄に印を付け、通常モードの検索結果からは除く', () => {
+    const advancedOnly = items.filter((i) => i.advanced)
+    expect(advancedOnly.length).toBeGreaterThan(0)
+    // 通常モードでも描かれる流派の箱には印を付けない
+    expect(items.some((i) => i.section === 'styles' && i.field === null && i.anchor.startsWith('sect-') && !i.advanced)).toBe(true)
+    const normal = itemsForMode(items, false)
+    expect(normal.some((i) => i.advanced)).toBe(false)
+    expect(itemsForMode(items, true)).toHaveLength(items.length)
+  })
+
   it('画面で読む索引のファイルが、今の画面から集めた名前と同じ（違えば pnpm test -u で作り直す）', async () => {
     await expect(`${JSON.stringify(entries, null, 1)}\n`).toMatchFileSnapshot('./search-index.generated.json')
   })
@@ -73,6 +83,12 @@ describe('検索の索引', () => {
 })
 
 describe('検索', () => {
+  it('セーブに応じて出る左手・一覧内の武器編集欄・上級者向けの欄を索引に含む', () => {
+    expect(items.some(item => item.section === 'belt' && item.crumbs.at(-1) === '左手')).toBe(true);
+    for (const section of ['weapon-bag', 'weapon-chest'])
+      expect(items.some(item => item.section === section && item.crumbs.at(-1) === '攻撃力' && item.field !== null)).toBe(true);
+    expect(items.some(item => item.section === 'belt' && item.crumbs.at(-1) === '武器種')).toBe(true);
+  });
   it('部分一致で引き、名前に一致するものを先に並べる', () => {
     const hits = searchItems(items, '主人公名')
     expect(crumbs(hits[0])).toBe('主人公 > 基本情報 > 名前 > 主人公名')

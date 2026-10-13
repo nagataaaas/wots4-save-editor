@@ -153,7 +153,7 @@ export function AccessoriesPage() {
             <Button
               variant="outline"
               size="sm"
-              disabled={readOnly}
+              disabled={readOnly || rows.length === 0}
               onClick={() => write((b) => writeAccessoryFlags(b, rows.map((a) => a.id), 1))}
             >
               表示中を全部所持
@@ -161,7 +161,7 @@ export function AccessoriesPage() {
             <Button
               variant="outline"
               size="sm"
-              disabled={readOnly}
+              disabled={readOnly || rows.length === 0}
               onClick={() => write((b) => writeAccessoryFlags(b, rows.map((a) => a.id), 0))}
             >
               表示中を全部外す
@@ -385,10 +385,10 @@ export function AppearancePage() {
               className="w-44"
               aria-label="服の所有状態"
             />
-            <Button variant="outline" size="sm" disabled={readOnly} onClick={() => write((b) => writeAppearanceBits(b, rows.map((c) => c.id), true))}>
+            <Button variant="outline" size="sm" disabled={readOnly || rows.length === 0} onClick={() => write((b) => writeAppearanceBits(b, rows.map((c) => c.id), true))}>
               表示中を全部解放
             </Button>
-            <Button variant="outline" size="sm" disabled={readOnly} onClick={() => write((b) => writeAppearanceBits(b, rows.map((c) => c.id), false))}>
+            <Button variant="outline" size="sm" disabled={readOnly || rows.length === 0} onClick={() => write((b) => writeAppearanceBits(b, rows.map((c) => c.id), false))}>
               表示中を全部消す
             </Button>
           </div>
@@ -467,7 +467,7 @@ export function UnlocksPage() {
             <Input className="w-56" placeholder="名前・条件で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
             <FilterSelect options={categoryOptions(categories)} value={category} onChange={setCategory} className="w-40" aria-label="特典の種別" />
             {([0, 1, 2] as const).map((v) => (
-              <Button key={v} variant="outline" size="sm" disabled={readOnly} onClick={() => write((b) => writeUnlockStates(b, ids, v))}>
+              <Button key={v} variant="outline" size="sm" disabled={readOnly || ids.length === 0} onClick={() => write((b) => writeUnlockStates(b, ids, v))}>
                 表示中を{UNLOCK_STATE_LABELS[v]}にする
               </Button>
             ))}

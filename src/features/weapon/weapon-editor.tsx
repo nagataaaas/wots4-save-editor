@@ -11,7 +11,18 @@ import { WEAPON_FIELDS, type WeaponView } from "@/save/weapon";
 import { WEAPON_EDITOR_ANCHORS } from "./anchors";
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import { charmIcon, titleIcon } from "./effect-icons";
-import { useWeaponRows } from "./use-weapon-rows";
+import {
+  CompleteWeaponRow,
+  WeaponIdRow,
+  WeaponNameHiddenRow,
+  WeaponNameRow,
+  WeaponNumberRow,
+  WeaponPartRow,
+  WeaponSheathRow,
+  WeaponTitleRow,
+  WeaponTypeRow,
+  type WeaponFieldProps,
+} from "./weapon-fields";
 import { CharmEditor } from "./charm-editor";
 import { type WeaponUpdate } from "./weapon-ui";
 
@@ -46,10 +57,10 @@ function Section({
   defaultOpen: boolean;
   children: ReactNode;
 }) {
-  const { id, open, setOpen } = useAnchoredOpen(anchor, defaultOpen);
+  const { id, ref, open, setOpen } = useAnchoredOpen(anchor, defaultOpen);
   useSearchBox(id, title);
   return (
-    <Collapsible id={id} open={open} onOpenChange={setOpen} className="flex scroll-mt-4 flex-col">
+    <Collapsible ref={ref} id={id} open={open} onOpenChange={setOpen} className="flex scroll-mt-4 flex-col">
       <div className="text-muted-foreground flex items-center gap-1 border-b pb-1 text-sm font-medium">
         <ToggleChevron open={open} onToggle={() => setOpen(!open)} />
         <AnchorLink id={id} />
@@ -88,7 +99,7 @@ export function WeaponEditor({
   update: WeaponUpdate;
   sectionsOpen?: boolean;
 }) {
-  const rows = useWeaponRows({ weapon, base, update });
+  const p: WeaponFieldProps = { weapon, base, update };
   const charms = weapon?.charms ?? null;
   const effects = charms ? charmEffects(charms.value) : [];
   const title = titleEffect(weapon?.title.value ?? null);
@@ -96,34 +107,34 @@ export function WeaponEditor({
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-3">
-        {rows.name}
-        {rows.weaponId}
-        {rows.weaponType}
-        <div className="sm:col-span-3">{rows.nameHidden}</div>
+        <WeaponNameRow {...p} />
+        <WeaponIdRow {...p} />
+        <WeaponTypeRow {...p} />
+        <div className="sm:col-span-3"><WeaponNameHiddenRow {...p} /></div>
       </div>
 
-      {rows.complete}
+      <CompleteWeaponRow {...p} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         {/* 鞘は刃に合わせて決まるので、刃のすぐ下に置く */}
         <div className="flex flex-col gap-4">
-          {rows.part("blade")}
-          {rows.sheath}
+          <WeaponPartRow {...p} kind="blade" />
+          <WeaponSheathRow {...p} />
         </div>
-        {rows.part("guard")}
-        {rows.part("grip")}
+        <WeaponPartRow {...p} kind="guard" />
+        <WeaponPartRow {...p} kind="grip" />
       </div>
 
       <Section anchor={WEAPON_EDITOR_ANCHORS.numbers} title="攻撃力・耐久・質" defaultOpen={sectionsOpen}>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{rows.number("attack")}</div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><WeaponNumberRow {...p} field="attack" /></div>
         <div className="grid gap-4 lg:grid-cols-2">
           <NumberPair title="耐久">
-            {rows.number("durability", "現在")}
-            {rows.number("durabilityMax", "最大")}
+            <WeaponNumberRow {...p} field="durability" label="現在" />
+            <WeaponNumberRow {...p} field="durabilityMax" label="最大" />
           </NumberPair>
           <NumberPair title="質">
-            {rows.number("quality", "現在")}
-            {rows.number("qualityMax", "最大")}
+            <WeaponNumberRow {...p} field="quality" label="現在" />
+            <WeaponNumberRow {...p} field="qualityMax" label="最大" />
           </NumberPair>
         </div>
       </Section>
@@ -131,7 +142,7 @@ export function WeaponEditor({
       <Section anchor={WEAPON_EDITOR_ANCHORS.titleCharms} title="銘・魅力" defaultOpen={sectionsOpen}>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            {rows.title}
+            <WeaponTitleRow {...p} />
             {!weapon && (
               <EffectBox>
                 <p className="text-muted-foreground">—</p>
@@ -195,15 +206,15 @@ export function WeaponEditor({
 
       <Section anchor={WEAPON_EDITOR_ANCHORS.kills} title="斬殺数・つま斬り数" defaultOpen={sectionsOpen}>
         <div className="grid gap-4 sm:grid-cols-2">
-          {rows.number("kills")}
-          {rows.number("tsumaKills")}
+          <WeaponNumberRow {...p} field="kills" />
+          <WeaponNumberRow {...p} field="tsumaKills" />
         </div>
       </Section>
 
       <Section anchor={WEAPON_EDITOR_ANCHORS.durability} title="耐久回復の累積値・手に持っていた時間" defaultOpen={sectionsOpen}>
         <div className="grid gap-4 sm:grid-cols-2">
-          {rows.number("durabilityRecovery")}
-          {rows.number("heldTime")}
+          <WeaponNumberRow {...p} field="durabilityRecovery" />
+          <WeaponNumberRow {...p} field="heldTime" />
         </div>
       </Section>
     </div>

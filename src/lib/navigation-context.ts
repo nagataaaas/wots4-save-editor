@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useState } from 'react'
+import { useNavigationTarget } from './navigation-target-context'
 import type { SectionId } from '@/features/sections'
 import { useIndexing } from '@/lib/search-collector'
 
@@ -20,6 +21,27 @@ export type NavigationValue = {
   field: readonly string[] | null
   /** go を呼ぶたびに増える。同じ anchor へもう一度飛んだときにも開いてスクロールし直すために使う */
   seq: number
+  /**
+   * これまでに移動先になった anchor と、最後に移動先になったときの seq。
+   * 開閉できる箱が、移動で開いたことを覚えておくのに使う（useAnchoredOpen）。省略は移動なし
+   */
+  targetSeqs?: ReadonlyMap<string, number>
+}
+
+/**
+ * 開閉できる箱 id が開いているか。manual は手で開閉したとき（マウント時はその時点）の seq と開閉。
+ * 箱かその中が manual.seq より後に移動先になっていれば開く。
+ * 次の移動先が別の箱でも、移動で開いた箱は閉じない（最後に移動先になった seq は変わらないため）。
+ * 移動で開いたあとも手で閉じられる（manual.seq が移動の seq に追いつく）
+ */
+export function anchoredOpen(
+  targetSeqs: ReadonlyMap<string, number> | undefined,
+  id: string,
+  manual: { seq: number; open: boolean },
+): boolean {
+  for (const [anchor, seq] of targetSeqs ?? [])
+    if ((anchor === id || anchor.startsWith(`${id}/`)) && seq > manual.seq) return true
+  return manual.open
 }
 
 /**
@@ -39,10 +61,8 @@ export function useNavigation(): NavigationValue {
 /** 外側の箱の anchor。箱は自分の anchor をこれで中身に渡す（`<AnchorScope.Provider value={id}>`） */
 export const AnchorScope = createContext<string>('')
 
-/** 外側の箱が開くアニメーション（collapsible-card の duration-200）のあとに位置が決まる */
-const SCROLL_DELAY_MS = 250
-
 export type AnchorState = {
+  ref: (element: HTMLElement | null) => void
   /** 外側の箱の anchor をつないだ、この箱の anchor。DOM の id にも使う */
   id: string
   /** リンク先がこの箱か、この箱の中。開閉できる箱はこのとき開く */
@@ -58,21 +78,11 @@ export type AnchorState = {
 export function useAnchor(name: string): AnchorState {
   const parent = useContext(AnchorScope)
   const id = anchorPath(parent, name)
-  const { anchor, field, seq } = useNavigation()
-  // 欄へ飛ぶときは、箱ではなく欄までスクロールする
-  const self = anchor === id && field === null
+  const { anchor, seq } = useNavigation()
   const targeted = anchor !== null && (anchor === id || anchor.startsWith(`${id}/`))
 
-  useEffect(() => {
-    if (!self) return
-    const t = window.setTimeout(
-      () => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-      SCROLL_DELAY_MS,
-    )
-    return () => window.clearTimeout(t)
-  }, [self, id, seq])
-
-  return { id, targeted, seq }
+  const ref = useNavigationTarget('boxes', id)
+  return { id, targeted, seq, ref }
 }
 
 /**
@@ -82,12 +92,10 @@ export function useAnchor(name: string): AnchorState {
  */
 export function useAnchoredOpen(name: string, defaultOpen = false) {
   const indexing = useIndexing()
-  const { id, targeted, seq } = useAnchor(name)
-  const [open, setOpen] = useState(defaultOpen || targeted)
-  const [openedFor, setOpenedFor] = useState(seq)
-  if (targeted && openedFor !== seq) {
-    setOpenedFor(seq)
-    setOpen(true)
-  }
-  return { id, open: open || indexing, setOpen }
+  const { id, targeted, seq, ref } = useAnchor(name)
+  const { targetSeqs } = useNavigation()
+  // マウント時に移動先なら、その移動で開く（seq を -1 にして、移動の seq より前に開閉したことにする）
+  const [manual, setManual] = useState(() => ({ seq: targeted ? -1 : seq, open: defaultOpen }))
+  const setOpen = (value: boolean) => setManual({ seq, open: value })
+  return { id, ref, open: anchoredOpen(targetSeqs, id, manual) || indexing, setOpen }
 }

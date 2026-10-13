@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { CollapsibleCard } from "@/components/collapsible-card";
@@ -13,6 +12,7 @@ import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
 import { WriteError } from "@/components/write-error";
+import { useIndexing } from "@/lib/search-collector";
 import {
   BELT_COUNT,
   BELT_STATE,
@@ -23,11 +23,13 @@ import {
   type BeltState,
   type BeltView,
 } from "@/save/belt";
-import { charmLabel, type NumberKey, type WeaponView } from "@/save/weapon";
-import { BELT_ANCHORS, WEAPON_ANCHORS } from "./anchors";
-import { WeaponEditor } from "./weapon-editor";
-import { SwitchRow, WeaponImage } from "./weapon-rows";
-import { NONE, type WeaponUpdate } from "./weapon-ui";
+import { type WeaponView } from "@/save/weapon";
+import { BELT_ANCHORS } from "./anchors";
+import { WEAPON_ANCHORS } from "@/features/weapon/anchors";
+import { WeaponEditor } from "@/features/weapon/weapon-editor";
+import { WeaponPanel } from "@/features/weapon/weapon-panel";
+import { SwitchRow } from "@/features/weapon/weapon-rows";
+import { NONE, type WeaponUpdate } from "@/features/weapon/weapon-ui";
 
 const weaponTitle = (w: WeaponView | undefined, i: number) =>
   `${i + 1}本目${w && !w.empty ? `：${w.name.value || "（名前なし）"}` : w?.empty ? "：空き" : ""}`;
@@ -78,6 +80,7 @@ function StateCard({
 }) {
   const { attempt, error, setMessage } = useWrite();
   const state = view?.state ?? null;
+  const indexing = useIndexing();
   const problem = state?.problem ?? null;
   const disabled = state === null || problem !== null;
 
@@ -129,12 +132,12 @@ function StateCard({
           problem={problem}
           onChange={(v) => onRight(v === NONE ? null : Number(v))}
         />
-        {state?.left != null && (
+        {(state?.left != null || indexing) && (
           <SelectRow
             label="左手"
             offset={BELT_STATE.left}
-            value={String(state.left)}
-            options={usable(state.right)}
+            value={state?.left != null ? String(state.left) : null}
+            options={usable(state?.right ?? null)}
             problem={problem}
             // 🟢 ロード時の二刀流の解除。🔶 どの組み合わせで持てるか（種類の制限）は未確認
             note="左手に持てない武器ならロード時に二刀流が解除されます"
@@ -157,67 +160,6 @@ function StateCard({
   );
 }
 
-/** 帯刀の一覧（閉じていても見える部分）の能力値と画像。ゲームの武器の画面に寄せた見た目 */
-/** weapon が null ならセーブ未読み込み。同じ枠に「—」を並べる */
-export function WeaponPanel({ weapon }: { weapon: WeaponView | null }) {
-  // ゲームと同じく桁区切りなし。耐久・質は現在値 / 最大値で並べる。
-  const num = (key: NumberKey) => (weapon ? String(weapon.numbers[key].value) : "—");
-  const pair = (current: NumberKey, maximum: NumberKey) => (
-    <span className="weapon-preview-pair" aria-label={`${num(current)}/${num(maximum)}`}>
-      <span>{num(current)}</span><span>/</span><span>{num(maximum)}</span>
-    </span>
-  );
-  const stat = (label: string, value: ReactNode) => (
-    <div className="weapon-preview-stat">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  );
-  const charmIds = weapon ? weapon.charms.value.filter((id): id is number => id !== null) : [];
-  const charms: string[] = !weapon
-    ? ["—", "—", "—"]
-    : charmIds.length > 3
-      ? [...new Set(charmIds)].map((id) => `${charmLabel(id)} ×${charmIds.filter((value) => value === id).length}`)
-      : charmIds.map((id) => charmLabel(id) ?? "不明");
-  while (charms.length < 3) charms.push("---");
-  return (
-    <div className="weapon-preview">
-      <div className="weapon-preview-layout">
-        <div className="weapon-preview-details">
-          <div className="weapon-preview-name">
-            {weapon?.title.value != null && weapon.title.label && (
-              <span>{weapon.title.label}</span>
-            )}
-            <span>{!weapon ? "—" : weapon.nameHidden.value ? "*****" : weapon.name.value || "（名前なし）"}</span>
-          </div>
-          <div className="weapon-preview-rule" aria-hidden="true">
-            <span />
-          </div>
-          <dl className="weapon-preview-stats">
-            {stat("攻撃力", num("attack"))}
-            {stat("耐久度", pair("durability", "durabilityMax"))}
-            {stat("斬殺数", num("kills"))}
-            {stat("質", pair("quality", "qualityMax"))}
-          </dl>
-          <ul className="weapon-preview-charms" aria-label="魅力">
-            {charms.map((label, slot) => (
-              <li key={slot} aria-label={`魅力 ${slot + 1}：${label === "---" ? "なし" : label}`}>
-                <span>{label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {weapon ? (
-          <WeaponImage key={weapon.completeByParts} id={weapon.completeByParts} />
-        ) : (
-          <div className="weapon-preview-image weapon-preview-image-empty">
-            <div className="text-wots-label flex size-full items-center justify-center p-2 font-serif text-xs">—</div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 /** 帯刀1本分。weapon が null ならセーブ未読み込み */
 function WeaponCard({
@@ -235,8 +177,8 @@ function WeaponCard({
   // 最初は閉じておく（ユーザー判断 2026-10-05）。リンク先なら開く
   const searchLabel = `${index + 1}本目`;
   const roles = [state?.right === index && "右手", state?.left === index && "左手"].filter(
-    Boolean,
-  ) as string[];
+    (role): role is string => typeof role === "string",
+  );
 
   if (weapon?.empty) {
     return (

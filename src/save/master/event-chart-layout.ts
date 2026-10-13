@@ -15,6 +15,8 @@ export type { ChartRoute }
 /** 向き。0 左・1 右・2 上・3 下 */
 export type ChartDir = 0 | 1 | 2 | 3
 export const CHART_DIRS: readonly ChartDir[] = [0, 1, 2, 3]
+/** 向きの名前 */
+export const DIR = { left: 0, right: 1, up: 2, down: 3 } as const satisfies Record<string, ChartDir>
 /** 反対の向き */
 export const OPPOSITE: Readonly<Record<ChartDir, ChartDir>> = { 0: 1, 1: 0, 2: 3, 3: 2 }
 const STEP: Readonly<Record<ChartDir, readonly [dc: number, dr: number]>> = {

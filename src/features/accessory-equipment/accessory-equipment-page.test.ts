@@ -7,7 +7,7 @@ import { TS_SAVE_SIZE } from '@/save/layout'
 import { ACCESSORY_EQUIPMENT_BASES } from '@/save/accessory-equipment'
 import { pages } from '@/features/pages'
 import { sectionGroups, sections } from '@/features/sections'
-import { AccessoryEquipmentPage } from './accessory-equipment-page'
+import { AccessoryEquipmentEditor as AccessoryEquipmentPage } from './accessory-equipment-page'
 import { HeroAppearancePage } from '@/features/hero/hero-appearance-page'
 
 function render(bytes: Uint8Array | null, advanced = false) {
@@ -76,8 +76,9 @@ describe('装飾品の装着画面', () => {
     expect(html).toContain('調整する構え')
     expect(html).toContain('抜刀')
     expect(html).toContain('共通')
-    expect(html).toContain('俺のおしゃれ1')
-    expect(html).toContain('俺のおしゃれ5')
+    // 共通の選択UIは、閉じている間は現在の選択だけを描く。
+    expect(html).toContain('aria-label="編集する記録"')
+    expect(html).toContain('現在の装着')
     expect(html).not.toContain('アンサンブル')
     expect(html).toContain('disabled')
     // 見出しの装飾品名は「—」

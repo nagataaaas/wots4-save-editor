@@ -6,7 +6,7 @@ import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { MARKET_ANCHORS } from "./anchors";
-import { WeaponPanel } from "@/features/belt/belt-page";
+import { WeaponPanel } from "@/features/weapon/weapon-panel";
 import { useSaveView } from "@/lib/use-save-view";
 import { PageBanner } from "@/components/page-banner";
 import {

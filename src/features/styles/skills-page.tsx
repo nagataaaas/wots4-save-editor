@@ -87,7 +87,7 @@ export function SkillsPage() {
   const [filter, setFilter] = useState<SkillFilter>(EMPTY_FILTER);
   const [minAttackText, setMinAttackText] = useState("");
   // 構えのタブの箱（リンク先にするときの名前）
-  const { id: stancesId } = useAnchor(SKILLS_ANCHORS.stances);
+  const { id: stancesId, ref: stancesRef } = useAnchor(SKILLS_ANCHORS.stances);
   const [sort, setSort] = useState<SkillSort>("id-asc");
   const rowsByStance = useMemo(() => STANCES.map((s) => stanceRows(s.id)), []);
   // 構えの技を、流派の画面と同じ木（続けて出す技・上位技）に並べる
@@ -193,7 +193,7 @@ export function SkillsPage() {
         </CardContent>
       </AnchoredCard>
 
-      <Tabs id={stancesId} defaultValue="0" className="bg-card scroll-mt-4 rounded-xl border p-3 shadow-xs">
+      <Tabs ref={stancesRef} id={stancesId} defaultValue="0" className="bg-card scroll-mt-4 rounded-xl border p-3 shadow-xs">
         {/* 構えは「刀」と「刀以外」の 2 段に、同じ幅の枠で並べる。数は 習得済/技の数、絞り込み中は条件に合う技の数 */}
         <TabsList className="h-auto w-full flex-col items-stretch gap-1.5 p-2 group-data-horizontal/tabs:h-auto">
           {STANCE_ROWS.map((row) => (

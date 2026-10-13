@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { readWeapon, WEAPON_FIELDS } from "@/save/weapon";
-import { WeaponPanel } from "./belt-page";
+import { WeaponPanel } from "./weapon-panel";
 
 function fixture() {
   const bytes = new Uint8Array(0xa0);

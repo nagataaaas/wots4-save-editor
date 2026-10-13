@@ -431,6 +431,16 @@
   "box": false
  },
  {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "容姿"
+  ],
+  "label": "手",
+  "box": false,
+  "advanced": true
+ },
+ {
   "section": "records",
   "anchor": "stat-evaluation",
   "path": [],
@@ -1229,6 +1239,15 @@
    "帯刀の状態"
   ],
   "label": "右手（選んでいる武器）",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "state",
+  "path": [
+   "帯刀の状態"
+  ],
+  "label": "左手",
   "box": false
  },
  {
@@ -2066,11 +2085,414 @@
   "box": false
  },
  {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "1本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 1 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "1本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 2 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "1本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 3 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "2本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 1 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "2本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 2 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "2本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 3 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "3本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 1 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "3本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 2 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "3本目",
+   "銘・魅力"
+  ],
+  "label": "魅力 3 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
   "section": "weapon-bag",
   "anchor": "weapons",
   "path": [],
   "label": "武器袋",
   "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "武器袋"
+  ],
+  "label": "武器名",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "武器袋"
+  ],
+  "label": "完成武器",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "武器袋"
+  ],
+  "label": "武器種",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "武器袋"
+  ],
+  "label": "名前を隠す（「*****」と表示）",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "武器袋"
+  ],
+  "label": "指定武器に変更",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "武器袋"
+  ],
+  "label": "刃",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "武器袋"
+  ],
+  "label": "鞘",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "武器袋"
+  ],
+  "label": "鍔",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "武器袋"
+  ],
+  "label": "柄",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "武器袋"
+  ],
+  "label": "攻撃力・耐久・質",
+  "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "武器袋",
+   "攻撃力・耐久・質"
+  ],
+  "label": "攻撃力",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "武器袋",
+   "攻撃力・耐久・質"
+  ],
+  "label": "耐久",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "武器袋",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "武器袋",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "武器袋",
+   "攻撃力・耐久・質"
+  ],
+  "label": "質",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "武器袋",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "武器袋",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "武器袋"
+  ],
+  "label": "銘・魅力",
+  "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "武器袋",
+   "銘・魅力"
+  ],
+  "label": "銘",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "武器袋",
+   "銘・魅力"
+  ],
+  "label": "魅力 1",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "武器袋",
+   "銘・魅力"
+  ],
+  "label": "魅力 2",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "武器袋",
+   "銘・魅力"
+  ],
+  "label": "魅力 3",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "武器袋"
+  ],
+  "label": "斬殺数・つま斬り数",
+  "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "武器袋",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "斬殺数",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "武器袋",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "つま斬り数",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "武器袋"
+  ],
+  "label": "耐久回復の累積値・手に持っていた時間",
+  "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "武器袋",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "耐久回復の累積値",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "武器袋",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "手に持っていた時間（秒）",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "武器袋",
+   "銘・魅力"
+  ],
+  "label": "魅力 1 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "武器袋",
+   "銘・魅力"
+  ],
+  "label": "魅力 2 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "武器袋",
+   "銘・魅力"
+  ],
+  "label": "魅力 3 の個数",
+  "box": false,
+  "advanced": true
  },
  {
   "section": "weapon-chest",
@@ -2094,6 +2516,310 @@
   "path": [],
   "label": "刀箪笥の武器",
   "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "武器名",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "完成武器",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "武器種",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "名前を隠す（「*****」と表示）",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "指定武器に変更",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "刃",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "鞘",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "鍔",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "柄",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "攻撃力・耐久・質",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "刀箪笥の武器",
+   "攻撃力・耐久・質"
+  ],
+  "label": "攻撃力",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "刀箪笥の武器",
+   "攻撃力・耐久・質"
+  ],
+  "label": "耐久",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "刀箪笥の武器",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "刀箪笥の武器",
+   "攻撃力・耐久・質",
+   "耐久"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "刀箪笥の武器",
+   "攻撃力・耐久・質"
+  ],
+  "label": "質",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "刀箪笥の武器",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "現在",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "刀箪笥の武器",
+   "攻撃力・耐久・質",
+   "質"
+  ],
+  "label": "最大",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "銘・魅力",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "刀箪笥の武器",
+   "銘・魅力"
+  ],
+  "label": "銘",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "刀箪笥の武器",
+   "銘・魅力"
+  ],
+  "label": "魅力 1",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "刀箪笥の武器",
+   "銘・魅力"
+  ],
+  "label": "魅力 2",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "刀箪笥の武器",
+   "銘・魅力"
+  ],
+  "label": "魅力 3",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "斬殺数・つま斬り数",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "刀箪笥の武器",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "斬殺数",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "刀箪笥の武器",
+   "斬殺数・つま斬り数"
+  ],
+  "label": "つま斬り数",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "刀箪笥の武器"
+  ],
+  "label": "耐久回復の累積値・手に持っていた時間",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "刀箪笥の武器",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "耐久回復の累積値",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "刀箪笥の武器",
+   "耐久回復の累積値・手に持っていた時間"
+  ],
+  "label": "手に持っていた時間（秒）",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "刀箪笥の武器",
+   "銘・魅力"
+  ],
+  "label": "魅力 1 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "刀箪笥の武器",
+   "銘・魅力"
+  ],
+  "label": "魅力 2 の個数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "刀箪笥の武器",
+   "銘・魅力"
+  ],
+  "label": "魅力 3 の個数",
+  "box": false,
+  "advanced": true
  },
  {
   "section": "tools",
@@ -7018,6 +7744,766 @@
   ],
   "label": "この流派で倒した数",
   "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-0",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-0",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-0",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-0",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-1",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-1",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-1",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-1",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-2",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-2",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-2",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-2",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-3",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-3",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-3",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-3",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-4",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-4",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-4",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-4",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-5",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-5",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-5",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-5",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-6",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-6",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-6",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-6",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-7",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-7",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-7",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-7",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-8",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-8",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-8",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-8",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-9",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-9",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-9",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-9",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-10",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-10",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-10",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-10",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-11",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-11",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-11",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-11",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-12",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-12",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-12",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-12",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-13",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-13",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-13",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-13",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-14",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-14",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-14",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-14",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-21",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-21",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-21",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-21",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-100",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-100",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-100",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-100",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-101",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-101",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-101",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-101",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-107",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-107",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-107",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-107",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-112",
+  "path": [],
+  "label": "……",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-112",
+  "path": [
+   "……"
+  ],
+  "label": "修練度",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-112",
+  "path": [
+   "……"
+  ],
+  "label": "段",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-112",
+  "path": [
+   "……"
+  ],
+  "label": "この流派で倒した数",
+  "box": false,
+  "advanced": true
  },
  {
   "section": "ore-ryu",

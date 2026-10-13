@@ -47,15 +47,17 @@ import {
   type RecordView,
   type YobaiView,
 } from "@/save/yobai";
-import { readU16 } from "@/save/binary";
 import type { EditOpts } from "@/save/field";
-import { DATE_OFFSETS } from "@/save/scenario-date";
 import {
   createPromise,
-  createProblem,
-  currentStage,
   defaultSpec,
-  partnerDeathWarning,
+  initialPromiseSpec,
+  requirePromisePartner,
+  PARTNER_NOTES,
+  layoutForPlace,
+  choosePromisePlace,
+  choosePromiseAt,
+  findPromiseRow,
   promisePartner,
   randomSpec,
   PROMISE_ROWS,
@@ -78,6 +80,11 @@ import {
 /** 10進数か 0x 付きの16進数 */
 function parseNumber(input: string, validate: (v: number) => string | null): ParseResult<number> {
   return parseInteger(input, validate, { hex: true });
+}
+
+function parseDay(input: string, validate: (v: number) => string | null): ParseResult<number> {
+  const result = parseNumber(input, v => v < 1 ? "1日目以上を指定してください" : validate(v - 1));
+  return result.ok ? { ok: true, value: result.value - 1 } : result;
 }
 
 const placeLabel = (place: number) => PLACES[place] ?? "名前なし";
@@ -242,12 +249,7 @@ function PersonFieldEditor({
         value={current}
         problem={problem}
         format={(v) => `${v + 1}`}
-        parse={(input) => {
-          const r = parseNumber(input, (v) =>
-            v < 1 ? "1日目以上を指定してください" : validate(v - 1),
-          );
-          return r.ok ? { ok: true, value: r.value - 1 } : r;
-        }}
+        parse={(input) => parseDay(input, validate)}
         apply={apply}
         inputMode="numeric"
         hint={hintFor(field, advanced)}
@@ -324,8 +326,7 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView | null; 
         onChange={(v) => {
           if (!promise) return;
           const place = Number(v);
-          const next = layoutsForPlace(place);
-          const layout = next.includes(promise.layout) ? promise.layout : next[0];
+          const layout = layoutForPlace(place, promise.layout);
           update((b) => writePromisePlace(b, place, layout, { advanced }));
         }}
       />
@@ -360,13 +361,12 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView | null; 
 /**
  * 相手の種類（約束の枠の +0x04）。名前のある相手の種類にしたとき、場所と配置がその相手のもの（組の表の行）と違えば、合わせるボタンを出す
  */
-function TypeEditor({ promise, problem }: { promise: PromiseView | null; problem: string | null }) {
-  const { save } = useSave();
+function TypeEditor({ promise, problem, view }: { promise: PromiseView | null; problem: string | null; view: YobaiView | null }) {
   const { write: update, tryWrite, error } = useWrite();
   const { advanced } = useAdvancedMode();
   // promise が null（セーブ未読み込み）のときは欄を無効にして描く
   const partner = promise ? promisePartner(promise.type) : undefined;
-  const death = save && promise ? partnerDeathWarning(save.working, promise.type) : null;
+  const death = promise ? view?.context.deathWarnings.get(promise.type) ?? null : null;
   const home = partner?.row != null ? PROMISE_ROWS.find((r) => r.index === partner.row) : undefined;
   const away =
     promise && home && (home.place !== promise.place || home.layout !== promise.layout) ? home : undefined;
@@ -407,12 +407,11 @@ function TypeEditor({ promise, problem }: { promise: PromiseView | null; problem
  * 約束した日（+0x28、経過日数で 1日目＝0）。🟢 場面が変わるたびに今日の経過日数と比べ、違えばすっぽかしで消える。
  * 「N日目」で入力する。今日でなければ警告を出す
  */
-function DayEditor({ promise, problem }: { promise: PromiseView | null; problem: string | null }) {
-  const { save } = useSave();
+function DayEditor({ promise, problem, view }: { promise: PromiseView | null; problem: string | null; view: YobaiView | null }) {
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   // promise が null（セーブ未読み込み）のときは欄を無効にし、今日の日付を出さない
-  const today = save && promise ? readU16(save.working, DATE_OFFSETS.dayIndex) : null;
+  const today = view?.context.today ?? null;
   const isToday = !promise || today === null || promise.day === today;
 
   return (
@@ -422,14 +421,7 @@ function DayEditor({ promise, problem }: { promise: PromiseView | null; problem:
       value={promise?.day ?? null}
       problem={problem}
       format={(v) => `${v + 1}`}
-      parse={(input) => {
-        const r = parseNumber(input, (v) =>
-          v < 1
-            ? "1日目以上を指定してください"
-            : promise && validatePersonField("day", v - 1, promise.day, { advanced }),
-        );
-        return r.ok ? { ok: true, value: r.value - 1 } : r;
-      }}
+      parse={(input) => parseDay(input, v => validatePersonField("day", v, promise?.day ?? 0, { advanced }))}
       apply={(v) => update((b) => writePromiseField(b, "day", v, { advanced }))}
       inputMode="numeric"
       // 🟢 場面が変わるたびに今日と比べ、違えば約束が消える
@@ -447,14 +439,6 @@ function DayEditor({ promise, problem }: { promise: PromiseView | null; problem:
 const PROMISE_ORDER = ["name", "look", "age", "blood"] as const;
 const RECORD_ORDER = ["name", "type", "day", "age", "blood"] as const;
 
-/** 名前のある相手ごとの注意（約束の外で変わる値など） */
-const PARTNER_NOTES: Readonly<Record<number, string>> = {
-  448: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
-  449: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
-  450: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
-  454: "読み込み直すとローラの印が消えるので、褒美が「掘り出し物」にならないことがあります",
-};
-
 const ageLabel = (v: number) => (v === AGE_UNKNOWN ? "？" : `${v}歳`);
 
 /** 年齢の選択肢（通常モードの範囲 0〜99 と「？」） */
@@ -470,18 +454,15 @@ const ageOptions: SelectOption[] = [
  * 空の約束の枠に約束を作る。相手の種類（セリフと戦闘力）が組を決める。
  * 名前・見た目と声・年齢・血液型は種類とは別々に効くので、約束の編集欄と同じ範囲で自由に選べる（初めはゲームが選ぶ候補の値）
  */
-function CreatePromiseForm({ problem }: { problem: string | null }) {
-  const { save } = useSave();
+function CreatePromiseForm({ problem, view }: { problem: string | null; view: YobaiView }) {
   const { tryWrite, error, setMessage } = useWrite();
   const { advanced } = useAdvancedMode();
-  const stage = save ? currentStage(save.working) : 0;
-  const day = save ? readU16(save.working, DATE_OFFSETS.dayIndex) : 0;
-  const [spec, setSpec] = useState<PromiseSpec>(() => defaultSpec(promisePartner(0x25)!, stage));
-  const partner = promisePartner(spec.type)!;
-  const blocked =
-    problem ?? (save ? createProblem(save.working) : "セーブファイルが読み込まれていません");
+  const { stage, today: day } = view.context;
+  const [spec, setSpec] = useState<PromiseSpec>(() => initialPromiseSpec(stage));
+  const partner = requirePromisePartner(spec.type);
+  const blocked = problem ?? view.context.createProblem;
   const invalid = validateSpec(spec, stage, { advanced });
-  const death = save ? partnerDeathWarning(save.working, spec.type) : null;
+  const death = view.context.deathWarnings.get(spec.type) ?? null;
   // 内容を変えたら、前に作ろうとしたときのエラーは消す
   const set = (patch: Partial<PromiseSpec>) => {
     setMessage(null);
@@ -495,7 +476,6 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
   const { place, layout } = specPlace(spec);
   const rowPlaces = [...new Set(rows.map((r) => r.place))].sort((a, b) => a - b);
   const placeChoices = advanced ? placeOptions : placeOptionsOf(rowPlaces);
-  const rowFor = (p: number, l: number) => rows.find((r) => r.place === p && r.layout === l);
   const layoutChoices = layoutOptionsOf(
     (advanced
       ? layoutsForPlace(place)
@@ -504,16 +484,13 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
   );
   /** 場所と配置を選ぶ。この相手の組にあればその組、なければ今の組のまま上書き */
   const choose = (p: number, l: number) => {
-    const r = rowFor(p, l);
-    set(r ? { row: r.index, place: undefined, layout: undefined } : { place: p, layout: l });
+    set(choosePromisePlace(spec, rows, p, l));
   };
-  /** その場所の組のうち、今の段階にいちばん近いもの。なければ家の人がいちばん少ない配置 */
+  /** その場所の組のうち、今の段階にいちばん近いもの。なければその場所の最初の配置 */
   const chooseAt = (p: number) => {
-    const r = rows
-      .filter((x) => x.place === p)
-      .sort((a, b) => Math.abs((a.stage ?? 0) - stage) - Math.abs((b.stage ?? 0) - stage))[0];
-    if (r) choose(r.place, r.layout);
-    else choose(p, layoutsForPlace(p)[0]);
+    const next = choosePromiseAt(spec, rows, p, stage);
+    if (next) set(next);
+    else setMessage({ error: true, text: "この場所で使える配置がありません" });
   };
 
   return (
@@ -536,11 +513,11 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
             note="場所と配置の組はこれで決まる。選ぶと、名前・見た目と声・年齢・血液型は、ゲームがその種類で選ぶ候補の値になる（そのあと別々に変えられる）"
             onChange={(v) => {
               setMessage(null);
-              setSpec(defaultSpec(promisePartner(Number(v))!, stage));
+              setSpec(defaultSpec(requirePromisePartner(Number(v)), stage));
             }}
           />
-          {!blocked && (!partner.checked || PARTNER_NOTES[spec.type]) && (
-            <p className="text-muted-foreground text-xs">{PARTNER_NOTES[spec.type] ?? ""}</p>
+          {!blocked && PARTNER_NOTES[spec.type] && (
+            <p className="text-muted-foreground text-xs">{PARTNER_NOTES[spec.type]}</p>
           )}
         </div>
         <SelectRow
@@ -551,7 +528,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
           problem={blocked}
           disabled={placeChoices.length <= 1}
           warning={
-            rowFor(place, layout) ? null : "この相手がゲームで約束する場所・配置ではありません"
+            findPromiseRow(rows, place, layout) ? null : "この相手がゲームで約束する場所・配置ではありません"
           }
           hint={
             advanced
@@ -662,13 +639,13 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
       }
     >
       <CardContent>
-        {promise && !promise.active ? (
-          <CreatePromiseForm key={save?.loadId} problem={problem} />
+        {view && promise && !promise.active ? (
+          <CreatePromiseForm key={save?.loadId} problem={problem} view={view} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-3">
-            <TypeEditor promise={promise} problem={problem} />
+            <TypeEditor promise={promise} problem={problem} view={view} />
             <PlaceLayoutEditor promise={promise} problem={problem} />
-            <DayEditor promise={promise} problem={problem} />
+            <DayEditor promise={promise} problem={problem} view={view} />
             {PROMISE_ORDER.map((field) => (
               <PersonFieldEditor
                 key={field}
@@ -806,7 +783,7 @@ function CountersCard({ view }: { view: YobaiView | null }) {
       <div className="grid gap-2 sm:grid-cols-2">
         {/* 🟢 段階（0x13E30）はゲーム内で数字として見えない内部の値なので出さない */}
         {/* 未読み込みのときは同じ行を「—」で出す */}
-        {YOBAI_COUNTERS.filter((c) => c.offset !== 0x13e30).map((c) => (
+        {YOBAI_COUNTERS.filter((c) => !c.hidden).map((c) => (
           <p key={c.offset}>
             {c.label}：{view?.counters.find((v) => v.offset === c.offset)?.value ?? "—"}
             <span className="text-muted-foreground ml-2 text-xs">{c.note}</span>

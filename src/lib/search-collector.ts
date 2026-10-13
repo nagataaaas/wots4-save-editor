@@ -14,6 +14,8 @@ export type SearchEntry = {
   label: string
   /** 箱そのもの（anchor へ飛べば箱がスクロールする）。false は欄・小見出しで、要素の data-search-key を探してスクロールする */
   box: boolean
+  /** 上級者モードのときだけ描かれる箱・欄。通常モードでは検索結果に出さない */
+  advanced?: true
 }
 
 export type SearchCollector = {

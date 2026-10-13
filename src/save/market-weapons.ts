@@ -15,7 +15,7 @@ import { readI16, readU16, readU32 } from './binary'
 import { type ViewStatus } from './field'
 import { checkLayout } from './layout'
 import { itemLabel } from './item-box'
-import { WEAPON_RECORD_BYTES, isEmptyWeapon, partId, readWeapon, type WeaponView } from './weapon'
+import { WEAPON_RECORD_BYTES, isEmptyWeapon, readWeapon, type WeaponView } from './weapon'
 import { BLADES, GRIPS, GUARDS, partName, type PartOption } from './weapon-ids'
 
 export const MARKET_WEAPON_OFFSET = 0x440d8
@@ -91,9 +91,9 @@ export type MarketOtherSummary = {
 
 const PART_TABLES: Record<Exclude<MarketOtherKey, 'item'>, readonly PartOption[]> = { blade: BLADES, guard: GUARDS, grip: GRIPS }
 
-/** 部品 ID（u16）から名前。表の値は 3 B のこともあるので、partId で ID に直して引く */
+/** 部品 ID（u16）から名前。表の選択肢の id で引く */
 function partLabel(key: Exclude<MarketOtherKey, 'item'>, id: number): string | null {
-  const hit = PART_TABLES[key].find((p) => partId(key, p.value, p.source) === id)
+  const hit = PART_TABLES[key].find((p) => p.id === id)
   return hit ? partName(hit) : null
 }
 

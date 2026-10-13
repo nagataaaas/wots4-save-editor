@@ -2,13 +2,14 @@ import { InfoTip } from "@/components/info-tip";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
-import { WEAPON_LIST_ANCHORS } from "@/features/belt/anchors";
+import { WEAPON_LIST_ANCHORS } from "@/features/weapon/anchors";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
 import { WEAPON_BAG_COUNT, WEAPON_BAG_OFFSET, readWeaponBag, weaponBagOffset } from "@/save/weapon-bag";
-import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
+import { CompactWeaponList } from "@/features/weapon/compact-weapon-list";
+import { WeaponIndexFields } from "@/features/weapon/weapon-index-fields";
 
 /** 武器袋の10本。帯刀と同じ欄を、細い一覧で編集する */
 export function WeaponBagPage() {
@@ -37,6 +38,7 @@ export function WeaponBagPage() {
           <CardDescription>行を押すと編集欄を開きます。</CardDescription>
         </CardHeader>
         <CardContent>
+          <WeaponIndexFields />
           {view ? (
             <CompactWeaponList
               key={k}

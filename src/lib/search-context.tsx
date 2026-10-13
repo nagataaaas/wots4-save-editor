@@ -1,6 +1,7 @@
 import { useContext, type ComponentProps, type ReactNode } from 'react'
 import { SearchPathContext } from '@/lib/search-collector'
 import { useSearchField } from '@/lib/search-hooks'
+import { useNavigationTarget } from './navigation-target-context'
 
 /** 中身の欄のパンくず（検索）に label を足す */
 export function SearchPath({ label, children }: { label: string | undefined; children: ReactNode }) {
@@ -11,7 +12,9 @@ export function SearchPath({ label, children }: { label: string | undefined; chi
 
 /** 1つの欄（項目名と入力を包む div）。名前を検索の索引に載せ、検索から飛ぶとこの div までスクロールする */
 export function SearchField({ label, ...props }: ComponentProps<'div'> & { label: string }) {
-  return <div data-search-key={useSearchField(label)} {...props} />
+  const key = useSearchField(label)
+  const ref = useNavigationTarget('fields', key)
+  return <div {...props} ref={ref} data-search-key={key} />
 }
 
 /**
@@ -20,8 +23,9 @@ export function SearchField({ label, ...props }: ComponentProps<'div'> & { label
  */
 export function SearchScope({ title, children, ...props }: ComponentProps<'div'> & { title: string }) {
   const key = useSearchField(title)
+  const ref = useNavigationTarget('fields', key)
   return (
-    <div data-search-key={key} {...props}>
+    <div {...props} ref={ref} data-search-key={key}>
       <SearchPath label={title}>{children}</SearchPath>
     </div>
   )

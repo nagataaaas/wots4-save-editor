@@ -39,7 +39,7 @@ export function CollapsibleCard({
   contentClassName,
   children,
 }: Props) {
-  const { id, open, setOpen } = useAnchoredOpen(anchor, defaultOpen)
+  const { id, ref, open, setOpen } = useAnchoredOpen(anchor, defaultOpen)
   useSearchBox(id, searchLabel)
 
   return (
@@ -49,6 +49,7 @@ export function CollapsibleCard({
       render={
         <Card
           id={id}
+          ref={ref}
           className={open ? 'scroll-mt-4 gap-0' : 'hover:bg-muted/40 scroll-mt-4 cursor-pointer gap-0'}
           onClick={(e) => {
             if (!open && !isOnButton(e)) setOpen(true)

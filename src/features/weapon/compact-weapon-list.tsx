@@ -49,13 +49,13 @@ function CompactWeaponRow({
   update: WeaponUpdate;
   badges?: ReactNode;
 }) {
-  const { id, open, setOpen } = useAnchoredOpen(WEAPON_ANCHORS.weapon(index));
+  const { id, ref, open, setOpen } = useAnchoredOpen(WEAPON_ANCHORS.weapon(index));
   const no = <span className="text-muted-foreground w-7 shrink-0 text-right text-xs tabular-nums">{index + 1}</span>;
   const offsetTip = <InfoTip offset={weapon.offset} />;
 
   if (weapon.empty) {
     return (
-      <li id={id} className="text-muted-foreground flex scroll-mt-4 items-center gap-2 border-b px-2 py-1 text-xs last:border-b-0">
+      <li ref={ref} id={id} className="text-muted-foreground flex scroll-mt-4 items-center gap-2 border-b px-2 py-1 text-xs last:border-b-0">
         <span className="size-4 shrink-0" aria-hidden />
         <AnchorLink id={id} />
         {no}
@@ -68,7 +68,7 @@ function CompactWeaponRow({
 
   const name = weapon.nameHidden.value ? "*****" : weapon.name.value || "（名前なし）";
   return (
-    <Collapsible open={open} onOpenChange={setOpen} render={<li id={id} className="scroll-mt-4 border-b last:border-b-0" />}>
+    <Collapsible open={open} onOpenChange={setOpen} render={<li ref={ref} id={id} className="scroll-mt-4 border-b last:border-b-0" />}>
       <div
         className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 px-2 py-1"
         onClick={(e) => {

@@ -1,7 +1,7 @@
 import type { SelectOption } from "@/components/select-options";
 import { EVENT_RECORDS, EVENT_RECORDS_SEEN, EVENT_STATES } from "@/save/scenario-events";
 
-/** 🟢 状態の値は 00〜05・FF で全部なので、上級者モードでも選択肢は同じ */
+/** 🟢 選べる状態の値は 00〜05・FF で全部なので、上級者モードでも選択肢は同じ（06 はチャートの判定にだけ使う値で、選択肢にしない） */
 export const stateOptions: SelectOption[] = EVENT_STATES.map((s) => ({
   value: String(s.value),
   // confirmed（書き込みでゲーム内の表示を確かめた値）でない値も、確度は出さずにそのまま選べる

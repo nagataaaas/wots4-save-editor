@@ -43,7 +43,7 @@ import {
   type Field,
   type ViewStatus,
 } from "./field";
-import { assertWritable, checkLayout } from "./layout";
+import { assertWritable } from "./layout";
 
 export const WEAPON_RECORD_BYTES = 0xa0;
 
@@ -275,12 +275,16 @@ function writeU24(bytes: Uint8Array, offset: number, value: number): void {
   writeU8(bytes, offset + 2, value >>> 16);
 }
 
-/** 選択肢の識別子 */
-export const partKey = (p: PartOption) => `${p.source}:${p.value}`;
+/**
+ * 選択肢の識別子。ID は表（partOptions の1つの一覧）の中で一意。
+ * 特殊武器の刃は通常の刃と ID が重なる（D-15）ので、別の識別子にして通常の刃の識別子で書けないようにする
+ */
+export const partKey = (p: PartOption) =>
+  p.tsRaw !== undefined && isSpecialBlade(p.tsRaw) ? `special:${p.id}` : String(p.id);
 
-/** 3 B／2 B の値から部品の ID（u16）を取り出す（chunks/weapon-record のパーツ：刃は下位 2 B、鍔は上位 2 B） */
-export function partId(kind: PartKind, raw: number, source: PartOption["source"]): number {
-  if (kind === "grip" || source === "ct") return raw;
+/** 読んだ 3 B／2 B の値から部品の ID（u16）を取り出す（chunks/weapon-record のパーツ：刃は下位 2 B、鍔は上位 2 B、柄は 2 B そのまま） */
+function partId(kind: PartKind, raw: number): number {
+  if (kind === "grip") return raw;
   return kind === "blade" ? raw & 0xffff : (raw >>> 8) & 0xffff;
 }
 
@@ -293,10 +297,10 @@ function findPart(
   list: readonly PartOption[],
   raw: number,
 ): { option: PartOption } | undefined {
-  const exact = list.find((p) => p.source === "ts" && p.value === raw);
+  const exact = list.find((p) => p.tsRaw === raw);
   if (exact) return { option: exact };
-  const id = kind === "grip" ? raw : partId(kind, raw, "ts");
-  const byId = list.find((p) => partId(kind, p.value, p.source) === id);
+  const id = partId(kind, raw);
+  const byId = list.find((p) => p.id === id);
   return byId && { option: byId };
 }
 
@@ -398,6 +402,17 @@ export function isEmptyWeapon(bytes: Uint8Array, offset: number): boolean {
   return true;
 }
 
+/** レコードの境界・空き・名前・魅力だけを検査する。表示用の完成武器照合は行わない。 */
+export function weaponRecordProblem(bytes: Uint8Array, offset: number, layoutProblem: string | null = null): string | null {
+  if (!Number.isInteger(offset) || offset < 0 || offset + WEAPON_RECORD_BYTES > bytes.byteLength)
+    throw new RangeError("ファイルが小さすぎて武器を読めません");
+  if (layoutProblem) return layoutProblem;
+  if (isEmptyWeapon(bytes, offset)) return null;
+  const name = readUtf16Fixed(bytes, offset + WEAPON_FIELDS.name, WEAPON_NAME_BYTES);
+  const charms = readCharms(bytes, offset + WEAPON_FIELDS.charms);
+  return fixedStringProblem(name, '武器名') ?? (charms.problem ? `魅力：${charms.problem}` : null);
+}
+
 export function readWeapon(
   bytes: Uint8Array,
   offset: number,
@@ -413,12 +428,9 @@ export function readWeapon(
   const special = isSpecialBlade(bladeValue);
 
   const nameRaw = readUtf16Fixed(bytes, at("name"), WEAPON_NAME_BYTES);
-  // レコード全体の妥当性（位置がずれていないか）。名前の終端と魅力で判定する
-  const nameProblem = fixedStringProblem(nameRaw, '武器名');
   const charms = readCharms(bytes, at("charms"));
-  const recordProblem =
-    layoutProblem ??
-    (empty ? null : (nameProblem ?? (charms.problem ? `魅力：${charms.problem}` : null)));
+  // レコード全体の妥当性（位置がずれていないか）。書き込み前の検査と同じ判定を使う
+  const recordProblem = weaponRecordProblem(bytes, offset, layoutProblem);
   const f = <T>(
     value: T,
     problem: string | null = null,
@@ -557,11 +569,11 @@ export function readWeapon(
 // 不正な値は例外にして、バイト列を変えない。
 
 function assertEditable(bytes: Uint8Array, offset: number): void {
+  // ファイルサイズが想定と違えば書かない（assertWritable が検査するので、weaponRecordProblem には渡さない）
   assertWritable(bytes, offset, WEAPON_RECORD_BYTES);
-  // ファイルサイズが想定と違えば書かない
-  const view = readWeapon(bytes, offset, checkLayout(bytes));
-  if (view.problem) throw new RangeError(view.problem);
-  if (view.empty) throw new RangeError("空き枠です");
+  if (isEmptyWeapon(bytes, offset)) throw new RangeError("空き枠です");
+  const problem = weaponRecordProblem(bytes, offset);
+  if (problem) throw new RangeError(problem);
 }
 
 export function writeWeaponName(bytes: Uint8Array, offset: number, text: string): void {
@@ -628,6 +640,9 @@ function completeWeaponWords(id: number, build: WeaponBuild): [number, number][]
   ];
 }
 
+const COMPLETE_WORDS = new Map(COMPLETE_WEAPONS.map(w => [w.id, completeWeaponWords(w.id, w.build)]));
+const COMPLETE_PART_WORDS = COMPLETE_WEAPONS.map(w => ({ id: w.id, words: COMPLETE_WORDS.get(w.id)?.filter(([at]) => at >= 0x02 && at <= 0x08) ?? [] }));
+
 /**
  * 指定武器に変更する：その完成武器のレコードに入る値（completeWeaponWords）をすべて書く。
  * - 書く位置：+0x00 完成武器ID、+0x02〜+0x09 部品（特殊武器は刃のあと FFFF × 3）、+0x0A〜+0x0F 固有武器の6バイト（U-9）、
@@ -636,13 +651,10 @@ function completeWeaponWords(id: number, build: WeaponBuild): [number, number][]
  * - 通常の武器と特殊武器の間でも変更できる。書いた値はゲームが書く値と同じ（✅ 読み）だが、ゲーム内で読めるかは要ゲーム内確認
  */
 export function writeCompleteWeapon(bytes: Uint8Array, offset: number, id: number): void {
-  assertWritable(bytes, offset, WEAPON_RECORD_BYTES);
+  assertEditable(bytes, offset);
   const option = COMPLETE_WEAPONS.find((w) => w.id === id);
   if (!option) throw new RangeError("構成が分からない完成武器です");
-  const view = readWeapon(bytes, offset);
-  if (view.problem) throw new RangeError(view.problem);
-  if (view.empty) throw new RangeError("空き枠です");
-  for (const [at, value] of completeWeaponWords(option.id, option.build))
+  for (const [at, value] of COMPLETE_WORDS.get(option.id) ?? [])
     writeU16(bytes, offset + at, value);
 }
 
@@ -650,7 +662,7 @@ export function writeCompleteWeapon(bytes: Uint8Array, offset: number, id: numbe
 export function matchesCompleteWeapon(bytes: Uint8Array, offset: number, id: number): boolean {
   const option = COMPLETE_WEAPONS.find((w) => w.id === id);
   if (!option) return false;
-  return completeWeaponWords(option.id, option.build).every(
+  return (COMPLETE_WORDS.get(option.id) ?? []).every(
     ([at, value]) => readU16(bytes, offset + at) === value,
   );
 }
@@ -660,10 +672,8 @@ export function matchesCompleteWeapon(bytes: Uint8Array, offset: number, id: num
  * 完成武器ID・名前の番号などは比べない
  */
 export function completeWeaponByParts(bytes: Uint8Array, offset: number): number | null {
-  const match = COMPLETE_WEAPONS.find((w) =>
-    completeWeaponWords(w.id, w.build)
-      .filter(([at]) => at >= 0x02 && at <= 0x08)
-      .every(([at, value]) => readU16(bytes, offset + at) === value),
+  const match = COMPLETE_PART_WORDS.find((w) =>
+    w.words.every(([at, value]) => readU16(bytes, offset + at) === value),
   );
   return match?.id ?? null;
 }
@@ -673,8 +683,8 @@ export function completeWeaponByParts(bytes: Uint8Array, offset: number): number
  * 特殊武器の刃は特殊武器の間だけ、通常の刃・鍔・柄は通常の武器の間だけで比べる
  */
 export function completeWeaponsUsingPart(kind: PartKind, option: PartOption): number[] {
-  const id = partId(kind, option.value, option.source);
-  const special = kind === "blade" && option.source === "ts" && isSpecialBlade(option.value);
+  const id = option.id;
+  const special = kind === "blade" && option.tsRaw !== undefined && isSpecialBlade(option.tsRaw);
   return COMPLETE_WEAPONS.filter(({ build }) => {
     if ((build.kind === "special") !== special) return false;
     if (kind === "blade") return build.blade === id;
@@ -709,12 +719,10 @@ export function isXUnknown(kind: PartKind, option: PartOption): boolean {
 
 /**
  * 刃の X（鞘の ID、chunks/weapon-record のパーツ）。null は X 不明（isXUnknown）。
- * 特殊武器の刃は 0xFFFF（鞘なし。[U] 2026-10-05）、[TS] の刃は x があればそれ、なければ 3 B 値の3バイト目
+ * 特殊武器の刃は 0xFFFF（鞘なし。[U] 2026-10-05）。表の読み込み時に完全な X へ正規化する
  */
 export function bladeX(option: PartOption): number | null {
-  if (option.source === "ct") return option.x ?? null;
-  if (isSpecialBlade(option.value)) return 0xffff;
-  return option.x ?? (option.value >>> 16) & 0xff;
+  return option.x ?? null;
 }
 
 /**
@@ -732,14 +740,12 @@ export function writeWeaponPart(
   kind: PartKind,
   key: string,
 ): void {
-  assertWritable(bytes, offset, WEAPON_RECORD_BYTES);
-  const view = readWeapon(bytes, offset);
-  if (view.problem) throw new RangeError(view.problem);
-  if (view.empty) throw new RangeError("空き枠です");
-  const option = partOptions(kind, view.special).find((p) => partKey(p) === key);
+  assertEditable(bytes, offset);
+  const special = isSpecialBlade(readU24(bytes, offset + WEAPON_FIELDS.blade));
+  const option = partOptions(kind, special).find((p) => partKey(p) === key);
   if (!option) throw new RangeError("書き込めないパーツです");
 
-  const id = partId(kind, option.value, option.source);
+  const id = option.id;
   if (kind === "grip") return writeU16(bytes, offset + WEAPON_FIELDS.grip, id);
   if (kind === "guard") return writeU16(bytes, offset + WEAPON_FIELDS.guard + 1, id);
   writeU16(bytes, offset + WEAPON_FIELDS.blade, id);

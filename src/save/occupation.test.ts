@@ -12,6 +12,8 @@ import {
   OCCUPATION_STATE_COUNT,
   OCCUPATION_STATE_OFFSET,
   occupationStateOffset,
+  occupationStateKind,
+  occupationValueForKind,
   readOccupations,
   syncClearCount,
   validateOccupationState,
@@ -70,6 +72,21 @@ describe("🟢 なりわいの表 datatable/occupation/occupation.csv", () => {
 });
 
 describe("なりわいの状態の表 0x33A4〜 chunks/occupation", () => {
+  it("✅ クリア回数を維持し、🔶 未クリア・未出現だけを1回にする一括変更", () => {
+    const bytes = makeSave();
+    writeU16(bytes, occupationStateOffset(171), 0);
+    writeU16(bytes, occupationStateOffset(172), OCCUPATION_NOT_APPEARED);
+    writeU16(bytes, occupationStateOffset(173), 7);
+    writeOccupationStates(bytes, [171, 172, 173], "cleared");
+    const view = readOccupations(bytes);
+    expect([171, 172, 173].map(id => view.states[id])).toEqual([1, 1, 7]);
+    const before = bytes.slice();
+    writeOccupationStates(bytes, [171, 172, 173], "cleared");
+    expect(bytes.every((value, index) => value === before[index])).toBe(true);
+    expect(occupationStateKind(OCCUPATION_NOT_APPEARED)).toBe("hidden");
+    expect(occupationStateKind(0)).toBe("open");
+    expect(occupationValueForKind("cleared", 7)).toBe(7);
+  });
   it("✅ 状態[id] = 0x33A4 + id×2（209 は 0x3546、212 は 0x354C）", () => {
     expect(occupationStateOffset(209)).toBe(0x3546);
     expect(occupationStateOffset(212)).toBe(0x354c);

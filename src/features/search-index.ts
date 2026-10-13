@@ -13,6 +13,8 @@ export type SearchItem = {
   crumbs: string[]
   /** crumbs を normalizeForSearch したもの（検索のたびに作り直さない） */
   normalized: string[]
+  /** 上級者モードのときだけ描かれる箱・欄（SearchEntry.advanced） */
+  advanced: boolean
 }
 
 /** 集めた名前（search-index.generated.json）に、画面そのものと、フォルダ・画面の名前のパンくずを足す */
@@ -26,16 +28,21 @@ export function toSearchItems(entries: readonly SearchEntry[]): SearchItem[] {
     const inside = box.every((b, i) => e.path[i] === b) ? e.path.slice(box.length) : e.path
     return [...inside, e.label]
   }
-  const add = (section: SectionId, anchor: string, field: string[] | null, crumbs: string[]) =>
-    items.push({ section, anchor, field, crumbs, normalized: crumbs.map(normalizeForSearch) })
+  const add = (section: SectionId, anchor: string, field: string[] | null, crumbs: string[], advanced = false) =>
+    items.push({ section, anchor, field, crumbs, normalized: crumbs.map(normalizeForSearch), advanced })
   for (const s of sections) {
     const head = s.folder ? [s.folder, s.label] : [s.label]
     add(s.id, '', null, head)
     for (const e of entries)
       if (e.section === s.id)
-        add(s.id, e.anchor, e.box ? null : relative(e), [...head, ...e.path, e.label])
+        add(s.id, e.anchor, e.box ? null : relative(e), [...head, ...e.path, e.label], e.advanced === true)
   }
   return items
+}
+
+/** 今のモードで画面に描かれる項目だけにする。上級者モードだけの箱・欄は、通常モードでは飛んでも見つからない */
+export function itemsForMode(items: readonly SearchItem[], advanced: boolean): readonly SearchItem[] {
+  return advanced ? items : items.filter((i) => !i.advanced)
 }
 
 let cache: Promise<SearchItem[]> | null = null

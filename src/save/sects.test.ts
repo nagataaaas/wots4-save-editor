@@ -35,7 +35,7 @@ import {
   writeSectValues,
   writeSkillPoints,
 } from './sects'
-import { STANCE_SKILLS, findSect, findSkillSheet } from './master/sect-data'
+import { SECTS, STANCE_SKILLS, findSect, findSkillSheet } from './master/sect-data'
 
 /** 🟢 鬼怒川流剣術（ID 51）の 1つめの技の表は 29（構え 3 脇） */
 const SHEET = 29
@@ -157,6 +157,18 @@ describe('learnSheetSkills', () => {
     learnSectSkills(b, 43)
     expect(readI16(b, sheetStateOffset(1))).toBe(sheet)
     expect(readU16(b, sheetStateOffset(1) + 2)).toBeGreaterThan(0)
+  })
+
+  it('🟢 枠がない技の表が2つ以上あっても、1回の書き込みで別々の空き枠に割り当てる', () => {
+    const b = makeSave()
+    const used = new Set(readSects(b).sheetSlots.map((s) => s.sheetId))
+    const sect = SECTS.find((s) => s.sheets.length >= 2 && s.sheets.every((id) => !used.has(id)))!
+    learnSectSkills(b, sect.id)
+    const slots = readSects(b).sheetSlots
+    const assigned = sect.sheets.map((id) => slots.findIndex((s) => s.sheetId === id))
+    expect(assigned.every((i) => i >= 0)).toBe(true)
+    expect(new Set(assigned).size).toBe(sect.sheets.length)
+    expect(readSects(b).problem).toBeNull()
   })
 
   it('🟢 状態 3 の技を対象にすると 1 にする。構えごとの状態は 2 を 1 で上書きしない', () => {

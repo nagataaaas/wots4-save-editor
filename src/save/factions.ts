@@ -126,6 +126,16 @@ export function validateFactionValue(
 /** 大寄せでルートに入れる友好度（行0 − 行1）の下限。✅ [U] 書き換えで5通り試した */
 export const ROUTE_THRESHOLD = 3;
 
+/** ✅ 友好度の差、🟢 幕府の生死条件を合わせた判定。 */
+export function factionRouteStatus(view: FactionsView, col: number) {
+  return {
+    eligible: routeEligible(view.values, col, view.moro),
+    friendly: view.values[0][col], opposed: view.values[1][col],
+    affinity: view.values[0][col] - view.values[1][col],
+    moroDead: col === 0 && view.moro === MORO_DEAD,
+  };
+}
+
 /** 茂呂の状態（chunks/characters）。1＝死亡のとき大寄せで幕府ルートに入れない（🟢） */
 export const MORO_OFFSET = CHARACTER_STATUS.moro.offset;
 export const MORO_DEAD = CHARACTER_DEAD;

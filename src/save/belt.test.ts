@@ -22,10 +22,12 @@ import {
   completeWeaponsUsingPart,
   completeWeaponsUsingSheath,
   matchesCompleteWeapon,
+  partKey,
   writeCompleteWeapon,
   decodeTitle,
   encodeTitle,
   isXUnknown,
+  weaponRecordProblem,
   readWeapon,
   validateWeaponNumber,
   writeWeaponCharms,
@@ -39,9 +41,14 @@ import {
   writeWeaponType,
 } from './weapon'
 
-/** 選択肢の識別子（partKey） */
-const ts = (v: number) => `ts:${v}`
-const ct = (v: number) => `ct:${v}`
+/** [TS] の保存値（刃・鍔は 3 B、柄は 2 B）から選択肢の識別子（partKey）を引く。表にない値は、どの選択肢にも当たらない識別子 */
+const ts = (raw: number) => {
+  const hits = [BLADES, SPECIAL_BLADES, GUARDS, GRIPS].flat().filter((p) => p.tsRaw === raw)
+  if (hits.length > 1) throw new Error(`保存値 ${raw.toString(16)} が複数の表にあります`)
+  return hits[0] ? partKey(hits[0]) : `none:${raw}`
+}
+/** ID（u16）から選択肢の識別子（partKey） */
+const ct = (id: number) => partKey({ ...BLADES[0], id })
 
 function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
   const out: number[] = []
@@ -88,6 +95,27 @@ function addSecond(b: Uint8Array): void {
 }
 
 describe('武器レコード（合成）', () => {
+  it('軽いレコード検査は名前・魅力・空きの判定で表示用の読み出しと一致する', () => {
+    for (const corrupt of [() => {}, (bytes: Uint8Array) => bytes.fill(0x41, beltOffset(0) + WEAPON_FIELDS.name, beltOffset(0) + WEAPON_FIELDS.name + 40),
+      (bytes: Uint8Array) => { bytes[beltOffset(0) + WEAPON_FIELDS.charms] = 0xfe }]) {
+      const bytes = makeSave();
+      corrupt(bytes);
+      expect(weaponRecordProblem(bytes, beltOffset(0))).toBe(readWeapon(bytes, beltOffset(0)).problem);
+    }
+    const bytes = makeSave();
+    expect(weaponRecordProblem(bytes, beltOffset(1))).toBeNull();
+    expect(() => weaponRecordProblem(bytes, bytes.length - 1)).toThrow();
+    // 配置の問題は名前・魅力より先に返す
+    expect(readWeapon(bytes, beltOffset(0), 'サイズが違います').problem).toBe('サイズが違います');
+    expect(weaponRecordProblem(bytes, beltOffset(0), 'サイズが違います')).toBe('サイズが違います');
+    // 空き枠は名前が壊れていても問題にしない
+    const empty = makeSave();
+    const e = beltOffset(2);
+    empty.fill(0xff, e + WEAPON_FIELDS.blade, e + WEAPON_FIELDS.blade + 8);
+    empty.fill(0x41, e + WEAPON_FIELDS.name, e + WEAPON_FIELDS.name + 40);
+    expect(readWeapon(empty, e)).toMatchObject({ empty: true, problem: null });
+    expect(weaponRecordProblem(empty, e)).toBeNull();
+  });
   it('空き枠は編集しない', () => {
     const b = makeSave()
     const v = readBelt(b)
@@ -290,8 +318,8 @@ describe('武器レコード（合成）', () => {
 
   it('❓ U-3 案B（ユーザー判断 2026-10-05）：X 不明の [CT] の刃は今はない。x が null の刃だけが X 不明になる', () => {
     expect(BLADES.filter((p) => isXUnknown('blade', p))).toEqual([])
-    expect(isXUnknown('blade', { source: 'ct', value: 0x999, name: '中道刀', x: null })).toBe(true)
-    expect(isXUnknown('guard', { source: 'ct', value: 0x999, name: '中道刀' })).toBe(false)
+    expect(isXUnknown('blade', { source: 'ct', id: 0x999, name: '中道刀', x: null })).toBe(true)
+    expect(isXUnknown('guard', { source: 'ct', id: 0x999, name: '中道刀' })).toBe(false)
   })
 
   it('通常パーツを刀と槍に分ける（[CT] の英語名「Spear …」。焔魔・霜柱・立奈美・藤奈美は [U] でも槍）', () => {
@@ -320,7 +348,7 @@ describe('武器レコード（合成）', () => {
     const missing = BLADES.filter((p) => {
       if (p.source === 'ct') return p.x == null || !ids.has(p.x)
       // [TS] の 3 B 値は X の下位バイトだけを持つ（上位バイトは鍔の 3 B の先頭）
-      const low = (p.value >>> 16) & 0xff
+      const low = ((p.tsRaw ?? 0) >>> 16) & 0xff
       return !SHEATHS.some((s) => (s.id & 0xff) === low)
     })
     expect(missing.map((p) => p.name)).toEqual([])
@@ -387,7 +415,8 @@ describe('武器レコード（合成）', () => {
     writeWeaponPart(b, o, 'blade', ts(0x260136))
     expect([...b.subarray(o + 0x02, o + 0x05)]).toEqual([0x36, 0x01, 0x26])
     expect(readWeapon(b, o).blade).toMatchObject({ value: { label: '見栄春', key: ts(0x260136) }, warnings: [] })
-    expect(() => writeWeaponPart(b, o, 'blade', ct(0x136))).toThrow()
+    // 識別子は ID だけで決まる（[TS] の値と CT の ID で別の選択肢にならない）
+    expect(ct(0x136)).toBe(ts(0x260136))
   })
 
   it('U-13 案A（ユーザー判断 2026-10-05）：CT の刃 305〜316 は −1 した ID。[U] ゲーム内で組み立てた武器のバイト列を正とする', () => {
@@ -780,11 +809,11 @@ describe('部品を使う完成武器（パーツ一覧の画像）', () => {
   })
 
   it('🟢 中道刀の鍔（0x0D）は中道刀を含み、特殊武器は含まない。特殊武器の刃は特殊武器だけを引く', () => {
-    const guard = GUARDS.find((p) => p.source === 'ts' && ((p.value >>> 8) & 0xffff) === 0x0d)!
+    const guard = GUARDS.find((p) => p.id === 0x0d)!
     const usedBy = completeWeaponsUsingPart('guard', guard)
     expect(usedBy).toContain(0x0002)
     expect(usedBy.every((id) => COMPLETE_WEAPONS.find((w) => w.id === id)!.build.kind === 'normal')).toBe(true)
-    const jacqueline = SPECIAL_BLADES.find((p) => (p.value & 0xffff) === 0)!
+    const jacqueline = SPECIAL_BLADES.find((p) => p.id === 0)!
     expect(completeWeaponsUsingPart('blade', jacqueline)).toEqual([9])
   })
 })

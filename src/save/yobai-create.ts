@@ -22,20 +22,18 @@
 // 🟢 名前のある相手が死んでいても、約束を止める判定はない。エディタでは警告だけ出す。
 //
 // 書くのは +0x04 が FFFFFFFF（約束なし）の枠だけ。ファイルサイズが 0x48BB0 のときだけ書く。
-import { readU16, readU32, readU8 } from "./binary";
+import { readU16 } from "./binary";
 import { type EditOpts } from "./field";
-import { assertWritable, checkLayout } from "./layout";
+import { assertWritable } from "./layout";
 import { DATE_OFFSETS } from "./scenario-date";
-import { characterStatusForPromise, CHARACTER_DEAD } from "./flags/characters";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_ROW_TABLE } from "./master/dataset/night-visit-row";
 import { NPC_NAMES } from "./master/npc-names";
-import { PLACE_LAYOUTS, PROMISE_EMPTY, PROMISE_OFFSET, PROMISE_CODEC, STAGE_OFFSET, validatePersonValue } from "./yobai";
+import { PLACE_LAYOUTS, PROMISE_OFFSET, PROMISE_CODEC, validatePersonValue, layoutsForPlace, currentStage, createProblem } from "./yobai";
+export { STAGE_MAX, currentStage, createProblem, partnerDeathWarning } from "./yobai";
 
 /** 書くバイト数（+0x00〜+0x29） */
 export const PROMISE_WRITE_LENGTH = 0x2a;
-/** 🟢 段階（0〜3。位置は yobai.ts の STAGE_OFFSET） */
-export const STAGE_MAX = 3;
 
 export type PromiseRow = {
   index: number;
@@ -108,16 +106,53 @@ export function promisePartner(type: number): PromisePartner | undefined {
   return PROMISE_PARTNERS.find((p) => p.type === type);
 }
 
-/** 名前のある相手が死んでいれば警告を返す（🟢 ゲームは約束を止めない） */
-export function partnerDeathWarning(bytes: Uint8Array, type: number): string | null {
-  const status = characterStatusForPromise(type);
-  if (!status || readU8(bytes, status.offset) !== CHARACTER_DEAD) return null;
-  return `${promisePartner(type)?.label ?? type} は死亡しています。夜這いの場に相手が出るかは確かめていません`;
+export function requirePromisePartner(type: number): PromisePartner {
+  const partner = promisePartner(type);
+  if (!partner) throw new RangeError("約束できる相手の種類ではありません");
+  return partner;
 }
 
-/** いまの段階（0x13E30）。範囲外は 0〜3 に丸める */
-export function currentStage(bytes: Uint8Array): number {
-  return Math.min(readU32(bytes, STAGE_OFFSET), STAGE_MAX);
+/** 🟢 名前のある相手の種類と、約束に付随する注意。 */
+export const SPECIAL_PARTNERS = { mayu: 448, chika: 449, yuri: 450, laura: 454 } as const;
+export const PARTNER_NOTES: Readonly<Record<number, string>> = {
+  [SPECIAL_PARTNERS.mayu]: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
+  [SPECIAL_PARTNERS.chika]: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
+  [SPECIAL_PARTNERS.yuri]: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
+  [SPECIAL_PARTNERS.laura]: "読み込み直すとローラの印が消えるので、褒美が「掘り出し物」にならないことがあります",
+};
+/** 🟢 初めの相手は女中（chunks/night-visit）。 */
+export const DEFAULT_PROMISE_PARTNER_TYPE = 0x25;
+export function initialPromiseSpec(stage: number): PromiseSpec {
+  return defaultSpec(requirePromisePartner(DEFAULT_PROMISE_PARTNER_TYPE), stage);
+}
+
+export function layoutForPlace(place: number, current: number): number {
+  const layouts = layoutsForPlace(place);
+  const layout = layouts.includes(current) ? current : layouts[0];
+  if (layout === undefined) throw new RangeError("この場所で使える配置がありません");
+  return layout;
+}
+
+/** 選べる組（rowsFor）のうち、場所と配置が一致する組 */
+export function findPromiseRow(rows: readonly PromiseRow[], place: number, layout: number): PromiseRow | undefined {
+  return rows.find((r) => r.place === place && r.layout === layout);
+}
+
+/** 場所と配置を選ぶ。この相手の組にあればその組、なければ今の組のまま場所と配置だけを上書きする */
+export function choosePromisePlace(spec: PromiseSpec, rows: readonly PromiseRow[], place: number, layout: number): PromiseSpec {
+  const row = findPromiseRow(rows, place, layout);
+  return { ...spec, ...(row ? { row: row.index, place: undefined, layout: undefined } : { place, layout }) };
+}
+
+/**
+ * 場所だけを選ぶ。その場所の組のうち今の段階にいちばん近いもの、なければその場所の最初の配置。
+ * 組も配置もない場所なら null（選べない場所）
+ */
+export function choosePromiseAt(spec: PromiseSpec, rows: readonly PromiseRow[], place: number, stage: number): PromiseSpec | null {
+  const row = rows.filter(r => r.place === place)
+    .sort((a, b) => Math.abs((a.stage ?? 0) - stage) - Math.abs((b.stage ?? 0) - stage))[0];
+  const layout = row?.layout ?? layoutsForPlace(place)[0];
+  return layout === undefined ? null : choosePromisePlace(spec, rows, place, layout);
 }
 
 /** 選べる組。名前のある相手は決まった1行。町の人はまとまりの行のうち、通常モードでは段階 stage 以下のもの */
@@ -201,14 +236,6 @@ export function randomSpec(partner: PromisePartner, stage: number, rand: () => n
     age: pick(ageCandidates(partner)),
     blood: pick(bloodCandidates(partner)),
   };
-}
-
-/** 約束の枠の検証。約束を作れるなら null */
-export function createProblem(bytes: Uint8Array): string | null {
-  const layout = checkLayout(bytes);
-  if (layout) return layout;
-  if (PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, 'type') !== PROMISE_EMPTY) return "すでに約束があります（空の枠にだけ作れます）";
-  return null;
 }
 
 /**

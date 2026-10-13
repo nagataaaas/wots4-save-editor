@@ -48,6 +48,13 @@ export type OccupationView = ViewStatus & {
 
 const isValidState = (v: number) => v === OCCUPATION_NOT_APPEARED || v <= OCCUPATION_CLEAR_MAX;
 
+export type OccupationStateKind = "hidden" | "open" | "cleared";
+/** ✅ FFFF とクリア回数、🔶 0＝出た・未クリア（chunks/occupation）。 */
+export const occupationStateKind = (value: number): OccupationStateKind =>
+  value === OCCUPATION_NOT_APPEARED ? "hidden" : value === 0 ? "open" : "cleared";
+export const occupationValueForKind = (kind: OccupationStateKind, current: number): number =>
+  kind === "hidden" ? OCCUPATION_NOT_APPEARED : kind === "open" ? 0 : occupationStateKind(current) === "cleared" ? current : 1;
+
 export function sumClears(states: readonly number[]): number {
   return states.reduce((sum, v) => (v === OCCUPATION_NOT_APPEARED ? sum : sum + v), 0);
 }
@@ -99,16 +106,17 @@ export function writeOccupationState(bytes: Uint8Array, id: number, value: numbe
 }
 
 /** ids の状態をまとめて書く（通常モードの範囲） */
-export function writeOccupationStates(bytes: Uint8Array, ids: readonly number[], value: number): void {
+export function writeOccupationStates(bytes: Uint8Array, ids: readonly number[], value: number | OccupationStateKind): void {
   assertWritable(bytes);
   const view = readOccupations(bytes);
   if (view.problem) throw new RangeError(view.problem);
   const offsets = ids.map(occupationStateOffset);
-  for (const id of ids) {
-    const problem = validateOccupationState(id, value, view.states[id], { advanced: false });
+  const values = ids.map(id => typeof value === "number" ? value : occupationValueForKind(value, view.states[id]));
+  for (const [i, id] of ids.entries()) {
+    const problem = validateOccupationState(id, values[i], view.states[id], { advanced: false });
     if (problem) throw new RangeError(problem);
   }
-  for (const offset of offsets) writeU16(bytes, offset, value);
+  for (const [i, offset] of offsets.entries()) writeU16(bytes, offset, values[i]);
 }
 
 /** クリア数（0x433A6）を状態の表の合計に揃える */

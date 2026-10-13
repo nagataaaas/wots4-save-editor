@@ -33,10 +33,10 @@ export function AnchoredCard({
   children,
   ...props
 }: Omit<ComponentProps<typeof Card>, 'title'> & { anchor: string } & HeaderProps & TitleProps) {
-  const { id } = useAnchor(anchor)
+  const { id, ref } = useAnchor(anchor)
   useSearchBox(id, searchLabel)
   return (
-    <Card id={id} className={cn('scroll-mt-4', className)} {...props}>
+    <Card {...props} ref={ref} id={id} className={cn('scroll-mt-4', className)}>
       <AnchorScope.Provider value={id}>
         <SearchPath label={searchLabel}>
           {title && (

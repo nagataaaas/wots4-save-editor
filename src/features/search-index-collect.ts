@@ -22,7 +22,7 @@ const NO_SAVE: SaveContextValue = {
   historyVersion: 0,
 }
 
-function wrap(section: SectionId, collector: SearchCollector, page: ComponentType): ReactNode {
+function wrap(section: SectionId, collector: SearchCollector, page: ComponentType, advanced: boolean): ReactNode {
   const navigation: NavigationValue = { go: () => {}, section, anchor: null, field: null, seq: 0 }
   return createElement(
     NavigationContext.Provider,
@@ -32,7 +32,7 @@ function wrap(section: SectionId, collector: SearchCollector, page: ComponentTyp
       { value: NO_SAVE },
       createElement(
         AdvancedModeContext.Provider,
-        { value: { advanced: false, setAdvanced: () => {} } },
+        { value: { advanced, setAdvanced: () => {} } },
         createElement(SearchCollectorContext.Provider, { value: collector }, createElement(page)),
       ),
     ),
@@ -49,8 +49,12 @@ export function collectSearchEntries(renderToStaticMarkup: (node: ReactNode) => 
     const page = pages[s.id]
     if (!page) continue
     const collector: SearchCollector = { section: s.id, entries: [], seen: new Set() }
-    renderToStaticMarkup(wrap(s.id, collector, page))
-    entries.push(...collector.entries)
+    // 上級者モードだけの欄も拾う。同じ collector の seen で重複を除き、上級者モードで初めて出たものに印を付ける
+    // （通常モードでは描かれないので、検索結果に出さない。search-dialog.tsx）
+    renderToStaticMarkup(wrap(s.id, collector, page, false))
+    const normalCount = collector.entries.length
+    renderToStaticMarkup(wrap(s.id, collector, page, true))
+    entries.push(...collector.entries.map((e, i) => (i < normalCount ? e : { ...e, advanced: true as const })))
   }
   return entries
 }

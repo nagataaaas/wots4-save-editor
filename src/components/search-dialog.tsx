@@ -2,7 +2,8 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { loadSearchIndex, searchItems, type SearchItem } from '@/features/search-index'
+import { itemsForMode, loadSearchIndex, searchItems, type SearchItem } from '@/features/search-index'
+import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { errorMessage } from '@/lib/error-message'
 import { useNavigation } from '@/lib/navigation-context'
 
@@ -14,6 +15,7 @@ const itemKey = (item: SearchItem) => `${item.section}\u001e${item.anchor}\u001e
 /** トップバー右の虫眼鏡。箱の見出し・小見出し・欄の名前を部分一致で探し、選ぶとそこへ移動する。Ctrl+K（⌘K）でも開く */
 export function SearchDialog() {
   const { go } = useNavigation()
+  const { advanced } = useAdvancedMode()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [index, setIndex] = useState<SearchItem[] | null>(null)
@@ -54,7 +56,7 @@ export function SearchDialog() {
     }
   }, [open, index])
 
-  const hits = useMemo(() => (index ? searchItems(index, query) : []), [index, query])
+  const hits = useMemo(() => (index ? searchItems(itemsForMode(index, advanced), query) : []), [index, advanced, query])
 
   function select(item: SearchItem) {
     setOpen(false)

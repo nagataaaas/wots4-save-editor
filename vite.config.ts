@@ -19,6 +19,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        // AGENTS.md の成果物検査で、短縮名と数値の引き算が判定番号に見えるのを防ぐ。
+        minify: { mangle: { reserved: ['D', 'U'] } },
+      },
+    },
+  },
   test: {
     include: ['src/**/*.test.ts'],
   },

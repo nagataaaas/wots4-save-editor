@@ -44,6 +44,13 @@ export const EVENT_RECORD_OFFSET = 0x3838 // 🔶 chunks/event-chart
 export const EVENT_COUNT = 166 // 🟢 chunks/event-chart（通し番号 166 から重要人物の状態）
 
 /**
+ * 状態（A）・記録（B）のうち、ほかのモジュールが判定に使う値。
+ * failedAlternate（06）は 🟢 チャートで 05 と同じ失敗の印になる値。選択肢（EVENT_STATES）には入れず、読み込み時も妥当な値とみなさない
+ */
+export const EVENT_STATE_VALUES = { inProgress: 0x03, success: 0x04, failed: 0x05, failedAlternate: 0x06 } as const
+export const EVENT_RECORD_SHOWN = 0x04
+
+/**
  * 周回中の状態（A）。FF・05 は書き込みでゲーム内の表示を確かめた（✅ [U]）。
  * 01〜04 の意味は 🟢（chunks/event-chart）。00 は ❓ 書き込みでの表示は未確認
  */
@@ -52,9 +59,9 @@ export const EVENT_STATES = [
   { value: 0xff, label: '未到達（初期状態）' }, // 🔶 FF の呼び名は仮。00 との違いは ❓
   { value: 0x01, label: '導入を見た' },
   { value: 0x02, label: '断った・保留した' },
-  { value: 0x03, label: '引き受けた・進行中' },
-  { value: 0x04, label: '成功' },
-  { value: 0x05, label: '失敗' },
+  { value: EVENT_STATE_VALUES.inProgress, label: '引き受けた・進行中' },
+  { value: EVENT_STATE_VALUES.success, label: '成功' },
+  { value: EVENT_STATE_VALUES.failed, label: '失敗' },
 ] as const
 
 /**
@@ -63,11 +70,11 @@ export const EVENT_STATES = [
  */
 export const EVENT_RECORDS = [
   { value: 0xff, label: '名前を隠す（成功なら出る）' },
-  { value: 0x04, label: '名前を出す' },
+  { value: EVENT_RECORD_SHOWN, label: '名前を出す' },
 ] as const
 
 /** 読み込み時に妥当とみなす値。EVENT_STATES と同じ */
-const PLAUSIBLE_STATES = new Set([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0xff])
+const PLAUSIBLE_STATES = new Set<number>(EVENT_STATES.map(s => s.value))
 
 /** 名前の付いたイベント1件。名前はイベントの表（master/event-names.ts）から添字で引く（eventNameOf） */
 export type NamedEvent = {

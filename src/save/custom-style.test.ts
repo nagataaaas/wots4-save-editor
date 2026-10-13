@@ -249,6 +249,19 @@ describe('編集と削除', () => {
     expect(readI16(b, SCROLL_HELD_OFFSET + 2)).toBe(-1)
     expect(b.slice(CUSTOM_OFFSET + 80, CUSTOM_OFFSET + 160).every((x) => x === 0)).toBe(true)
   })
+
+  it('🟢 構えが2つの俺流を消すと、2つ目の技の表も前に詰めた位置で消え、ほかの技の表はバイトごと残る', () => {
+    const b = withPlayerStyle()
+    addCustomStance(b, 1000, 3, [0], { advanced: true })
+    expect(readCustomStyles(b).sheets.map((s) => s.id)).toEqual([4003, 2000, 2001])
+    deleteCustomStyle(b, 1000)
+    const v = readCustomStyles(b)
+    expect(v.problem).toBeNull()
+    expect(v.styles.map((s) => s.id)).toEqual([2003])
+    expect(v.sheets.map((s) => s.id)).toEqual([4003])
+    expect(readU16(b, CUSTOM_SHEET_COUNT_OFFSET)).toBe(1)
+    expect([...b.subarray(CUSTOM_SHEET_OFFSET, CUSTOM_SHEET_OFFSET + SHEET_4003.length)]).toEqual([...SHEET_4003])
+  })
 })
 
 describe('initialStanceSkills', () => {

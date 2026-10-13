@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
-import { WEAPON_LIST_ANCHORS } from "@/features/belt/anchors";
+import { WEAPON_LIST_ANCHORS } from "@/features/weapon/anchors";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
+import { CompactWeaponList } from "@/features/weapon/compact-weapon-list";
+import { WeaponIndexFields } from "@/features/weapon/weapon-index-fields";
 import { formatOffset, formatWarnings } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
@@ -142,6 +143,7 @@ export function WeaponChestPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <WeaponIndexFields />
           {weapons ? (
             <CompactWeaponList
               key={save?.loadId ?? 0}

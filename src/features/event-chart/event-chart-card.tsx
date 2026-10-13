@@ -2,11 +2,10 @@ import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "r
 import { SelectRow } from "@/components/select-row";
 import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
-import { EVENTS_ANCHORS } from "@/features/scenario/anchors";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent } from "@/components/ui/popover";
-import { recordOptions, stateOptions } from "@/features/scenario/event-options";
+import { recordOptions, stateOptions } from "./event-options";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
 import { useWrite } from "@/lib/use-write";
@@ -87,6 +86,7 @@ const MASKED = { fill: "#7A7A7A", stroke: "#111111", text: "#D4D4D4" };
  * top はチャートの上（凡例の前）に並べる欄（真ルート）、bottom はチャートの下に並べる欄（一括設定）
  */
 export function EventChartCard({
+  anchor,
   events,
   counts,
   stage,
@@ -94,6 +94,7 @@ export function EventChartCard({
   top,
   bottom,
 }: {
+  anchor: string;
   events: EventsView | null;
   counts: CycleCountsView | null;
   /** 段階（0x0010）。null なら紫の箱を描かない */
@@ -123,7 +124,7 @@ export function EventChartCard({
 
   return (
     <AnchoredCard
-      anchor={EVENTS_ANCHORS.chart}
+      anchor={anchor}
       title="イベントチャート"
       description={
         <>
@@ -358,16 +359,20 @@ function ChartCanvas({
               strokeDasharray="6 4"
             />
           )}
-          {CHART_FRAMES.map((f) => (
-            <FrameShape
-              key={f.id}
-              frame={f}
-              look={view.frames.get(f.id)!}
-              selected={f.id === selected}
-              revealName={revealNames}
-              onSelect={() => setSelected(f.id)}
-            />
-          ))}
+          {CHART_FRAMES.map((f) => {
+            const look = view.frames.get(f.id);
+            if (!look) return null;
+            return (
+              <FrameShape
+                key={f.id}
+                frame={f}
+                look={look}
+                selected={f.id === selected}
+                revealName={revealNames}
+                onSelect={() => setSelected(f.id)}
+              />
+            );
+          })}
         </svg>
         {selectedFrame && (
           <div

@@ -16,6 +16,7 @@ import {
   TOWNSFOLK_PEOPLE,
   TOWNSFOLK_START,
   UNUSED_OCCUPATION_FLAGS,
+  isPersonDead,
   occupationFlagOffset,
   personName,
   personOffset,
@@ -76,6 +77,13 @@ describe('🟢 町の人の状態 0x011C〜0x0B33 chunks/townsfolk', () => {
       .filter((x) => x.dead)
       .map((x) => x.p)
     expect(dead).toEqual([21, 30, 62])
+  })
+
+  it('🟢 isPersonDead は view から bit0 だけを見る（ほかのビットが立っていても死亡にしない）', () => {
+    const b = makeSave()
+    writeU8(b, personOffset(81), 0x80)
+    const view = readTownsfolk(b)
+    expect([21, 30, 62, 81, 0].map((p) => isPersonDead(view, p))).toEqual([true, true, true, false, false])
   })
 
   it('🟢 死亡のビットだけを書く。ほかのビットは変えない。名前のない番号（0〜209）にも書ける', () => {

@@ -19,16 +19,14 @@ import {
   type StanceSkill,
 } from './master/sect-data'
 import {
-  I16_MAX,
   isUsableInOreRyu,
-  MASTERY_MAX,
-  RANK_MAX,
   SCROLL_STORED_COUNT_OFFSET,
   readSects,
-  sectValueOffset,
   type ScrollSlot,
   type SectsView,
 } from './sects'
+
+import { sectRecordCodec, scrollSlotCodec, validateSectValues, type SectValues, SCROLL_SLOT_BYTES } from './sect-record'
 
 export const CUSTOM_COUNT_OFFSET = 0x1920e
 export const CUSTOM_OFFSET = 0x19210
@@ -37,6 +35,9 @@ export const CUSTOM_SLOTS = 64
 export const CUSTOM_NAME_BYTES = 64
 /** 🟢 俺流レコードの名前欄（chunks/custom-style）。 */
 export const CUSTOM_NAME_REL = 8
+/** 🟢 俺流レコードの技の表3つ（chunks/custom-style）。 */
+export const CUSTOM_SHEET_RELS = [0x48, 0x4a, 0x4c] as const
+const customSheetOffset = (offset: number, index: number) => offset + CUSTOM_SHEET_RELS[index]
 
 export function customNameOffset(base: number): number {
   return base + CUSTOM_NAME_REL
@@ -154,19 +155,17 @@ export function readCustomStyles(bytes: Uint8Array): CustomStylesView {
   const styles: CustomStyle[] = []
   for (let i = 0; i < Math.min(count, CUSTOM_SLOTS); i++) {
     const offset = styleOffset(i)
-    const id = readI16(bytes, offset)
-    const sheetIds = [0x48, 0x4a, 0x4c].map((d) => readI16(bytes, offset + d))
+    const fields = sectRecordCodec.read(bytes, offset)
+    const id = fields.id
+    const sheetIds = CUSTOM_SHEET_RELS.map((d) => readI16(bytes, offset + d))
     for (const sid of sheetIds) {
       if (sid >= 0 && !sheets.some((s) => s.id === sid)) problems.push('俺流に対応する技の表がありません')
     }
     styles.push({
       index: i,
       offset,
-      id,
+      ...fields,
       kind: styleKind(id),
-      mastery: readI16(bytes, sectValueOffset(offset, 'mastery')),
-      rank: readI16(bytes, sectValueOffset(offset, 'rank')),
-      kills: readI16(bytes, sectValueOffset(offset, 'kills')),
       name: readUtf16Fixed(bytes, customNameOffset(offset), CUSTOM_NAME_BYTES).text,
       sheetIds,
       scroll: scrolls.find((s) => s.scrollNo < 0 && s.customId === id) ?? null,
@@ -198,7 +197,7 @@ export function validateCustomName(name: string, options: EditOpts = NORMAL_EDIT
   return null
 }
 
-function writeName(bytes: Uint8Array, style: CustomStyle, name: string): void {
+function writeName(bytes: Uint8Array, style: Pick<CustomStyle, 'offset' | 'scroll'>, name: string): void {
   for (let i = 0; i < CUSTOM_NAME_BYTES / 2; i++) writeU16(bytes, customNameOffset(style.offset) + 2 * i, i < name.length ? name.charCodeAt(i) : 0)
   // 🟢 流派の書の枠に、名前の先頭 10 文字の写しがある
   if (style.scroll) {
@@ -216,23 +215,14 @@ export function writeCustomName(bytes: Uint8Array, id: number, name: string, opt
   writeName(bytes, findStyle(view, id), name)
 }
 
-export type CustomValues = { mastery: number; rank: number; kills: number }
-
-export function validateCustomValues(v: CustomValues): string | null {
-  if (!Number.isInteger(v.mastery) || v.mastery < 0 || v.mastery > MASTERY_MAX) return `修練度は 0〜${MASTERY_MAX} です`
-  if (!Number.isInteger(v.rank) || v.rank < 0 || v.rank > RANK_MAX) return '段が正しくありません'
-  if (!Number.isInteger(v.kills) || v.kills < 0 || v.kills > I16_MAX) return `倒した数は 0〜${I16_MAX} です`
-  return null
-}
+export type CustomValues = SectValues
+export const validateCustomValues = validateSectValues
 
 export function writeCustomValues(bytes: Uint8Array, id: number, v: CustomValues): void {
   assertWritable(bytes)
-  const problem = validateCustomValues(v)
-  if (problem) throw new RangeError(problem)
   const style = findStyle(requireEditable(bytes), id)
-  writeI16(bytes, sectValueOffset(style.offset, 'mastery'), v.mastery)
-  writeI16(bytes, sectValueOffset(style.offset, 'rank'), v.rank)
-  writeI16(bytes, sectValueOffset(style.offset, 'kills'), v.kills)
+  // 値の検証は codec が書く前に1回だけ行う（validateCustomValues と同じ）
+  sectRecordCodec.writeValues(bytes, style.offset, v)
 }
 
 /**
@@ -417,7 +407,7 @@ export function addCustomStance(bytes: Uint8Array, id: number, stance: number, s
   const sheetId = newSheetId(view)
   writeSheetBody(bytes, sheetOffset(view.sheets.length), sheetId, stance, buildCustomSkills(stance, skillNos))
   writeU16(bytes, CUSTOM_SHEET_COUNT_OFFSET, view.sheets.length + 1)
-  writeI16(bytes, style.offset + 0x48 + 2 * free, sheetId)
+  writeI16(bytes, customSheetOffset(style.offset, free), sheetId)
 }
 
 /** 俺流の技の表を消して、後ろの表を前に詰める */
@@ -428,6 +418,7 @@ function removeSheet(bytes: Uint8Array, view: CustomStylesView, sheetId: number)
   bytes.copyWithin(sheetOffset(sheet.index), sheetOffset(sheet.index + 1), sheetOffset(last + 1))
   bytes.fill(0, sheetOffset(last), sheetOffset(last + 1))
   writeU16(bytes, CUSTOM_SHEET_COUNT_OFFSET, last)
+  view.sheets = view.sheets.filter(s => s.id !== sheetId).map((s, index) => ({ ...s, index, offset: sheetOffset(index) }))
 }
 
 /** 俺流から構えを外す（最後の 1 つは外せない） */
@@ -439,7 +430,7 @@ export function removeCustomStance(bytes: Uint8Array, id: number, sheetId: numbe
   if (!ids.includes(sheetId)) throw new RangeError('この俺流にその構えはありません')
   if (ids.length === 1) throw new RangeError('最後の構えは外せません')
   const rest = ids.filter((s) => s !== sheetId)
-  ;[0, 1, 2].forEach((k) => writeI16(bytes, style.offset + 0x48 + 2 * k, rest[k] ?? -1))
+  ;[0, 1, 2].forEach((k) => writeI16(bytes, customSheetOffset(style.offset, k), rest[k] ?? -1))
   removeSheet(bytes, view, sheetId)
 }
 
@@ -478,18 +469,13 @@ export function createCustomStyle(bytes: Uint8Array, spec: NewCustomStyle, optio
   const offset = styleOffset(view.styles.length)
   bytes.fill(0, offset, offset + CUSTOM_BYTES)
   writeI16(bytes, offset, id)
-  writeI16(bytes, offset + 0x48, sheetId)
-  writeI16(bytes, offset + 0x4a, -1)
-  writeI16(bytes, offset + 0x4c, -1)
+  CUSTOM_SHEET_RELS.forEach((rel, index) => writeI16(bytes, offset + rel, index === 0 ? sheetId : -1))
   writeU16(bytes, CUSTOM_COUNT_OFFSET, view.styles.length + 1)
 
-  bytes.fill(0, scroll.offset, scroll.offset + 24)
-  writeI16(bytes, scroll.offset, -1)
-  writeI16(bytes, scroll.offset + 2, id)
+  scrollSlotCodec.writeCustom(bytes, scroll.offset, id)
   if (scroll.place === 'stored') writeU16(bytes, SCROLL_STORED_COUNT_OFFSET, view.sects.storedCount + 1)
 
-  const style: CustomStyle = { ...findStyle(readCustomStyles(bytes), id) }
-  writeName(bytes, style, spec.name)
+  writeName(bytes, { offset, scroll }, spec.name)
   return id
 }
 
@@ -498,12 +484,10 @@ function removeScroll(bytes: Uint8Array, view: SectsView, scroll: ScrollSlot): v
   const list = scroll.place === 'held' ? view.held : view.stored
   const used = scroll.place === 'held' ? list.length : view.storedCount
   const start = list[0].offset
-  const end = start + used * 24
-  bytes.copyWithin(scroll.offset, scroll.offset + 24, end)
-  const lastOffset = end - 24
-  bytes.fill(0, lastOffset, lastOffset + 24)
-  writeI16(bytes, lastOffset, -1)
-  writeI16(bytes, lastOffset + 2, -1)
+  const end = start + used * SCROLL_SLOT_BYTES
+  bytes.copyWithin(scroll.offset, scroll.offset + SCROLL_SLOT_BYTES, end)
+  const lastOffset = end - SCROLL_SLOT_BYTES
+  scrollSlotCodec.clear(bytes, lastOffset)
   if (scroll.place === 'stored') writeU16(bytes, SCROLL_STORED_COUNT_OFFSET, view.storedCount - 1)
 }
 
@@ -515,7 +499,7 @@ export function deleteCustomStyle(bytes: Uint8Array, id: number, options: EditOp
   if (style.equipped) throw new RangeError('装備している俺流は消せません')
   if (style.kind !== 'player' && !options.advanced) throw new RangeError('生きた証の写しは上級者モードでだけ消せます')
   if (style.scroll) removeScroll(bytes, view.sects, style.scroll)
-  for (const sid of style.sheetIds.filter((s) => s >= 0)) removeSheet(bytes, readCustomStyles(bytes), sid)
+  for (const sid of style.sheetIds.filter((s) => s >= 0)) removeSheet(bytes, view, sid)
   const last = view.styles.length - 1
   bytes.copyWithin(styleOffset(style.index), styleOffset(style.index + 1), styleOffset(last + 1))
   bytes.fill(0, styleOffset(last), styleOffset(last + 1))

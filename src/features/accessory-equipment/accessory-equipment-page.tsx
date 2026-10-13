@@ -17,10 +17,12 @@ import { useWrite } from "@/lib/use-write";
 import { errorMessage } from "@/lib/error-message";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { ACCESSORIES } from "@/save/master/accessory-names";
-import { ACCESSORY_FLAGS_OFFSET } from "@/save/unlocks";
+import { FilterSelect } from "@/components/filter-select";
 import {
   ACCESSORY_ATTACHMENT_LABELS,
   ACCESSORY_FLOAT_FIELDS,
+  ACCESSORY_FIELDS,
+  ACCESSORY_SLOT_COUNT,
   accessoryFloatRange,
   accessorySlotOffset,
   copySheathedAccessoryToDrawn,
@@ -59,7 +61,6 @@ function parseFloatInput(input: string, min: number, max: number): ParseResult<n
 }
 
 function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slot: number; onSelectSlot: (slot: number) => void }) {
-  const { save } = useSave();
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const [mode, setMode] = useState<keyof typeof MODE_LABELS>("A");
@@ -71,7 +72,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
   const problem = readError ?? current?.problem ?? null;
   const selected = ACCESSORIES.find((a) => a.id === current?.id);
   const disabled = !current || Boolean(problem) || !selected;
-  const unowned = selected && save?.working[ACCESSORY_FLAGS_OFFSET + selected.id] !== 1;
+  const unowned = selected && current && !current.owned;
   const state = mode === "B" ? "B" : "A";
 
   function confirm() {
@@ -95,65 +96,65 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
       <div className="grid gap-6 sm:grid-cols-[minmax(0,5fr)_minmax(0,2fr)] sm:gap-0">
         <section className="min-w-0 space-y-4 sm:pr-6">
           <div className="space-y-2">
-          <h3 className="text-sm font-semibold">
-            {slot + 1}枠目：{!current ? "—" : (selected?.ja ?? (current.id === -1 ? "空き" : "装飾品"))}
-          </h3>
-          <p className="text-muted-foreground text-sm">
-            装飾品を変更すると、新しい装飾品の標準部位に取り付け、納刀・抜刀の補正を0へ戻します。所持の状態は変更しません。
-          </p>
+            <h3 className="text-sm font-semibold">
+              {slot + 1}枠目：{!current ? "—" : (selected?.ja ?? (current.id === -1 ? "空き" : "装飾品"))}
+            </h3>
+            <p className="text-muted-foreground text-sm">
+              装飾品を変更すると、新しい装飾品の標準部位に取り付け、納刀・抜刀の補正を0へ戻します。所持の状態は変更しません。
+            </p>
           </div>
           <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectRow
-              label="装飾品"
-              offset={offset + 0x3e}
-              value={current?.id === null || !current ? null : String(current.id)}
-              currentLabel="不明な装飾品"
-              options={idOptions}
-              problem={problem}
-              warning={
-                unowned
-                  ? "この装飾品は未所持です。必要なら所持画面で変更してください。"
-                  : null
-              }
-              onChange={(v) => {
-                update((b) => equipAccessory(b, group, slot, Number(v), { advanced }));
-                setMode("A");
-              }}
-            />
-            <SelectRow
-              label="取り付け先"
-              offset={offset + 0x3c}
-              value={current?.joint === null || !current ? null : String(current.joint)}
-              options={jointOptions}
-              problem={problem}
-              disabled={!selected}
-              // 🟢
-              note="標準の位置・回転からさらに補正して配置します。頭は顔、胸は背中も含みます。"
-              onChange={(v) =>
-                update((b) => writeAccessoryField(b, group, slot, "joint", Number(v), { advanced }))
-              }
-            />
-          </div>
-          {selected && (
-            <div className="text-muted-foreground space-y-1 text-sm">
-              <p>標準の取り付け先：{ACCESSORY_ATTACHMENT_LABELS[selected.defaultAttachment]}</p>
-              <p>標準位置：({selected.defaultPosition.map(formatFloat).join(", ")})</p>
-              <p>
-                標準回転：({selected.defaultRotation.map(formatFloat).join(", ")}) 度 ／
-                標準サイズ：{formatFloat(selected.defaultSize)}
-              </p>
-              <p>標準位置・回転は装飾品固有の値です。下の欄で編集するのは標準からの補正です。</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SelectRow
+                label="装飾品"
+                offset={offset + ACCESSORY_FIELDS.id.relative}
+                value={current?.id === null || !current ? null : String(current.id)}
+                currentLabel="不明な装飾品"
+                options={idOptions}
+                problem={problem}
+                warning={
+                  unowned
+                    ? "この装飾品は未所持です。必要なら所持画面で変更してください。"
+                    : null
+                }
+                onChange={(v) => {
+                  update((b) => equipAccessory(b, group, slot, Number(v), { advanced }));
+                  setMode("A");
+                }}
+              />
+              <SelectRow
+                label="取り付け先"
+                offset={offset + ACCESSORY_FIELDS.joint.relative}
+                value={current?.joint === null || !current ? null : String(current.joint)}
+                options={jointOptions}
+                problem={problem}
+                disabled={!selected}
+                // 🟢
+                note="標準の位置・回転からさらに補正して配置します。頭は顔、胸は背中も含みます。"
+                onChange={(v) =>
+                  update((b) => writeAccessoryField(b, group, slot, "joint", Number(v), { advanced }))
+                }
+              />
             </div>
-          )}
-          <p className="text-muted-foreground text-sm">
-            「なし」にすると外れます。位置・回転・大きさは残します。
-          </p>
+            {selected && (
+              <div className="text-muted-foreground space-y-1 text-sm">
+                <p>標準の取り付け先：{ACCESSORY_ATTACHMENT_LABELS[selected.defaultAttachment]}</p>
+                <p>標準位置：({selected.defaultPosition.map(formatFloat).join(", ")})</p>
+                <p>
+                  標準回転：({selected.defaultRotation.map(formatFloat).join(", ")}) 度 ／
+                  標準サイズ：{formatFloat(selected.defaultSize)}
+                </p>
+                <p>標準位置・回転は装飾品固有の値です。下の欄で編集するのは標準からの補正です。</p>
+              </div>
+            )}
+            <p className="text-muted-foreground text-sm">
+              「なし」にすると外れます。位置・回転・大きさは残します。
+            </p>
           </div>
         </section>
-          <div className="min-w-0 border-t pt-6 sm:border-t-0 sm:border-l sm:pl-6 sm:pt-0">
-            <AccessorySlotList group={group} slot={slot} onSelectSlot={onSelectSlot} />
-          </div>
+        <div className="min-w-0 border-t pt-6 sm:border-t-0 sm:border-l sm:pl-6 sm:pt-0">
+          <AccessorySlotList group={group} slot={slot} onSelectSlot={onSelectSlot} />
+        </div>
       </div>
       <section className="space-y-4 border-t pt-6">
         <div className="space-y-2">
@@ -171,7 +172,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
                 variant={mode === value ? "default" : "outline"}
                 aria-pressed={mode === value}
                 // 納刀・抜刀は表示の切り替えだけなので、未読み込みのときも押せる。共通は書き込みの確認を開くので止める
-                disabled={value === "common" || current ? disabled : false}
+                disabled={(value === "common" || current !== null) && disabled}
                 onClick={() => {
                   if (value === mode) return;
                   if (value === "common") {
@@ -280,13 +281,14 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
 }
 
 function AccessorySlotList({ group, slot, onSelectSlot }: { group: number; slot: number; onSelectSlot: (slot: number) => void }) {
-  const read = useCallback((bytes: Uint8Array) => Array.from({ length: 10 }, (_, i) => readAccessorySlot(bytes, group, i)), [group]);
+  const read = useCallback((bytes: Uint8Array) => Array.from({ length: ACCESSORY_SLOT_COUNT }, (_, i) => readAccessorySlot(bytes, group, i)), [group]);
+  // 読めないときのエラーは、同じ枠を読む AccessorySlotEditor が出す
   const { view: entries } = useSaveView(read);
   return (
     <fieldset className="min-w-0 space-y-2">
       <legend className="text-sm">編集する枠</legend>
       <div className="grid gap-1">
-        {Array.from({ length: 10 }, (_, i) => {
+        {Array.from({ length: ACCESSORY_SLOT_COUNT }, (_, i) => {
           const entry = entries?.[i] ?? null;
           const name = entry?.id === -1 ? "空き" : (ACCESSORIES.find((a) => a.id === entry?.id)?.ja ?? (entry ? "不明" : "—"));
           return (
@@ -306,27 +308,18 @@ function AccessorySlotList({ group, slot, onSelectSlot }: { group: number; slot:
   );
 }
 
-export function AccessoryEquipmentPage() {
+export function AccessoryEquipmentEditor() {
   const { save } = useSave();
   const [group, setGroup] = useState(0);
   const [slot, setSlot] = useState(0);
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-2 text-sm">
-          編集する記録
-          <select
-            className="bg-background rounded-md border p-2"
-            value={group}
-            onChange={(e) => setGroup(Number(e.target.value))}
-          >
-            {GROUP_LABELS.map((label, i) => (
-              <option key={label} value={i}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex flex-col gap-2 text-sm">
+          <span>編集する記録</span>
+          <FilterSelect aria-label="編集する記録" value={String(group)} onChange={(v) => setGroup(Number(v))}
+            options={GROUP_LABELS.map((label, i) => ({ value: String(i), label }))} />
+        </div>
       </div>
       {/* 枠・記録・ファイルが変わったら共通モードと確認待ち、入力途中を破棄する。 */}
       <AccessorySlotEditor
