@@ -31,24 +31,55 @@
 import { nameOf } from "../master/labels";
 import { ALIVE_DEAD, type ByteFlag } from "./byte-flag";
 
+/** 🟢 人物の状態と、町の人の番号・夜の約束の種類との対応（chunks/characters・townsfolk・night-visit）。 */
+export const CHARACTER_STATUS = {
+  akagi: { offset: 0x374e, town: 10, promiseTypes: [46, 425] },
+  kogure: { offset: 0x374f, town: 11, promiseTypes: [69] },
+  akemi: { offset: 0x3750, town: 12, promiseTypes: [442] },
+  kotobuki: { offset: 0x3751, town: 13, promiseTypes: [] },
+  moro: { offset: 0x3752, town: 14, promiseTypes: [65] },
+  mayu: { offset: 0x3753, town: 15, promiseTypes: [448] },
+  chika: { offset: 0x3754, town: 16, promiseTypes: [449] },
+  yuri: { offset: 0x3755, town: 17, promiseTypes: [450] },
+  kinugawa: { offset: 0x3756, town: 18, promiseTypes: [] },
+  laura: { offset: 0x3757, town: 19, promiseTypes: [454] },
+  jj: { offset: 0x3758, town: 20, promiseTypes: [44, 456] },
+  melinda: { offset: 0x3759, town: 21, promiseTypes: [788] },
+  dojima: { offset: 0x375a, town: 22, promiseTypes: [] },
+  teacher: { offset: 0x375b, town: 23, promiseTypes: [] },
+  pharmacist: { offset: 0x375c, town: 55, promiseTypes: [] },
+  sushi: { offset: 0x37f9, town: 30, promiseTypes: [] },
+} satisfies Record<string, { offset: number; town: number; promiseTypes: number[] }>;
+
+/** 🟢 死亡を表す値。鬼怒川・堂島の特殊な状態には使わない。 */
+export const CHARACTER_DEAD = 1;
+
+export function characterStatusForPromise(type: number) {
+  return Object.values(CHARACTER_STATUS).find(s => s.promiseTypes.some(t => t === type));
+}
+
+export function characterStatusForTown(person: number) {
+  return Object.values(CHARACTER_STATUS).find(s => s.town === person);
+}
+
 /** 0x374E〜0x375C の人物と、寿司屋 */
 export const CHARACTER_FLAGS: readonly ByteFlag[] = [
   {
-    offset: 0x374e,
+    offset: CHARACTER_STATUS.akagi.offset,
     label: nameOf.npc(1),
     // 🟢
     note: "将の器は病院に運ばれて助かった状態、怒りの矛先は死亡の状態のときに起きる",
     values: [...ALIVE_DEAD, { value: 3, label: "病院に運ばれて助かった" }],
   },
   {
-    offset: 0x374f,
+    offset: CHARACTER_STATUS.kogure.offset,
     label: nameOf.npc(2),
     // 🟢
     note: "願い虚しくは、生存のとき小暮本人が敵になる",
     values: ALIVE_DEAD,
   },
   {
-    offset: 0x3750,
+    offset: CHARACTER_STATUS.akemi.offset,
     label: nameOf.npc(3),
     // 🟢
     note: "真実でまだら（朱美）に勝つと死亡する",
@@ -58,24 +89,24 @@ export const CHARACTER_FLAGS: readonly ByteFlag[] = [
     ],
   },
   {
-    offset: 0x3751,
+    offset: CHARACTER_STATUS.kotobuki.offset,
     label: nameOf.npc(4),
     // 🟢
     note: "死亡になる場面はない（武人 琴吹光で死んでも変わらない）",
     values: ALIVE_DEAD,
   },
   {
-    offset: 0x3752,
+    offset: CHARACTER_STATUS.moro.offset,
     label: nameOf.npc(5),
     // 🟢
     note: "死亡だと剣術大会の準備で建築現場にいない。大寄せで幕府ルートに入るには生存していることが要る",
     values: ALIVE_DEAD,
   },
-  { offset: 0x3753, label: nameOf.npc(6), values: ALIVE_DEAD },
-  { offset: 0x3754, label: nameOf.npc(7), values: ALIVE_DEAD },
-  { offset: 0x3755, label: nameOf.npc(8), values: ALIVE_DEAD },
+  { offset: CHARACTER_STATUS.mayu.offset, label: nameOf.npc(6), values: ALIVE_DEAD },
+  { offset: CHARACTER_STATUS.chika.offset, label: nameOf.npc(7), values: ALIVE_DEAD },
+  { offset: CHARACTER_STATUS.yuri.offset, label: nameOf.npc(8), values: ALIVE_DEAD },
   {
-    offset: 0x3756,
+    offset: CHARACTER_STATUS.kinugawa.offset,
     label: "鬼怒川怨仙",
     // 🟢
     note: "船上の侍（周回の始め）で生存の状態になり、大老暗殺計画で倒すと偽物が死亡の状態になる",
@@ -85,14 +116,14 @@ export const CHARACTER_FLAGS: readonly ByteFlag[] = [
     ],
   },
   {
-    offset: 0x3757,
+    offset: CHARACTER_STATUS.laura.offset,
     label: nameOf.npc(11),
     // 🟢
     note: "鬼怒川の魔手で死亡する。ローラの決意の導入で、領事館を出て代官所（鬼怒川のもと）へ向かう。領事館に出るのは生存のときだけ",
     values: [...ALIVE_DEAD, { value: 2, label: "代官所へ向かった" }],
   },
   {
-    offset: 0x3758,
+    offset: CHARACTER_STATUS.jj.offset,
     label: "J.J.",
     // 🟢
     note: "伯爵救出の成功で療養中、伯爵に刺激をの成功で打ち解け、刺激が欲しいの成功で逮捕される。ローラ奪還で通常に戻る",
@@ -105,14 +136,14 @@ export const CHARACTER_FLAGS: readonly ByteFlag[] = [
     ],
   },
   {
-    offset: 0x3759,
+    offset: CHARACTER_STATUS.melinda.offset,
     label: nameOf.npc(13),
     // 🟢
     note: "講師ご到着・祝 病院開業・傷心の帰国船の戦闘、魔鱗組としてで死亡する",
     values: ALIVE_DEAD,
   },
   {
-    offset: 0x375a,
+    offset: CHARACTER_STATUS.dojima.offset,
     label: nameOf.npc(14),
     // 🟢
     note: "表彰式でほかの優勝者として並ぶと釜茹でになる。町の人の生死の「堂島」とは別の欄",
@@ -122,21 +153,21 @@ export const CHARACTER_FLAGS: readonly ByteFlag[] = [
     ],
   },
   {
-    offset: 0x375b,
+    offset: CHARACTER_STATUS.teacher.offset,
     label: nameOf.npc(15),
     // 🟢
     note: "通常のプレイで変わる場面はない",
     values: ALIVE_DEAD,
   },
   {
-    offset: 0x375c,
+    offset: CHARACTER_STATUS.pharmacist.offset,
     label: "薬屋",
     // 🟢
     note: "変わる場面はない。小公女倒れるで生存でないと町に入った時点で失敗",
     values: ALIVE_DEAD,
   },
   {
-    offset: 0x37f9,
+    offset: CHARACTER_STATUS.sushi.offset,
     label: "寿司屋",
     // 🟢
     note: "寿司屋の店主を殺すと死亡になる。伯爵に刺激を・傷心の帰国船の開始条件に関わる。町の人の生死の「寿司屋」とは別の欄で、両方を生存にしないと店とイベントは死んだ扱いのまま",

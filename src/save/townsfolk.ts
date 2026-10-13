@@ -16,6 +16,7 @@
 //
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
+import { CHARACTER_STATUS, characterStatusForTown } from "./flags/characters";
 import { checkLayout } from "./hero";
 import { nameOf } from "./master/labels";
 
@@ -133,15 +134,16 @@ const PERSON_BY_NUMBER = new Map(TOWNSFOLK_PEOPLE.map((x) => [x.p, x]));
 
 /**
  * 🟢 ビットを外すだけでは生き返らない人物と、一緒に戻す値（chunks/townsfolk「生き返らせるとき」）。
- * 重要人物（p 10〜23）は町に出る条件に「人物の状態（0x3744 + p）＝ 0」もある。状態は物語の進み具合も持つので、書き換えると物語と食い違う。
+ * 重要人物は町に出る条件に「人物の状態＝ 0」もある。状態は物語の進み具合も持つので、書き換えると物語と食い違う。
  * 要ゲーム内確認
  */
 export function reviveNote(p: number): string | null {
-  if (p >= 10 && p <= 23) {
+  const status = characterStatusForTown(p);
+  if (status && status !== CHARACTER_STATUS.sushi && status !== CHARACTER_STATUS.pharmacist) {
     return "「人物の状態」の同じ人物も生存にしないと町に出てこない";
   }
-  if (p === 30) return "「人物の状態」の寿司屋も生存にしないと死んだ扱いのまま";
-  if (p === 55) return "「人物の状態」の同じ人物も生存にしないと死んだ扱いのまま";
+  if (status === CHARACTER_STATUS.sushi) return "「人物の状態」の寿司屋も生存にしないと死んだ扱いのまま";
+  if (status === CHARACTER_STATUS.pharmacist) return "「人物の状態」の同じ人物も生存にしないと死んだ扱いのまま";
   return null;
 }
 

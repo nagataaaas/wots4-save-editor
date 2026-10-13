@@ -24,6 +24,7 @@
 // 書くのは +0x04 が FFFFFFFF（約束なし）の枠だけ。ファイルサイズが 0x48BB0 のときだけ書く。
 import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
+import { characterStatusForPromise, CHARACTER_DEAD } from "./flags/characters";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_ROW_TABLE } from "./master/dataset/night-visit-row";
 import { NPC_NAMES } from "./master/npc-names";
@@ -108,26 +109,10 @@ export function promisePartner(type: number): PromisePartner | undefined {
   return PROMISE_PARTNERS.find((p) => p.type === type);
 }
 
-/** 名前のある相手の生死のバイト（characters。🟢 1＝死亡） */
-const DEATH_OFFSETS: Readonly<Record<number, number>> = {
-  46: 0x374e, // 赤城
-  425: 0x374e, // 赤城（病院で療養中）
-  69: 0x374f, // 小暮
-  442: 0x3750, // 朱美
-  65: 0x3752, // 茂呂
-  448: 0x3753, // 万由
-  449: 0x3754, // 千佳
-  450: 0x3755, // 百合
-  454: 0x3757, // ローラ
-  44: 0x3758, // J.J
-  456: 0x3758, // J.J（病院で療養中）
-  788: 0x3759, // メリンダ
-};
-
 /** 名前のある相手が死んでいれば警告を返す（🟢 ゲームは約束を止めない） */
 export function partnerDeathWarning(bytes: Uint8Array, type: number): string | null {
-  const offset = DEATH_OFFSETS[type];
-  if (offset === undefined || readU8(bytes, offset) !== 1) return null;
+  const status = characterStatusForPromise(type);
+  if (!status || readU8(bytes, status.offset) !== CHARACTER_DEAD) return null;
   return `${promisePartner(type)?.label ?? type} は死亡しています。夜這いの場に相手が出るかは確かめていません`;
 }
 

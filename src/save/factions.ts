@@ -38,6 +38,7 @@
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { checkLayout } from "./hero";
+import { CHARACTER_STATUS, CHARACTER_DEAD } from "./flags/characters";
 
 export const FACTION_TABLE_OFFSET = 0x3780; // 🔶 chunks/factions
 
@@ -122,8 +123,8 @@ export function validateFactionValue(
 export const ROUTE_THRESHOLD = 3;
 
 /** 茂呂の状態（chunks/characters）。1＝死亡のとき大寄せで幕府ルートに入れない（🟢） */
-export const MORO_OFFSET = 0x3752;
-export const MORO_DEAD = 1;
+export const MORO_OFFSET = CHARACTER_STATUS.moro.offset;
+export const MORO_DEAD = CHARACTER_DEAD;
 
 /**
  * 勢力 col（0〜2）が大寄せでルートに入れるか。values は readFactions の values（行0−行1 ≥ 3 ✅ [U]）。
