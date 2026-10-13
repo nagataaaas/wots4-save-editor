@@ -1,50 +1,27 @@
-import { useMemo } from "react";
 import { InfoTip } from "@/components/info-tip";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { WEAPON_LIST_ANCHORS } from "@/features/belt/anchors";
 import { useSave } from "@/lib/save-context";
-import { WEAPON_BAG_COUNT, WEAPON_BAG_OFFSET, readWeaponBag, weaponBagOffset, type WeaponBagView } from "@/save/weapon-bag";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WEAPON_BAG_COUNT, WEAPON_BAG_OFFSET, readWeaponBag, weaponBagOffset } from "@/save/weapon-bag";
 import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /** 武器袋の10本。帯刀と同じ欄を、細い一覧で編集する */
 export function WeaponBagPage() {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { write: update } = useWrite();
+  const { view, error: readError, problem } = useSaveView(readWeaponBag, { problem: (v) => v.layoutProblem });
 
-  const result = useMemo((): { view: WeaponBagView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readWeaponBag(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  const view = result?.view ?? null;
   const k = save?.loadId ?? 0;
   const filled = view ? view.weapons.filter((w) => !w.empty).length : "—";
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
       {/* 未読み込みのときは枠だけを描き、一覧は「—」にする */}
       <AnchoredCard anchor={WEAPON_LIST_ANCHORS.weapons} searchLabel="武器袋" className="gap-2">

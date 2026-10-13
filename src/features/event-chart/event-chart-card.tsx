@@ -10,6 +10,7 @@ import { Popover, PopoverContent } from "@/components/ui/popover";
 import { recordOptions, stateOptions } from "@/features/scenario/event-options";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { useWrite } from "@/lib/use-write";
 import { PLAY_COUNT_REVEALS_BEST_ROUTE, type CycleCountsView } from "@/save/cycle-counts";
 import {
   chartViewWithoutSave,
@@ -531,7 +532,7 @@ function FrameShape({
 }
 
 function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView | null }) {
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const index = frame.eventId;
   const entry = events?.entries[index] ?? null;

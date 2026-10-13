@@ -1,8 +1,7 @@
 import { STYLES_ANCHORS } from "./anchors";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { InfoTip } from "@/components/info-tip";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteResult } from "@/components/write-error";
 import { matchesSearch } from "@/lib/search";
 import {
   RANK_LABELS,
@@ -49,7 +52,7 @@ import {
   writeSkillPoints,
   type SectsView,
 } from "@/save/sects";
-import { STANCE_TAB_CLASS, errorMessage } from "./sect-format";
+import { STANCE_TAB_CLASS } from "./sect-format";
 import {
   IntField,
   RankField,
@@ -100,33 +103,16 @@ function matchesPlace(filter: PlaceFilter, view: SectsView, owned: ReadonlySet<n
 }
 
 export function StylesPage() {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const [query, setQuery] = useState("");
   const [placeFilter, setPlaceFilter] = useState<PlaceFilter>("owned");
   const [uniqueOnly, setUniqueOnly] = useState(false);
-  const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
 
-  const result = useMemo((): { view: SectsView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readSects(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
+  const { view, error: readError, problem, readOnly } = useSaveView(readSects, { problem: (v) => v.problem });
 
   // 未読み込みのときは view が null。流派の表から同じカードを描き、値を空・操作を無効にする
-  const view = result?.view ?? null;
   const k = save?.loadId ?? 0;
   const owned = view ? ownedSectIds(view) : null;
   const sects = SECTS.filter((s) => !s.hidden || advanced)
@@ -134,25 +120,10 @@ export function StylesPage() {
     // 置き場所はセーブから決まるので、未読み込みのときは絞り込まない
     .filter((s) => !view || !owned || matchesPlace(placeFilter, view, owned, s.id))
     .filter((s) => !uniqueOnly || sectHasUniqueSkill(s));
-  const readOnly = !view || view.problem !== null;
-
-  const run = (label: string, f: (b: Uint8Array) => void) => {
-    try {
-      update(f);
-      setMessage({ error: false, text: label });
-    } catch (e) {
-      setMessage({ error: true, text: errorMessage(e) });
-    }
-  };
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.problem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.problem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
       <AnchoredCard anchor={STYLES_ANCHORS.overview} searchLabel="流派">
         <CardHeader>
@@ -215,7 +186,6 @@ export function StylesPage() {
             </Label>
             <span className="text-muted-foreground text-xs">{sects.length} 件</span>
           </div>
-          {message && <p className={message.error ? "text-destructive text-xs" : "text-muted-foreground text-xs"}>{message.text}</p>}
         </CardContent>
       </AnchoredCard>
 
@@ -226,16 +196,14 @@ export function StylesPage() {
           view={view}
           readOnly={readOnly}
           advanced={advanced}
-          onLearnAll={() =>
-            run(`${sect.nameJa} の技を習得しました`, (b) => learnSectSkills(b, sect.id))
-          }
+          onLearnAll={() => update((b) => learnSectSkills(b, sect.id))}
           onLearn={(sheet, skill) =>
-            run("技を習得しました", (b) =>
+            update((b) =>
               isUniqueSkill(skill) ? learnUniqueSkills(b, sheet, [skill.skillNo]) : learnSheetSkills(b, sheet, [skill.skillNo]),
             )
           }
-          onShowInOreRyu={(sheet, no) => run("俺流に組み込めるようにしました", (b) => learnSheetSkills(b, sheet, [no]))}
-          onForget={(sheet, no) => run("技を忘れさせました", (b) => forgetSheetSkill(b, sheet, no))}
+          onShowInOreRyu={(sheet, no) => update((b) => learnSheetSkills(b, sheet, [no]))}
+          onForget={(sheet, no) => update((b) => forgetSheetSkill(b, sheet, no))}
           onValues={(v) => update((b) => writeSectValues(b, sect.id, v))}
         />
       ))}
@@ -266,6 +234,12 @@ function SectCard({
   onForget: (sheet: number, no: number) => void;
   onValues: (v: { mastery: number; rank: number; kills: number }) => void;
 }) {
+  // ボタンの書き込みの結果は、このカードの「技を全部習得する」の下に出す（欄の書き込みのエラーは欄に出る）
+  const { attempt, message } = useWrite();
+  const learnAll = () => attempt(onLearnAll, `${sect.nameJa} の技を習得しました`);
+  const learn = (sheet: number, skill: SheetSkill) => attempt(() => onLearn(sheet, skill), "技を習得しました");
+  const showInOreRyu = (sheet: number, no: number) => attempt(() => onShowInOreRyu(sheet, no), "俺流に組み込めるようにしました");
+  const forget = (sheet: number, no: number) => attempt(() => onForget(sheet, no), "技を忘れさせました");
   const rec = view?.records.find((r) => r.id === sect.id) ?? null;
   const places = view ? placesOf(view, sect.id) : [];
   // 固有技は覚えられる流派でだけ出す（sectSheetSkills）。未読み込みのときは states が null
@@ -323,7 +297,7 @@ function SectCard({
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={onLearnAll} disabled={readOnly || learned === total}>
+          <Button onClick={learnAll} disabled={readOnly || learned === total}>
             技を全部習得する
           </Button>
           <span className="text-muted-foreground text-xs">
@@ -332,6 +306,7 @@ function SectCard({
             固有技は「習得する」で習得済（俺流には未組み込み）、「俺流で表示」で俺流に組み込める状態にします。
             続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
           </span>
+          <WriteResult message={message} className="basis-full" />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -392,9 +367,9 @@ function SectCard({
                       states={states}
                       readOnly={readOnly}
                       advanced={advanced}
-                      onLearn={onLearn}
-                      onShowInOreRyu={onShowInOreRyu}
-                      onForget={onForget}
+                      onLearn={learn}
+                      onShowInOreRyu={showInOreRyu}
+                      onForget={forget}
                     />
                   )}
                 />

@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useSave } from "@/lib/save-context";
+import { useWrite } from "@/lib/use-write";
+import { errorMessage } from "@/lib/error-message";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { ACCESSORIES } from "@/save/master/accessory-names";
 import { ACCESSORY_FLAGS_OFFSET } from "@/save/unlocks";
@@ -55,7 +57,8 @@ function parseFloatInput(input: string, min: number, max: number): ParseResult<n
 }
 
 function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slot: number; onSelectSlot: (slot: number) => void }) {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const [mode, setMode] = useState<keyof typeof MODE_LABELS>("A");
   const [pending, setPending] = useState<"common" | "reset" | null>(null);
@@ -80,7 +83,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
       setPending(null);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(errorMessage(e));
     }
   }
 

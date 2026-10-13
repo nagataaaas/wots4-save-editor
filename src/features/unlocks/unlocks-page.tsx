@@ -1,7 +1,6 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { ItemInformation, OwnershipStateButton, UnlockStateButton } from "./unlock-ui";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatOffset } from "@/lib/format";
-import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteError } from "@/components/write-error";
 import {
   ACCESSORIES,
   ACCESSORY_DLC_LABELS,
@@ -45,53 +47,23 @@ import {
   type UnlockStatesView,
 } from "@/save/unlocks";
 
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+/** 特典の領域が読めない場合は、画面で空の値と読取エラーを表示する。 */
+function readUnlockView(bytes: Uint8Array) {
+  const view = readUnlockStates(bytes);
+  // 読めない領域を空の表で返す reader も、画面では読取エラーとして扱う。
+  if (view.values.length !== UNLOCK_COUNT) throw new RangeError("ファイルが小さすぎて特典を読めません");
+  return view;
+}
 
-/** 読み取り専用・エラーの表示と、書き込みのエラーの受け止め（未読み込みの案内は NoSaveNotice が出す） */
+/**
+ * 読み取り専用・エラーの表示と、書き込み（未読み込みの案内は NoSaveNotice が出す）。
+ * ボタンの書き込みは失敗を受け止めて error に入れるので、カードの中の操作の近くに出す
+ */
 function usePageState<T extends { layoutProblem: string | null }>(read: (bytes: Uint8Array) => T) {
-  const { save, update } = useSave();
-  const [writeError, setWriteError] = useState<string | null>(null);
-  const result = useMemo((): { view: T } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: read(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save, read]);
-  const view = result && "view" in result ? result.view : null;
-  const readOnly = !view || view.layoutProblem !== null;
-  function write(mutator: (bytes: Uint8Array) => void) {
-    setWriteError(null);
-    try {
-      update(mutator);
-    } catch (e) {
-      setWriteError(errorMessage(e));
-    }
-  }
-  const banner: ReactNode = (
-    <>
-      {result && "error" in result && (
-        <Alert variant="destructive">
-          <AlertTitle>読み込めません</AlertTitle>
-          <AlertDescription>{result.error}</AlertDescription>
-        </Alert>
-      )}
-      {view?.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
-      {writeError && (
-        <Alert variant="destructive">
-          <AlertTitle>書き込めません</AlertTitle>
-          <AlertDescription>{writeError}</AlertDescription>
-        </Alert>
-      )}
-    </>
-  );
-  return { view, readOnly, write, banner };
+  const { view, error: readError, problem, readOnly } = useSaveView(read, { problem: (v) => v.layoutProblem });
+  const { tryWrite: write, error } = useWrite();
+  const banner = <PageBanner error={readError} problem={problem} />;
+  return { view, readOnly, write, error, banner };
 }
 
 function matches(query: string, ...texts: string[]): boolean {
@@ -105,7 +77,7 @@ type AccessoryFilter = "all" | "owned" | "missing";
 
 export function AccessoriesPage() {
   const { advanced } = useAdvancedMode();
-  const { view, readOnly, write, banner } = usePageState(readAccessoryFlags);
+  const { view, readOnly, write, error, banner } = usePageState(readAccessoryFlags);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<AccessoryFilter>("all");
   const [part, setPart] = useState("all");
@@ -197,6 +169,7 @@ export function AccessoriesPage() {
               表示中を全部外す
             </Button>
           </div>
+          <WriteError error={error} />
           <div className="flex flex-col divide-y">
             {rows.map((a) => {
               const value = view ? view.values[a.id] : null;
@@ -266,7 +239,8 @@ function UnlockStateRows({
   view: UnlockStatesView | null;
   readOnly: boolean;
   advanced: boolean;
-  write: (mutator: (bytes: Uint8Array) => void) => void;
+  /** 失敗を受け止めて呼び出し側のカードに出す書き込み */
+  write: (mutator: (bytes: Uint8Array) => void) => unknown;
 }) {
   return (
     <div className="flex flex-col divide-y">
@@ -296,9 +270,9 @@ function UnlockStateRows({
   );
 }
 
-function AppearanceUnlocksCard() {
+function AppearanceUnlocksCard({ view, readOnly }: { view: UnlockStatesView | null; readOnly: boolean }) {
   const { advanced } = useAdvancedMode();
-  const { view, readOnly, write, banner } = usePageState(readUnlockStates);
+  const { tryWrite: write, error } = useWrite();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const rows = UNLOCKS.filter((u) => APPEARANCE_UNLOCK_CATEGORIES.some((c) => c === u.category))
@@ -310,7 +284,6 @@ function AppearanceUnlocksCard() {
 
   return (
     <>
-      {banner}
       <AnchoredCard anchor={UNLOCKS_ANCHORS.faces} searchLabel="顔・髪型などの特典">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
@@ -343,6 +316,7 @@ function AppearanceUnlocksCard() {
               </SelectContent>
             </Select>
           </div>
+          <WriteError error={error} />
           <UnlockStateRows rows={rows} view={view} readOnly={readOnly} advanced={advanced} write={write} appearance />
         </CardContent>
       </AnchoredCard>
@@ -353,7 +327,14 @@ function AppearanceUnlocksCard() {
 type ClothFilter = "all" | "on" | "off";
 
 export function AppearancePage() {
-  const { view, readOnly, write, banner } = usePageState(readAppearance);
+  // 服と顔・髪型などの特典は別の領域なので別々に読み、片方が読めなくてももう片方は編集できるようにする
+  const clothes = useSaveView(readAppearance, { problem: (v) => v.layoutProblem });
+  const unlocks = useSaveView(readUnlockView, { problem: (v) => v.layoutProblem });
+  const { view, readOnly } = clothes;
+  const { tryWrite: write, error } = useWrite();
+  // 同じ理由（ファイルが短い・サイズが違うなど）で両方が落ちたときは1つにまとめて出す
+  const joined = (a: string | null, b: string | null) => [...new Set([a, b].filter((x) => x !== null))].join(" ／ ") || null;
+  const banner = <PageBanner error={joined(clothes.error, unlocks.error)} problem={joined(clothes.problem, unlocks.problem)} />;
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [filter, setFilter] = useState<ClothFilter>("all");
@@ -370,7 +351,7 @@ export function AppearancePage() {
   return (
     <div className="flex flex-col gap-4">
       {banner}
-      <AppearanceUnlocksCard />
+      <AppearanceUnlocksCard view={unlocks.view} readOnly={unlocks.readOnly} />
       <AnchoredCard anchor={UNLOCKS_ANCHORS.clothes} searchLabel="容姿の服">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
@@ -423,6 +404,7 @@ export function AppearancePage() {
               表示中を全部消す
             </Button>
           </div>
+          <WriteError error={error} />
           <div className="flex flex-col divide-y">
             {rows.map((c) => {
               const { offset } = appearanceBitPosition(c.id); // ビット位置（bit 番号）は画面に出さない
@@ -463,7 +445,7 @@ export function AppearancePage() {
 
 export function UnlocksPage() {
   const { advanced } = useAdvancedMode();
-  const { view, readOnly, write, banner } = usePageState(readUnlockStates);
+  const { view, readOnly, write, error, banner } = usePageState(readUnlockView);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const categories = useMemo(() => [...new Set(UNLOCKS.map((u) => u.category))], []);
@@ -515,6 +497,7 @@ export function UnlocksPage() {
               </Button>
             ))}
           </div>
+          <WriteError error={error} />
           <UnlockStateRows rows={rows} view={view} readOnly={readOnly} advanced={advanced} write={write} />
         </CardContent>
       </AnchoredCard>

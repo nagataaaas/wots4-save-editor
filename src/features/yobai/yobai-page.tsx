@@ -1,17 +1,20 @@
 import { YOBAI_ANCHORS } from "./anchors";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
 import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AGE_NORMAL_MAX,
   AGE_UNKNOWN,
@@ -70,8 +73,6 @@ import {
   writeYobaiPoint,
   type YobaiPointsView,
 } from "@/save/yobai-points";
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /** 10進数か 0x 付きの16進数 */
 function parseNumber(input: string, validate: (v: number) => string | null): ParseResult<number> {
@@ -232,7 +233,7 @@ function PersonFieldEditor({
   problem: string | null;
   write: (bytes: Uint8Array, value: number, opts: { advanced: boolean }) => void;
 }) {
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const spec = PERSON_FIELDS[field];
   const apply = (v: number) => update((b) => write(b, v, { advanced }));
@@ -308,7 +309,7 @@ function PersonFieldEditor({
  * 場所を変えると、今の配置がその場所で使えなければ、家の中の人がいちばん少ない配置にする
  */
 function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView | null; problem: string | null }) {
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   // promise が null（セーブ未読み込み）のときは欄を無効にして描く
   const layouts = promise ? layoutsForPlace(promise.place) : [];
@@ -365,8 +366,8 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView | null; 
  * 相手の種類（約束の枠の +0x04）。名前のある相手の種類にしたとき、場所と配置がその相手のもの（組の表の行）と違えば、合わせるボタンを出す
  */
 function TypeEditor({ promise, problem }: { promise: PromiseView | null; problem: string | null }) {
-  const { save, update } = useSave();
-  const [error, setError] = useState<string | null>(null);
+  const { save } = useSave();
+  const { write: update, tryWrite, error } = useWrite();
   const { advanced } = useAdvancedMode();
   // promise が null（セーブ未読み込み）のときは欄を無効にして描く
   const partner = promise ? promisePartner(promise.type) : undefined;
@@ -395,9 +396,7 @@ function TypeEditor({ promise, problem }: { promise: PromiseView | null; problem
             size="sm"
             variant="outline"
             onClick={() => {
-              setError(null);
-              try { update((b) => writePromisePlace(b, away.place, away.layout, { advanced })); }
-              catch (e) { setError(errorMessage(e)); }
+              tryWrite((b) => writePromisePlace(b, away.place, away.layout, { advanced }));
             }}
           >
             場所と配置をこの相手のものにする
@@ -414,10 +413,11 @@ function TypeEditor({ promise, problem }: { promise: PromiseView | null; problem
  * 「N日目」で入力する。今日でなければ警告を出す
  */
 function DayEditor({ promise, problem }: { promise: PromiseView | null; problem: string | null }) {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   // promise が null（セーブ未読み込み）のときは欄を無効にし、今日の日付を出さない
-  const today = save ? readU16(save.working, DAY_INDEX_OFFSET) : null;
+  const today = save && promise ? readU16(save.working, DAY_INDEX_OFFSET) : null;
   const isToday = !promise || today === null || promise.day === today;
 
   return (
@@ -476,19 +476,20 @@ const ageOptions: SelectOption[] = [
  * 名前・見た目と声・年齢・血液型は種類とは別々に効くので、約束の編集欄と同じ範囲で自由に選べる（初めはゲームが選ぶ候補の値）
  */
 function CreatePromiseForm({ problem }: { problem: string | null }) {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { tryWrite, error, setMessage } = useWrite();
   const { advanced } = useAdvancedMode();
   const stage = save ? currentStage(save.working) : 0;
   const day = save ? readU16(save.working, DAY_INDEX_OFFSET) : 0;
   const [spec, setSpec] = useState<PromiseSpec>(() => defaultSpec(promisePartner(0x25)!, stage));
-  const [error, setError] = useState<string | null>(null);
   const partner = promisePartner(spec.type)!;
   const blocked =
     problem ?? (save ? createProblem(save.working) : "セーブファイルが読み込まれていません");
   const invalid = validateSpec(spec, stage, { advanced });
   const death = save ? partnerDeathWarning(save.working, spec.type) : null;
+  // 内容を変えたら、前に作ろうとしたときのエラーは消す
   const set = (patch: Partial<PromiseSpec>) => {
-    setError(null);
+    setMessage(null);
     setSpec((s) => ({ ...s, ...patch }));
   };
 
@@ -539,7 +540,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
             searchPlaceholder="名前・町の人の種類で検索"
             note="場所と配置の組はこれで決まる。選ぶと、名前・見た目と声・年齢・血液型は、ゲームがその種類で選ぶ候補の値になる（そのあと別々に変えられる）"
             onChange={(v) => {
-              setError(null);
+              setMessage(null);
               setSpec(defaultSpec(promisePartner(Number(v))!, stage));
             }}
           />
@@ -625,7 +626,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
             size="sm"
             variant="outline"
             onClick={() => {
-              setError(null);
+              setMessage(null);
               setSpec(randomSpec(partner, stage));
             }}
           >
@@ -635,11 +636,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
             size="sm"
             disabled={invalid !== null}
             onClick={() => {
-              try {
-                update((b) => createPromise(b, spec, { advanced }));
-              } catch (e) {
-                setError(errorMessage(e));
-              }
+              tryWrite((b) => createPromise(b, spec, { advanced }));
             }}
           >
             約束を作る
@@ -747,7 +744,7 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
 }
 
 function PointsCard({ view }: { view: YobaiPointsView | null }) {
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const problem = view?.problem ?? null;
 
@@ -837,41 +834,21 @@ function CountersCard({ view }: { view: YobaiView | null }) {
   );
 }
 
+const readYobaiViews = (bytes: Uint8Array) => ({ view: readYobai(bytes), points: readYobaiPoints(bytes) });
+
 export function YobaiPage() {
   const { save } = useSave();
 
-  const result = useMemo(():
-    | { view: YobaiView; points: YobaiPointsView }
-    | { error: string }
-    | null => {
-    if (!save) return null;
-    try {
-      return { view: readYobai(save.working), points: readYobaiPoints(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
+  const { view: result, error: readError, problem } = useSaveView(readYobaiViews, {
+    problem: (v) => v.view.promiseProblem,
+  });
 
   const view = result?.view ?? null;
   const k = save?.loadId ?? 0;
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.promiseProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.promiseProblem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
       {/*
         確度（docs: night-visit）：約束の場所・名前・見た目と声・セリフと戦闘力・年齢・血液型は ✅ 書き換えでゲームに反映。

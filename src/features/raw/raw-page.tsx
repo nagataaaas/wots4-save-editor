@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
+import { errorMessage } from '@/lib/error-message'
 import { readFileAsBytes } from '@/lib/file-io'
 import { formatOffset } from '@/lib/format'
 import { useSave } from '@/lib/save-context'
@@ -38,8 +39,6 @@ import {
 
 // 生データ：セーブ全体を 16 進で表示する解析用の画面。
 // 領域の色分けは docs/save_format/README.md §3 の写し（src/save/raw.ts）。書き換えは上級者モードのときだけ。
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 const BYTES_PER_ROW = 16
 const ROW_HEIGHT = 20

@@ -1,10 +1,9 @@
-import { useMemo, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { AnchorLink, ScopeAnchorLink, ToggleChevron } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -13,6 +12,10 @@ import { AnchorScope, useAnchoredOpen } from "@/lib/navigation-context";
 import { SearchPath } from "@/lib/search-context";
 import { useSearchBox } from "@/lib/search-hooks";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteError } from "@/components/write-error";
 import {
   BELT_COUNT,
   BELT_STATE,
@@ -29,43 +32,18 @@ import { WeaponEditor } from "./weapon-editor";
 import { SwitchRow, WeaponImage } from "./weapon-rows";
 import { COLLAPSIBLE_ANIMATION, NONE, isOnButton, type WeaponUpdate } from "./weapon-ui";
 
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
-
 const weaponTitle = (w: WeaponView | undefined, i: number) =>
   `${i + 1}本目${w && !w.empty ? `：${w.name.value || "（名前なし）"}` : w?.empty ? "：空き" : ""}`;
 
 export function BeltPage() {
-  const { save, update } = useSave();
-
-  const result = useMemo((): { view: BeltView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readBelt(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  const view = result?.view ?? null;
+  const { save } = useSave();
+  const { write: update } = useWrite();
+  const { view, error: readError, problem } = useSaveView(readBelt, { problem: (v) => v.layoutProblem });
   const k = save?.loadId ?? 0;
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
       <StateCard
         view={view}
@@ -101,7 +79,7 @@ function StateCard({
   onRight: (index: number | null) => void;
   onDual: (left: number | null) => void;
 }) {
-  const [error, setError] = useState<string | null>(null);
+  const { attempt, error, setMessage } = useWrite();
   const state = view?.state ?? null;
   const problem = state?.problem ?? null;
   const disabled = state === null || problem !== null;
@@ -113,21 +91,12 @@ function StateCard({
       .filter(({ w, i }) => !w.empty && i !== exclude && i < (state?.count ?? 0))
       .map(({ w, i }) => ({ value: String(i), label: weaponTitle(w, i) }));
 
-  function run(action: () => void) {
-    setError(null);
-    try {
-      action();
-    } catch (e) {
-      setError(errorMessage(e));
-    }
-  }
-
   function toggleDual(on: boolean) {
     if (!state) return;
-    if (!on) return run(() => onDual(null));
+    if (!on) return void attempt(() => onDual(null));
     const first = usable(state.right)[0];
-    if (!first) return setError("左手に持てる武器がありません");
-    run(() => onDual(Number(first.value)));
+    if (!first) return setMessage({ error: true, text: "左手に持てる武器がありません" });
+    attempt(() => onDual(Number(first.value)));
   }
 
   return (
@@ -184,7 +153,7 @@ function StateCard({
         {problem ? (
           <p className="text-muted-foreground text-xs sm:col-span-2">読み取り専用：{problem}</p>
         ) : (
-          error && <p className="text-destructive text-xs sm:col-span-2">{error}</p>
+          <WriteError error={error} className="sm:col-span-2" />
         )}
       </CardContent>
     </AnchoredCard>

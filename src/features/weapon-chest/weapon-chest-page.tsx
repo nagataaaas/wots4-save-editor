@@ -1,8 +1,7 @@
-import { useId, useMemo, useState } from "react";
+import { useId, useState } from "react";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +11,12 @@ import { WEAPON_LIST_ANCHORS } from "@/features/belt/anchors";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CompactWeaponList } from "@/features/belt/compact-weapon-list";
-import type { WeaponView } from "@/save/weapon";
 import { formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteError } from "@/components/write-error";
 import {
   CAPACITY_MAX,
   CAPACITY_MIN,
@@ -28,38 +30,20 @@ import {
   validateWeaponChestCapacity,
   writeWeaponChestCapacity,
   writeWeaponChestCountToFilled,
-  type WeaponChestView,
 } from "@/save/weapon-chest";
 
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+const readChest = (bytes: Uint8Array) => ({ view: readWeaponChest(bytes), weapons: readWeaponChestWeapons(bytes) });
 
 /** 武器箪笥（刀箪笥）の本数と容量、個々の武器（帯刀と同じ欄を細い一覧で） */
 export function WeaponChestPage() {
-  const { save, update } = useSave();
-  const [error, setError] = useState<string | null>(null);
+  const { save } = useSave();
+  const { write: update, tryWrite, error: fixError } = useWrite();
   const [showEmpty, setShowEmpty] = useState(false);
   const showEmptyId = useId();
 
-  const result = useMemo(
-    (): { view: WeaponChestView; weapons: WeaponView[] } | { error: string } | null => {
-      if (!save) return null;
-      try {
-        return { view: readWeaponChest(save.working), weapons: readWeaponChestWeapons(save.working) };
-      } catch (e) {
-        return { error: errorMessage(e) };
-      }
-    },
-    [save],
-  );
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
+  const { view: result, error: readError, problem: layoutProblem } = useSaveView(readChest, {
+    problem: (v) => v.view.layoutProblem,
+  });
 
   const view = result?.view ?? null;
   const weapons = result?.weapons ?? null;
@@ -76,22 +60,12 @@ export function WeaponChestPage() {
   }
 
   function fixCount() {
-    setError(null);
-    try {
-      update((b) => writeWeaponChestCountToFilled(b));
-    } catch (e) {
-      setError(errorMessage(e));
-    }
+    tryWrite(writeWeaponChestCountToFilled);
   }
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={layoutProblem} />
 
       <AnchoredCard anchor={WEAPON_LIST_ANCHORS.capacity} searchLabel="刀箪笥の本数と容量">
         <CardHeader>
@@ -136,7 +110,7 @@ export function WeaponChestPage() {
                 </Button>
               </div>
             )}
-            {error && <p className="text-destructive text-xs">{error}</p>}
+            {!problem && <WriteError error={fixError} />}
           </div>
           {problem && (
             <p className="text-muted-foreground text-xs sm:col-span-2">読み取り専用：{problem}</p>

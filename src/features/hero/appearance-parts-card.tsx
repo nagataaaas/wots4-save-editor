@@ -1,5 +1,4 @@
 import { HERO_APPEARANCE_ANCHORS } from "./anchors";
-import { useMemo, useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { InfoTip } from "@/components/info-tip";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,10 @@ import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteError } from "@/components/write-error";
 import { SearchField } from "@/lib/search-context";
 import {
   APPEARANCE_PARTS_OFFSETS,
@@ -186,15 +189,8 @@ function NudeButtons({
   disabled: boolean;
   onNude: (kind: "upper" | "lower") => void;
 }) {
-  const [error, setError] = useState<string | null>(null);
-  const run = (kind: "upper" | "lower") => {
-    setError(null);
-    try {
-      onNude(kind);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
-  };
+  const { attempt, error } = useWrite();
+  const run = (kind: "upper" | "lower") => attempt(() => onNude(kind));
   return (
     <SearchField label="裸" className="flex flex-col gap-1.5 sm:col-span-2">
       <div className="flex flex-wrap items-center gap-2">
@@ -214,19 +210,19 @@ function NudeButtons({
       <p className="text-muted-foreground text-xs">
         タイプが男・女のときだけ使えます。足元は変えません
       </p>
-      {error && <p className="text-destructive text-xs">{error}</p>}
+      <WriteError error={error} />
     </SearchField>
   );
 }
 
 /** 人物・タイプ・髪の色・顔・髪型・服（0x3AAD4〜0x3AB5B）。U-19 */
 export function AppearancePartsCard() {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
-  const view = useMemo(() => (save ? readAppearanceParts(save.working) : null), [save]);
+  const { view, error, problem } = useSaveView(readAppearanceParts, { problem: (v) => v.problem });
   const k = save?.loadId ?? 0;
-  const problem = view === null ? (save ? "ファイルが小さすぎて読めません" : null) : view.problem;
-  const heroBodyKind = view?.bodyKind ?? 0;
+  const heroBodyKind = view?.bodyKind ?? null;
 
   // タイプ（男・女）の順に主人公設定の人物、続けて主人公設定に出ない見た目の組（ローラ・男の子・女の子 ✅ [U]）。どのモードでも出す（ユーザー判断 2026-10-09）
   const personGroups: string[] = [...BODY_KIND_NAMES, PERSON_HIDDEN_GROUP];
@@ -263,6 +259,7 @@ export function AppearancePartsCard() {
       }
       contentClassName="grid gap-4 sm:grid-cols-2"
     >
+      <PageBanner error={error} problem={problem} className="sm:col-span-2" />
       <SearchSelectRow
         key={`${k}-person-${advanced}`}
         label="人物"
@@ -342,12 +339,12 @@ export function AppearancePartsCard() {
                     ? partLabel(current)
                     : "表にない部品"
               }
-              options={partOptions(kind, heroBodyKind, advanced)}
+              options={heroBodyKind === null ? [] : partOptions(kind, heroBodyKind, advanced)}
               problem={problem}
               hint={
                 (kind === "upper" || kind === "lower") && view && isNude(view, kind)
                   ? `今は${kind === "upper" ? "上裸" : "下裸"}です（服の層を外して体の層だけにしています）`
-                  : advanced || !view
+                  : advanced || heroBodyKind === null
                     ? undefined
                     : heroBodyKind === 0 || heroBodyKind === 1
                       ? `${bodyKindName(heroBodyKind)}用と共通の、名前のある部品だけを表示しています`

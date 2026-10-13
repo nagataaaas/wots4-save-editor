@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +19,10 @@ import {
 } from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteResult } from "@/components/write-error";
 import { SearchField } from "@/lib/search-context";
 import {
   CUSTOM_COUNT_OFFSET,
@@ -43,60 +46,21 @@ import {
 } from "@/save/custom-style";
 import { RANK_LABELS, SLOT_LABELS, STANCES, findStance, findStanceSkill } from "@/save/master/sect-data";
 import { I16_MAX, MASTERY_MAX } from "@/save/sects";
-import { errorMessage } from "./sect-format";
 import { IntField, RankField, SkillPicker } from "./sect-ui";
-
-type Message = { error: boolean; text: string } | null;
 
 const isFirstSkill = (stance: number, no: number) => findStanceSkill(stance, no)?.first ?? false;
 
 export function OreRyuPage() {
-  const { save, update } = useSave();
+  const { save } = useSave();
   const { advanced } = useAdvancedMode();
-  const [message, setMessage] = useState<Message>(null);
-
-  const result = useMemo((): { view: CustomStylesView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readCustomStyles(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
+  const { view, error: readError, problem, readOnly } = useSaveView(readCustomStyles, { problem: (v) => v.problem });
 
   // 未読み込みのときは view が null。俺流の一覧は空、作る欄は無効にして描く
-  const view = result?.view ?? null;
   const k = save?.loadId ?? 0;
-  const readOnly = !view || view.problem !== null;
-  /** 成功したら true */
-  const run = (label: string, f: (b: Uint8Array) => void): boolean => {
-    try {
-      update(f);
-      setMessage({ error: false, text: label });
-      return true;
-    } catch (e) {
-      setMessage({ error: true, text: errorMessage(e) });
-      return false;
-    }
-  };
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.problem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.problem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
       <AnchoredCard anchor={ORE_RYU_ANCHORS.overview} searchLabel="俺流">
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
@@ -113,18 +77,13 @@ export function OreRyuPage() {
             {/* 技は構えの技の表から選ぶ（通常モードでは覚えていて俺流に入れられる技だけ、上級者モードでは構えの全部の技） */}
           </CardDescription>
         </CardHeader>
-        {message && (
-          <CardContent>
-            <p className={message.error ? "text-destructive text-sm" : "text-muted-foreground text-sm"}>{message.text}</p>
-          </CardContent>
-        )}
       </AnchoredCard>
 
       {view?.styles.map((style) => (
-        <StyleCard key={`${k}-${style.id}`} style={style} view={view} readOnly={readOnly} advanced={advanced} run={run} update={update} />
+        <StyleCard key={`${k}-${style.id}`} style={style} view={view} readOnly={readOnly} advanced={advanced} />
       ))}
 
-      <CreateCard key={`create-${k}`} view={view} readOnly={readOnly} advanced={advanced} run={run} />
+      <CreateCard key={`create-${k}`} view={view} readOnly={readOnly} advanced={advanced} />
     </div>
   );
 }
@@ -140,16 +99,13 @@ function StyleCard({
   view,
   readOnly,
   advanced,
-  run,
-  update,
 }: {
   style: CustomStyle;
   view: CustomStylesView;
   readOnly: boolean;
   advanced: boolean;
-  run: (label: string, f: (b: Uint8Array) => void) => boolean;
-  update: (f: (b: Uint8Array) => void) => void;
 }) {
+  const { write: update, run, message } = useWrite();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [addStance, setAddStance] = useState<string>("");
   // 生きた証の写しはその人物が町に出るたびに作り直されるので、上級者モードでだけ書き換える 🔶
@@ -287,6 +243,8 @@ function StyleCard({
           </div>
         )}
 
+        <WriteResult message={message} />
+
         <div className="flex flex-wrap items-center gap-2 border-t pt-3">
           {!confirmDelete ? (
             <Button variant="outline" disabled={readOnly || style.equipped || (style.kind !== "player" && !advanced)} onClick={() => setConfirmDelete(true)}>
@@ -373,14 +331,13 @@ function CreateCard({
   view,
   readOnly,
   advanced,
-  run,
 }: {
   /** null はセーブ未読み込み */
   view: CustomStylesView | null;
   readOnly: boolean;
   advanced: boolean;
-  run: (label: string, f: (b: Uint8Array) => void) => boolean;
 }) {
+  const { run, message } = useWrite();
   const [name, setName] = useState("My流");
   const [stance, setStance] = useState("0");
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -455,6 +412,7 @@ function CreateCard({
           </Button>
           {(nameProblem ?? skillProblem) && <span className="text-destructive text-xs">{nameProblem ?? skillProblem}</span>}
         </div>
+        <WriteResult message={message} />
       </CardContent>
     </AnchoredCard>
   );

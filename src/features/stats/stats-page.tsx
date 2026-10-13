@@ -1,5 +1,5 @@
 import { STATS_ANCHORS } from "./anchors";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { SearchSelectRow } from "@/components/search-select-row";
@@ -14,11 +14,12 @@ import {
   writeScore,
   type ScoreScope,
   type ScoreTableId,
-  type ScoreTableView,
 } from "@/save/score-tables";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
 import {
   STAT_FIELDS,
   STAT_GROUPS,
@@ -28,7 +29,6 @@ import {
   writeStat,
   type StatField,
   type StatGroupId,
-  type StatsView,
 } from "@/save/stats";
 
 /** 最初から開いておくまとまり */
@@ -56,28 +56,10 @@ function unitHint(field: StatField, value: number | null): string {
 }
 
 export function StatsPage() {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
-
-  const result = useMemo((): { view: StatsView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readStats(save.working) };
-    } catch (e) {
-      return { error: e instanceof Error ? e.message : String(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  const view = result?.view ?? null;
+  const { view, error: readError, problem } = useSaveView(readStats, { problem: (v) => v.problem });
   const k = save?.loadId ?? 0;
   const byKey = new Map(view?.values.map((v) => [v.field.key, v]));
 
@@ -104,12 +86,7 @@ export function StatsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.problem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.problem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
       {/* 書き換えたときのゲーム内の表示は要ゲーム内確認 */}
       <p className="text-muted-foreground text-sm">
         侍点は「基本情報」、周回数は「世界 / 阿弥浜」、経過日数は「世界 / 阿弥浜」の日数で編集します。上限はゲームが値を増やすときの上限で、上級者モードでは型で書ける範囲まで入力できます。
@@ -143,17 +120,11 @@ const SCORE_TOP = 10;
 
 /** 🟢 技ごとの斬殺数・道具の使用回数。1件を選んで、周回中と累計を書く */
 function ScoreTableCard({ table }: { table: ScoreTableId }) {
-  const { save, update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const t = SCORE_TABLES[table];
-  const view = useMemo((): ScoreTableView | null => {
-    if (!save) return null;
-    try {
-      return readScoreTable(save.working, table);
-    } catch {
-      return null;
-    }
-  }, [save, table]);
+  const read = useCallback((bytes: Uint8Array) => readScoreTable(bytes, table), [table]);
+  const { view, error, problem } = useSaveView(read, { problem: (v) => v.problem });
   const entries = useMemo(() => scoreEntries(table), [table]);
   const [index, setIndex] = useState(() => entries[0]?.index ?? 0);
 
@@ -198,6 +169,7 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
 
   return (
     <CollapsibleCard anchor={STATS_ANCHORS.scoreTable(table)} title={t.label} description={SCORE_NOTES[table]} contentClassName="flex flex-col gap-4">
+      <PageBanner error={error} problem={problem} />
       {(!view || top.length > 0) && (
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="text-muted-foreground">累計の上位：</span>

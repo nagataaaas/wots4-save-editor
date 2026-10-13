@@ -1,9 +1,7 @@
-import { useMemo } from "react";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { SearchPath } from "@/lib/search-context";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
@@ -12,7 +10,9 @@ import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatOffset } from "@/lib/format";
 import { NPC_LINKS } from "@/features/scenario/anchors";
 import { useNavigation } from "@/lib/navigation-context";
-import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
 import {
   ALL_LOOKS,
   PUPIL_COUNT_OFFSET,
@@ -37,8 +37,6 @@ import {
 
 // 道場（🟢 chunks/dojo）。名簿の書き換え・道場破りを帰す操作のゲームへの反映は要ゲーム内確認。
 // 評判の点は種類ごとの値の合計で、段階（☆）を決める。段階の範囲は REPUTATION_RANGES（🟢）。
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 const EMPTY_VALUE = "empty";
 
@@ -118,7 +116,7 @@ function RelatedFlagsNote() {
 }
 
 function ReputationCard({ view }: { view: DojoView | null }) {
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const problem = view?.problem ?? null;
   const next = view && view.rank < RANK_MAX ? REPUTATION_RANGES[view.rank + 1][0] : null;
 
@@ -175,7 +173,7 @@ function ReputationCard({ view }: { view: DojoView | null }) {
 }
 
 function PupilRow({ index, view }: { index: number; view: DojoView | null }) {
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const problem = view?.problem ?? null;
   const pupil = view?.pupils[index] ?? null;
@@ -238,34 +236,11 @@ function PupilsCard({ view }: { view: DojoView | null }) {
 }
 
 export function DojoPage() {
-  const { save } = useSave();
-  const result = useMemo((): { view: DojoView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readDojo(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
-  const view = result?.view ?? null;
+  const { view, error: readError, problem } = useSaveView(readDojo, { problem: (v) => v.problem });
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.problem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.problem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
       <RelatedFlagsNote />
       <ReputationCard view={view} />
       <PupilsCard view={view} />

@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { ItemSlotRow } from "@/components/item-slot-row";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
@@ -19,6 +18,10 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { formatHex4, formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteResult } from "@/components/write-error";
 import {
   PROBE_CANDIDATES,
   VALUABLES,
@@ -30,61 +33,26 @@ import {
   readValuables,
   slotOffset,
   writeValuable,
-  type ValuablesView,
 } from "@/save/valuables";
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 const VALUABLE_GROUPS = [{ items: VALUABLES }];
 
 export function ValuablesPage() {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { write: update } = useWrite();
   // 一覧にない ID を書ける上級者モード（U-14 の調査用に作った）。明示的に有効にしたときだけ使える
   const [investigate, setInvestigate] = useState(false);
 
-  const result = useMemo((): { view: ValuablesView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readValuables(save.working, { investigate }) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save, investigate]);
+  const read = useCallback((bytes: Uint8Array) => readValuables(bytes, { investigate }), [investigate]);
+  const { view, error: readError, problem, readOnly } = useSaveView(read, { problem: (v) => v.layoutProblem });
 
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  const view = result?.view ?? null;
   const k = save?.loadId ?? 0;
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
-      <ProbeCard
-        key={k}
-        enabled={investigate}
-        onToggle={setInvestigate}
-        disabled={!view || view.layoutProblem !== null}
-        onFill={(start) => {
-          let filled: number[] = [];
-          update((b) => {
-            filled = fillEmptySlotsWithProbes(b, start);
-          });
-          return filled;
-        }}
-      />
+      <ProbeCard key={k} enabled={investigate} onToggle={setInvestigate} disabled={readOnly} />
 
       <AnchoredCard anchor={ITEM_ANCHORS.items} searchLabel="重要品">
         <CardHeader>
@@ -139,30 +107,27 @@ function ProbeCard({
   enabled,
   onToggle,
   disabled,
-  onFill,
 }: {
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
   disabled: boolean;
-  onFill: (start: number) => number[];
 }) {
   const [start, setStart] = useState(String(PROBE_CANDIDATES[0]));
-  const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
+  const { tryWrite, message, setMessage } = useWrite();
 
   function fill() {
-    try {
-      const filled = onFill(Number(start));
-      if (filled.length === 0) {
-        setMessage({ error: true, text: "入れられる空き枠か候補 ID がありません" });
-        return;
-      }
-      setMessage({ error: false, text: `入れた ID：${filled.map(formatHex4).join(", ")}` });
-      // 次の回は続きから
-      const next = PROBE_CANDIDATES[PROBE_CANDIDATES.indexOf(filled[filled.length - 1]) + 1];
-      if (next !== undefined) setStart(String(next));
-    } catch (e) {
-      setMessage({ error: true, text: errorMessage(e) });
-    }
+    const result = tryWrite((b) => {
+      const filled = fillEmptySlotsWithProbes(b, Number(start));
+      // 何も書かなかったときは失敗として出す
+      if (filled.length === 0) throw new Error("入れられる空き枠か候補 ID がありません");
+      return filled;
+    });
+    if (!result.ok) return;
+    const filled = result.value;
+    setMessage({ error: false, text: `入れた ID：${filled.map(formatHex4).join(", ")}` });
+    // 次の回は続きから
+    const next = PROBE_CANDIDATES[PROBE_CANDIDATES.indexOf(filled[filled.length - 1]) + 1];
+    if (next !== undefined) setStart(String(next));
   }
 
   return (
@@ -210,15 +175,7 @@ function ProbeCard({
               空き枠に候補 ID を入れる
             </Button>
           </div>
-          {message && (
-            <p
-              className={
-                message.error ? "text-destructive text-xs" : "text-muted-foreground text-xs"
-              }
-            >
-              {message.text}
-            </p>
-          )}
+          <WriteResult message={message} />
           {/* 🔶 候補の範囲：0xD7〜0xFF、続いて 0x9F〜0xBF の残り */}
           <p className="text-muted-foreground text-xs">
             「なし」の枠に、開始 ID から順に候補の ID を個数 1

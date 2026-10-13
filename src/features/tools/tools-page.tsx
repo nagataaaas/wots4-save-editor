@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { InfoTip } from '@/components/info-tip'
 import { ItemSlotRow } from '@/components/item-slot-row'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -10,6 +10,10 @@ import { ITEM_ANCHORS } from './anchors'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { formatOffset } from '@/lib/format'
 import { useSave } from '@/lib/save-context'
+import { useSaveView } from '@/lib/use-save-view'
+import { useWrite } from '@/lib/use-write'
+import { PageBanner } from '@/components/page-banner'
+import { WriteError } from '@/components/write-error'
 import {
   CHEST_AREA,
   TOOLS_AREA,
@@ -22,11 +26,8 @@ import {
   slotsMissingMark,
   writeItemBoxSlot,
   type ItemBoxArea,
-  type ItemBoxView,
 } from '@/save/item-box'
 import { ITEM_SLOT_BYTES } from '@/save/item-slot'
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 /** 手持ちの道具（0x5B40〜、10件） */
 export function ToolsPage() {
@@ -66,42 +67,23 @@ function ItemBoxPage({
   description: string
   missingMarkNote: string
 }) {
-  const { save, update } = useSave()
-  const [error, setError] = useState<string | null>(null)
+  const { save } = useSave()
+  const { write: update, tryWrite, error: repairError } = useWrite()
   const { advanced } = useAdvancedMode()
   const groups = useMemo(() => itemOptionGroups({ advanced }), [advanced])
 
-  const result = useMemo((): { view: ItemBoxView; missingMark: number[] } | { error: string } | null => {
-    if (!save) return null
-    try {
-      return { view: readItemBox(save.working, area, { advanced }), missingMark: slotsMissingMark(save.working, area) }
-    } catch (e) {
-      return { error: errorMessage(e) }
-    }
-  }, [save, area, advanced])
-
-  if (result && 'error' in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    )
-  }
-
+  const read = useCallback(
+    (bytes: Uint8Array) => ({ view: readItemBox(bytes, area, { advanced }), missingMark: slotsMissingMark(bytes, area) }),
+    [area, advanced],
+  )
+  const { view: result, error: readError, problem } = useSaveView(read, { problem: (v) => v.view.layoutProblem })
   const view = result?.view ?? null
   const missingMark = result?.missingMark ?? []
   const k = save?.loadId ?? 0
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <Alert variant="destructive"><AlertTitle>書き込めません</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
-      {view?.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
       {missingMark.length > 0 && (
         <Alert variant="destructive">
@@ -111,13 +93,12 @@ function ItemBoxPage({
               {missingMark.map((i) => `${i + 1}件目`).join('、')} は道具として扱えない状態です。{missingMarkNote}
               修復すると、これらの枠を道具として扱える状態にします。
             </p>
-            <Button size="sm" variant="outline" disabled={view?.layoutProblem != null} onClick={() => {
-              setError(null)
-              try { update((b) => void repairItemMarks(b, area)) }
-              catch (e) { setError(errorMessage(e)) }
+            <Button size="sm" variant="outline" disabled={problem !== null} onClick={() => {
+              tryWrite((b) => repairItemMarks(b, area))
             }}>
               修復
             </Button>
+            <WriteError error={repairError} />
           </AlertDescription>
         </Alert>
       )}

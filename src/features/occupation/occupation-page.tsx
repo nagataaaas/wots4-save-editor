@@ -1,10 +1,9 @@
 import { OCCUPATION_ANCHORS } from "./anchors";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { GameLabel } from "@/components/game-label";
 import { InfoTip } from "@/components/info-tip";
 import { LazySelect } from "@/components/lazy-select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +22,11 @@ import { Switch } from "@/components/ui/switch";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteError } from "@/components/write-error";
+import { errorMessage } from "@/lib/error-message";
 import { SearchField } from "@/lib/search-context";
 import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
@@ -69,13 +73,6 @@ import { OCCUPATION_FLAG_START } from "@/save/townsfolk";
 
 import { seriesOptions } from "./series-options";
 
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
-
-type Views = {
-  occupations: OccupationView;
-  accepted: AcceptedView;
-};
-
 type StateKind = "hidden" | "open" | "cleared";
 
 const kindOf = (v: number): StateKind =>
@@ -115,82 +112,31 @@ const groupLabelOf = (id: number) => {
   return group && occupationGroupLabel(group);
 };
 
+const readViews = (bytes: Uint8Array) => ({ occupations: readOccupations(bytes), accepted: readAccepted(bytes) });
+
 /** なりわい：状態の表・クリア数・受注中、連続なりわいなどの進み具合（なりわいのフラグ） */
 export function OccupationPage() {
-  const { save, update } = useSave();
-  const [writeError, setWriteError] = useState<string | null>(null);
-  const result = useMemo((): { views: Views } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return {
-        views: {
-          occupations: readOccupations(save.working),
-          accepted: readAccepted(save.working),
-        },
-      };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-  const views = result && "views" in result ? result.views : null;
-
-  function write(mutator: (bytes: Uint8Array) => void) {
-    setWriteError(null);
-    try {
-      update(mutator);
-    } catch (e) {
-      setWriteError(errorMessage(e));
-    }
-  }
+  const { save } = useSave();
+  const { view: views, error: readError, problem } = useSaveView(readViews, {
+    problem: (v) => v.occupations.layoutProblem,
+  });
 
   return (
     <div className="flex flex-col gap-4">
-      {result && "error" in result && (
-        <Alert variant="destructive">
-          <AlertTitle>読み込めません</AlertTitle>
-          <AlertDescription>{result.error}</AlertDescription>
-        </Alert>
-      )}
-      {views?.occupations.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{views.occupations.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
-      {writeError && (
-        <Alert variant="destructive">
-          <AlertTitle>書き込めません</AlertTitle>
-          <AlertDescription>{writeError}</AlertDescription>
-        </Alert>
-      )}
-      <SummaryCard
-        view={views?.occupations ?? null}
-        accepted={views?.accepted ?? null}
-        write={write}
-      />
+      <PageBanner error={readError} problem={problem} />
+      <SummaryCard view={views?.occupations ?? null} accepted={views?.accepted ?? null} />
       <SeriesCard />
       <DlcCard />
       <SecurityCard />
-      <StatesCard
-        key={`${save?.loadId ?? 0}-states`}
-        view={views?.occupations ?? null}
-        write={write}
-      />
+      <StatesCard key={`${save?.loadId ?? 0}-states`} view={views?.occupations ?? null} />
     </div>
   );
 }
 
 // ---------------------------------------------------------------- クリア数・受注中
 
-function SummaryCard({
-  view,
-  accepted,
-  write,
-}: {
-  view: OccupationView | null;
-  accepted: AcceptedView | null;
-  write: (m: (b: Uint8Array) => void) => void;
-}) {
+function SummaryCard({ view, accepted }: { view: OccupationView | null; accepted: AcceptedView | null }) {
+  const { tryWrite, error } = useWrite();
   const readOnly = !view || view.layoutProblem !== null;
   const mismatch = view !== null && view.clearCount !== view.stateSum;
 
@@ -218,7 +164,7 @@ function SummaryCard({
               variant="outline"
               size="sm"
               disabled={readOnly || !mismatch}
-              onClick={() => write(syncClearCount)}
+              onClick={() => tryWrite(syncClearCount)}
             >
               表の合計に揃える
             </Button>
@@ -226,8 +172,9 @@ function SummaryCard({
           {mismatch && (
             <p className="text-destructive text-xs">クリア数と状態の表の合計が違います</p>
           )}
+          <WriteError error={error} />
         </SearchField>
-        <AcceptRow view={accepted} write={write} />
+        <AcceptRow view={accepted} />
       </CardContent>
     </AnchoredCard>
   );
@@ -237,13 +184,8 @@ function SummaryCard({
  * 受注中のなりわい。受注・外す書き込みは occupation-accept.ts（✅ 受注中の情報、🟢 受注で書くフラグ、🔶 外すときのフラグ）。
  * ❓ 書き込みのゲーム内の反映は要ゲーム内確認
  */
-function AcceptRow({
-  view,
-  write,
-}: {
-  view: AcceptedView | null;
-  write: (m: (b: Uint8Array) => void) => void;
-}) {
+function AcceptRow({ view }: { view: AcceptedView | null }) {
+  const { write } = useWrite();
   const entry = view && view.id !== 0 ? occupationById(view.id) : undefined;
   const options: SelectOption[] = [
     { value: "0", label: "受注していない" },
@@ -386,13 +328,8 @@ const jobList = (ids: readonly number[], separator = " → ") =>
 
 type KindFilter = "all" | StateKind;
 
-function StatesCard({
-  view,
-  write,
-}: {
-  view: OccupationView | null;
-  write: (m: (b: Uint8Array) => void) => void;
-}) {
+function StatesCard({ view }: { view: OccupationView | null }) {
+  const { write, attempt, error } = useWrite();
   const { advanced } = useAdvancedMode();
   const readOnly = !view || view.layoutProblem !== null;
   const [query, setQuery] = useState("");
@@ -489,11 +426,13 @@ function StatesCard({
               size="sm"
               disabled={readOnly || rows.length === 0}
               onClick={() =>
-                writeStates((b) => {
-                  // クリア済みは、すでにクリアしたものの回数を残す
-                  for (const o of rows)
-                    writeOccupationStates(b, [o.id], valueForKind(k, view?.states[o.id] ?? 0));
-                })
+                attempt(() =>
+                  writeStates((b) => {
+                    // クリア済みは、すでにクリアしたものの回数を残す
+                    for (const o of rows)
+                      writeOccupationStates(b, [o.id], valueForKind(k, view?.states[o.id] ?? 0));
+                  }),
+                )
               }
             >
               表示中を「{KIND_LABELS[k]}」に
@@ -508,6 +447,7 @@ function StatesCard({
             書き込むときにクリア数も揃える
           </label>
         </div>
+        <WriteError error={error} />
         <div className="flex flex-col divide-y">
           {rows.map((o) => (
             <StateRow
@@ -538,8 +478,10 @@ function StateRow({
   accepted: boolean;
   readOnly: boolean;
   advanced: boolean;
+  /** 失敗したら例外を投げる */
   write: (m: (b: Uint8Array) => void) => void;
 }) {
+  const { attempt, error } = useWrite();
   const kind = value === null ? null : kindOf(value);
   const offset = occupationStateOffset(o.id);
   return (
@@ -553,8 +495,8 @@ function StateRow({
         aria-label={entryLabel(o)}
         onValueChange={(k) =>
           value !== null &&
-          write((b) =>
-            writeOccupationState(b, o.id, valueForKind(k as StateKind, value), { advanced }),
+          attempt(() =>
+            write((b) => writeOccupationState(b, o.id, valueForKind(k as StateKind, value), { advanced })),
           )
         }
       >
@@ -564,6 +506,7 @@ function StateRow({
           </SelectItem>
         ))}
       </LazySelect>
+      <WriteError error={error} />
       {kind === "cleared" && value !== null && (
         <CountInput id={o.id} value={value} readOnly={readOnly} advanced={advanced} write={write} />
       )}
@@ -634,7 +577,12 @@ function CountInput({
       return;
     }
     setError(null);
-    if (v !== value) write((b) => writeOccupationState(b, id, v, { advanced }));
+    if (v === value) return;
+    try {
+      write((b) => writeOccupationState(b, id, v, { advanced }));
+    } catch (e) {
+      setError(errorMessage(e));
+    }
   }
 
   return (

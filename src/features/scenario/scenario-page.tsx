@@ -19,7 +19,6 @@ import {
 } from "@/save/cycle-counts";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -73,6 +72,11 @@ import {
   type PublicOrderView,
 } from "@/save/public-order";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteError } from "@/components/write-error";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   FACTIONS,
   FACTION_ROWS,
@@ -126,8 +130,6 @@ import {
 } from "@/save/scenario-events";
 import { EventChartCard } from "@/features/event-chart/event-chart-card";
 import { recordOptions, stateOptions } from "./event-options";
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 type Views = {
   difficulty: DifficultyView;
@@ -226,52 +228,27 @@ export function EventsPage() {
   );
 }
 
+const readViews = (b: Uint8Array): Views => ({
+  difficulty: readDifficulty(b),
+  cycle: readCycleCounts(b),
+  date: readDate(b),
+  events: readEvents(b),
+  factions: readFactions(b),
+  route: readRouteJudge(b),
+  townsfolk: readTownsfolk(b),
+  bestRoute: readFlag(b, BEST_ROUTE_FLAG).value,
+  publicOrder: readPublicOrder(b),
+});
+
 /** セーブを読み、共通の注意書きを出して、children に各欄を描かせる。views が null ならセーブ未読み込み、k は読み込みごとの key */
 function ViewsPage({ children }: { children: (views: Views | null, k: number) => ReactNode }) {
   const { save } = useSave();
-
-  const result = useMemo((): { views: Views } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      const b = save.working;
-      return {
-        views: {
-          difficulty: readDifficulty(b),
-          cycle: readCycleCounts(b),
-          date: readDate(b),
-          events: readEvents(b),
-          factions: readFactions(b),
-          route: readRouteJudge(b),
-          townsfolk: readTownsfolk(b),
-          bestRoute: readFlag(b, BEST_ROUTE_FLAG).value,
-          publicOrder: readPublicOrder(b),
-        },
-      };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  const views = result?.views ?? null;
+  const { view: views, error: readError, problem } = useSaveView(readViews, { problem: (v) => v.date.layoutProblem });
   const k = save?.loadId ?? 0;
 
   return (
     <div className="flex flex-col gap-4">
-      {views?.date.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{views.date.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
       {children(views, k)}
     </div>
@@ -320,27 +297,21 @@ function CycleCard({
   counts: CycleCountsView | null;
   publicOrder: PublicOrderView | null;
 }) {
-  const { update } = useSave();
+  const { write: update, tryWrite, error } = useWrite();
   const { advanced } = useAdvancedMode();
   const [armed, setArmed] = useState<CycleEnd | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<string | null>(null);
 
   const start = (end: CycleEnd) => {
     if (armed !== end) return setArmed(end);
     setArmed(null);
-    try {
-      const box: { result?: NewCycleReport } = {};
-      update((b) => {
-        box.result = startNewCycle(b, end);
-        // 🟢 ゲームは周回を終えるたびに周回数 0x0B8C を +1 する（クリア・立ち去りのどちらでも）
-        countFinishedCycle(b);
-      });
-      setReport(box.result ? cycleReportText(box.result) : null);
-      setError(null);
-    } catch (e) {
-      setError(errorMessage(e));
-    }
+    const result = tryWrite((b) => {
+      const report = startNewCycle(b, end);
+      // 🟢 ゲームは周回を終えるたびに周回数 0x0B8C を +1 する（クリア・立ち去りのどちらでも）
+      countFinishedCycle(b);
+      return report;
+    });
+    setReport(result.ok ? cycleReportText(result.value) : null);
   };
 
   // 確度：難易度の書き換えの反映は ✅。新しい周回は ✅（以前の版で確認）。
@@ -439,7 +410,7 @@ function CycleCard({
             ))}
           </div>
           {report && <p className="text-muted-foreground text-xs">{report}</p>}
-          {error && <p className="text-destructive text-xs">{error}</p>}
+          <WriteError error={error} />
         </SearchField>
       </CardContent>
     </AnchoredCard>
@@ -464,7 +435,7 @@ const stageOptions: SelectOption[] = STAGES.map((s) => ({
 
 /** 段階・日数・時間帯。view が null ならセーブ未読み込み */
 function DateCard({ view }: { view: DateView | null }) {
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const range = advanced ? DAY_RANGE.system : DAY_RANGE.normal;
   const problem = view?.problem ?? null;
@@ -732,8 +703,7 @@ function CharactersCard() {
  * ほかの人が外せば町に出てくるかは ❓ 要ゲーム内確認
  */
 function PeopleCard({ view }: { view: TownsfolkView | null }) {
-  const { update } = useSave();
-  const [error, setError] = useState<string | null>(null);
+  const { tryWrite, error } = useWrite();
   const groups = [...new Set(TOWNSFOLK_PEOPLE.map((x) => x.group))];
   const deadOf = (p: number) => {
     const v = view?.values[personOffset(p) - TOWNSFOLK_START];
@@ -770,9 +740,7 @@ function PeopleCard({ view }: { view: TownsfolkView | null }) {
                       checked={dead ?? false}
                       disabled={dead === null || view?.problem != null}
                       onCheckedChange={(on) => {
-                        setError(null);
-                        try { update((b) => writePersonDead(b, x.p, on)); }
-                        catch (e) { setError(errorMessage(e)); }
+                        tryWrite((b) => writePersonDead(b, x.p, on));
                       }}
                     />
                     <span>{x.name}</span>
@@ -859,7 +827,7 @@ function RouteJudgeRows({
 }) {
   const { id } = useAnchor(EVENTS_ANCHORS.factions.routeJudge);
   useSearchBox(id, "剣術大会以後のルート分岐");
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const problem = view?.problem ?? null;
   const current = () => "不明";
@@ -913,7 +881,7 @@ function RouteJudgeRows({
 
 /** 勢力の 3×3 表（🔶 3勢力 × 3項目の並びは推定）。view が null ならセーブ未読み込み */
 function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJudgeView | null }) {
-  const { update } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const max = advanced ? FACTION_VALUE_MAX.system : FACTION_VALUE_MAX.normal;
 
@@ -980,21 +948,11 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
  * 対応のない添字（47〜50・67・84 など）は対象にしない（ユーザー判断 2026-10-06）
  */
 function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabled: boolean }) {
-  const { update } = useSave();
+  const { tryWrite: run, error } = useWrite();
   const { advanced } = useAdvancedMode();
   const [state, setState] = useState<string>("");
   const [record, setRecord] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
   const locked = disabled || problem !== null;
-
-  const run = (write: (b: Uint8Array) => void) => {
-    setError(null);
-    try {
-      update(write);
-    } catch (e) {
-      setError(errorMessage(e));
-    }
-  };
 
   return (
     <SearchScope title="一括設定（デバッグ用）" className="flex flex-col gap-3">
@@ -1047,7 +1005,7 @@ function BulkEventsPanel({ problem, disabled }: { problem: string | null; disabl
         </div>
       </div>
       {problem && <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>}
-      {error && <p className="text-destructive text-xs">{error}</p>}
+      <WriteError error={error} />
     </SearchScope>
   );
 }

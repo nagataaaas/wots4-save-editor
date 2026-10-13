@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { SelectRow } from "@/components/select-row";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,9 @@ import { AnchoredCard } from "@/components/anchored-card";
 import { HERO_APPEARANCE_ANCHORS } from "./anchors";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
 import {
   APPEARANCE_CURRENT_NOTES,
   APPEARANCE_CURRENT_OFFSETS,
@@ -39,15 +41,17 @@ const numberRows: {
 
 /** 体型・身長・肌色は ✅、身長の選択肢は 🟢。 */
 export function AppearanceCurrentCard() {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
-  const view = useMemo(() => (save ? readAppearanceCurrent(save.working) : null), [save]);
+  const { view, error } = useSaveView(readAppearanceCurrent);
   return (
     <AnchoredCard anchor={HERO_APPEARANCE_ANCHORS.current} searchLabel="体">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />体</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
+        <PageBanner error={error} className="sm:col-span-2" />
         {selectRows.map(({ key, label, names, hint }) => {
           const field = view?.[key];
           return (

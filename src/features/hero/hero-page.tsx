@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
@@ -15,6 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteError } from "@/components/write-error";
 import { SearchField, SearchScope } from "@/lib/search-context";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import {
@@ -87,29 +90,13 @@ const GAUGE_CURRENT_NOTES: Record<GaugeKind, string> = {
 };
 
 export function HeroPage() {
-  const { save, update } = useSave();
+  const { save } = useSave();
+  const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
 
-  const result = useMemo((): { view: HeroView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readHero(save.working) };
-    } catch (e) {
-      return { error: e instanceof Error ? e.message : String(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
+  const { view, error: readError, problem } = useSaveView(readHero, { problem: (v) => v.layoutProblem });
 
   // 未読み込みのときは view が null。同じ項目を無効状態で表示し、何を編集できるかを見せる
-  const view = result?.view ?? null;
   const k = save?.loadId ?? 0;
 
   const amountRow = (key: U32Key, label: string) => (
@@ -165,12 +152,7 @@ export function HeroPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
       <AnchoredCard anchor={HERO_ANCHORS.name} searchLabel="名前">
         <CardHeader>
@@ -234,19 +216,13 @@ export function HeroPage() {
 
 /** 0x0010 だけを 0 にする（new-cycle.ts の enableCharacterSetup。✅ [U] 次のロードで難易度と主人公の設定に進む） */
 function CharacterSetupCard({ view }: { view: HeroView | null }) {
-  const { update } = useSave();
+  const { tryWrite, error } = useWrite();
   const [armed, setArmed] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const run = () => {
     if (!armed) return setArmed(true);
     setArmed(false);
-    try {
-      update(enableCharacterSetup);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
+    tryWrite(enableCharacterSetup);
   };
 
   return (
@@ -278,7 +254,7 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
           >
             {armed ? "もう一度押すと書き込みます" : "難易度と主人公設定を行えるようにする"}
           </Button>
-          {error && <p className="text-destructive text-xs">{error}</p>}
+          <WriteError error={error} />
         </SearchField>
       </CardContent>
     </AnchoredCard>
@@ -293,7 +269,7 @@ function LocationCard({
   view: HeroView | null;
   onChange: (value: number) => void;
 }) {
-  const [error, setError] = useState<string | null>(null);
+  const { attempt, error } = useWrite();
   const current = view?.location.value ?? null;
   const problem = view?.location.problem ?? null;
   const currentLoc = current === null ? undefined : findLocation(current);
@@ -327,12 +303,7 @@ function LocationCard({
             disabled={current === null || problem !== null}
             onValueChange={(s) => {
               if (s === null) return;
-              setError(null);
-              try {
-                onChange(Number(s));
-              } catch (e) {
-                setError(e instanceof Error ? e.message : String(e));
-              }
+              attempt(() => onChange(Number(s)));
             }}
           >
             <SelectTrigger className="w-full">
@@ -355,7 +326,7 @@ function LocationCard({
           {problem ? (
             <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>
           ) : error ? (
-            <p className="text-destructive text-xs">{error}</p>
+            <WriteError error={error} />
           ) : (
             warning && <p className="text-xs text-amber-600 dark:text-amber-400">⚠ {warning}</p>
           )}

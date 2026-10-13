@@ -1,6 +1,5 @@
-import { useMemo, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { InfoTip } from "@/components/info-tip";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnchorLink, ToggleChevron } from "@/components/anchor-link";
@@ -11,7 +10,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { WeaponPanel } from "@/features/belt/belt-page";
 import { useAnchoredOpen } from "@/lib/navigation-context";
 import { useSearchBox } from "@/lib/search-hooks";
-import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { PageBanner } from "@/components/page-banner";
 import {
   MARKET_ELAPSED,
   MARKET_HOLDER,
@@ -22,11 +22,8 @@ import {
   refineChance,
   vanishChance,
   type MarketOtherSummary,
-  type MarketView,
   type MarketWeaponEntry,
 } from "@/save/market-weapons";
-
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /** 🟢 武器種ごとの行き先（刀は刀泥棒、槍は槍泥棒、ほかは落し物屋） */
 function destination(type: number): string {
@@ -37,36 +34,11 @@ function destination(type: number): string {
 
 /** 流通中の武器・道具・部品（🟢）。読み取り専用 */
 export function MarketWeaponsPage() {
-  const { save } = useSave();
-
-  const result = useMemo((): { view: MarketView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readMarket(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  const view = result?.view ?? null;
+  const { view, error: readError, problem } = useSaveView(readMarket, { problem: (v) => v.layoutProblem });
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.layoutProblem && (
-        <Alert variant="destructive">
-          <AlertTitle>位置がずれている可能性があります</AlertTitle>
-          <AlertDescription>{view.layoutProblem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
       <AnchoredCard anchor={MARKET_ANCHORS.summary} searchLabel="流通">
         <CardHeader>

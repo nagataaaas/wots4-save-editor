@@ -1,7 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { LazyTip } from "@/components/lazy-tip";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
@@ -12,7 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
+import { useWrite } from "@/lib/use-write";
+import { PageBanner } from "@/components/page-banner";
+import { WriteResult } from "@/components/write-error";
 import { SECTS, SLOT_LABELS, STANCES, sheetSkillTree, stanceSkillSheet, stanceSkills, type Sect, type SkillSheet } from "@/save/master/sect-data";
 import {
   forgetStanceSkill,
@@ -21,9 +23,8 @@ import {
   readSects,
   showStanceSkillInOreRyu,
   stanceSkillSheets,
-  type SectsView,
 } from "@/save/sects";
-import { STANCE_TAB_CLASS, attrLabel, errorMessage } from "./sect-format";
+import { STANCE_TAB_CLASS, attrLabel } from "./sect-format";
 import { SkillAttrs, SkillCommandCells, SkillTreeName, SkillTreeRows, StateBadge, type SkillTreeRowContext } from "./sect-ui";
 import {
   ANY,
@@ -79,14 +80,12 @@ function stanceRows(stance: number): Map<number, Row> {
 }
 
 export function SkillsPage() {
-  const { save, update } = useSave();
   const { advanced } = useAdvancedMode();
   const [filter, setFilter] = useState<SkillFilter>(EMPTY_FILTER);
   const [minAttackText, setMinAttackText] = useState("");
   // 構えのタブの箱（リンク先にするときの名前）
   const { id: stancesId } = useAnchor(SKILLS_ANCHORS.stances);
   const [sort, setSort] = useState<SkillSort>("id-asc");
-  const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
   const rowsByStance = useMemo(() => STANCES.map((s) => stanceRows(s.id)), []);
   // 構えの技を、流派の画面と同じ木（続けて出す技・上位技）に並べる
   const trees = useMemo(
@@ -100,46 +99,14 @@ export function SkillsPage() {
   const shownByStance = useMemo(() => trees.map((t) => filterSortTree(t.groups, filter, sort)), [trees, filter, sort]);
   const filtering = JSON.stringify(filter) !== JSON.stringify(EMPTY_FILTER);
 
-  const result = useMemo((): { view: SectsView } | { error: string } | null => {
-    if (!save) return null;
-    try {
-      return { view: readSects(save.working) };
-    } catch (e) {
-      return { error: errorMessage(e) };
-    }
-  }, [save]);
-
-  if (result && "error" in result) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>読み込めません</AlertTitle>
-        <AlertDescription>{result.error}</AlertDescription>
-      </Alert>
-    );
-  }
+  const { view, error: readError, problem, readOnly } = useSaveView(readSects, { problem: (v) => v.problem });
 
   // 未読み込みのときは view が null。技の表から同じ一覧を描き、状態を「—」・操作を無効にする
-  const view = result?.view ?? null;
-  const readOnly = !view || view.problem !== null;
   const set = (patch: Partial<SkillFilter>) => setFilter((f) => ({ ...f, ...patch }));
-
-  const run = (label: string, f: (b: Uint8Array) => void) => {
-    try {
-      update(f);
-      setMessage({ error: false, text: label });
-    } catch (e) {
-      setMessage({ error: true, text: errorMessage(e) });
-    }
-  };
 
   return (
     <div className="flex flex-col gap-4">
-      {view?.problem && (
-        <Alert variant="destructive">
-          <AlertTitle>読み取り専用</AlertTitle>
-          <AlertDescription>{view.problem}</AlertDescription>
-        </Alert>
-      )}
+      <PageBanner error={readError} problem={problem} />
 
       <AnchoredCard anchor={SKILLS_ANCHORS.overview} searchLabel="技">
         <CardHeader>
@@ -246,7 +213,6 @@ export function SkillsPage() {
               条件を戻す
             </Button>
           </div>
-          {message && <p className={message.error ? "text-destructive text-xs" : "text-muted-foreground text-xs"}>{message.text}</p>}
         </CardContent>
       </AnchoredCard>
 
@@ -289,7 +255,6 @@ export function SkillsPage() {
               states={view ? view.stanceStates[stance.id] : null}
               readOnly={readOnly}
               advanced={advanced}
-              run={run}
             />
           </TabsContent>
         ))}
@@ -311,7 +276,6 @@ type RowActions = {
   stance: number;
   readOnly: boolean;
   advanced: boolean;
-  run: (label: string, f: (b: Uint8Array) => void) => void;
 };
 
 function StanceSkillTable({
@@ -327,7 +291,9 @@ function StanceSkillTable({
   /** null はセーブ未読み込み */
   states: readonly number[] | null;
 }) {
-  const { stance, readOnly, run } = actions;
+  const { stance, readOnly } = actions;
+  // 結果は表の上に出す（行ごとには出さない）
+  const { run, message } = useWrite();
   const nos = [...shown.skillNos];
   const pending = states ? nos.filter((no) => rows.get(no)?.learnable && states[no] === 0) : [];
   return (
@@ -350,6 +316,7 @@ function StanceSkillTable({
           条件に合わない前の技は薄く出します。
         </span>
       </div>
+      <WriteResult message={message} />
       {nos.length === 0 ? (
         <p className="text-muted-foreground text-sm">条件に合う技がありません。</p>
       ) : (
@@ -369,6 +336,7 @@ function StanceSkillTable({
               <SkillRow
                 {...ctx}
                 {...actions}
+                run={run}
                 sheet={sheet}
                 row={rows.get(ctx.node.skill.skillNo)!}
                 state={states ? states[ctx.node.skill.skillNo] : null}
@@ -392,7 +360,13 @@ function SkillRow({
   advanced,
   run,
   ...ctx
-}: RowActions & SkillTreeRowContext & { sheet: SkillSheet; row: Row; state: number | null; dim: boolean }) {
+}: RowActions & SkillTreeRowContext & {
+  sheet: SkillSheet;
+  row: Row;
+  state: number | null;
+  dim: boolean;
+  run: (label: string, f: (b: Uint8Array) => void) => void;
+}) {
   const s = ctx.node.skill;
   return (
     <div className={`col-span-full grid min-h-9 grid-cols-subgrid items-center border-b py-1 ${dim ? "opacity-60" : ""}`}>
