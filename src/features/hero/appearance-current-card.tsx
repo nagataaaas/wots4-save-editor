@@ -5,7 +5,6 @@ import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { HERO_APPEARANCE_ANCHORS } from "./anchors";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
@@ -41,7 +40,6 @@ const numberRows: {
 
 /** 体型・身長・肌色は ✅、身長の選択肢は 🟢。 */
 export function AppearanceCurrentCard() {
-  const { save } = useSave();
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const { view, error } = useSaveView(readAppearanceCurrent);
@@ -55,7 +53,7 @@ export function AppearanceCurrentCard() {
         {selectRows.map(({ key, label, names, hint }) => {
           const field = view?.[key];
           return (
-            <div key={`${save?.loadId ?? 0}-${key}`} className="flex flex-col gap-1">
+            <div key={key} className="flex flex-col gap-1">
               <SelectRow
                 label={label}
                 offset={APPEARANCE_CURRENT_OFFSETS[key]}
@@ -88,7 +86,7 @@ export function AppearanceCurrentCard() {
             return error ? { ok: false, error } : { ok: true, value };
           };
           return (
-            <div key={`${save?.loadId ?? 0}-${key}`} className="flex flex-col gap-1">
+            <div key={key} className="flex flex-col gap-1">
               <FieldRow
                 label={label}
                 offset={APPEARANCE_CURRENT_OFFSETS[key]}

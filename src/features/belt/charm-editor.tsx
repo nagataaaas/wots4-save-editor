@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { SaveContext } from "@/lib/save-context";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
@@ -28,19 +29,21 @@ export function CharmEditor({
 }) {
   const { advanced } = useAdvancedMode();
   const field = weapon?.charms;
-  const source = `${base}:${charmSelectionKey(field?.value ?? [])}`;
+  const loadId = useContext(SaveContext)?.save?.loadId;
+  const source = `${loadId}:${base}:${charmSelectionKey(field?.value ?? [])}`;
   const [state, setState] = useState(() => ({ source, rows: charmSelections(field?.value ?? []) }));
   // 保存時の合算で表示項目を潰さない。外部から値が変わったときだけ同期する。
   if (state.source !== source) {
     setState({ source, rows: charmSelections(field?.value ?? []) });
   }
-  const rows = state.source === source ? state.rows : charmSelections(field?.value ?? []);
+  // source が変わる描画は React が上の更新でやり直すため、二重の同期は不要。
+  const rows = state.rows;
 
   function change(slot: number, patch: Partial<CharmSelection>) {
     const next = rows.map((row, i) => (i === slot ? { ...row, ...patch } : row));
     const values = expandCharmSelections(next, advanced);
     update((bytes, offset) => writeWeaponCharms(bytes, offset, values, { advanced }));
-    setState({ source: `${base}:${charmSelectionKey(values)}`, rows: next });
+    setState({ source: `${loadId}:${base}:${charmSelectionKey(values)}`, rows: next });
   }
 
   const advancedOnly = !advanced && rows.some((row) => row.id !== null && row.count !== 1);

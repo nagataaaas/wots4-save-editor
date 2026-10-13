@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
@@ -104,7 +103,6 @@ function matchesPlace(filter: PlaceFilter, view: SectsView, owned: ReadonlySet<n
 }
 
 export function StylesPage() {
-  const { save } = useSave();
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const [query, setQuery] = useState("");
@@ -114,7 +112,6 @@ export function StylesPage() {
   const { view, error: readError, problem, readOnly } = useSaveView(readSects, { problem: (v) => v.problem });
 
   // 未読み込みのときは view が null。流派の表から同じカードを描き、値を空・操作を無効にする
-  const k = save?.loadId ?? 0;
   const owned = view ? ownedSectIds(view) : null;
   const sects = SECTS.filter((s) => !s.hidden || advanced)
     .filter((s) => matchesSearch(query, [s.nameJa, s.nameEn]))
@@ -192,7 +189,7 @@ export function StylesPage() {
 
       {sects.map((sect) => (
         <SectCard
-          key={`${k}-${sect.id}`}
+          key={sect.id}
           sect={sect}
           view={view}
           readOnly={readOnly}

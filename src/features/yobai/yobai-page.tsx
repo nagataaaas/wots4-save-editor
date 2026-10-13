@@ -650,6 +650,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
 }
 
 function PromiseCard({ view }: { view: YobaiView | null }) {
+  const { save } = useSave();
   const promise = view?.promise ?? null;
   const problem = view?.promise.problem ?? null;
 
@@ -666,7 +667,7 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
       </CardHeader>
       <CardContent>
         {promise && !promise.active ? (
-          <CreatePromiseForm problem={problem} />
+          <CreatePromiseForm key={save?.loadId} problem={problem} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-3">
             <TypeEditor promise={promise} problem={problem} />
@@ -838,14 +839,12 @@ function CountersCard({ view }: { view: YobaiView | null }) {
 const readYobaiViews = (bytes: Uint8Array) => ({ view: readYobai(bytes), points: readYobaiPoints(bytes) });
 
 export function YobaiPage() {
-  const { save } = useSave();
 
   const { view: result, error: readError, problem } = useSaveView(readYobaiViews, {
     problem: (v) => v.view.promise.problem,
   });
 
   const view = result?.view ?? null;
-  const k = save?.loadId ?? 0;
 
   return (
     <div className="flex flex-col gap-4">
@@ -856,9 +855,9 @@ export function YobaiPage() {
         夜這いの記録は 🔶 差分からの推定で、書き換えの反映は未確認
       */}
 
-      <PromiseCard key={`${k}-promise`} view={view} />
-      <PointsCard key={`${k}-points`} view={result?.points ?? null} />
-      <RecordsCard key={`${k}-records`} view={view} />
+      <PromiseCard key="promise" view={view} />
+      <PointsCard key="points" view={result?.points ?? null} />
+      <RecordsCard key="records" view={view} />
       <CountersCard view={view} />
 
       {/* 約束の枠の +0x00（約束したときの段階）・+0x02（まとまり）・+0x0C〜+0x1B・+0x26〜+0x2B は、約束を作るとき以外は書き換えない。記録の +0x08 は入った建物で表示しない */}

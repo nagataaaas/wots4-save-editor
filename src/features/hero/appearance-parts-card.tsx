@@ -7,7 +7,6 @@ import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
-import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
@@ -218,11 +217,9 @@ function NudeButtons({
 
 /** 人物・タイプ・髪の色・顔・髪型・服（0x3AAD4〜0x3AB5B）。U-19 */
 export function AppearancePartsCard() {
-  const { save } = useSave();
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const { view, error, problem } = useSaveView(readAppearanceParts, { problem: (v) => v.problem });
-  const k = save?.loadId ?? 0;
   const heroBodyKind = view?.bodyKind ?? null;
 
   // タイプ（男・女）の順に主人公設定の人物、続けて主人公設定に出ない見た目の組（ローラ・男の子・女の子 ✅ [U]）。どのモードでも出す（ユーザー判断 2026-10-09）
@@ -262,7 +259,7 @@ export function AppearancePartsCard() {
     >
       <PageBanner error={error} problem={problem} className="sm:col-span-2" />
       <SearchSelectRow
-        key={`${k}-person-${advanced}`}
+        key="person"
         label="人物"
         offset={APPEARANCE_PARTS_OFFSETS.person}
         value={view ? String(view.person) : null}
@@ -284,7 +281,7 @@ export function AppearancePartsCard() {
         onChange={(v) => update((b) => writePerson(b, Number(v)))}
       />
       <SelectRow
-        key={`${k}-body-kind-${advanced}`}
+        key="body-kind"
         label="タイプ"
         offset={APPEARANCE_PARTS_OFFSETS.bodyKind}
         value={view ? String(view.bodyKind) : null}
@@ -304,7 +301,7 @@ export function AppearancePartsCard() {
         onChange={(v) => update((b) => writeBodyKind(b, Number(v), { advanced }))}
       />
       <SelectRow
-        key={`${k}-hair-color-${advanced}`}
+        key="hair-color"
         label="髪の色"
         offset={APPEARANCE_PARTS_OFFSETS.hairColor}
         value={view ? String(view.hairColor) : null}
@@ -328,7 +325,7 @@ export function AppearancePartsCard() {
         const part = view?.parts[kind];
         const current = part && part.id !== -1 ? findPart(kind, part.id) : undefined;
         return (
-          <div key={`${k}-${kind}-${advanced}`} className="flex flex-col gap-1">
+          <div key={kind} className="flex flex-col gap-1">
             <SearchSelectRow
               label={PART_KIND_LABELS[kind]}
               offset={part?.offset ?? partOffset(kind)}

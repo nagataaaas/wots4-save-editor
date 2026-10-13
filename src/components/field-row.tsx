@@ -1,12 +1,12 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { Input } from '@/components/ui/input'
 import { InfoTip } from '@/components/info-tip'
 import { WarningTip } from '@/components/warning-tip'
 import { Label } from '@/components/ui/label'
 import { SearchField } from '@/lib/search-context'
-import { errorMessage } from '@/lib/error-message'
+import { useFieldDraft, type ParseResult } from '@/lib/use-field-draft'
 
-export type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string }
+export type { ParseResult } from '@/lib/use-field-draft'
 
 type Props<T> = {
   label: string
@@ -33,30 +33,12 @@ type Props<T> = {
 
 /**
  * 1フィールド分の入力欄。入力途中の文字列は手元に持ち、妥当な値になったときだけセーブに反映する。
- * 読み込み直したときに入力途中の値を捨てるため、呼び出し側で key に loadId を含めること。
+ * フォーカスが外れているときは最新の値を表示し、読み込み直し・位置の変更で入力途中の値を捨てる。
  */
 export function FieldRow<T>({ label, offset, badges, value, problem, warning, format, display, parse, apply, inputMode, hint, note }: Props<T>) {
   const id = useId()
-  const [draft, setDraft] = useState(() => (value === null ? '' : format(value)))
-  const [error, setError] = useState<string | null>(null)
-  const [focused, setFocused] = useState(false)
-
-  function handleChange(input: string) {
-    if (value === null) return
-    setDraft(input)
-    const result = parse(input)
-    if (!result.ok) {
-      setError(result.error)
-      return
-    }
-    setError(null)
-    if (format(result.value) === format(value)) return
-    try {
-      apply(result.value)
-    } catch (e) {
-      setError(errorMessage(e))
-    }
-  }
+  const draft = useFieldDraft({ value, format, parse, apply, identity: offset })
+  const { error, focused } = draft
 
   return (
     <SearchField label={label} className="flex flex-col gap-1.5">
@@ -69,26 +51,16 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
       <Input
         id={id}
         value={
-          value === null ? '' : display && !focused ? display(value) : problem ? format(value) : draft
+          value === null ? '' : display && !focused ? display(value) : problem ? format(value) : draft.input
         }
         disabled={value === null}
         placeholder={value === null ? '未読み込み' : undefined}
         readOnly={problem !== null}
         inputMode={inputMode}
         aria-invalid={error !== null}
-        onChange={(e) => handleChange(e.target.value)}
-        onFocus={() => {
-          setFocused(true)
-          if (display && value !== null && !error) setDraft(format(value))
-        }}
-        onBlur={() => {
-          setFocused(false)
-          // 不正な入力のまま離れたら、セーブ上の値に戻す
-          if (error && value !== null) {
-            setDraft(format(value))
-            setError(null)
-          }
-        }}
+        onChange={(e) => draft.change(e.target.value)}
+        onFocus={draft.focus}
+        onBlur={draft.blur}
       />
       {problem ? (
         <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>

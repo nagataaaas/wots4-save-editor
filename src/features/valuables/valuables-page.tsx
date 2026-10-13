@@ -74,8 +74,7 @@ export function ValuablesPage() {
             const slot = view?.slots[i] ?? null;
             return (
               <ItemSlotRow
-                // 読み込み直しと ID の変更で、入力途中の値を捨てる
-                key={`${k}-${i}-${slot?.id ?? ""}`}
+                key={i}
                 index={i}
                 offset={slotOffset(i)}
                 slot={slot}

@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { matchesSearch } from '@/lib/search'
 import { SearchField } from '@/lib/search-context'
 import { errorMessage } from '@/lib/error-message'
+import { useScopedError } from '@/lib/use-scoped-error'
 
 type Props = {
   label: string
@@ -63,7 +64,7 @@ export function SearchSelectRow({
   onChange,
 }: Props) {
   const [open, setOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useScopedError()
   const selected = options.find((o) => o.value === value)
   const triggerText =
     value === null ? '未読み込み' : selected ? selected.label : `${currentLabel ?? '不明'}（現在の値）`

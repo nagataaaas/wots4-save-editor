@@ -65,7 +65,6 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
   const [mode, setMode] = useState<keyof typeof MODE_LABELS>("A");
   const [pending, setPending] = useState<"common" | "reset" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [revision, setRevision] = useState(0);
   const read = useCallback((bytes: Uint8Array) => readAccessorySlot(bytes, group, slot), [group, slot]);
   const { view: current, error: readError } = useSaveView(read);
   const offset = current?.offset ?? accessorySlotOffset(group, slot);
@@ -82,7 +81,6 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
         setMode("common");
       } else if (pending === "reset")
         update((b) => resetAccessoryDefaults(b, group, slot));
-      setRevision((n) => n + 1);
       setPending(null);
       setError(null);
     } catch (e) {
@@ -120,7 +118,6 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
               }
               onChange={(v) => {
                 update((b) => equipAccessory(b, group, slot, Number(v), { advanced }));
-                setRevision((n) => n + 1);
                 setMode("A");
               }}
             />
@@ -202,7 +199,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
               const { min, max } = accessoryFloatRange(field.key, { advanced });
               return (
                 <FieldRow
-                  key={`${revision}-${mode}-${advanced}-${field.key}`}
+                  key={field.key}
                   label={field.label}
                   offset={offset + field.relative}
                   value={current?.values[field.key] ?? null}

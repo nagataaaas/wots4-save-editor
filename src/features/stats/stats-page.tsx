@@ -17,7 +17,6 @@ import {
 } from "@/save/score-tables";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
-import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
@@ -57,11 +56,9 @@ function unitHint(field: StatField, value: number | null): string {
 }
 
 export function StatsPage() {
-  const { save } = useSave();
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const { view, error: readError, problem } = useSaveView(readStats, { problem: (v) => v.problem });
-  const k = save?.loadId ?? 0;
   const byKey = new Map(view?.values.map((v) => [v.field.key, v]));
 
   const row = (field: StatField) => {
@@ -69,7 +66,7 @@ export function StatsPage() {
     const value = v?.value ?? null;
     return (
       <FieldRow
-        key={`${k}-${field.key}`}
+        key={field.key}
         label={field.label}
         offset={field.offset}
         value={value}
@@ -94,7 +91,7 @@ export function StatsPage() {
       </p>
       {STAT_GROUPS.map((g) => (
         <CollapsibleCard
-          key={`${k}-${g.id}`}
+          key={g.id}
           anchor={STATS_ANCHORS.group(g.id)}
           title={g.label}
           description={g.note}
@@ -104,8 +101,8 @@ export function StatsPage() {
           {STAT_FIELDS.filter((f) => f.group === g.id).map(row)}
         </CollapsibleCard>
       ))}
-      <ScoreTableCard key={`${k}-arts`} table="arts" />
-      <ScoreTableCard key={`${k}-items`} table="items" />
+      <ScoreTableCard key="arts" table="arts" />
+      <ScoreTableCard key="items" table="items" />
     </div>
   );
 }
@@ -149,7 +146,7 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
 
   const countRow = (scope: ScoreScope) => (
     <FieldRow
-      key={`${index}-${scope}`}
+      key={scope}
       label={scope === "cycle" ? "周回中" : "累計"}
       offset={scoreOffset(table, scope, index)}
       value={view ? (scope === "cycle" ? view.cycle[index] : view.total[index]) : null}

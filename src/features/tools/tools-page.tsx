@@ -9,7 +9,6 @@ import { AnchoredCard } from '@/components/anchored-card'
 import { ITEM_ANCHORS } from './anchors'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { formatOffset } from '@/lib/format'
-import { useSave } from '@/lib/save-context'
 import { useSaveView } from '@/lib/use-save-view'
 import { useWrite } from '@/lib/use-write'
 import { PageBanner } from '@/components/page-banner'
@@ -67,7 +66,6 @@ function ItemBoxPage({
   description: string
   missingMarkNote: string
 }) {
-  const { save } = useSave()
   const { write: update, tryWrite, error: repairError } = useWrite()
   const { advanced } = useAdvancedMode()
   const groups = useMemo(() => itemOptionGroups({ advanced }), [advanced])
@@ -79,7 +77,6 @@ function ItemBoxPage({
   const { view: result, error: readError, problem } = useSaveView(read, { problem: (v) => v.view.problem })
   const view = result?.view ?? null
   const missingMark = result?.missingMark ?? []
-  const k = save?.loadId ?? 0
 
   return (
     <div className="flex flex-col gap-4">
@@ -122,8 +119,7 @@ function ItemBoxPage({
             const slot = view?.slots[i] ?? null
             return (
               <ItemSlotRow
-                // 読み込み直しと ID の変更で、入力途中の値を捨てる
-                key={`${k}-${i}-${slot?.id ?? ''}-${advanced}`}
+                key={i}
                 index={i}
                 offset={itemBoxSlotOffset(area, i)}
                 slot={slot}

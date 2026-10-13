@@ -102,7 +102,7 @@ export function HeroPage() {
 
   const amountRow = (key: U32Key, label: string) => (
     <FieldRow
-      key={`${k}-${key}`}
+      key={key}
       label={label}
       offset={HERO_OFFSETS[key]}
       value={view?.[key].value ?? null}
@@ -119,7 +119,7 @@ export function HeroPage() {
 
   const gaugeRow = (key: F32Key, label: string, hint: string, note: string) => (
     <FieldRow
-      key={`${k}-${key}`}
+      key={key}
       label={label}
       offset={HERO_OFFSETS[key]}
       value={view?.[key].value ?? null}
@@ -161,7 +161,7 @@ export function HeroPage() {
         </CardHeader>
         <CardContent>
           <FieldRow
-            key={`${k}-name`}
+            key="name"
             label="主人公名"
             offset={HERO_OFFSETS.name}
             value={view?.name.value ?? null}
@@ -205,7 +205,6 @@ export function HeroPage() {
       </AnchoredCard>
 
       <LocationCard
-        key={`${k}-location`}
         view={view}
         onChange={(v) => update((b) => writeLocation(b, v))}
       />

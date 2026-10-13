@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { LazySelect } from "@/components/lazy-select";
 import { groupOptions, type SelectOption } from "@/components/select-options";
@@ -6,6 +6,7 @@ import { WarningTip } from "@/components/warning-tip";
 import { Label } from "@/components/ui/label";
 import { SearchField } from "@/lib/search-context";
 import { errorMessage } from "@/lib/error-message";
+import { useScopedError } from "@/lib/use-scoped-error";
 import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from "@/components/ui/select";
 
 function OptionContent({ option: o }: { option: SelectOption }) {
@@ -62,7 +63,7 @@ export function SelectRow({
   note,
   onChange,
 }: Props) {
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useScopedError();
   const listed = value === null || options.some((o) => o.value === value);
   // トリガーに出す名前（Base UI の Select は閉じている間は選択肢を描かないので、items から引く）
   const items: Record<string, ReactNode> = {};

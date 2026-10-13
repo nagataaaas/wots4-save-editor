@@ -152,7 +152,6 @@ function RawEditor({
         </AnchoredCard>
 
         <SelectionCard
-          key={selected}
           bytes={bytes}
           offset={selected}
           advanced={advanced}
@@ -420,29 +419,6 @@ function SelectionCard({
   onWrite: (values: number[]) => void
 }) {
   const regions = regionsAt(offset)
-  // 選んだ位置から 1 行分の今の値を、入力の初期値にする
-  const [draft, setDraft] = useState(() =>
-    Array.from(bytes.subarray(offset, Math.min(bytes.byteLength, offset + 4)), hex2).join(' '),
-  )
-  const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<string | null>(null)
-
-  function submit() {
-    setDone(null)
-    const r = parseHexBytes(draft)
-    if (!r.ok) {
-      setError(r.error)
-      return
-    }
-    try {
-      onWrite(r.value)
-      setError(null)
-      setDone(`${formatOffset(offset)} から ${r.value.length} B を書き換えました`)
-    } catch (e) {
-      setError(errorMessage(e))
-    }
-  }
-
   return (
     <AnchoredCard anchor={RAW_ANCHORS.byte} searchLabel="選んだバイト" className="min-w-0">
       <CardHeader>
@@ -468,43 +444,77 @@ function SelectionCard({
         </dl>
         <p className="text-muted-foreground text-xs">複数バイトの値はリトルエンディアンで、選択中の位置から読んでいます。</p>
 
-        <form
-          className="flex flex-col gap-1.5 border-t pt-4"
-          onSubmit={(e) => {
-            e.preventDefault()
-            submit()
-          }}
-        >
-          <Label htmlFor="raw-write">ここから上書き</Label>
-          <div className="flex gap-2">
-            <Input
-              id="raw-write"
-              value={draft}
-              onChange={(e) => {
-                setDraft(e.target.value)
-                setError(null)
-                setDone(null)
-              }}
-              disabled={!advanced}
-              className="font-mono"
-              aria-invalid={error !== null}
-            />
-            <Button type="submit" variant="outline" disabled={!advanced}>
-              書き込む
-            </Button>
-          </div>
-          {advanced ? (
-            <p className="text-muted-foreground text-xs">
-              16進のバイト列（例：01 00 FF）を、選択中の位置から上書きします（最大 {RAW_WRITE_MAX} B）。値の意味は確かめないので、書いた値によってはゲームで読めなくなることがあります。
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-xs">サイドバーの上級者モードをオンにすると、バイト列を直接書き換えられます。</p>
-          )}
-          {error && <p className="text-destructive text-xs">{error}</p>}
-          {done && <p className="text-xs text-emerald-600 dark:text-emerald-400">{done}</p>}
-        </form>
+        <SelectionForm key={offset} bytes={bytes} offset={offset} advanced={advanced} onWrite={onWrite} />
       </CardContent>
     </AnchoredCard>
+  )
+}
+
+function SelectionForm({ bytes, offset, advanced, onWrite }: {
+  bytes: Uint8Array
+  offset: number
+  advanced: boolean
+  onWrite: (values: number[]) => void
+}) {
+  // 選んだ位置から 1 行分の今の値を、入力の初期値にする
+  const [draft, setDraft] = useState(() =>
+    Array.from(bytes.subarray(offset, Math.min(bytes.byteLength, offset + 4)), hex2).join(' '),
+  )
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState<string | null>(null)
+
+  function submit() {
+    setDone(null)
+    const r = parseHexBytes(draft)
+    if (!r.ok) {
+      setError(r.error)
+      return
+    }
+    try {
+      onWrite(r.value)
+      setError(null)
+      setDone(`${formatOffset(offset)} から ${r.value.length} B を書き換えました`)
+    } catch (e) {
+      setError(errorMessage(e))
+    }
+  }
+
+  return (
+    <form
+      className="flex flex-col gap-1.5 border-t pt-4"
+      onSubmit={(e) => {
+        e.preventDefault()
+        submit()
+      }}
+    >
+      <Label htmlFor="raw-write">ここから上書き</Label>
+      <div className="flex gap-2">
+        <Input
+          id="raw-write"
+          value={draft}
+          onChange={(e) => {
+            setDraft(e.target.value)
+            setError(null)
+            setDone(null)
+          }}
+          disabled={!advanced}
+          className="font-mono"
+          aria-invalid={error !== null}
+        />
+        <Button type="submit" variant="outline" disabled={!advanced}>
+          書き込む
+        </Button>
+      </div>
+      {advanced ? (
+        <p className="text-muted-foreground text-xs">
+          16進のバイト列（例：01 00 FF）を、選択中の位置から上書きします（最大 {RAW_WRITE_MAX} B）。値の意味は確かめないので、書いた値によってはゲームで読めなくなることがあります。
+        </p>
+      ) : (
+        <p className="text-muted-foreground text-xs">サイドバーの上級者モードをオンにすると、バイト列を直接書き換えられます。</p>
+      )}
+      {error && <p className="text-destructive text-xs">{error}</p>}
+      {done && <p className="text-xs text-emerald-600 dark:text-emerald-400">{done}</p>}
+    </form>
   )
 }
 

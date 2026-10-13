@@ -158,17 +158,18 @@ function parseInteger(input: string, validate: (v: number) => string | null): Pa
  * 難易度、新しい周回を始める書き込み、日数・時間帯、治安は ✅ 書き換えの反映を確認。そのほかは ❓ 要ゲーム内確認
  */
 export function AmihamaPage() {
+  const { save } = useSave();
   return (
     <ViewsPage>
-      {(views, k) => (
+      {(views) => (
         <>
           <CycleCard
-            key={`${k}-cycle`}
+            key={save?.loadId}
             view={views?.difficulty ?? null}
             counts={views?.cycle ?? null}
             publicOrder={views?.publicOrder ?? null}
           />
-          <DateCard key={`${k}-date`} view={views?.date ?? null} />
+          <DateCard view={views?.date ?? null} />
           <FacilityFlagsCard />
           <GateFlagsCard />
         </>
@@ -185,11 +186,11 @@ export function AmihamaPage() {
 export function NpcPage() {
   return (
     <ViewsPage>
-      {(views, k) => (
+      {(views) => (
         <>
           <FactionExitCard />
           <CharactersCard />
-          <PeopleCard key={`${k}-people`} view={views?.townsfolk ?? null} />
+          <PeopleCard view={views?.townsfolk ?? null} />
           <NpcFlagsCard />
         </>
       )}
@@ -206,10 +207,9 @@ export function NpcPage() {
 export function EventsPage() {
   return (
     <ViewsPage>
-      {(views, k) => (
+      {(views) => (
         <>
           <EventChartCard
-            key={`${k}-chart`}
             events={views?.events ?? null}
             counts={views?.cycle ?? null}
             stage={views?.date.stage ?? null}
@@ -218,7 +218,6 @@ export function EventsPage() {
             bottom={<BulkEventsPanel problem={views?.events.problem ?? null} disabled={!views} />}
           />
           <FactionCard
-            key={`${k}-factions`}
             view={views?.factions ?? null}
             route={views?.route ?? null}
           />
@@ -241,17 +240,15 @@ const readViews = (b: Uint8Array): Views => ({
   publicOrder: readPublicOrder(b),
 });
 
-/** セーブを読み、共通の注意書きを出して、children に各欄を描かせる。views が null ならセーブ未読み込み、k は読み込みごとの key */
-function ViewsPage({ children }: { children: (views: Views | null, k: number) => ReactNode }) {
-  const { save } = useSave();
+/** セーブを読み、共通の注意書きを出して、children に各欄を描かせる。views が null ならセーブ未読み込み */
+function ViewsPage({ children }: { children: (views: Views | null) => ReactNode }) {
   const { view: views, error: readError, problem } = useSaveView(readViews, { problem: (v) => v.date.problem });
-  const k = save?.loadId ?? 0;
 
   return (
     <div className="flex flex-col gap-4">
       <PageBanner error={readError} problem={problem} />
 
-      {children(views, k)}
+      {children(views)}
     </div>
   );
 }

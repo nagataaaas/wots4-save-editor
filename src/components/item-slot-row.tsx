@@ -15,6 +15,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { errorMessage } from '@/lib/error-message'
+import { useFieldDraft } from '@/lib/use-field-draft'
+import { useScopedError } from '@/lib/use-scoped-error'
 import { formatWarnings } from '@/lib/format'
 import { matchesSearch } from '@/lib/search'
 import { cn } from '@/lib/utils'
@@ -69,9 +71,7 @@ export function ItemSlotRow({
   onChange: (id: number, count: number) => void
 }) {
   const [open, setOpen] = useState(false)
-  const [draft, setDraft] = useState(() => (slot && slot.id !== EMPTY_ID ? String(slot.count) : ''))
-  const [idDraft, setIdDraft] = useState(() => (slot ? hexId(slot.id) : ''))
-  const [error, setError] = useState<string | null>(null)
+  const [actionError, setError] = useScopedError(`${offset}:${slot?.id}`)
 
   const readOnly = slot === null || slot.problem !== null
   const warning = formatWarnings(slot?.warnings)
@@ -110,37 +110,26 @@ export function ItemSlotRow({
     run(() => onChange(id, countFor(id)))
   }
 
-  function handleId(input: string) {
-    if (!slot) return
-    setIdDraft(input)
-    const id = parseHexId(input)
-    if (id === null) {
-      setError('ID は16進4桁まで（例：2F）で入力してください')
-      return
-    }
-    if (id === slot.id) {
-      setError(null)
-      return
-    }
-    run(() => onChange(id, countFor(id)))
-  }
-
-  function handleCount(input: string) {
-    if (!slot) return
-    setDraft(input)
-    if (!/^\d+$/.test(input.trim())) {
-      setError('1以上の整数を入力してください')
-      return
-    }
-    const count = Number(input.trim())
-    const problem = validateItemCount(count, countMaxFor?.(slot.id))
-    if (problem) {
-      setError(problem)
-      return
-    }
-    setError(null)
-    if (count !== slot.count) run(() => onChange(slot.id, count))
-  }
+  const idInput = useFieldDraft({
+    value: slot?.id ?? null, format: hexId, identity: offset,
+    parse: (input) => {
+      const id = parseHexId(input)
+      return id === null ? { ok: false, error: 'ID は16進4桁まで（例：2F）で入力してください' } : { ok: true, value: id }
+    },
+    apply: (id) => onChange(id, countFor(id)),
+  })
+  const countInput = useFieldDraft({
+    value: slot && slot.id !== EMPTY_ID ? slot.count : null,
+    format: String, identity: `${offset}:${slot?.id}`,
+    parse: (input) => {
+      if (!/^\d+$/.test(input.trim())) return { ok: false, error: '1以上の整数を入力してください' }
+      const count = Number(input.trim())
+      const problem = validateItemCount(count, slot ? countMaxFor?.(slot.id) : undefined)
+      return problem ? { ok: false, error: problem } : { ok: true, value: count }
+    },
+    apply: (count) => { if (slot) onChange(slot.id, count) },
+  })
+  const error = actionError ?? idInput.error ?? countInput.error
 
   // 説明文でも検索できるよう、keywords に入れる
   const item = (id: number, label: string, keywords: readonly string[] = [], description?: string) => (
@@ -221,26 +210,22 @@ export function ItemSlotRow({
         </Popover>
         {investigate && (
           <Input
-            value={slot === null ? '' : readOnly ? hexId(slot.id) : idDraft}
+            value={slot === null ? '' : readOnly ? hexId(slot.id) : idInput.input}
             disabled={slot === null}
             readOnly={readOnly}
             placeholder="ID"
             className={cn('h-8 font-mono', showCount && 'col-start-1 row-start-2 sm:col-auto sm:row-auto')}
             aria-label={`${index + 1}件目の ID（16進）`}
-            onChange={(e) => handleId(e.target.value)}
-            onBlur={() => {
-              if (error && slot) {
-                setIdDraft(hexId(slot.id))
-                setError(null)
-              }
-            }}
+            onChange={(e) => { setError(null); idInput.change(e.target.value) }}
+            onFocus={idInput.focus}
+            onBlur={idInput.blur}
           />
         )}
         {showCount && (
           <div className={cn('flex items-center gap-2', investigate && 'col-start-2 row-start-1 sm:col-auto sm:row-auto')}>
             <Input
               className="h-8 w-18 px-2 tabular-nums"
-              value={slot === null || isEmpty ? '' : countLocked ? String(slot.count) : draft}
+              value={slot === null || isEmpty ? '' : countLocked ? String(slot.count) : countInput.input}
               disabled={slot === null || isEmpty}
               readOnly={countLocked}
               placeholder={slot === null ? '未読み込み' : isEmpty ? '—' : undefined}
@@ -250,14 +235,9 @@ export function ItemSlotRow({
               inputMode="numeric"
               aria-label={`${index + 1}件目の個数`}
               aria-invalid={error !== null}
-              onChange={(e) => handleCount(e.target.value)}
-              onBlur={() => {
-                // 不正な入力のまま離れたら、セーブ上の値に戻す
-                if (error && slot) {
-                  setDraft(String(slot.count))
-                  setError(null)
-                }
-              }}
+              onChange={(e) => { setError(null); countInput.change(e.target.value) }}
+              onFocus={countInput.focus}
+              onBlur={countInput.blur}
             />
             <span className="text-muted-foreground w-14 text-xs leading-tight tabular-nums">
               {!slot?.problem && countLimitText}

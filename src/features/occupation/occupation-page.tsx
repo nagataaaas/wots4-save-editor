@@ -21,12 +21,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatOffset } from "@/lib/format";
-import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
 import { WriteError } from "@/components/write-error";
-import { errorMessage } from "@/lib/error-message";
+import { useFieldDraft } from "@/lib/use-field-draft";
 import { SearchField } from "@/lib/search-context";
 import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
@@ -116,7 +115,6 @@ const readViews = (bytes: Uint8Array) => ({ occupations: readOccupations(bytes),
 
 /** なりわい：状態の表・クリア数・受注中、連続なりわいなどの進み具合（なりわいのフラグ） */
 export function OccupationPage() {
-  const { save } = useSave();
   const { view: views, error: readError, problem } = useSaveView(readViews, {
     problem: (v) => v.occupations.problem,
   });
@@ -128,7 +126,7 @@ export function OccupationPage() {
       <SeriesCard />
       <DlcCard />
       <SecurityCard />
-      <StatesCard key={`${save?.loadId ?? 0}-states`} view={views?.occupations ?? null} />
+      <StatesCard view={views?.occupations ?? null} />
     </div>
   );
 }
@@ -554,36 +552,19 @@ function CountInput({
   advanced: boolean;
   write: (m: (b: Uint8Array) => void) => void;
 }) {
-  const [draft, setDraft] = useState(String(value));
-  const [error, setError] = useState<string | null>(null);
-  const [shown, setShown] = useState(value);
-  // セーブ側の値が変わったら入力中の値を捨てる
-  if (shown !== value) {
-    setShown(value);
-    setDraft(String(value));
-    setError(null);
-  }
-
-  function commit() {
-    const text = draft.trim();
-    if (!/^\d+$/.test(text) || Number(text) < 1) {
-      setError("1 以上の整数で入力してください");
-      return;
-    }
-    const v = Number(text);
-    const problem = validateOccupationState(id, v, value, { advanced });
-    if (problem) {
-      setError(problem);
-      return;
-    }
-    setError(null);
-    if (v === value) return;
-    try {
-      write((b) => writeOccupationState(b, id, v, { advanced }));
-    } catch (e) {
-      setError(errorMessage(e));
-    }
-  }
+  const draft = useFieldDraft({
+    value, format: String, identity: occupationStateOffset(id), commitOn: 'blur',
+    parse: (input) => {
+      const text = input.trim();
+      if (!/^\d+$/.test(text) || Number(text) < 1)
+        return { ok: false, error: "1 以上の整数で入力してください" };
+      const v = Number(text);
+      const problem = validateOccupationState(id, v, value, { advanced });
+      return problem ? { ok: false, error: problem } : { ok: true, value: v };
+    },
+    apply: (v) => write((b) => writeOccupationState(b, id, v, { advanced })),
+  });
+  const { error } = draft;
 
   return (
     <div className="flex items-center gap-1.5">
@@ -592,10 +573,11 @@ function CountInput({
         inputMode="numeric"
         aria-label="クリア回数"
         disabled={readOnly}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => e.key === "Enter" && commit()}
+        value={draft.input}
+        onChange={(e) => draft.change(e.target.value)}
+        onFocus={draft.focus}
+        onBlur={draft.blur}
+        onKeyDown={(e) => e.key === "Enter" && draft.commit()}
       />
       <span className="text-muted-foreground text-xs">回</span>
       {error && <span className="text-destructive text-xs">{error}</span>}
