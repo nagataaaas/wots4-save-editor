@@ -4,6 +4,8 @@ import { TS_SAVE_SIZE } from './hero'
 import { CHARACTER_FLAGS, CHARACTER_STATUS, characterStatusForPromise, characterStatusForTown } from './flags/characters'
 import { MORO_OFFSET, MORO_DEAD, readFactions, routeEligible } from './factions'
 import { partnerDeathWarning } from './yobai-create'
+import { DAY_RANGE } from './scenario-date'
+import { DAY_NORMAL_MAX, YOBAI_COUNTERS, PROMISE_CODEC, STAGE_OFFSET, validatePersonValue, validatePersonField } from './yobai'
 import { reviveNote } from './townsfolk'
 
 describe('共有する固定位置とレコード', () => {
@@ -36,5 +38,30 @@ describe('共有する固定位置とレコード', () => {
     expect(reviveNote(55)).toMatch(/同じ人物/)
     expect(reviveNote(9)).toBeNull()
     expect(reviveNote(24)).toBeNull()
+  })
+
+  it('🟢 約束の作成と表示は経過日数・夜這いの段階・日数上限を共有する', () => {
+    expect(STAGE_OFFSET).toBe(0x13e30)
+    expect(YOBAI_COUNTERS.find(c => c.label === '段階')?.offset).toBe(STAGE_OFFSET)
+    expect(DAY_NORMAL_MAX + 1).toBe(DAY_RANGE.normal.max)
+    expect(validatePersonValue('day', DAY_NORMAL_MAX, { advanced: false })).toBeNull()
+    expect(validatePersonValue('day', DAY_NORMAL_MAX + 1, { advanced: false })).not.toBeNull()
+    // 編集では未知の現在値も書き戻せるが、新規の約束では新しい値として検証する。
+    expect(validatePersonField('blood', 254, 254, { advanced: false })).toBeNull()
+    expect(validatePersonValue('blood', 254, { advanced: false })).not.toBeNull()
+    expect(validatePersonField('type', 0xffffffff, 0xffffffff, { advanced: false })).not.toBeNull()
+  })
+
+  it('🟢 約束の codec は既存の並びを読み書きし、隙間・前後を保つ', () => {
+    const promise = new Uint8Array(0x2c + 2).fill(0xaa)
+    const values = { type: 37, place: 12, layout: 6, name: 7077, look: 28, age: 24, blood: 3, reserved: 65535, day: 1 }
+    for (const field of Object.keys(values) as (keyof typeof values)[]) PROMISE_CODEC.writeField(promise, 1, field, values[field])
+    expect([...promise.slice(5, 13)]).toEqual([37, 0, 0, 0, 12, 0, 6, 0])
+    expect([...promise.slice(0x25, 0x2b)]).toEqual([24, 3, 255, 255, 1, 0])
+    expect([...promise.slice(13, 29)]).toEqual(new Array(16).fill(0xaa))
+    const before = promise.slice()
+    const record = PROMISE_CODEC.read(promise, 1)
+    for (const field of Object.keys(record) as (keyof typeof record)[]) PROMISE_CODEC.writeField(promise, 1, field, record[field])
+    expect(promise).toEqual(before)
   })
 })

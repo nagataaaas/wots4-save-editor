@@ -22,20 +22,18 @@
 // 🟢 名前のある相手が死んでいても、約束を止める判定はない。エディタでは警告だけ出す。
 //
 // 書くのは +0x04 が FFFFFFFF（約束なし）の枠だけ。ファイルサイズが 0x48BB0 のときだけ書く。
-import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
+import { readU16, readU32, readU8 } from "./binary";
 import { checkLayout } from "./hero";
+import { DATE_OFFSETS } from "./scenario-date";
 import { characterStatusForPromise, CHARACTER_DEAD } from "./flags/characters";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_ROW_TABLE } from "./master/dataset/night-visit-row";
 import { NPC_NAMES } from "./master/npc-names";
-import { PLACE_LAYOUTS, PROMISE_EMPTY, PROMISE_OFFSET, validatePersonField } from "./yobai";
+import { PLACE_LAYOUTS, PROMISE_EMPTY, PROMISE_OFFSET, PROMISE_CODEC, STAGE_OFFSET, validatePersonValue } from "./yobai";
 
 /** 書くバイト数（+0x00〜+0x29） */
 export const PROMISE_WRITE_LENGTH = 0x2a;
-/** 🟢 経過日数（1日目＝0） */
-export const DAY_INDEX_OFFSET = 0x0bd8;
-/** 🟢 段階（0〜3） */
-export const STAGE_OFFSET = 0x13e30;
+/** 🟢 段階（0〜3。位置は yobai.ts の STAGE_OFFSET） */
 export const STAGE_MAX = 3;
 
 export type PromiseRow = {
@@ -208,7 +206,7 @@ export function randomSpec(partner: PromisePartner, stage: number, rand: () => n
 export function createProblem(bytes: Uint8Array): string | null {
   const layout = checkLayout(bytes);
   if (layout) return layout;
-  if (readU32(bytes, PROMISE_OFFSET + 4) !== PROMISE_EMPTY) return "すでに約束があります（空の枠にだけ作れます）";
+  if (PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, 'type') !== PROMISE_EMPTY) return "すでに約束があります（空の枠にだけ作れます）";
   return null;
 }
 
@@ -231,9 +229,9 @@ export function validateSpec(spec: PromiseSpec, stage: number, opts: { advanced:
     if (!PLACE_LAYOUTS.some((p) => p.place === place && p.layout === layout))
       return "その場所で使える配置ではありません";
   }
-  // 名前・見た目と声・年齢・血液型は種類とは別々に効く（✅ [U]）ので、約束の編集欄と同じ範囲で選べる。NaN は書き戻しの扱いをしないため
+  // 名前・見た目と声・年齢・血液型は種類とは別々に効く（✅ [U]）ので、約束の編集欄と同じ範囲で選べる。
   for (const field of ["name", "look", "age", "blood"] as const) {
-    const error = validatePersonField(field, spec[field], Number.NaN, opts);
+    const error = validatePersonValue(field, spec[field], opts);
     if (error) return error;
   }
   return null;
@@ -245,16 +243,9 @@ export function buildPromiseBytes(spec: PromiseSpec, day: number): Uint8Array {
   if (!row) throw new RangeError("組の表にない行です");
   const out = new Uint8Array(PROMISE_WRITE_LENGTH);
   out.set(row.bytes, 0);
-  writeU32(out, 0x04, spec.type);
   const { place, layout } = specPlace(spec);
-  writeU16(out, 0x08, place);
-  writeU16(out, 0x0a, layout);
-  writeU32(out, 0x1c, spec.name);
-  writeU32(out, 0x20, spec.look);
-  writeU8(out, 0x24, spec.age);
-  writeU8(out, 0x25, spec.blood);
-  writeU16(out, 0x26, 0xffff);
-  writeU16(out, 0x28, day);
+  const values = { type: spec.type, place, layout, name: spec.name, look: spec.look, age: spec.age, blood: spec.blood, reserved: 0xffff, day };
+  for (const field of Object.keys(values) as (keyof typeof values)[]) PROMISE_CODEC.writeField(out, 0, field, values[field]);
   return out;
 }
 
@@ -264,5 +255,5 @@ export function createPromise(bytes: Uint8Array, spec: PromiseSpec, opts: { adva
   if (problem) throw new RangeError(problem);
   const error = validateSpec(spec, currentStage(bytes), opts);
   if (error) throw new RangeError(error);
-  bytes.set(buildPromiseBytes(spec, readU16(bytes, DAY_INDEX_OFFSET)), PROMISE_OFFSET);
+  bytes.set(buildPromiseBytes(spec, readU16(bytes, DATE_OFFSETS.dayIndex)), PROMISE_OFFSET);
 }

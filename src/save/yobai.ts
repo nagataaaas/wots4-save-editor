@@ -40,8 +40,9 @@
 //
 // 空の枠に新しく約束を作るのは yobai-create.ts。記録を作る・消す機能は持たない。
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
-import { readU16, readU32, readU8, writeU16, writeU32, writeU8 } from "./binary";
+import { readU16, readU32, readSized, writeU16, writeSized, recordCodec, type SizedField } from "./binary";
 import { checkLayout } from "./hero";
+import { DAY_RANGE } from "./scenario-date";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_LAYOUT_TABLE } from "./master/dataset/night-visit-layout";
 import { NIGHT_VISIT_PLACE_TABLE } from "./master/dataset/night-visit-place";
@@ -55,6 +56,9 @@ export const PROMISE_EMPTY = 0xffffffff;
 
 /** ✅ [U] 約束の画面の夜這い回数 */
 export const YOBAI_TOTAL_OFFSET = 0x137ec;
+/** 🟢 夜這いの段階と愛の証の回数 */
+export const STAGE_OFFSET = 0x13e30;
+export const LOVE_COUNT_OFFSET = 0x13e34;
 export const RECORDS_OFFSET = 0x137f0;
 export const RECORD_SIZE = 0x10;
 export const RECORD_CAPACITY = 100;
@@ -72,21 +76,21 @@ export const YOBAI_COUNTERS: readonly {
   note: string;
 }[] = [
   {
-    offset: 0x137ec,
+    offset: YOBAI_TOTAL_OFFSET,
     size: 4,
     label: "夜這い回数",
     // ✅ 約束の画面の「夜這い回数」
     note: "約束の画面の「夜這い回数」。上限 9999。周回で消えない",
   },
   {
-    offset: 0x13e30,
+    offset: STAGE_OFFSET,
     size: 4,
     label: "段階",
     // 🟢
     note: "夜這い回数が 10・45・85 に届くたびに上がる。高いほど家の中の人が多い場所になりやすい",
   },
   {
-    offset: 0x13e34,
+    offset: LOVE_COUNT_OFFSET,
     size: 4,
     label: "愛の証の回数",
     // 🟢
@@ -253,7 +257,7 @@ export const AGE_UNKNOWN = 0xff;
 /** 通常モードの年齢の上限（と AGE_UNKNOWN） */
 export const AGE_NORMAL_MAX = 99;
 /** 通常モードの約束した日（経過日数）の上限。scenario-date の DAY_RANGE.normal（99日目）に合わせる */
-export const DAY_NORMAL_MAX = 98;
+export const DAY_NORMAL_MAX = DAY_RANGE.normal.max - 1;
 
 /**
  * group は約束の +0x02（🟢 町の人の種類ごとのまとまり。特別な相手 0、町の人 1〜3）。
@@ -263,9 +267,7 @@ export const DAY_NORMAL_MAX = 98;
 export type PersonField = "group" | "day" | "type" | "name" | "look" | "age" | "blood";
 export type RecordField = Exclude<PersonField, "look" | "group">;
 
-type FieldSpec = { rel: number; size: 1 | 2 | 4 };
-
-const PROMISE_FIELDS: Record<PersonField, FieldSpec> = {
+export const PROMISE_FIELDS: Record<PersonField, SizedField> = {
   group: { rel: 0x02, size: 2 },
   day: { rel: 0x28, size: 2 },
   type: { rel: 0x04, size: 4 },
@@ -276,8 +278,21 @@ const PROMISE_FIELDS: Record<PersonField, FieldSpec> = {
 };
 export const PROMISE_PLACE_REL = 0x08;
 export const PROMISE_LAYOUT_REL = 0x0a;
+const PROMISE_PERSON_CODEC = recordCodec(PROMISE_FIELDS);
 
-const RECORD_FIELDS: Record<RecordField, FieldSpec> = {
+/**
+ * 🟢 約束の作成・読み出し・編集・周回の初期化が使う共通のレコード定義。+0x26 は FFFF。
+ * helpSeen（+0x2A）は初めての説明を見たかのビット。編集では書かず、周回の初期化でだけ 0 にする。
+ */
+export const PROMISE_CODEC = recordCodec({
+  ...PROMISE_FIELDS,
+  place: { rel: PROMISE_PLACE_REL, size: 2 },
+  layout: { rel: PROMISE_LAYOUT_REL, size: 2 },
+  reserved: { rel: 0x26, size: 2 },
+  helpSeen: { rel: 0x2a, size: 1 },
+});
+
+const RECORD_FIELDS: Record<RecordField, SizedField> = {
   type: { rel: 0x00, size: 4 },
   name: { rel: 0x04, size: 4 },
   day: { rel: 0x0c, size: 2 },
@@ -286,9 +301,10 @@ const RECORD_FIELDS: Record<RecordField, FieldSpec> = {
 };
 /** 🟢 記録の +0x08：入った建物の番号（0x20C〜0x228。同じ建物の扉は同じ番号）。表示だけ */
 export const RECORD_BUILDING_REL = 0x08;
+const RECORD_CODEC = recordCodec({ ...RECORD_FIELDS, building: { rel: RECORD_BUILDING_REL, size: 4 } });
 
 export function promiseFieldOffset(field: PersonField): number {
-  return PROMISE_OFFSET + PROMISE_FIELDS[field].rel;
+  return PROMISE_CODEC.offset(PROMISE_OFFSET, field);
 }
 
 export function recordOffset(index: number): number {
@@ -297,20 +313,6 @@ export function recordOffset(index: number): number {
 
 export function recordFieldOffset(index: number, field: RecordField): number {
   return recordOffset(index) + RECORD_FIELDS[field].rel;
-}
-
-function readSized(bytes: Uint8Array, offset: number, size: 1 | 2 | 4): number {
-  return size === 1
-    ? readU8(bytes, offset)
-    : size === 2
-      ? readU16(bytes, offset)
-      : readU32(bytes, offset);
-}
-
-function writeSized(bytes: Uint8Array, offset: number, size: 1 | 2 | 4, value: number): void {
-  if (size === 1) writeU8(bytes, offset, value);
-  else if (size === 2) writeU16(bytes, offset, value);
-  else writeU32(bytes, offset, value);
 }
 
 export type PromiseView = {
@@ -345,17 +347,12 @@ export function readYobai(bytes: Uint8Array): YobaiView {
     throw new RangeError("ファイルが小さすぎて夜這いの領域を読めません");
   const layoutProblem = checkLayout(bytes);
 
-  const fields = Object.fromEntries(
-    (Object.keys(PROMISE_FIELDS) as PersonField[]).map((f) => [
-      f,
-      readSized(bytes, promiseFieldOffset(f), PROMISE_FIELDS[f].size),
-    ]),
-  ) as Record<PersonField, number>;
+  const fields = PROMISE_PERSON_CODEC.read(bytes, PROMISE_OFFSET);
   const promise: PromiseView = {
     ...fields,
     active: fields.type !== PROMISE_EMPTY,
-    place: readU16(bytes, PROMISE_OFFSET + PROMISE_PLACE_REL),
-    layout: readU16(bytes, PROMISE_OFFSET + PROMISE_LAYOUT_REL),
+    place: PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, 'place'),
+    layout: PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, 'layout'),
   };
 
   // 🟢 記録は最初の空いている件に書かれるので、使用中の件は先頭から続く。途中に空きがあれば読み取り専用にする
@@ -371,13 +368,7 @@ export function readYobai(bytes: Uint8Array): YobaiView {
     }
   }
   const records = Array.from({ length: count }, (_, index): RecordView => {
-    const r = Object.fromEntries(
-      (Object.keys(RECORD_FIELDS) as RecordField[]).map((f) => [
-        f,
-        readSized(bytes, recordFieldOffset(index, f), RECORD_FIELDS[f].size),
-      ]),
-    ) as Record<RecordField, number>;
-    return { ...r, index, building: readU32(bytes, recordOffset(index) + RECORD_BUILDING_REL) };
+    return { ...RECORD_CODEC.read(bytes, recordOffset(index)), index };
   });
 
   const counters = YOBAI_COUNTERS.map((c) => ({
@@ -421,11 +412,20 @@ export function validatePersonField(
   current: number,
   opts: { advanced: boolean },
 ): string | null {
+  return validatePersonValue(field, value, { advanced: opts.advanced || value === current });
+}
+
+/** 新規の値を検証する。現在値の書き戻しを許す判断は編集側で行う。 */
+export function validatePersonValue(
+  field: PersonField,
+  value: number,
+  opts: { advanced: boolean },
+): string | null {
   const size = PROMISE_FIELDS[field].size;
   const max = size === 1 ? 0xff : size === 2 ? 0xffff : 0xffffffff;
   if (!Number.isInteger(value) || value < 0 || value > max) return "範囲外の値です";
   if (field === "type" && value === PROMISE_EMPTY) return "空きを表す値なので書けません";
-  if (opts.advanced || value === current) return null;
+  if (opts.advanced) return null;
   const known = knownList(field);
   if (known)
     return known.some((k) => k.value === value)

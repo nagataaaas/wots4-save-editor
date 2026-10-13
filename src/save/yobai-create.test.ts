@@ -4,11 +4,10 @@
 //   朱美・町人（男性）は書き込みでゲーム内確認（✅ [U] 2026-10-10）。名前のある男性7人は 🟢 だけ（要ゲーム内確認）。
 import { describe, expect, it } from "vitest";
 import { TS_SAVE_SIZE } from "./hero";
+import { DATE_OFFSETS } from "./scenario-date";
 import {
-  DAY_INDEX_OFFSET,
   PROMISE_PARTNERS,
   PROMISE_ROWS,
-  STAGE_OFFSET,
   buildPromiseBytes,
   createPromise,
   createProblem,
@@ -20,7 +19,7 @@ import {
   validateSpec,
   type PromiseSpec,
 } from "./yobai-create";
-import { PROMISE_OFFSET, readYobai } from "./yobai";
+import { PROMISE_OFFSET, STAGE_OFFSET, readYobai } from "./yobai";
 
 const hex = (s: string) => Uint8Array.from(s.replace(/\s/g, "").match(/../g)!.map((h) => Number.parseInt(h, 16)));
 
@@ -40,7 +39,7 @@ function makeSave(opts: { day?: number; stage?: number; promise?: Uint8Array } =
   const b = new Uint8Array(TS_SAVE_SIZE);
   b.set(opts.promise ?? PROMISE_EMPTY, PROMISE_OFFSET);
   const dv = new DataView(b.buffer);
-  dv.setUint16(DAY_INDEX_OFFSET, opts.day ?? 1, true);
+  dv.setUint16(DATE_OFFSETS.dayIndex, opts.day ?? 1, true);
   dv.setUint32(STAGE_OFFSET, opts.stage ?? 0, true);
   return b;
 }

@@ -48,8 +48,8 @@ import {
   type YobaiView,
 } from "@/save/yobai";
 import { readU16 } from "@/save/binary";
+import { DATE_OFFSETS } from "@/save/scenario-date";
 import {
-  DAY_INDEX_OFFSET,
   createPromise,
   createProblem,
   currentStage,
@@ -417,7 +417,7 @@ function DayEditor({ promise, problem }: { promise: PromiseView | null; problem:
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   // promise が null（セーブ未読み込み）のときは欄を無効にし、今日の日付を出さない
-  const today = save && promise ? readU16(save.working, DAY_INDEX_OFFSET) : null;
+  const today = save && promise ? readU16(save.working, DATE_OFFSETS.dayIndex) : null;
   const isToday = !promise || today === null || promise.day === today;
 
   return (
@@ -480,7 +480,7 @@ function CreatePromiseForm({ problem }: { problem: string | null }) {
   const { tryWrite, error, setMessage } = useWrite();
   const { advanced } = useAdvancedMode();
   const stage = save ? currentStage(save.working) : 0;
-  const day = save ? readU16(save.working, DAY_INDEX_OFFSET) : 0;
+  const day = save ? readU16(save.working, DATE_OFFSETS.dayIndex) : 0;
   const [spec, setSpec] = useState<PromiseSpec>(() => defaultSpec(promisePartner(0x25)!, stage));
   const partner = promisePartner(spec.type)!;
   const blocked =
