@@ -8,7 +8,7 @@
 //   0x129F6 i8   🟢 武器箪笥の容量 ÷ 10。新しく始めたとき 2（20本）、上限 20（200本）。
 //                ゲームは先頭から「容量」件の中だけで空きを探し、本数が容量以上なら入れない
 // 書き込みの反映は要ゲーム内確認。
-import { readI16, readU8, writeI16, writeU8 } from './binary'
+import { readI16, readI8, writeI16, writeU8 } from './binary'
 import { checkLayout } from './hero'
 import { WEAPON_RECORD_BYTES, isEmptyWeapon, readWeapon, type WeaponView } from './weapon'
 
@@ -40,13 +40,11 @@ export type WeaponChestView = {
   countWarning: string | null
 }
 
-const toI8 = (v: number) => (v >= 0x80 ? v - 0x100 : v)
-
 export function readWeaponChest(bytes: Uint8Array): WeaponChestView {
   if (bytes.byteLength < WEAPON_CHEST_CAPACITY + 1) throw new RangeError('ファイルが小さすぎて武器箪笥を読めません')
   const layoutProblem = checkLayout(bytes)
   const count = readI16(bytes, WEAPON_CHEST_COUNT)
-  const capacity = toI8(readU8(bytes, WEAPON_CHEST_CAPACITY))
+  const capacity = readI8(bytes, WEAPON_CHEST_CAPACITY)
   const filled: number[] = []
   for (let i = 0; i < WEAPON_CHEST_SLOTS; i++) if (!isEmptyWeapon(bytes, weaponChestOffset(i))) filled.push(i)
 

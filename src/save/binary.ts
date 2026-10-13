@@ -16,6 +16,35 @@ export function readU8(bytes: Uint8Array, offset: number): number {
   return bytes[offset]
 }
 
+export function readI8(bytes: Uint8Array, offset: number): number {
+  assertRange(bytes, offset, 1)
+  return view(bytes).getInt8(offset)
+}
+
+export type SizedField = { rel: number; size: 1 | 2 | 4 }
+
+export function readSized(bytes: Uint8Array, offset: number, size: SizedField['size']): number {
+  return size === 1 ? readU8(bytes, offset) : size === 2 ? readU16(bytes, offset) : readU32(bytes, offset)
+}
+
+export function writeSized(bytes: Uint8Array, offset: number, size: SizedField['size'], value: number): void {
+  if (size === 1) writeU8(bytes, offset, value)
+  else if (size === 2) writeU16(bytes, offset, value)
+  else writeU32(bytes, offset, value)
+}
+
+/** レコードの相対位置と幅を、読み書きで共有する。 */
+export function recordCodec<K extends string>(fields: Record<K, SizedField>) {
+  return {
+    offset: (base: number, key: K) => base + fields[key].rel,
+    readField: (bytes: Uint8Array, base: number, key: K) => readSized(bytes, base + fields[key].rel, fields[key].size),
+    writeField: (bytes: Uint8Array, base: number, key: K, value: number) => writeSized(bytes, base + fields[key].rel, fields[key].size, value),
+    read: (bytes: Uint8Array, base: number): Record<K, number> => Object.fromEntries(
+      (Object.keys(fields) as K[]).map(key => [key, readSized(bytes, base + fields[key].rel, fields[key].size)]),
+    ) as Record<K, number>,
+  }
+}
+
 export function writeU8(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 1)
   if (!Number.isInteger(value) || value < 0 || value > 0xff) throw new RangeError("入力できる範囲を超えています")
