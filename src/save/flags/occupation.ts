@@ -6,7 +6,8 @@
 // 0x0120（番号 4、【岡っ引き】野戸仏の連続なりわい）は書き換えで確認（✅ 2026-10-07）。ほかは 🟢。
 // 受注にあわせてこれらのフラグを書く規則は occupation-accept.ts。
 import { nameOf, occupationGroupLabel } from "../master/labels";
-import { occupationById, occupationGroupByKey } from "../master/occupation-names";
+import { occupationById, occupationGroupByKey, type OccupationGroupKey } from "../master/occupation-names";
+import { OCCUPATION_SERIES, SHIRUBE_SERIES, seriesJobs } from "../master/occupation-series";
 import { occupationFlagOffset } from "../townsfolk";
 import { yesNo, type ByteFlag, type FlagValue } from "./byte-flag";
 
@@ -23,7 +24,11 @@ function jobRange(from: number, to: number): number[] {
 }
 
 /** なりわいのまとまりの見出し（【岡っ引き】野戸仏 など）。なりわいの画面の絞り込みと同じ */
-const groupTitle = (key: string): string => occupationGroupLabel(occupationGroupByKey(key)!);
+const groupTitle = (key: OccupationGroupKey): string => {
+  const group = occupationGroupByKey(key);
+  if (!group) throw new RangeError('なりわいのまとまりがありません');
+  return occupationGroupLabel(group);
+};
 
 /**
  * 連続なりわい（番号 4〜7）の値。十の位が何件目か、一の位が 0＝依頼前・1＝依頼済み。100 で完了。
@@ -156,35 +161,35 @@ const at = (n: number) => ({ number: n, offset: occupationFlagOffset(n) });
 /** 連続なりわい、四天王の話、最終なりわい */
 export const OCCUPATION_SERIES_FLAGS: readonly OccupationFlag[] = [
   {
-    ...at(4),
+    ...at(OCCUPATION_SERIES.police.flag),
     label: groupTitle("police"),
     note: `代官所の同心 ${nameOf.npc(40)}新太郎の連続なりわい。書き換えると${nameOf.npc(40)}の次の依頼が変わる（2件目「督促状」から始める、完了にする、など）`,
     values: POLICE_SERIES_VALUES,
-    jobs: jobRange(171, 178),
+    jobs: seriesJobs('police').filter(id => occupationById(id)),
   },
   {
-    ...at(5),
+    ...at(OCCUPATION_SERIES.gangster.flag),
     label: groupTitle("gangster"),
     // 🟢
     note: `町の極道者 ${nameOf.npc(45)}戒の連続なりわい`,
     values: GANGSTER_SERIES_VALUES,
-    jobs: jobRange(179, 186),
+    jobs: seriesJobs('gangster').filter(id => occupationById(id)),
   },
   {
-    ...at(6),
+    ...at(OCCUPATION_SERIES.thief.flag),
     label: groupTitle("thief"),
     // 🟢
     note: `港の${nameOf.npc(169)}の連続なりわい`,
     values: THIEF_SERIES_VALUES,
-    jobs: jobRange(187, 194),
+    jobs: seriesJobs('thief').filter(id => occupationById(id)),
   },
   {
-    ...at(7),
+    ...at(OCCUPATION_SERIES.homeless.flag),
     label: groupTitle("homeless"),
     // 🟢
     note: `居留地の${nameOf.npc(76)}の連続なりわい`,
     values: HOMELESS_SERIES_VALUES,
-    jobs: jobRange(195, 206),
+    jobs: seriesJobs('homeless').filter(id => occupationById(id)),
   },
   {
     ...at(25),
@@ -345,12 +350,7 @@ export const OCCUPATION_SERIES_FLAGS: readonly OccupationFlag[] = [
 ];
 
 /** 汁部（DLC）のなりわい 209〜212 の名前 */
-export const SHIRUBE_JOBS = [
-  nameOf.occupation(209),
-  nameOf.occupation(210),
-  nameOf.occupation(211),
-  nameOf.occupation(212),
-] as const;
+export const SHIRUBE_JOBS = SHIRUBE_SERIES.ids.map(id => nameOf.occupation(id));
 
 /** 汁部（DLC）の 209〜212 それぞれの進み具合（🟢） */
 const SHIRUBE_RESULT_VALUES: readonly FlagValue[] = [
@@ -362,14 +362,14 @@ const SHIRUBE_RESULT_VALUES: readonly FlagValue[] = [
 /** 汁部（DLC）：知り合ったか（27）と、209〜212 の進み具合（28〜31）🟢 */
 export const OCCUPATION_DLC_FLAGS: readonly OccupationFlag[] = [
   {
-    ...at(27),
+    ...at(SHIRUBE_SERIES.flag),
     label: `${nameOf.npc(211)}（DLC）と知り合ったか`,
     // 🟢
     note: `${nameOf.npc(81)} ${nameOf.npc(211)}理人の誘いに乗って組むと知り合った状態になり、一度組むとそのまま`,
     values: yesNo("知り合う前（組んでいない）", "知り合った（組んでいる）"),
   },
   ...SHIRUBE_JOBS.map((job, i) => ({
-    ...at(28 + i),
+    ...at(SHIRUBE_SERIES.resultFlags[i]),
     label: `${nameOf.npc(211)}の「${job}」`,
     // 🟢
     note: `なりわいの進み具合（破棄すると受注前に戻る）。成功は残る。${nameOf.npc(211)}は4つの仕事のうち最初に受注前のものを頼む。受注前がなく「成功……？」があれば「あきらめた仕事があるよな」と言い、頼み直すと受注前に戻る。すべて成功ならもう頼まない`,

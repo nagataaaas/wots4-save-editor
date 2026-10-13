@@ -39,6 +39,13 @@ function diffOffsets(a: Uint8Array, b: Uint8Array): number[] {
 }
 
 describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
+  it('上級者モードの任意のフラグ値は、受注する分岐でも許可する（受注の印 🔶）', () => {
+    const bytes = makeSave()
+    writeSeriesState(bytes, [{ flag: 4, value: 255 }], 171, { advanced: true })
+    expect(readAccepted(bytes).id).toBe(171)
+    expect(bytes[flagOffset(4)]).toBe(255)
+    expect(() => writeSeriesState(makeSave(), [{ flag: 4, value: 255 }], 171, { advanced: false })).toThrow()
+  })
   it('✅ 受注中の情報の位置', () => {
     expect(ACCEPT_OFFSETS).toEqual({ id: 0x45f4e, day: 0x45f52, slot: 0x45f54, active: 0x45f55 })
   })

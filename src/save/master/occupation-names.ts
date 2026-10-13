@@ -9,6 +9,7 @@
 // - reward・bonus：成功報酬・追加報酬（文）
 // - deadlineDays：期限（日）。空は期限なし（null）
 import { OCCUPATION_TABLE } from "./dataset/occupation";
+import { seriesRange, SHIRUBE_SERIES, type SeriesGroupKey } from "./occupation-series";
 import {
   npcLabelId,
   occupationId,
@@ -60,7 +61,8 @@ export function occupationById(id: number): OccupationEntry | undefined {
 /** まとまりの見出し。依頼主のいるまとまりは「【役目】名前」で表示する（labels.ts の occupationGroupLabel） */
 export type OccupationGroupTitle = string | { role: string; npc: NpcLabelId };
 
-export type OccupationGroup = { key: string; title: OccupationGroupTitle; from: number; to: number };
+export type OccupationGroupKey = 'basic' | 'sakotsu' | 'okami' | SeriesGroupKey | 'final' | 'shirube';
+export type OccupationGroup = { key: OccupationGroupKey; title: OccupationGroupTitle; from: number; to: number };
 
 /**
  * 画面で使うなりわいのまとまり。ids は ID の範囲（欠番を含む）。
@@ -71,18 +73,18 @@ export const OCCUPATION_GROUPS: readonly OccupationGroup[] = [
   { key: "basic", title: "町のなりわい", from: 3, to: 161 },
   { key: "sakotsu", title: { role: "同心頭", npc: npcLabelId(37) }, from: 162, to: 166 },
   { key: "okami", title: { role: "賭場", npc: npcLabelId(44) }, from: 167, to: 170 },
-  { key: "police", title: { role: "岡っ引き", npc: npcLabelId(40) }, from: 171, to: 178 },
-  { key: "gangster", title: { role: "極道", npc: npcLabelId(45) }, from: 179, to: 186 },
-  { key: "thief", title: { role: "泥棒", npc: npcLabelId(169) }, from: 187, to: 194 },
-  { key: "homeless", title: { role: "宿無し", npc: npcLabelId(76) }, from: 195, to: 206 },
+  { key: "police", title: { role: "岡っ引き", npc: npcLabelId(40) }, ...seriesRange('police') },
+  { key: "gangster", title: { role: "極道", npc: npcLabelId(45) }, ...seriesRange('gangster') },
+  { key: "thief", title: { role: "泥棒", npc: npcLabelId(169) }, ...seriesRange('thief') },
+  { key: "homeless", title: { role: "宿無し", npc: npcLabelId(76) }, ...seriesRange('homeless') },
   { key: "final", title: "最終なりわい", from: 207, to: 208 },
-  { key: "shirube", title: "汁部（DLC）", from: 209, to: 212 },
+  { key: "shirube", title: "汁部（DLC）", from: SHIRUBE_SERIES.ids[0], to: SHIRUBE_SERIES.ids[SHIRUBE_SERIES.ids.length - 1] },
 ];
 
-export function occupationGroupOf(id: number): string {
+export function occupationGroupOf(id: number): OccupationGroupKey {
   return OCCUPATION_GROUPS.find((g) => id >= g.from && id <= g.to)?.key ?? "basic";
 }
 
-export function occupationGroupByKey(key: string): OccupationGroup | undefined {
+export function occupationGroupByKey(key: OccupationGroupKey): OccupationGroup | undefined {
   return OCCUPATION_GROUPS.find((g) => g.key === key);
 }

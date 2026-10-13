@@ -6,6 +6,10 @@ import { MORO_OFFSET, MORO_DEAD, readFactions, routeEligible } from './factions'
 import { partnerDeathWarning } from './yobai-create'
 import { DAY_RANGE } from './scenario-date'
 import { DAY_NORMAL_MAX, YOBAI_COUNTERS, PROMISE_CODEC, STAGE_OFFSET, validatePersonValue, validatePersonField } from './yobai'
+import { OCCUPATION_SERIES, SHIRUBE_SERIES } from './master/occupation-series'
+import { OCCUPATION_GROUPS, occupationById } from './master/occupation-names'
+import { OCCUPATION_SERIES_FLAGS, OCCUPATION_DLC_FLAGS } from './flags/occupation'
+import { acceptRuleOf, seriesAcceptOf } from './occupation-accept'
 import { reviveNote } from './townsfolk'
 import { PUPIL_CODEC } from './dojo'
 
@@ -72,5 +76,27 @@ describe('共有する固定位置とレコード', () => {
     for (const field of Object.keys(entry) as (keyof typeof entry)[]) PUPIL_CODEC.writeField(pupil, 1, field, entry[field])
     expect(pupil).toEqual(original)
     expect(PUPIL_CODEC.offset(1, 'look')).toBe(9)
+  })
+})
+
+describe('連続なりわいの共通表（🟢、受注解除の値は 🔶）', () => {
+  it('まとまり・欄の仕事・受注の対応が揃い、最後の仕事と途中の追加の仕事を保つ', () => {
+    for (const [key, s] of Object.entries(OCCUPATION_SERIES)) {
+      const group = OCCUPATION_GROUPS.find(g => g.key === key)!
+      const field = OCCUPATION_SERIES_FLAGS.find(f => f.number === s.flag)!
+      const jobs = Array.from({ length: group.to - group.from + 1 }, (_, i) => group.from + i).filter(id => occupationById(id))
+      expect(field.jobs).toEqual(jobs)
+      s.ids.forEach((id, i) => {
+        const n = (i + 1) * 10
+        expect(acceptRuleOf(id).onAccept).toEqual([{ flag: s.flag, value: n + (i < s.writesUntil ? 1 : 0) }])
+        expect(seriesAcceptOf(s.flag, n + 1)).toBe(i < s.writesUntil ? id : undefined)
+      })
+    }
+    expect(acceptRuleOf(203).onAccept).toEqual([{ flag: 7, value: 61 }])
+    expect(acceptRuleOf(206).onAccept).toEqual([{ flag: 7, value: 80 }])
+    expect(acceptRuleOf(198).onAccept).toEqual([])
+    expect(acceptRuleOf(200).onAccept).toEqual([])
+    expect(OCCUPATION_DLC_FLAGS.map(f => f.number)).toEqual([27, 28, 29, 30, 31])
+    expect(SHIRUBE_SERIES.ids).toEqual([209, 210, 211, 212])
   })
 })
