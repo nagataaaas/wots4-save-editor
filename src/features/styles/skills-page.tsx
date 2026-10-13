@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { FilterSelect, type FilterOption } from "@/components/filter-select";
 import { InfoTip } from "@/components/info-tip";
 import { LazyTip } from "@/components/lazy-tip";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { AnchoredCard } from "@/components/anchored-card";
 import { SKILLS_ANCHORS } from "./anchors";
 import { useAnchor } from "@/lib/navigation-context";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSaveView } from "@/lib/use-save-view";
@@ -24,8 +24,9 @@ import {
   showStanceSkillInOreRyu,
   stanceSkillSheets,
 } from "@/save/sects";
-import { STANCE_TAB_CLASS, attrLabel } from "./sect-format";
+import { SKILL_TREE_DESCRIPTION, STANCE_TAB_CLASS, attrLabel } from "./sect-format";
 import { SkillAttrs, SkillCommandCells, SkillTreeName, SkillTreeRows, StateBadge, type SkillTreeRowContext } from "./sect-ui";
+import { SkillActionButtons } from "./skill-action-buttons";
 import {
   ANY,
   ATTR_OPTIONS,
@@ -40,14 +41,16 @@ import {
   type SkillSort,
 } from "./skill-list";
 
-const COMMAND_LABELS: Record<string, string> = {
-  [ANY]: "すべての入力",
-  ...Object.fromEntries(COMMAND_OPTIONS.map((c) => [c, c || "入力なし"])),
-};
-const ATTR_LABELS: Record<string, string> = {
-  [ANY]: "すべての効果",
-  ...Object.fromEntries(ATTR_OPTIONS.map((a) => [a, attrLabel(a)])),
-};
+const COMMAND_FILTER_OPTIONS: FilterOption<string>[] = [
+  { value: ANY, label: "すべての入力" },
+  ...COMMAND_OPTIONS.map((c) => ({ value: c, label: c || "入力なし" })),
+];
+const ATTR_FILTER_OPTIONS: FilterOption<string>[] = [
+  { value: ANY, label: "すべての効果" },
+  ...ATTR_OPTIONS.map((a) => ({ value: a, label: attrLabel(a) })),
+];
+const KIND_FILTER_OPTIONS = (Object.keys(SKILL_KIND_LABELS) as SkillKind[]).map((value) => ({ value, label: SKILL_KIND_LABELS[value] }));
+const SORT_OPTIONS = (Object.keys(SKILL_SORT_LABELS) as SkillSort[]).map((value) => ({ value, label: SKILL_SORT_LABELS[value] }));
 
 /** タブの段：刀の構え（構えの組 0）と、それ以外（構えの組の順 🟢：槍・無手・拳銃・ライフル・二刀） */
 const STANCE_ROWS = [
@@ -131,32 +134,22 @@ export function SkillsPage() {
               <Input placeholder="名前で絞り込み" value={filter.query} onChange={(e) => set({ query: e.target.value })} />
             </FilterField>
             <FilterField label="入力">
-              <Select value={filter.command} items={COMMAND_LABELS} onValueChange={(v) => v !== null && set({ command: v })}>
-                <SelectTrigger className="w-full" aria-label="入力で絞り込み">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[ANY, ...COMMAND_OPTIONS].map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {COMMAND_LABELS[c]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FilterSelect
+                options={COMMAND_FILTER_OPTIONS}
+                value={filter.command}
+                onChange={(command) => set({ command })}
+                className="w-full"
+                aria-label="入力で絞り込み"
+              />
             </FilterField>
             <FilterField label="種類">
-              <Select value={filter.kind} items={SKILL_KIND_LABELS} onValueChange={(v) => v !== null && set({ kind: v as SkillKind })}>
-                <SelectTrigger className="w-full" aria-label="技の種類で絞り込み">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(SKILL_KIND_LABELS) as SkillKind[]).map((k) => (
-                    <SelectItem key={k} value={k}>
-                      {SKILL_KIND_LABELS[k]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FilterSelect
+                options={KIND_FILTER_OPTIONS}
+                value={filter.kind}
+                onChange={(kind) => set({ kind })}
+                className="w-full"
+                aria-label="技の種類で絞り込み"
+              />
             </FilterField>
             <FilterField label="攻撃力（以上）">
               <Input
@@ -173,32 +166,16 @@ export function SkillsPage() {
               />
             </FilterField>
             <FilterField label="効果">
-              <Select value={filter.attr} items={ATTR_LABELS} onValueChange={(v) => v !== null && set({ attr: v })}>
-                <SelectTrigger className="w-full" aria-label="効果で絞り込み">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[ANY, ...ATTR_OPTIONS].map((a) => (
-                    <SelectItem key={a} value={a}>
-                      {ATTR_LABELS[a]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FilterSelect
+                options={ATTR_FILTER_OPTIONS}
+                value={filter.attr}
+                onChange={(attr) => set({ attr })}
+                className="w-full"
+                aria-label="効果で絞り込み"
+              />
             </FilterField>
             <FilterField label="並べ替え">
-              <Select value={sort} items={SKILL_SORT_LABELS} onValueChange={(v) => v !== null && setSort(v as SkillSort)}>
-                <SelectTrigger className="w-full" aria-label="並べ替え">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(SKILL_SORT_LABELS) as SkillSort[]).map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {SKILL_SORT_LABELS[s]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FilterSelect options={SORT_OPTIONS} value={sort} onChange={setSort} className="w-full" aria-label="並べ替え" />
             </FilterField>
             <Button
               variant="outline"
@@ -312,7 +289,7 @@ function StanceSkillTable({
         </Button>
         <span className="text-muted-foreground text-xs">
           {nos.length} 件（未習得 {states ? nos.filter((no) => states[no] === 0).length : "—"}）。段や習得条件は見ずに書き込みます。
-          続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
+          {SKILL_TREE_DESCRIPTION}
           条件に合わない前の技は薄く出します。
         </span>
       </div>
@@ -389,42 +366,17 @@ function SkillRow({
           <span className="text-muted-foreground">{row.learnable ? "（手に入れられない流派のみ）" : "—"}</span>
         )}
       </span>
-      <span className="flex justify-end gap-1">
-        {/* 流派の画面と同じ：固有技は 0 →「習得する」（3）→「俺流で表示」（1）。ほかの技は 0・3 から「習得する」（1） */}
-        {state === 3 && row.unique ? (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={readOnly || !row.learnable}
-            onClick={() => run("俺流に組み込めるようにしました", (b) => showStanceSkillInOreRyu(b, stance, s.skillNo))}
-          >
-            俺流で表示
-          </Button>
-        ) : (
-          // 未読み込み（state が null）のときも、無効にした「習得する」を出す
-          (state === null || state === 0 || state === 3) && (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={readOnly || !row.learnable}
-              title={row.learnable ? undefined : "この技が入っている流派がないので習得できません"}
-              onClick={() => run("技を習得しました", (b) => learnStanceSkill(b, stance, s.skillNo))}
-            >
-              習得する
-            </Button>
-          )
-        )}
-        {advanced && state !== null && state !== 0 && (
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={readOnly}
-            onClick={() => run("技を忘れさせました", (b) => forgetStanceSkill(b, stance, s.skillNo))}
-          >
-            忘れさせる
-          </Button>
-        )}
-      </span>
+      {/* 流派の画面と同じ：固有技は 0 →「習得する」（3）→「俺流で表示」（1）。ほかの技は 0・3 から「習得する」（1） */}
+      <SkillActionButtons
+        state={state}
+        unique={row.unique}
+        advanced={advanced}
+        disabled={readOnly}
+        learnable={row.learnable}
+        onLearn={() => run("技を習得しました", (b) => learnStanceSkill(b, stance, s.skillNo))}
+        onShowInOreRyu={() => run("俺流に組み込めるようにしました", (b) => showStanceSkillInOreRyu(b, stance, s.skillNo))}
+        onForget={() => run("技を忘れさせました", (b) => forgetStanceSkill(b, stance, s.skillNo))}
+      />
     </div>
   );
 }

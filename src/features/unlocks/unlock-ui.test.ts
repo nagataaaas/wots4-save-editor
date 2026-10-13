@@ -47,7 +47,7 @@ describe("装飾品・容姿の所持ボタン", () => {
     const disabled = OwnershipStateButton({ owned: false, name: "服", labels: ["未解放", "解放済み"], disabled: true, onChange: (v) => changes.push(v) });
     disabled.props.onClick();
     expect(changes).toEqual([true, false]);
-    expect(disabled.props["aria-disabled"]).toBe(true);
+    expect(disabled.props.disabled).toBe(true);
   });
 });
 
@@ -68,9 +68,8 @@ describe("特典の状態ボタン（🔶 U-17）", () => {
     if (value === 2) expect(html).toContain("dark:text-emerald-400");
   });
 
-  it("読み取り専用でもホバー可能なボタンで無効状態を示す", () => {
+  it("読み取り専用のボタンを実際に無効にする", () => {
     const html = renderToStaticMarkup(createElement(UnlockStateButton, { value: 0, name: "特典", disabled: true, onChange: () => {} }));
-    expect(html).toContain('aria-disabled="true"');
-    expect(html).not.toContain(' disabled=""');
+    expect(html).toContain(' disabled=""');
   });
 });

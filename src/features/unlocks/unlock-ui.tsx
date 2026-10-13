@@ -54,9 +54,9 @@ export function OwnershipStateButton({ owned, name, disabled, labels, onChange }
   const Icon = owned ? Check : LockKeyhole;
   return (
     <LazyTip
-      className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border hover:bg-muted"
+      className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
       aria-label={`${name}：${label}（クリックで切り替え）`}
-      aria-disabled={disabled}
+      disabled={disabled}
       content={label}
       onClick={() => { if (!disabled) onChange(!owned); }}
     >
@@ -87,7 +87,7 @@ export function UnlockStateButton({ value, name, disabled, onChange }: {
     <LazyTip
       className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
       aria-label={`${name}：${label}（クリックで次の状態）`}
-      aria-disabled={disabled}
+      disabled={disabled}
       content={label}
       onClick={() => { if (!disabled) onChange(nextUnlockState(value)); }}
     >

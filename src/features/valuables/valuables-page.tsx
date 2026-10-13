@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { FilterSelect } from "@/components/filter-select";
 import { InfoTip } from "@/components/info-tip";
 import { ItemSlotRow } from "@/components/item-slot-row";
 import { Badge } from "@/components/ui/badge";
@@ -8,13 +9,6 @@ import { AnchoredCard } from "@/components/anchored-card";
 import { ITEM_ANCHORS } from "@/features/tools/anchors";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { formatHex4, formatOffset } from "@/lib/format";
 import { useSave } from "@/lib/save-context";
@@ -153,23 +147,13 @@ function ProbeCard({
           <div className="flex flex-wrap items-end gap-2">
             <div className="flex flex-col gap-1.5">
               <Label>開始 ID</Label>
-              <Select
+              <FilterSelect
+                options={PROBE_CANDIDATES.map((id) => ({ value: String(id), label: formatHex4(id) }))}
                 value={start}
-                items={PROBE_CANDIDATES.map((id) => ({ value: String(id), label: formatHex4(id) }))}
-                onValueChange={(v) => v !== null && setStart(v)}
+                onChange={setStart}
                 disabled={disabled}
-              >
-                <SelectTrigger className="w-32 font-mono">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROBE_CANDIDATES.map((id) => (
-                    <SelectItem key={id} value={String(id)} className="font-mono">
-                      {formatHex4(id)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="w-32 font-mono"
+              />
             </div>
             <Button onClick={fill} disabled={disabled}>
               空き枠に候補 ID を入れる

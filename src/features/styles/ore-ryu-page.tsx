@@ -1,5 +1,6 @@
 import { ORE_RYU_ANCHORS } from "./anchors";
 import { useMemo, useState } from "react";
+import { ActionButton } from "@/components/action-button";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
@@ -8,15 +9,9 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
+import { FilterSelect } from "@/components/filter-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
 import { formatOffset } from "@/lib/format";
@@ -36,6 +31,7 @@ import {
   createCustomStyle,
   customSkillLabel,
   deleteCustomStyle,
+  initialStanceSkills,
   readCustomStyles,
   removeCustomStance,
   validateCustomName,
@@ -47,11 +43,9 @@ import {
   type CustomStyle,
   type CustomStylesView,
 } from "@/save/custom-style";
-import { RANK_LABELS, SLOT_LABELS, STANCES, findStance, findStanceSkill } from "@/save/master/sect-data";
+import { RANK_LABELS, SLOT_LABELS, STANCES, findStance } from "@/save/master/sect-data";
 import { I16_MAX, MASTERY_MAX } from "@/save/sects";
 import { IntField, RankField, SkillPicker } from "./sect-ui";
-
-const isFirstSkill = (stance: number, no: number) => findStanceSkill(stance, no)?.first ?? false;
 
 export function OreRyuPage() {
   const { save } = useSave();
@@ -109,7 +103,6 @@ function StyleCard({
   advanced: boolean;
 }) {
   const { write: update, run, message } = useWrite();
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [addStance, setAddStance] = useState<string>("");
   // 生きた証の写しはその人物が町に出るたびに作り直されるので、上級者モードでだけ書き換える 🔶
   const locked = readOnly || (style.kind !== "player" && !advanced);
@@ -210,23 +203,14 @@ function StyleCard({
           <div className="flex flex-wrap items-end gap-2">
             <div className="flex flex-col gap-1.5">
               <Label>構えを足す（同じ構えの組だけ、3 つまで）</Label>
-              <Select
-                value={addStance}
-                items={addable.map((s) => ({ value: String(s.id), label: s.nameJa }))}
-                onValueChange={(v) => v !== null && setAddStance(v)}
+              <FilterSelect
+                options={addable.map((s) => ({ value: String(s.id), label: s.nameJa }))}
+                value={addStance === "" ? null : addStance}
+                onChange={setAddStance}
                 disabled={locked}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="構え" />
-                </SelectTrigger>
-                <SelectContent>
-                  {addable.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      {s.nameJa}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="w-40"
+                placeholder="構え"
+              />
             </div>
             <Button
               variant="outline"
@@ -234,10 +218,7 @@ function StyleCard({
               onClick={() => {
                 const stance = Number(addStance);
                 // 足した直後は、その構えで入れられる初段の技だけを入れておく（あとで選び直す）
-                const firsts = view.sects.stanceStates[stance]
-                  .map((v, no) => ({ v, no }))
-                  .filter(({ v, no }) => (advanced || v === 1 || v === 2) && isFirstSkill(stance, no))
-                  .map(({ no }) => no);
+                const firsts = initialStanceSkills(view.sects.stanceStates[stance], stance, { advanced });
                 run(`${findStance(stance)?.nameJa}を足しました`, (b) => addCustomStance(b, style.id, stance, firsts, { advanced }));
               }}
             >
@@ -249,20 +230,14 @@ function StyleCard({
         <WriteResult message={message} />
 
         <div className="flex flex-wrap items-center gap-2 border-t pt-3">
-          {!confirmDelete ? (
-            <Button variant="outline" disabled={readOnly || style.equipped || (style.kind !== "player" && !advanced)} onClick={() => setConfirmDelete(true)}>
-              この俺流を消す
-            </Button>
-          ) : (
-            <>
-              <Button variant="destructive" onClick={() => run("俺流を消しました", (b) => deleteCustomStyle(b, style.id, { advanced }))}>
-                本当に消す
-              </Button>
-              <Button variant="ghost" onClick={() => setConfirmDelete(false)}>
-                やめる
-              </Button>
-            </>
-          )}
+          {/* 消すとこのカードごとなくなるので、成功の文は出さない */}
+          <ActionButton
+            disabled={readOnly || style.equipped || (style.kind !== "player" && !advanced)}
+            label="この俺流を消す"
+            confirm="inline"
+            confirmLabel="本当に消す"
+            onAction={() => update((b) => deleteCustomStyle(b, style.id, { advanced }))}
+          />
           <span className="text-muted-foreground text-xs">
             ゲームで捨てたときと同じく、俺流・技の表・流派の書を消します。装備中は消せません。
           </span>
@@ -371,27 +346,16 @@ function CreateCard({
           </SearchField>
           <SearchField label="構え" className="flex flex-col gap-1.5">
             <Label>構え</Label>
-            <Select
+            <FilterSelect
+              options={STANCES.map((x) => ({ value: String(x.id), label: x.nameJa }))}
               value={stance}
-              items={STANCES.map((x) => ({ value: String(x.id), label: x.nameJa }))}
-              onValueChange={(v) => {
-                if (v === null) return;
-                setStance(v);
+              onChange={(value) => {
+                setStance(value);
                 setSelected(new Set());
               }}
               disabled={readOnly}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STANCES.map((x) => (
-                  <SelectItem key={x.id} value={String(x.id)}>
-                    {x.nameJa}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className="w-40"
+            />
           </SearchField>
         </div>
         <SkillPicker

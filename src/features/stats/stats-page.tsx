@@ -17,6 +17,7 @@ import {
 } from "@/save/score-tables";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
+import { parseInteger } from "@/lib/parse";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
@@ -38,11 +39,12 @@ const OPEN_GROUPS: readonly StatGroupId[] = ["evaluation", "actions"];
 const formatValue = (field: StatField) => (v: number) =>
   field.type === "f32" ? String(Number(v.toPrecision(7))) : String(v);
 
+const UNSIGNED_ERROR = { error: "0以上の整数を入力してください" };
+
 function parseValue(field: StatField, input: string, advanced: boolean): ParseResult<number> {
+  if (field.type !== "f32") return parseInteger(input, (value) => validateStat(field, value, { advanced }), UNSIGNED_ERROR);
   const text = input.trim();
-  const pattern = field.type === "f32" ? /^-?\d+(\.\d+)?$/ : /^\d+$/;
-  if (!pattern.test(text))
-    return { ok: false, error: field.type === "f32" ? "数値を入力してください" : "0以上の整数を入力してください" };
+  if (!/^-?\d+(\.\d+)?$/.test(text)) return { ok: false, error: "数値を入力してください" };
   const value = Number(text);
   const error = validateStat(field, value, { advanced });
   return error ? { ok: false, error } : { ok: true, value };
@@ -152,12 +154,7 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
       value={view ? (scope === "cycle" ? view.cycle[index] : view.total[index]) : null}
       problem={view?.problem ?? null}
       format={String}
-      parse={(input) => {
-        if (!/^\d+$/.test(input.trim())) return { ok: false, error: "0以上の整数を入力してください" };
-        const value = Number(input.trim());
-        const error = validateScore(table, index, value, { advanced });
-        return error ? { ok: false, error } : { ok: true, value };
-      }}
+      parse={(input) => parseInteger(input, (value) => validateScore(table, index, value, { advanced }), UNSIGNED_ERROR)}
       apply={(v) => update((b) => writeScore(b, table, scope, index, v, { advanced }))}
       inputMode="numeric"
       hint={`0〜${(advanced ? 0xffff_ffff : t.max).toLocaleString()}`}

@@ -1,10 +1,11 @@
 import { createElement, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { AnchorLink, ToggleChevron } from "@/components/anchor-link";
+import { DisclosureContent } from "@/components/disclosure-content";
 import { InfoTip } from "@/components/info-tip";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AnchorScope, useAnchoredOpen } from "@/lib/navigation-context";
-import { SearchPath, SearchScope } from "@/lib/search-context";
+import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAnchoredOpen } from "@/lib/navigation-context";
+import { SearchScope } from "@/lib/search-context";
 import { useSearchBox } from "@/lib/search-hooks";
 import { WEAPON_FIELDS, type WeaponView } from "@/save/weapon";
 import { WEAPON_EDITOR_ANCHORS } from "./anchors";
@@ -12,7 +13,7 @@ import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import { charmIcon, titleIcon } from "./effect-icons";
 import { useWeaponRows } from "./use-weapon-rows";
 import { CharmEditor } from "./charm-editor";
-import { COLLAPSIBLE_ANIMATION, type WeaponUpdate } from "./weapon-ui";
+import { type WeaponUpdate } from "./weapon-ui";
 
 // 武器1件分の編集欄（帯刀・武器袋・刀箪笥で共通。開いたときの中身）。
 
@@ -55,14 +56,9 @@ function Section({
         <CollapsibleTrigger className="hover:text-foreground flex-1 text-left">{title}</CollapsibleTrigger>
       </div>
       {/* overflow-hidden で入力欄のフォーカスリングが切れないよう、-mx-1 px-1 で少し広げる */}
-      <CollapsibleContent className={`${COLLAPSIBLE_ANIMATION} -mx-1 px-1`}>
-        <div className="flex flex-col gap-4 pt-4 pb-1">
-          {/* 検索から中の欄へ飛んだときにこのまとまりも開くよう、中の欄の anchor をこのまとまりにする */}
-          <AnchorScope.Provider value={id}>
-            <SearchPath label={title}>{children}</SearchPath>
-          </AnchorScope.Provider>
-        </div>
-      </CollapsibleContent>
+      <DisclosureContent id={id} searchLabel={title} className="-mx-1 px-1">
+        <div className="flex flex-col gap-4 pt-4 pb-1">{children}</div>
+      </DisclosureContent>
     </Collapsible>
   );
 }

@@ -1,15 +1,12 @@
 import type { ReactNode } from "react";
 import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AnchorLink, ToggleChevron } from "@/components/anchor-link";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
+import { CollapsibleCard } from "@/components/collapsible-card";
 import { MARKET_ANCHORS } from "./anchors";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { WeaponPanel } from "@/features/belt/belt-page";
-import { useAnchoredOpen } from "@/lib/navigation-context";
-import { useSearchBox } from "@/lib/search-hooks";
 import { useSaveView } from "@/lib/use-save-view";
 import { PageBanner } from "@/components/page-banner";
 import {
@@ -102,35 +99,29 @@ function Group({
   offset: number;
   children?: ReactNode;
 }) {
-  const { id, open, setOpen } = useAnchoredOpen(anchor);
-  useSearchBox(id, title);
   return (
-    <Card id={id} className="scroll-mt-4 py-0">
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <div className="flex items-center gap-2 px-6 py-4">
-          <ToggleChevron open={open} onToggle={() => setOpen(!open)} />
-          <AnchorLink id={id} />
-          <CollapsibleTrigger className="flex flex-1 items-center gap-2 text-left font-medium">
-            {title}
-            <span className="text-muted-foreground text-sm font-normal">
-              {filled ?? "—"} / {slots}
-            </span>
-          </CollapsibleTrigger>
-          <InfoTip offset={offset} />
-        </div>
-        <CollapsibleContent>
-          <CardContent className="flex flex-col gap-4 pb-6">
-            {filled === null ? (
-              <p className="text-muted-foreground text-sm">—</p>
-            ) : filled === 0 ? (
-              <p className="text-muted-foreground text-sm">ありません。</p>
-            ) : (
-              children
-            )}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
+    <CollapsibleCard
+      anchor={anchor}
+      searchLabel={title}
+      title={
+        <>
+          {title}
+          <span className="text-muted-foreground text-sm font-normal">
+            {filled ?? "—"} / {slots}
+          </span>
+        </>
+      }
+      extra={<InfoTip offset={offset} />}
+      contentClassName="flex flex-col gap-4"
+    >
+      {filled === null ? (
+        <p className="text-muted-foreground text-sm">—</p>
+      ) : filled === 0 ? (
+        <p className="text-muted-foreground text-sm">ありません。</p>
+      ) : (
+        children
+      )}
+    </CollapsibleCard>
   );
 }
 

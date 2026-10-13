@@ -1,26 +1,22 @@
 import { OCCUPATION_ANCHORS } from "./anchors";
 import { useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
+import { FilterSelect, type FilterOption } from "@/components/filter-select";
 import { GameLabel } from "@/components/game-label";
 import { InfoTip } from "@/components/info-tip";
 import { LazySelect } from "@/components/lazy-select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatOffset } from "@/lib/format";
+import { parseInteger } from "@/lib/parse";
+import { matchesSearch } from "@/lib/search";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
@@ -93,11 +89,6 @@ const valueForKind = (kind: StateKind, current: number) =>
         ? current
         : 1;
 
-function matches(query: string, ...texts: string[]): boolean {
-  const q = query.trim().toLowerCase();
-  return q === "" || texts.some((t) => t.toLowerCase().includes(q));
-}
-
 const entryLabel = (entry: OccupationEntry) => occupationLabel(entry.labelId);
 const entryKeywords = (entry: OccupationEntry) => labelKeywords({ kind: "occupation", id: entry.labelId });
 
@@ -139,14 +130,12 @@ function SummaryCard({ view, accepted }: { view: OccupationView | null; accepted
   const mismatch = view !== null && view.clearCount !== view.stateSum;
 
   return (
-    <AnchoredCard anchor={OCCUPATION_ANCHORS.current} searchLabel="受注中・クリア数">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />受注中・クリア数</CardTitle>
-        <CardDescription>
-          {/* ❓ 揃っていないときのゲームの動作は未確認。クリアしたなりわいの数も周回をまたぐ統計で、下の記録のクリア回数の合計と揃える */}
-          受注中のなりわいと、これまでにクリアしたなりわいの数を編集できます。
-        </CardDescription>
-      </CardHeader>
+    <AnchoredCard
+      anchor={OCCUPATION_ANCHORS.current}
+      title="受注中・クリア数"
+      // ❓ 揃っていないときのゲームの動作は未確認。クリアしたなりわいの数も周回をまたぐ統計で、下の記録のクリア回数の合計と揃える
+      description="受注中のなりわいと、これまでにクリアしたなりわいの数を編集できます。"
+    >
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <SearchField label="クリアしたなりわいの数" className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
@@ -326,6 +315,15 @@ const jobList = (ids: readonly number[], separator = " → ") =>
 
 type KindFilter = "all" | StateKind;
 
+const GROUP_FILTER_OPTIONS = [
+  { value: "all", label: "すべて" },
+  ...OCCUPATION_GROUPS.map((g) => ({ value: g.key, label: occupationGroupLabel(g) })),
+];
+const KIND_FILTER_OPTIONS: FilterOption<KindFilter>[] = [
+  { value: "all", label: "すべて" },
+  ...(Object.keys(KIND_LABELS) as StateKind[]).map((value) => ({ value, label: KIND_LABELS[value] })),
+];
+
 function StatesCard({ view }: { view: OccupationView | null }) {
   const { write, attempt, error } = useWrite();
   const { advanced } = useAdvancedMode();
@@ -336,7 +334,7 @@ function StatesCard({ view }: { view: OccupationView | null }) {
   const [sync, setSync] = useState(true);
 
   const rows = OCCUPATIONS.filter((o) => group === "all" || occupationGroupOf(o.id) === group)
-    .filter((o) => matches(query, ...entryKeywords(o), o.client, o.type))
+    .filter((o) => matchesSearch(query, [...entryKeywords(o), o.client, o.type]))
     .filter((o) => filter === "all" || !view || kindOf(view.states[o.id]) === filter);
   const counts: Record<StateKind, number | "—"> = { hidden: "—", open: "—", cleared: "—" };
   if (view) {
@@ -351,12 +349,6 @@ function StatesCard({ view }: { view: OccupationView | null }) {
       mutator(b);
       if (sync) syncClearCount(b);
     });
-
-  const groupItems = {
-    all: "すべて",
-    ...Object.fromEntries(OCCUPATION_GROUPS.map((g) => [g.key, occupationGroupLabel(g)])),
-  };
-  const filterItems = { all: "すべて", ...KIND_LABELS };
 
   return (
     <CollapsibleCard
@@ -385,36 +377,16 @@ function StatesCard({ view }: { view: OccupationView | null }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <Select value={group} items={groupItems} onValueChange={(v) => v !== null && setGroup(v)}>
-            <SelectTrigger className="w-44" aria-label="まとまり">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">すべて</SelectItem>
-              {OCCUPATION_GROUPS.map((g) => (
-                <SelectItem key={g.key} value={g.key}>
-                  {occupationGroupLabel(g)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
+          <FilterSelect options={GROUP_FILTER_OPTIONS} value={group} onChange={setGroup} className="w-44" aria-label="まとまり" />
+          {/* 状態はセーブで決まるので、未読み込みのときは無効にして絞り込まない */}
+          <FilterSelect
+            options={KIND_FILTER_OPTIONS}
             value={filter}
-            items={filterItems}
-            onValueChange={(v) => v !== null && setFilter(v as KindFilter)}
-          >
-            <SelectTrigger className="w-44" aria-label="状態">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">すべて</SelectItem>
-              {(Object.keys(KIND_LABELS) as StateKind[]).map((k) => (
-                <SelectItem key={k} value={k}>
-                  {KIND_LABELS[k]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={setFilter}
+            disabled={!view}
+            className="w-44"
+            aria-label="状態"
+          />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {(Object.keys(KIND_LABELS) as StateKind[]).map((k) => (
@@ -555,12 +527,8 @@ function CountInput({
   const draft = useFieldDraft({
     value, format: String, identity: occupationStateOffset(id), commitOn: 'blur',
     parse: (input) => {
-      const text = input.trim();
-      if (!/^\d+$/.test(text) || Number(text) < 1)
-        return { ok: false, error: "1 以上の整数で入力してください" };
-      const v = Number(text);
-      const problem = validateOccupationState(id, v, value, { advanced });
-      return problem ? { ok: false, error: problem } : { ok: true, value: v };
+      const error = "1 以上の整数で入力してください";
+      return parseInteger(input, (v) => (v < 1 ? error : validateOccupationState(id, v, value, { advanced })), { error });
     },
     apply: (v) => write((b) => writeOccupationState(b, id, v, { advanced })),
   });

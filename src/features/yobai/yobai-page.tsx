@@ -6,10 +6,10 @@ import type { SelectOption } from "@/components/select-options";
 import { SearchSelectRow } from "@/components/search-select-row";
 import { SelectRow } from "@/components/select-row";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { parseInteger } from "@/lib/parse";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
@@ -77,13 +77,7 @@ import {
 
 /** 10進数か 0x 付きの16進数 */
 function parseNumber(input: string, validate: (v: number) => string | null): ParseResult<number> {
-  const s = input.trim();
-  let value: number;
-  if (/^0x[0-9a-f]+$/i.test(s)) value = Number.parseInt(s.slice(2), 16);
-  else if (/^\d+$/.test(s)) value = Number(s);
-  else return { ok: false, error: "整数を入力してください" };
-  const error = validate(value);
-  return error ? { ok: false, error } : { ok: true, value };
+  return parseInteger(input, validate, { hex: true });
 }
 
 const placeLabel = (place: number) => PLACES[place] ?? "名前なし";
@@ -655,16 +649,18 @@ function PromiseCard({ view }: { view: YobaiView | null }) {
   const problem = view?.promise.problem ?? null;
 
   return (
-    <AnchoredCard anchor={YOBAI_ANCHORS.currentPromise} searchLabel="夜の約束">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />夜の約束</CardTitle>
-        <CardDescription>
+    <AnchoredCard
+      anchor={YOBAI_ANCHORS.currentPromise}
+      title="夜の約束"
+      description={
+        <>
           約束中の相手・場所・名前・見た目などを書き換えられます。約束がないときは新しく作れます。
           <br />
           相手の種類・名前・見た目は別々に選べるので、自由に組み合わせられます。
           {/* 相手の種類（セリフと戦闘力）・名前・見た目と声は別々に決まる */}
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent>
         {promise && !promise.active ? (
           <CreatePromiseForm key={save?.loadId} problem={problem} />

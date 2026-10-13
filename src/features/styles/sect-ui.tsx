@@ -18,8 +18,9 @@ import {
   type SkillTreeGroup,
   type SkillTreeNode,
 } from "@/save/master/sect-data";
+import { isUsableInOreRyu } from "@/save/sects";
 import { uniqueSkillSects, uniqueWeaponsForSkill } from "@/save/unique-weapons";
-import { STATE_LABELS, UNIQUE_WEAPON_ATTR, parseInteger } from "./sect-format";
+import { SKILL_TREE_DESCRIPTION, STATE_LABELS, UNIQUE_WEAPON_ATTR, parseIntegerInRange } from "./sect-format";
 import { EMPTY_FILTER, filterSortTree } from "./skill-list";
 
 /** state が null はセーブ未読み込み */
@@ -59,7 +60,7 @@ export function IntField({
       value={value}
       problem={problem}
       format={String}
-      parse={parseInteger(min, max)}
+      parse={parseIntegerInRange(min, max)}
       apply={apply}
       inputMode="numeric"
       hint={`${min}〜${max}`}
@@ -124,7 +125,7 @@ export function SkillPicker({
   const sheet = useMemo(() => stanceSkillSheet(stance), [stance]);
   const groups = useMemo(() => sheetSkillTree(sheet), [sheet]);
   const shown = useMemo(() => filterSortTree(groups, { ...EMPTY_FILTER, query: filter }, "id-asc"), [groups, filter]);
-  const usable = (no: number) => advanced || !stanceStates || stanceStates[no] === 1 || stanceStates[no] === 2;
+  const usable = (no: number) => advanced || !stanceStates || isUsableInOreRyu(stanceStates[no]);
   const conflicts = useMemo(() => findSkillConflicts(stance, [...selected]), [stance, selected]);
   const toggle = (no: number, on: boolean) => {
     const next = new Set(selected);
@@ -166,7 +167,7 @@ export function SkillPicker({
         </p>
       ))}
       <p className="text-muted-foreground text-xs">
-        続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
+        {SKILL_TREE_DESCRIPTION}
       </p>
       {shown.skillNos.size === 0 ? (
         <p className="text-muted-foreground text-sm">条件に合う技がありません。</p>

@@ -1,7 +1,7 @@
 import { HERO_APPEARANCE_ANCHORS } from "./anchors";
+import { ActionButton } from "@/components/action-button";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { InfoTip } from "@/components/info-tip";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
@@ -10,7 +10,6 @@ import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
-import { WriteError } from "@/components/write-error";
 import { SearchField } from "@/lib/search-context";
 import {
   APPEARANCE_PARTS_OFFSETS,
@@ -181,6 +180,16 @@ const PART_NOTES: Record<PartKind, string> = {
   cape: "色違いも含めて選ぶ",
 };
 
+/** 部品の欄の下に出す説明。裸のときはそのことを、通常モードでは体の種類で絞った選択肢であることを出す */
+function partSelectionHint(kind: PartKind, bodyKind: number | null, advanced: boolean, nude: boolean): string | undefined {
+  if ((kind === "upper" || kind === "lower") && nude)
+    return `今は${kind === "upper" ? "上裸" : "下裸"}です（服の層を外して体の層だけにしています）`;
+  if (advanced || bodyKind === null) return undefined;
+  if (bodyKind === 0 || bodyKind === 1) return `${bodyKindName(bodyKind)}用と共通の、名前のある部品だけを表示しています`;
+  if (BODY_KIND_PARTS[bodyKind]) return `${bodyKindName(bodyKind)}用の部品だけを表示しています`;
+  return `タイプが${bodyKindName(bodyKind) ?? "不明"}のときは、通常モードでは部品を選べません。上級者モードで選んでください`;
+}
+
 /** 上裸・下裸のボタン。体の種類が男・女のときだけ使える（✅ [U] 2026-10-08、ユーザー判断 2026-10-08） */
 function NudeButtons({
   disabled,
@@ -189,8 +198,6 @@ function NudeButtons({
   disabled: boolean;
   onNude: (kind: "upper" | "lower") => void;
 }) {
-  const { attempt, error } = useWrite();
-  const run = (kind: "upper" | "lower") => attempt(() => onNude(kind));
   return (
     <SearchField label="裸" className="flex flex-col gap-1.5 sm:col-span-2">
       <div className="flex flex-wrap items-center gap-2">
@@ -200,17 +207,12 @@ function NudeButtons({
         </InfoTip>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" disabled={disabled} onClick={() => run("upper")}>
-          上裸にする
-        </Button>
-        <Button variant="outline" size="sm" disabled={disabled} onClick={() => run("lower")}>
-          下裸にする
-        </Button>
+        <ActionButton size="sm" disabled={disabled} label="上裸にする" onAction={() => onNude("upper")} />
+        <ActionButton size="sm" disabled={disabled} label="下裸にする" onAction={() => onNude("lower")} />
       </div>
       <p className="text-muted-foreground text-xs">
         タイプが男・女のときだけ使えます。足元は変えません
       </p>
-      <WriteError error={error} />
     </SearchField>
   );
 }
@@ -339,17 +341,12 @@ export function AppearancePartsCard() {
               }
               options={heroBodyKind === null ? [] : partOptions(kind, heroBodyKind, advanced)}
               problem={problem}
-              hint={
-                (kind === "upper" || kind === "lower") && view && isNude(view, kind)
-                  ? `今は${kind === "upper" ? "上裸" : "下裸"}です（服の層を外して体の層だけにしています）`
-                  : advanced || heroBodyKind === null
-                    ? undefined
-                    : heroBodyKind === 0 || heroBodyKind === 1
-                      ? `${bodyKindName(heroBodyKind)}用と共通の、名前のある部品だけを表示しています`
-                      : BODY_KIND_PARTS[heroBodyKind]
-                        ? `${bodyKindName(heroBodyKind)}用の部品だけを表示しています`
-                        : `タイプが${bodyKindName(heroBodyKind) ?? "不明"}のときは、通常モードでは部品を選べません。上級者モードで選んでください`
-              }
+              hint={partSelectionHint(
+                kind,
+                heroBodyKind,
+                advanced,
+                view !== null && (kind === "upper" || kind === "lower") && isNude(view, kind),
+              )}
               // その項目が「なし」のときだけ（止めない。ユーザー判断 2026-10-08）
               warning={part ? partNoneWarning(kind, part.id) : null}
               note={PART_NOTES[kind]}

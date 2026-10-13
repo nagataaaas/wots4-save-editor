@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { SelectRow } from "@/components/select-row";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { EVENTS_ANCHORS } from "@/features/scenario/anchors";
 import { Label } from "@/components/ui/label";
@@ -123,10 +122,11 @@ export function EventChartCard({
   const [revealNames, setRevealNames] = useState(false);
 
   return (
-    <AnchoredCard anchor={EVENTS_ANCHORS.chart} searchLabel="イベントチャート">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />イベントチャート</CardTitle>
-        <CardDescription>
+    <AnchoredCard
+      anchor={EVENTS_ANCHORS.chart}
+      title="イベントチャート"
+      description={
+        <>
           ゲーム内の「状況」のチャートを、セーブの内容から再現した図です。
           {loaded ? "枠をクリックすると、そのイベントの状態を編集できます。" : "セーブを読み込むまでは、全部の枠を名前つきで描いています。"}
           <br />
@@ -142,8 +142,9 @@ export function EventChartCard({
           <br />
           周回数 {counts ? counts.playCount.toLocaleString() : "—"}・クリア回数の合計{" "}
           {counts ? counts.clearTotal.toLocaleString() : "—"}
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent className="flex flex-col gap-3">
         {top}
         <div className="flex flex-wrap items-center justify-between gap-3">

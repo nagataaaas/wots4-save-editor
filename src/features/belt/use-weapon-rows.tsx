@@ -4,6 +4,7 @@ import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
+import { parseInteger } from "@/lib/parse";
 import {
   TITLES,
   COMPLETE_WEAPONS,
@@ -111,10 +112,7 @@ const TITLE_OPTIONS: SelectOption[] = [
 ];
 
 function parseNumber(key: NumberKey, input: string, advanced: boolean): ParseResult<number> {
-  if (!/^-?\d+$/.test(input.trim())) return { ok: false, error: "整数を入力してください" };
-  const value = Number(input.trim());
-  const error = validateWeaponNumber(key, value, { advanced });
-  return error ? { ok: false, error } : { ok: true, value };
+  return parseInteger(input, (value) => validateWeaponNumber(key, value, { advanced }), { signed: true });
 }
 
 /** 入力欄の下に出す範囲。上級者モードではシステム上の範囲も出す */

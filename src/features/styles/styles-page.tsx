@@ -1,6 +1,7 @@
 import { STYLES_ANCHORS } from "./anchors";
 import { useState } from "react";
 import { CollapsibleCard } from "@/components/collapsible-card";
+import { FilterSelect } from "@/components/filter-select";
 import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,6 @@ import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
@@ -52,7 +52,7 @@ import {
   writeSkillPoints,
   type SectsView,
 } from "@/save/sects";
-import { STANCE_TAB_CLASS } from "./sect-format";
+import { SKILL_TREE_DESCRIPTION, STANCE_TAB_CLASS } from "./sect-format";
 import {
   IntField,
   RankField,
@@ -63,6 +63,7 @@ import {
   StateBadge,
   type SkillTreeRowContext,
 } from "./sect-ui";
+import { SkillActionButtons } from "./skill-action-buttons";
 
 /** その流派がどこにあるか（装備・持ち歩き・箪笥） */
 function placesOf(view: SectsView, id: number): string[] {
@@ -161,23 +162,14 @@ export function StylesPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Input className="w-56" placeholder="流派名で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <Select
+            <FilterSelect
+              options={(Object.keys(PLACE_FILTER_LABELS) as PlaceFilter[]).map((value) => ({ value, label: PLACE_FILTER_LABELS[value] }))}
               value={placeFilter}
-              items={PLACE_FILTER_LABELS}
-              onValueChange={(v) => v !== null && setPlaceFilter(v as PlaceFilter)}
+              onChange={setPlaceFilter}
               disabled={!view}
-            >
-              <SelectTrigger className="w-36" aria-label="置き場所で絞り込み">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(PLACE_FILTER_LABELS) as PlaceFilter[]).map((f) => (
-                  <SelectItem key={f} value={f}>
-                    {PLACE_FILTER_LABELS[f]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className="w-36"
+              aria-label="置き場所で絞り込み"
+            />
             <Label className="font-normal">
               <Checkbox checked={uniqueOnly} onCheckedChange={(on) => setUniqueOnly(on)} />
               固有技がある流派のみ
@@ -302,7 +294,7 @@ function SectCard({
             {/* 固有技の「習得する」は 🟢 要ゲーム内確認 */}
             段は「極」にはならないので、必要なら下の段を変更してください。
             固有技は「習得する」で習得済（俺流には未組み込み）、「俺流で表示」で俺流に組み込める状態にします。
-            続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。
+            {SKILL_TREE_DESCRIPTION}
           </span>
           <WriteResult message={message} className="basis-full" />
         </div>
@@ -416,26 +408,16 @@ function SkillRow({
           .filter(Boolean)
           .join("：")}
       </span>
-      <span className="flex justify-end gap-1">
-        {/* 固有技は 0 →「習得する」（3）→「俺流で表示」（1）の 2 段階。ほかの技は 0・3 から「習得する」（1） */}
-        {state === 3 && isUniqueSkill(s) ? (
-          <Button size="sm" variant="outline" disabled={readOnly} onClick={() => onShowInOreRyu(sheet.id, s.skillNo)}>
-            俺流で表示
-          </Button>
-        ) : (
-          // 未読み込み（state が null）のときも、無効にした「習得する」を出す
-          (state === null || state === 0 || state === 3) && (
-            <Button size="sm" variant="outline" disabled={readOnly} onClick={() => onLearn(sheet.id, s)}>
-              習得する
-            </Button>
-          )
-        )}
-        {advanced && state !== null && state !== 0 && (
-          <Button size="sm" variant="ghost" disabled={readOnly} onClick={() => onForget(sheet.id, s.skillNo)}>
-            忘れさせる
-          </Button>
-        )}
-      </span>
+      {/* 固有技は 0 →「習得する」（3）→「俺流で表示」（1）の 2 段階。ほかの技は 0・3 から「習得する」（1） */}
+      <SkillActionButtons
+        state={state}
+        unique={isUniqueSkill(s)}
+        advanced={advanced}
+        disabled={readOnly}
+        onLearn={() => onLearn(sheet.id, s)}
+        onShowInOreRyu={() => onShowInOreRyu(sheet.id, s.skillNo)}
+        onForget={() => onForget(sheet.id, s.skillNo)}
+      />
     </div>
   );
 }

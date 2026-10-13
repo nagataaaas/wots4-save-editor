@@ -1,26 +1,19 @@
-import { useState } from "react";
+import { ActionButton } from "@/components/action-button";
 import { FieldRow, type ParseResult } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { HERO_ANCHORS } from "./anchors";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectRow } from "@/components/select-row";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
-import { WriteError } from "@/components/write-error";
 import { SearchField, SearchScope } from "@/lib/search-context";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
+import { parseInteger } from "@/lib/parse";
 import {
   AMOUNT_LIMITS,
   GAUGE_MAX,
@@ -43,13 +36,9 @@ import {
 import { findLocation, selectableLocations } from "@/save/locations";
 import { enableCharacterSetup } from "@/save/new-cycle";
 import { DATE_OFFSETS } from "@/save/scenario-date";
-import { Button } from "@/components/ui/button";
 
 function parseAmount(key: U32Key, input: string): ParseResult<number> {
-  if (!/^\d+$/.test(input.trim())) return { ok: false, error: "0以上の整数を入力してください" };
-  const value = Number(input.trim());
-  const error = validateAmount(key, value);
-  return error ? { ok: false, error } : { ok: true, value };
+  return parseInteger(input, value => validateAmount(key, value), { error: "0以上の整数を入力してください" });
 }
 
 /** 上限の出典。所持金・金庫はゲーム内の上限 [U]、侍点はユーザー指定の上限 */
@@ -155,10 +144,7 @@ export function HeroPage() {
     <div className="flex flex-col gap-4">
       <PageBanner error={readError} problem={problem} />
 
-      <AnchoredCard anchor={HERO_ANCHORS.name} searchLabel="名前">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />名前</CardTitle>
-        </CardHeader>
+      <AnchoredCard anchor={HERO_ANCHORS.name} title="名前">
         <CardContent>
           <FieldRow
             key="name"
@@ -176,10 +162,7 @@ export function HeroPage() {
         </CardContent>
       </AnchoredCard>
 
-      <AnchoredCard anchor={HERO_ANCHORS.money} searchLabel="所持金・侍点">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />所持金・侍点</CardTitle>
-        </CardHeader>
+      <AnchoredCard anchor={HERO_ANCHORS.money} title="所持金・侍点">
         <CardContent className="grid gap-4 sm:grid-cols-2">
           {amountRow("money", "所持金")}
           {amountRow("cashbox", "金庫")}
@@ -187,16 +170,18 @@ export function HeroPage() {
         </CardContent>
       </AnchoredCard>
 
-      <AnchoredCard anchor={HERO_ANCHORS.vitals} searchLabel="HP・活力・つま斬り">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />HP・活力・つま斬り</CardTitle>
-          <CardDescription>
+      <AnchoredCard
+        anchor={HERO_ANCHORS.vitals}
+        title="HP・活力・つま斬り"
+        description={
+          <>
             HP・活力・つま斬りの現在値と最大値を編集できます。
             <br />
             現在値は最大値まで入力できます（上級者モードでは超えられます）。
             {/* ロード時、現在値は最大値で頭打ちになる */}
-          </CardDescription>
-        </CardHeader>
+          </>
+        }
+      >
         <CardContent className="flex flex-col gap-6">
           {gaugeGroup("hp")}
           {gaugeGroup("vitality")}
@@ -216,26 +201,21 @@ export function HeroPage() {
 
 /** 0x0010 だけを 0 にする（new-cycle.ts の enableCharacterSetup。✅ [U] 次のロードで難易度と主人公の設定に進む） */
 function CharacterSetupCard({ view }: { view: HeroView | null }) {
-  const { tryWrite, error } = useWrite();
-  const [armed, setArmed] = useState(false);
-
-  const run = () => {
-    if (!armed) return setArmed(true);
-    setArmed(false);
-    tryWrite(enableCharacterSetup);
-  };
+  const { write } = useWrite();
 
   return (
-    <AnchoredCard anchor={HERO_ANCHORS.difficulty} searchLabel="難易度・主人公設定のやり直し">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />難易度・主人公設定のやり直し</CardTitle>
-        <CardDescription>
+    <AnchoredCard
+      anchor={HERO_ANCHORS.difficulty}
+      title="難易度・主人公設定のやり直し"
+      description={
+        <>
           今の周回のまま、難易度と主人公の設定だけをやり直せます。
           <br />
           周回をはじめからやり直すときは、「世界 / 阿弥浜」画面の「新しい周回」を使います。
           {/* 次のロードの「続きから」で難易度と主人公の設定に進む。イベントの状態は今の周回のままなので、序章のイベントは始まらず、セーブした場所から続く */}
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent>
         <SearchField label="難易度と主人公設定" className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -244,17 +224,14 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
               次のロードで難易度と主人公の設定に進む状態にします。元の状態に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください
             </InfoTip>
           </div>
-          <Button
-            variant={armed ? "destructive" : "outline"}
+          <ActionButton
             size="sm"
             className="w-fit"
             disabled={!view || view.problem !== null}
-            onClick={run}
-            onBlur={() => setArmed(false)}
-          >
-            {armed ? "もう一度押すと書き込みます" : "難易度と主人公設定を行えるようにする"}
-          </Button>
-          <WriteError error={error} />
+            label="難易度と主人公設定を行えるようにする"
+            confirm="repeat"
+            onAction={() => write(enableCharacterSetup)}
+          />
         </SearchField>
       </CardContent>
     </AnchoredCard>
@@ -269,68 +246,26 @@ function LocationCard({
   view: HeroView | null;
   onChange: (value: number) => void;
 }) {
-  const { attempt, error } = useWrite();
   const current = view?.location.value ?? null;
-  const problem = view?.location.problem ?? null;
   const currentLoc = current === null ? undefined : findLocation(current);
-  const isSelectable = current === null || selectableLocations.some((l) => l.value === current);
-  const warning = currentLoc?.warning;
-  // Base UI の Select はトリガーに出す名前を items から引く
-  const locationItems: Record<string, string> = {};
-  for (const l of selectableLocations) locationItems[String(l.value)] = `${l.label}${l.warning ? " ⚠" : ""}`;
-  if (!isSelectable && current !== null)
-    locationItems[String(current)] = `${currentLoc?.label ?? "不明"}（現在の値）`;
-
   return (
-    <AnchoredCard anchor={HERO_ANCHORS.location} searchLabel="現在地（開始地点）">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />現在地（開始地点）</CardTitle>
-        <CardDescription>
-          次にロードしたときに出現する場所を選べます。
-          {/* クラッシュが報告されている値は選択肢に出さない */}
-        </CardDescription>
-      </CardHeader>
+    <AnchoredCard
+      anchor={HERO_ANCHORS.location}
+      title="現在地（開始地点）"
+      // クラッシュが報告されている値は選択肢に出さない（selectableLocations）
+      description="次にロードしたときに出現する場所を選べます。"
+    >
       <CardContent>
-        <SearchField label="場所" className="flex flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <Label>場所</Label>
-            <InfoTip offset={HERO_OFFSETS.location}></InfoTip>
-          </div>
-          <Select
-            // null でプレースホルダー表示になる（undefined だと非制御扱いになる）
-            value={current === null ? null : String(current)}
-            items={locationItems}
-            disabled={current === null || problem !== null}
-            onValueChange={(s) => {
-              if (s === null) return;
-              attempt(() => onChange(Number(s)));
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="未読み込み" />
-            </SelectTrigger>
-            <SelectContent>
-              {!isSelectable && current !== null && (
-                <SelectItem value={String(current)} disabled>
-                  {currentLoc?.label ?? "不明"}（現在の値）
-                </SelectItem>
-              )}
-              {selectableLocations.map((l) => (
-                <SelectItem key={l.value} value={String(l.value)}>
-                  {l.label}
-                  {l.warning && " ⚠"}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {problem ? (
-            <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>
-          ) : error ? (
-            <WriteError error={error} />
-          ) : (
-            warning && <p className="text-xs text-amber-600 dark:text-amber-400">⚠ {warning}</p>
-          )}
-        </SearchField>
+        <SelectRow
+          label="場所"
+          offset={HERO_OFFSETS.location}
+          value={current === null ? null : String(current)}
+          currentLabel={currentLoc?.label}
+          options={selectableLocations.map((l) => ({ value: String(l.value), label: `${l.label}${l.warning ? " ⚠" : ""}` }))}
+          problem={view?.location.problem ?? null}
+          warning={currentLoc?.warning}
+          onChange={(value) => onChange(Number(value))}
+        />
       </CardContent>
     </AnchoredCard>
   );

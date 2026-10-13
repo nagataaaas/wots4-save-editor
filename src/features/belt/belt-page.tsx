@@ -1,16 +1,13 @@
 import type { ReactNode } from "react";
-import { AnchorLink, ScopeAnchorLink, ToggleChevron } from "@/components/anchor-link";
+import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
+import { CollapsibleCard } from "@/components/collapsible-card";
 import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatOffset } from "@/lib/format";
-import { AnchorScope, useAnchoredOpen } from "@/lib/navigation-context";
-import { SearchPath } from "@/lib/search-context";
-import { useSearchBox } from "@/lib/search-hooks";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
@@ -30,7 +27,7 @@ import { charmLabel, type NumberKey, type WeaponView } from "@/save/weapon";
 import { BELT_ANCHORS, WEAPON_ANCHORS } from "./anchors";
 import { WeaponEditor } from "./weapon-editor";
 import { SwitchRow, WeaponImage } from "./weapon-rows";
-import { COLLAPSIBLE_ANIMATION, NONE, isOnButton, type WeaponUpdate } from "./weapon-ui";
+import { NONE, type WeaponUpdate } from "./weapon-ui";
 
 const weaponTitle = (w: WeaponView | undefined, i: number) =>
   `${i + 1}本目${w && !w.empty ? `：${w.name.value || "（名前なし）"}` : w?.empty ? "：空き" : ""}`;
@@ -236,90 +233,52 @@ function WeaponCard({
 }) {
   const base = beltOffset(index);
   // 最初は閉じておく（ユーザー判断 2026-10-05）。リンク先なら開く
-  const { id, open, setOpen } = useAnchoredOpen(WEAPON_ANCHORS.weapon(index));
   const searchLabel = `${index + 1}本目`;
-  useSearchBox(id, searchLabel);
   const roles = [state?.right === index && "右手", state?.left === index && "左手"].filter(
     Boolean,
   ) as string[];
 
   if (weapon?.empty) {
     return (
-      <Card id={id} className="scroll-mt-4">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <AnchorLink id={id} />
-            {weaponTitle(weapon, index)}
-            <InfoTip offset={base} />
-          </CardTitle>
-          <CardDescription>
-            空き枠は編集できません（武器を新しく作る機能はありません）。
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <AnchoredCard
+        anchor={WEAPON_ANCHORS.weapon(index)}
+        searchLabel={searchLabel}
+        title={weaponTitle(weapon, index)}
+        extra={<InfoTip offset={base} />}
+        description="空き枠は編集できません（武器を新しく作る機能はありません）。"
+      />
     );
   }
 
   const recordProblem = weapon?.problem ?? null;
 
   return (
-    // 閉じているときはカード全体、開いているときは見出しの欄で開閉する（ユーザー判断 2026-10-05）。
-    // キーボードでは見出しの Trigger で開閉できる
-    <Collapsible
-      open={open}
-      onOpenChange={setOpen}
-      render={
-        <Card
-          id={id}
-          className={open ? "scroll-mt-4 gap-0" : "hover:bg-muted/40 scroll-mt-4 cursor-pointer gap-0"}
-          onClick={(e) => {
-            if (!open && !isOnButton(e)) setOpen(true);
-          }}
-        />
-      }
-    >
-        <CardHeader
-          className={open ? "cursor-pointer" : undefined}
-          onClick={(e) => {
-            if (open && !isOnButton(e)) setOpen(false);
-          }}
-        >
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            {/* 三角の開閉はカード・見出しの欄のクリックに任せる */}
-            <ToggleChevron open={open} />
-            <AnchorLink id={id} />
-            <CollapsibleTrigger className="flex flex-wrap items-center gap-2 text-left hover:underline">
-              {searchLabel}
-              <span className="text-muted-foreground text-xs font-normal">
-                {open ? "編集を閉じる" : "編集する"}
-              </span>
-            </CollapsibleTrigger>
-            <InfoTip offset={base} />
-            {roles.map((r) => (
-              <Badge key={r}>{r}</Badge>
-            ))}
-            {weapon && state && index >= state.count && (
-              // 🟢 帯刀の本数より後ろはゲームが読まない
-              <Badge variant="outline">帯刀の本数より後ろ（読まれない）</Badge>
-            )}
-            {weapon?.nameHidden.value && <Badge variant="outline">名前を隠す</Badge>}
-          </CardTitle>
-          <WeaponPanel weapon={weapon} />
-          {recordProblem && (
-            <CardDescription className="text-destructive">
-              読み取り専用：{recordProblem}
-            </CardDescription>
+    <CollapsibleCard
+      anchor={WEAPON_ANCHORS.weapon(index)}
+      searchLabel={searchLabel}
+      title={(open) => (
+        <>
+          {searchLabel}
+          <span className="text-muted-foreground text-xs font-normal">{open ? "編集を閉じる" : "編集する"}</span>
+        </>
+      )}
+      extra={
+        <>
+          <InfoTip offset={base} />
+          {roles.map((r) => (
+            <Badge key={r}>{r}</Badge>
+          ))}
+          {weapon && state && index >= state.count && (
+            // 🟢 帯刀の本数より後ろはゲームが読まない
+            <Badge variant="outline">帯刀の本数より後ろ（読まれない）</Badge>
           )}
-        </CardHeader>
-        <CollapsibleContent className={COLLAPSIBLE_ANIMATION}>
-          <CardContent className="pt-6">
-            <AnchorScope.Provider value={id}>
-              <SearchPath label={searchLabel}>
-                <WeaponEditor weapon={weapon} base={base} update={update} />
-              </SearchPath>
-            </AnchorScope.Provider>
-          </CardContent>
-        </CollapsibleContent>
-    </Collapsible>
+          {weapon?.nameHidden.value && <Badge variant="outline">名前を隠す</Badge>}
+        </>
+      }
+      headerExtra={<WeaponPanel weapon={weapon} />}
+      description={recordProblem && <span className="text-destructive">読み取り専用：{recordProblem}</span>}
+    >
+      <WeaponEditor weapon={weapon} base={base} update={update} />
+    </CollapsibleCard>
   );
 }

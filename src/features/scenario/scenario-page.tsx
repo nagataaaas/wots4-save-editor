@@ -5,6 +5,7 @@ import { useSearchBox } from "@/lib/search-hooks";
 import { AMIHAMA_ANCHORS, EVENTS_ANCHORS, EVENTS_LINKS, NPC_ANCHORS } from "./anchors";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FieldRow, type ParseResult } from "@/components/field-row";
+import { FilterSelect } from "@/components/filter-select";
 import { InfoTip } from "@/components/info-tip";
 import { startNewCycle, type CycleEnd, type NewCycleReport } from "@/save/new-cycle";
 import {
@@ -21,19 +22,12 @@ import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { AnchorLink } from "@/components/anchor-link";
-import { ScopeAnchorLink } from "@/components/anchor-link";
 import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
+import { parseInteger } from "@/lib/parse";
 import { FlagGrid, FlagRow } from "@/components/flag-row";
 import { useFlag } from "@/hooks/use-flag";
 import { flagProblem, readFlag, type ByteFlag } from "@/save/flags/byte-flag";
@@ -145,12 +139,9 @@ type Views = {
   publicOrder: PublicOrderView;
 };
 
-function parseInteger(input: string, validate: (v: number) => string | null): ParseResult<number> {
-  if (!/^\d+$/.test(input.trim())) return { ok: false, error: "0以上の整数を入力してください" };
-  const value = Number(input.trim());
-  const error = validate(value);
-  return error ? { ok: false, error } : { ok: true, value };
-}
+/** この画面の数の欄は、どれも0以上の整数 */
+const parseCount = (input: string, validate: (v: number) => string | null): ParseResult<number> =>
+  parseInteger(input, validate, { error: "0以上の整数を入力してください" });
 
 /**
  * 世界 / 阿弥浜：難易度・治安・周回、段階・日数・時間帯、施設、門・柵（ユーザー判断 2026-10-11）
@@ -316,10 +307,11 @@ function CycleCard({
   // 普通＝1・難しい＝2 は 0 と 3 の間を埋めた 🔶 推測。治安の 1日目 0 の例と初期値 50 の食い違いは ❓。
   // 周回数が PLAY_COUNT_REVEALS_BEST_ROUTE 以上で真ルートの枠と線が全部出るのは ❓ 要ゲーム内確認、死亡で増えるかは ❓
   return (
-    <AnchoredCard anchor={AMIHAMA_ANCHORS.cycle} searchLabel="難易度・治安・周回">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />難易度・治安・周回</CardTitle>
-        <CardDescription>
+    <AnchoredCard
+      anchor={AMIHAMA_ANCHORS.cycle}
+      title="難易度・治安・周回"
+      description={
+        <>
           難易度・治安・周回数を編集できます。「新しい周回」で、物語を終えたときと同じように次の周回を始められます。
           {/* 新しい周回：物語を終えたときにゲームが行う引き継ぎと初期化を同じ順序で行う。終わり方はクリアか立ち去り。
               次のロードの「続きから」で難易度と主人公の設定に進み、序章（船上の侍）から遊べる。
@@ -339,8 +331,9 @@ function CycleCard({
               ／立ち去った回数：{counts ? counts.goneCount : "—"}
             </>
           )}
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <SelectRow
           label="難易度"
@@ -360,7 +353,7 @@ function CycleCard({
           problem={publicOrder?.problem ?? null}
           warning={formatWarnings(publicOrder?.warnings)}
           format={String}
-          parse={(input) => parseInteger(input, (v) => validatePublicOrder(v, { advanced }))}
+          parse={(input) => parseCount(input, (v) => validatePublicOrder(v, { advanced }))}
           apply={(v) => update((b) => writePublicOrder(b, v, { advanced }))}
           inputMode="numeric"
           hint={advanced ? "0〜255" : `0〜${PUBLIC_ORDER_MAX}`}
@@ -373,7 +366,7 @@ function CycleCard({
           problem={counts?.problem ?? null}
           warning={formatWarnings(counts?.warnings)}
           format={String}
-          parse={(input) => parseInteger(input, (v) => validatePlayCount(v, { advanced }))}
+          parse={(input) => parseCount(input, (v) => validatePlayCount(v, { advanced }))}
           apply={(n) => update((b) => writePlayCount(b, n, { advanced }))}
           inputMode="numeric"
           hint={advanced ? "0〜4,294,967,295" : `0〜${PLAY_COUNT_MAX.toLocaleString()}`}
@@ -469,7 +462,7 @@ function DateCard({ view }: { view: DateView | null }) {
         problem={problem}
         warning={formatWarnings(view?.warnings)}
         format={String}
-        parse={(input) => parseInteger(input, (v) => validateDay(v, { advanced }))}
+        parse={(input) => parseCount(input, (v) => validateDay(v, { advanced }))}
         apply={(day) => update((b) => writeDayTime(b, day, view!.slot, { advanced }))}
         inputMode="numeric"
         hint={`${range.min}〜${range.max}日目。メインイベントには影響しません`}
@@ -592,16 +585,18 @@ function FlagSection({ anchor, title, flags }: { anchor: string; title: string; 
  */
 function EventFlagsCard() {
   return (
-    <AnchoredCard anchor={EVENTS_ANCHORS.flags} searchLabel="イベント関連フラグ">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />イベント関連フラグ</CardTitle>
-        <CardDescription>
+    <AnchoredCard
+      anchor={EVENTS_ANCHORS.flags}
+      title="イベント関連フラグ"
+      description={
+        <>
           イベントで変わる状態や、イベントの起き方を変えるフラグを編集できます。
           <br />
           各欄の説明に、状態が変わる場面と、影響するイベントを書いています。
           {/* 通常モードでは、その場面で現れる状態だけを選べる */}
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent>
         <FlagGrid flags={EVENT_FLAGS} />
       </CardContent>
@@ -884,16 +879,18 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
   const max = advanced ? FACTION_VALUE_MAX.system : FACTION_VALUE_MAX.normal;
 
   return (
-    <AnchoredCard anchor={EVENTS_ANCHORS.factions.card} searchLabel="勢力の状態">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />勢力の状態</CardTitle>
-        <CardDescription>
+    <AnchoredCard
+      anchor={EVENTS_ANCHORS.factions.card}
+      title="勢力の状態"
+      description={
+        <>
           幕府・外国・攘夷との友好・対立の記録を編集できます。どの勢力のルートに入れるかが変わります。
           <br />
           大寄せの時点で友好度が 3 以上の勢力のルートに入れます（幕府は茂呂が生きていることも条件）。
           {/* 友好度＝友好ポイント（協力・成功）− 対立ポイント（不利益・敵対行為） */}
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent className="flex flex-col gap-4">
         <RouteJudgeRows view={route} factions={view} />
         {FACTION_ROWS.map((row, r) => (
@@ -924,7 +921,7 @@ function FactionCard({ view, route }: { view: FactionsView | null; route: RouteJ
                     problem={view?.problem ?? null}
                     format={String}
                     parse={(input) =>
-                      parseInteger(input, (v) => validateFactionValue(v, { advanced }, r))
+                      parseCount(input, (v) => validateFactionValue(v, { advanced }, r))
                     }
                     apply={(v) => update((b) => writeFactionValue(b, r, c, v, { advanced }))}
                     inputMode="numeric"
@@ -1024,23 +1021,14 @@ function BulkSelect({
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
       <Label>{label}</Label>
-      <Select
+      <FilterSelect
+        options={options}
         value={value === "" ? null : value}
-        items={options}
+        onChange={onChange}
         disabled={disabled}
-        onValueChange={(v) => v !== null && onChange(v)}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="選ぶ" />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        className="w-full"
+        placeholder="選ぶ"
+      />
     </div>
   );
 }

@@ -1,14 +1,16 @@
 import { type ReactNode } from "react";
 import { AnchorLink } from "@/components/anchor-link";
+import { DisclosureContent } from "@/components/disclosure-content";
 import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AnchorScope, useAnchoredOpen } from "@/lib/navigation-context";
+import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { isOnButton } from "@/lib/click-target";
+import { useAnchoredOpen } from "@/lib/navigation-context";
 import { charmLabel, type WeaponView } from "@/save/weapon";
 import { WEAPON_ANCHORS } from "./anchors";
 import { WeaponEditor } from "./weapon-editor";
 import { Chevron, WeaponImage } from "./weapon-rows";
-import { COLLAPSIBLE_ANIMATION, isOnButton, type WeaponUpdate } from "./weapon-ui";
+import { type WeaponUpdate } from "./weapon-ui";
 
 // 武器袋・刀箪笥のように件数の多い武器の一覧。1枠＝1行の細い表示で、開くと帯刀と同じ編集欄を出す。
 
@@ -93,13 +95,11 @@ function CompactWeaponRow({
       </div>
       {weapon.problem && <p className="text-destructive px-2 pb-1 pl-17 text-xs">読み取り専用：{weapon.problem}</p>}
       {/* 閉じているあいだは中身を描画しない（Base UI の Panel の既定）ので、200枠でも重くならない */}
-      <CollapsibleContent className={COLLAPSIBLE_ANIMATION}>
+      <DisclosureContent id={id}>
         <div className="px-2 pt-4 pb-6 sm:pl-17">
-          <AnchorScope.Provider value={id}>
-            <WeaponEditor weapon={weapon} base={weapon.offset} update={update} sectionsOpen={false} />
-          </AnchorScope.Provider>
+          <WeaponEditor weapon={weapon} base={weapon.offset} update={update} sectionsOpen={false} />
         </div>
-      </CollapsibleContent>
+      </DisclosureContent>
     </Collapsible>
   );
 }

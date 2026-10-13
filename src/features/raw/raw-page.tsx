@@ -1,15 +1,14 @@
 import { RAW_ANCHORS } from './anchors'
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { CollapsibleCard } from '@/components/collapsible-card'
+import { FilterSelect } from '@/components/filter-select'
 import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScopeAnchorLink } from '@/components/anchor-link'
+import { CardContent } from '@/components/ui/card'
 import { AnchoredCard } from '@/components/anchored-card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { errorMessage } from '@/lib/error-message'
 import { readFileAsBytes } from '@/lib/file-io'
@@ -134,17 +133,17 @@ function RawEditor({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-[max-content_minmax(16rem,1fr)]">
-        <AnchoredCard anchor={RAW_ANCHORS.hex} searchLabel="16進表示" className="min-w-0">
-          <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2">
-              <ScopeAnchorLink />
-              16進表示
-              <InfoTip offset={`0x0〜0x${(bytes.byteLength - 1).toString(16).toUpperCase()}（${bytes.byteLength.toLocaleString()} B）`}>
-                背景色は既知の領域（下の「領域の一覧」）、赤字は差分の基準と違うバイトです。クリックで選択し、矢印キー・PageUp/PageDown で移動できます。
-              </InfoTip>
-            </CardTitle>
-            <CardDescription>ファイル全体のバイト列です。右の欄は文字として読んだ表示です。</CardDescription>
-          </CardHeader>
+        <AnchoredCard
+          anchor={RAW_ANCHORS.hex}
+          className="min-w-0"
+          title="16進表示"
+          extra={
+            <InfoTip offset={`0x0〜0x${(bytes.byteLength - 1).toString(16).toUpperCase()}（${bytes.byteLength.toLocaleString()} B）`}>
+              背景色は既知の領域（下の「領域の一覧」）、赤字は差分の基準と違うバイトです。クリックで選択し、矢印キー・PageUp/PageDown で移動できます。
+            </InfoTip>
+          }
+          description="ファイル全体のバイト列です。右の欄は文字として読んだ表示です。"
+        >
           <CardContent className="flex flex-col gap-3">
             <JumpForm size={bytes.byteLength} onJump={goTo} />
             <HexView bytes={bytes} base={base} selected={selected} onSelect={setSelected} jump={jump} />
@@ -161,38 +160,31 @@ function RawEditor({
 
       <PatchCard bytes={bytes} advanced={advanced} onApply={(patches) => update((b) => applyPatches(b, patches))} onJump={goTo} />
 
-      <AnchoredCard anchor={RAW_ANCHORS.diff} searchLabel="差分">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />差分</CardTitle>
-          <CardDescription>
+      <AnchoredCard
+        anchor={RAW_ANCHORS.diff}
+        title="差分"
+        description={
+          <>
             読み込み時から変わった範囲を一覧します。
             <br />
             比較用のファイルを開くと、別のセーブとの違いも見られます。
             {/* 時間で進む値などは操作と関係なく変わる */}
-          </CardDescription>
-        </CardHeader>
+          </>
+        }
+      >
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1.5">
               <Label>基準</Label>
-              <Select
-                value={diffBase}
-                items={[
+              <FilterSelect<DiffBase>
+                options={[
                   { value: 'original', label: '読み込み時' },
-                  { value: 'compare', label: compare ? `比較用：${compare.name}` : '比較用のファイル（未選択）' },
+                  { value: 'compare', label: compare ? `比較用：${compare.name}` : '比較用のファイル（未選択）', disabled: !compare },
                 ]}
-                onValueChange={(v) => v !== null && onDiffBaseChange(v as DiffBase)}
-              >
-                <SelectTrigger className="w-64">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="original">読み込み時</SelectItem>
-                  <SelectItem value="compare" disabled={!compare}>
-                    {compare ? `比較用：${compare.name}` : '比較用のファイル（未選択）'}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                value={diffBase}
+                onChange={onDiffBaseChange}
+                className="w-64"
+              />
             </div>
             <CompareFileButton onOpen={openCompare} />
           </div>
@@ -420,19 +412,21 @@ function SelectionCard({
 }) {
   const regions = regionsAt(offset)
   return (
-    <AnchoredCard anchor={RAW_ANCHORS.byte} searchLabel="選んだバイト" className="min-w-0">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2 font-mono"><ScopeAnchorLink />{formatOffset(offset)}</CardTitle>
-        <CardDescription>
-          {regions.length === 0
-            ? '既知の領域に入っていない位置です'
-            : regions.map((r) => (
-                <span key={`${r.start}-${r.chunk}-${r.label}`} className="block">
-                  {r.label} {positionInRegion(r, offset)}
-                </span>
-              ))}
-        </CardDescription>
-      </CardHeader>
+    <AnchoredCard
+      anchor={RAW_ANCHORS.byte}
+      searchLabel="選んだバイト"
+      className="min-w-0"
+      title={<span className="font-mono">{formatOffset(offset)}</span>}
+      description={
+        regions.length === 0
+          ? '既知の領域に入っていない位置です'
+          : regions.map((r) => (
+              <span key={`${r.start}-${r.chunk}-${r.label}`} className="block">
+                {r.label} {positionInRegion(r, offset)}
+              </span>
+            ))
+      }
+    >
       <CardContent className="flex flex-col gap-4">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
           {inspectAt(bytes, offset).map((v) => (
@@ -596,12 +590,12 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
   const placeholder = SEARCH_KINDS.find((s) => s.kind === kind)?.placeholder
 
   return (
-    <AnchoredCard anchor={RAW_ANCHORS.search} searchLabel="検索">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />検索</CardTitle>
-        {/* 今のバイト列（編集を含む）から探す。数値はリトルエンディアンのバイト列として探す */}
-        <CardDescription>セーブの中から値や文字列を探せます。編集中の内容も対象です。</CardDescription>
-      </CardHeader>
+    <AnchoredCard
+      anchor={RAW_ANCHORS.search}
+      title="検索"
+      // 今のバイト列（編集を含む）から探す。数値はリトルエンディアンのバイト列として探す
+      description="セーブの中から値や文字列を探せます。編集中の内容も対象です。"
+    >
       <CardContent className="flex flex-col gap-3">
         <form
           className="flex flex-wrap items-start gap-2"
@@ -617,27 +611,17 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
             setResult(searchBytes(bytes, p.value, LIST_LIMIT))
           }}
         >
-          <Select
+          <FilterSelect
+            options={SEARCH_KINDS.map((s) => ({ value: s.kind, label: s.label }))}
             value={kind}
-            items={SEARCH_KINDS.map((s) => ({ value: s.kind, label: s.label }))}
-            onValueChange={(v) => {
-              if (v === null) return
-              setKind(v as SearchKind)
+            onChange={(value) => {
+              setKind(value)
               setError(null)
               setResult(null)
             }}
-          >
-            <SelectTrigger className="w-44" aria-label="検索の種類">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SEARCH_KINDS.map((s) => (
-                <SelectItem key={s.kind} value={s.kind}>
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-44"
+            aria-label="検索の種類"
+          />
           <Input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -753,21 +737,22 @@ function PatchCard({
   }
 
   return (
-    <AnchoredCard anchor={RAW_ANCHORS.bulkWrite} searchLabel="まとめて書き込む">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          <ScopeAnchorLink />
-          まとめて書き込む
-          <InfoTip>
-            1行に「オフセット（16進、0x は省略可） バイト列（16進）」を書きます。オフセットの後の「:」とバイト間の空白は省略できます。範囲が重なる行は後の行の値が残ります。
-          </InfoTip>
-        </CardTitle>
-        <CardDescription>
+    <AnchoredCard
+      anchor={RAW_ANCHORS.bulkWrite}
+      title="まとめて書き込む"
+      extra={
+        <InfoTip>
+          1行に「オフセット（16進、0x は省略可） バイト列（16進）」を書きます。オフセットの後の「:」とバイト間の空白は省略できます。範囲が重なる行は後の行の値が残ります。
+        </InfoTip>
+      }
+      description={
+        <>
           オフセットとバイト列の組を貼り付けて、まとめて上書きできます。
           <br />
           1行でも読めない行があれば、何も書き込みません。
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent className="flex flex-col gap-3">
         <Textarea
           value={text}
