@@ -17,7 +17,7 @@
 // ゲームは弟子入り・破門のたびに数・点・段階を決め直す（🟢）。エディタも名簿を書いたら同じ規則で決め直す。
 // 段階 5 になったときにゲームが立てる特典 57（0x43351）は、ここでは書かない（次に弟子が増減したときにゲームが立てる 🟢）。
 // 名簿の書き換え・道場破りを帰す操作がゲームに反映されるかは要ゲーム内確認。
-import { readI16, readU16, readU32, readU8, writeI16, writeU16, writeU32, writeU8 } from "./binary";
+import { readI16, readU16, readU32, readU8, writeI16, writeU16, writeU32, writeU8, recordCodec } from "./binary";
 import { checkLayout } from "./hero";
 import { PUPIL_TABLE } from "./master/dataset/pupil";
 import { NPC_LOOK_TABLE } from "./master/dataset/npc-look";
@@ -37,6 +37,15 @@ export const RAIDER_MAX = 8;
 export const RANK_MAX = 5;
 
 const EMPTY = 0xffffffff;
+
+/** 🟢 弟子のレコード（chunks/dojo）。読み書き・再集計・InfoTip で共有。 */
+export const PUPIL_CODEC = recordCodec({
+  kind: { rel: 0, size: 4 },
+  name: { rel: 4, size: 4 },
+  look: { rel: 8, size: 2 },
+  point: { rel: 0x0a, size: 1 },
+  shown: { rel: 0x0b, size: 1 },
+});
 
 /** 🟢 評判の段階ごとの点の範囲（段階 0〜5） */
 export const REPUTATION_RANGES: readonly (readonly [number, number])[] = [
@@ -126,13 +135,7 @@ export function readDojo(bytes: Uint8Array): DojoView {
   const pupils = Array.from({ length: PUPIL_MAX }, (_, i): PupilView | null => {
     if (isEmptySlot(bytes, i)) return null;
     const o = pupilOffset(i);
-    return {
-      kind: readU32(bytes, o),
-      name: readU32(bytes, o + 4),
-      look: readU16(bytes, o + 8),
-      point: readU8(bytes, o + 0x0a),
-      shown: readU8(bytes, o + 0x0b),
-    };
+    return PUPIL_CODEC.read(bytes, o);
   });
   const view: DojoView = {
     raid: readU8(bytes, RAID_OFFSET) !== 0,
@@ -174,7 +177,7 @@ function recompute(bytes: Uint8Array): void {
   for (let i = 0; i < PUPIL_MAX; i++) {
     if (isEmptySlot(bytes, i)) continue;
     count++;
-    points += readU8(bytes, pupilOffset(i) + 0x0a);
+    points += PUPIL_CODEC.readField(bytes, pupilOffset(i), 'point');
   }
   writeU8(bytes, PUPIL_COUNT_OFFSET, count);
   writeU16(bytes, POINTS_OFFSET, points);
@@ -197,13 +200,13 @@ export function writePupilKind(bytes: Uint8Array, index: number, kindId: number 
   }
   const kind = pupilKind(kindId);
   if (!kind) throw new RangeError("弟子にできない種類です");
-  const current = isEmptySlot(bytes, index) ? null : readU16(bytes, o + 8);
+  const current = isEmptySlot(bytes, index) ? null : PUPIL_CODEC.readField(bytes, o, 'look');
   const look = current !== null && kind.looks.includes(current) ? current : kind.looks[0];
-  writeU32(bytes, o, kind.id);
-  writeU32(bytes, o + 4, kind.name);
-  writeU16(bytes, o + 8, look);
-  writeU8(bytes, o + 0x0a, kind.point);
-  writeU8(bytes, o + 0x0b, 0);
+  PUPIL_CODEC.writeField(bytes, o, 'kind', kind.id);
+  PUPIL_CODEC.writeField(bytes, o, 'name', kind.name);
+  PUPIL_CODEC.writeField(bytes, o, 'look', look);
+  PUPIL_CODEC.writeField(bytes, o, 'point', kind.point);
+  PUPIL_CODEC.writeField(bytes, o, 'shown', 0);
   recompute(bytes);
 }
 
@@ -224,7 +227,7 @@ export function writePupilLook(bytes: Uint8Array, index: number, look: number, o
   if (!pupil) throw new RangeError("空きの枠です");
   const error = validatePupilLook(pupil.kind, look, pupil.look, opts);
   if (error) throw new RangeError(error);
-  writeU16(bytes, pupilOffset(index) + 8, look);
+  PUPIL_CODEC.writeField(bytes, pupilOffset(index), 'look', look);
 }
 
 /**

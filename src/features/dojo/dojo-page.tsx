@@ -16,6 +16,7 @@ import { PageBanner } from "@/components/page-banner";
 import {
   ALL_LOOKS,
   PUPIL_COUNT_OFFSET,
+  PUPIL_CODEC,
   PUPIL_KINDS,
   PUPIL_MAX,
   RAID_OFFSET,
@@ -196,7 +197,7 @@ function PupilRow({ index, view }: { index: number; view: DojoView | null }) {
       <SearchPath label={`弟子 ${index + 1}`}>
         <SelectRow
           label="見た目"
-          offset={offset + 8}
+          offset={PUPIL_CODEC.offset(offset, 'look')}
           value={view === null ? null : pupil ? String(pupil.look) : null}
           currentLabel={pupil ? (lookLabel(pupil.look) ?? "不明") : undefined}
           options={lookOptions(pupil, advanced)}

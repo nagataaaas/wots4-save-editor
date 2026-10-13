@@ -7,6 +7,7 @@ import { partnerDeathWarning } from './yobai-create'
 import { DAY_RANGE } from './scenario-date'
 import { DAY_NORMAL_MAX, YOBAI_COUNTERS, PROMISE_CODEC, STAGE_OFFSET, validatePersonValue, validatePersonField } from './yobai'
 import { reviveNote } from './townsfolk'
+import { PUPIL_CODEC } from './dojo'
 
 describe('共有する固定位置とレコード', () => {
   it('🟢 茂呂の状態は勢力の判定・夜の約束・人物の欄で同じバイトを読む', () => {
@@ -52,7 +53,7 @@ describe('共有する固定位置とレコード', () => {
     expect(validatePersonField('type', 0xffffffff, 0xffffffff, { advanced: false })).not.toBeNull()
   })
 
-  it('🟢 約束の codec は既存の並びを読み書きし、隙間・前後を保つ', () => {
+  it('🟢 約束と弟子の codec は既存の並びを読み書きし、隙間・前後を保つ', () => {
     const promise = new Uint8Array(0x2c + 2).fill(0xaa)
     const values = { type: 37, place: 12, layout: 6, name: 7077, look: 28, age: 24, blood: 3, reserved: 65535, day: 1 }
     for (const field of Object.keys(values) as (keyof typeof values)[]) PROMISE_CODEC.writeField(promise, 1, field, values[field])
@@ -63,5 +64,13 @@ describe('共有する固定位置とレコード', () => {
     const record = PROMISE_CODEC.read(promise, 1)
     for (const field of Object.keys(record) as (keyof typeof record)[]) PROMISE_CODEC.writeField(promise, 1, field, record[field])
     expect(promise).toEqual(before)
+
+    const pupil = Uint8Array.from([0xaa, 0x49, 0, 0, 0, 0x15, 0, 0, 0, 0xbc, 0, 4, 0, 0xbb])
+    const original = pupil.slice()
+    const entry = PUPIL_CODEC.read(pupil, 1)
+    expect(entry).toEqual({ kind: 73, name: 21, look: 188, point: 4, shown: 0 })
+    for (const field of Object.keys(entry) as (keyof typeof entry)[]) PUPIL_CODEC.writeField(pupil, 1, field, entry[field])
+    expect(pupil).toEqual(original)
+    expect(PUPIL_CODEC.offset(1, 'look')).toBe(9)
   })
 })
