@@ -13,7 +13,7 @@
 //   モデルの値はテクスチャの番号で、形は部品の番号で決まる（✅ [U] 2026-10-08）。層ごとに「なし」か色違いを選ぶのは上級者モードだけ
 //   （ユーザー判断 2026-10-08）。足元の層を外した書き込みの反映 ✅ [U] 2026-10-08
 // 固定オフセットを使う。ファイルサイズを検証する。
-import { readU16, readU8, writeF32, writeU16, writeU8, readF32 } from "./binary";
+import { readU16, readU8, writeF32, writeU16, writeU32, writeU8, readF32 } from "./binary";
 import { checkLayout } from "./hero";
 import { APPEARANCE_CURRENT_OFFSETS, HEIGHT_RATIOS } from "./appearance-current";
 import {
@@ -359,7 +359,8 @@ export function writeBodyKind(bytes: Uint8Array, value: number, advanced: boolea
 
 /**
  * 人物を選ぶ（✅ [U] 2026-10-08 H1・H2）。人物の番号・0x3AAD6・タイプ・身長・髪の色・全部の部品とモデルの値を、その人物の値で書く。
- * 身長は、今の人物の身長に対する低い・高いの倍率を引き継ぐ（今が個別に設定のときや倍率が分からないときはふつう）。体型・肌色は変えない。
+ * 身長は、今の人物の身長に対する低い・高いの倍率を引き継ぐ（今が個別に設定のときや倍率が分からないときはふつう）。
+ * 容姿設定の身長の選択肢（0x4633C 🟢）も同じ倍率に揃える。体型・肌色は変えない。
  * 主人公設定に出ない見た目の組（ローラ・男の子・女の子 ✅ [U]）も、どのモードでも選べる（ユーザー判断 2026-10-09）。
  */
 export function writePerson(bytes: Uint8Array, personId: number): void {
@@ -371,6 +372,8 @@ export function writePerson(bytes: Uint8Array, personId: number): void {
   const ratio = current
     ? (HEIGHT_RATIOS.find((r) => Math.abs(height - current.height * r) < 0.01) ?? 1)
     : 1;
+  // 🟢 容姿設定の身長の選択肢を、引き継ぐ倍率と揃える。
+  writeU32(bytes, APPEARANCE_CURRENT_OFFSETS.heightChoice, HEIGHT_RATIOS.indexOf(ratio));
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, person.id);
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.secondId, person.secondId ?? 0xffff);
   writeU8(bytes, APPEARANCE_PARTS_OFFSETS.hairColor, person.hairColor);

@@ -3,7 +3,7 @@
 // 手（k＝4）・足元の層を外す書き込みは ✅ [U] 2026-10-08。層を別の部品の値にする組み合わせは 🔶（上級者モードだけ）。
 // 上半身・下半身・足元の部品の書き込み、髪の色の 3 以外（🔶）は U-19 の判定待ち。
 import { describe, expect, it } from 'vitest'
-import { readF32, writeF32 } from './binary'
+import { readF32, readU32, writeF32, writeU32 } from './binary'
 import { TS_SAVE_SIZE } from './hero'
 import {
   NONE_ALLOWED,
@@ -144,6 +144,25 @@ describe('主人公の見た目のレコード（U-19）', () => {
     writeF32(bytes, 0x3aae0, 150)
     writePerson(bytes, 238)
     expect(readF32(bytes, 0x3aae0)).toBe(175)
+  })
+
+  it('🟢 人物の変更で、実際の倍率に身長の選択肢を揃える（ふつう・高い・低い）', () => {
+    for (const [ratio, choice] of [[1, 0], [1.1, 1], [0.9, 2]]) {
+      const bytes = makeSave()
+      writeF32(bytes, 0x3aae0, 175 * ratio)
+      writeU32(bytes, 0x4633c, 255)
+      writePerson(bytes, 245)
+      expect(readF32(bytes, 0x3aae0)).toBeCloseTo(160 * ratio, 3)
+      expect(readU32(bytes, 0x4633c)).toBe(choice)
+      const before = bytes.slice()
+      writePerson(bytes, 245)
+      expect(bytes).toEqual(before)
+    }
+    const bytes = makeSave()
+    writeU32(bytes, 0x4633c, 2)
+    writeF32(bytes, 0x3aae0, 150)
+    writePerson(bytes, 245)
+    expect(readU32(bytes, 0x4633c)).toBe(0)
   })
 
   it('✅ [U] C：顔・髪型は部品の番号とモデルの値を書き、人物の番号を FFFF にする', () => {
