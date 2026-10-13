@@ -24,6 +24,8 @@ export const BODY_TYPES = ['ふつう', '細め', '太め'] as const
  * ゲームは容姿設定を開いたときのカーソル位置にだけ使い、実際の身長は 0x3AAE0 で決まる。
  */
 export const HEIGHT_CHOICES = ['ふつう', '高い', '低い'] as const
+/** ✅ 身長の倍率。🟢 身長の選択肢と同じ並び（chunks/appearance）。 */
+export const HEIGHT_RATIOS = [1, 1.1, 0.9] as const
 
 /**
  * ✅ [U] 身長は人物（容姿）ごとの基準身長×0.9（低い）・×1.0（ふつう）・×1.1（高い）。

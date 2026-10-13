@@ -15,6 +15,7 @@
 // 固定オフセットを使う。ファイルサイズを検証する。
 import { readU16, readU8, writeF32, writeU16, writeU8, readF32 } from "./binary";
 import { checkLayout } from "./hero";
+import { APPEARANCE_CURRENT_OFFSETS, HEIGHT_RATIOS } from "./appearance-current";
 import {
   BODY_KINDS,
   findPart,
@@ -31,12 +32,20 @@ export const APPEARANCE_PARTS_OFFSETS = {
   secondId: 0x3aad6,
   hairColor: 0x3aada,
   bodyKind: 0x3aadc,
-  height: 0x3aae0,
+  height: APPEARANCE_CURRENT_OFFSETS.height,
   parts: 0x3aae4,
 } as const;
 
 /** 部品の組の長さ */
 export const PART_RECORD_SIZE = 12;
+/** 🟢 部品レコード内の層の位置と幅。 */
+export const PART_MODELS_REL = 4;
+export const PART_MODEL_BYTES = 2;
+
+export function partLayerOffset(kind: PartKind, layer: number): number {
+  if (!Number.isInteger(layer) || layer < 0 || layer >= LAYER_COUNT) throw new RangeError('指定できない層です');
+  return partOffset(kind) + PART_MODELS_REL + layer * PART_MODEL_BYTES;
+}
 
 /** 0x3AAD4 の「個別に設定」 */
 export const PERSON_CUSTOM = 0xffff;
@@ -115,7 +124,7 @@ export function readAppearanceParts(bytes: Uint8Array): AppearancePartsView | nu
       offset,
       id: i16(readU16(bytes, offset)),
       models: [0, 1, 2, 3].map((i) =>
-        i16(readU16(bytes, offset + 4 + i * 2)),
+        i16(readU16(bytes, partLayerOffset(kind, i))),
       ) as PartValue["models"],
       raw: hex(bytes, offset, PART_RECORD_SIZE),
     };
@@ -207,7 +216,7 @@ function writePartRecord(
   const m = models ?? (id === -1 ? [-1, -1, -1, -1] : findPart(kind, id)!.models);
   writeU16(bytes, offset, id === -1 ? 0xffff : id);
   // +2 は意味が分からないので書かない（❓）
-  m.forEach((v, i) => writeU16(bytes, offset + 4 + i * 2, v === -1 ? 0xffff : v));
+  m.forEach((v, i) => writeU16(bytes, partLayerOffset(kind, i), v === -1 ? 0xffff : v));
 }
 
 /**
@@ -310,7 +319,7 @@ export function writeLayer(
   const error = validateLayer(kind, view.parts[kind].id, layer, value, advanced);
   if (error) throw new RangeError(error);
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM);
-  writeU16(bytes, partOffset(kind) + 4 + layer * 2, value === -1 ? 0xffff : value);
+  writeU16(bytes, partLayerOffset(kind, layer), value === -1 ? 0xffff : value);
 }
 
 /** 部品の層が、その部品の標準の値（表の save_models）と違うときに true。表にない部品は false */
@@ -347,9 +356,6 @@ export function writeBodyKind(bytes: Uint8Array, value: number, advanced: boolea
     throw new RangeError(`タイプ「${bodyKindName(value) ?? "不明"}」はロードでクラッシュします`);
   writeU8(bytes, APPEARANCE_PARTS_OFFSETS.bodyKind, value);
 }
-
-/** 身長の倍率（低い・ふつう・高い ✅ [U]） */
-const HEIGHT_RATIOS = [0.9, 1, 1.1];
 
 /**
  * 人物を選ぶ（✅ [U] 2026-10-08 H1・H2）。人物の番号・0x3AAD6・タイプ・身長・髪の色・全部の部品とモデルの値を、その人物の値で書く。

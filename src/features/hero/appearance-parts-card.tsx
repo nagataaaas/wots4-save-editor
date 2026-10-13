@@ -28,6 +28,7 @@ import {
   LAYER_COUNT,
   layersCustomized,
   partOffset,
+  partLayerOffset,
   readAppearanceParts,
   validatePart,
   writeBodyKind,
@@ -144,7 +145,7 @@ function LayerEditor({
             <SelectRow
               key={layer}
               label={`層${layer + 1}：${def?.mesh ?? "この部品にない層"}`}
-              offset={part.offset + 4 + layer * 2}
+              offset={partLayerOffset(kind, layer)}
               value={String(value)}
               currentLabel={def ? "この形にない色" : "不明"}
               options={def ? layerOptions(def, entry.models[layer]) : []}
