@@ -73,6 +73,18 @@ function makeSave(): Uint8Array {
 }
 
 describe('readCustomStyles', () => {
+  it('🟢 複数の技・参照に同じ異常があっても問題文は1回ずつ出す', () => {
+    const b = makeSave()
+    writeU8(b, CUSTOM_SHEET_OFFSET + 9, 0x7f)
+    writeU8(b, CUSTOM_SHEET_OFFSET + 17, 0x7f)
+    writeI16(b, CUSTOM_OFFSET + 0x48, 999)
+    writeI16(b, CUSTOM_OFFSET + 0x4a, 998)
+    writeI16(b, CUSTOM_OFFSET + 0x4c, 997)
+    const messages = readCustomStyles(b).problem!.split(' ／ ')
+    expect(messages.filter(m => m === '俺流の技の表の、続けて出す技の数が多すぎます')).toHaveLength(1)
+    expect(messages.filter(m => m === '俺流に対応する技の表がありません')).toHaveLength(1)
+    expect(new Set(messages).size).toBe(messages.length)
+  })
   it('🟢 俺流と俺流の技の表を読む', () => {
     const v = readCustomStyles(makeSave())
     expect(v.problem).toBeNull()

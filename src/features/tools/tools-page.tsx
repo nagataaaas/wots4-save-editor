@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { InfoTip } from '@/components/info-tip'
 import { ItemSlotRow } from '@/components/item-slot-row'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -67,6 +67,7 @@ function ItemBoxPage({
   missingMarkNote: string
 }) {
   const { save, update } = useSave()
+  const [error, setError] = useState<string | null>(null)
   const { advanced } = useAdvancedMode()
   const groups = useMemo(() => itemOptionGroups({ advanced }), [advanced])
 
@@ -94,6 +95,7 @@ function ItemBoxPage({
 
   return (
     <div className="flex flex-col gap-4">
+      {error && <Alert variant="destructive"><AlertTitle>書き込めません</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
       {view?.layoutProblem && (
         <Alert variant="destructive">
           <AlertTitle>読み取り専用</AlertTitle>
@@ -109,7 +111,11 @@ function ItemBoxPage({
               {missingMark.map((i) => `${i + 1}件目`).join('、')} は道具として扱えない状態です。{missingMarkNote}
               修復すると、これらの枠を道具として扱える状態にします。
             </p>
-            <Button size="sm" variant="outline" onClick={() => update((b) => void repairItemMarks(b, area))}>
+            <Button size="sm" variant="outline" disabled={view?.layoutProblem != null} onClick={() => {
+              setError(null)
+              try { update((b) => void repairItemMarks(b, area)) }
+              catch (e) { setError(errorMessage(e)) }
+            }}>
               修復
             </Button>
           </AlertDescription>

@@ -45,19 +45,8 @@ export function partOffset(kind: PartKind): number {
   return APPEARANCE_PARTS_OFFSETS.parts + PART_RECORD_SIZE * PART_KINDS.indexOf(kind);
 }
 
-/** 書き込みの反映をゲーム内で確認した部品（✅ [U] 2026-10-08）。ほかは要ゲーム内確認（U-19） */
-export const PART_WRITE_CONFIRMED: Readonly<Record<PartKind, boolean>> = {
-  upper: false,
-  lower: false,
-  face: true,
-  hair: true,
-  body: true,
-  feet: false,
-  gauntlet: true,
-  leggings: true,
-  apron: true,
-  cape: true,
-};
+// 書き込みの反映：顔・髪型・体・手甲・脚絆・前掛け・合羽はゲーム内で確認（✅ [U] 2026-10-08）。
+// 上半身・下半身・足元は要ゲーム内確認（U-19）。
 
 /**
  * 髪の色の名前。値＝主人公設定の一覧の左からの位置（1 起点）。
@@ -76,8 +65,6 @@ export const HAIR_COLOR_NAMES: Readonly<Record<number, string>> = {
   8: "藍",
   9: "紫",
 };
-/** 名前をゲーム内で確認した髪の色 ✅ [U] */
-export const HAIR_COLOR_CONFIRMED: ReadonlySet<number> = new Set([0, 1, 2, 3, 4]);
 /** 通常モードで書ける髪の色の範囲（主人公設定の一覧にある色）。0・10 以上は上級者モードだけ */
 export const HAIR_COLOR_MIN = 1;
 export const HAIR_COLOR_MAX = 9;

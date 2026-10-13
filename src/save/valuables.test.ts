@@ -44,9 +44,9 @@ describe('readValuables', () => {
     expect(v.slots[0].unknown).toBe(0xdeadbeef)
   })
 
-  it('🔶 [TS] が扱うのは先頭4件だけ。5件目以降は推測の扱いとして区別する', () => {
+  it('🔶 [TS] が扱う先頭4件の後ろも同じ形式で読む', () => {
     const v = readValuables(makeSave())
-    expect(v.slots.map((s) => s.tsEdited)).toEqual([true, true, true, true, false, false, false, false, false, false])
+    expect(v.slots.slice(4).every((s) => s.id === EMPTY_ID && s.count === 0)).toBe(true)
   })
 
   it('サイズが 0x48BB0 でなければ全枠を読み取り専用にする', () => {

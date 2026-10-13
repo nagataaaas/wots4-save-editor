@@ -30,9 +30,6 @@ export const OCCUPATION_CLEAR_COUNT_OFFSET = 0x433a6;
 /** 🟢 受注中のなりわいの ID（読むだけ。書き込みは occupation-accept.ts） */
 export const OCCUPATION_ACCEPTED_OFFSET = 0x45f4e;
 
-/** ✅ 状態を書き換えて反映を確かめた ID（209：1 でクリア済み） */
-export const OCCUPATION_WRITE_CONFIRMED: ReadonlySet<number> = new Set([209]);
-
 export function occupationStateOffset(id: number): number {
   if (!Number.isInteger(id) || id < 0 || id >= OCCUPATION_STATE_COUNT) throw new RangeError(`なりわいが範囲外です`);
   return OCCUPATION_STATE_OFFSET + id * 2;

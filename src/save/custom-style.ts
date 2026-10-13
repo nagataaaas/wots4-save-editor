@@ -164,7 +164,7 @@ export function readCustomStyles(bytes: Uint8Array): CustomStylesView {
       equipped: sects.equipped.includes(id),
     })
   }
-  return { problem: problems.length ? problems.join(' ／ ') : null, styles, sheets, sects }
+  return { problem: problems.length ? [...new Set(problems)].join(' ／ ') : null, styles, sheets, sects }
 }
 
 // 書き込み。不正な値は例外にして、バイト列を変えない（呼び出し側は save-context の update で包む）。

@@ -79,11 +79,6 @@ export const APPEARANCE_OFFSET = 0x3ab5c;
 export const APPEARANCE_BYTES = 31;
 export const APPEARANCE_BIT_COUNT = APPEARANCE_BYTES * 8;
 
-/** ゲーム内で書き換えを確かめた服の番号（✅ [U] 2026-10-07・2026-10-06。ほかは 🟢） */
-export const APPEARANCE_CONFIRMED: ReadonlySet<number> = new Set([
-  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 238,
-]);
-
 /** なりわいの報酬のセット（✅ 差分。名前は 🟢） */
 export const APPEARANCE_REWARDS: Readonly<Record<number, string>> = {
   238: "新撰組 近藤セット（なりわい「今宵の虎徹は」）",
@@ -130,10 +125,8 @@ export function writeAppearanceBits(bytes: Uint8Array, bits: readonly number[], 
 export const UNLOCK_COUNT = 106;
 /** 🔶 U-17：固定位置。差分：01 copy 5→6（番号31）。 */
 export const UNLOCK_STATES_OFFSET = 0x43318;
-/** ✅ [U] 2026-10-07 番号31「J.J. の顔」はゲーム内で解除した前後の差分で対応を確認。書き込みの反映は 🔶 U-17。 */
-export const UNLOCK_READ_CONFIRMED: ReadonlySet<number> = new Set([31]);
-/** ✅ [U] 2026-10-07 値 2 の書き込みによる反映をゲーム内で確認した特典。 */
-export const UNLOCK_WRITE_CONFIRMED: ReadonlySet<number> = new Set([101]);
+// ✅ [U] 2026-10-07 番号31「J.J. の顔」はゲーム内で解除した前後の差分で対応を確認。書き込みの反映は 🔶 U-17。
+// ✅ [U] 2026-10-07 番号101（ライフルの免許）は値 2 の書き込みによる反映をゲーム内で確認。
 
 export const UNLOCK_STATE_LABELS: Record<number, string> = {
   0: "非表示",
@@ -141,7 +134,7 @@ export const UNLOCK_STATE_LABELS: Record<number, string> = {
   2: "取得済み",
 };
 
-export type UnlockStatesView = FlagBytesView & { offset: number | null };
+export type UnlockStatesView = FlagBytesView & { offset: number };
 
 export function readUnlockStates(bytes: Uint8Array): UnlockStatesView {
   const layoutProblem = checkLayout(bytes);
@@ -152,8 +145,9 @@ export function readUnlockStates(bytes: Uint8Array): UnlockStatesView {
   return {
     values,
     offset,
-    layoutProblem: layoutProblem ?? (!readable ? "ファイルが小さすぎて特典を読めません" : bad >= 0 ? "想定外の状態の特典があるため読み取り専用です" : null), // 🔶 U-17
-    warning: null,
+    layoutProblem: layoutProblem ?? (!readable ? "ファイルが小さすぎて特典を読めません" : null),
+    // 🔶 U-17：0〜2 以外の値は上級者モードで書けるので、読み取り専用にはせず注意だけ出す
+    warning: bad >= 0 ? "状態が想定外の特典があります。切り替えは上級者モードでだけできます" : null,
   };
 }
 
@@ -161,10 +155,7 @@ export function readUnlockStates(bytes: Uint8Array): UnlockStatesView {
 export function writeUnlockState(bytes: Uint8Array, index: number, value: number, opts: { advanced: boolean }): void {
   assertEditable(bytes);
   if (!Number.isInteger(index) || index < 0 || index >= UNLOCK_COUNT) throw new RangeError("特典が範囲外です");
-  assertValue(value, 2, opts.advanced);
-  if (value > 2) throw new RangeError("指定できない状態です");
-  const view = readUnlockStates(bytes);
-  if (view.layoutProblem) throw new RangeError(view.layoutProblem);
+  assertValue(value, 2, opts.advanced); // 🔶 U-17：3 以上は上級者モードだけ
   writeU8(bytes, UNLOCK_STATES_OFFSET + index, value);
 }
 

@@ -54,30 +54,31 @@ export const PENDING_VALUES = [0, 10] as const
 export type Stage = {
   value: number
   label: string
-  /** 実セーブで値を見たか。見ていないものは 🟢（値の一覧）で、書き込んだときのゲーム内の動作は ❓ */
-  seen: boolean
 }
 
-/** 🟢 段階の値の一覧。ラベルの 400 以降は、その段階で起きるイベントから付けた */
+/**
+ * 🟢 段階の値の一覧。ラベルの 400 以降は、その段階で起きるイベントから付けた。
+ * 実セーブで見たのは 0・100・110・120・200・400。ほかを書き込んだときのゲーム内の動作は ❓
+ */
 export const STAGES: readonly Stage[] = [
-  { value: 0, label: '序章（周回の開始前）', seen: true },
-  { value: 100, label: '1日目 昼', seen: true },
-  { value: 110, label: '1日目 夕', seen: true },
-  { value: 120, label: '1日目 夜', seen: true },
-  { value: 200, label: '2日目 朝', seen: true },
-  { value: 210, label: '2日目 夕', seen: false },
-  { value: 220, label: '2日目 夜', seen: false },
-  { value: 300, label: '3日目 昼', seen: false },
-  { value: 310, label: '3日目 夕', seen: false },
-  { value: 320, label: '3日目 夜', seen: false },
-  { value: 400, label: '4日目以降（剣術大会の前）', seen: true },
-  { value: 410, label: '4日目以降（ローラの決意）', seen: false },
-  { value: 420, label: '4日目以降（ローラ奪還・士魂は屈せず）', seen: false },
-  { value: 500, label: '剣術大会のあと（闇黒の意志・大老武断など）', seen: false },
-  { value: 510, label: '剣術大会のあと（般若党壊滅・鬼怒川の魔手など）', seen: false },
-  { value: 520, label: '剣術大会のあと（剣客 茂呂茂・武人 琴吹光）', seen: false },
-  { value: 600, label: '鬼怒川の魔手のあと（夕暮れの船上・討ち入り）', seen: false },
-  { value: 999, label: '結末（エンディング）', seen: false },
+  { value: 0, label: '序章（周回の開始前）' },
+  { value: 100, label: '1日目 昼' },
+  { value: 110, label: '1日目 夕' },
+  { value: 120, label: '1日目 夜' },
+  { value: 200, label: '2日目 朝' },
+  { value: 210, label: '2日目 夕' },
+  { value: 220, label: '2日目 夜' },
+  { value: 300, label: '3日目 昼' },
+  { value: 310, label: '3日目 夕' },
+  { value: 320, label: '3日目 夜' },
+  { value: 400, label: '4日目以降（剣術大会の前）' },
+  { value: 410, label: '4日目以降（ローラの決意）' },
+  { value: 420, label: '4日目以降（ローラ奪還・士魂は屈せず）' },
+  { value: 500, label: '剣術大会のあと（闇黒の意志・大老武断など）' },
+  { value: 510, label: '剣術大会のあと（般若党壊滅・鬼怒川の魔手など）' },
+  { value: 520, label: '剣術大会のあと（剣客 茂呂茂・武人 琴吹光）' },
+  { value: 600, label: '鬼怒川の魔手のあと（夕暮れの船上・討ち入り）' },
+  { value: 999, label: '結末（エンディング）' },
 ]
 
 /** 序章（周回の開始前） */

@@ -74,6 +74,14 @@ function makeSave(): Uint8Array {
 }
 
 describe('readSects', () => {
+  it('🟢 複数の流派・技の表に同じ異常があっても問題文は1回ずつ出す', () => {
+    const b = makeSave()
+    writeI16(b, SECT_RECORDS_OFFSET, 999)
+    writeI16(b, SECT_RECORDS_OFFSET + 16, 998)
+    writeU8(b, sheetStateOffset(0) + 4, 9)
+    writeU8(b, sheetStateOffset(1) + 4, 9)
+    expect(readSects(b).problem).toBe('流派の表に知らない流派があります ／ 技の覚え状況に不明な値があります')
+  })
   it('🟢 装備・流派の書・流派の表・技の覚え状況を読む', () => {
     const v = readSects(makeSave())
     expect(v.problem).toBeNull()

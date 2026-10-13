@@ -240,7 +240,7 @@ export function AppearancePartsCard() {
 
   const hairMin = advanced ? 0 : HAIR_COLOR_MIN;
   const hairMax = advanced ? 15 : HAIR_COLOR_MAX;
-  // 髪の色：HAIR_COLOR_CONFIRMED の値（0〜4）は ✅ [U]、5＝赤・6〜9 は 🔶（U-19）
+  // 髪の色：0〜4 は ✅ [U]、5＝赤・6〜9 は 🔶（U-19）
   const hairLabel = (i: number) => HAIR_COLOR_NAMES[i] ?? "色なし";
   const hairOptions: SelectOption[] = Array.from({ length: hairMax - hairMin + 1 }, (_, i) => ({
     value: String(hairMin + i),

@@ -5,12 +5,22 @@ import { searchItems, toSearchItems, type SearchItem } from './search-index'
 import { sections } from './sections'
 import { matchFieldKey } from '@/lib/route'
 import { searchKey } from '@/lib/search-collector'
+import { EVENTS_LINKS } from './scenario/anchors'
 
 const entries = collectSearchEntries(renderToStaticMarkup)
 const items = toSearchItems(entries)
 const crumbs = (i: SearchItem) => i.crumbs.join(' > ')
 
 describe('検索の索引', () => {
+  it('門・柵からの移動先となるルート分岐を、イベント画面の箱として登録する', () => {
+    const anchor = EVENTS_LINKS.routeJudge
+    expect(items.find(i => i.section === 'event-chart' && i.anchor === anchor && i.field === null)).toMatchObject({
+      section: 'event-chart',
+      anchor,
+      field: null,
+      crumbs: ['世界', 'イベント', '勢力の状態', '剣術大会以後のルート分岐'],
+    })
+  })
   it('画面で読む索引のファイルが、今の画面から集めた名前と同じ（違えば pnpm test -u で作り直す）', async () => {
     await expect(`${JSON.stringify(entries, null, 1)}\n`).toMatchFileSnapshot('./search-index.generated.json')
   })

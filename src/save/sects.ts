@@ -180,7 +180,7 @@ export function readSects(bytes: Uint8Array): SectsView {
   )
 
   return {
-    problem: problems.length ? problems.join(' ／ ') : null,
+    problem: problems.length ? [...new Set(problems)].join(' ／ ') : null,
     learnedCount: readU16(bytes, LEARNED_COUNT_OFFSET),
     skillPoints: readU16(bytes, SKILL_POINTS_OFFSET),
     equipped: Array.from({ length: SLOT_COUNT }, (_, s) => readI16(bytes, EQUIP_OFFSET + 2 * s)),

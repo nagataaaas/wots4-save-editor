@@ -21,7 +21,7 @@ export const NPC_ANCHORS = {
 /** 世界 / イベント */
 export const EVENTS_ANCHORS = {
   chart: 'chart',
-  factions: 'factions',
+  factions: { card: 'factions', routeJudge: 'post-tournament-route' },
   flags: 'event-flags',
 } as const
 
@@ -29,4 +29,9 @@ export const EVENTS_ANCHORS = {
 export const NPC_LINKS = {
   /** 「NPCイベントフラグ」の「道場・先生」（道場の画面からリンク） */
   dojoFlags: anchorPath(NPC_ANCHORS.flags.card, NPC_ANCHORS.flags.dojo),
+} as const
+
+export const EVENTS_LINKS = {
+  /** 「勢力の状態」の「剣術大会以後のルート分岐」（阿弥浜の門・柵からリンク） */
+  routeJudge: anchorPath(EVENTS_ANCHORS.factions.card, EVENTS_ANCHORS.factions.routeJudge),
 } as const

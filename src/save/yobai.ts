@@ -137,43 +137,15 @@ const GREEN_PLACE_LAYOUTS: readonly (readonly [number, readonly number[]])[] = P
 );
 
 /**
- * ✅ [U] 約束の実データで見た組の注記。すべて 🟢 の組の中にある。
- * 2026-10-06 の 1D＋01 は操作ミスとみられる（[U] 2026-10-07。配置 00〜02 は 🟢 の組に出てこない）ので外した
- */
-const SEEN_PLACE_LAYOUTS: readonly { place: number; layout: number; note?: string }[] = [
-  { place: 0x00, layout: 0x03 },
-  { place: 0x09, layout: 0x21 },
-  { place: 0x0a, layout: 0x05 },
-  { place: 0x0b, layout: 0x22 },
-  { place: 0x0c, layout: 0x06, note: "女中・娘" },
-  { place: 0x0e, layout: 0x23 },
-  { place: 0x10, layout: 0x3d, note: "さよ" },
-  { place: 0x11, layout: 0x20, note: "先生" },
-  { place: 0x18, layout: 0x25 },
-  { place: 0x1c, layout: 0x3a, note: "ローラ" },
-  { place: 0x1d, layout: 0x19, note: "万由" },
-  { place: 0x1d, layout: 0x1a, note: "千佳" },
-  { place: 0x1d, layout: 0x1b, note: "百合" },
-  { place: 0x20, layout: 0x1e, note: "メリンダ" },
-];
-
-/**
  * 正しい（場所、配置）の組。🟢 の72組。場所・配置の順。
  * 通常モードではこの組だけを書ける（配置が合わないと布団が宙に浮いたり壁にめり込んだりする）。
- * seen は実データで見た組、note はそのときの相手
  */
 export const PLACE_LAYOUTS: readonly {
   place: number;
   layout: number;
-  seen: boolean;
-  note?: string;
 }[] = GREEN_PLACE_LAYOUTS.flatMap(([place, layouts]) =>
   layouts.map((layout) => ({ place, layout })),
 )
-  .map(({ place, layout }) => {
-    const seen = SEEN_PLACE_LAYOUTS.find((s) => s.place === place && s.layout === layout);
-    return { place, layout, seen: seen !== undefined, note: seen?.note };
-  })
   .sort((a, b) => a.place - b.place || a.layout - b.layout);
 
 export type LayoutInfo = {

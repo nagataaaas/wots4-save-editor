@@ -366,6 +366,7 @@ function PlaceLayoutEditor({ promise, problem }: { promise: PromiseView | null; 
  */
 function TypeEditor({ promise, problem }: { promise: PromiseView | null; problem: string | null }) {
   const { save, update } = useSave();
+  const [error, setError] = useState<string | null>(null);
   const { advanced } = useAdvancedMode();
   // promise が null（セーブ未読み込み）のときは欄を無効にして描く
   const partner = promise ? promisePartner(promise.type) : undefined;
@@ -393,14 +394,17 @@ function TypeEditor({ promise, problem }: { promise: PromiseView | null; problem
           <Button
             size="sm"
             variant="outline"
-            onClick={() =>
-              update((b) => writePromisePlace(b, away.place, away.layout, { advanced }))
-            }
+            onClick={() => {
+              setError(null);
+              try { update((b) => writePromisePlace(b, away.place, away.layout, { advanced })); }
+              catch (e) { setError(errorMessage(e)); }
+            }}
           >
             場所と配置をこの相手のものにする
           </Button>
         </div>
       )}
+      {error && <Alert variant="destructive"><AlertTitle>書き込めません</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
     </div>
   );
 }

@@ -3380,6 +3380,55 @@
  },
  {
   "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "勢力の状態"
+  ],
+  "label": "剣術大会以後のルート分岐",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "勢力の状態",
+   "剣術大会以後のルート分岐"
+  ],
+  "label": "幕府",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "勢力の状態",
+   "剣術大会以後のルート分岐"
+  ],
+  "label": "外国",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "勢力の状態",
+   "剣術大会以後のルート分岐"
+  ],
+  "label": "攘夷",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "勢力の状態",
+   "剣術大会以後のルート分岐"
+  ],
+  "label": "無所属",
+  "box": false
+ },
+ {
+  "section": "event-chart",
   "anchor": "factions",
   "path": [
    "勢力の状態"
@@ -3403,15 +3452,6 @@
    "勢力の状態"
   ],
   "label": "攘夷",
-  "box": false
- },
- {
-  "section": "event-chart",
-  "anchor": "factions",
-  "path": [
-   "勢力の状態"
-  ],
-  "label": "無所属",
   "box": false
  },
  {

@@ -255,8 +255,8 @@ const categoryItems = (categories: readonly string[], allLabel = "すべての�
 ];
 
 /**
- * 特典の状態の行。確度：UNLOCK_READ_CONFIRMED の番号は ✅ 解除前後の差分で対応を確認（書き込みは ❓ 要ゲーム内確認）、
- * UNLOCK_WRITE_CONFIRMED の番号（ライフルの免許）は ✅ 取得済みへの変更を確認。ほかは 🔶 U-17
+ * 特典の状態の行。番号31は ✅ 解除前後の差分で対応を確認（書き込みは ❓ 要ゲーム内確認）、
+ * 番号101（ライフルの免許）は ✅ 取得済みへの変更を確認。ほかは 🔶 U-17
  */
 function UnlockStateRows({
   rows, view, readOnly, advanced, write, appearance = false,
@@ -326,6 +326,7 @@ function AppearanceUnlocksCard() {
             <br />
             クリックするたびに 非表示 → 未取得 → 取得済み の順に切り替わります。
           </CardDescription>
+          {view?.warning && <p className="text-destructive text-xs">{view.warning}</p>}
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -376,7 +377,7 @@ export function AppearancePage() {
             <ScopeAnchorLink />
             容姿の服
             {/* 服の番号ごとに1ビット（番号 n は APPEARANCE_OFFSET + n/8 の bit n%8）。
-                APPEARANCE_CONFIRMED の番号は ✅ ゲーム内で書き換えを確認、ほかは 🟢 */}
+                番号32〜46・238は ✅ ゲーム内で書き換えを確認、ほかは 🟢 */}
             <InfoTip offset={`${formatOffset(APPEARANCE_OFFSET)}〜${formatOffset(APPEARANCE_OFFSET + APPEARANCE_BYTES - 1)}`} />
           </CardTitle>
           <CardDescription>

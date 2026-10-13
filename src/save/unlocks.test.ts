@@ -14,14 +14,12 @@ import {
   readAccessoryFlags,
   readAppearance,
   readUnlockStates,
-  UNLOCK_READ_CONFIRMED,
   writeAccessoryFlag,
   writeAccessoryFlags,
   writeAppearanceBit,
   writeAppearanceBits,
   writeUnlockState,
   writeUnlockStates,
-  UNLOCK_WRITE_CONFIRMED,
 } from "./unlocks";
 
 const OWNED = [0, 152, 154, 155, 156, 157];
@@ -137,6 +135,22 @@ describe("容姿の解放ビット chunks/appearance（U-16 決着）", () => {
 });
 
 describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
+  it("🔶 U-17 上級者モードなら 3〜255 を1 Bに書ける。範囲外は変更しない", () => {
+    for (const value of [3, 255]) {
+      const b = makeSave();
+      const before = b.slice();
+      writeUnlockState(b, 105, value, { advanced: true });
+      expect(diffOffsets(before, b)).toEqual([0x43318 + 105]);
+      expect(readUnlockStates(b).values[105]).toBe(value);
+      expect(b.length).toBe(before.length);
+    }
+    for (const value of [-1, 256, 1.5, NaN]) {
+      const b = makeSave();
+      const before = b.slice();
+      expect(() => writeUnlockState(b, 105, value, { advanced: true })).toThrow();
+      expect(b).toEqual(before);
+    }
+  });
   it("✅ [U] ライフルの免許（101）を取得済みの2にする。固定位置", () => {
     const orig = makeSave();
     orig[0x4337d] = 1;
@@ -144,7 +158,6 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     writeUnlockState(b, 101, 2, { advanced: false });
     expect(diffOffsets(orig, b)).toEqual([0x4337d]);
     expect(readUnlockStates(b).values[101]).toBe(2);
-    expect([...UNLOCK_WRITE_CONFIRMED]).toEqual([101]);
     writeUnlockState(b, 101, 1, { advanced: false });
     expect(b).toEqual(orig);
   });
@@ -166,8 +179,6 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     expect(diffOffsets(before, after)).toEqual([0x43337]);
     expect(readUnlockStates(before).values[31]).toBe(1);
     expect(readUnlockStates(after).values[31]).toBe(2);
-    expect([...UNLOCK_READ_CONFIRMED]).toEqual([31]);
-    expect(UNLOCK_WRITE_CONFIRMED.has(31)).toBe(false);
   });
 
   it("🔶 U-17 周囲の並びや別位置の状態列に依存せず固定位置を使う", () => {
@@ -192,13 +203,20 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
       expect(() => writeUnlockState(bytes, 0, 2, { advanced: false })).toThrow();
       expect(bytes).toEqual(before);
     }
-    const invalid = makeSave();
-    invalid[0x43318 + 40] = 3;
-    const before = invalid.slice();
-    expect(readUnlockStates(invalid).values[40]).toBe(3);
-    expect(readUnlockStates(invalid).layoutProblem).toMatch(/読み取り専用/); // 🔶 U-17
-    expect(() => writeUnlockState(invalid, 0, 2, { advanced: true })).toThrow();
-    expect(invalid).toEqual(before);
+  });
+
+  it("🔶 U-17 0〜2 以外の状態があっても読み取り専用にせず、注意を出して書き込める", () => {
+    const b = makeSave();
+    writeUnlockState(b, 40, 3, { advanced: true });
+    expect(readUnlockStates(b).values[40]).toBe(3);
+    expect(readUnlockStates(b).layoutProblem).toBeNull();
+    expect(readUnlockStates(b).warning).toContain("想定外");
+    // 別の特典も書け、上級者モードでなくても 0〜2 に戻せる
+    writeUnlockState(b, 0, 2, { advanced: false });
+    writeUnlockState(b, 40, 1, { advanced: false });
+    expect(readUnlockStates(b).values[0]).toBe(2);
+    expect(readUnlockStates(b).values[40]).toBe(1);
+    expect(readUnlockStates(b).warning).toBeNull();
   });
 
   it("1 B だけを書き、書き戻すと元に戻る（往復）", () => {

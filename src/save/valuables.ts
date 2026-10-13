@@ -27,11 +27,8 @@ export const VALUABLES_OFFSET = 0x5b90 // ✅ [TS][I-3]
 export const VALUABLE_SLOT_BYTES = ITEM_SLOT_BYTES
 export const VALUABLE_SLOT_COUNT = 10
 
-/**
- * [TS] が読み書きする枠の数（製錬用の鉄4種として先頭4件）。
- * 5件目以降は同じ構造と推定しているが、[TS] は扱っておらず I-3 の範囲外（🔶）。
- */
-export const TS_EDITED_SLOTS = 4
+// [TS] が読み書きするのは先頭4件（製錬用の鉄4種）。
+// 5件目以降は同じ構造と推定しているが、[TS] は扱っておらず I-3 の範囲外（🔶）。
 
 export { EMPTY_ID }
 
@@ -179,12 +176,10 @@ export const VALUABLE_COUNT_MAX = ITEM_COUNT_MAX
 
 /**
  * label は、U-12 の ID なら「？」付き、U-14 で調べた ID なら調査結果の名前。
- * idWritable が false になるのは U-12 の ID と未知の ID
+ * idWritable が false になるのは U-12 の ID と未知の ID。
+ * [TS] が扱う先頭4件は ✅、5件目以降は 🔶
  */
-export type ValuableSlot = ItemSlot & {
-  /** [TS] が編集する枠か（✅）。false なら 🔶 */
-  tsEdited: boolean
-}
+export type ValuableSlot = ItemSlot
 
 export type ValuablesView = {
   layoutProblem: string | null
@@ -260,7 +255,6 @@ export function readValuables(bytes: Uint8Array, options: ValuableOptions = {}):
       count,
       unknown,
       label: valuableLabel(id),
-      tsEdited: index < TS_EDITED_SLOTS,
       problem: layoutProblem ?? problem,
       idWritable: idProblem === null,
       warning,
