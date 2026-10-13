@@ -26,57 +26,64 @@
 //    共通の初期化 🟢（下の resetCycle の表）
 //
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
-import { readI16, readU16, readU32, readU8, writeF32, writeU16, writeU32, writeU8 } from './binary'
-import { HERO_OFFSETS, checkLayout } from './hero'
+import { readI16, readI8, readU16, readU32, readU8, writeF32, writeU16, writeU32, writeU8 } from './binary'
+import { HERO_OFFSETS, AMOUNT_LIMITS, checkLayout } from './hero'
+import { DIFFICULTY_OFFSET } from './difficulty'
+import { CLEAR_COUNTS_OFFSET, GONE_COUNT_OFFSET } from './cycle-counts'
+import { HINT_OFFSET, HINT_NONE } from './hint'
+import { TOOLS_AREA, CHEST_AREA } from './item-box'
+import { ITEM_SLOT_BYTES } from './item-slot'
+import { VALUABLES_OFFSET, VALUABLE_SLOT_COUNT } from './valuables'
+import { MARKET_WEAPON_OFFSET, MARKET_WEAPON_SLOTS, MARKET_WEAPON_BYTES, MARKET_ELAPSED, MARKET_OTHERS } from './market-weapons'
+import { OCCUPATION_FLAG_START, PERSON_RECORDS_START, PERSON_RECORD_SIZE, PERSON_COUNT } from './townsfolk'
+import { statField, ACTION_COUNTS_OFFSET, ACTION_COUNT_SLOTS, DAMAGE_CYCLE_OFFSET, DAMAGE_KINDS } from './stats'
+import { SCORE_TABLES } from './score-tables'
+import { RAID_OFFSET } from './dojo'
+import { RECORDS_OFFSET, RECORD_SIZE, RECORD_CAPACITY, RECORD_EMPTY_BYTES, STAGE_OFFSET, LOVE_COUNT_OFFSET, PROMISE_OFFSET, PROMISE_CODEC } from './yobai'
 import { findItem } from './master/item-names'
 import { DATE_OFFSETS } from './scenario-date'
-import { EVENT_STATE_OFFSET } from './scenario-events'
-import { WEAPON_RECORD_BYTES } from './weapon'
+import { EVENT_STATE_OFFSET, EVENT_RECORD_OFFSET, EVENT_COUNT } from './scenario-events'
+import { WEAPON_RECORD_BYTES, WEAPON_FIELDS } from './weapon'
 import { WEAPON_BAG_COUNT, weaponBagOffset } from './weapon-bag'
 import { WEAPON_CHEST_CAPACITY, WEAPON_CHEST_COUNT, WEAPON_CHEST_OFFSET } from './weapon-chest'
 
 /** 物語の終わり方。clear＝結末を見た、gone＝町を立ち去った */
 export type CycleEnd = 'clear' | 'gone'
 
-/** イベントの状態 A・記録 B の件数（通し番号 0〜165） */
-const EVENT_COUNT = 166
-/** 記録 B の先頭 */
-const EVENT_RECORD_OFFSET = 0x3838
-
 /** シナリオのフラグ（通し番号 166〜399） */
-const SCENARIO_FLAGS = { start: 0x374e, end: 0x3837 } as const
+const SCENARIO_FLAGS = { start: EVENT_STATE_OFFSET + EVENT_COUNT, end: EVENT_RECORD_OFFSET - 1 } as const
 /** 🟢 シナリオのフラグのうち初期化で残すもの：施設 0x375D〜0x375F・0x3760、堂島の職 0x3799・0x379A */
 export const NEW_CYCLE_KEEP_FLAGS: readonly number[] = [0x375d, 0x375e, 0x375f, 0x3760, 0x3799, 0x379a]
 
 /** 🟢 なりわいのフラグの先頭（0x011C + 番号） */
-const OCCUPATION_FLAGS = 0x011c
+const OCCUPATION_FLAGS = OCCUPATION_FLAG_START
 /** 🟢 クリア・立ち去りで 0 にするなりわいのフラグの番号 */
 export const NEW_CYCLE_CLEARED_OCCUPATION_FLAGS: readonly number[] = [
   4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 18, 19, 23, 24, 25, 26, 27, 28, 29, 30, 31,
 ]
 
 /** 🟢 難易度（u8）。初期化で 1（普通）にする */
-const DIFFICULTY = 0x0000
+const DIFFICULTY = DIFFICULTY_OFFSET
 const DIFFICULTY_AFTER = 1
 /** 🟢 難易度ごとのクリア回数（u16 × 4） */
-const CLEAR_COUNTS = 0x43398
+const CLEAR_COUNTS = CLEAR_COUNTS_OFFSET
 const CLEAR_COUNT_MAX = 1000
 /** 🟢 立ち去った回数（u32） */
-const GONE_COUNT = 0x46340
+const GONE_COUNT = GONE_COUNT_OFFSET
 const GONE_COUNT_MAX = 99_999
 
-const MONEY = 0x0008
-const VAULT = 0x000c
-const VAULT_MAX = 999_999
+const MONEY = HERO_OFFSETS.money
+const VAULT = HERO_OFFSETS.cashbox
+const VAULT_MAX = AMOUNT_LIMITS.cashbox
 
 /** 🟢 武器レコードの刃・X・鍔・柄（u16 × 4）。どれも負なら空き */
-const WEAPON_PARTS = 0x02
+const WEAPON_PARTS = WEAPON_FIELDS.blade
 
 /** 🟢 道具の枠（8 B）。手持ち 10 枠・箪笥 80 枠・貴重品 10 枠 */
-const ITEM_SLOT = 8
-const ITEM_HAND = { offset: 0x5b40, slots: 10 } as const
-const ITEM_CHEST = { offset: 0x58c0, slots: 80 } as const
-const VALUABLES = { offset: 0x5b90, slots: 10 } as const
+const ITEM_SLOT = ITEM_SLOT_BYTES
+const ITEM_HAND = { offset: TOOLS_AREA.offset, slots: TOOLS_AREA.slotCount }
+const ITEM_CHEST = { offset: CHEST_AREA.offset, slots: CHEST_AREA.slotCount }
+const VALUABLES = { offset: VALUABLES_OFFSET, slots: VALUABLE_SLOT_COUNT }
 /** 🟢 箪笥で同じ品をまとめる上限 */
 const ITEM_CHEST_STACK = 99
 /** 🟢 貴重品のうち初期化で残す品：くず鉄・卸し鉄・堂島鋼・緋緋色金。道具の表にない品も残す */
@@ -96,19 +103,12 @@ const PARTS_ID_LIMIT = 0x400
 
 /** 🟢 流通の記録。経過の数（u16）を周回の終わりに +1 する */
 const DISTRIBUTION = [
-  { offset: 0x440d8, slots: 15, bytes: 0xa4, age: 0x94, weapon: true },
-  { offset: 0x44a74, slots: 10, bytes: 0x0c, age: 0x08, weapon: false },
-  { offset: 0x44aec, slots: 100, bytes: 0x14, age: 0x12, weapon: false },
-  { offset: 0x452bc, slots: 100, bytes: 0x10, age: 0x0c, weapon: false },
-  { offset: 0x458fc, slots: 100, bytes: 0x10, age: 0x0c, weapon: false },
+  { offset: MARKET_WEAPON_OFFSET, slots: MARKET_WEAPON_SLOTS, bytes: MARKET_WEAPON_BYTES, age: MARKET_ELAPSED, weapon: true },
+  ...MARKET_OTHERS.map(d => ({ ...d, age: d.elapsed, weapon: false })),
 ] as const
-
-/** 🟢 技ごとの斬殺数（周回中） */
-const KILL_COUNTS_CYCLE = { start: 0x0c64, end: 0x1c03 } as const
 
 /** 🔶 現在地 0x27（港（騒乱／希望の光用））。🟢 初期化で書く値 */
 export const NEW_CYCLE_LOCATION = 0x27
-const HINT_NONE = 0xffff
 
 /** startNewCycle の結果。入りきらずに元の場所に残った数も返す */
 export type NewCycleReport = {
@@ -134,7 +134,8 @@ export function enableCharacterSetup(bytes: Uint8Array): void {
   writeU16(bytes, DATE_OFFSETS.dayTime, 0)
 }
 
-const isEmptyWeaponRecord = (bytes: Uint8Array, at: number) => {
+// 🟢 周回移行時は4語がすべて負なら空き。表示用 isEmptyWeapon の FFFF 判定とは対象が違う。
+const isEmptyWeaponForCycleTransfer = (bytes: Uint8Array, at: number) => {
   for (let i = 0; i < 4; i++) if (readI16(bytes, at + WEAPON_PARTS + i * 2) >= 0) return false
   return true
 }
@@ -154,7 +155,7 @@ function ageDistribution(bytes: Uint8Array): void {
   for (const d of DISTRIBUTION) {
     for (let i = 0; i < d.slots; i++) {
       const at = d.offset + i * d.bytes
-      const used = d.weapon ? !isEmptyWeaponRecord(bytes, at) : readI16(bytes, at) >= 0
+      const used = d.weapon ? !isEmptyWeaponForCycleTransfer(bytes, at) : readI16(bytes, at) >= 0
       if (used) writeU16(bytes, at + d.age, (readU16(bytes, at + d.age) + 1) & 0xffff)
     }
   }
@@ -162,9 +163,9 @@ function ageDistribution(bytes: Uint8Array): void {
 
 /** 🟢 武器箪笥の空き枠。先頭から容量×10 枠だけを見て、本数が容量以上なら -1 */
 function weaponChestFreeSlot(bytes: Uint8Array): number {
-  const capacity = (readU8(bytes, WEAPON_CHEST_CAPACITY) << 24 >> 24) * 10
+  const capacity = readI8(bytes, WEAPON_CHEST_CAPACITY) * 10
   if (capacity <= readI16(bytes, WEAPON_CHEST_COUNT)) return -1
-  for (let i = 0; i < capacity; i++) if (isEmptyWeaponRecord(bytes, WEAPON_CHEST_OFFSET + i * WEAPON_RECORD_BYTES)) return i
+  for (let i = 0; i < capacity; i++) if (isEmptyWeaponForCycleTransfer(bytes, WEAPON_CHEST_OFFSET + i * WEAPON_RECORD_BYTES)) return i
   return -1
 }
 
@@ -172,6 +173,7 @@ function weaponChestFreeSlot(bytes: Uint8Array): number {
 function moveBagWeapons(bytes: Uint8Array, report: NewCycleReport): void {
   for (let i = WEAPON_BAG_COUNT - 1; i >= 0; i--) {
     const at = weaponBagOffset(i)
+    // 🟢 袋から移せるかは刃だけで判定する。箪笥の空き判定（4語）とは別。
     if (readI16(bytes, at + WEAPON_PARTS) < 0) continue
     const slot = weaponChestFreeSlot(bytes)
     if (slot < 0) {
@@ -313,8 +315,8 @@ function removeValuables(bytes: Uint8Array, report: NewCycleReport): void {
  * | 0x45F40〜0x45F4D、0x45F4E〜0x4626D | 0 |
  */
 function resetCycle(bytes: Uint8Array, report: NewCycleReport): void {
-  for (const o of [0x35a4, 0x35a8, 0x35ac, 0x35b0, 0x35b8]) writeF32(bytes, o, 1000)
-  writeF32(bytes, 0x35b4, 0)
+  for (const key of ['hpCurrent', 'hpMax', 'vitalityCurrent', 'vitalityMax', 'tsumaMax'] as const) writeF32(bytes, HERO_OFFSETS[key], 1000)
+  writeF32(bytes, HERO_OFFSETS.tsumaCurrent, 0)
   removeValuables(bytes, report)
   writeU32(bytes, MONEY, 0)
 
@@ -329,36 +331,32 @@ function resetCycle(bytes: Uint8Array, report: NewCycleReport): void {
   writeU8(bytes, DATE_OFFSETS.pending, 0)
   writeU8(bytes, HERO_OFFSETS.location, NEW_CYCLE_LOCATION)
   writeU8(bytes, DATE_OFFSETS.slot, 0)
-  writeU16(bytes, 0x3900, HINT_NONE)
+  writeU16(bytes, HINT_OFFSET, HINT_NONE)
   writeU16(bytes, 0x6324, 0xffff)
   writeU32(bytes, 0x0018, 0)
-  writeU8(bytes, 0x14064, 0)
+  writeU8(bytes, RAID_OFFSET, 0)
 
-  for (let i = 0; i < 100; i++) {
-    const at = 0x137f0 + i * 16
-    bytes.fill(0xff, at, at + 8)
-    bytes.fill(0, at + 8, at + 16)
-    writeU16(bytes, at + 12, 0xffff)
+  for (let i = 0; i < RECORD_CAPACITY; i++) {
+    bytes.set(RECORD_EMPTY_BYTES, RECORDS_OFFSET + i * RECORD_SIZE)
   }
-  writeU32(bytes, 0x13e30, 0)
-  writeU32(bytes, 0x13e34, 0)
-  bytes.fill(0xff, 0x14038, 0x14060)
-  writeU16(bytes, 0x14060, 0)
-  writeU8(bytes, 0x14062, 0)
+  writeU32(bytes, STAGE_OFFSET, 0)
+  writeU32(bytes, LOVE_COUNT_OFFSET, 0)
+  bytes.fill(0xff, PROMISE_OFFSET, PROMISE_CODEC.offset(PROMISE_OFFSET, 'day'))
+  PROMISE_CODEC.writeField(bytes, PROMISE_OFFSET, 'day', 0)
+  PROMISE_CODEC.writeField(bytes, PROMISE_OFFSET, 'helpSeen', 0)
 
-  bytes.fill(0, 0x015c, 0x0b34)
+  bytes.fill(0, PERSON_RECORDS_START, PERSON_RECORDS_START + PERSON_RECORD_SIZE * PERSON_COUNT)
   bytes.fill(0, 0x45f40, 0x4626e)
-  bytes.fill(0, 0x0b44, 0x0b8c)
-  writeF32(bytes, 0x0bc0, 0)
-  writeU32(bytes, 0x0b90, 0)
-  writeU32(bytes, 0x0b98, 0)
+  bytes.fill(0, statField('degreeNumerator').offset, ACTION_COUNTS_OFFSET + ACTION_COUNT_SLOTS * 4)
+  bytes.fill(0, DAMAGE_CYCLE_OFFSET, DAMAGE_CYCLE_OFFSET + DAMAGE_KINDS.length * 4)
+  writeF32(bytes, statField('distanceCycle').offset, 0)
+  writeU32(bytes, statField('playTimeCycle').offset, 0)
+  writeU32(bytes, statField('deathStage').offset, 0)
   writeU8(bytes, 0x0bba, 0)
-  writeU32(bytes, 0x0bc8, 0)
-  writeU32(bytes, 0x0bd0, 0)
+  writeU32(bytes, statField('killsCycle').offset, 0)
+  writeU32(bytes, statField('comboCycle').offset, 0)
   writeU16(bytes, DATE_OFFSETS.dayIndex, 0)
-  bytes.fill(0, 0x0bdc, 0x0c20)
-  bytes.fill(0, KILL_COUNTS_CYCLE.start, KILL_COUNTS_CYCLE.end + 1)
-  bytes.fill(0, 0x2ba4, 0x2fa4)
+  for (const table of Object.values(SCORE_TABLES)) bytes.fill(0, table.cycleStart, table.cycleStart + table.count * 4)
   bytes.fill(0xff, 0x001c, 0x00dc)
 }
 

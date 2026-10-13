@@ -12,6 +12,7 @@ import {
   startNewCycle,
 } from './new-cycle'
 import { readDate } from './scenario-date'
+import { isEmptyWeapon } from './weapon'
 
 const BAG = 0xa6b0
 const CHEST = 0xacf4
@@ -176,6 +177,30 @@ describe('startNewCycle：共通の初期化（🟢）', () => {
 })
 
 describe('startNewCycle：引き継ぎ（🟢）', () => {
+  it('🟢 表示は4語がFFFF、周回移行の空きは4語が負、袋を移せるかは刃だけで判定する', () => {
+    const bytes = makeMidCycleSave()
+    for (const rel of [2, 4, 6, 8]) writeU16(bytes, CHEST + rel, 0xfffe)
+    expect(isEmptyWeapon(bytes, CHEST)).toBe(false)
+    weapon(bytes, BAG, 10)
+    weapon(bytes, BAG + REC, 0x8000)
+    const skipped = bytes.slice(BAG + REC, BAG + 2 * REC)
+    const report = startNewCycle(bytes)
+    expect(report.weaponsMoved).toBe(1)
+    expect(readU16(bytes, CHEST + 2)).toBe(10)
+    expect(bytes.slice(BAG + REC, BAG + 2 * REC)).toEqual(skipped)
+    expect(isEmptyWeapon(bytes, BAG)).toBe(true)
+  })
+
+  it('🟢 武器箪笥の容量は符号付き1バイト。負なら袋に残す', () => {
+    for (const capacity of [0x80, 0xff]) {
+      const bytes = makeMidCycleSave()
+      bytes[0x129f6] = capacity
+      weapon(bytes, BAG, 10)
+      const before = bytes.slice(BAG, BAG + REC)
+      expect(startNewCycle(bytes)).toMatchObject({ weaponsMoved: 0, weaponsLeft: 1 })
+      expect(bytes.slice(BAG, BAG + REC)).toEqual(before)
+    }
+  })
   it('クリアは難易度ごとのクリア回数を +1（1000 まで）、立ち去りは立ち去った回数を +1（99,999 まで）', () => {
     const b = makeMidCycleSave()
     writeU16(b, 0x43398 + 3 * 2, 5)

@@ -63,6 +63,10 @@ export const PLAY_TIME_MAX = 35_999_999
 /** 🟢 侍度の上限 */
 export const SAMURAI_DEGREE_MAX = 120
 
+/** 🟢 行動の回数の全16枠。未使用の枠も周回の終わりに消す（chunks/stats）。 */
+export const ACTION_COUNTS_OFFSET = 0x0b4c
+export const ACTION_COUNT_SLOTS = 16
+
 /** 🟢 行動の回数 0x0B4C + 4 × i。使われていない i（8・11〜15）は載せない */
 export const ACTION_COUNTS: readonly { index: number; label: string; note: string }[] = [
   { index: 0, label: '人が落とした持ち物を拾った', note: '主人公が拾ったときだけ数える。不適切な行動に数える' },
@@ -113,6 +117,10 @@ export const TITLES = [
   '腐れ外道',
   '鬼畜王',
 ] as const
+
+/** 🟢 人物ごとの痛手（u32 × DAMAGE_KINDS）。周回中は周回の終わりに 0 にする（chunks/stats） */
+export const DAMAGE_CYCLE_OFFSET = 0x0bdc
+export const DAMAGE_TOTAL_OFFSET = 0x0c20
 
 /** 🟢 人物の種類（0x0BDC・0x0C20 の添字）。まだらは朱美の姿のときは数えない */
 export const DAMAGE_KINDS = [
@@ -196,7 +204,7 @@ export const STAT_FIELDS: readonly StatField[] = [
   ...ACTION_COUNTS.map(
     (a): StatField => ({
       key: `action${a.index}`,
-      offset: 0x0b4c + 4 * a.index,
+      offset: ACTION_COUNTS_OFFSET + 4 * a.index,
       type: 'u32',
       label: a.label,
       group: 'actions',
@@ -305,7 +313,7 @@ export const STAT_FIELDS: readonly StatField[] = [
     return [
       {
         key: `damageCycle${c}`,
-        offset: 0x0bdc + 4 * c,
+        offset: DAMAGE_CYCLE_OFFSET + 4 * c,
         type: 'u32',
         label: `${who}（周回中）`,
         group: 'damage',
@@ -314,7 +322,7 @@ export const STAT_FIELDS: readonly StatField[] = [
       },
       {
         key: `damageTotal${c}`,
-        offset: 0x0c20 + 4 * c,
+        offset: DAMAGE_TOTAL_OFFSET + 4 * c,
         type: 'u32',
         label: `${who}（累計）`,
         group: 'damage',
