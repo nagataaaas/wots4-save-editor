@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { readF32, readI8, readI16, readU32, readUtf16Fixed, writeF32, writeI16, writeU32, writeU8, writeUtf16Fixed, recordCodec } from './binary'
+import {
+  F32_MAX, NUM_TYPE_RANGE, readF32, readI8, readI16, readI32, readNum, readSized, readU32, readUtf16Fixed,
+  writeF32, writeI16, writeI32, writeNum, writeSized, writeU32, writeU8, writeUtf16Fixed, recordCodec, type NumType,
+} from './binary'
 
 describe('符号付き1バイトとレコードの共通操作', () => {
   it('i8 の境界と、Uint8Array の部分領域を読む', () => {
@@ -21,6 +24,65 @@ describe('符号付き1バイトとレコードの共通操作', () => {
     expect(() => codec.writeField(bytes, 1, 'a', 256)).toThrow(RangeError)
     expect(() => codec.read(bytes, 3)).toThrow(RangeError)
     expect(bytes).toEqual(before)
+  })
+})
+
+describe('型つきの欄（readNum / writeNum / recordCodec の type）', () => {
+  it('型ごとの読み出し→書き戻しで全バイトが一致する', () => {
+    const codec = recordCodec({
+      a: { rel: 0, type: 'u8' },
+      b: { rel: 1, type: 'i8' },
+      c: { rel: 2, type: 'u16' },
+      d: { rel: 4, type: 'i16' },
+      e: { rel: 6, type: 'u32' },
+      f: { rel: 10, type: 'i32' },
+      g: { rel: 14, type: 'f32' },
+      h: { rel: 18, size: 2 },
+    })
+    const bytes = Uint8Array.from([
+      0x9a, 0xfe, 0x34, 0x12, 0x00, 0x80, 0x78, 0x56, 0x34, 0x12,
+      0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0xc8, 0xc2, 0xcd, 0xab,
+    ])
+    const before = bytes.slice()
+    const record = codec.read(bytes, 0)
+    expect(record).toEqual({ a: 0x9a, b: -2, c: 0x1234, d: -32768, e: 0x12345678, f: -1, g: -100, h: 0xabcd })
+    for (const key of Object.keys(record) as (keyof typeof record)[]) codec.writeField(bytes, 0, key, record[key])
+    expect(bytes).toEqual(before)
+    expect(codec.type('h')).toBe('u16')
+    expect(codec.type('f')).toBe('i32')
+  })
+
+  it('型の範囲を超える値は拒否し、バイトを変えない', () => {
+    const b = new Uint8Array(4)
+    const cases: [NumType, number][] = [
+      ['u8', -1], ['i8', 128], ['i8', -129], ['u16', 0x10000], ['i16', -0x8001],
+      ['u32', -1], ['i32', 0x8000_0000], ['i32', -0x8000_0001], ['i32', 1.5],
+      ['f32', Infinity], ['f32', NaN], ['f32', F32_MAX * 2],
+    ]
+    for (const [type, value] of cases) expect(() => writeNum(b, 0, type, value), `${type} ${value}`).toThrow(RangeError)
+    expect([...b]).toEqual([0, 0, 0, 0])
+    for (const type of Object.keys(NUM_TYPE_RANGE) as NumType[]) {
+      const { min, max } = NUM_TYPE_RANGE[type]
+      for (const value of [min, max]) {
+        writeNum(b, 0, type, value)
+        expect(readNum(b, 0, type)).toBe(type === 'f32' ? Math.fround(value) : value)
+      }
+    }
+  })
+
+  it('i32 を 2 の補数の LE で読み書きする', () => {
+    const b = new Uint8Array(4)
+    writeI32(b, 0, -2)
+    expect([...b]).toEqual([0xfe, 0xff, 0xff, 0xff])
+    expect(readI32(b, 0)).toBe(-2)
+  })
+
+  it('readSized / writeSized は幅でも型でも指定できる', () => {
+    const b = Uint8Array.from([0xff, 0xff])
+    expect(readSized(b, 0, 2)).toBe(0xffff)
+    expect(readSized(b, 0, 'i16')).toBe(-1)
+    writeSized(b, 0, 'i8', -128)
+    expect([...b]).toEqual([0x80, 0xff])
   })
 })
 

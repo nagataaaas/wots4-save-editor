@@ -17,11 +17,11 @@
 // 周回の終わり方 0x0BBA は new-cycle.ts が扱うので、ここには入れない。
 // 上限はゲームが値を増やすときの上限（🟢）。通常モードはそこまで、上級者モードは型で書ける範囲まで受け付ける。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
-import { readF32, readU16, readU32, writeF32, writeU16, writeU32 } from './binary'
+import { NUM_TYPE_RANGE, readNum, writeNum, type NumType } from './binary'
 import { warningsOf, type EditOpts, type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
 
-export type StatType = 'u16' | 'u32' | 'f32'
+export type StatType = Extract<NumType, 'u16' | 'u32' | 'f32'>
 
 export type StatField = {
   /** 一意の名前（UI の key） */
@@ -342,10 +342,6 @@ export function statField(key: string): StatField {
   return f
 }
 
-const TYPE_MAX: Record<Exclude<StatType, 'f32'>, number> = { u16: 0xffff, u32: 0xffff_ffff }
-/** float32 で表せるいちばん大きな有限の値 */
-const F32_MAX = 3.4028234663852886e38
-
 export type StatValue = {
   field: StatField
   value: number
@@ -357,18 +353,12 @@ export type StatsView = ViewStatus & {
   values: readonly StatValue[]
 }
 
-function readField(bytes: Uint8Array, f: StatField): number {
-  if (f.type === 'u16') return readU16(bytes, f.offset)
-  if (f.type === 'u32') return readU32(bytes, f.offset)
-  return readF32(bytes, f.offset)
-}
-
 export function readStats(bytes: Uint8Array): StatsView {
   if (bytes.byteLength < 0x0c64) throw new RangeError('ファイルが小さすぎて記録を読めません')
   return {
     warnings: [],
     values: STAT_FIELDS.map((field) => {
-      const value = readField(bytes, field)
+      const value = readNum(bytes, field.offset, field.type)
       const warning = !Number.isFinite(value)
         ? '数値ではない値が入っています'
         : value < 0 || value > field.max
@@ -382,11 +372,12 @@ export function readStats(bytes: Uint8Array): StatsView {
 
 /** 通常モードは 0〜上限、上級者モードは型で書ける範囲。問題がなければ null */
 export function validateStat(field: StatField, value: number, opts: EditOpts): string | null {
+  const range = NUM_TYPE_RANGE[field.type]
   if (field.type === 'f32') {
-    if (!Number.isFinite(value) || Math.abs(value) > F32_MAX) return '数値を入力してください'
+    if (!Number.isFinite(value) || value < range.min || value > range.max) return '数値を入力してください'
     if (opts.advanced) return null
   } else {
-    if (!Number.isInteger(value) || value < 0 || value > TYPE_MAX[field.type])
+    if (!Number.isInteger(value) || value < 0 || value > range.max)
       return `この項目に書ける範囲を超えています: ${value}`
     if (opts.advanced) return null
   }
@@ -401,9 +392,7 @@ export function writeStat(bytes: Uint8Array, key: string, value: number, opts: E
   const field = statField(key)
   const error = validateStat(field, value, opts)
   if (error) throw new RangeError(error)
-  if (field.type === 'u16') writeU16(bytes, field.offset, value)
-  else if (field.type === 'u32') writeU32(bytes, field.offset, value)
-  else writeF32(bytes, field.offset, value)
+  writeNum(bytes, field.offset, field.type, value)
 }
 
 /** 秒を「時:分:秒」にする（プレイ時間の表示） */
