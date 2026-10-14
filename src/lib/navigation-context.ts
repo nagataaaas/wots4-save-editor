@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from 'react'
-import { useNavigationTarget } from './navigation-target-context'
+import { useBoxTarget } from './navigation-target-context'
 import type { SectionId } from '@/features/sections'
 import { useIndexing } from '@/lib/search-collector'
 
@@ -81,7 +81,7 @@ export function useAnchor(name: string): AnchorState {
   const { anchor, seq } = useNavigation()
   const targeted = anchor !== null && (anchor === id || anchor.startsWith(`${id}/`))
 
-  const ref = useNavigationTarget('boxes', id)
+  const ref = useBoxTarget(id)
   return { id, targeted, seq, ref }
 }
 

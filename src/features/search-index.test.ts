@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { collectSearchEntries } from './search-index-collect'
 import { itemsForMode, searchItems, toSearchItems, type SearchItem } from './search-index'
 import { sections } from './sections'
-import { matchFieldKey } from '@/lib/route'
+import { matchField } from '@/lib/route'
 import { searchKey } from '@/lib/search-collector'
 import { EVENTS_LINKS } from './scenario/anchors'
 
@@ -61,13 +61,12 @@ describe('検索の索引', () => {
   })
 
   it('欄の URL（箱の anchor と、箱より内側の名前の並び）から、その欄の data-search-key がひとつに決まる', () => {
-    const keys = entries.filter((e) => !e.box).map((e) => ({ section: e.section, key: searchKey(e.anchor, e.path, e.label) }))
-    for (const e of entries) {
-      if (e.box) continue
+    const fields = entries.filter((e) => !e.box)
+    for (const e of fields) {
       const item = items.find((i) => i.section === e.section && i.anchor === e.anchor && i.crumbs.join('').endsWith([...e.path, e.label].join('')) && i.field !== null)
       expect(item).toBeDefined()
-      const sectionKeys = keys.filter((k) => k.section === e.section).map((k) => k.key)
-      expect(matchFieldKey(sectionKeys, e.anchor || null, item!.field!)).toBe(searchKey(e.anchor, e.path, e.label))
+      const matched = matchField(fields.filter((f) => f.section === e.section), e.anchor || null, item!.field!)
+      expect(matched && searchKey(matched)).toBe(searchKey(e))
     }
   })
 

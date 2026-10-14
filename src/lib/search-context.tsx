@@ -1,20 +1,22 @@
-import { useContext, type ComponentProps, type ReactNode } from 'react'
-import { SearchPathContext } from '@/lib/search-collector'
+import { useContext, useMemo, type ComponentProps, type ReactNode } from 'react'
+import { SearchPathContext, searchKey } from '@/lib/search-collector'
 import { useSearchField } from '@/lib/search-hooks'
-import { useNavigationTarget } from './navigation-target-context'
+import { useFieldTarget } from './navigation-target-context'
 
 /** 中身の欄のパンくず（検索）に label を足す */
 export function SearchPath({ label, children }: { label: string | undefined; children: ReactNode }) {
   const path = useContext(SearchPathContext)
+  // 中の欄が移動先の登録をやり直さないよう、外側と label が同じなら同じ配列を渡す
+  const inner = useMemo(() => (label ? [...path, label] : path), [path, label])
   if (!label) return <>{children}</>
-  return <SearchPathContext.Provider value={[...path, label]}>{children}</SearchPathContext.Provider>
+  return <SearchPathContext.Provider value={inner}>{children}</SearchPathContext.Provider>
 }
 
 /** 1つの欄（項目名と入力を包む div）。名前を検索の索引に載せ、検索から飛ぶとこの div までスクロールする */
 export function SearchField({ label, ...props }: ComponentProps<'div'> & { label: string }) {
-  const key = useSearchField(label)
-  const ref = useNavigationTarget('fields', key)
-  return <div {...props} ref={ref} data-search-key={key} />
+  const name = useSearchField(label)
+  const ref = useFieldTarget(name)
+  return <div {...props} ref={ref} data-search-key={searchKey(name)} />
 }
 
 /**
@@ -22,10 +24,10 @@ export function SearchField({ label, ...props }: ComponentProps<'div'> & { label
  * 検索から飛ぶとこの div までスクロールする
  */
 export function SearchScope({ title, children, ...props }: ComponentProps<'div'> & { title: string }) {
-  const key = useSearchField(title)
-  const ref = useNavigationTarget('fields', key)
+  const name = useSearchField(title)
+  const ref = useFieldTarget(name)
   return (
-    <div {...props} ref={ref} data-search-key={key}>
+    <div {...props} ref={ref} data-search-key={searchKey(name)}>
       <SearchPath label={title}>{children}</SearchPath>
     </div>
   )

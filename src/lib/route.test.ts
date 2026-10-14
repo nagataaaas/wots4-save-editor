@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatHash, matchFieldKey, parseHash } from './route'
+import { formatHash, matchField, parseHash } from './route'
 
 describe('URL のハッシュ', () => {
   it('画面だけ', () => {
@@ -41,21 +41,28 @@ describe('URL のハッシュ', () => {
 })
 
 describe('URL の欄から要素を選ぶ', () => {
-  const key = (...parts: string[]) => parts.join('')
+  const name = (anchor: string, ...names: string[]) => ({ anchor, path: names.slice(0, -1), label: names.at(-1)! })
 
   it('anchor が同じで名前の並びが欄で終わるもの', () => {
-    const keys = [key('vitals', 'HP・活力・つま斬り', 'HP', '現在'), key('vitals', 'HP・活力・つま斬り', '活力', '現在')]
-    expect(matchFieldKey(keys, 'vitals', ['HP', '現在'])).toBe(keys[0])
-    expect(matchFieldKey(keys, 'vitals', ['活力', '現在'])).toBe(keys[1])
-    expect(matchFieldKey(keys, 'money', ['HP', '現在'])).toBeUndefined()
+    const fields = [name('vitals', 'HP・活力・つま斬り', 'HP', '現在'), name('vitals', 'HP・活力・つま斬り', '活力', '現在')]
+    expect(matchField(fields, 'vitals', ['HP', '現在'])).toBe(fields[0])
+    expect(matchField(fields, 'vitals', ['活力', '現在'])).toBe(fields[1])
+    expect(matchField(fields, 'money', ['HP', '現在'])).toBeUndefined()
   })
 
   it('箱の外の欄は anchor が空', () => {
-    expect(matchFieldKey([key('', '名前')], null, ['名前'])).toBe(key('', '名前'))
+    const fields = [name('', '名前')]
+    expect(matchField(fields, null, ['名前'])).toBe(fields[0])
   })
 
   it('合うものが複数あれば、いちばん短いもの', () => {
-    const keys = [key('a', '箱', '外', '小見出し', '欄'), key('a', '箱', '小見出し', '欄')]
-    expect(matchFieldKey(keys, 'a', ['小見出し', '欄'])).toBe(keys[1])
+    const fields = [name('a', '箱', '外', '小見出し', '欄'), name('a', '箱', '小見出し', '欄')]
+    expect(matchField(fields, 'a', ['小見出し', '欄'])).toBe(fields[1])
+  })
+
+  it('名前に区切りの文字を含んでも、名前の並びのまま比べる', () => {
+    const fields = [name('a', 'x\u001fy', '欄')]
+    expect(matchField(fields, 'a', ['y', '欄'])).toBeUndefined()
+    expect(matchField(fields, 'a', ['x\u001fy', '欄'])).toBe(fields[0])
   })
 })

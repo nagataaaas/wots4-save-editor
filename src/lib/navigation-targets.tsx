@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
-import { matchFieldKey } from './route'
+import { matchField } from './route'
 import { NavigationTargetContext, type NavigationTargetRegistry } from './navigation-target-context'
 
 /** 欄を探す移動で、箱だけが見つかったあと、欄が後から描かれるのを待つ時間 */
@@ -27,7 +27,7 @@ export function NavigationTargets({ anchor, field, seq, children }: {
   anchor: string | null; field: readonly string[] | null; seq: number; children: ReactNode
 }) {
   const changed = useRef(() => {})
-  const targets = useMemo<NavigationTargetRegistry>(() => ({ boxes: new Map(), fields: new Map(), changed }), [changed])
+  const targets = useMemo<NavigationTargetRegistry>(() => ({ boxes: new Map(), fields: new Set(), changed }), [changed])
   useLayoutEffect(() => {
     let frame = 0
     let clear = 0
@@ -50,8 +50,7 @@ export function NavigationTargets({ anchor, field, seq, children }: {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         frame = requestAnimationFrame(async () => {
-          const key = field ? matchFieldKey([...targets.fields.keys()], anchor, field) : undefined
-          const fieldElement = key ? targets.fields.get(key) : undefined
+          const fieldElement = field ? matchField(targets.fields, anchor, field)?.element : undefined
           let box: HTMLElement | undefined
           // セーブや絞り込みで行がない場合は、存在する最も内側の一覧・箱へ移動する。
           const names = anchor?.split('/') ?? []

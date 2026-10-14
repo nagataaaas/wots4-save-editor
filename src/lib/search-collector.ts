@@ -34,6 +34,16 @@ export function useIndexing(): boolean {
   return useContext(SearchCollectorContext) !== null
 }
 
-/** 欄・小見出しの要素に付ける data-search-key の値。検索から飛ぶときにこれで要素を探す */
-export const searchKey = (anchor: string, path: readonly string[], label: string): string =>
+/** 欄・小見出しの名前。いちばん内側の箱の anchor（箱の外なら空）、外側の箱・小見出しの名前の並び、欄の名前 */
+export type FieldName = {
+  anchor: string
+  path: readonly string[]
+  label: string
+}
+
+/**
+ * 欄・小見出しの要素に付ける data-search-key の値（DOM の属性と、索引の重複除けにだけ使う）。
+ * 検索から飛ぶときの照合は FieldName のまま行う（matchField）ので、この文字列を分解しない
+ */
+export const searchKey = ({ anchor, path, label }: FieldName): string =>
   [anchor, ...path, label].join('\u001f')
