@@ -4,9 +4,14 @@ import { writeU16, writeU32 } from './binary'
 import { TS_SAVE_SIZE } from './layout'
 import {
   EMPTY_ID,
+  U12_VALUABLE_IDS,
+  VALUABLES,
   VALUABLE_COUNT_MAX,
+  VALUABLE_COUNT_SYSTEM_MAX,
+  VALUABLE_IDS,
   PROBE_CANDIDATES,
   VALUABLE_SLOT_COUNT,
+  valuableCountMax,
   fillEmptySlotsWithProbes,
   readValuables,
   slotOffset,
@@ -294,5 +299,24 @@ describe('[U] 2026-10-05 U-14：会談の手紙（0x00。7回目の訂正で 0x0
     const v = readValuables(b)
     expect(v.slots[2]).toMatchObject({ id: 0x00, count: 1, label: '会談の手紙', problem: null, idWritable: true })
     expect((v.slots[2].warnings.join('。') || null)).toContain('セーブできなくなる')
+  })
+})
+
+describe('選択肢と個数の上限', () => {
+  it('✅ 選択肢は貴重品の表から作り、❓ U-12 のチップ・木札を除く。名前はアイテムの表の名前', () => {
+    expect(VALUABLES.map((v) => v.id)).toEqual([0x00, 0x29, 0x2a, 0x2b, 0x2c, 0xed, 0xee])
+    expect(VALUABLES.map((v) => v.label)).toEqual([
+      '会談の手紙', 'くず鉄', '卸し鉄(おろしがね)', '堂島鋼(どうじまはがね)', '緋緋色金(ひひいろかね)', '拷問部屋の鍵', '謎の鍵',
+    ])
+    expect([...VALUABLE_IDS]).toEqual(VALUABLES.map((v) => v.id))
+    expect([...U12_VALUABLE_IDS]).toEqual([0x2d, 0x2e])
+    // 注意を付けるのは会談の手紙と鍵2本（U-14）だけ
+    expect(VALUABLES.filter((v) => v.caution).map((v) => v.id)).toEqual([0x00, 0xed, 0xee])
+  })
+
+  it('🔶 通常モードの個数の上限は 999、上級者モードは u16 の上限', () => {
+    expect(valuableCountMax()).toBe(VALUABLE_COUNT_MAX)
+    expect(valuableCountMax({ advanced: true })).toBe(VALUABLE_COUNT_SYSTEM_MAX)
+    expect(VALUABLE_COUNT_SYSTEM_MAX).toBe(0xffff)
   })
 })

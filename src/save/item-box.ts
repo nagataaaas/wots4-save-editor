@@ -21,6 +21,7 @@ import {
 } from "./item-slot";
 import { labelKeywords, labelOf } from "./master/labels";
 import { ITEMS, ITEM_KIND_LABELS, findItem, type ItemEntry } from "./master/item-names";
+import { U12_VALUABLE_IDS, VALUABLE_IDS } from "./valuables";
 
 /** 個数として書ける値の上限（u16）。上級者モードで使う */
 export const ITEM_COUNT_SYSTEM_MAX = 0xffff;
@@ -74,8 +75,7 @@ const ITEM_MARK_OFFSET = 4;
  * - チップ・木札（0x2D／0x2E）：❓ U-12。Steam版で書くとゲーム内でセーブできなくなった（[U] 2026-10-04）。上級者モードでも拒否する
  * - 重要品の画面で扱う ID（会談の手紙・鉄4種・鍵2本。valuables.ts）
  */
-const U12_IDS = new Set([0x2d, 0x2e]);
-const VALUABLE_IDS = new Set([0x00, 0x29, 0x2a, 0x2b, 0x2c, 0xed, 0xee]);
+const U12_IDS = U12_VALUABLE_IDS;
 
 // 🟢 道具としては手に入らない。❓ 枠に入れたときの動作・表示は要ゲーム内確認
 const KIND_CAUTION: Record<1 | 2 | 3, string> = {

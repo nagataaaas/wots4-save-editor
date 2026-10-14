@@ -17,11 +17,11 @@ import {
   type ItemOption,
   type ItemSlot,
 } from './item-slot'
-import { itemLabel, nameOf } from './master/labels'
+import { NUM_TYPE_RANGE } from './binary'
+import { VALUABLE_TABLE } from './master/dataset/valuable'
+import { itemLabel } from './master/labels'
 import { itemLabelId } from './master/label-types'
-
-/** アイテムの表（item.csv）の名前。表の名前どおりに表示するものはここから引く */
-const item = nameOf.item
+import { lookup } from './master/lookup'
 
 export const VALUABLES_OFFSET = 0x5b90 // ✅ [TS][I-3]
 export const VALUABLE_SLOT_BYTES = ITEM_SLOT_BYTES
@@ -35,7 +35,7 @@ export { EMPTY_ID }
 export type Valuable = ItemOption
 
 /**
- * 選択肢に出す貴重品ID。
+ * 貴重品ID。ID の一覧は貴重品の表（datatable/item/valuable.csv）から作る（VALUABLES）。
  * - くず鉄〜緋緋色金：datatable/item/valuable.csv ✅ [TS][I-3]。0x2A／0x2B の順は D-12 で判定済み
  * - 会談の手紙（0x00）：U-14 の調査で分かった（[U] 2026-10-05）。7回目の調査では 0x01 としていたが、
  *   対応づけが1つずれていた（PROBED_LABELS の7回目の訂正を参照）。訂正後、重要品の枠に 0x00 を書いて
@@ -48,36 +48,41 @@ export type Valuable = ItemOption
  * チップ（0x2D）・木札（0x2E）は ❓ U-12 判定待ち。Steam版で書き込むと、フリーズはしないが
  * ゲーム内でセーブできなくなった（[U] 2026-10-04）ため、選択肢に出さない。
  */
-export const VALUABLES: readonly Valuable[] = [
-  {
-    id: 0x0000,
-    label: item(0x0000),
-    // ✅ 表示（U-14）。❓ ゲーム内でセーブできるか・イベントで使えるか
-    caution: 'イベントで使えない、またはゲーム内でセーブできなくなることがあります',
-  },
-  { id: 0x0029, label: item(0x0029) },
-  { id: 0x002a, label: item(0x002a) },
-  { id: 0x002b, label: item(0x002b) },
-  { id: 0x002c, label: item(0x002c) },
-  {
-    id: 0x00ed,
-    label: item(0x00ed),
-    // 🟢 ID（U-14）。❓ ゲーム内での表示・イベントで使えるか
-    caution: 'ゲーム内で表示されない、またはイベントで使えないことがあります',
-  },
-  {
-    id: 0x00ee,
-    label: item(0x00ee),
-    // 🟢 ID（U-14）。❓ ゲーム内での表示・ローラの部屋の扉で使えるか
-    caution: 'ゲーム内で表示されない、またはローラの部屋の扉で使えないことがあります',
-  },
-]
+/** ❓ U-12：チップ・木札。貴重品の表にはあるが、書き込まない（選択肢に出さない） */
+export const U12_VALUABLE_IDS: ReadonlySet<number> = new Set([0x002d, 0x002e])
 
-/** ❓ U-12：PS3版での意味 [SE-BBS]。PC版では未確認のため、表示だけに使い書き込まない */
-const U12_LABELS: Record<number, string> = {
-  0x002d: 'チップ？',
-  0x002e: '木札？',
+/** 選択肢の ID ごとの注意。あれば、その ID が入った枠に警告として出す */
+const VALUABLE_CAUTIONS: Readonly<Record<number, string>> = {
+  // ✅ 表示（U-14）。❓ ゲーム内でセーブできるか・イベントで使えるか
+  0x0000: 'イベントで使えない、またはゲーム内でセーブできなくなることがあります',
+  // 🟢 ID（U-14）。❓ ゲーム内での表示・イベントで使えるか
+  0x00ed: 'ゲーム内で表示されない、またはイベントで使えないことがあります',
+  // 🟢 ID（U-14）。❓ ゲーム内での表示・ローラの部屋の扉で使えるか
+  0x00ee: 'ゲーム内で表示されない、またはローラの部屋の扉で使えないことがあります',
 }
+
+/** 貴重品の表（valuable.csv）の ID。「なし」（0xFFFF）は除く。表の順（ID の昇順） */
+const VALUABLE_TABLE_IDS: readonly number[] = Object.values(VALUABLE_TABLE)
+  .map((row) => row.id_dec)
+  .filter((id) => id !== EMPTY_ID)
+
+/**
+ * 表の ID のうち U-12 を除いたもの。名前はアイテムの表（item.csv）の名前（貴重品の表の name_ja は読みを省いた形なので使わない）
+ */
+export const VALUABLES: readonly Valuable[] = VALUABLE_TABLE_IDS.filter((id) => !U12_VALUABLE_IDS.has(id)).map(
+  (id): Valuable => {
+    const caution = VALUABLE_CAUTIONS[id]
+    return { id, label: itemLabel(itemLabelId(id)), ...(caution ? { caution } : {}) }
+  },
+)
+
+/** 重要品の画面で扱う ID（選択肢にある ID）。道具・箪笥の選択肢からは外す */
+export const VALUABLE_IDS: ReadonlySet<number> = new Set(VALUABLES.map((v) => v.id))
+
+/** ❓ U-12：PS3版での意味 [SE-BBS]。PC版では未確認のため、表示だけに使い書き込まない。表の名前に「？」を付ける */
+const U12_LABELS: Record<number, string> = Object.fromEntries(
+  [...U12_VALUABLE_IDS].map((id) => [id, `${lookup(VALUABLE_TABLE, id)?.name_ja ?? itemLabel(itemLabelId(id))}？`]),
+)
 
 /**
  * ❓ U-14 の調査で、重要品の枠に書いてゲーム内の重要品一覧に出た名前（[U] 2026-10-04、2026-10-05）。
@@ -166,6 +171,14 @@ export const PROBE_CANDIDATES: readonly number[] = [
 /** 個数の上限。🔶 推測（item-slot.ts の ITEM_COUNT_MAX） */
 export const VALUABLE_COUNT_MAX = ITEM_COUNT_MAX
 
+/** 個数として書ける値の上限（u16）。上級者モードで使う */
+export const VALUABLE_COUNT_SYSTEM_MAX = NUM_TYPE_RANGE.u16.max
+
+/** 書ける個数の上限。通常モードは VALUABLE_COUNT_MAX、上級者モード（ID調査モード）は u16 の上限 */
+export function valuableCountMax(opts: EditOpts = NORMAL_EDIT_OPTS): number {
+  return opts.advanced ? VALUABLE_COUNT_SYSTEM_MAX : VALUABLE_COUNT_MAX
+}
+
 /**
  * label は、U-12 の ID なら「？」付き、U-14 で調べた ID なら調査結果の名前。
  * idWritable が false になるのは U-12 の ID と未知の ID。
@@ -214,7 +227,7 @@ export function validateValuableId(id: number, options: EditOpts = NORMAL_EDIT_O
 }
 
 export function validateValuableCount(count: number, opts: EditOpts = NORMAL_EDIT_OPTS): string | null {
-  return validateItemCount(count, opts.advanced ? 0xffff : VALUABLE_COUNT_MAX)
+  return validateItemCount(count, valuableCountMax(opts))
 }
 
 export function readValuables(bytes: Uint8Array, options: EditOpts = NORMAL_EDIT_OPTS): ValuablesView {
@@ -275,7 +288,7 @@ export function writeValuable(
   const offset = slotOffset(index)
   const idProblem = validateValuableId(id, options)
   if (idProblem) throw new RangeError(idProblem)
-  writeItemSlotRaw(bytes, offset, id, count, options.advanced ? 0xffff : VALUABLE_COUNT_MAX)
+  writeItemSlotRaw(bytes, offset, id, count, valuableCountMax(options))
 }
 
 /**
