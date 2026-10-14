@@ -74,7 +74,7 @@ export const EVENT_RECORDS = [
   { value: EVENT_RECORD_SHOWN, label: '名前を出す' },
 ] as const
 
-/** 読み込み時に妥当とみなす値。EVENT_STATES と同じ */
+/** 読み込み時に妥当とみなす状態（A）の値。EVENT_STATES と同じ */
 const PLAUSIBLE_STATES = new Set<number>(EVENT_STATES.map(s => s.value))
 
 /** 名前の付いたイベント1件。名前はイベントの表（master/event-names.ts）から添字で引く（eventNameOf） */
@@ -152,6 +152,16 @@ export const EVENT_RECORDS_SEEN = [
   { value: 0x00, label: '不明（名無し侍の一部で見た値）' },
 ] as const
 
+/**
+ * 読み込み時に妥当とみなす記録（B）の値。チャート表示に効く値（EVENT_RECORDS）と、記録で見た値（EVENT_RECORDS_SEEN）に加えて、
+ * 🟢 周回の終わりに記録が 04 でない添字へ写る状態の 00〜05（chunks/event-chart「A と B の関係」）。01・02 は実データでは ❓ 未確認
+ */
+const PLAUSIBLE_RECORDS = new Set<number>([
+  ...EVENT_RECORDS.map(r => r.value),
+  ...EVENT_RECORDS_SEEN.map(r => r.value),
+  ...EVENT_STATES.map(s => s.value).filter(v => v <= EVENT_STATE_VALUES.failed),
+])
+
 export function recordLabel(value: number): string {
   return (
     EVENT_RECORDS.find((s) => s.value === value)?.label ??
@@ -170,7 +180,7 @@ export function readEvents(bytes: Uint8Array): EventsView {
   }))
 
   let problem: string | null = null
-  const bad = entries.find((e) => !PLAUSIBLE_STATES.has(e.state) || !PLAUSIBLE_STATES.has(e.record))
+  const bad = entries.find((e) => !PLAUSIBLE_STATES.has(e.state) || !PLAUSIBLE_RECORDS.has(e.record))
   if (bad) problem = '一部のイベントの状態が想定外です。位置がずれている可能性があります'
   return { warnings: [], entries, problem: layoutProblem ?? problem }
 }

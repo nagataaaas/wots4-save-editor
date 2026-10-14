@@ -60,6 +60,19 @@ describe('readEvents 🔶 chunks/event-chart', () => {
     expect(readEvents(b).problem).toMatch(/想定外/)
   })
 
+  it('記録は記録の値で検証する。🟢 周回の終わりに状態の 00〜05 が写るので、01・02（❓ 実データでは未確認）も想定内', () => {
+    for (const value of [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0xff]) {
+      const b = makeSave(A_START)
+      writeU8(b, EVENT_RECORD_OFFSET + 20, value)
+      expect(readEvents(b).problem).toBeNull()
+    }
+    for (const value of [0x06, 0x40]) {
+      const b = makeSave(A_START)
+      writeU8(b, EVENT_RECORD_OFFSET + 20, value)
+      expect(readEvents(b).problem).toMatch(/想定外/)
+    }
+  })
+
   it('サイズが 0x48BB0 でなければ読み取り専用にする', () => {
     expect(readEvents(makeSave(A_START, B_START, TS_SAVE_SIZE + 4)).problem).not.toBeNull()
   })
