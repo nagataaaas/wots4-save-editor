@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
 import { FieldShell } from "@/components/field-shell";
 import { LazySelect } from "@/components/lazy-select";
 import { groupOptions, type SelectOption } from "@/components/select-options";
@@ -62,12 +62,19 @@ export function SelectRow({
   const { error, run } = useFieldAction(offset);
   const listed = value === null || options.some((o) => o.value === value);
   // トリガーに出す名前（Base UI の Select は閉じている間は選択肢を描かないので、items から引く）
-  const items: Record<string, ReactNode> = {};
-  for (const o of options)
-    items[o.value] = (
-      <OptionContent option={o.selectedLabel ? { ...o, label: o.selectedLabel } : o} />
-    );
-  if (!listed && value !== null) items[value] = `${currentLabel ?? "不明"}（現在の値）`;
+  // 選択肢の分は options が変わったときだけ作り直す（選択肢の多い欄で描画のたびに全件を作らない）
+  const optionItems = useMemo(() => {
+    const items: Record<string, ReactNode> = {};
+    for (const o of options)
+      items[o.value] = (
+        <OptionContent option={o.selectedLabel ? { ...o, label: o.selectedLabel } : o} />
+      );
+    return items;
+  }, [options]);
+  const items =
+    !listed && value !== null
+      ? { ...optionItems, [value]: `${currentLabel ?? "不明"}（現在の値）` }
+      : optionItems;
 
   return (
     <FieldShell label={label} offset={offset} note={note} warning={warning} badges={badges} problem={problem} hint={hint} error={error}>

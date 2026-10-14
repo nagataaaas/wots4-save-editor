@@ -2,7 +2,7 @@ import { FieldFeedback } from '@/components/field-shell'
 import { InfoTip } from '@/components/info-tip'
 import { ItemCategoryIcon } from '@/components/item-category-icon'
 import { SearchSelectControl } from '@/components/search-select-control'
-import type { OptionGroup } from '@/components/select-options'
+import type { OptionGroup, SelectOption } from '@/components/select-options'
 import { Input } from '@/components/ui/input'
 import { useFieldDraft } from '@/lib/use-field-draft'
 import { useFieldAction } from '@/lib/use-field-action'
@@ -15,6 +15,36 @@ import { EMPTY_ID, validateItemCount, type ItemOptionGroup, type ItemSlot } from
 
 /** ID を 16進4桁（0x なし）で表示する */
 const hexId = (id: number) => id.toString(16).toUpperCase().padStart(4, '0')
+
+type SlotSelectOptions = { groups: OptionGroup[]; options: SelectOption[] }
+
+/**
+ * groups から作った選択肢。同じ groups（呼び出し側で useMemo した配列やモジュールの定数）なら全行で使い回す。
+ * 箪笥は80行あり、行ごと・描画ごとに全アイテムの選択肢を作ると重いため
+ */
+const selectOptionsCache = new WeakMap<readonly ItemOptionGroup[], SlotSelectOptions>()
+
+function selectOptionsFor(groups: readonly ItemOptionGroup[]): SlotSelectOptions {
+  const cached = selectOptionsCache.get(groups)
+  if (cached) return cached
+  // 「なし」は見出しのないまとまりにして、道具の一覧（通常モードは見出しなし）と区切り線で分ける
+  const optionGroups: OptionGroup[] = [
+    { name: undefined, items: [{ value: String(EMPTY_ID), label: 'なし', keywords: ['FFFF'], leading: <ItemCategoryIcon id={EMPTY_ID} /> }] },
+    ...groups.map((g) => ({
+      name: g.label,
+      items: g.items.map((item) => ({
+        value: String(item.id),
+        label: item.label,
+        keywords: item.keywords,
+        description: item.description,
+        leading: <ItemCategoryIcon id={item.id} />,
+      })),
+    })),
+  ]
+  const result = { groups: optionGroups, options: optionGroups.flatMap((g) => g.items) }
+  selectOptionsCache.set(groups, result)
+  return result
+}
 
 /** slot が null のときはセーブ未読み込み。入力欄を無効にして表示する */
 export function ItemSlotRow({
@@ -89,20 +119,7 @@ export function ItemSlotRow({
   })
   const error = actionError ?? idInput.error ?? countInput.error
 
-  // 「なし」は見出しのないまとまりにして、道具の一覧（通常モードは見出しなし）と区切り線で分ける
-  const optionGroups: OptionGroup[] = [
-    { name: undefined, items: [{ value: String(EMPTY_ID), label: 'なし', keywords: ['FFFF'], leading: <ItemCategoryIcon id={EMPTY_ID} /> }] },
-    ...groups.map((g) => ({
-      name: g.label,
-      items: g.items.map((item) => ({
-        value: String(item.id),
-        label: item.label,
-        keywords: item.keywords,
-        description: item.description,
-        leading: <ItemCategoryIcon id={item.id} />,
-      })),
-    })),
-  ]
+  const { groups: optionGroups, options } = selectOptionsFor(groups)
 
   // 個数の上限。書ける上限（countMax）が通常の上限（normalMax）を超えるのは上級者モードのとき。
   // 通常モードでは入力欄の min・max を 1 とその アイテムの上限にし、上級者モードではつけない（ユーザー判断 2026-10-07）
@@ -128,7 +145,7 @@ export function ItemSlotRow({
         <SearchSelectControl
           value={slot ? String(slot.id) : null}
           currentLabel={slot?.label ?? undefined}
-          options={optionGroups.flatMap((g) => g.items)}
+          options={options}
           groups={optionGroups}
           disabled={readOnly}
           aria-label={`${index + 1}件目の${noun}`}
