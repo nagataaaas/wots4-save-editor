@@ -1,13 +1,10 @@
 import { readFactions, readRouteJudge, factionRouteStatus } from "@/save/factions";
-import { AnchorScope, useAnchor } from "@/lib/navigation-context";
-import { SearchPath } from "@/lib/search-context";
-import { useSearchBox } from "@/lib/search-hooks";
 import { EVENTS_ANCHORS } from "./anchors";
 import { FieldRow } from "@/components/field-row";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { CardContent } from "@/components/ui/card";
-import { AnchorLink } from "@/components/anchor-link";
+import { AnchoredSection } from "@/components/anchored-section";
 import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
@@ -38,59 +35,49 @@ function RouteJudgeRows({
   view: RouteJudgeView | null;
   factions: FactionsView | null;
 }) {
-  const { id, ref } = useAnchor(EVENTS_ANCHORS.factions.routeJudge);
-  useSearchBox(id, "剣術大会以後のルート分岐");
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const problem = view?.problem ?? null;
 
   return (
-    <section ref={ref} id={id} className="flex scroll-mt-4 flex-col gap-2">
-      <h3 className="flex items-center gap-2 text-sm font-medium">
-        <AnchorLink id={id} />
-        剣術大会以後のルート分岐
-      </h3>
-      <AnchorScope.Provider value={id}>
-        <SearchPath label="剣術大会以後のルート分岐">
-          <div className="grid gap-4 sm:grid-cols-4">
-            {FACTIONS.map((faction, c) => {
-              const status = factions && !factions.problem ? factionRouteStatus(factions, c) : null;
-              return (
-                <SelectRow
-                  key={faction}
-                  label={faction}
-                  offset={ROUTE_JUDGE_OFFSET + c}
-                  value={view ? String(view.judges[c]) : null}
-                  currentLabel={view ? "不明" : undefined}
-                  options={judgeOptions}
-                  problem={problem}
-                  hint={
-                    status
-                      ? `今の記録なら大寄せで${status.eligible ? "入れる" : "入れない"}（友好度 ${status.friendly} − ${status.opposed} ＝ ${status.affinity}${status.moroDead ? "。茂呂が死亡" : ""}）`
-                      : undefined
-                  }
-                  note={`大寄せのときに決まる。友好度（友好ポイント - 対立ポイント）が ${ROUTE_THRESHOLD} 以上で「ルートに入れる」、それ未満で「入れない」。敵対状態は関係しない。${c === 0 ? "幕府は茂呂が死亡していると友好度にかかわらず「入れない」。" : ""}大寄せのあと、ほかの勢力の剣術大会の誘いを引き受けると「入れない」、その勢力の人物に斬りかかっても「入れない」、最後通告に逆らうと3勢力とも「入れない」`}
-                  onChange={(v) => update((b) => writeRouteJudge(b, c, Number(v), { advanced }))}
-                />
-              );
-            })}
+    <AnchoredSection anchor={EVENTS_ANCHORS.factions.routeJudge} title="剣術大会以後のルート分岐" className="gap-2">
+      <div className="grid gap-4 sm:grid-cols-4">
+        {FACTIONS.map((faction, c) => {
+          const status = factions && !factions.problem ? factionRouteStatus(factions, c) : null;
+          return (
             <SelectRow
-              label="無所属"
-              offset={ROUTE_NONE_OFFSET}
-              value={view ? String(view.none) : null}
+              key={faction}
+              label={faction}
+              offset={ROUTE_JUDGE_OFFSET + c}
+              value={view ? String(view.judges[c]) : null}
               currentLabel={view ? "不明" : undefined}
-              options={noneOptions}
+              options={judgeOptions}
               problem={problem}
-              warning={formatWarnings(view?.warnings)}
-              note="大寄せで3勢力とも「入れない」のとき「根無し草」になる。勢力のどれかが「ルートに入れる」だと、ここが「根無し草」でも根無し草にはならない"
-              onChange={(v) =>
-                update((b) => writeRouteJudge(b, FACTIONS.length, Number(v), { advanced }))
+              hint={
+                status
+                  ? `今の記録なら大寄せで${status.eligible ? "入れる" : "入れない"}（友好度 ${status.friendly} − ${status.opposed} ＝ ${status.affinity}${status.moroDead ? "。茂呂が死亡" : ""}）`
+                  : undefined
               }
+              note={`大寄せのときに決まる。友好度（友好ポイント - 対立ポイント）が ${ROUTE_THRESHOLD} 以上で「ルートに入れる」、それ未満で「入れない」。敵対状態は関係しない。${c === 0 ? "幕府は茂呂が死亡していると友好度にかかわらず「入れない」。" : ""}大寄せのあと、ほかの勢力の剣術大会の誘いを引き受けると「入れない」、その勢力の人物に斬りかかっても「入れない」、最後通告に逆らうと3勢力とも「入れない」`}
+              onChange={(v) => update((b) => writeRouteJudge(b, c, Number(v), { advanced }))}
             />
-          </div>
-        </SearchPath>
-      </AnchorScope.Provider>
-    </section>
+          );
+        })}
+        <SelectRow
+          label="無所属"
+          offset={ROUTE_NONE_OFFSET}
+          value={view ? String(view.none) : null}
+          currentLabel={view ? "不明" : undefined}
+          options={noneOptions}
+          problem={problem}
+          warning={formatWarnings(view?.warnings)}
+          note="大寄せで3勢力とも「入れない」のとき「根無し草」になる。勢力のどれかが「ルートに入れる」だと、ここが「根無し草」でも根無し草にはならない"
+          onChange={(v) =>
+            update((b) => writeRouteJudge(b, FACTIONS.length, Number(v), { advanced }))
+          }
+        />
+      </div>
+    </AnchoredSection>
   );
 }
 
