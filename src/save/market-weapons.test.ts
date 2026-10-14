@@ -6,6 +6,8 @@ import {
   MARKET_END,
   MARKET_OTHERS,
   MARKET_WEAPON_SLOTS,
+  MEI_CHANCE,
+  marketDestination,
   marketWeaponOffset,
   readMarket,
   refineChance,
@@ -122,5 +124,11 @@ describe('🟢 流通中の武器・道具・部品', () => {
     expect([0, 1, 2, 3, 4, 10].map(vanishChance)).toEqual([0, 0, 20, 33, 51, 51])
     // 精錬：e＝1 で 15%、2 で 20%、3 で 30%、4 で 60%、5 以上で 100%
     expect([0, 1, 2, 3, 4, 10].map(refineChance)).toEqual([15, 20, 30, 60, 100, 100])
+    // 銘：経過の数によらず 50%
+    expect(MEI_CHANCE).toBe(50)
+  })
+
+  it('行き先は武器種で決まる：刀は刀泥棒、槍は槍泥棒、爪・拳銃・ライフルは落し物屋', () => {
+    expect([0, 1, 2, 3, 4].map(marketDestination)).toEqual(['swordThief', 'spearThief', 'lostAndFound', 'lostAndFound', 'lostAndFound'])
   })
 })

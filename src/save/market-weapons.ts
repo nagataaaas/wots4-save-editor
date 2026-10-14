@@ -11,7 +11,7 @@
 //
 // 周回の終わりの処理（🟢。ゲーム内では未確認）：経過の数 +1 → 武器が消える → 精錬 → 銘。
 // 確率は「+1 したあとの経過の数」で決まる。道具・部品は経過では消えない。
-import { readI16, readU16, readU32 } from './binary'
+import { readI16, readI32, readU16 } from './binary'
 import { type ViewStatus } from './field'
 import { checkLayout } from './layout'
 import { itemLabel } from './item-box'
@@ -51,6 +51,25 @@ const pick = (table: readonly number[], e: number) => (e <= 0 ? 0 : table[Math.m
 export const vanishChance = (elapsed: number) => pick(VANISH, elapsed + 1)
 /** 🟢 次の周回の終わりに（消えなければ）精錬される確率（%） */
 export const refineChance = (elapsed: number) => pick(REFINE, elapsed + 1)
+/**
+ * 🟢 次の周回の終わりに（消えなければ）銘を決め直す確率（%）。経過の数によらない。
+ * 決め直しても、魂技による斬殺数で決める側（30%）で数が足りなければ付かない
+ */
+export const MEI_CHANCE = 50
+
+/** 🟢 武器の行き先：刀は刀泥棒、槍は槍泥棒が持ち、ほかは落し物屋に並ぶ */
+export type MarketDestination = 'swordThief' | 'spearThief' | 'lostAndFound'
+
+/** WEAPON_TYPES の刀・槍 */
+const WEAPON_TYPE_SWORD = 0
+const WEAPON_TYPE_SPEAR = 1
+
+/** 🟢 武器種（武器レコードの +0x18。WEAPON_TYPES の id）から行き先 */
+export function marketDestination(weaponType: number): MarketDestination {
+  if (weaponType === WEAPON_TYPE_SWORD) return 'swordThief'
+  if (weaponType === WEAPON_TYPE_SPEAR) return 'spearThief'
+  return 'lostAndFound'
+}
 
 export type MarketWeaponEntry = {
   index: number
@@ -129,7 +148,7 @@ export function readMarket(bytes: Uint8Array): MarketView {
   for (let i = 0; i < MARKET_WEAPON_SLOTS; i++) {
     const offset = marketWeaponOffset(i)
     if (isEmptyWeapon(bytes, offset)) continue
-    const holder = readU32(bytes, offset + MARKET_HOLDER) | 0
+    const holder = readI32(bytes, offset + MARKET_HOLDER)
     weapons.push({
       index: i,
       offset,
