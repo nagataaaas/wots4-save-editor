@@ -118,6 +118,7 @@ function FolderItem({ folder, active, onSelect }: { folder: SectionFolder } & Pr
 function FilePanel() {
   const inputRef = useRef<HTMLInputElement>(null)
   const { save, error, changedBytes, unsavedBytes, load, downloadEdited } = useSave()
+  const dirty = save !== null && unsavedBytes > 0
 
   return (
     <div className="flex flex-col gap-2 p-2">
@@ -147,7 +148,18 @@ function FilePanel() {
       )}
       <div className="grid grid-cols-2 gap-2">
         <RestoreDialog />
-        <Button size="sm" variant="outline" disabled={!save} onClick={downloadEdited}>
+        {/* 未保存の変更があるときは、下の「未保存の変更」と同じ色で目立たせる */}
+        <Button
+          size="sm"
+          variant={dirty ? 'default' : 'outline'}
+          disabled={!save}
+          onClick={downloadEdited}
+          className={
+            dirty
+              ? 'bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:text-black dark:hover:bg-amber-400'
+              : undefined
+          }
+        >
           <Download />
           保存
         </Button>
