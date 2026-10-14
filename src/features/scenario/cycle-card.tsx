@@ -1,26 +1,22 @@
-import { useState } from "react";
 import { readCycleCounts } from "@/save/cycle-counts";
 import { readDifficulty } from "@/save/difficulty";
 import { readPublicOrder } from "@/save/public-order";
 import { useSaveView } from "@/lib/use-save-view";
 import { PageBanner } from "@/components/page-banner";
-import { SearchField } from "@/lib/search-context";
 import { AMIHAMA_ANCHORS } from "./anchors";
 import { FieldRow } from "@/components/field-row";
-import { InfoTip } from "@/components/info-tip";
+import { FieldShell } from "@/components/field-shell";
+import { ActionButton } from "@/components/action-button";
 import { startNewCycle, type CycleEnd, type NewCycleReport } from "@/save/new-cycle";
-import { PLAY_COUNT_MAX, PLAY_COUNT_OFFSET, PLAY_COUNT_REVEALS_BEST_ROUTE, countFinishedCycle, validatePlayCount, writePlayCount } from "@/save/cycle-counts";
+import { PLAY_COUNT_MAX, PLAY_COUNT_OFFSET, PLAY_COUNT_REVEALS_BEST_ROUTE, validatePlayCount, writePlayCount } from "@/save/cycle-counts";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
 import { PUBLIC_ORDER_LEVELS, PUBLIC_ORDER_MAX, PUBLIC_ORDER_OFFSET, validatePublicOrder, writePublicOrder } from "@/save/public-order";
 import { useWrite } from "@/lib/use-write";
-import { WriteError } from "@/components/write-error";
 import { DIFFICULTIES, DIFFICULTY_OFFSET, writeDifficulty } from "@/save/difficulty";
 import { DATE_OFFSETS } from "@/save/scenario-date";
 import { parseCount } from "./scenario-input";
@@ -65,21 +61,13 @@ export function CycleCard() {
   const view = data?.difficulty ?? null;
   const counts = data?.counts ?? null;
   const publicOrder = data?.publicOrder ?? null;
-  const { write: update, tryWrite, error } = useWrite();
+  // message は新しい周回の結果（成功文かエラー）。読み込み直すと消える
+  const { write: update, tryWrite, setMessage, message } = useWrite();
   const { advanced } = useAdvancedMode();
-  const [armed, setArmed] = useState<CycleEnd | null>(null);
-  const [report, setReport] = useState<string | null>(null);
 
   const start = (end: CycleEnd) => {
-    if (armed !== end) return setArmed(end);
-    setArmed(null);
-    const result = tryWrite((b) => {
-      const report = startNewCycle(b, end);
-      // 🟢 ゲームは周回を終えるたびに周回数 0x0B8C を +1 する（クリア・立ち去りのどちらでも）
-      countFinishedCycle(b);
-      return report;
-    });
-    setReport(result.ok ? cycleReportText(result.value) : null);
+    const result = tryWrite((b) => startNewCycle(b, end));
+    if (result.ok) setMessage({ error: false, text: cycleReportText(result.value) });
   };
   // セーブ未読み込みなら「—」。読めたが段階の表にない値なら「不明」
   const publicOrderLevelText = publicOrder ? (publicOrder.level ?? "不明") : "—";
@@ -146,37 +134,37 @@ export function CycleCard() {
           hint={advanced ? "0〜4,294,967,295" : `0〜${PLAY_COUNT_MAX.toLocaleString()}`}
           note={`終えた周回の数で、クリアでも立ち去りでも物語を終えるたびにゲームが1つ増やします。新しい周回の初期化では 0 になりません。${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上だと、イベントチャートに真ルートの枠と線が全部出ます`}
         />
-        <SearchField label="新しい周回" className="flex flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <Label>新しい周回</Label>
-            <InfoTip offset={DATE_OFFSETS.dayTime}>
-              引き継ぎ：クリアなら難易度ごとのクリア回数、立ち去りなら立ち去った回数を1つ増やします。
+        <FieldShell
+          label="新しい周回"
+          offset={DATE_OFFSETS.dayTime}
+          problem={view?.problem ?? null}
+          hint={message && !message.error ? message.text : undefined}
+          error={message?.error ? message.text : null}
+          note={
+            <>
+              引き継ぎ：周回数と、クリアなら難易度ごとのクリア回数、立ち去りなら立ち去った回数を1つ増やします。
               過去の周回の記録を更新し、なりわいの一部のフラグを初期化します。
               武器袋の武器は武器箪笥へ、所持金は金庫へ、手持ちの道具は道具の箪笥へ、持っている刃・鍔・柄は部品の箪笥へ移します。箪笥に入りきらないものは元の場所に残ります。帯刀はそのまま次の主人公が持ちます。
               初期化：難易度は普通、段階は序章、現在地は港、時間帯・時間帯を進める保留量・所持金は 0、周回中の記録・技ごとの斬殺数・道具の使用回数もリセット、
               HP・活力は初期値、イベントの状態は未到達、シナリオのフラグは初期値（施設・門柵の一部などは残す）、ヒントはなし、
               貴重品は鉄4種だけを残す、夜這いの記録・約束を消す（回数は残す）、町の人の状態を初期化。
               ゲームが流通の武器を確率で消したり変えたりする処理は行いません。元に戻す操作はないので、書き換える前のセーブを残してください
-            </InfoTip>
-          </div>
+            </>
+          }
+        >
           <div className="flex flex-wrap gap-2">
             {(Object.keys(CYCLE_END_LABELS) as CycleEnd[]).map((end) => (
-              <Button
+              <ActionButton
                 key={end}
-                variant={armed === end ? "destructive" : "outline"}
                 size="sm"
-                className="w-fit"
                 disabled={!view || view.problem !== null}
-                onClick={() => start(end)}
-                onBlur={() => setArmed(null)}
-              >
-                {armed === end ? "もう一度押すと書き込みます" : CYCLE_END_LABELS[end]}
-              </Button>
+                label={CYCLE_END_LABELS[end]}
+                confirm="repeat"
+                onAction={() => start(end)}
+              />
             ))}
           </div>
-          {report && <p className="text-muted-foreground text-xs">{report}</p>}
-          <WriteError error={error} />
-        </SearchField>
+        </FieldShell>
       </CardContent>
     </AnchoredCard>
   );

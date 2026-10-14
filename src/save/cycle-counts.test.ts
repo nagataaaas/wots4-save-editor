@@ -8,7 +8,6 @@ import {
   GONE_COUNT_OFFSET,
   PLAY_COUNT_MAX,
   PLAY_COUNT_OFFSET,
-  countFinishedCycle,
   readCycleCounts,
   validatePlayCount,
   writePlayCount,
@@ -90,17 +89,5 @@ describe('🟢 周回数 0x0B8C', () => {
     const b = makeSave(TS_SAVE_SIZE + 2)
     expect(readCycleCounts(b).problem).not.toBeNull()
     expect(() => writePlayCount(b, 1, { advanced: true })).toThrow()
-    expect(() => countFinishedCycle(b)).toThrow()
-  })
-
-  it('周回を終えると +1、99,999 で止まる', () => {
-    const b = makeSave()
-    const before = b.slice()
-    countFinishedCycle(b)
-    expect(readCycleCounts(b).playCount).toBe(39)
-    expect(diffOffsets(before, b)).toEqual([0x0b8c])
-    writeU32(b, PLAY_COUNT_OFFSET, PLAY_COUNT_MAX)
-    countFinishedCycle(b)
-    expect(readCycleCounts(b).playCount).toBe(PLAY_COUNT_MAX)
   })
 })

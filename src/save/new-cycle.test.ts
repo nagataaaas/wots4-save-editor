@@ -224,6 +224,19 @@ describe('startNewCycle：引き継ぎ（🟢）', () => {
     expect(readU32(capped, 0x46340)).toBe(99_999)
   })
 
+  it('🟢 周回数 0x0B8C はクリアでも立ち去りでも +1（99,999 で止まる）', () => {
+    const b = makeMidCycleSave()
+    writeU32(b, 0x0b8c, 38)
+    for (const end of ['clear', 'gone'] as const) {
+      const c = b.slice()
+      startNewCycle(c, end)
+      expect(readU32(c, 0x0b8c)).toBe(39)
+    }
+    writeU32(b, 0x0b8c, 99_999)
+    startNewCycle(b)
+    expect(readU32(b, 0x0b8c)).toBe(99_999)
+  })
+
   it('記録 B：A が 00〜05 で B が 04 でなければ B ← A', () => {
     const b = makeMidCycleSave()
     const cases: [number, number, number][] = [

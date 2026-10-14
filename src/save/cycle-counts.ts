@@ -6,7 +6,8 @@
 //   0x43398 u16 × 4  難易度ごとのクリア回数 🟢（1000 まで）。合計が 1 以上でイベントチャートを左右にスクロール・縮小できる（🟢 要ゲーム内確認）
 //   0x46340 u32       立ち去った回数 🟢（99,999 まで）
 //
-// クリア回数・立ち去った回数はここでは読むだけ（新しい周回の書き込みが増やす。new-cycle.ts）。
+// 周回の終わりの +1（周回数・クリア回数・立ち去った回数）は新しい周回の書き込み（new-cycle.ts の startNewCycle）が行う。
+// クリア回数・立ち去った回数はここでは読むだけ。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, writeU32 } from './binary'
 import { validateRange, warningsOf, type EditOpts, type ViewStatus } from './field'
@@ -21,8 +22,12 @@ export const PLAY_COUNT_REVEALS_BEST_ROUTE = 3
 
 /** 🟢 難易度ごとのクリア回数（u16 × 4） */
 export const CLEAR_COUNTS_OFFSET = 0x43398
+/** 🟢 ゲームがクリア回数を増やすときの上限 */
+export const CLEAR_COUNT_MAX = 1000
 /** 🟢 立ち去った回数（u32） */
 export const GONE_COUNT_OFFSET = 0x46340
+/** 🟢 ゲームが立ち去った回数を増やすときの上限 */
+export const GONE_COUNT_MAX = 99_999
 
 /** warnings は、周回数が通常の上限を超えているなど、編集はできるが注意が必要な理由 */
 export type CycleCountsView = ViewStatus & {
@@ -60,11 +65,4 @@ export function writePlayCount(bytes: Uint8Array, value: number, opts: EditOpts)
   const error = validatePlayCount(value, opts)
   if (error) throw new RangeError(error)
   writeU32(bytes, PLAY_COUNT_OFFSET, value)
-}
-
-/** 🟢 周回を終えたときにゲームが行う +1（99,999 で止まる）。新しい周回の書き込みと一緒に使う */
-export function countFinishedCycle(bytes: Uint8Array): void {
-  assertWritable(bytes)
-  const n = readU32(bytes, PLAY_COUNT_OFFSET)
-  if (n < PLAY_COUNT_MAX) writeU32(bytes, PLAY_COUNT_OFFSET, n + 1)
 }

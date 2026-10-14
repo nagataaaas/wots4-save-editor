@@ -1,4 +1,3 @@
-import { useSave } from "@/lib/save-context";
 import { CycleCard } from "./cycle-card";
 import { DateCard } from "./date-card";
 import { FacilityFlagsCard, GateFlagsCard } from "./amihama-flags";
@@ -9,10 +8,9 @@ import { FacilityFlagsCard, GateFlagsCard } from "./amihama-flags";
  * 難易度、新しい周回を始める書き込み、日数・時間帯、治安は ✅ 書き換えの反映を確認。そのほかは ❓ 要ゲーム内確認
  */
 export function AmihamaPage() {
-  const { save } = useSave();
   return (
     <div className="flex flex-col gap-4">
-      <CycleCard key={save?.loadId} />
+      <CycleCard />
       <DateCard />
       <FacilityFlagsCard />
       <GateFlagsCard />
