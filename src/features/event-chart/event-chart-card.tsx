@@ -24,7 +24,9 @@ import {
   CHART_FRAMES,
   CHART_LINES,
   CHART_ROWS,
+  DIR,
   frameName,
+  type ChartDir,
   type ChartFrame,
   type ChartRoute,
   type ChartLine,
@@ -54,6 +56,8 @@ const colX = (col: number) =>
   MARGIN + Math.ceil(col / 2) * FRAME_COL_PX + Math.floor(col / 2) * LINE_COL_PX;
 const colW = (col: number) => (col % 2 === 0 ? FRAME_COL_PX : LINE_COL_PX);
 const rowY = (row: number) => MARGIN + row * ROW_PX;
+/** 枠の上端（枠は行の高さの中ほどに置く） */
+const frameY = (row: number) => rowY(row) + (ROW_PX - FRAME_H) / 2;
 const WIDTH = colX(CHART_COLS) + MARGIN;
 const HEIGHT = rowY(CHART_ROWS) + MARGIN;
 
@@ -258,25 +262,25 @@ function stageBoxOf(view: ChartView) {
   if (frames.length === 0) return null;
   const left = Math.min(...frames.map((f) => colX(f.col))) - STAGE_BOX_PAD;
   const right = Math.max(...frames.map((f) => colX(f.col) + FRAME_COL_PX)) + STAGE_BOX_PAD;
-  const top = Math.min(...frames.map((f) => rowY(f.row))) + (ROW_PX - FRAME_H) / 2 - STAGE_BOX_PAD;
-  const bottom =
-    Math.max(...frames.map((f) => rowY(f.row))) + (ROW_PX + FRAME_H) / 2 + STAGE_BOX_PAD;
+  const top = Math.min(...frames.map((f) => frameY(f.row))) - STAGE_BOX_PAD;
+  const bottom = Math.max(...frames.map((f) => frameY(f.row) + FRAME_H)) + STAGE_BOX_PAD;
   return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
 /** 線の升の中心から、腕の向きの端まで */
-function armSegment(line: ChartLine, k: number) {
+function armSegment(line: ChartLine, k: ChartDir) {
   const x = colX(line.col);
   const y = rowY(line.row);
   const cx = x + colW(line.col) / 2;
   const cy = y + ROW_PX / 2;
-  const end = [
-    [x, cy],
-    [x + colW(line.col), cy],
-    [cx, y],
-    [cx, y + ROW_PX],
-  ][k];
-  return { x1: cx, y1: cy, x2: end[0], y2: end[1] };
+  const ends: Record<ChartDir, readonly [number, number]> = {
+    [DIR.left]: [x, cy],
+    [DIR.right]: [x + colW(line.col), cy],
+    [DIR.up]: [cx, y],
+    [DIR.down]: [cx, y + ROW_PX],
+  };
+  const [x2, y2] = ends[k];
+  return { x1: cx, y1: cy, x2, y2 };
 }
 
 function ChartCanvas({
@@ -380,7 +384,7 @@ function ChartCanvas({
             className="pointer-events-none absolute"
             style={{
               left: colX(selectedFrame.col),
-              top: rowY(selectedFrame.row) + (ROW_PX - FRAME_H) / 2,
+              top: frameY(selectedFrame.row),
               width: FRAME_COL_PX,
               height: FRAME_H,
             }}
@@ -420,7 +424,7 @@ function FrameShape({
   onSelect: () => void;
 }) {
   const x = colX(frame.col);
-  const y = rowY(frame.row) + (ROW_PX - FRAME_H) / 2;
+  const y = frameY(frame.row);
   const w = FRAME_COL_PX;
   const name = frameName(frame);
   const title = `${name}（${frameLookLabel(look)}）`;
@@ -577,8 +581,9 @@ function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView 
         }
         options={recordOptions(advanced)}
         problem={problem}
-        // 確度：名前の出方は FF と 04 で ✅。真ルートの枠が状態 04 以外・記録 FF で出ないのは ✅
-        note={`周回をまたぐ記録（生きた証）。「名前を出す」にすると名前が出て、それ以外は引き受けた・成功のときだけ名前が出ます。真ルートのイベントは、これが「名前を出す」か、引き受けた・成功でないと枠ごと出ません（周回数が ${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら常に出る）。ほかの周回にも引き継がれる可能性があります`}
+        // 確度：名前の出方は FF と 04 で ✅。真ルートの枠が状態 04 以外・記録 FF で出ないのは ✅。
+        // 🟢 周回の終わりに、記録が 04 でなければ状態の値で上書きされ、04 になった記録はその後変わらない
+        note={`周回をまたぐ記録（生きた証）。「名前を出す」にすると名前が出て、それ以外は引き受けた・成功のときだけ名前が出ます。真ルートのイベントは、これが「名前を出す」か、引き受けた・成功でないと枠ごと出ません（周回数が ${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら常に出る）。「名前を出す」にした記録は、次の周回以降も残ります`}
         onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
       />
       {shared && (
