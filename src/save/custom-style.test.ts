@@ -18,6 +18,7 @@ import {
   pickWithoutConflicts,
   readCustomStyles,
   removeCustomStance,
+  styleSheets,
   writeCustomName,
   writeCustomSheetSkills,
   writeCustomValues,
@@ -26,7 +27,6 @@ import {
   EQUIP_OFFSET,
   SCROLL_HELD_OFFSET,
   SCROLL_HELD_SLOTS,
-  SCROLL_SLOT_BYTES,
   SCROLL_STORED_COUNT_OFFSET,
   SCROLL_STORED_OFFSET,
   SCROLL_STORED_SLOTS,
@@ -34,6 +34,7 @@ import {
   STANCE_STATES_OFFSET,
   sheetStateOffset,
 } from './sects'
+import { SCROLL_SLOT_BYTES } from './sect-record'
 
 const hex = (s: string) => Uint8Array.from(s.trim().split(/\s+/).map((h) => parseInt(h, 16)))
 
@@ -220,6 +221,32 @@ describe('編集と削除', () => {
     writeCustomName(b, 1000, '夜杯')
     writeCustomValues(b, 1000, { mastery: 10000, rank: 5, kills: 3 })
     expect(readCustomStyles(b).styles[1]).toMatchObject({ name: '夜杯', mastery: 10000, rank: 5, kills: 3 })
+  })
+
+  it('🟢 名前は 64 B の枠に終端つきで、書の写しは先頭 10 文字を終端なしで書く', () => {
+    const b = withPlayerStyle()
+    const name = 'あいうえおかきくけこ'
+    writeCustomName(b, 1000, name)
+    const nameAt = CUSTOM_OFFSET + 80 + 8
+    expect(Array.from({ length: 32 }, (_, i) => readU16(b, nameAt + 2 * i))).toEqual([
+      ...[...name].map((c) => c.charCodeAt(0)),
+      ...Array<number>(22).fill(0),
+    ])
+    expect(Array.from({ length: 10 }, (_, i) => readU16(b, SCROLL_HELD_OFFSET + 4 + 2 * i))).toEqual([...name].map((c) => c.charCodeAt(0)))
+    // 書の枠の次（+0x18 から）は次の枠なので書かない
+    expect(readI16(b, SCROLL_HELD_OFFSET + SCROLL_SLOT_BYTES)).toBe(-1)
+    writeCustomName(b, 1000, 'A')
+    expect(Array.from({ length: 10 }, (_, i) => readU16(b, SCROLL_HELD_OFFSET + 4 + 2 * i))).toEqual([65, ...Array<number>(9).fill(0)])
+  })
+
+  it('styleSheets は俺流の技の表を +0x48 からの順に返す', () => {
+    const b = withPlayerStyle()
+    addCustomStance(b, 1000, 3, [0], { advanced: true })
+    const v = readCustomStyles(b)
+    expect(styleSheets(v, v.styles[1]).map((s) => [s.id, s.stance])).toEqual([
+      [2000, 2],
+      [2001, 3],
+    ])
   })
 
   it('🟢 構えは同じ構えの組だけ足せる。外すと技の表を前に詰める', () => {

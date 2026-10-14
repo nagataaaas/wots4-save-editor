@@ -65,8 +65,6 @@ export type StanceSkill = {
   prev: number[]
 }
 
-const nullable = (v: number | null | string): number | null => (v === null || v === '' ? null : Number(v))
-
 export const STANCES: readonly Stance[] = Object.values(STANCE_TABLE).map((r) => ({
   id: r.id_dec,
   nameJa: r.name_ja,
@@ -82,7 +80,7 @@ export const SECTS: readonly Sect[] = Object.values(SECT_TABLE).map((r) => ({
   slot: r.slot,
   sheets: ([r.sheet1, r.sheet2, r.sheet3] as (number | null)[]).filter((v): v is number => v !== null),
   thresholds: [r.thr1, r.thr2, r.thr3, r.thr4],
-  scrollNo: nullable(r.scroll_no),
+  scrollNo: r.scroll_no,
   hidden: r.name_ja === '……',
 }))
 
@@ -96,7 +94,7 @@ const SHEET_SKILLS: readonly SheetSkill[] = Object.values(SHEET_SKILL_TABLE).map
   condJa: r.cond_ja,
   rank: r.rank,
   points: r.points,
-  parent: nullable(r.parent),
+  parent: r.parent,
 }))
 
 export const SKILL_SHEETS: readonly SkillSheet[] = Object.values(SKILL_SHEET_TABLE).map((r) => ({
@@ -117,6 +115,7 @@ export const STANCE_SKILLS: readonly StanceSkill[] = Object.values(STANCE_SKILL_
   prev: [...r.prev],
 }))
 
+const STANCE_BY_ID = new Map(STANCES.map((s) => [s.id, s]))
 const SECT_BY_ID = new Map(SECTS.map((s) => [s.id, s]))
 const SECT_BY_SCROLL = new Map(SECTS.filter((s) => s.scrollNo !== null).map((s) => [s.scrollNo as number, s]))
 const SHEET_BY_ID = new Map(SKILL_SHEETS.map((s) => [s.id, s]))
@@ -125,7 +124,7 @@ const STANCE_SKILL_BY_KEY = new Map(STANCE_SKILLS.map((s) => [s.stance * SKILL_N
 export const findSect = (id: number): Sect | undefined => SECT_BY_ID.get(id)
 export const findSectByScroll = (scrollNo: number): Sect | undefined => SECT_BY_SCROLL.get(scrollNo)
 export const findSkillSheet = (id: number): SkillSheet | undefined => SHEET_BY_ID.get(id)
-export const findStance = (id: number): Stance | undefined => STANCES[id]
+export const findStance = (id: number): Stance | undefined => STANCE_BY_ID.get(id)
 export const findStanceSkill = (stance: number, skillNo: number): StanceSkill | undefined =>
   STANCE_SKILL_BY_KEY.get(stance * SKILL_NO_COUNT + skillNo)
 export const stanceSkills = (stance: number): StanceSkill[] => STANCE_SKILLS.filter((s) => s.stance === stance)
@@ -154,7 +153,7 @@ const SKILL_BY_ID = new Map<number, SkillInfo>(
       nameJa: r.name_ja,
       command: r.command,
       commandJa: r.command_ja,
-      defenseGroup: nullable(r.defense_group),
+      defenseGroup: r.defense_group,
       attack: r.attack,
       points: r.points,
       attrs: [...r.attrs],
@@ -258,7 +257,7 @@ export function stanceSkillSheet(stance: number): SkillSheet {
   return {
     id: -1 - stance,
     stance,
-    nameJa: STANCES[stance]?.nameJa ?? '',
+    nameJa: findStance(stance)?.nameJa ?? '',
     skills: stanceSkills(stance).map((s) => ({
       sheet: -1 - stance,
       skillNo: s.skillNo,

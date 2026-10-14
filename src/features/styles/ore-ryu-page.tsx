@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSave } from "@/lib/save-context";
 import { formatOffset } from "@/lib/format";
-import { sectValueOffset } from "@/save/sects";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
@@ -44,7 +43,7 @@ import {
   type CustomStylesView,
 } from "@/save/custom-style";
 import { RANK_LABELS, SLOT_LABELS, STANCES, findStance } from "@/save/master/sect-data";
-import { I16_MAX, MASTERY_MAX } from "@/save/sects";
+import { I16_MAX, MASTERY_MAX, sectValueOffset } from "@/save/sect-record";
 import { IntField, RankField, SkillPicker } from "./sect-ui";
 
 export function OreRyuPage() {

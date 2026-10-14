@@ -6,14 +6,18 @@ import {
   EQUIP_OFFSET,
   SCROLL_HELD_OFFSET,
   SCROLL_HELD_SLOTS,
-  SCROLL_SLOT_BYTES,
   SCROLL_STORED_OFFSET,
   SCROLL_STORED_SLOTS,
   SECT_COUNT_OFFSET,
   SECT_RECORDS_OFFSET,
   SKILL_POINTS_OFFSET,
+  SKILL_STATE,
   SHEET_STATE_SLOTS,
   STANCE_STATES_OFFSET,
+  countLearned,
+  isLearned,
+  learnSheetSkill,
+  learnStanceSkills,
   forgetSheetSkill,
   forgetStanceSkill,
   isUniqueStanceSkill,
@@ -36,6 +40,7 @@ import {
   writeSkillPoints,
 } from './sects'
 import { SECTS, STANCE_SKILLS, findSect, findSkillSheet } from './master/sect-data'
+import { SCROLL_SLOT_BYTES } from './sect-record'
 
 /** 🟢 鬼怒川流剣術（ID 51）の 1つめの技の表は 29（構え 3 脇） */
 const SHEET = 29
@@ -352,6 +357,67 @@ describe('learnStanceSkill', () => {
     forgetStanceSkill(b, STANCE, 3)
     for (const sheet of stanceSkillSheets(STANCE, 3)) expect(stateIn(b, sheet.id, 3)).toBe(0)
     expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 3]).toBe(0)
+  })
+})
+
+describe('learnSheetSkill', () => {
+  it('🟢 通常の技は learnSheetSkills と、固有技は learnUniqueSkills と同じバイト列になる', () => {
+    const own = findSect(49)!.sheets[0]
+    const normal = findSkillSheet(SHEET)!.skills.find((s) => !LEARNED_BEFORE.includes(s.skillNo) && s.parent !== null && s.skillNo !== 21)!
+    for (const [sheetId, no] of [
+      [SHEET, normal.skillNo],
+      [own, 21],
+    ]) {
+      const a = makeSave()
+      const b = makeSave()
+      learnSheetSkill(a, sheetId, no)
+      if (no === 21) learnUniqueSkills(b, sheetId, [no])
+      else learnSheetSkills(b, sheetId, [no])
+      expect(a).toEqual(b)
+    }
+    const b = makeSave()
+    learnSheetSkill(b, own, 21)
+    expect(b[STANCE_STATES_OFFSET + STANCE * 128 + 21]).toBe(3)
+  })
+
+  it('技の表にない技・知らない技の表は拒否してバイト列を変えない', () => {
+    const b = makeSave()
+    const before = b.slice()
+    const missing = Array.from({ length: 128 }, (_, no) => no).find((no) => !findSkillSheet(SHEET)!.skills.some((s) => s.skillNo === no))!
+    expect(() => learnSheetSkill(b, SHEET, missing)).toThrow()
+    expect(() => learnSheetSkill(b, 9999, 0)).toThrow()
+    expect(b).toEqual(before)
+  })
+})
+
+describe('learnStanceSkills', () => {
+  it('🟢 まとめて習得すると、1 つずつ learnStanceSkill したときと同じバイト列になる', () => {
+    const nos = findSkillSheet(SHEET)!.skills.map((s) => s.skillNo).filter((no) => stanceSkillSheets(STANCE, no).length > 0)
+    const a = makeSave()
+    const b = makeSave()
+    learnStanceSkills(a, STANCE, nos)
+    for (const no of nos) learnStanceSkill(b, STANCE, no)
+    expect(a).toEqual(b)
+    expect(readSects(a).problem).toBeNull()
+  })
+
+  it('どの技の表にもない技が 1 つでもあれば、ほかの技も書かずに拒否する', () => {
+    const missing = STANCE_SKILLS.find((s) => s.stance === STANCE && stanceSkillSheets(s.stance, s.skillNo).length === 0)
+    if (!missing) return
+    const b = makeSave()
+    const before = b.slice()
+    expect(() => learnStanceSkills(b, STANCE, [3, missing.skillNo])).toThrow()
+    expect(b).toEqual(before)
+  })
+})
+
+describe('技の状態', () => {
+  it('🟢 状態 1・2・3 が覚えている技。countLearned は指定した番号のうち覚えている数', () => {
+    expect([0, 1, 2, 3].map(isLearned)).toEqual([false, true, true, true])
+    expect(SKILL_STATE).toEqual({ notLearned: 0, learned: 1, learnedParent: 2, notInOreRyu: 3 })
+    const states = [0, 1, 2, 3, 0]
+    expect(countLearned(states, [0, 1, 2, 3, 4])).toBe(3)
+    expect(countLearned(states, [0, 4])).toBe(0)
   })
 })
 

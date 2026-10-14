@@ -6,17 +6,15 @@
 //
 // 書き込みはすべて 🟢（要ゲーム内確認）。
 // 固定オフセットを使い、ファイルサイズ・件数・相互参照を検証する。検証に落ちたら読み取り専用。
-import { readI16, readU16, readUtf16Fixed, writeI16, writeU16, writeU8 } from './binary'
-import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from './field'
+import { readI16, readU16, readUtf16Fixed, recordCodec, writeI16, writeU16, writeU8, writeUtf16Fixed } from './binary'
+import { type EditOpts, NORMAL_EDIT_OPTS, validateText, type ViewStatus } from './field'
 import { assertWritable } from './layout'
 import {
-  SKILL_NO_COUNT,
   STANCE_COUNT,
   findSkillInfo,
   findStance,
   findStanceSkill,
   skillName,
-  type StanceSkill,
 } from './master/sect-data'
 import {
   isUsableInOreRyu,
@@ -37,6 +35,8 @@ export const CUSTOM_NAME_BYTES = 64
 export const CUSTOM_NAME_REL = 8
 /** 🟢 俺流レコードの技の表3つ（chunks/custom-style）。 */
 export const CUSTOM_SHEET_RELS = [0x48, 0x4a, 0x4c] as const
+/** 1つの俺流に入れられる構え（技の表）の数 🟢 */
+export const CUSTOM_STANCE_MAX = CUSTOM_SHEET_RELS.length
 const customSheetOffset = (offset: number, index: number) => offset + CUSTOM_SHEET_RELS[index]
 
 export function customNameOffset(base: number): number {
@@ -62,12 +62,54 @@ export const LIVE_PROOF_STYLE_ID_MIN = 2000
 /** 🟢 名前はゲーム内の入力で 10 文字まで。セーブの枠は 32 文字分（終端を残して 31 文字まで書く） */
 export const NAME_MAX = 10
 export const NAME_MAX_ADVANCED = 31
-/** 🟢 流派の書の +0x04〜+0x17 にある名前の写し（10 文字） */
-const SCROLL_NAME_OFFSET = 4
-const SCROLL_NAME_CHARS = 10
 
+/** 🟢 俺流の技の表の先頭 8 B：+0 技の表 ID、+2 種類（2）、+4 構え、+6 技の数 */
+const sheetHeaderCodec = recordCodec({
+  id: { rel: 0, type: 'i16' },
+  type: { rel: 2, type: 'u16' },
+  stance: { rel: 4, type: 'i16' },
+  count: { rel: 6, type: 'i16' },
+})
+const SHEET_HEADER_BYTES = 8
+/** 🟢 俺流の技の表の種類（+2） */
+const CUSTOM_SHEET_TYPE = 2
+
+/** 🟢 俺流の技の表の技（8 B）：+0 技の番号、+1 初段の印（bit7）と繋がる技の数、+2 技の ID、+4〜+7 繋がる技の番号（使わない分は FF） */
+const CUSTOM_SKILL_BYTES = 8
+const customSkillCodec = recordCodec({
+  skillNo: { rel: 0, type: 'u8' },
+  flags: { rel: 1, type: 'u8' },
+  skillId: { rel: 2, type: 'u16' },
+})
+const LINKS_REL = 4
+const NO_LINK = 0xff
 /** 初段の印 🟢 */
 const FIRST_BIT = 0x80
+const LINK_COUNT_MASK = 0x7f
+const customSkillOffset = (sheetOffset: number, j: number) => sheetOffset + SHEET_HEADER_BYTES + CUSTOM_SKILL_BYTES * j
+
+/** 技 1 つを読む。linkCount は書いてある繋がる技の数（LINK_MAX を超えていても、next は LINK_MAX までにする） */
+function readCustomSkill(bytes: Uint8Array, at: number): { skill: CustomSkill; linkCount: number } {
+  const { skillNo, flags, skillId } = customSkillCodec.read(bytes, at)
+  const linkCount = flags & LINK_COUNT_MASK
+  const linksAt = at + LINKS_REL
+  return {
+    skill: {
+      skillNo,
+      first: (flags & FIRST_BIT) !== 0,
+      skillId,
+      next: Array.from(bytes.subarray(linksAt, linksAt + Math.min(linkCount, LINK_MAX))),
+    },
+    linkCount,
+  }
+}
+
+function writeCustomSkill(bytes: Uint8Array, at: number, s: CustomSkill): void {
+  customSkillCodec.writeField(bytes, at, 'skillNo', s.skillNo)
+  customSkillCodec.writeField(bytes, at, 'flags', (s.first ? FIRST_BIT : 0) | s.next.length)
+  customSkillCodec.writeField(bytes, at, 'skillId', s.skillId)
+  for (let k = 0; k < LINK_MAX; k++) writeU8(bytes, at + LINKS_REL + k, s.next[k] ?? NO_LINK)
+}
 
 export type CustomSkill = {
   skillNo: number
@@ -117,25 +159,15 @@ const sheetOffset = (index: number) => CUSTOM_SHEET_OFFSET + index * CUSTOM_SHEE
 
 function readSheet(bytes: Uint8Array, index: number, problems: string[]): CustomSheet {
   const offset = sheetOffset(index)
-  const id = readI16(bytes, offset)
-  const type = readU16(bytes, offset + 2)
-  const stance = readI16(bytes, offset + 4)
-  const n = readI16(bytes, offset + 6)
-  if (type !== 2) problems.push('俺流の技の表の種類が正しくありません')
+  const { id, type, stance, count: n } = sheetHeaderCodec.read(bytes, offset)
+  if (type !== CUSTOM_SHEET_TYPE) problems.push('俺流の技の表の種類が正しくありません')
   if (stance < 0 || stance >= STANCE_COUNT) problems.push('俺流の技の表の構えが正しくありません')
   if (n < 0 || n > CUSTOM_SHEET_SKILL_MAX) problems.push('俺流の技の表の技の数が正しくありません')
   const skills: CustomSkill[] = []
   for (let j = 0; j < Math.max(0, Math.min(n, CUSTOM_SHEET_SKILL_MAX)); j++) {
-    const at = offset + 8 + 8 * j
-    const flags = bytes[at + 1]
-    const linkCount = flags & 0x7f
+    const { skill, linkCount } = readCustomSkill(bytes, customSkillOffset(offset, j))
     if (linkCount > LINK_MAX) problems.push('俺流の技の表の、続けて出す技の数が多すぎます')
-    skills.push({
-      skillNo: bytes[at],
-      first: (flags & FIRST_BIT) !== 0,
-      skillId: readU16(bytes, at + 2),
-      next: Array.from(bytes.subarray(at + 4, at + 4 + Math.min(linkCount, LINK_MAX))),
-    })
+    skills.push(skill)
   }
   const nos = new Set(skills.map((s) => s.skillNo))
   if (skills.some((s) => s.next.some((x) => !nos.has(x)))) problems.push('俺流の技の表に、表にない技へのつながりがあります')
@@ -189,22 +221,22 @@ function findStyle(view: CustomStylesView, id: number): CustomStyle {
   return s
 }
 
+/**
+ * 俺流に入っている技の表（+0x48〜+0x4C の順）。readCustomStyles が、どの ID にも技の表があることを検証している
+ * （ない ID は problem になる）ので、検証に通った view ではすべてそろう。ない ID は飛ばす
+ */
+export function styleSheets(view: CustomStylesView, style: CustomStyle): CustomSheet[] {
+  return style.sheetIds.flatMap((id) => (id < 0 ? [] : view.sheets.filter((s) => s.id === id)))
+}
+
 export function validateCustomName(name: string, options: EditOpts = NORMAL_EDIT_OPTS): string | null {
-  const max = options.advanced ? NAME_MAX_ADVANCED : NAME_MAX
-  if (name.length === 0) return '名前が空です'
-  if (name.length > max) return `名前は${max}文字までです`
-  for (let i = 0; i < name.length; i++) if (name.charCodeAt(i) < 0x20) return '制御文字は使えません'
-  return null
+  return validateText(name, options.advanced ? NAME_MAX_ADVANCED : NAME_MAX)
 }
 
 function writeName(bytes: Uint8Array, style: Pick<CustomStyle, 'offset' | 'scroll'>, name: string): void {
-  for (let i = 0; i < CUSTOM_NAME_BYTES / 2; i++) writeU16(bytes, customNameOffset(style.offset) + 2 * i, i < name.length ? name.charCodeAt(i) : 0)
+  writeUtf16Fixed(bytes, customNameOffset(style.offset), CUSTOM_NAME_BYTES, name)
   // 🟢 流派の書の枠に、名前の先頭 10 文字の写しがある
-  if (style.scroll) {
-    for (let i = 0; i < SCROLL_NAME_CHARS; i++) {
-      writeU16(bytes, style.scroll.offset + SCROLL_NAME_OFFSET + 2 * i, i < name.length ? name.charCodeAt(i) : 0)
-    }
-  }
+  if (style.scroll) scrollSlotCodec.writeNameCopy(bytes, style.scroll.offset, name)
 }
 
 export function writeCustomName(bytes: Uint8Array, id: number, name: string, options: EditOpts = NORMAL_EDIT_OPTS): void {
@@ -240,14 +272,17 @@ export function findSkillConflicts(stance: number, skillNos: readonly number[]):
   const set = new Set(skillNos)
   const byNo = new Map<number, string[]>()
   const add = (no: number, text: string) => byNo.set(no, [...(byNo.get(no) ?? []), text])
-  const entries = [...set].map((no) => ({ no, s: findStanceSkill(stance, no) })).filter((e) => e.s)
+  const entries = [...set].flatMap((no) => {
+    const s = findStanceSkill(stance, no)
+    return s ? [{ no, s }] : []
+  })
   const info = (no: number) => findSkillInfo(findStanceSkill(stance, no)?.skillId ?? -1)
   const name = (no: number) => skillName(findStanceSkill(stance, no) ?? { nameJa: String(no) })
   const isAttack = (no: number) => (info(no)?.defenseGroup ?? null) === null
 
   for (const { no, s } of entries) {
-    if (!s!.first && !s!.prev.some((p) => set.has(p))) {
-      add(no, `前に出す技（${s!.prev.map(name).join('・')}）が入っていません`)
+    if (!s.first && !s.prev.some((p) => set.has(p))) {
+      add(no, `前に出す技（${s.prev.map(name).join('・')}）が入っていません`)
     }
   }
   const sameCommand = (nos: number[], where: string) => {
@@ -266,11 +301,11 @@ export function findSkillConflicts(stance: number, skillNos: readonly number[]):
     }
   }
   sameCommand(
-    entries.filter(({ no, s }) => s!.first && isAttack(no)).map(({ no }) => no),
+    entries.filter(({ no, s }) => s.first && isAttack(no)).map(({ no }) => no),
     '初段',
   )
   for (const parent of set) {
-    const children = entries.filter(({ s }) => s!.prev.includes(parent)).map(({ no }) => no)
+    const children = entries.filter(({ s }) => s.prev.includes(parent)).map(({ no }) => no)
     sameCommand(children, `${name(parent)}の次`)
   }
   const byGroup = new Map<number, number[]>()
@@ -332,40 +367,40 @@ export function validateSkillSelection(
     const s = findStanceSkill(stance, no)
     if (!s) return 'この構えにない技が含まれています'
     if (options.advanced) continue
-    const state = view.sects.stanceStates[stance][no]
-    if (state !== 1 && state !== 2) return `${s.nameJa || 'この技'} はまだ俺流に入れられません（覚えていないか、斬殺数が足りない技）`
+    if (!isUsableInOreRyu(view.sects.stanceStates[stance][no])) {
+      return `${s.nameJa || 'この技'} はまだ俺流に入れられません（覚えていないか、斬殺数が足りない技）`
+    }
   }
   if (options.advanced) return null
   const conflicts = findSkillConflicts(stance, skillNos)
   const first = [...conflicts.byNo].sort(([a], [b]) => a - b)[0]
-  if (first) return `${skillName(findStanceSkill(stance, first[0])!)}：${first[1][0]}`
+  if (first) {
+    // 問題の出る技は findSkillConflicts が構えの技の表から引いたものだけなので、名前は必ず引ける
+    const s = findStanceSkill(stance, first[0])
+    return `${s ? skillName(s) : customSkillLabel(stance, first[0])}：${first[1][0]}`
+  }
   return conflicts.sheet[0] ?? null
 }
 
-/** 技の番号の集まりから、俺流の技の表の技を作る（番号の小さい順） */
+/** 技の番号の集まりから、俺流の技の表の技を作る（番号の小さい順）。構えにない技は拒否する */
 export function buildCustomSkills(stance: number, skillNos: readonly number[]): CustomSkill[] {
   const set = new Set(skillNos)
   return [...set]
     .sort((a, b) => a - b)
     .map((no) => {
-      const s = findStanceSkill(stance, no) as StanceSkill
+      const s = findStanceSkill(stance, no)
+      if (!s) throw new RangeError('この構えにない技が含まれています')
       return { skillNo: no, first: s.first, skillId: s.skillId, next: s.next.filter((x) => set.has(x)).slice(0, LINK_MAX) }
     })
 }
 
 function writeSheetBody(bytes: Uint8Array, offset: number, id: number, stance: number, skills: CustomSkill[]): void {
   bytes.fill(0, offset, offset + CUSTOM_SHEET_BYTES)
-  writeI16(bytes, offset, id)
-  writeU16(bytes, offset + 2, 2)
-  writeI16(bytes, offset + 4, stance)
-  writeI16(bytes, offset + 6, skills.length)
-  skills.forEach((s, j) => {
-    const at = offset + 8 + 8 * j
-    writeU8(bytes, at, s.skillNo)
-    writeU8(bytes, at + 1, (s.first ? FIRST_BIT : 0) | s.next.length)
-    writeU16(bytes, at + 2, s.skillId)
-    for (let k = 0; k < LINK_MAX; k++) writeU8(bytes, at + 4 + k, s.next[k] ?? 0xff)
-  })
+  sheetHeaderCodec.writeField(bytes, offset, 'id', id)
+  sheetHeaderCodec.writeField(bytes, offset, 'type', CUSTOM_SHEET_TYPE)
+  sheetHeaderCodec.writeField(bytes, offset, 'stance', stance)
+  sheetHeaderCodec.writeField(bytes, offset, 'count', skills.length)
+  skills.forEach((s, j) => writeCustomSkill(bytes, customSkillOffset(offset, j), s))
 }
 
 /** 俺流の技の表の技を入れ替える */
@@ -396,8 +431,8 @@ export function addCustomStance(bytes: Uint8Array, id: number, stance: number, s
   const view = requireEditable(bytes)
   const style = findStyle(view, id)
   const free = style.sheetIds.indexOf(-1)
-  if (free < 0) throw new RangeError('構えは 3 つまでです')
-  const stances = style.sheetIds.filter((s) => s >= 0).map((sid) => view.sheets.find((x) => x.id === sid)!.stance)
+  if (free < 0) throw new RangeError(`構えは ${CUSTOM_STANCE_MAX} つまでです`)
+  const stances = styleSheets(view, style).map((s) => s.stance)
   const slot = findStance(stances[0])?.slot
   if (findStance(stance)?.slot !== slot) throw new RangeError('構えはすべて同じ構えの組にします')
   if (stances.includes(stance)) throw new RangeError('同じ構えがすでに入っています')
@@ -410,15 +445,21 @@ export function addCustomStance(bytes: Uint8Array, id: number, stance: number, s
   writeI16(bytes, customSheetOffset(style.offset, free), sheetId)
 }
 
-/** 俺流の技の表を消して、後ろの表を前に詰める */
-function removeSheet(bytes: Uint8Array, view: CustomStylesView, sheetId: number): void {
-  const sheet = view.sheets.find((s) => s.id === sheetId)
-  if (!sheet) return
-  const last = view.sheets.length - 1
-  bytes.copyWithin(sheetOffset(sheet.index), sheetOffset(sheet.index + 1), sheetOffset(last + 1))
+/**
+ * count 件ある俺流の技の表から index 番目を消して、後ろの表を前に詰める。
+ * 消したあと index より後ろの表は 1 つ前にずれるので、複数消すときは index の大きい順に呼ぶ（removeSheetsAt）
+ */
+function removeSheetAt(bytes: Uint8Array, count: number, index: number): void {
+  const last = count - 1
+  bytes.copyWithin(sheetOffset(index), sheetOffset(index + 1), sheetOffset(last + 1))
   bytes.fill(0, sheetOffset(last), sheetOffset(last + 1))
   writeU16(bytes, CUSTOM_SHEET_COUNT_OFFSET, last)
-  view.sheets = view.sheets.filter(s => s.id !== sheetId).map((s, index) => ({ ...s, index, offset: sheetOffset(index) }))
+}
+
+/** view の俺流の技の表のうち、sheetIds の表を消して詰める。後ろの表から消すので、view の index は消し終わるまで正しい */
+function removeSheets(bytes: Uint8Array, view: CustomStylesView, sheetIds: readonly number[]): void {
+  const indexes = view.sheets.filter((s) => sheetIds.includes(s.id)).map((s) => s.index).sort((a, b) => b - a)
+  indexes.forEach((index, k) => removeSheetAt(bytes, view.sheets.length - k, index))
 }
 
 /** 俺流から構えを外す（最後の 1 つは外せない） */
@@ -430,8 +471,8 @@ export function removeCustomStance(bytes: Uint8Array, id: number, sheetId: numbe
   if (!ids.includes(sheetId)) throw new RangeError('この俺流にその構えはありません')
   if (ids.length === 1) throw new RangeError('最後の構えは外せません')
   const rest = ids.filter((s) => s !== sheetId)
-  ;[0, 1, 2].forEach((k) => writeI16(bytes, customSheetOffset(style.offset, k), rest[k] ?? -1))
-  removeSheet(bytes, view, sheetId)
+  CUSTOM_SHEET_RELS.forEach((_, k) => writeI16(bytes, customSheetOffset(style.offset, k), rest[k] ?? -1))
+  removeSheets(bytes, view, [sheetId])
 }
 
 /** 流派の書の空き：持ち歩きの最初の空き、なければ箪笥の末尾（🟢 ゲームが作った俺流を入れる順） */
@@ -499,7 +540,7 @@ export function deleteCustomStyle(bytes: Uint8Array, id: number, options: EditOp
   if (style.equipped) throw new RangeError('装備している俺流は消せません')
   if (style.kind !== 'player' && !options.advanced) throw new RangeError('生きた証の写しは上級者モードでだけ消せます')
   if (style.scroll) removeScroll(bytes, view.sects, style.scroll)
-  for (const sid of style.sheetIds.filter((s) => s >= 0)) removeSheet(bytes, view, sid)
+  removeSheets(bytes, view, style.sheetIds.filter((s) => s >= 0))
   const last = view.styles.length - 1
   bytes.copyWithin(styleOffset(style.index), styleOffset(style.index + 1), styleOffset(last + 1))
   bytes.fill(0, styleOffset(last), styleOffset(last + 1))
@@ -511,8 +552,6 @@ export function customSkillLabel(stance: number, skillNo: number): string {
   const s = findStanceSkill(stance, skillNo)
   return s ? s.nameJa || `（名前なし ${skillNo}）` : `技 ${skillNo}`
 }
-
-export { SKILL_NO_COUNT }
 
 /**
  * 🟢 構えを足した直後に入れておく技（あとで選び直す）。states はその構えの技の状態（番号順）。

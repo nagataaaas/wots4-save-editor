@@ -30,11 +30,9 @@ import {
   type SheetSkill,
   type SkillSheet,
 } from "@/save/master/sect-data";
+import { I16_MAX, MASTERY_MAX, sectValueOffset } from "@/save/sect-record";
 import {
-  I16_MAX,
-  sectValueOffset,
   LEARNED_COUNT_OFFSET,
-  MASTERY_MAX,
   SKILL_POINTS_MAX,
   SKILL_POINTS_OFFSET,
   forgetSheetSkill,
