@@ -47,14 +47,6 @@ import {
   type UnlockStatesView,
 } from "@/save/unlocks";
 
-/** 特典の領域が読めない場合は、画面で空の値と読取エラーを表示する。 */
-function readUnlockView(bytes: Uint8Array) {
-  const view = readUnlockStates(bytes);
-  // 読めない領域を空の表で返す reader も、画面では読取エラーとして扱う。
-  if (view.values.length !== UNLOCK_COUNT) throw new RangeError("ファイルが小さすぎて特典を読めません");
-  return view;
-}
-
 /**
  * 読み取り専用・エラーの表示と、書き込み（未読み込みの案内は NoSaveNotice が出す）。
  * ボタンの書き込みは失敗を受け止めて error に入れるので、カードの中の操作の近くに出す
@@ -104,12 +96,11 @@ export function AccessoriesPage() {
         .filter((a) => part === "all" || a.part === part)
         .filter((a) => {
           if (filter === "all" || !view) return true;
-          const owned = view.values[a.id] !== 0;
-          return filter === "owned" ? owned : !owned;
+          return view.owned[a.id] === (filter === "owned");
         }),
     [query, filter, part, view],
   );
-  const ownedCount = view ? view.values.filter((v) => v !== 0).length : "—";
+  const ownedCount = view ? view.owned.filter(Boolean).length : "—";
 
   return (
     <div className="flex flex-col gap-4">
@@ -170,14 +161,14 @@ export function AccessoriesPage() {
           <WriteError error={error} />
           <div className="flex flex-col divide-y">
             {rows.map((a) => {
-              const value = view ? view.values[a.id] : null;
+              const known = view ? view.known[a.id] : true;
               return (
                 <div key={a.id} className="flex items-center gap-3 py-1.5">
                   <OwnershipStateButton
-                    owned={value === null ? null : value !== 0}
+                    owned={view ? view.owned[a.id] : null}
                     name={a.ja}
                     labels={["未所持", "所持"]}
-                    disabled={readOnly || (value !== null && value > 1 && !advanced)}
+                    disabled={readOnly || (!known && !advanced)}
                     onChange={(on) => write((b) => writeAccessoryFlag(b, a.id, on ? 1 : 0, { advanced }))}
                   />
                   <ItemInformation
@@ -198,7 +189,7 @@ export function AccessoriesPage() {
                         </Badge>
                       )}
                   </ItemInformation>
-                  {value !== null && value > 1 && <span className="text-destructive text-xs">状態不明</span>}
+                  {!known && <span className="text-destructive text-xs">状態不明</span>}
                 </div>
               );
             })}
@@ -243,15 +234,14 @@ function UnlockStateRows({
   return (
     <div className="flex flex-col divide-y">
       {rows.map((u) => {
-        const value = view ? view.values[u.id] : null;
         const info = appearance ? appearanceUnlockInformation(u) : { ja: u.ja, en: u.en, descriptionJa: u.effectJa };
 
         return (
           <div key={u.id} className="flex flex-wrap items-center gap-3 py-1.5">
             <UnlockStateButton
-              value={value}
+              value={view ? view.values[u.id] : null}
               name={info.ja}
-              disabled={readOnly || (value !== null && value > 2 && !advanced)}
+              disabled={readOnly || (view !== null && !view.known[u.id] && !advanced)}
               onChange={(v) => write((b) => writeUnlockState(b, u.id, v, { advanced }))}
             />
             <ItemInformation
@@ -330,7 +320,7 @@ const CLOTH_FILTER_OPTIONS: FilterOption<ClothFilter>[] = [
 export function AppearancePage() {
   // 服と顔・髪型などの特典は別の領域なので別々に読み、片方が読めなくてももう片方は編集できるようにする
   const clothes = useSaveView(readAppearance, { problem: (v) => v.problem });
-  const unlocks = useSaveView(readUnlockView, { problem: (v) => v.problem });
+  const unlocks = useSaveView(readUnlockStates, { problem: (v) => v.problem });
   const { view, readOnly } = clothes;
   const { tryWrite: write, error } = useWrite();
   // 同じ理由（ファイルが短い・サイズが違うなど）で両方が落ちたときは1つにまとめて出す
@@ -433,7 +423,7 @@ export function AppearancePage() {
 
 export function UnlocksPage() {
   const { advanced } = useAdvancedMode();
-  const { view, readOnly, write, error, banner } = usePageState(readUnlockView);
+  const { view, readOnly, write, error, banner } = usePageState(readUnlockStates);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const categories = useMemo(() => [...new Set(UNLOCKS.map((u) => u.category))], []);

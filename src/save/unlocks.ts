@@ -27,9 +27,19 @@ import { assertWritable, checkLayout } from "./layout";
 export const ACCESSORY_FLAGS_OFFSET = 0x3902;
 export const ACCESSORY_COUNT = 158;
 
-/** warnings は通常モードの範囲外の値があるときの説明（読み取り専用にはしない） */
-export type FlagBytesView = ViewStatus & {
+/** 通常モードで書ける値。所持フラグは 0・1、特典の状態は 0〜2（🔶 U-17） */
+const ACCESSORY_FLAG_VALUES = [{ value: 0 }, { value: 1 }] as const;
+const UNLOCK_STATE_VALUES = [{ value: 0 }, { value: 1 }, { value: 2 }] as const;
+
+/**
+ * 添字は装飾品の ID。warnings は通常モードの範囲外の値があるときの説明（読み取り専用にはしない）
+ */
+export type AccessoryFlagsView = ViewStatus & {
   values: number[];
+  /** 所持している（値が 0 以外） */
+  owned: boolean[];
+  /** 値が通常モードで書ける 0・1 のどちらか。false の行は上級者モードでだけ切り替えられる */
+  known: boolean[];
 };
 
 function readBytes(bytes: Uint8Array, offset: number, count: number): number[] {
@@ -37,19 +47,17 @@ function readBytes(bytes: Uint8Array, offset: number, count: number): number[] {
   return Array.from({ length: count }, (_, i) => readU8(bytes, offset + i));
 }
 
-export function readAccessoryFlags(bytes: Uint8Array): FlagBytesView {
+export function readAccessoryFlags(bytes: Uint8Array): AccessoryFlagsView {
   const values = readBytes(bytes, ACCESSORY_FLAGS_OFFSET, ACCESSORY_COUNT);
-  const bad = values.findIndex((v) => v > 1);
+  const known = values.map((v) => ACCESSORY_FLAG_VALUES.some((k) => k.value === v));
   return {
     values,
+    owned: values.map((v) => v !== 0),
+    known,
     problem: checkLayout(bytes),
-    warnings: warningsOf(bad >= 0 ? "所持の状態が想定外の装飾品があります。切り替えは上級者モードでだけできます" : null),
+    warnings: warningsOf(known.includes(false) ? "所持の状態が想定外の装飾品があります。切り替えは上級者モードでだけできます" : null),
   };
 }
-
-/** 通常モードで書ける値。所持フラグは 0・1、特典の状態は 0〜2（🔶 U-17） */
-const ACCESSORY_FLAG_VALUES = [{ value: 0 }, { value: 1 }] as const;
-const UNLOCK_STATE_VALUES = [{ value: 0 }, { value: 1 }, { value: 2 }] as const;
 
 function assertValue(value: number, known: readonly { value: number }[], opts: EditOpts): void {
   const problem = validateKnownValue(value, known, opts);
@@ -140,19 +148,22 @@ export const UNLOCK_STATE_LABELS: Record<number, string> = {
   2: "取得済み",
 };
 
-export type UnlockStatesView = FlagBytesView & { offset: number };
+/** 添字は特典の番号 */
+export type UnlockStatesView = ViewStatus & {
+  values: number[];
+  /** 🔶 U-17 値が通常モードで書ける 0〜2 のどれか。false の行は上級者モードでだけ切り替えられる */
+  known: boolean[];
+};
 
 export function readUnlockStates(bytes: Uint8Array): UnlockStatesView {
-  const layoutProblem = checkLayout(bytes);
-  const offset = UNLOCK_STATES_OFFSET;
-  const values = readBytes(bytes, offset, UNLOCK_COUNT);
-  const bad = values.findIndex(value => value > 2);
+  const values = readBytes(bytes, UNLOCK_STATES_OFFSET, UNLOCK_COUNT);
+  const known = values.map((v) => UNLOCK_STATE_VALUES.some((k) => k.value === v));
   return {
     values,
-    offset,
-    problem: layoutProblem,
+    known,
+    problem: checkLayout(bytes),
     // 🔶 U-17：0〜2 以外の値は上級者モードで書けるので、読み取り専用にはせず注意だけ出す
-    warnings: warningsOf(bad >= 0 ? "状態が想定外の特典があります。切り替えは上級者モードでだけできます" : null),
+    warnings: warningsOf(known.includes(false) ? "状態が想定外の特典があります。切り替えは上級者モードでだけできます" : null),
   };
 }
 

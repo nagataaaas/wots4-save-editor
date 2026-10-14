@@ -80,7 +80,11 @@ describe("✅ 装飾品の所持フラグ chunks/accessories", () => {
     const b = makeSave();
     expect(() => writeAccessoryFlag(b, 1, 2, { advanced: false })).toThrow();
     writeAccessoryFlag(b, 1, 2, { advanced: true });
-    expect((readAccessoryFlags(b).warnings.join('。') || null)).toContain("想定外");
+    const v = readAccessoryFlags(b);
+    expect((v.warnings.join('。') || null)).toContain("想定外");
+    // ❓ 2 以上は所持扱いだが、通常モードで書ける値ではない
+    expect([v.owned[1], v.known[1]]).toEqual([true, false]);
+    expect([v.owned[0], v.known[0], v.owned[2], v.known[2]]).toEqual([true, true, false, true]);
     expect(() => writeAccessoryFlag(b, 158, 1, { advanced: true })).toThrow();
   });
 
@@ -165,7 +169,6 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
   it("✅ [U] 先頭16件はゲーム内表示と一致する状態列から読む", () => {
     const v = readUnlockStates(makeSave());
     expect(v.values.length).toBe(106);
-    expect(v.offset).toBe(0x43318);
     expect(v.values.slice(0, 16)).toEqual([2, 2, 2, 0, 2, 2, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0]);
     expect(Object.fromEntries(v.values.flatMap((x, i) => (x ? [[i, x]] : [])))).toEqual(UNLOCK_SEEN);
     expect((v.warnings.join('。') || null)).toBeNull();
@@ -183,7 +186,6 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
 
   it("🔶 U-17 周囲の並びや別位置の状態列に依存せず固定位置を使う", () => {
     const shifted = makeSave(TS_SAVE_SIZE, 0x43418);
-    expect(readUnlockStates(shifted).offset).toBe(0x43318);
     expect(readUnlockStates(shifted).values.every(v => v === 0)).toBe(true);
     const ambiguous = makeSave();
     for (const [i, v] of Object.entries(UNLOCK_SEEN)) writeU8(ambiguous, 0x43418 + Number(i), v);
@@ -210,6 +212,8 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     const b = makeSave();
     writeUnlockState(b, 40, 3, { advanced: true });
     expect(readUnlockStates(b).values[40]).toBe(3);
+    expect(readUnlockStates(b).known[40]).toBe(false);
+    expect(readUnlockStates(b).known[0]).toBe(true);
     expect(readUnlockStates(b).problem).toBeNull();
     expect((readUnlockStates(b).warnings.join('。') || null)).toContain("想定外");
     // 別の特典も書け、上級者モードでなくても 0〜2 に戻せる
