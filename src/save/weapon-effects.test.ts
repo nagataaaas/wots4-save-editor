@@ -1,11 +1,11 @@
 // ✅ 銘・魅力の効果は [W] 鍛冶屋ページ（p20）の記載を確定として扱う（ユーザー判断 2026-10-05）。表の写し間違いがないかを確かめる
 import { describe, expect, it } from 'vitest'
-import { CHARMS, TITLES } from './weapon'
+import { CHARMS, WEAPON_TITLES } from './weapon'
 import { charmEffects, titleEffect } from './weapon-effects'
 
 describe('銘の効果（[W] p20）', () => {
   it('すべての銘に効果がある', () => {
-    for (const t of TITLES) expect(titleEffect(t.no), t.label).not.toBeNull()
+    for (const t of WEAPON_TITLES) expect(titleEffect(t.no), t.label).not.toBeNull()
   })
 
   it('銘なし・未知の番号は null', () => {

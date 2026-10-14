@@ -5,7 +5,7 @@ import { CHARMS } from './weapon'
 
 export type TitleEffect = { effect: string; note?: string }
 
-/** 銘の番号 → 効果。番号は TITLES（datatable/weapon/title.csv）と同じ */
+/** 銘の番号 → 効果。番号は WEAPON_TITLES（datatable/weapon/title.csv）と同じ */
 const TITLE_EFFECTS: Record<number, TitleEffect> = {
   0x00: { effect: '攻撃力 +25' },
   0x01: { effect: '攻撃力 +50' },

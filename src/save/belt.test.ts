@@ -1,7 +1,18 @@
 // 帯刀と武器レコード。合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 🟢 レコード内の位置は本当の先頭（[TS] の配置の +0x06）から数える。[TS] の配置での位置は +0x06 を足したもの。
 import { describe, expect, it } from 'vitest'
-import { BELT_OFFSET, BELT_STATE, NO_LEFT, beltOffset, readBelt, writeBeltDual, writeBeltRight } from './belt'
+import {
+  BELT_OFFSET,
+  BELT_STATE,
+  NO_LEFT,
+  beltOffset,
+  defaultDualLeft,
+  readBelt,
+  usableBeltWeapons,
+  writeBeltDual,
+  writeBeltDualEnabled,
+  writeBeltRight,
+} from './belt'
 import { TS_SAVE_SIZE } from './layout'
 import { WEAPON_NAMES, weaponKind } from './master/weapon-names'
 import {
@@ -15,8 +26,15 @@ import {
   type PartOption,
 } from './weapon-ids'
 import {
+  CHARMS,
   COMPLETE_WEAPONS,
+  NUMBER_KEYS,
   WEAPON_FIELDS,
+  WEAPON_NUMBER_RANGES,
+  WEAPON_TITLES,
+  charmSummary,
+  countCharms,
+  weaponDisplayName,
   WEAPON_NAME_MAX_CHARS,
   completeWeaponByParts,
   completeWeaponsUsingPart,
@@ -454,7 +472,7 @@ describe('武器レコード（合成）', () => {
     expect(() => writeWeaponPart(b, o, 'guard', ct(0x167))).toThrow()
   })
 
-  it('U-8 武器種（+0x18 の 🟢 u16）・🔶 鞘（X、+0x04〜+0x05）は上級者モードでだけ書け、そのバイトだけを変える', () => {
+  it('U-8 武器種（+0x18 の 🟢 u16）・🔶 鞘（X、+0x04〜+0x05）は「上書き」を押したとき（override）だけ書け、そのバイトだけを変える', () => {
     const before = makeSave()
     const o = beltOffset(0)
     const v = readWeapon(before, o)
@@ -462,21 +480,22 @@ describe('武器レコード（合成）', () => {
     expect(v.sheath).toMatchObject({ value: 0x18, label: '中道刀・なまくら刀', problem: null })
 
     const b = before.slice()
-    expect(() => writeWeaponType(b, o, 1)).toThrow()
-    expect(() => writeWeaponSheath(b, o, 0x26)).toThrow()
+    expect(() => writeWeaponType(b, o, 1)).toThrow('上書き')
+    expect(() => writeWeaponSheath(b, o, 0x26)).toThrow('上書き')
+    expect(() => writeWeaponSheath(b, o, 0x26, { override: false })).toThrow()
     expect(diffOffsets(before, b)).toEqual([])
 
-    writeWeaponType(b, o, 1, { advanced: true })
+    writeWeaponType(b, o, 1, { override: true })
     expect(diffOffsets(before, b)).toEqual([o + 0x18])
     expect(readWeapon(b, o).weaponType.label).toBe('槍')
 
     const c = before.slice()
-    writeWeaponSheath(c, o, 0x139, { advanced: true }) // クルセイダー（上位バイト 01）
+    writeWeaponSheath(c, o, 0x139, { override: true }) // クルセイダー（上位バイト 01）
     expect(diffOffsets(before, c)).toEqual([o + 0x04, o + 0x05])
     expect(readWeapon(c, o).sheath.label).toBe('クルセイダー')
 
-    expect(() => writeWeaponType(b, o, 5, { advanced: true })).toThrow()
-    expect(() => writeWeaponSheath(b, o, 0x1234, { advanced: true })).toThrow()
+    expect(() => writeWeaponType(b, o, 5, { override: true })).toThrow()
+    expect(() => writeWeaponSheath(b, o, 0x1234, { override: true })).toThrow()
   })
 
   it('[U] 2026-10-05：特殊武器の刃は 0xFF0000〜0xFF000B の12件（FF0006 は鬼ヶ島）。0x0C 以降はない', () => {
@@ -485,7 +504,7 @@ describe('武器レコード（合成）', () => {
     b.set([0x0b, 0x00, 0xff, 0xff, 0xff, 0xff], o + 0x02) // M2リボルバーの刃、鍔なし
     // [U] 2026-10-05：X 0xFFFF は鞘なし
     expect(readWeapon(b, o).sheath).toMatchObject({ value: 0xffff, label: '鞘なし', warnings: [] })
-    writeWeaponSheath(b, o, 0xffff, { advanced: true })
+    writeWeaponSheath(b, o, 0xffff, { override: true })
     writeWeaponPart(b, o, 'blade', ts(0xff0006))
     expect(readWeapon(b, o).blade).toMatchObject({ value: { label: '鬼ヶ島' }, warnings: [] })
     writeWeaponId(b, o, 0x006a) // 完成武器 0x006A も鬼ヶ島（[U] 2026-10-05）
@@ -828,5 +847,120 @@ describe('鞘を使う完成武器（鞘の一覧の画像）', () => {
 
   it('🟢 中道刀の鞘（0x18）は中道刀を含む', () => {
     expect(completeWeaponsUsingSheath(0x18)).toContain(0x0002)
+  })
+})
+
+describe('魅力・銘の表（datatable/weapon の charm.csv・title.csv）', () => {
+  it('魅力は 0〜9 の10種で、「なし」の 0xFFFF は選択肢に入れない', () => {
+    expect(CHARMS.map((c) => c.id)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    expect(CHARMS[0].label).toBe('天運')
+    expect(CHARMS[9].label).toBe('重撃')
+  })
+
+  it('✅ 銘は番号 0x00〜0x13 の20種で、バイト列は `<0x6A + 番号> 01 <番号>`。銘なしは表に入れない', () => {
+    expect(WEAPON_TITLES.map((t) => t.no)).toEqual(Array.from({ length: 20 }, (_, i) => i))
+    for (const t of WEAPON_TITLES) expect(t.raw).toBe((0x6a + t.no) | (0x01 << 8) | (t.no << 16))
+    expect(WEAPON_TITLES[0].label).toBe('人斬り')
+    expect(WEAPON_TITLES[0x13].label).toBe('散華')
+  })
+
+  it('銘の番号とバイト列の往復。銘なしは FF FF FF、✅ U-2：[TS] の 00 6A 01 は未知', () => {
+    for (const t of WEAPON_TITLES) expect(decodeTitle(encodeTitle(t.no))).toBe(t.no)
+    expect(encodeTitle(null)).toBe(0xffffff)
+    expect(decodeTitle(0xffffff)).toBeNull()
+    expect(decodeTitle(0x016a00)).toBeUndefined()
+    expect(() => encodeTitle(0x14)).toThrow()
+  })
+
+  it('銘を書いて読み出し→書き戻しでバイトが一致する', () => {
+    const before = makeSave()
+    const o = beltOffset(0)
+    const b = before.slice()
+    writeWeaponTitle(b, o, 0x12)
+    expect([...b.subarray(o + WEAPON_FIELDS.title, o + WEAPON_FIELDS.title + 3)]).toEqual([0x7c, 0x01, 0x12])
+    expect(readWeapon(b, o).title).toMatchObject({ value: 0x12, label: '鬼神' })
+    writeWeaponTitle(b, o, readWeapon(before, o).title.value)
+    expect(diffOffsets(before, b)).toEqual([])
+  })
+})
+
+describe('武器レコードの欄の型', () => {
+  it('数値のシステム上の範囲は欄の型で決まる（攻撃力・耐久・質は ✅ i16、斬殺数は ✅ u16、つま斬り数は 🟢 u16、累積値・時間は u32）', () => {
+    for (const k of ['attack', 'durabilityMax', 'durability', 'quality', 'qualityMax'] as const)
+      expect(WEAPON_NUMBER_RANGES[k].system).toEqual({ min: -0x8000, max: 0x7fff })
+    for (const k of ['kills', 'tsumaKills'] as const) expect(WEAPON_NUMBER_RANGES[k].system).toEqual({ min: 0, max: 0xffff })
+    for (const k of ['durabilityRecovery', 'heldTime'] as const)
+      expect(WEAPON_NUMBER_RANGES[k]).toEqual({ game: { min: 0, max: 0xffffffff }, system: { min: 0, max: 0xffffffff } })
+    expect(NUMBER_KEYS).toHaveLength(9)
+  })
+
+  it('位置はこれまでどおり（刃 3 B は +0x02、鞘は +0x04、鍔 3 B は +0x05、柄は +0x08、名前の番号は +0x6C）', () => {
+    expect(WEAPON_FIELDS).toMatchObject({
+      weaponId: 0x00, blade: 0x02, bladeId: 0x02, sheath: 0x04, guard: 0x05, guardId: 0x06, grip: 0x08,
+      attack: 0x10, durabilityMax: 0x12, quality: 0x14, qualityMax: 0x16, weaponType: 0x18, charms: 0x1e, name: 0x2a,
+      nameNo: 0x6c, heldTime: 0x80, heldTime2: 0x84, durabilityRecovery: 0x88, durability: 0x8c, title: 0x90,
+      nameHidden: 0x93, kills: 0x96, tsumaKills: 0x98,
+    })
+  })
+
+  it('レコードの末尾が範囲外なら読まない', () => {
+    const b = makeSave()
+    expect(() => readWeapon(b.subarray(0, beltOffset(0) + 0x92), beltOffset(0))).toThrow()
+  })
+})
+
+describe('魅力の要約と武器名の表示', () => {
+  it('countCharms は最初に出てきた順に ID ごとに数え、空きを数えない', () => {
+    expect(countCharms([9, 4, 9, null])).toEqual([{ id: 9, count: 2 }, { id: 4, count: 1 }])
+    expect(countCharms([null, null, null])).toEqual([])
+  })
+
+  it('charmSummary は3個までは1個ずつ、4個以上は「名前 ×個数」。未知の ID は「不明」', () => {
+    expect(charmSummary([9, 9, 4])).toEqual(['重撃', '重撃', '活復'])
+    expect(charmSummary([9, 9, 9, 4])).toEqual(['重撃 ×3', '活復 ×1'])
+    expect(charmSummary([42, 42, 42, 42])).toEqual(['不明 ×4'])
+    expect(charmSummary([42, null, null])).toEqual(['不明'])
+  })
+
+  it('weaponDisplayName は名前を隠す武器を「*****」、空の名前を「（名前なし）」にする', () => {
+    const b = makeSave()
+    const o = beltOffset(0)
+    expect(weaponDisplayName(readWeapon(b, o))).toBe('A')
+    writeWeaponNameHidden(b, o, true)
+    expect(weaponDisplayName(readWeapon(b, o))).toBe('*****')
+    writeWeaponNameHidden(b, o, false)
+    b.fill(0, o + WEAPON_FIELDS.name, o + WEAPON_FIELDS.name + 2)
+    expect(weaponDisplayName(readWeapon(b, o))).toBe('（名前なし）')
+  })
+})
+
+describe('🟢 手に持てる帯刀と二刀流の既定の左手', () => {
+  it('手に持てるのは本数の内側の空きでない武器。exclude はもう一方の手', () => {
+    const b = makeSave()
+    expect(usableBeltWeapons(readBelt(b), null)).toEqual([0])
+    expect(usableBeltWeapons(readBelt(b), 0)).toEqual([])
+    addSecond(b)
+    expect(usableBeltWeapons(readBelt(b), null)).toEqual([0, 1])
+    expect(usableBeltWeapons(readBelt(b), 0)).toEqual([1])
+    expect(defaultDualLeft(readBelt(b))).toBe(1)
+  })
+
+  it('二刀流をオンにすると左手に既定の武器を持たせ、オフで元のバイトに戻る', () => {
+    const before = makeSave()
+    addSecond(before)
+    const b = before.slice()
+    writeBeltDualEnabled(b, true)
+    expect(diffOffsets(before, b)).toEqual([BELT_STATE.left, BELT_STATE.dual])
+    expect(readBelt(b).state).toMatchObject({ right: 0, left: 1 })
+    writeBeltDualEnabled(b, false)
+    expect(diffOffsets(before, b)).toEqual([])
+  })
+
+  it('左手に持てる武器がなければオンにできず、バイトを変えない', () => {
+    const before = makeSave()
+    expect(defaultDualLeft(readBelt(before))).toBeNull()
+    const b = before.slice()
+    expect(() => writeBeltDualEnabled(b, true)).toThrow('左手に持てる武器がありません')
+    expect(diffOffsets(before, b)).toEqual([])
   })
 })

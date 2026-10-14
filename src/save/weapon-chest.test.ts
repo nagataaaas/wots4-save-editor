@@ -8,6 +8,7 @@ import {
   WEAPON_CHEST_SLOTS,
   readWeaponChest,
   readWeaponChestWeapons,
+  selectableCapacities,
   weaponChestOffset,
   writeWeaponChestCapacity,
   writeWeaponChestCountToFilled,
@@ -52,6 +53,22 @@ describe('🟢 武器箪笥の本数と容量', () => {
     // 読み出し→書き戻しで元に戻る
     writeWeaponChestCapacity(b, 3)
     expect(diff(before, b)).toEqual([])
+  })
+
+  it('選べる容量は、今の武器が収まる値と今の値。未読み込みならすべて', () => {
+    expect(selectableCapacities(null)).toEqual(Array.from({ length: 19 }, (_, i) => i + 2))
+    // 26枠目に武器があるので 20・30 本は選べない（今の値 3 は選べる）
+    const b = makeSave([0, 25], 2, 3)
+    expect(selectableCapacities(readWeaponChest(b))).toEqual(Array.from({ length: 18 }, (_, i) => i + 3))
+    // 今の値が収まらなくても（本数が容量を超える）、今の値は選択肢に残す
+    const c = makeSave([0, 25], 2, 2)
+    expect(selectableCapacities(readWeaponChest(c))[0]).toBe(2)
+    expect(selectableCapacities(readWeaponChest(c))[1]).toBe(3)
+    // 選べる値は書ける
+    const d = b.slice()
+    for (const n of selectableCapacities(readWeaponChest(b))) writeWeaponChestCapacity(d, n)
+    writeWeaponChestCapacity(d, 3)
+    expect(diff(b, d)).toEqual([])
   })
 
   it('容量の値が想定外（i8 として 2〜20 の外）なら読み取り専用', () => {

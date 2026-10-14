@@ -29,6 +29,8 @@ export const BELT_STATE = {
   left: 0xa6aa,
   dual: 0xa6ab,
 } as const
+/** 帯刀の状態の範囲の最後のバイト（0xA6AC 以降は扱わないが、武器袋の直前までが帯刀の状態） */
+export const BELT_STATE_LAST = 0xa6af
 
 /** 左手・右手とも、0xFF は何も持っていない */
 export const NO_LEFT = 0xff
@@ -105,6 +107,19 @@ function editableState(bytes: Uint8Array): BeltView {
   return view
 }
 
+/**
+ * 🟢 手に持てる帯刀の番号（帯刀の本数の内側にある空きでない武器）。exclude はもう一方の手に持っている番号で、一覧から除く。
+ * 帯刀の状態が読み取り専用でも一覧は作る（選択肢の表示に使う）
+ */
+export function usableBeltWeapons(view: BeltView, exclude: number | null): number[] {
+  return view.weapons.flatMap((w, i) => (!w.empty && i !== exclude && i < view.state.count ? [i] : []))
+}
+
+/** 二刀流にするときの左手の既定：右手のほかで、手に持てる最初の武器。なければ null */
+export function defaultDualLeft(view: BeltView): number | null {
+  return usableBeltWeapons(view, view.state.right)[0] ?? null
+}
+
 /** 🟢 手に持てるのは、帯刀の本数の内側にある空きでない武器 */
 function assertUsable(view: BeltView, index: number, hand: string): void {
   if (!Number.isInteger(index) || index < 0 || index >= BELT_COUNT) throw new RangeError(`${hand}の指定が範囲外です`)
@@ -147,4 +162,16 @@ export function writeBeltDual(bytes: Uint8Array, left: number | null): void {
   if (left === view.state.right) throw new RangeError('右手と同じ武器は左手に持てません')
   writeU8(bytes, BELT_STATE.left, left)
   writeU8(bytes, BELT_STATE.dual, 1)
+}
+
+/**
+ * 二刀流のオン・オフ。オンにするときは左手に既定の武器（defaultDualLeft）を持たせる。
+ * 左手に持てる武器がなければ例外にして、バイト列を変えない
+ */
+export function writeBeltDualEnabled(bytes: Uint8Array, on: boolean): void {
+  if (!on) return writeBeltDual(bytes, null)
+  assertWritable(bytes)
+  const left = defaultDualLeft(editableState(bytes))
+  if (left === null) throw new RangeError('左手に持てる武器がありません')
+  writeBeltDual(bytes, left)
 }

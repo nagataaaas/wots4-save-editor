@@ -71,6 +71,19 @@ export function validateWeaponChestCapacity(view: WeaponChestView, capacity: num
   return null
 }
 
+/**
+ * 選択肢に出す容量の値（÷10）。今の武器が収まる値と、今の値（収まらなくても）。
+ * view が null（未読み込み）ならすべての値
+ */
+export function selectableCapacities(view: WeaponChestView | null): number[] {
+  const values: number[] = []
+  for (let n = CAPACITY_MIN; n <= CAPACITY_MAX; n++) {
+    if (view && n !== view.capacity && validateWeaponChestCapacity(view, n)) continue
+    values.push(n)
+  }
+  return values
+}
+
 /** 🟢 容量（0x129F6 の i8。値は容量 ÷ 10）を書く。反映は要ゲーム内確認 */
 export function writeWeaponChestCapacity(bytes: Uint8Array, capacity: number): void {
   assertWritable(bytes)
