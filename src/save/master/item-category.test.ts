@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { itemCategory } from './item-category'
-import { ITEMS, findItem } from '@/save/master/item-names'
+import { ITEMS, findItem, itemCategory } from './item-names'
 
 // 🔶 item/item.csv の use_action に基づく表示用分類候補（datatable/item/README.md）。
 // 名前・説明から分類せず、使用可否の検証にも使わない。

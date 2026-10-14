@@ -1,6 +1,6 @@
 import { BookOpen, FlaskConical, Package, Utensils, Wine, type LucideIcon } from 'lucide-react'
 import { EMPTY_ID } from '@/save/item-slot'
-import { ITEM_CATEGORY_LABELS, itemCategory, type ItemCategory } from '@/lib/item-category'
+import { ITEM_CATEGORY_LABELS, itemCategory, type ItemCategory } from '@/save/master/item-names'
 
 const ICONS: Record<ItemCategory, LucideIcon> = {
   food: Utensils,
