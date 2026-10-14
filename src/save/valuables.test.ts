@@ -60,7 +60,6 @@ describe('readValuables', () => {
     expect(v.slots[0]).toMatchObject({ offset: 0x5b90, id: 0x29, count: 5, label: 'くず鉄', problem: null })
     expect(v.slots[1]).toMatchObject({ offset: 0x5b98, id: 0x2b, count: 2, label: '堂島鋼(どうじまはがね)', problem: null })
     expect(v.slots[2]).toMatchObject({ id: EMPTY_ID, label: 'なし', problem: null })
-    expect(v.slots[0].unknown).toBe(0xdeadbeef)
   })
 
   it('🔶 [TS] が扱う先頭4件の後ろも同じ形式で読む', () => {
@@ -126,7 +125,8 @@ describe('writeValuable', () => {
     writeValuable(after, 0, 0x2c, 99)
     const o = slotOffset(0)
     expect(diffOffsets(before, after).every((i) => i >= o && i < o + 4)).toBe(true)
-    expect(readValuables(after).slots[0]).toMatchObject({ id: 0x2c, count: 99, unknown: 0xdeadbeef, label: '緋緋色金(ひひいろかね)' })
+    expect(readValuables(after).slots[0]).toMatchObject({ id: 0x2c, count: 99, label: '緋緋色金(ひひいろかね)' })
+    expect(after.subarray(o + 4, o + 8)).toEqual(before.subarray(o + 4, o + 8))
   })
 
   it('🔶 「なし」にするときは個数 0 を書く', () => {

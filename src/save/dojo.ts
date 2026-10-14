@@ -35,7 +35,7 @@ export const PUPIL_SIZE = 12;
 export const PUPIL_MAX = 20;
 export const RAIDERS_OFFSET = 0x1415c;
 export const RAIDER_MAX = 8;
-export const RANK_MAX = 5;
+export const REPUTATION_RANK_MAX = 5;
 
 const EMPTY = 0xffffffff;
 
@@ -77,7 +77,7 @@ export const PUPIL_KINDS: readonly PupilKind[] = Object.values(PUPIL_TABLE).map(
   sex: r.sex === "f" ? "f" : "m",
   point: r.point,
   name: r.name,
-  looks: r.looks.split(";").map((s) => parseInt(s, 16)),
+  looks: r.looks,
 }));
 
 export function pupilKind(id: number): PupilKind | undefined {
@@ -156,7 +156,7 @@ function validateDojo(bytes: Uint8Array, view: DojoView): string | null {
   const occupied = view.pupils.filter((p) => p !== null);
   if (view.count > PUPIL_MAX) return "弟子の数が多すぎます";
   if (view.count !== occupied.length) return "弟子の数と名簿の人数が合いません";
-  if (view.rank > RANK_MAX) return "評判の段階が想定外の値です";
+  if (view.rank > REPUTATION_RANK_MAX) return "評判の段階が想定外の値です";
   if (view.raiderCount < 0 || view.raiderCount > RAIDER_MAX) return "道場破りの人数が想定外の値です";
   if (occupied.some((p) => p.point < 1 || p.point > 5)) return "名簿に想定外の値があります";
   const sum = occupied.reduce((s, p) => s + p.point, 0);

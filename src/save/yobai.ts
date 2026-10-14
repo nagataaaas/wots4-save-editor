@@ -46,6 +46,7 @@ import { validateKnownValue } from "./flags/byte-flag";
 import { assertWritable, checkLayout } from "./layout";
 import { DAY_RANGE, DATE_OFFSETS } from "./scenario-date";
 import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
+import { NIGHT_VISIT_COUNT_TABLE } from "./master/dataset/night-visit-count";
 import { NIGHT_VISIT_LAYOUT_TABLE } from "./master/dataset/night-visit-layout";
 import { NIGHT_VISIT_PLACE_TABLE } from "./master/dataset/night-visit-place";
 import { NPC_LOOK_TABLE } from "./master/dataset/npc-look";
@@ -112,24 +113,10 @@ export const YOBAI_COUNTERS: readonly {
   },
 ];
 
-/** 🟢 特別な相手ごとの夜這い回数 0x13E38 + 4k（u32、上限 9999）。npc は名前の表の ID。さよと町の人は数えない */
+/** 🟢 特別な相手ごとの夜這い回数 0x13E38 + 4k（u32、上限 9999）。k は枠（slot）、npc は名前の表の ID。さよと町の人は数えない */
 export const PARTNER_COUNTS_OFFSET = 0x13e38;
-export const PARTNER_COUNT_NPCS: readonly { npc: number; label: string }[] = [
-  { npc: 6, label: nameOf.npc(6) }, // 万由
-  { npc: 7, label: nameOf.npc(7) }, // 千佳
-  { npc: 8, label: nameOf.npc(8) }, // 百合
-  { npc: 13, label: nameOf.npc(13) }, // メリンダ
-  { npc: 3, label: nameOf.npc(3) }, // 朱美
-  { npc: 11, label: nameOf.npc(11) }, // ローラ
-  { npc: 15, label: nameOf.npc(15) }, // 先生
-  { npc: 5, label: nameOf.npc(5) }, // 茂呂
-  { npc: 1, label: nameOf.npc(1) }, // 赤城
-  { npc: 12, label: nameOf.npc(12) }, // J.J
-  { npc: 2, label: nameOf.npc(2) }, // 小暮
-  { npc: 4, label: nameOf.npc(4) }, // 琴吹
-  { npc: 14, label: nameOf.npc(14) }, // 堂島
-  { npc: 9, label: nameOf.npc(9) }, // 鬼怒川
-];
+export const PARTNER_COUNT_NPCS: readonly { slot: number; npc: number; label: string }[] = Object.values(NIGHT_VISIT_COUNT_TABLE)
+  .map(r => ({ slot: r.id_dec, npc: r.npc, label: nameOf.npc(r.npc) }));
 
 const PLACE_ROWS = Object.values(NIGHT_VISIT_PLACE_TABLE);
 
@@ -144,7 +131,7 @@ export const PLACES: readonly string[] = PLACE_ROWS.map((r) => r.name_ja);
  * 町の人の約束と特別な相手（さよ・先生・ローラ・メリンダ・三姉妹など）の約束の組
  */
 const GREEN_PLACE_LAYOUTS: readonly (readonly [number, readonly number[]])[] = PLACE_ROWS.map(
-  (r) => [r.id_dec, r.layout.split(";").map((s) => parseInt(s, 16))],
+  (r) => [r.id_dec, r.layout],
 );
 
 /**
@@ -415,8 +402,8 @@ export function readYobai(bytes: Uint8Array): YobaiView {
     note: c.note,
     value: readSized(bytes, c.offset, c.size),
   }));
-  const partners = PARTNER_COUNT_NPCS.map(({ npc, label }, k) => {
-    const offset = PARTNER_COUNTS_OFFSET + k * 4;
+  const partners = PARTNER_COUNT_NPCS.map(({ slot, npc, label }) => {
+    const offset = PARTNER_COUNTS_OFFSET + slot * 4;
     return { offset, npc, label, value: readU32(bytes, offset) };
   });
 

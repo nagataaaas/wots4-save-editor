@@ -634,11 +634,11 @@ describe('🟢 武器名の扱い', () => {
   it('名前を隠す（+0x93）は 0／1 を書き、そのバイトだけを変える。読み出し→書き戻しで一致する', () => {
     const before = makeSave()
     const o = beltOffset(0)
-    expect(readWeapon(before, o).nameHidden).toMatchObject({ value: false, raw: 0 })
+    expect(readWeapon(before, o).nameHidden).toMatchObject({ value: false })
     const b = before.slice()
     writeWeaponNameHidden(b, o, true)
     expect(diffOffsets(before, b)).toEqual([o + 0x93])
-    expect(readWeapon(b, o).nameHidden).toMatchObject({ value: true, raw: 1 })
+    expect(readWeapon(b, o).nameHidden).toMatchObject({ value: true })
     writeWeaponNameHidden(b, o, false)
     expect(diffOffsets(before, b)).toEqual([])
     expect(() => writeWeaponNameHidden(b, beltOffset(1), true)).toThrow() // 空き枠

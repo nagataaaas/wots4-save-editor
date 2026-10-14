@@ -4,6 +4,7 @@
 // ラベルは画面（生データ・履歴の変わった領域）に出すので、アドレスや格納のしかたは書かずにコメントへ回す。
 // 位置は固定オフセット（サイズ 0x48BB0）。
 import { integerValue } from '@/lib/parse'
+import { changedByteOffsets } from '@/lib/byte-diff'
 import { readF32 } from './binary'
 import { assertWritable } from './layout'
 
@@ -145,8 +146,7 @@ export function diffRanges(a: Uint8Array, b: Uint8Array, limit = Infinity): { ra
   let total = 0
   let truncated = false
   let open: ByteRange | null = null
-  for (let i = 0; i < n; i++) {
-    if (a[i] === b[i]) continue
+  for (const i of changedByteOffsets(a, b, n)) {
     total++
     if (open && open.end === i - 1) {
       open.end = i

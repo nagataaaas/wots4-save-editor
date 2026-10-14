@@ -59,7 +59,7 @@ export const PROMISE_ROWS: readonly PromiseRow[] = Object.values(NIGHT_VISIT_ROW
   layout: r.layout,
   partnerName: r.name_ja,
   checked: r.checked,
-  bytes: r.save_bytes_le.split(" ").map((h) => Number.parseInt(h, 16)),
+  bytes: r.save_bytes_le,
 }));
 
 export type PromisePartner = {
@@ -92,7 +92,7 @@ export const PROMISE_PARTNERS: readonly PromisePartner[] = Object.values(NIGHT_V
   sex: p.sex === "f" ? "f" : "m",
   nameList: p.name_list === 7 || p.name_list === 8 ? p.name_list : null,
   name: p.name,
-  looks: p.looks.split(";").map((h) => Number.parseInt(h, 16)),
+  looks: p.looks,
   age: p.age,
   ageRandom: p.age_random === 1,
   blood: p.blood,

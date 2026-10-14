@@ -6,6 +6,7 @@
 // nameOf.npc(40) にカーソルを当てると返り値の文字列が見える。
 // 列の型：空でない値がすべて整数・小数なら数値、すべて 0x で始まる16進数なら数値（空は null）。それ以外は文字列（空は ""）。
 // すべての行が空の列は null（CSV ごとに "" と null に分かれないように）。
+// 並びを持つ列は LIST_COLUMNS で指定し、生成時に形式を検証して配列へ変換する（空は []）。
 // id_hex は id_dec と同じ値なので出さない。備考・status は確度が入るので出さない（下の DERIVED_COLUMNS で変換したものだけ出す）。
 
 /** RFC 4180 の CSV を行・列に分ける（"..." の中のカンマ・改行・"" に対応） */
@@ -43,6 +44,88 @@ export function parseCsv(text: string): string[][] {
 
 const DECIMAL = /^-?\d+(\.\d+)?$/;
 const HEX = /^0x[0-9a-f]+$/i;
+type ListKind =
+  /** "0x10;0xFF" → [16, 255] */
+  | 'hex-list'
+  /** "07 00 A2" → [7, 0, 162] */
+  | 'bytes'
+  /** "41 02 0A 00 61 00" → [65, 2, 10, 0, 97, 0]。空か 6 B */
+  | 'bytes-6'
+  /** "46 01 FF FF …"（8 B）→ u16 LE ×4、FFFF は −1 */
+  | 'models'
+  /** "足|小物||" → 層4つ */
+  | 'meshes'
+  /** "299 300|309||" → 層4つの番号の並び */
+  | 'textures'
+  /** "2 3" → [2, 3] */
+  | 'numbers'
+  /** "投げ・防御" → ["投げ", "防御"] */
+  | 'attrs';
+
+const APPEARANCE_LIST_COLUMNS = { save_models: 'models', layer_meshes: 'meshes', layer_textures: 'textures' } as const;
+
+/** 並びを持つ列（datatable からの相対パス → 列 → 形式）。生成時に検証し、実行時には配列として使う */
+const LIST_COLUMNS: Readonly<Record<string, Readonly<Record<string, ListKind>>>> = {
+  'weapon/blade.csv': { save_bytes_le: 'bytes' },
+  'weapon/guard.csv': { save_bytes_le: 'bytes' },
+  'weapon/grip.csv': { save_bytes_le: 'bytes' },
+  'weapon/complete.csv': { unique_bytes: 'bytes-6' },
+  'place/night-visit-row.csv': { save_bytes_le: 'bytes' },
+  'place/night-visit-place.csv': { layout: 'hex-list' },
+  'npc/pupil.csv': { looks: 'hex-list' },
+  'npc/night-visit-partner.csv': { looks: 'hex-list' },
+  'appearance/upper.csv': APPEARANCE_LIST_COLUMNS,
+  'appearance/lower.csv': APPEARANCE_LIST_COLUMNS,
+  'appearance/face.csv': APPEARANCE_LIST_COLUMNS,
+  'appearance/hair.csv': APPEARANCE_LIST_COLUMNS,
+  'appearance/body.csv': APPEARANCE_LIST_COLUMNS,
+  'appearance/feet.csv': APPEARANCE_LIST_COLUMNS,
+  'appearance/extra.csv': APPEARANCE_LIST_COLUMNS,
+  'sect/stance-skill.csv': { next: 'numbers', prev: 'numbers' },
+  'sect/skill.csv': { attrs: 'attrs' },
+};
+
+function listValue(kind: ListKind, text: string): unknown {
+  const numbers = (value: string, separator: RegExp, hex = false): number[] => {
+    if (!value.trim()) return [];
+    return value.trim().split(separator).map(token => {
+      if (!(hex ? /^(?:0x)?[0-9a-f]+$/i : /^-?\d+$/).test(token)) throw new Error(`配列の値が読めません: ${token}`);
+      const n = hex ? parseInt(token, 16) : Number(token);
+      if (!Number.isSafeInteger(n)) throw new Error(`配列の値が大きすぎます: ${token}`);
+      return n;
+    });
+  };
+  if (kind === 'hex-list') return numbers(text, /;/, true);
+  if (kind === 'numbers') return numbers(text, /\s+/);
+  if (kind === 'attrs') return text ? text.split('・') : [];
+  if (kind === 'meshes' || kind === 'textures') {
+    const layers = text.split('|');
+    if (layers.length !== 4) throw new Error('層は4つ必要です');
+    return kind === 'meshes' ? layers : layers.map(layer => numbers(layer, /\s+/));
+  }
+  const bytes = numbers(text, /\s+/, true);
+  if (bytes.some(b => b < 0 || b > 255)) throw new Error('バイトは00〜FFの範囲です');
+  if (kind === 'bytes') return bytes;
+  if (kind === 'bytes-6') {
+    if (bytes.length !== 0 && bytes.length !== 6) throw new Error('空か6バイト必要です');
+    return bytes;
+  }
+  if (bytes.length !== 8) throw new Error('8バイト必要です');
+  return [0, 2, 4, 6].map(i => {
+    const n = bytes[i] | (bytes[i + 1] << 8);
+    return n === 0xffff ? -1 : n;
+  });
+}
+
+/** 読めない値のエラーに、どのファイル・列・行かを添える */
+function listValueAt(kind: ListKind, text: string, where: string): unknown {
+  try {
+    return listValue(kind, text);
+  } catch (e) {
+    throw new Error(`${where}: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
+  }
+}
+
 // 確度の入る列（備考・status）はバンドルに入れない（AGENTS.md「UI に確度を出さない」）。
 // 画面で使うものだけを DERIVED_COLUMNS で確度を含まない列に変えて出す。
 const OMIT_COLUMNS = new Set(["id_hex", "備考", "status"]);
@@ -84,20 +167,21 @@ export function renderDataset(csvPath: string, text: string): string {
   const rows = body.filter((r) => r.length > 1);
   const idCol = header.indexOf("id_dec");
   if (idCol < 0) throw new Error(`${csvPath} に id_dec 列がありません`);
+  const listColumns: Readonly<Record<string, ListKind | undefined>> = LIST_COLUMNS[csvPath] ?? {};
 
   const columns = header
     .map((name, i) => ({ name, i }))
     .filter((c) => !OMIT_COLUMNS.has(c.name))
     .map((c) => {
       const values = rows.map((r) => r[c.i] ?? "").filter((v) => v !== "");
-      const kind =
+      const kind: ListKind | 'empty' | 'decimal' | 'hex' | 'string' = listColumns[c.name] ?? (
         values.length === 0
           ? "empty"
           : values.every((v) => DECIMAL.test(v))
             ? "decimal"
             : values.every((v) => HEX.test(v))
               ? "hex"
-              : "string";
+              : "string");
       return { ...c, kind };
     });
 
@@ -120,7 +204,9 @@ export function renderDataset(csvPath: string, text: string): string {
     const fields = columns.map((c) => {
       const v = r[c.i] ?? "";
       const value =
-        c.kind === "empty" ? "null" : c.kind === "string" ? JSON.stringify(v) : v === "" ? "null" : String(Number(v));
+        c.kind === "empty" ? "null" : c.kind === "string" ? JSON.stringify(v)
+          : c.kind === 'decimal' || c.kind === 'hex' ? (v === "" ? "null" : String(Number(v)))
+          : JSON.stringify(listValueAt(c.kind, v, `${csvPath} の ${c.name} 列（id_dec ${id}）`));
       return `${JSON.stringify(c.name)}: ${value}`;
     });
     for (const d of derived) {

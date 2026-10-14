@@ -80,7 +80,6 @@ describe('readItemBox', () => {
     expect(v.slots[0]).toMatchObject({ offset: 0x5b40, id: 0x09, count: 1, label: '秘薬', problem: null, warnings: [] })
     expect(v.slots[1]).toMatchObject({ id: 0x10, label: '砥石' })
     expect(v.slots[2]).toMatchObject({ id: EMPTY_ID, label: 'なし', problem: null })
-    expect(v.slots[0].unknown).toBe(0x50e8ee06)
     const c = readItemBox(makeSave(), CHEST_AREA)
     expect(c.slots).toHaveLength(80)
     expect(c.slots[0]).toMatchObject({ id: 0x13, count: 13, label: '刀油', problem: null, warnings: [] })
@@ -197,7 +196,8 @@ describe('writeItemBoxSlot', () => {
     writeItemBoxSlot(after, TOOLS_AREA, 0, 0x0c, 1)
     const o = itemBoxSlotOffset(TOOLS_AREA, 0)
     expect(diffOffsets(before, after).every((i) => i >= o && i < o + 4)).toBe(true)
-    expect(readItemBox(after, TOOLS_AREA).slots[0]).toMatchObject({ id: 0x0c, count: 1, unknown: 0x50e8ee06 })
+    expect(readItemBox(after, TOOLS_AREA).slots[0]).toMatchObject({ id: 0x0c, count: 1 })
+    expect(after.subarray(o + 4, o + 8)).toEqual(before.subarray(o + 4, o + 8))
     expect(readValuables(after).slots).toEqual(readValuables(before).slots)
   })
 

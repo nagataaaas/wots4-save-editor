@@ -21,7 +21,7 @@ import {
   PUPIL_MAX,
   RAID_OFFSET,
   RAIDERS_OFFSET,
-  RANK_MAX,
+  REPUTATION_RANK_MAX,
   RANK_OFFSET,
   POINTS_OFFSET,
   REPUTATION_RANGES,
@@ -92,7 +92,7 @@ function lookOptions(pupil: PupilView | null, advanced: boolean): SelectOption[]
 }
 
 function stars(rank: number): string {
-  return "★".repeat(rank) + "☆".repeat(RANK_MAX - rank);
+  return "★".repeat(rank) + "☆".repeat(REPUTATION_RANK_MAX - rank);
 }
 
 /**
@@ -119,7 +119,7 @@ function RelatedFlagsNote() {
 function ReputationCard({ view }: { view: DojoView | null }) {
   const { write: update } = useWrite();
   const problem = view?.problem ?? null;
-  const next = view && view.rank < RANK_MAX ? REPUTATION_RANGES[view.rank + 1][0] : null;
+  const next = view && view.rank < REPUTATION_RANK_MAX ? REPUTATION_RANGES[view.rank + 1][0] : null;
 
   return (
     <AnchoredCard anchor={DOJO_ANCHORS.reputation} searchLabel="道場の評判">

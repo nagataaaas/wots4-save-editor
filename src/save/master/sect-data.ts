@@ -65,8 +65,6 @@ export type StanceSkill = {
   prev: number[]
 }
 
-const numbers = (s: string | number | null): number[] =>
-  s === null || s === '' ? [] : String(s).trim().split(/\s+/).map(Number)
 const nullable = (v: number | null | string): number | null => (v === null || v === '' ? null : Number(v))
 
 export const STANCES: readonly Stance[] = Object.values(STANCE_TABLE).map((r) => ({
@@ -115,8 +113,8 @@ export const STANCE_SKILLS: readonly StanceSkill[] = Object.values(STANCE_SKILL_
   nameJa: r.name_ja,
   nameEn: r.name_en,
   first: r.first === 1,
-  next: numbers(r.next),
-  prev: numbers(r.prev),
+  next: [...r.next],
+  prev: [...r.prev],
 }))
 
 const SECT_BY_ID = new Map(SECTS.map((s) => [s.id, s]))
@@ -159,7 +157,7 @@ const SKILL_BY_ID = new Map<number, SkillInfo>(
       defenseGroup: nullable(r.defense_group),
       attack: r.attack,
       points: r.points,
-      attrs: r.attrs ? String(r.attrs).split('・') : [],
+      attrs: [...r.attrs],
     },
   ]),
 )

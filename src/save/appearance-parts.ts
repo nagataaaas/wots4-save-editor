@@ -93,7 +93,6 @@ export type PartValue = {
   /** −1 は FFFF（なし） */
   id: number;
   models: [number, number, number, number];
-  raw: string;
 };
 
 export type AppearancePartsView = ViewStatus & {
@@ -105,11 +104,6 @@ export type AppearancePartsView = ViewStatus & {
   bodyKind: number;
   parts: Record<PartKind, PartValue>;
 };
-
-const hex = (bytes: Uint8Array, offset: number, length: number) =>
-  Array.from(bytes.subarray(offset, offset + length), (b) =>
-    b.toString(16).padStart(2, "0").toUpperCase(),
-  ).join(" ");
 
 const i16 = (u: number) => (u === 0xffff ? -1 : u);
 
@@ -125,7 +119,6 @@ export function readAppearanceParts(bytes: Uint8Array): AppearancePartsView {
       models: [0, 1, 2, 3].map((i) =>
         i16(readU16(bytes, partLayerOffset(kind, i))),
       ) as PartValue["models"],
-      raw: hex(bytes, offset, PART_RECORD_SIZE),
     };
   }
   return {

@@ -2,7 +2,7 @@
 //
 // 1枠は 8 B：+0x00 ID（u16）、+0x02 個数（u16）、+0x04 用途不明（4 B ❓）。
 // 書き込むのは ID と個数の 4 B だけで、+0x04 の 4 B は変えない。
-import { readU16, readU32, writeU16 } from './binary'
+import { readU16, writeU16 } from './binary'
 import type { ViewStatus } from './field'
 import { assertWritable } from './layout'
 
@@ -41,8 +41,6 @@ export type ItemSlot = ViewStatus & {
   offset: number
   id: number
   count: number
-  /** +0x04〜+0x07（❓ 用途不明）。表示のみ */
-  unknown: number
   /** 既知の ID なら名前、未知の ID は null */
   label: string | null
   /**
@@ -59,10 +57,11 @@ export function validateItemCount(count: number, max: number = ITEM_COUNT_MAX): 
   return null
 }
 
-export type RawItemSlot = { offset: number; id: number; count: number; unknown: number }
+/** ID と個数。+0x04 の 4 B（❓ 用途不明）は読まない */
+export type RawItemSlot = { offset: number; id: number; count: number }
 
 export function readItemSlotRaw(bytes: Uint8Array, offset: number): RawItemSlot {
-  return { offset, id: readU16(bytes, offset), count: readU16(bytes, offset + 2), unknown: readU32(bytes, offset + 4) }
+  return { offset, id: readU16(bytes, offset), count: readU16(bytes, offset + 2) }
 }
 
 /**

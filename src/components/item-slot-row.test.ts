@@ -5,7 +5,7 @@ import { ItemSlotRow } from './item-slot-row'
 import { EMPTY_ID, type ItemSlot } from '@/save/item-slot'
 
 const slot: ItemSlot = {
-  index: 0, offset: 0x58c0, id: 1, count: 2, unknown: 0,
+  index: 0, offset: 0x58c0, id: 1, count: 2,
   label: '道具', problem: null, idWritable: true, warnings: [],
 }
 

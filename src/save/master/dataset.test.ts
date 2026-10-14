@@ -59,4 +59,37 @@ describe("CSV から生成したデータ", () => {
       ["1", "x\ny", ""],
     ]);
   });
+
+  it('候補の16進数・バイト列は生成時に配列にする。空欄は空配列', () => {
+    const out = renderDataset('npc/pupil.csv', 'id_dec,looks\n1,0x10;0xFF\n2,\n');
+    expect(out).toContain('"looks": [16,255]');
+    expect(out).toContain('"looks": []');
+    expect(renderDataset('place/night-visit-row.csv', 'id_dec,save_bytes_le,備考\n1,07 00 A2,\n2,,\n'))
+      .toContain('"save_bytes_le": [7,0,162]');
+    // 読めない値はファイル・列・行を添えて止める
+    expect(() => renderDataset('npc/pupil.csv', 'id_dec,looks\n1,0x10;xx\n'))
+      .toThrow('npc/pupil.csv の looks 列（id_dec 1）: 配列の値が読めません: xx');
+    expect(() => renderDataset('weapon/blade.csv', 'id_dec,save_bytes_le\n1,00 100\n')).toThrow('範囲');
+  });
+
+  it('固有武器のバイト列は空か6バイト', () => {
+    const out = renderDataset('weapon/complete.csv', 'id_dec,unique_bytes\n1,41 02 0A 00 61 00\n2,\n');
+    expect(out).toContain('"unique_bytes": [65,2,10,0,97,0]');
+    expect(out).toContain('"unique_bytes": []');
+    expect(() => renderDataset('weapon/complete.csv', 'id_dec,unique_bytes\n1,41 02\n')).toThrow('6バイト');
+  });
+
+  it('🟢 容姿のモデルは符号つきの4値、層と技の列は配列にして出す', () => {
+    const out = renderDataset('appearance/feet.csv', 'id_dec,save_models,layer_meshes,layer_textures\n1,46 01 FF FF 00 00 FF FF,足|小物||,299 300|309||\n');
+    expect(out).toContain('"save_models": [326,-1,0,-1]');
+    expect(out).toContain('"layer_meshes": ["足","小物","",""]');
+    expect(out).toContain('"layer_textures": [[299,300],[309],[],[]]');
+    const header = 'id_dec,save_models,layer_meshes,layer_textures\n';
+    expect(() => renderDataset('appearance/feet.csv', `${header}1,FF FF,|||,|||\n`)).toThrow('8バイト');
+    expect(() => renderDataset('appearance/feet.csv', `${header}1,00 00 00 00 00 00 00 00,|||,1|2\n`)).toThrow('4つ');
+    expect(renderDataset('sect/stance-skill.csv', 'id_dec,next,prev\n1,2 3,\n'))
+      .toContain('"next": [2,3], "prev": []');
+    expect(renderDataset('sect/skill.csv', 'id_dec,attrs\n1,投げ・防御\n'))
+      .toContain('"attrs": ["投げ","防御"]');
+  });
 });

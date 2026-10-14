@@ -1,25 +1,20 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import { assertSameSize, downloadBytes, readFileAsBytes } from '@/lib/file-io'
 import { addLoaded, addSaved, clearAll, getBytes, getSnapshot } from '@/lib/history-db'
 import { SaveContext, type LoadedSave } from '@/lib/save-context'
 import { errorMessage } from '@/lib/error-message'
-
-function countChangedBytes(a: Uint8Array, b: Uint8Array): number {
-  let n = 0
-  for (let i = 0; i < a.byteLength; i++) if (a[i] !== b[i]) n++
-  return n
-}
+import { countChangedBytes } from '@/lib/byte-diff'
 
 /** 読み込んだセーブをメモリ上に保持し、画面全体に共有する。読み込み時と保存のたびに履歴（IndexedDB）へ残す */
 export function SaveProvider({ children }: { children: ReactNode }) {
   const [save, setSave] = useState<LoadedSave | null>(null)
   const saveRef = useRef<LoadedSave | null>(null)
   // 同じイベント内の連続更新にも、最新のセーブを同期で渡す。
-  function replaceSave(next: LoadedSave | null | ((prev: LoadedSave | null) => LoadedSave | null)) {
+  const replaceSave = useCallback((next: LoadedSave | null | ((prev: LoadedSave | null) => LoadedSave | null)) => {
     const value = typeof next === 'function' ? next(saveRef.current) : next
     saveRef.current = value
     setSave(value)
-  }
+  }, [])
   const [error, setError] = useState<string | null>(null)
   const [historyVersion, setHistoryVersion] = useState(0)
   const loadSeq = useRef(0)
@@ -27,26 +22,26 @@ export function SaveProvider({ children }: { children: ReactNode }) {
   const changedBytes = useMemo(() => (save ? countChangedBytes(save.original, save.working) : 0), [save])
   const unsavedBytes = useMemo(() => (save ? countChangedBytes(save.saved, save.working) : 0), [save])
 
-  function run(action: () => void) {
+  const run = useCallback((action: () => void) => {
     setError(null)
     try {
       action()
     } catch (e) {
       setError(errorMessage(e))
     }
-  }
+  }, [])
 
   /** 履歴に残す。失敗してもエラーを出すだけで、編集は続けられる */
-  async function record(action: () => Promise<void>) {
+  const record = useCallback(async (action: () => Promise<void>) => {
     try {
       await action()
       setHistoryVersion((v) => v + 1)
     } catch (e) {
       setError(`履歴に残せませんでした: ${errorMessage(e)}`)
     }
-  }
+  }, [])
 
-  async function load(file: File) {
+  const load = useCallback(async (file: File) => {
     setError(null)
     let original: Uint8Array
     try {
@@ -62,18 +57,18 @@ export function SaveProvider({ children }: { children: ReactNode }) {
       // 履歴に残すあいだに別のファイルを読み込んでいたら、そちらには紐づけない
       replaceSave((prev) => (prev?.loadId === loadId ? { ...prev, sessionId } : prev))
     })
-  }
+  }, [record, replaceSave])
 
-  function update(mutator: (bytes: Uint8Array) => void) {
+  const update = useCallback((mutator: (bytes: Uint8Array) => void) => {
     const save = saveRef.current
     if (!save) throw new Error('セーブファイルが読み込まれていません')
     const next = save.working.slice()
     mutator(next)
     assertSameSize(save.original, next)
     replaceSave({ ...save, working: next })
-  }
+  }, [replaceSave])
 
-  function downloadEdited() {
+  const downloadEdited = useCallback(() => {
     const save = saveRef.current
     if (!save) return
     run(() => {
@@ -84,9 +79,9 @@ export function SaveProvider({ children }: { children: ReactNode }) {
     })
     const { sessionId, working } = save
     if (sessionId !== null) void record(() => addSaved(sessionId, working))
-  }
+  }, [record, replaceSave, run])
 
-  async function restore(id: number) {
+  const restore = useCallback(async (id: number) => {
     setError(null)
     try {
       const snapshot = await getSnapshot(id)
@@ -102,28 +97,21 @@ export function SaveProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       setError(`履歴から復元できませんでした: ${errorMessage(e)}`)
     }
-  }
+  }, [replaceSave])
 
-  async function clearHistory() {
+  const clearHistory = useCallback(async () => {
     await record(clearAll)
     // 編集中のデータの組も消えたので、このあとの保存は履歴に残さない
     replaceSave((prev) => (prev ? { ...prev, sessionId: null } : prev))
-  }
+  }, [record, replaceSave])
+
+  const value = useMemo(() => ({
+    save, error, changedBytes, unsavedBytes, load, update, downloadEdited, restore, clearHistory, historyVersion,
+  }), [save, error, changedBytes, unsavedBytes, load, update, downloadEdited, restore, clearHistory, historyVersion])
 
   return (
     <SaveContext.Provider
-      value={{
-        save,
-        error,
-        changedBytes,
-        unsavedBytes,
-        load,
-        update,
-        downloadEdited,
-        restore,
-        clearHistory,
-        historyVersion,
-      }}
+      value={value}
     >
       {children}
     </SaveContext.Provider>

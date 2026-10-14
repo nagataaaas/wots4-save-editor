@@ -47,13 +47,13 @@ export type PartOption = {
 };
 
 /** 部品の CSV（blade・guard・grip）の行。0xFFFF の「なし」は選択肢にしない */
-type PartRow = { id_dec: number; save_bytes_le: string; name_ja: string };
+type PartRow = { id_dec: number; save_bytes_le: readonly number[]; name_ja: string };
 
 const NONE_ID = 0xffff;
 
 /** "07 00 A2" → 0xA20007 */
-function bytesLe(text: string): number {
-  return text.split(" ").reduceRight((acc, b) => acc * 0x100 + parseInt(b, 16), 0);
+function bytesLe(bytes: readonly number[]): number {
+  return bytes.reduceRight((acc, b) => acc * 0x100 + b, 0);
 }
 
 function weaponKeyOf(name: string, file: string): WeaponKey {
@@ -69,7 +69,7 @@ function partOptions<R extends PartRow>(
   return Object.values(table)
     .filter((r) => r.id_dec !== NONE_ID)
     .map((r) => {
-      const source = r.save_bytes_le === "" ? "ct" : "ts";
+      const source = r.save_bytes_le.length === 0 ? "ct" : "ts";
       const tsRaw = source === "ts" ? bytesLe(r.save_bytes_le) : undefined;
       return { source, id: r.id_dec, tsRaw, name: weaponKeyOf(r.name_ja, file), ...extra(r, source) };
     });
@@ -172,11 +172,9 @@ export const CUSTOM_WEAPON_ID = 0xffff;
 
 type CompleteRow = (typeof COMPLETE_TABLE)[keyof typeof COMPLETE_TABLE];
 
-/** "41 02 0A 00 61 00" → [0x241, 0x0A, 0x61]。空は null（固有武器でない） */
-function uniqueOf(text: string): BuildCommon["unique"] {
-  if (text === "") return null;
-  const b = text.split(" ").map((s) => parseInt(s, 16));
-  if (b.length !== 6) throw new Error(`complete.csv の unique_bytes が読めません: ${text}`);
+/** "41 02 0A 00 61 00" → [0x241, 0x0A, 0x61]。空は null（固有武器でない）。空か 6 B かは生成時に検証済み */
+function uniqueOf(b: readonly number[]): BuildCommon["unique"] {
+  if (b.length === 0) return null;
   return [b[0] | (b[1] << 8), b[2] | (b[3] << 8), b[4] | (b[5] << 8)];
 }
 

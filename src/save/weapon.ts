@@ -241,8 +241,8 @@ export type WeaponView = ViewStatus & {
   name: Field<string>;
   /** 🟢 完成武器の名前の番号（i32）。0 以上なら name は表示されない */
   nameNo: number;
-  /** 🟢 1 以上なら武器名が「*****」と表示される（+0x93 の u8）。raw は読んだ値 */
-  nameHidden: Field<boolean> & { raw: number };
+  /** 🟢 1 以上なら武器名が「*****」と表示される（+0x93 の u8）。 */
+  nameHidden: Field<boolean>;
   weaponId: Field<number> & { label: string | null };
   /** 特殊武器（刃の3バイト目が 0xFF。D-15） */
   special: boolean;
@@ -253,7 +253,7 @@ export type WeaponView = ViewStatus & {
   /** 魅力を個数分に展開したもの。通常は3枠、上級者設定では最大9個。空きは null */
   charms: Field<(number | null)[]>;
   /** 銘の番号。null は銘なし。label が null なら未知のバイト列 */
-  title: Field<number | null> & { label: string | null; raw: number };
+  title: Field<number | null> & { label: string | null };
   /** 鞘（X）。label は同じ鞘を使う刃の名前。表にない X は null */
   sheath: Field<number> & { label: string | null };
   /** 武器種（U-8）。label は WEAPON_TYPES の名前、未知の値は null */
@@ -526,7 +526,7 @@ export function readWeapon(
           : null,
     ),
     nameNo,
-    nameHidden: { ...f(hiddenRaw !== 0), raw: hiddenRaw },
+    nameHidden: f(hiddenRaw !== 0),
     weaponId: {
       ...f(
         weaponId,
@@ -550,7 +550,6 @@ export function readWeapon(
           : null,
       ),
       label: titleLabel,
-      raw: titleRaw,
     },
     sheath: {
       ...f(sheathValue, null, sheathLabel ? null : "表にない鞘です"),

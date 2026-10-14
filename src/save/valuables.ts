@@ -225,7 +225,7 @@ export function readValuables(bytes: Uint8Array, options: EditOpts = NORMAL_EDIT
   const slots: ValuableSlot[] = []
   const seen = new Map<number, number>()
   for (let index = 0; index < VALUABLE_SLOT_COUNT; index++) {
-    const { offset, id, count, unknown } = readItemSlotRaw(bytes, slotOffset(index))
+    const { offset, id, count } = readItemSlotRaw(bytes, slotOffset(index))
 
     const idProblem = validateValuableId(id, options)
     const warnings: string[] = []
@@ -248,7 +248,6 @@ export function readValuables(bytes: Uint8Array, options: EditOpts = NORMAL_EDIT
       offset,
       id,
       count,
-      unknown,
       label: valuableLabel(id),
       problem: layoutProblem,
       idWritable: idProblem === null,

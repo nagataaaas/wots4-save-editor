@@ -180,7 +180,7 @@ export function readItemBox(bytes: Uint8Array, area: ItemBoxArea, options: EditO
 
   const slots: ItemSlot[] = [];
   for (let index = 0; index < area.slotCount; index++) {
-    const { offset, id, count, unknown } = readItemSlotRaw(bytes, itemBoxSlotOffset(area, index));
+    const { offset, id, count } = readItemSlotRaw(bytes, itemBoxSlotOffset(area, index));
     const item = findItem(id);
 
     const idProblem = validateItemId(id, options);
@@ -202,7 +202,6 @@ export function readItemBox(bytes: Uint8Array, area: ItemBoxArea, options: EditO
       offset,
       id,
       count,
-      unknown,
       label: itemLabel(id),
       problem: layoutProblem,
       idWritable: idProblem === null,

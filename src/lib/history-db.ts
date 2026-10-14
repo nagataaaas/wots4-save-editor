@@ -4,6 +4,7 @@
 // 組（session）：1回の読み込みと、それを編集して保存した版の並び。組の id は読み込みの版の id と同じ。
 // store は2つに分ける。一覧ではメタデータ（snapshots）だけを読み、バイト列（snapshotBytes）は復元のときだけ読む。
 import { snapshotMeta, type SnapshotMeta } from '@/save/snapshot-meta'
+import { sameBytes } from './byte-diff'
 
 const DB_NAME = 'wots4-save-editor'
 const DB_VERSION = 1
@@ -58,12 +59,6 @@ function done(tx: IDBTransaction): Promise<void> {
     tx.onerror = () => reject(tx.error)
     tx.onabort = () => reject(tx.error ?? new Error('履歴の書き込みが中断されました'))
   })
-}
-
-function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
-  if (a.byteLength !== b.byteLength) return false
-  for (let i = 0; i < a.byteLength; i++) if (a[i] !== b[i]) return false
-  return true
 }
 
 /** 版を1つ追加し、その id を返す。sessionId が null なら新しい組を作る（組の id は追加した版の id） */

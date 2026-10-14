@@ -111,9 +111,9 @@ type PartRow = {
   name_ja: string | null;
   name_en: string | null;
   gender: string | null;
-  save_models: string;
-  layer_meshes: string;
-  layer_textures: string;
+  save_models: PartEntry['models'];
+  layer_meshes: readonly [string, string, string, string];
+  layer_textures: readonly [readonly number[], readonly number[], readonly number[], readonly number[]];
   unlock_id?: number | null;
   cloth_id?: number | null;
   dlc?: number | string | null;
@@ -125,82 +125,37 @@ type PartRow = {
 const optNum = (v: number | string | null | undefined) =>
   v === undefined || v === null || v === "" ? null : Number(v);
 
-/** "46 01 FF FF …" → [326, -1, …] */
-function parseModels(text: string, file: string, id: number): PartEntry["models"] {
-  const b = text.split(" ").map((x) => parseInt(x, 16));
-  if (b.length !== 8 || b.some((x) => !Number.isInteger(x)))
-    throw new Error(`${file} の ${id} の save_models が読めません`);
-  const v = [0, 1, 2, 3].map((i) => {
-    const u = b[i * 2] | (b[i * 2 + 1] << 8);
-    return u === 0xffff ? -1 : u;
-  });
-  return [v[0], v[1], v[2], v[3]];
-}
-
-/** layer_meshes "足（浪人）|小物1（浪人）||" と layer_textures "299 300|309||" → 層4つ */
-function parseLayers(
-  meshes: string,
-  textures: string,
-  file: string,
-  id: number,
-): PartEntry["layers"] {
-  const m = meshes.split("|");
-  const t = textures.split("|");
-  if (m.length !== 4 || t.length !== 4)
-    throw new Error(`${file} の ${id} の layer_meshes・layer_textures が読めません`);
-  const layers = m.map((mesh, i): PartLayer | null => {
-    if (mesh === "") return null;
-    const values = t[i].split(" ").map(Number);
-    if (values.length === 0 || values.some((v) => !Number.isInteger(v)))
-      throw new Error(`${file} の ${id} の layer_textures が読めません`);
-    return { mesh, textures: values };
-  });
-  return [layers[0], layers[1], layers[2], layers[3]];
-}
-
 function loadParts(
   table: Readonly<Record<number, PartRow>>,
-  file: string,
   kind?: string,
 ): PartEntry[] {
   return Object.values(table)
     .filter((r) => kind === undefined || r.kind === kind)
     .map((r) => {
       const g = r.gender;
+      const layer = (i: number): PartLayer | null => r.layer_meshes[i] === '' ? null
+        : { mesh: r.layer_meshes[i], textures: r.layer_textures[i] };
+      const layers: PartEntry['layers'] = [layer(0), layer(1), layer(2), layer(3)];
       return {
         id: r.id_dec,
         ja: r.name_ja ?? "",
         en: r.name_en ?? "",
         gender: g === "男" || g === "女" ? g : null,
-        models: parseModels(r.save_models, file, r.id_dec),
+        models: r.save_models,
         unlockId: optNum(r.unlock_id),
         clothId: optNum(r.cloth_id),
         dlc: optNum(r.dlc),
         alias: r.alias_ja ?? "",
         crash: r.crash === 1,
-        layers: parseLayers(r.layer_meshes ?? "", r.layer_textures ?? "", file, r.id_dec),
+        layers,
       };
     });
 }
 
-const PERSON_PART_COLUMNS: Record<PartKind, string> = {
-  upper: "upper",
-  lower: "lower",
-  face: "face",
-  hair: "hair",
-  body: "body",
-  feet: "feet",
-  gauntlet: "gauntlet",
-  leggings: "leggings",
-  apron: "apron",
-  cape: "cape",
-};
-
 function loadPersons(): PersonEntry[] {
   return Object.values(PERSON_TABLE).map((r) => {
-    const row: Readonly<Record<string, unknown>> = r;
     const parts = {} as Record<PartKind, number | null>;
-    for (const k of PART_KINDS) parts[k] = optNum(row[PERSON_PART_COLUMNS[k]] as number | null);
+    for (const k of PART_KINDS) parts[k] = optNum(r[k]);
     const bodyKind = BODY_KINDS.indexOf(r.body_kind);
     if (bodyKind < 0) throw new Error(`person.csv の ${r.id_dec} の body_kind が読めません`);
     return {
@@ -220,16 +175,16 @@ function loadPersons(): PersonEntry[] {
 
 /** 部品の種類ごとの表（番号順） */
 export const PARTS: Readonly<Record<PartKind, readonly PartEntry[]>> = {
-  upper: loadParts(UPPER_TABLE, "upper.csv"),
-  lower: loadParts(LOWER_TABLE, "lower.csv"),
-  face: loadParts(FACE_TABLE, "face.csv"),
-  hair: loadParts(HAIR_TABLE, "hair.csv"),
-  body: loadParts(BODY_TABLE, "body.csv"),
-  feet: loadParts(FEET_TABLE, "feet.csv"),
-  gauntlet: loadParts(EXTRA_TABLE, "extra.csv", "手甲"),
-  leggings: loadParts(EXTRA_TABLE, "extra.csv", "脚絆"),
-  apron: loadParts(EXTRA_TABLE, "extra.csv", "前掛け"),
-  cape: loadParts(EXTRA_TABLE, "extra.csv", "合羽"),
+  upper: loadParts(UPPER_TABLE),
+  lower: loadParts(LOWER_TABLE),
+  face: loadParts(FACE_TABLE),
+  hair: loadParts(HAIR_TABLE),
+  body: loadParts(BODY_TABLE),
+  feet: loadParts(FEET_TABLE),
+  gauntlet: loadParts(EXTRA_TABLE, "手甲"),
+  leggings: loadParts(EXTRA_TABLE, "脚絆"),
+  apron: loadParts(EXTRA_TABLE, "前掛け"),
+  cape: loadParts(EXTRA_TABLE, "合羽"),
 };
 
 /** 人物の番号順 */

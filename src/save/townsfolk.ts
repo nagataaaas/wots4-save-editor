@@ -20,6 +20,7 @@ import { type ViewStatus } from "./field";
 import { CHARACTER_STATUS, characterStatusForTown } from "./flags/characters";
 import { assertWritable, checkLayout } from "./layout";
 import { nameOf } from "./master/labels";
+import { TOWNSFOLK_PERSON_TABLE } from "./master/dataset/townsfolk-person";
 
 /** 🟢 主人公名（〜0x011B）の直後 */
 export const TOWNSFOLK_START = 0x011c;
@@ -56,80 +57,13 @@ export function personOffset(p: number): number {
 export type TownsfolkPerson = { p: number; name: string; group: string };
 
 /** 🟢 人物番号と人物（chunks/townsfolk「人物のレコード」）。堂島・寿司屋・鍛冶屋のおやじは死亡の位置が ✅ [U] */
-export const TOWNSFOLK_PEOPLE: readonly TownsfolkPerson[] = [
-  ...(
-    [
-      [10, nameOf.npc(1)],
-      [11, nameOf.npc(2)],
-      [12, `${nameOf.npc(3)}・${nameOf.npc(10)}`],
-      [13, nameOf.npc(4)],
-      [14, nameOf.npc(5)],
-      [15, nameOf.npc(6)],
-      [16, nameOf.npc(7)],
-      [17, nameOf.npc(8)],
-      [18, nameOf.npc(9)],
-      [19, nameOf.npc(11)],
-      [20, nameOf.npc(12)],
-      [21, nameOf.npc(13)],
-      [22, nameOf.npc(14)],
-      [23, `${nameOf.npc(15)}（${nameOf.npc(93)}）`],
-    ] as const
-  ).map(([p, name]) => ({ p, name, group: "重要人物" })),
-  ...(
-    [
-      [30, nameOf.npc(137)],
-      [31, nameOf.npc(138)],
-      [32, nameOf.npc(139)],
-      [33, nameOf.npc(140)],
-      [34, nameOf.npc(141)],
-      [35, nameOf.npc(142)],
-      [36, nameOf.npc(143)],
-      [37, nameOf.npc(158)],
-      [38, nameOf.npc(90)],
-      [39, nameOf.npc(79)],
-      [40, `${nameOf.npc(145)}（DLCの${nameOf.npc(207)}）`],
-      [50, nameOf.npc(144)],
-      [51, nameOf.npc(145)],
-      [52, nameOf.npc(146)],
-      [53, nameOf.npc(147)],
-      [54, nameOf.npc(148)],
-      [55, nameOf.npc(149)],
-      [56, nameOf.npc(150)],
-      [57, nameOf.npc(151)],
-      [58, nameOf.npc(152)],
-      [59, nameOf.npc(153)],
-      [60, nameOf.npc(154)],
-      [61, nameOf.npc(155)],
-      [62, `${nameOf.npc(25)}（おやじ）`],
-    ] as const
-  ).map(([p, name]) => ({ p, name, group: "店主" })),
-  ...(
-    [
-      [100, nameOf.npc(37)],
-      [101, `${nameOf.npc(162)}・${nameOf.npc(44)}`],
-      [102, nameOf.npc(40)],
-      [103, nameOf.npc(45)],
-      [104, `${nameOf.npc(169)}・${nameOf.npc(69)}`],
-      [105, `${nameOf.npc(76)}・${nameOf.npc(73)}`],
-      [106, `${nameOf.npc(168)}・${nameOf.npc(68)}`],
-      [107, nameOf.npc(61)],
-      [108, nameOf.npc(48)],
-      [109, nameOf.npc(51)],
-      [110, `${nameOf.npc(56)}・${nameOf.npc(57)}`],
-      [111, nameOf.npc(164)],
-    ] as const
-  ).map(([p, name]) => ({ p, name, group: "依頼主・四天王など" })),
-  ...(
-    [
-      [70, `${nameOf.npc(32)}（道場主）`],
-      [72, nameOf.npc(16)],
-      [80, nameOf.npc(211)],
-      [81, nameOf.npc(215)],
-      [200, nameOf.npc(97)],
-    ] as const
-  ).map(([p, name]) => ({ p, name, group: "その他" })),
-  ...([[201, nameOf.npc(94)]] as const).map(([p, name]) => ({ p, name, group: "重要人物" })),
-];
+export const TOWNSFOLK_PEOPLE: readonly TownsfolkPerson[] = Object.values(TOWNSFOLK_PERSON_TABLE)
+  .sort((a, b) => a.display_order - b.display_order)
+  .map(r => ({
+    p: r.id_dec,
+    name: `${nameOf.npc(r.npc)}${r.separator}${r.second_npc === null ? '' : nameOf.npc(r.second_npc)}${r.suffix}`,
+    group: r.group,
+  }));
 
 const PERSON_BY_NUMBER = new Map(TOWNSFOLK_PEOPLE.map((x) => [x.p, x]));
 

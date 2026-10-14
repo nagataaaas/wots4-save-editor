@@ -5,6 +5,7 @@ IDを持つデータの一覧。1ファイル＝1つのリストの CSV。新し
 コードはこの CSV を直接読まず、`pnpm gen:dataset` で生成した `src/save/master/dataset/*.ts`（`id_dec` をキーにした型付きのオブジェクト）を使う。
 CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いとテストが落ちる）。列は名前で引くので、列の追加・並べ替えはしてよい。
 列の型は値から決まる（すべて整数・小数・`0x` の16進数なら数値で、空は null。それ以外は文字列で、空は空文字。すべて空の列は null）。
+候補の16進数の並び・バイト列・層・技のつながり・属性の列は、生成時に形式を検証して配列にする。空の並びは空配列。
 
 <!--
 書き方
@@ -50,6 +51,8 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 | `occupation/occupation.csv`   | なりわい（3〜212） | このリストのみ（0〜255） | 状態の表の添字・u16 LE       |              | [occupation](../chunks/occupation/README.md)              |
 | `npc/npc-name.csv`            | 人物の名前         | このリストのみ（1〜8200）| u32 LE                       |              | [night-visit](../chunks/night-visit/README.md) +0x1C・記録 +0x04、[dojo](../chunks/dojo/README.md) 弟子の +0x04 |
 | `npc/pupil.csv`               | 弟子にできる町の人の種類（60件） | 町の人の種類（0〜796）のうち弟子にできるもの | i32 LE | `FFFFFFFF`＝空き | [dojo](../chunks/dojo/README.md) 弟子の +0x00 |
+| `npc/townsfolk-person.csv`    | 町の人の人物番号と表示名の組 | 町の人の人物番号 | 12 B レコードの添字 | | [townsfolk](../chunks/townsfolk/README.md) |
+| `npc/night-visit-count.csv`   | 特別な相手の夜這い回数の並び | 回数の枠（0〜13） | u32 LE | | [night-visit](../chunks/night-visit/README.md) `0x13E38` |
 | `sect/sect.csv`               | 流派（0〜112）     | このリストのみ           | i16 LE                       |              | [styles](../chunks/styles/README.md)、[sect-scrolls](../chunks/sect-scrolls/README.md) |
 | `sect/stance.csv`             | 構え（0〜12）      | このリストのみ           | i16 LE                       |              | [skill-states](../chunks/skill-states/README.md)          |
 | `sect/skill-sheet.csv`        | 技の表（0〜93）    | このリストのみ           | i16 LE                       | `FFFF`       | [styles](../chunks/styles/README.md) +0x08〜+0x0C         |
@@ -72,6 +75,9 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
   `layout`：その場所で正しく表示される「人と布団の配置」（約束の枠 +0x0A）。実データで見た組と 🟢 の組を書く。複数あるときは `;` で区切る。どれが実データで見た組かは `備考` に書く。
   🟢 の組は町の人の約束と特別な相手（さよ・先生・ローラ・メリンダ・三姉妹など）の約束で使われる組（全72組）。実データで見た組はすべてこの中にある
 - `event/event.csv` の `name_en`：英語版のゲーム内の表記
+  `day`：一覧の時間帯・ルート・エンディングの区分（[event.md](../../event.md)）。空欄のイベントは一覧と一括設定の対象にしない。
+- `npc/townsfolk-person.csv`：人物番号 `id_dec` と名前の `npc`・`second_npc` は 🟢。名前は `npc-name.csv` を参照し、`separator`・`suffix` で併記する。`group`・`display_order` は画面の分類と表示順。
+- `npc/night-visit-count.csv`：回数の枠 `id_dec` と名前の `npc` の対応は 🟢。順序は保存位置 `0x13E38 + 4 × id_dec` に対応する。
 - `occupation/occupation.csv`：ID 3〜212 の全170件（欠番あり）、全行 🟢。`name_ja`・`name_en`・`client_ja`（依頼主）はゲーム内の表記。`type` は種類（討伐・破壊・配達・伝言・説得・説得・盗み）、`alignment` は善良・悪質（空欄はどちらでもない）、`reward` は成功報酬（文）、`bonus` は1人・1つあたりの追加報酬（文）、`deadline_days` は期限の日数（空欄は期限なし）
 - `event/chart-node.csv`：全行 🟢。`name_ja`・`name_en` はチャートの枠に出る名前で、同じイベントの別の枠は名前が違うことがある（39 町の薬師＝小公女倒れる、30 闇討ち ～小暮捜索）。
   `event_id` はそのノードのイベントの通し番号（`event/event.csv` の ID）。イベントに当たらないノードは空欄

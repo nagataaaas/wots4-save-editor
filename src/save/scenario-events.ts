@@ -38,6 +38,7 @@ import { validateKnownValue } from './flags/byte-flag'
 import { assertWritable, checkLayout } from './layout'
 import { eventLabelId } from './master/label-types'
 import { eventLabel, findLabel } from './master/labels'
+import { EVENT_TABLE } from './master/dataset/event'
 
 export const EVENT_STATE_OFFSET = 0x36a8 // 🟢 chunks/event-chart（通し番号 0）
 export const EVENT_RECORD_OFFSET = 0x3838 // 🔶 chunks/event-chart
@@ -87,9 +88,8 @@ export type NamedEvent = {
 /**
  * 名前の付いたイベント（添字の順）。イベントチャートの枠の説明と、一括設定の対象はこの配列で決める。
  * 名前は docs/save_format/datatable/event/event.csv。day は docs/event.md（Wiki）の時間帯。
- * 行末のコメントの名前は読みやすさのための写しで、表示には使わない。
  * 添字とイベントの対応の根拠：
- *   0・1・3・6・9〜12  🟢 差分の観察（行末に差分を書く）
+ *   0・1・3・6・9〜12  🟢 差分の観察（chunks/event-chart の調査記録）
  *   2〜46 のそのほか  ✅ ユーザーがゲーム内のチャートで確かめた（[U] 2026-10-05）
  *   51〜99・116      ✅ 同じ（[U] 2026-10-06）。名前はゲーム内の表記に合わせる（🟢）
  * 4日目以降のイベントの day は時間帯ではなく、docs/event.md の節（ルート・エンディング）を入れる。
@@ -103,103 +103,9 @@ export type NamedEvent = {
  *   100〜165（116 以外）🟢 対応するイベントがない
  *     102 ガイジンとゲイシャで「102 = 3」のときの別の会話があるが、値を書く場面がない（使われていない。🟢）
  */
-export const NAMED_EVENTS: readonly NamedEvent[] = [
-  { index: 0, day: '1日目昼' }, // 船上の侍。どのセーブでも 04（Samurai on Board、オープニング）
-  { index: 1, day: '1日目昼' }, // 阿弥浜港争乱。スキップで 00、1周目で 04
-  { index: 2, day: '1日目昼' }, // 簀巻き日和
-  { index: 3, day: '1日目昼' }, // 嵐のあと。差分 03 copy → copy 2。Wiki の表記は「嵐の後」
-  { index: 4, day: '1日目昼' }, // 代官所の面々
-  { index: 5, day: '1日目昼' }, // 小公女謁見
-  { index: 6, day: '1日目昼' }, // 志士との出会い。差分 03 copy 2 → copy 3 → copy 4
-  { index: 7, day: '1日目夕' }, // 琴吹光探検隊
-  { index: 8, day: '1日目夕' }, // 電信あり
-  { index: 9, day: '1日目夕' }, // 海兵隊の横暴。差分 03 copy 5 → 04 copy（成功）／04 copy 2（失敗）／04 copy 4（成功）
-  { index: 10, day: '1日目夜' }, // 阿片密売を阻止せよ。差分 04 copy 2 → copy 3
-  { index: 11, day: '1日目夜' }, // 辻斬りを辻斬る。差分 04 copy 4 → copy 5
-  { index: 12, day: '1日目夜' }, // 代官所潜入。差分 04 copy 4 → 03 copy 6
-  { index: 13, day: '2日目昼' }, // 西洋医学お断り
-  { index: 14, day: '2日目昼' }, // 病院廃業の企て
-  { index: 15, day: '2日目昼' }, // 病院占拠事件
-  { index: 16, day: '2日目昼' }, // 祝 病院開業
-  { index: 17, day: '2日目昼' }, // 欺きの代価
-  { index: 18, day: '2日目夕' }, // 講師ご到着
-  { index: 19, day: '2日目夕' }, // 語学所開設
-  { index: 20, day: '2日目夕' }, // お団子物語
-  { index: 21, day: '2日目夕' }, // 語学無用
-  { index: 22, day: '2日目夕' }, // 講師を亡き者に
-  { index: 23, day: '2日目夜' }, // ガイジンとゲイシャ
-  { index: 24, day: '2日目夜' }, // ライジングサン
-  { index: 25, day: '2日目夜' }, // カジノ再建を急げ
-  { index: 26, day: '2日目夜' }, // カジノを破壊せよ
-  { index: 27, day: '2日目夜' }, // カジノ再建断固阻止
-  { index: 28, day: '3日目昼' }, // 大老 鬼怒川怨仙
-  { index: 29, day: '3日目昼' }, // 魔鱗組の力
-  { index: 30, day: '3日目昼' }, // 小公女と大老
-  { index: 31, day: '3日目昼' }, // 血で血を洗う戦い
-  { index: 32, day: '3日目昼' }, // 白昼の激突
-  { index: 33, day: '3日目夕' }, // 大老と三姉妹
-  { index: 34, day: '3日目夕' }, // 小公女倒れる
-  { index: 35, day: '3日目夕' }, // 売国奴を斬れ
-  { index: 36, day: '3日目夜' }, // 剣術大会の準備
-  { index: 37, day: '3日目夜' }, // 危険な賭け
-  { index: 38, day: '3日目夜' }, // 真実
-  { index: 39, day: '3日目夜' }, // 仕組まれた襲撃
-  { index: 40, day: '3日目夜' }, // 罠を破れ
-  { index: 41, day: '4日目以降' }, // 大老の大寄せ
-  { index: 42, day: '4日目以降' }, // 公儀の剣。ユーザーの一覧では「広儀の剣」。docs/event.md の表記に合わせた
-  { index: 43, day: '4日目以降' }, // 東国の騎士
-  { index: 44, day: '4日目以降' }, // 志士の刀
-  { index: 45, day: '4日目以降' }, // 根無し草
-  { index: 46, day: '4日目以降' }, // 剣術大会開催
-  { index: 51, day: '4日目以降' }, // 覇者となる
-  { index: 52, day: '4日目以降' }, // 最後通告
-  { index: 53, day: '幕府ルート' }, // 闇黒の意志
-  { index: 54, day: '幕府ルート' }, // 大老武断
-  { index: 55, day: '幕府ルート' }, // 憂国の士
-  { index: 56, day: '外国ルート' }, // 願い虚しく
-  { index: 57, day: '攘夷ルート' }, // 臆病風
-  { index: 58, day: '攘夷ルート' }, // 同士救出
-  { index: 59, day: '幕府ルート' }, // 般若党壊滅
-  { index: 60, day: '幕府ルート' }, // 黒船を我が手に
-  { index: 61, day: '外国ルート' }, // 鬼怒川の魔手
-  { index: 62, day: '攘夷ルート' }, // 領事館斬り込み
-  { index: 63, day: '攘夷ルート' }, // 武士の魂
-  { index: 64, day: '幕府ルート' }, // 三匹で斬る
-  { index: 65, day: '幕府ルート' }, // 剣客 茂呂茂
-  { index: 66, day: '幕府ルート' }, // 武人 琴吹光
-  { index: 68, day: '外国ルート' }, // 夕暮れの船上
-  { index: 69, day: '外国ルート' }, // 討ち入り
-  { index: 70, day: '真ルート' }, // 三姉妹見参
-  { index: 71, day: '真ルート' }, // お早い到着
-  { index: 72, day: '真ルート' }, // 再起の望み
-  { index: 73, day: '真ルート' }, // 将の器
-  { index: 74, day: '真ルート' }, // 怒りの矛先
-  { index: 75, day: '真ルート' }, // 伯爵に刺激を
-  { index: 76, day: '真ルート' }, // 運命のルーレット
-  { index: 77, day: '真ルート' }, // 闇討ち
-  { index: 78, day: '真ルート' }, // 学問のすすめ
-  { index: 79, day: '真ルート' }, // 刺激が欲しい
-  { index: 80, day: '真ルート' }, // 傷心の帰国船
-  { index: 81, day: '真ルート' }, // 伯爵救出
-  { index: 82, day: '真ルート' }, // 人間湯通しの恐怖
-  { index: 83, day: '真ルート' }, // 大老暗殺計画
-  { index: 85, day: '真ルート' }, // ローラの決意
-  { index: 86, day: '真ルート' }, // 士魂は屈せず
-  { index: 87, day: '真ルート' }, // ローラ奪還
-  { index: 88, day: '真ルート' }, // 鬼怒川を追え
-  { index: 89, day: '真ルート' }, // 黒船の決闘
-  { index: 90, day: 'エンディング' }, // 希望の光
-  { index: 91, day: 'エンディング' }, // 熱き魂
-  { index: 92, day: 'エンディング' }, // 攘夷の炎
-  { index: 93, day: 'エンディング' }, // 破滅への道
-  { index: 94, day: 'エンディング' }, // 変わり往く心
-  { index: 95, day: 'エンディング' }, // 海外雄飛
-  { index: 96, day: 'エンディング' }, // 侍一直線
-  { index: 97, day: 'エンディング' }, // 魔鱗組として。docs/event.md に記載なし。エンディングなのは [U] 2026-10-06
-  { index: 98, day: 'エンディング' }, // 釜茹で侍。同上
-  { index: 99, day: 'エンディング' }, // 大老は生きていた
-  { index: 116, day: '3日目夜' }, // 夜の墓場で。99 以降で初めて見つかった添字
-]
+export const NAMED_EVENTS: readonly NamedEvent[] = Object.values(EVENT_TABLE)
+  .filter(r => r.day !== '')
+  .map(r => ({ index: r.id_dec, day: r.day }))
 
 /** NAMED_EVENTS の添字。昇順 */
 export const NAMED_EVENT_INDICES: readonly number[] = NAMED_EVENTS.map((e) => e.index)

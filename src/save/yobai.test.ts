@@ -10,6 +10,7 @@ import {
   PLACES,
   PLACE_LAYOUTS,
   PARTNER_COUNTS_OFFSET,
+  PARTNER_COUNT_NPCS,
   PROMISE_OFFSET,
   RECORDS_OFFSET,
   RECORD_EMPTY_BYTES,
@@ -210,7 +211,9 @@ describe('🟢 夜這いの記録 0x137F0〜0x13E2F（16 B × 100件、最初の
     const { partners } = readYobai(b)
     expect(PARTNER_COUNTS_OFFSET).toBe(0x13e38)
     expect(partners).toHaveLength(14)
-    expect(partners[partners.length - 1].offset).toBe(0x13e6c)
+    // 枠は 0〜13 の連番（CSV の行が欠けると位置がずれるので確かめる）
+    expect(PARTNER_COUNT_NPCS.map((p) => p.slot)).toEqual(Array.from({ length: 14 }, (_, k) => k))
+    expect(partners.map((p) => p.offset)).toEqual(Array.from({ length: 14 }, (_, k) => 0x13e38 + k * 4))
     expect(partners.filter((p) => p.value !== 0)).toEqual([{ offset: 0x13e4c, npc: 11, label: 'ローラ', value: 1 }]) // 11＝ローラ
   })
 

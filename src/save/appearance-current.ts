@@ -55,7 +55,6 @@ export type AppearanceCurrentField = {
   warnings: string[]
   offset: number | null
   value: number | null
-  raw: string
   problem: string | null
 }
 export type AppearanceCurrentView = ViewStatus & Record<AppearanceCurrentKey, AppearanceCurrentField>
@@ -64,13 +63,11 @@ export function readAppearanceCurrent(bytes: Uint8Array): AppearanceCurrentView 
   const layoutProblem = checkLayout(bytes)
   if (bytes.length < APPEARANCE_CURRENT_OFFSETS.heightChoice + 4) throw new RangeError('ファイルが小さすぎて容姿を読めません')
   const makeField = (offset: number, kind: 'u8' | 'u32' | 'f32'): AppearanceCurrentField => {
-    const width = kind === 'u8' ? 1 : 4
     const value = kind === 'f32' ? readF32(bytes, offset) : kind === 'u32' ? readU32(bytes, offset) : readU8(bytes, offset)
     const problem = kind === 'f32' && !Number.isFinite(value) ? '身長が有限の数値ではありません' : null
     return {
       warnings: [],
       offset, value,
-      raw: Array.from(bytes.subarray(offset, offset + width), b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '),
       problem: layoutProblem ?? problem,
     }
   }
