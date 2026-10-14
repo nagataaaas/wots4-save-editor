@@ -114,8 +114,7 @@ export const DATASET_COLUMNS: Readonly<Record<string, DatasetColumns>> = {
   'item/item.csv': {
     ...NAMES, reading: S, kind: N, max_stack: N, use_action: N, description_ja: S, description_en: S,
   },
-  // 今はどこからも使わない
-  'item/valuable.csv': {},
+  'item/valuable.csv': { name_ja: S },
   'npc/night-visit-count.csv': { npc: N },
   'npc/night-visit-partner.csv': {
     name_ja: S, kind: S, sex: S, name_list: N, name: N, looks: 'hex-list',
@@ -152,16 +151,14 @@ export const DATASET_COLUMNS: Readonly<Record<string, DatasetColumns>> = {
   'unlock/unlock.csv': { ...NAMES, category: S, condition_ja: S, effect_ja: S },
   'weapon/blade.csv': { save_bytes_le: 'bytes', ...NAMES, sheath_x: N },
   'weapon/blade-special.csv': { name_ja: S },
-  // 今はどこからも使わない
-  'weapon/charm.csv': {},
+  'weapon/charm.csv': { name_ja: S },
   'weapon/complete.csv': {
     ...NAMES, reading: S, blade: N, sheath_x: N, guard: N, grip: N, weapon_type: N,
     unique_bytes: 'bytes-6', name_no: N, flag_22: N, image_url: S,
   },
   'weapon/grip.csv': { save_bytes_le: 'bytes', name_ja: S },
   'weapon/guard.csv': { save_bytes_le: 'bytes', name_ja: S },
-  // 今はどこからも使わない
-  'weapon/title.csv': {},
+  'weapon/title.csv': { save_bytes_le: 'bytes', name_ja: S },
 };
 
 function listValue(kind: ListKind, text: string): unknown {
