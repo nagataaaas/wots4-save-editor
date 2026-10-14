@@ -8,7 +8,7 @@
 // 通常モードは表にある技・道具だけ、0〜9,999,999。上級者モードは任意の添字・u32。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU32, writeU32 } from './binary'
-import { type EditOpts, type ViewStatus } from './field'
+import { validateRange, type EditOpts, type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
 import { ITEMS } from './master/item-names'
 import { itemLabel } from './master/labels'
@@ -73,11 +73,8 @@ export function readScoreTable(bytes: Uint8Array, table: ScoreTableId): ScoreTab
 export function validateScore(table: ScoreTableId, index: number, value: number, opts: EditOpts): string | null {
   const t = SCORE_TABLES[table]
   if (!Number.isInteger(index) || index < 0 || index >= t.count) return "範囲外の技・道具です"
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff_ffff) return `書ける範囲を超えています: ${value}`
-  if (opts.advanced) return null
-  if (scoreEntryName(table, index) === null) return "表にない技・道具です（上級者モードで書けます）"
-  if (value > t.max) return `通常モードでは 0〜${t.max.toLocaleString()} を指定してください: ${value}`
-  return null
+  if (!opts.advanced && scoreEntryName(table, index) === null) return "表にない技・道具です（上級者モードで書けます）"
+  return validateRange(value, { systemMax: 0xffff_ffff, normalMax: t.max }, opts)
 }
 
 /** 1件の4バイトだけを書く */

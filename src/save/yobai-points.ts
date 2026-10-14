@@ -15,7 +15,7 @@
 // 通常モードの上限 POINT_NORMAL_MAX は、しきい値（10）と攻略手順どおりの点数（11）より少し上に取った値（🔶 ゲームの上限ではない）。
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
-import { type EditOpts, type ViewStatus } from "./field";
+import { validateRange, type EditOpts, type ViewStatus } from "./field";
 import { assertWritable, checkLayout } from "./layout";
 
 export type YobaiPoint = {
@@ -94,10 +94,7 @@ export function readYobaiPoints(bytes: Uint8Array): YobaiPointsView {
 
 /** 通常モードは 0〜POINT_NORMAL_MAX、上級者モードは任意の u8。問題がなければ null */
 export function validateYobaiPoint(value: number, opts: EditOpts): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return "0〜255 の整数を指定してください";
-  if (!opts.advanced && value > POINT_NORMAL_MAX)
-    return `通常モードでは 0〜${POINT_NORMAL_MAX} を指定してください（上級者モードで 255 まで書けます）`;
-  return null;
+  return validateRange(value, { systemMax: 0xff, normalMax: POINT_NORMAL_MAX }, opts);
 }
 
 /** offset の1バイトだけを書く */

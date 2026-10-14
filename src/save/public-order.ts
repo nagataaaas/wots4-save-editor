@@ -9,7 +9,7 @@
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
-import { warningsOf, type EditOpts, type ViewStatus } from "./field";
+import { validateRange, warningsOf, type EditOpts, type ViewStatus } from "./field";
 import { assertWritable, checkLayout } from "./layout";
 
 /** ✅ [U] 治安の位置 */
@@ -52,10 +52,7 @@ export function readPublicOrder(bytes: Uint8Array): PublicOrderView {
 
 /** 通常モードは 0〜99、上級者モードは任意の u8。問題がなければ null */
 export function validatePublicOrder(value: number, opts: EditOpts): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) return `値が範囲外です: ${value}`;
-  if (!opts.advanced && value > PUBLIC_ORDER_MAX)
-    return `通常モードでは 0〜${PUBLIC_ORDER_MAX} を指定してください: ${value}`;
-  return null;
+  return validateRange(value, { systemMax: 0xff, normalMax: PUBLIC_ORDER_MAX }, opts);
 }
 
 /** 0x0015 の1バイトだけを書く（✅ [U] 書き換えはゲームに反映される） */

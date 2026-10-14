@@ -10,7 +10,7 @@
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, writeU16 } from "./binary";
-import { warningsOf, type EditOpts, type ViewStatus } from "./field";
+import { validateRange, warningsOf, type EditOpts, type ViewStatus } from "./field";
 import { assertWritable, checkLayout } from "./layout";
 import { CHART_NODE_MAX, chartNode, type ChartNodeEntry } from "./master/chart-nodes";
 import { chartNodeLabel } from "./master/labels";
@@ -82,7 +82,9 @@ export function readHint(bytes: Uint8Array): HintView {
 
 /** 通常モードは 0〜118（ノード）と 0xFFFF、上級者モードは任意の u16。問題がなければ null */
 export function validateHint(value: number, opts: EditOpts): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff) return `値が範囲外です: ${value}`;
+  // 通常モードの範囲は 0〜118 に「なし」を足したものなので、格納できる範囲だけを validateRange で見る
+  const rangeProblem = validateRange(value, { systemMax: 0xffff }, opts);
+  if (rangeProblem) return rangeProblem;
   if (!opts.advanced && value > HINT_NORMAL_MAX && value !== HINT_NONE)
     return "通常モードでは指定できないイベントです";
   return null;

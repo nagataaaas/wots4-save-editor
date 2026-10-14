@@ -7,7 +7,7 @@
 //
 // 固定オフセットを使い、ファイルサイズと各値の範囲を検証する。検証に落ちたら読み取り専用。
 import { readI16, readU16, writeI16, writeU16, writeU8 } from './binary'
-import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from './field'
+import { type EditOpts, NORMAL_EDIT_OPTS, validateRange, type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
 import {
   SECTS,
@@ -398,8 +398,8 @@ const U16_MAX = 0xffff
  */
 export function writeSkillPoints(bytes: Uint8Array, value: number, options: EditOpts = NORMAL_EDIT_OPTS): void {
   assertWritable(bytes)
-  const max = options.advanced ? U16_MAX : SKILL_POINTS_MAX
-  if (!Number.isInteger(value) || value < 0 || value > max) throw new RangeError(`腕前点は 0〜${max} です`)
+  const problem = validateRange(value, { systemMax: U16_MAX, normalMax: SKILL_POINTS_MAX }, options)
+  if (problem) throw new RangeError(problem)
   requireEditable(bytes)
   writeU16(bytes, SKILL_POINTS_OFFSET, value)
 }

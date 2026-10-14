@@ -9,7 +9,7 @@
 // クリア回数・立ち去った回数はここでは読むだけ（新しい周回の書き込みが増やす。new-cycle.ts）。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU32, writeU32 } from './binary'
-import { warningsOf, type EditOpts, type ViewStatus } from './field'
+import { validateRange, warningsOf, type EditOpts, type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
 
 /** 🟢 周回数（u32） */
@@ -51,10 +51,7 @@ export function readCycleCounts(bytes: Uint8Array): CycleCountsView {
 
 /** 通常モードは 0〜99,999、上級者モードは任意の u32。問題がなければ null */
 export function validatePlayCount(value: number, opts: EditOpts): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff_ffff) return `値が範囲外です: ${value}`
-  if (!opts.advanced && value > PLAY_COUNT_MAX)
-    return `通常モードでは 0〜${PLAY_COUNT_MAX.toLocaleString()} を指定してください: ${value}`
-  return null
+  return validateRange(value, { systemMax: 0xffff_ffff, normalMax: PLAY_COUNT_MAX }, opts)
 }
 
 /** 0x0B8C の4バイトだけを書く（🟢。ゲーム内での反映は要確認） */

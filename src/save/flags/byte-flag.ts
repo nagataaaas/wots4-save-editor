@@ -11,7 +11,7 @@
 //   - values にない値は、画面では「不明」と出して警告を付ける。編集はできる（AGENTS.md「未確認データの扱い」）
 //   - alsoAt があれば、同じ値をそこにも書く（通常のプレイで必ず同じ値になるバイト）。食い違っていたら「不明」と同じ扱い
 import { readU8, writeU8 } from "../binary";
-import { type EditOpts } from "../field";
+import { validateRange, type EditOpts } from "../field";
 import { assertWritable, checkLayout } from "../layout";
 
 export type FlagValue = {
@@ -83,7 +83,8 @@ export function validateKnownValue(
   max = 0xff,
   unknownProblem = "通常モードでは指定できない状態です",
 ): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > max) return `値が範囲外です: ${value}`;
+  const rangeProblem = validateRange(value, { systemMax: max }, opts);
+  if (rangeProblem) return rangeProblem;
   if (!opts.advanced && !known.some((v) => v.value === value)) return unknownProblem;
   return null;
 }

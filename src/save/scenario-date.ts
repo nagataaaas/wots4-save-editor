@@ -22,7 +22,7 @@
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU8, writeU16, writeU8 } from './binary'
-import { type EditOpts, type ViewStatus } from './field'
+import { validateRange, type EditOpts, type ViewStatus } from './field'
 import { validateKnownValue } from './flags/byte-flag'
 import { assertWritable, checkLayout } from './layout'
 
@@ -132,10 +132,11 @@ export function readDate(bytes: Uint8Array): DateView {
 }
 
 export function validateDay(day: number, opts: EditOpts): string | null {
-  const r = opts.advanced ? DAY_RANGE.system : DAY_RANGE.normal
-  if (!Number.isInteger(day)) return '整数を入力してください'
-  if (day < r.min || day > r.max) return `${r.min}〜${r.max} の範囲で入力してください`
-  return null
+  return validateRange(
+    day,
+    { min: DAY_RANGE.normal.min, normalMax: DAY_RANGE.normal.max, systemMin: DAY_RANGE.system.min, systemMax: DAY_RANGE.system.max },
+    opts,
+  )
 }
 
 function editable(bytes: Uint8Array): DateView {

@@ -18,7 +18,7 @@
 // 上限はゲームが値を増やすときの上限（🟢）。通常モードはそこまで、上級者モードは型で書ける範囲まで受け付ける。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { NUM_TYPE_RANGE, readNum, writeNum, type NumType } from './binary'
-import { warningsOf, type EditOpts, type ViewStatus } from './field'
+import { validateRange, warningsOf, type EditOpts, type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
 
 export type StatType = Extract<NumType, 'u16' | 'u32' | 'f32'>
@@ -372,18 +372,13 @@ export function readStats(bytes: Uint8Array): StatsView {
 
 /** 通常モードは 0〜上限、上級者モードは型で書ける範囲。問題がなければ null */
 export function validateStat(field: StatField, value: number, opts: EditOpts): string | null {
+  // 上級者モードでは型で書ける範囲まで（f32 は負の値も書ける）
   const range = NUM_TYPE_RANGE[field.type]
-  if (field.type === 'f32') {
-    if (!Number.isFinite(value) || value < range.min || value > range.max) return '数値を入力してください'
-    if (opts.advanced) return null
-  } else {
-    if (!Number.isInteger(value) || value < 0 || value > range.max)
-      return `この項目に書ける範囲を超えています: ${value}`
-    if (opts.advanced) return null
-  }
-  if (value < 0 || value > field.max)
-    return `通常モードでは 0〜${field.max.toLocaleString()} を指定してください: ${value}`
-  return null
+  return validateRange(
+    value,
+    { systemMin: range.min, systemMax: range.max, normalMax: field.max, integer: field.type !== 'f32' },
+    opts,
+  )
 }
 
 /** 1項目の幅（2 B か 4 B）だけを書く */

@@ -37,7 +37,7 @@
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
-import { warningsOf, type EditOpts, type ViewStatus } from "./field";
+import { validateRange, warningsOf, type EditOpts, type ViewStatus } from "./field";
 import { validateFlag, writeFlag, type ByteFlag } from "./flags/byte-flag";
 import { CHARACTER_STATUS, CHARACTER_DEAD } from "./flags/characters";
 import { assertWritable, checkLayout } from "./layout";
@@ -117,10 +117,11 @@ export function validateFactionValue(
   col = 0,
 ): string | null {
   if (row === HOSTILE_ROW) return validateFlag(hostileFlag(col), value, opts);
-  const max = opts.advanced ? FACTION_VALUE_MAX.system : FACTION_VALUE_MAX.normal;
-  if (!Number.isInteger(value)) return "整数を入力してください";
-  if (value < 0 || value > max) return `0〜${max} の範囲で入力してください`;
-  return null;
+  return validateRange(
+    value,
+    { systemMax: FACTION_VALUE_MAX.system, normalMax: FACTION_VALUE_MAX.normal },
+    opts,
+  );
 }
 
 /** 大寄せでルートに入れる友好度（行0 − 行1）の下限。✅ [U] 書き換えで5通り試した */

@@ -11,6 +11,36 @@ export function warningsOf(warning: string | null | undefined): string[] {
   return warning ? [warning] : []
 }
 
+/** 1つの数値の欄に書ける範囲 */
+export type RangeSpec = {
+  /** 格納できる上限（型の上限など）。上級者モードではここまで書ける */
+  systemMax: number
+  /** 通常モードの上限。省略すると systemMax */
+  normalMax?: number
+  /** 下限。省略すると 0 */
+  min?: number
+  /** 上級者モードの下限。省略すると min */
+  systemMin?: number
+  /** false なら小数も受ける（f32 の欄）。省略すると整数だけ */
+  integer?: boolean
+}
+
+/**
+ * 整数（integer: false なら有限の数）か、格納できる範囲か、通常モードの範囲か（上級者モードなら格納できる範囲）を検証する。
+ * 問題がなければ null。文言は画面に出すので、入力できる範囲だけを書く
+ */
+export function validateRange(value: number, spec: RangeSpec, opts: EditOpts): string | null {
+  const { systemMax, normalMax = systemMax, min = 0, systemMin = min, integer = true } = spec
+  const isNumber = integer ? Number.isInteger(value) : Number.isFinite(value)
+  const lo = opts.advanced ? systemMin : min
+  const hi = opts.advanced ? systemMax : normalMax
+  if (isNumber && value >= lo && value <= hi) return null
+  if (!integer && !isNumber) return '数値を入力してください'
+  const text = `${lo.toLocaleString()}〜${hi.toLocaleString()} の${integer ? '整数' : '数値'}を入力してください`
+  const advancedAllows = isNumber && value >= systemMin && value <= systemMax
+  return !opts.advanced && advancedAllows ? `${text}（上級者モードでは範囲を超えて書けます）` : text
+}
+
 export function hasControlChar(text: string): boolean {
   for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) < 0x20) return true
   return false
