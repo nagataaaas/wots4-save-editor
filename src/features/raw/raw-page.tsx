@@ -14,6 +14,8 @@ import { errorMessage } from '@/lib/error-message'
 import { readFileAsBytes } from '@/lib/file-io'
 import { formatOffset } from '@/lib/format'
 import { useSave } from '@/lib/save-context'
+import { useWrite } from '@/lib/use-write'
+import { WriteResult } from '@/components/write-error'
 import {
   RAW_REGIONS,
   RAW_WRITE_MAX,
@@ -34,7 +36,6 @@ import {
   utf16Char,
   writeRawBytes,
   type ByteRange,
-  type RawPatch,
   type SearchKind,
 } from '@/save/raw'
 
@@ -105,7 +106,6 @@ function RawEditor({
   compare: CompareFile | null
   onCompareChange: (file: CompareFile) => void
 }) {
-  const { update } = useSave()
   const { advanced } = useAdvancedMode()
   const [selected, setSelected] = useState(0)
   const hexRef = useRef<HexHandle>(null)
@@ -150,15 +150,10 @@ function RawEditor({
           </CardContent>
         </AnchoredCard>
 
-        <SelectionCard
-          bytes={bytes}
-          offset={selected}
-          advanced={advanced}
-          onWrite={(values) => update((b) => writeRawBytes(b, selected, values))}
-        />
+        <SelectionCard bytes={bytes} offset={selected} advanced={advanced} />
       </div>
 
-      <PatchCard bytes={bytes} advanced={advanced} onApply={(patches) => update((b) => applyPatches(b, patches))} onJump={goTo} />
+      <PatchCard bytes={bytes} advanced={advanced} onJump={goTo} />
 
       <DiffCard bytes={bytes} base={base} diff={diff} diffBase={diffBase} onDiffBaseChange={onDiffBaseChange}
         compare={compare} compareError={compareError} sizeMismatch={Boolean(sizeMismatch)} openCompare={openCompare} onJump={goTo} />
@@ -416,12 +411,10 @@ function SelectionCard({
   bytes,
   offset,
   advanced,
-  onWrite,
 }: {
   bytes: Uint8Array
   offset: number
   advanced: boolean
-  onWrite: (values: number[]) => void
 }) {
   const regions = regionsAt(offset)
   return (
@@ -451,39 +444,30 @@ function SelectionCard({
         </dl>
         <p className="text-muted-foreground text-xs">複数バイトの値はリトルエンディアンで、選択中の位置から読んでいます。</p>
 
-        <SelectionForm key={offset} bytes={bytes} offset={offset} advanced={advanced} onWrite={onWrite} />
+        <SelectionForm key={offset} bytes={bytes} offset={offset} advanced={advanced} />
       </CardContent>
     </AnchoredCard>
   )
 }
 
-function SelectionForm({ bytes, offset, advanced, onWrite }: {
+function SelectionForm({ bytes, offset, advanced }: {
   bytes: Uint8Array
   offset: number
   advanced: boolean
-  onWrite: (values: number[]) => void
 }) {
   // 選んだ位置から 1 行分の今の値を、入力の初期値にする
   const [draft, setDraft] = useState(() =>
     previewBytes(bytes, offset, Math.min(bytes.byteLength - offset, 4)),
   )
-  const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<string | null>(null)
+  const { run, message, error, setMessage } = useWrite()
 
   function submit() {
-    setDone(null)
     const r = parseHexBytes(draft)
     if (!r.ok) {
-      setError(r.error)
+      setMessage({ error: true, text: r.error })
       return
     }
-    try {
-      onWrite(r.value)
-      setError(null)
-      setDone(`${formatOffset(offset)} から ${r.value.length} B を書き換えました`)
-    } catch (e) {
-      setError(errorMessage(e))
-    }
+    run(`${formatOffset(offset)} から ${r.value.length} B を書き換えました`, (b) => writeRawBytes(b, offset, r.value))
   }
 
   return (
@@ -501,8 +485,7 @@ function SelectionForm({ bytes, offset, advanced, onWrite }: {
           value={draft}
           onChange={(e) => {
             setDraft(e.target.value)
-            setError(null)
-            setDone(null)
+            setMessage(null)
           }}
           disabled={!advanced}
           className="font-mono"
@@ -519,8 +502,7 @@ function SelectionForm({ bytes, offset, advanced, onWrite }: {
       ) : (
         <p className="text-muted-foreground text-xs">サイドバーの上級者モードをオンにすると、バイト列を直接書き換えられます。</p>
       )}
-      {error && <p className="text-destructive text-xs">{error}</p>}
-      {done && <p className="text-xs text-emerald-600 dark:text-emerald-400">{done}</p>}
+      <WriteResult message={message} />
     </form>
   )
 }
@@ -714,31 +696,22 @@ const PATCH_PLACEHOLDER = `0x3780 02 ff 00 11
 function PatchCard({
   bytes,
   advanced,
-  onApply,
   onJump,
 }: {
   bytes: Uint8Array
   advanced: boolean
-  onApply: (patches: RawPatch[]) => void
   onJump: (offset: number) => void
 }) {
   const [text, setText] = useState('')
-  const [applyError, setApplyError] = useState<string | null>(null)
-  const [done, setDone] = useState<string | null>(null)
+  const { run, message, setMessage } = useWrite()
   const parsed = useMemo(() => (text.trim() === '' ? null : parsePatchScript(text, bytes.byteLength)), [text, bytes.byteLength])
   const canApply = advanced && parsed !== null && parsed.errors.length === 0 && parsed.patches.length > 0
 
   function apply() {
     if (!parsed || !canApply) return
-    try {
-      onApply(parsed.patches)
-      setApplyError(null)
-      const total = parsed.patches.reduce((n, p) => n + p.values.length, 0)
-      setDone(`${parsed.patches.length} 行（${total} B）を書き込みました`)
-    } catch (e) {
-      setApplyError(errorMessage(e))
-      setDone(null)
-    }
+    const { patches } = parsed
+    const total = patches.reduce((n, p) => n + p.values.length, 0)
+    run(`${patches.length} 行（${total} B）を書き込みました`, (b) => applyPatches(b, patches))
   }
 
   return (
@@ -763,8 +736,7 @@ function PatchCard({
           value={text}
           onChange={(e) => {
             setText(e.target.value)
-            setApplyError(null)
-            setDone(null)
+            setMessage(null)
           }}
           placeholder={PATCH_PLACEHOLDER}
           rows={6}
@@ -832,8 +804,7 @@ function PatchCard({
             まとめて書き込む
           </Button>
           {!advanced && <p className="text-muted-foreground text-xs">サイドバーの上級者モードをオンにすると書き込めます。</p>}
-          {done && <p className="text-xs text-emerald-600 dark:text-emerald-400">{done}</p>}
-          {applyError && <p className="text-destructive text-xs">{applyError}</p>}
+          <WriteResult message={message} />
         </div>
         <p className="text-muted-foreground text-xs">
           値の意味は確かめずにそのまま書きます。書いた値によってはゲームで読めなくなることがあります。ダウンロードするまでファイルは変わりません（サイドバーの「保存」で書き出します）。
