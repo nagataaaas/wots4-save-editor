@@ -20,6 +20,33 @@ export type SnapshotRecord = SnapshotMeta & {
   fileName: string
   /** 残した日時（Date.now()） */
   createdAt: number
+  /**
+   * バイト列の SHA-256（16進）。同じ読み込みを探すときに、バイト列を読む前にこれで絞る。
+   * 足す前に残した版と、crypto.subtle が使えない環境（安全でない接続）で残した版にはない
+   */
+  sha256?: string
+}
+
+/** バイト列の SHA-256（16進）。crypto.subtle が使えない環境では undefined */
+export async function sha256Hex(bytes: Uint8Array): Promise<string | undefined> {
+  const subtle = globalThis.crypto?.subtle
+  if (!subtle) return undefined
+  const digest = new Uint8Array(await subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>))
+  return Array.from(digest, (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+/**
+ * 同じファイル名・同じバイト列かもしれない読み込みの版。バイト列はこのあと比べる。
+ * ハッシュが両方にあれば一致するものだけ、どちらかにないものは候補に残す（従来どおりバイト列で比べる）
+ */
+export function loadedCandidates(
+  records: readonly SnapshotRecord[],
+  fileName: string,
+  sha256: string | undefined,
+): SnapshotRecord[] {
+  return records.filter((r) =>
+    r.kind === 'loaded' && r.fileName === fileName
+    && (r.sha256 === undefined || sha256 === undefined || r.sha256 === sha256))
 }
 
 let dbPromise: Promise<IDBDatabase> | null = null
@@ -68,6 +95,7 @@ async function add(
   sessionId: number | null,
   bytes: Uint8Array,
   meta: SnapshotMeta,
+  sha256: string | undefined,
 ): Promise<number> {
   const db = await openDb()
   const tx = db.transaction([META, BYTES], 'readwrite')
@@ -77,6 +105,7 @@ async function add(
     kind,
     fileName,
     createdAt: Date.now(),
+    ...(sha256 === undefined ? {} : { sha256 }),
     ...(sessionId === null ? {} : { sessionId }),
   }
   const copy = bytes.slice()
@@ -120,12 +149,14 @@ export async function getBytes(id: number): Promise<Uint8Array> {
 
 /**
  * 読み込んだセーブを新しい組として残し、組の id を返す。
- * 同じファイル名・同じバイト列の読み込みが既にあれば、追加せずにその組の id を返す（読み込み直しで一覧が増えないように）
+ * 同じファイル名・同じバイト列の読み込みが既にあれば、追加せずにその組の id を返す（読み込み直しで一覧が増えないように）。
+ * メタデータの SHA-256 で絞ってから、残った版だけバイト列を読んで比べる
  */
 export async function addLoaded(fileName: string, bytes: Uint8Array): Promise<number> {
-  const loaded = (await listSnapshots()).filter((r) => r.kind === 'loaded' && r.fileName === fileName)
-  for (const r of loaded) if (sameBytes(await getBytes(r.id), bytes)) return r.sessionId
-  return add('loaded', fileName, null, bytes, snapshotMeta(bytes, null))
+  const sha256 = await sha256Hex(bytes)
+  for (const r of loadedCandidates(await listSnapshots(), fileName, sha256))
+    if (sameBytes(await getBytes(r.id), bytes)) return r.sessionId
+  return add('loaded', fileName, null, bytes, snapshotMeta(bytes, null), sha256)
 }
 
 /** 保存した版を組に足す。変わった領域は組の最新の版と比べる。最新の版と同じバイト列なら足さない */
@@ -135,7 +166,7 @@ export async function addSaved(sessionId: number, bytes: Uint8Array): Promise<vo
   if (!latest) throw new Error('履歴の読み込みの版が見つかりません')
   const prev = await getBytes(latest.id)
   if (sameBytes(prev, bytes)) return
-  await add('saved', records[0].fileName, sessionId, bytes, snapshotMeta(bytes, prev))
+  await add('saved', records[0].fileName, sessionId, bytes, snapshotMeta(bytes, prev), await sha256Hex(bytes))
 }
 
 export async function clearAll(): Promise<void> {
