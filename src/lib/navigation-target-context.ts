@@ -1,8 +1,29 @@
 import { createContext, useCallback, useContext, useRef, type RefObject } from 'react'
+import { matchField } from './route'
 import type { FieldName } from './search-collector'
 
 /** 移動先になれる欄・小見出しの要素と、その名前 */
-export type FieldTarget = FieldName & { element: HTMLElement }
+export type FieldTarget<E = HTMLElement> = FieldName & { element: E }
+
+/**
+ * 移動先の要素。field があればそれに合う欄（matchField）、なければ anchor の箱。
+ * 箱は anchor を外側へたどって、登録されているいちばん内側のものを使う（セーブや絞り込みで行がない場合）。
+ * kind は見つかったのが欄か箱か。どちらもなければ null
+ */
+export function findNavigationTarget<E>(
+  targets: { boxes: ReadonlyMap<string, E>; fields: Iterable<FieldTarget<E>> },
+  anchor: string | null,
+  field: readonly string[] | null,
+): { element: E; kind: 'field' | 'box' } | null {
+  const fieldTarget = field ? matchField(targets.fields, anchor, field) : undefined
+  if (fieldTarget) return { element: fieldTarget.element, kind: 'field' }
+  const names = anchor?.split('/') ?? []
+  for (; names.length > 0; names.pop()) {
+    const box = targets.boxes.get(names.join('/'))
+    if (box !== undefined) return { element: box, kind: 'box' }
+  }
+  return null
+}
 
 export type NavigationTargetRegistry = {
   /** 箱の anchor ごとの要素 */
