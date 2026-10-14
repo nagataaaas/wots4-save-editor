@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
-import { useFlag } from "@/hooks/use-flag";
+import { useFlag } from "@/lib/use-flag";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useWrite } from "@/lib/use-write";
 import { cn } from "@/lib/utils";
@@ -30,8 +30,7 @@ export function FlagRow({
 }) {
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
-  const current = useFlag(flag);
-  const state = current?.state ?? null;
+  const { state, error, problem } = useFlag(flag);
 
   return (
     <SelectRow
@@ -43,7 +42,8 @@ export function FlagRow({
         options ??
         flag.values.map((v) => ({ value: String(v.value), label: v.label, group: v.group }))
       }
-      problem={current?.problem ?? null}
+      // 読めないときは、読み取り専用の理由として欄の下に出す（未読み込みと見分けられるように）
+      problem={error ?? problem}
       warning={state && !state.known ? "通常のプレイでは取らない状態です" : null}
       note={note ?? flag.note}
       hint={hint ?? flag.hint}

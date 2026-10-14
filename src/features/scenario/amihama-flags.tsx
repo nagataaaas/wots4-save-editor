@@ -4,7 +4,7 @@ import { SearchScope } from "@/lib/search-context";
 import { AMIHAMA_ANCHORS, EVENTS_LINKS } from "./anchors";
 import { CollapsibleCard } from "@/components/collapsible-card";
 import { FlagGrid, FlagRow } from "@/components/flag-row";
-import { useFlag } from "@/hooks/use-flag";
+import { useFlag } from "@/lib/use-flag";
 import { flagProblem, readFlag } from "@/save/flags/byte-flag";
 import { FACILITY_FLAGS, facilitiesReadyForLightOfHope, facilitySlotEvent, type FacilityFlag } from "@/save/flags/facilities";
 import { GATE_CLOSE_FLAGS, GATE_DOOR_FLAGS, GATE_RECRUIT_FLAGS } from "@/save/flags/gates";
@@ -93,7 +93,7 @@ export function FacilityFlagsCard() {
 
 /** 🟢 施設の値で入れ替わる2日目のイベント。選択肢の並びで「〇〇のとき△△」と書く */
 function FacilitySlots({ flag }: { flag: FacilityFlag }) {
-  const current = useFlag(flag)?.state.value ?? null;
+  const current = useFlag(flag).state?.value ?? null;
   return (
     <ul className="text-muted-foreground list-disc pl-5 text-xs">
       {flag.slots.map((slot) => {
