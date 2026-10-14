@@ -14,7 +14,7 @@ import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { WriteError } from "@/components/write-error";
 import {
   AGE_NORMAL_MAX,
   AGE_UNKNOWN,
@@ -24,7 +24,7 @@ import {
   KNOWN_TYPES,
   PLACES,
   nameLabel,
-  PLACE_LAYOUTS,
+  PROMISE_PLACES,
   PROMISE_LAYOUT_REL,
   PROMISE_OFFSET,
   PROMISE_PLACE_REL,
@@ -34,10 +34,8 @@ import {
   promiseFieldOffset,
   readYobai,
   recordFieldOffset,
-  layoutHeadcount,
   layoutLabel,
   layoutsForPlace,
-  promisePartner,
   validatePersonField,
   writePromiseField,
   writePromisePlace,
@@ -59,8 +57,9 @@ import {
   choosePromisePlace,
   choosePromiseAt,
   findPromiseRow,
+  partnerHomeMismatch,
+  promisePlaceChoices,
   randomSpec,
-  PROMISE_ROWS,
   rowsFor,
   specPlace,
   validateSpec,
@@ -117,9 +116,7 @@ const placeOptionsOf = (places: readonly number[]): SelectOption[] =>
   numberDuplicates(places.map(placeOption));
 
 /** 🟢 約束で使われる場所（00〜22 の全部） */
-const placeOptions: SelectOption[] = placeOptionsOf([
-  ...new Set(PLACE_LAYOUTS.map((p) => p.place)),
-]);
+const placeOptions: SelectOption[] = placeOptionsOf(PROMISE_PLACES);
 
 /** 配置の説明（欄の注記）。家の種類・家の人・犬・布団と座標の組は 🟢、ほかの配置で布団が宙に浮くなどは ✅ */
 const LAYOUT_NOTE =
@@ -365,11 +362,8 @@ function TypeEditor({ promise, problem, view }: { promise: PromiseView | null; p
   const { write: update, tryWrite, error } = useWrite();
   const { advanced } = useAdvancedMode();
   // promise が null（セーブ未読み込み）のときは欄を無効にして描く
-  const partner = promise ? promisePartner(promise.type) : undefined;
   const death = promise ? view?.context.deathWarnings.get(promise.type) ?? null : null;
-  const home = partner?.row != null ? PROMISE_ROWS.find((r) => r.index === partner.row) : undefined;
-  const away =
-    promise && home && (home.place !== promise.place || home.layout !== promise.layout) ? home : undefined;
+  const away = promise ? partnerHomeMismatch(promise) : null;
 
   return (
     <div className="flex flex-col gap-2 sm:col-span-3">
@@ -398,7 +392,7 @@ function TypeEditor({ promise, problem, view }: { promise: PromiseView | null; p
           </Button>
         </div>
       )}
-      {error && <Alert variant="destructive"><AlertTitle>書き込めません</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
+      <WriteError error={error} />
     </div>
   );
 }
@@ -430,7 +424,8 @@ function DayEditor({ promise, problem, view }: { promise: PromiseView | null; pr
           ? null
           : `今日（${today + 1}日目）ではないので、次に場面が変わるとすっぽかしで消えます`
       }
-      hint={`${hintFor("day", advanced)}。今日は ${today === null ? "—" : `${today + 1}日目`}`}
+      // 未読み込みのときは今日の補足を出さない
+      hint={today === null ? hintFor("day", advanced) : `${hintFor("day", advanced)}。今日は ${today + 1}日目`}
       note="場面が変わるたびに今日と比べ、違えば「夜這いの約束をすっぽかしてしまった…」で約束が消える"
     />
   );
@@ -474,14 +469,9 @@ function CreatePromiseForm({ problem, view }: { problem: string | null; view: Yo
   // 場所と配置：通常モードはこの相手の組の場所・配置だけ。上級者モードは全部の場所と、その場所で使える配置
   // （この相手の組にない組を選ぶと、組はそのままで場所と配置だけを上書きする）
   const { place, layout } = specPlace(spec);
-  const rowPlaces = [...new Set(rows.map((r) => r.place))].sort((a, b) => a - b);
-  const placeChoices = advanced ? placeOptions : placeOptionsOf(rowPlaces);
-  const layoutChoices = layoutOptionsOf(
-    (advanced
-      ? layoutsForPlace(place)
-      : rows.filter((r) => r.place === place).map((r) => r.layout)
-    ).sort((a, b) => layoutHeadcount(a) - layoutHeadcount(b) || a - b),
-  );
+  const choices = promisePlaceChoices(partner, stage, place, { advanced });
+  const placeChoices = placeOptionsOf(choices.places);
+  const layoutChoices = layoutOptionsOf(choices.layouts);
   /** 場所と配置を選ぶ。この相手の組にあればその組、なければ今の組のまま上書き */
   const choose = (p: number, l: number) => {
     set(choosePromisePlace(spec, rows, p, l));
@@ -698,7 +688,8 @@ function RecordsCard({ view }: { view: YobaiView | null }) {
         <>
           これまでの夜這いの記録を書き換えられます（記録を足したり消したりはできません）。
           <br />
-          最大 {RECORD_CAPACITY} 件（今は {view ? view.count : "—"} 件）で、周回を始めると全部消えます。
+          {/* 未読み込みのときは今の件数の補足を出さない */}
+          最大 {RECORD_CAPACITY} 件{view && `（今は ${view.count} 件）`}で、周回を始めると全部消えます。
           {/* 夜這いのたびに最初の空いている件に書かれる。見た目と声は記録に残らない */}
         </>
       }
