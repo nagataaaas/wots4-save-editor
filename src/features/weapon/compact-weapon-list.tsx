@@ -6,11 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { isOnButton } from "@/lib/click-target";
 import { useAnchoredOpen } from "@/lib/navigation-context";
-import { charmLabel, type WeaponView } from "@/save/weapon";
+import { charmSummary, weaponDisplayName, type WeaponView } from "@/save/weapon";
 import { WEAPON_ANCHORS } from "./anchors";
 import { WeaponEditor } from "./weapon-editor";
 import { Chevron, WeaponImage } from "./weapon-rows";
-import { type WeaponUpdate } from "./weapon-ui";
 
 // 武器袋・刀箪笥のように件数の多い武器の一覧。1枠＝1行の細い表示で、開くと帯刀と同じ編集欄を出す。
 
@@ -26,7 +25,7 @@ function Num({ value, digits }: { value: number; digits: number }) {
 /** 閉じた行に出す能力値（ゲームと同じく桁区切りなし）。攻撃力・斬殺数は4桁、耐久は4桁/4桁、質は2桁/2桁の幅 */
 function Stats({ weapon }: { weapon: WeaponView }) {
   const n = (key: keyof WeaponView["numbers"]) => weapon.numbers[key].value;
-  const charms = weapon.charms.value.filter((c): c is number => c !== null).map((c) => charmLabel(c) ?? "不明");
+  const charms = charmSummary(weapon.charms.value);
   return (
     <span className="text-muted-foreground hidden shrink-0 items-center gap-3 font-mono text-xs tabular-nums sm:flex">
       <span>攻 <Num value={n("attack")} digits={4} /></span>
@@ -41,12 +40,10 @@ function Stats({ weapon }: { weapon: WeaponView }) {
 function CompactWeaponRow({
   index,
   weapon,
-  update,
   badges,
 }: {
   index: number;
   weapon: WeaponView;
-  update: WeaponUpdate;
   badges?: ReactNode;
 }) {
   const { id, ref, open, setOpen } = useAnchoredOpen(WEAPON_ANCHORS.weapon(index));
@@ -66,7 +63,7 @@ function CompactWeaponRow({
     );
   }
 
-  const name = weapon.nameHidden.value ? "*****" : weapon.name.value || "（名前なし）";
+  const name = weaponDisplayName(weapon);
   return (
     <Collapsible open={open} onOpenChange={setOpen} render={<li ref={ref} id={id} className="scroll-mt-4 border-b last:border-b-0" />}>
       <div
@@ -97,7 +94,7 @@ function CompactWeaponRow({
       {/* 閉じているあいだは中身を描画しない（Base UI の Panel の既定）ので、200枠でも重くならない */}
       <DisclosureContent id={id}>
         <div className="px-2 pt-4 pb-6 sm:pl-17">
-          <WeaponEditor weapon={weapon} base={weapon.offset} update={update} sectionsOpen={false} />
+          <WeaponEditor weapon={weapon} offset={weapon.offset} sectionsOpen={false} />
         </div>
       </DisclosureContent>
     </Collapsible>
@@ -106,17 +103,15 @@ function CompactWeaponRow({
 
 /**
  * 武器の細い一覧。indices の枠だけを並べる（省略時はすべて）。
- * update(i) は i 枠目のレコードの先頭を渡して書き込む関数。badges(i) は行の末尾に足すバッジ
+ * 各枠の丸ハテナと書き込みは、その武器のレコードの先頭（WeaponView の offset）を使う。badges(i) は行の末尾に足すバッジ
  */
 export function CompactWeaponList({
   weapons,
   indices,
-  update,
   badges,
 }: {
   weapons: readonly WeaponView[];
   indices?: readonly number[];
-  update: (index: number) => WeaponUpdate;
   badges?: (index: number) => ReactNode;
 }) {
   const list = indices ?? weapons.map((_, i) => i);
@@ -124,7 +119,7 @@ export function CompactWeaponList({
   return (
     <ul className="flex flex-col">
       {list.map((i) => (
-        <CompactWeaponRow key={i} index={i} weapon={weapons[i]} update={update(i)} badges={badges?.(i)} />
+        <CompactWeaponRow key={i} index={i} weapon={weapons[i]} badges={badges?.(i)} />
       ))}
     </ul>
   );

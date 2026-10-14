@@ -2,9 +2,22 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AdvancedModeContext } from "@/lib/advanced-mode-context";
-import { readWeapon, WEAPON_FIELDS } from "@/save/weapon";
+import { SaveContext, type SaveContextValue } from "@/lib/save-context";
+import { readWeapon, WEAPON_FIELDS, type WeaponView } from "@/save/weapon";
 import { CharmEditor } from "./charm-editor";
 import { charmSelectionKey, charmSelections, expandCharmSelections } from "./charm-selection";
+
+/** 魅力の欄を描く。欄は自分で書き込む（useWrite）ので、書き込まないセーブの文脈を渡す */
+function renderEditor(weapon: WeaponView, advanced: boolean) {
+  const ctx: SaveContextValue = {
+    save: null, error: null, changedBytes: 0, unsavedBytes: 0,
+    load: async () => {}, update: () => {}, downloadEdited: () => {},
+    restore: async () => {}, clearHistory: async () => {}, historyVersion: 0,
+  };
+  return renderToStaticMarkup(createElement(SaveContext.Provider, { value: ctx },
+    createElement(AdvancedModeContext.Provider, { value: { advanced, setAdvanced: () => {} } },
+      createElement(CharmEditor, { weapon, offset: 0 }))));
+}
 
 const rows = [
   { id: 9, count: 1 },
@@ -41,11 +54,7 @@ describe("魅力項目×個数", () => {
     const bytes = new Uint8Array(0xa0);
     bytes.set([9, 0, 2, 0, 4, 0, 1, 0, 255, 255, 0, 0], WEAPON_FIELDS.charms);
     const weapon = readWeapon(bytes, 0);
-    const render = (advanced: boolean) => renderToStaticMarkup(createElement(
-      AdvancedModeContext.Provider,
-      { value: { advanced, setAdvanced: () => {} } },
-      createElement(CharmEditor, { weapon, base: 0, update: () => {} }),
-    ));
+    const render = (advanced: boolean) => renderEditor(weapon, advanced);
     const normal = render(false);
     expect(normal.match(/×1<\/span>/g)).toHaveLength(3);
     expect(normal).not.toContain("魅力 1 の個数");
@@ -57,11 +66,7 @@ describe("魅力項目×個数", () => {
     expect(advanced).toContain("バックアップ");
     // ✅ 合計4以上の危険性は通常モードに戻したあとも表示する。
     bytes.set([9, 0, 3, 0, 4, 0, 2, 0, 255, 255, 0, 0], WEAPON_FIELDS.charms);
-    const overflow = renderToStaticMarkup(createElement(
-      AdvancedModeContext.Provider,
-      { value: { advanced: false, setAdvanced: () => {} } },
-      createElement(CharmEditor, { weapon: readWeapon(bytes, 0), base: 0, update: () => {} }),
-    ));
+    const overflow = renderEditor(readWeapon(bytes, 0), false);
     expect(overflow).toContain("クラッシュする可能性");
     expect(overflow).not.toContain("魅力 1 の個数");
   });

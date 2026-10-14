@@ -1,20 +1,17 @@
 import { InfoTip } from "@/components/info-tip";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { WEAPON_LIST_ANCHORS } from "@/features/weapon/anchors";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
-import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
-import { WEAPON_BAG_COUNT, WEAPON_BAG_OFFSET, readWeaponBag, weaponBagOffset } from "@/save/weapon-bag";
+import { WEAPON_BAG_COUNT, WEAPON_BAG_OFFSET, readWeaponBag } from "@/save/weapon-bag";
 import { CompactWeaponList } from "@/features/weapon/compact-weapon-list";
 import { WeaponIndexFields } from "@/features/weapon/weapon-index-fields";
 
 /** 武器袋の10本。帯刀と同じ欄を、細い一覧で編集する */
 export function WeaponBagPage() {
   const { save } = useSave();
-  const { write: update } = useWrite();
   const { view, error: readError, problem } = useSaveView(readWeaponBag, { problem: (v) => v.problem });
 
   const k = save?.loadId ?? 0;
@@ -25,26 +22,24 @@ export function WeaponBagPage() {
       <PageBanner error={readError} problem={problem} />
 
       {/* 未読み込みのときは枠だけを描き、一覧は「—」にする */}
-      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.weapons} searchLabel="武器袋" className="gap-2">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <ScopeAnchorLink />
-            武器袋
+      <AnchoredCard
+        anchor={WEAPON_LIST_ANCHORS.weapons}
+        title="武器袋"
+        extra={
+          <>
             <span className="text-muted-foreground text-sm font-normal">
               {filled} / {WEAPON_BAG_COUNT} 本
             </span>
             <InfoTip offset={WEAPON_BAG_OFFSET} />
-          </CardTitle>
-          <CardDescription>行を押すと編集欄を開きます。</CardDescription>
-        </CardHeader>
+          </>
+        }
+        description="行を押すと編集欄を開きます。"
+        className="gap-2"
+      >
         <CardContent>
           <WeaponIndexFields />
           {view ? (
-            <CompactWeaponList
-              key={k}
-              weapons={view.weapons}
-              update={(i) => (mutate) => update((b) => mutate(b, weaponBagOffset(i)))}
-            />
+            <CompactWeaponList key={k} weapons={view.weapons} />
           ) : (
             <p className="text-muted-foreground text-sm">—</p>
           )}

@@ -24,7 +24,6 @@ import {
   type WeaponFieldProps,
 } from "./weapon-fields";
 import { CharmEditor } from "./charm-editor";
-import { type WeaponUpdate } from "./weapon-ui";
 
 // 武器1件分の編集欄（帯刀・武器袋・刀箪笥で共通。開いたときの中身）。
 
@@ -85,21 +84,19 @@ function NumberPair({ title, children }: { title: string; children: ReactNode })
 }
 
 /**
- * 武器1件分の編集欄。weapon が null ならセーブ未読み込み。base はレコードの先頭。
+ * 武器1件分の編集欄。weapon が null ならセーブ未読み込み。offset はレコードの先頭で、各欄が丸ハテナと書き込みに使う。
  * sectionsOpen は「攻撃力・耐久・質」などのまとまりを最初から開いておくか（武器袋・刀箪笥は閉じる。ユーザー判断 2026-10-09）
  */
 export function WeaponEditor({
   weapon,
-  base,
-  update,
+  offset,
   sectionsOpen = true,
 }: {
   weapon: WeaponView | null;
-  base: number;
-  update: WeaponUpdate;
+  offset: number;
   sectionsOpen?: boolean;
 }) {
-  const p: WeaponFieldProps = { weapon, base, update };
+  const p: WeaponFieldProps = { weapon, offset };
   const charms = weapon?.charms ?? null;
   const effects = charms ? charmEffects(charms.value) : [];
   const title = titleEffect(weapon?.title.value ?? null);
@@ -171,9 +168,9 @@ export function WeaponEditor({
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium">魅力</span>
-            <InfoTip offset={base + WEAPON_FIELDS.charms} />
+            <InfoTip offset={offset + WEAPON_FIELDS.charms} />
           </div>
-          <CharmEditor weapon={weapon} base={base} update={update} />
+          <CharmEditor weapon={weapon} offset={offset} />
           {!weapon && (
             <EffectBox>
               <p className="text-muted-foreground">—</p>

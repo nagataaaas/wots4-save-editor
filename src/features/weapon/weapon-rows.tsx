@@ -46,7 +46,8 @@ export function SwitchRow({
 
 /**
  * ふだんは変更不可にし、武器ごとに「○○を上書き」を押したときだけ選べる欄（鞘・武器種。ユーザー判断 2026-10-05）。
- * 押したことを、書き込み関数の「明示した」印（EditOpts）として渡す。どちらも 🔶 データ破損のおそれ
+ * 押したことを明示とみなし、onChange では書き込み関数に上書きの印（OverrideOpts の { override: true }）を渡す。
+ * 上級者モードとは関係しない。どちらも 🔶 データ破損のおそれ
  */
 export function OverrideRow({
   label,

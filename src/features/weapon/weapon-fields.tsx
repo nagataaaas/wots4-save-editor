@@ -3,10 +3,11 @@ import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { useWrite } from "@/lib/use-write";
 import { formatWarnings } from "@/lib/format";
 import { parseInteger } from "@/lib/parse";
 import {
-  TITLES,
+  WEAPON_TITLES,
   COMPLETE_WEAPONS,
   completeWeaponsUsingPart,
   completeWeaponsUsingSheath,
@@ -51,7 +52,7 @@ import {
   weaponIdName,
 } from "@/save/weapon-ids";
 import { OverrideRow, SwitchRow } from "./weapon-rows";
-import { NONE, type WeaponUpdate } from "./weapon-ui";
+import { NONE } from "./weapon-ui";
 
 // 帯刀・武器袋・刀箪笥で共通の、武器レコード1件分の編集欄。
 
@@ -108,7 +109,7 @@ const SHEATH_OPTIONS: SelectOption[] = [...SHEATHS]
   });
 const TITLE_OPTIONS: SelectOption[] = [
   { value: NONE, label: "なし" },
-  ...TITLES.map((t) => ({ value: String(t.no), label: t.label, icon: titleIcon(t.no) })),
+  ...WEAPON_TITLES.map((t) => ({ value: String(t.no), label: t.label, icon: titleIcon(t.no) })),
 ];
 
 // 指定武器に変更する。刀・槍・特殊に分け、その中を部品と同じ読みの五十音順に並べる（名前のないものは ID 順）
@@ -180,28 +181,31 @@ function parseName(input: string): ParseResult<string> {
   return error ? { ok: false, error } : { ok: true, value: input };
 }
 
-/** 武器1件分の編集欄に共通の props。weapon が null ならセーブ未読み込み。欄の並べ方は WeaponEditor で決める */
-export type WeaponFieldProps = { weapon: WeaponView | null; base: number; update: WeaponUpdate };
+/**
+ * 武器1件分の編集欄に共通の props。weapon が null ならセーブ未読み込み。offset はレコードの先頭で、丸ハテナにも書き込みにもこれを使う。
+ * 欄の並べ方は WeaponEditor で決める
+ */
+export type WeaponFieldProps = { weapon: WeaponView | null; offset: number };
 
 /** 攻撃力・耐久・質・斬殺数などの数値 */
 export function WeaponNumberRow({
   weapon,
-  base,
-  update,
+  offset,
   field: key,
   label = NUMBER_LABELS[key],
 }: WeaponFieldProps & { field: NumberKey; label?: string }) {
   const { advanced } = useAdvancedMode();
+  const { write } = useWrite();
   return (
     <FieldRow
       label={label}
-      offset={base + WEAPON_FIELDS[key]}
+      offset={offset + WEAPON_FIELDS[key]}
       value={weapon?.numbers[key].value ?? null}
       problem={weapon?.numbers[key].problem ?? null}
       warning={formatWarnings(weapon?.numbers[key].warnings)}
       format={String}
       parse={(input) => parseNumber(key, input, advanced)}
-      apply={(v) => update((b, o) => writeWeaponNumber(b, o, key, v, { advanced }))}
+      apply={(v) => write((b) => writeWeaponNumber(b, offset, key, v, { advanced }))}
       // 負の値を書けるときは、スマホでもマイナスを打てるよう text にする
       inputMode={advanced && WEAPON_NUMBER_RANGES[key].system.min < 0 ? "text" : "numeric"}
       hint={numberHint(key, advanced)}
@@ -211,14 +215,15 @@ export function WeaponNumberRow({
 }
 
 /** 刃・鍔・柄 */
-export function WeaponPartRow({ weapon, base, update, kind }: WeaponFieldProps & { kind: PartKind }) {
+export function WeaponPartRow({ weapon, offset, kind }: WeaponFieldProps & { kind: PartKind }) {
+  const { write } = useWrite();
   const field = weapon?.[kind] ?? null;
   const special = weapon?.special ?? false;
   return (
     <SearchSelectRow
       searchPlaceholder="読み・名前・英語名で検索"
       label={PART_LABELS[kind]}
-      offset={base + WEAPON_FIELDS[kind]}
+      offset={offset + WEAPON_FIELDS[kind]}
       value={field ? (field.value.key ?? `raw:${field.value.value}`) : null}
       currentLabel={field ? (field.value.label ?? "未登録") : undefined}
       options={PART_OPTIONS[special ? "special" : "normal"][kind]}
@@ -232,22 +237,23 @@ export function WeaponPartRow({ weapon, base, update, kind }: WeaponFieldProps &
             : // 🔶 X の計算は U-3 案C（要ゲーム内確認）、X 不明の刃の扱いは U-3 案B
               "一部の刃は、鞘を計算して書きます。鞘が不明な刃は鞘を元のまま残すので、ゲーム内で分解→組み立てて正しい鞘にしてください"
       }
-      onChange={(v) => update((b, o) => writeWeaponPart(b, o, kind, v))}
+      onChange={(v) => write((b) => writeWeaponPart(b, offset, kind, v))}
     />
   );
 }
 
-export function WeaponNameRow({ weapon, base, update }: WeaponFieldProps) {
+export function WeaponNameRow({ weapon, offset }: WeaponFieldProps) {
+  const { write } = useWrite();
   return (
     <FieldRow
       label="武器名"
-      offset={base + WEAPON_FIELDS.name}
+      offset={offset + WEAPON_FIELDS.name}
       value={weapon?.name.value ?? null}
       problem={weapon?.name.problem ?? null}
       warning={formatWarnings(weapon?.name.warnings)}
       format={(v) => v}
       parse={parseName}
-      apply={(v) => update((b, o) => writeWeaponName(b, o, v))}
+      apply={(v) => write((b) => writeWeaponName(b, offset, v))}
       hint={`最大${WEAPON_NAME_MAX_CHARS}文字`}
       // 🟢
       note="完成武器の名前を使う武器では、この名前は表示されません（自作の武器だけ表示されます）"
@@ -256,27 +262,29 @@ export function WeaponNameRow({ weapon, base, update }: WeaponFieldProps) {
 }
 
 /** 完成武器ID だけを変える */
-export function WeaponIdRow({ weapon, base, update }: WeaponFieldProps) {
+export function WeaponIdRow({ weapon, offset }: WeaponFieldProps) {
+  const { write } = useWrite();
   return (
     <SelectRow
       label="完成武器"
-      offset={base + WEAPON_FIELDS.weaponId}
+      offset={offset + WEAPON_FIELDS.weaponId}
       value={weapon ? String(weapon.weaponId.value) : null}
       currentLabel={weapon ? "未知" : undefined}
       options={WEAPON_ID_OPTIONS}
       problem={weapon?.weaponId.problem ?? null}
       warning={formatWarnings(weapon?.weaponId.warnings)}
       note="名前・パーツは変わりません"
-      onChange={(v) => update((b, o) => writeWeaponId(b, o, Number(v)))}
+      onChange={(v) => write((b) => writeWeaponId(b, offset, Number(v)))}
     />
   );
 }
 
-export function WeaponTypeRow({ weapon, base, update }: WeaponFieldProps) {
+export function WeaponTypeRow({ weapon, offset }: WeaponFieldProps) {
+  const { write } = useWrite();
   return (
     <OverrideRow
       label="武器種"
-      offset={base + WEAPON_FIELDS.weaponType}
+      offset={offset + WEAPON_FIELDS.weaponType}
       value={weapon ? String(weapon.weaponType.value) : null}
       currentLabel={weapon ? "未知" : undefined}
       options={TYPE_OPTIONS}
@@ -285,29 +293,32 @@ export function WeaponTypeRow({ weapon, base, update }: WeaponFieldProps) {
       note="パーツは変わりません"
       idleHint="パーツに合わせて決まります"
       overrideHint="バックアップを取ってから試してください"
-      onChange={(v) => update((b, o) => writeWeaponType(b, o, Number(v), { advanced: true }))}
+      // OverrideRow は「武器種を上書き」を押したときだけ選べるので、選んだことが上書きの印になる
+      onChange={(v) => write((b) => writeWeaponType(b, offset, Number(v), { override: true }))}
     />
   );
 }
 
-export function WeaponNameHiddenRow({ weapon, base, update }: WeaponFieldProps) {
+export function WeaponNameHiddenRow({ weapon, offset }: WeaponFieldProps) {
+  const { write } = useWrite();
   return (
     <SwitchRow
       label="名前を隠す（「*****」と表示）"
-      offset={base + WEAPON_FIELDS.nameHidden}
+      offset={offset + WEAPON_FIELDS.nameHidden}
       checked={weapon?.nameHidden.value ?? false}
       disabled={!weapon || weapon.nameHidden.problem !== null}
-      onChange={(on) => update((b, o) => writeWeaponNameHidden(b, o, on))}
+      onChange={(on) => write((b) => writeWeaponNameHidden(b, offset, on))}
     />
   );
 }
 
 /** 指定武器に変更（完成武器の構成をまとめて書く） */
-export function CompleteWeaponRow({ weapon, base, update }: WeaponFieldProps) {
+export function CompleteWeaponRow({ weapon, offset }: WeaponFieldProps) {
+  const { write } = useWrite();
   return (
     <SearchSelectRow
       label="指定武器に変更"
-      offset={base + WEAPON_FIELDS.weaponId}
+      offset={offset + WEAPON_FIELDS.weaponId}
       searchPlaceholder="読み・名前・英語名で検索"
       value={weapon ? (weapon.matchesComplete ? String(weapon.weaponId.value) : "mismatch") : null}
       currentLabel="どの完成武器の構成とも一致しない"
@@ -316,16 +327,17 @@ export function CompleteWeaponRow({ weapon, base, update }: WeaponFieldProps) {
       hint="完成武器・武器種・刃・鞘・鍔・柄（固有武器の秘伝を含む）をその武器のものに置き換えます。名前・攻撃力・耐久・質・魅力・銘は変わりません"
       note="特殊武器との間でも変更できます"
       // 特殊武器との間の変更をゲームが読めるかは要ゲーム内確認
-      onChange={(v) => update((b, o) => writeCompleteWeapon(b, o, Number(v)))}
+      onChange={(v) => write((b) => writeCompleteWeapon(b, offset, Number(v)))}
     />
   );
 }
 
-export function WeaponSheathRow({ weapon, base, update }: WeaponFieldProps) {
+export function WeaponSheathRow({ weapon, offset }: WeaponFieldProps) {
+  const { write } = useWrite();
   return (
     <OverrideRow
       label="鞘"
-      offset={base + WEAPON_FIELDS.sheath}
+      offset={offset + WEAPON_FIELDS.sheath}
       value={weapon ? String(weapon.sheath.value) : null}
       currentLabel={weapon ? "表にない鞘" : undefined}
       options={SHEATH_OPTIONS}
@@ -336,22 +348,24 @@ export function WeaponSheathRow({ weapon, base, update }: WeaponFieldProps) {
       note="名前は同じ鞘を使う刃。一覧にない鞘ではロード時にエラーが出て鞘が表示されませんでした（ゲーム内で分解・再組み立てすると直りました）"
       idleHint="刃を選び直すと、刃に合わせて書き換わります"
       overrideHint="バックアップを取ってから試してください"
-      onChange={(v) => update((b, o) => writeWeaponSheath(b, o, Number(v), { advanced: true }))}
+      // OverrideRow は「鞘を上書き」を押したときだけ選べるので、選んだことが上書きの印になる
+      onChange={(v) => write((b) => writeWeaponSheath(b, offset, Number(v), { override: true }))}
     />
   );
 }
 
-export function WeaponTitleRow({ weapon, base, update }: WeaponFieldProps) {
+export function WeaponTitleRow({ weapon, offset }: WeaponFieldProps) {
+  const { write } = useWrite();
   return (
     <SelectRow
       label="銘"
-      offset={base + WEAPON_FIELDS.title}
+      offset={offset + WEAPON_FIELDS.title}
       value={weapon ? (weapon.title.value === null ? NONE : String(weapon.title.value)) : null}
       currentLabel={weapon ? (weapon.title.label ?? "未知") : undefined}
       options={TITLE_OPTIONS}
       problem={weapon?.title.problem ?? null}
       warning={formatWarnings(weapon?.title.warnings)}
-      onChange={(v) => update((b, o) => writeWeaponTitle(b, o, v === NONE ? null : Number(v)))}
+      onChange={(v) => write((b) => writeWeaponTitle(b, offset, v === NONE ? null : Number(v)))}
     />
   );
 }

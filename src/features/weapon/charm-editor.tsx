@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import { SaveContext } from "@/lib/save-context";
 import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { useWrite } from "@/lib/use-write";
 import { formatWarnings } from "@/lib/format";
 import { CHARMS, WEAPON_FIELDS, writeWeaponCharms, type WeaponView } from "@/save/weapon";
 import { charmIcon } from "./effect-icons";
@@ -11,26 +12,20 @@ import {
   expandCharmSelections,
   type CharmSelection,
 } from "./charm-selection";
-import { NONE, type WeaponUpdate } from "./weapon-ui";
+import { NONE } from "./weapon-ui";
 
 const OPTIONS = [
   { value: NONE, label: "なし" },
   ...CHARMS.map((c) => ({ value: String(c.id), label: c.label, icon: charmIcon(c.id) })),
 ];
 
-export function CharmEditor({
-  weapon,
-  base,
-  update,
-}: {
-  weapon: WeaponView | null;
-  base: number;
-  update: WeaponUpdate;
-}) {
+/** 魅力の3枠。offset はレコードの先頭 */
+export function CharmEditor({ weapon, offset }: { weapon: WeaponView | null; offset: number }) {
   const { advanced } = useAdvancedMode();
+  const { write } = useWrite();
   const field = weapon?.charms;
   const loadId = useContext(SaveContext)?.save?.loadId;
-  const source = `${loadId}:${base}:${charmSelectionKey(field?.value ?? [])}`;
+  const source = `${loadId}:${offset}:${charmSelectionKey(field?.value ?? [])}`;
   const [state, setState] = useState(() => ({ source, rows: charmSelections(field?.value ?? []) }));
   // 保存時の合算で表示項目を潰さない。外部から値が変わったときだけ同期する。
   if (state.source !== source) {
@@ -42,8 +37,8 @@ export function CharmEditor({
   function change(slot: number, patch: Partial<CharmSelection>) {
     const next = rows.map((row, i) => (i === slot ? { ...row, ...patch } : row));
     const values = expandCharmSelections(next, advanced);
-    update((bytes, offset) => writeWeaponCharms(bytes, offset, values, { advanced }));
-    setState({ source: `${loadId}:${base}:${charmSelectionKey(values)}`, rows: next });
+    write((bytes) => writeWeaponCharms(bytes, offset, values, { advanced }));
+    setState({ source: `${loadId}:${offset}:${charmSelectionKey(values)}`, rows: next });
   }
 
   const advancedOnly = !advanced && rows.some((row) => row.id !== null && row.count !== 1);
@@ -54,7 +49,7 @@ export function CharmEditor({
           <div key={slot} className="flex flex-col gap-2">
             <SelectRow
               label={`魅力 ${slot + 1}`}
-              offset={base + WEAPON_FIELDS.charms}
+              offset={offset + WEAPON_FIELDS.charms}
               value={weapon ? (row.id === null ? NONE : String(row.id)) : null}
               options={OPTIONS}
               problem={field?.problem ?? null}
@@ -75,7 +70,7 @@ export function CharmEditor({
             {advanced && (
               <SelectRow
                 label={`魅力 ${slot + 1} の個数`}
-                offset={base + WEAPON_FIELDS.charms}
+                offset={offset + WEAPON_FIELDS.charms}
                 value={weapon ? String(row.count) : null}
                 options={[1, 2, 3].map((count) => ({ value: String(count), label: `×${count}` }))}
                 problem={field?.problem ?? null}

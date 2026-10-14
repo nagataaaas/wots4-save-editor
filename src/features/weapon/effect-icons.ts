@@ -34,7 +34,7 @@ export function charmIcon(id: number): LucideIcon | null {
   return CHARM_ICONS[id] ?? null
 }
 
-/** 銘の番号 → 系統ごとのアイコン（番号は TITLES と同じ。datatable/weapon/title.csv） */
+/** 銘の番号 → 系統ごとのアイコン（番号は WEAPON_TITLES と同じ。datatable/weapon/title.csv） */
 export function titleIcon(no: number): LucideIcon | null {
   if (no < 0 || no > 0x13) return null
   if (no <= 0x04) return Skull // 人斬り〜猟奇守：斬殺数で攻撃力アップ

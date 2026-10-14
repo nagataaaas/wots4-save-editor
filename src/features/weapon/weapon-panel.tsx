@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { charmLabel, type NumberKey, type WeaponView } from "@/save/weapon";
+import { charmSummary, weaponDisplayName, type NumberKey, type WeaponView } from "@/save/weapon";
 import { WeaponImage } from "./weapon-rows";
 
 /** 帯刀の一覧（閉じていても見える部分）の能力値と画像。ゲームの武器の画面に寄せた見た目 */
@@ -18,12 +18,7 @@ export function WeaponPanel({ weapon }: { weapon: WeaponView | null }) {
       <dd>{value}</dd>
     </div>
   );
-  const charmIds = weapon ? weapon.charms.value.filter((id): id is number => id !== null) : [];
-  const charms: string[] = !weapon
-    ? ["—", "—", "—"]
-    : charmIds.length > 3
-      ? [...new Set(charmIds)].map((id) => `${charmLabel(id)} ×${charmIds.filter((value) => value === id).length}`)
-      : charmIds.map((id) => charmLabel(id) ?? "不明");
+  const charms: string[] = weapon ? charmSummary(weapon.charms.value) : ["—", "—", "—"];
   while (charms.length < 3) charms.push("---");
   return (
     <div className="weapon-preview">
@@ -33,7 +28,7 @@ export function WeaponPanel({ weapon }: { weapon: WeaponView | null }) {
             {weapon?.title.value != null && weapon.title.label && (
               <span>{weapon.title.label}</span>
             )}
-            <span>{!weapon ? "—" : weapon.nameHidden.value ? "*****" : weapon.name.value || "（名前なし）"}</span>
+            <span>{weapon ? weaponDisplayName(weapon) : "—"}</span>
           </div>
           <div className="weapon-preview-rule" aria-hidden="true">
             <span />

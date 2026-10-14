@@ -4,8 +4,7 @@ import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { WEAPON_LIST_ANCHORS } from "@/features/weapon/anchors";
 import { Label } from "@/components/ui/label";
@@ -27,8 +26,7 @@ import {
   WEAPON_CHEST_OFFSET,
   readWeaponChest,
   readWeaponChestWeapons,
-  weaponChestOffset,
-  validateWeaponChestCapacity,
+  selectableCapacities,
   writeWeaponChestCapacity,
   writeWeaponChestCountToFilled,
 } from "@/save/weapon-chest";
@@ -54,11 +52,10 @@ export function WeaponChestPage() {
   const indices = weapons?.flatMap((w, i) => (!w.empty || (showEmpty && i < slots) ? [i] : []));
 
   // 容量は 10 本単位。今の武器が収まらない容量は選べない
-  const capacityOptions: SelectOption[] = [];
-  for (let n = CAPACITY_MIN; n <= CAPACITY_MAX; n++) {
-    if (view && validateWeaponChestCapacity(view, n) && n !== view.capacity) continue;
-    capacityOptions.push({ value: String(n), label: `${n * CAPACITY_UNIT} 本` });
-  }
+  const capacityOptions: SelectOption[] = selectableCapacities(view).map((n) => ({
+    value: String(n),
+    label: `${n * CAPACITY_UNIT} 本`,
+  }));
 
   function fixCount() {
     tryWrite(writeWeaponChestCountToFilled);
@@ -68,20 +65,14 @@ export function WeaponChestPage() {
     <div className="flex flex-col gap-4">
       <PageBanner error={readError} problem={layoutProblem} />
 
-      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.capacity} searchLabel="刀箪笥の本数と容量">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <ScopeAnchorLink />
-            刀箪笥の本数と容量
-            <InfoTip offset={`${formatOffset(WEAPON_CHEST_COUNT)}〜${formatOffset(WEAPON_CHEST_CAPACITY)}`} />
-            {/* 箪笥の武器は WEAPON_CHEST_OFFSET から 0xA0 B × 200 枠。その直後に本数（2 B）と容量÷10（1 B） */}
-          </CardTitle>
-          {/* 位置・意味は 🟢。🔶 書き換えたときのゲーム内の反映は未確認（要ゲーム内確認） */}
-          <CardDescription>
-            刀箪笥に入る本数（容量）を変えられます。本数が容量に達すると、武器を入れられなくなります。
-            {/* 🟢 ゲームは箪笥の先頭から容量の枠までだけを使う */}
-          </CardDescription>
-        </CardHeader>
+      {/* 箪笥の武器は WEAPON_CHEST_OFFSET から 0xA0 B × 200 枠。その直後に本数（2 B）と容量÷10（1 B）。
+          位置・意味は 🟢。🔶 書き換えたときのゲーム内の反映は未確認（要ゲーム内確認）。🟢 ゲームは箪笥の先頭から容量の枠までだけを使う */}
+      <AnchoredCard
+        anchor={WEAPON_LIST_ANCHORS.capacity}
+        title="刀箪笥の本数と容量"
+        extra={<InfoTip offset={`${formatOffset(WEAPON_CHEST_COUNT)}〜${formatOffset(WEAPON_CHEST_CAPACITY)}`} />}
+        description="刀箪笥に入る本数（容量）を変えられます。本数が容量に達すると、武器を入れられなくなります。"
+      >
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <SelectRow
             label="容量"
@@ -120,11 +111,11 @@ export function WeaponChestPage() {
       </AnchoredCard>
 
       {/* 未読み込みのときは枠だけを描き、一覧は「—」にする */}
-      <AnchoredCard anchor={WEAPON_LIST_ANCHORS.weapons} searchLabel="刀箪笥の武器" className="gap-2">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <ScopeAnchorLink />
-            刀箪笥の武器
+      <AnchoredCard
+        anchor={WEAPON_LIST_ANCHORS.weapons}
+        title="刀箪笥の武器"
+        extra={
+          <>
             <span className="text-muted-foreground text-sm font-normal">
               {view ? view.filled.length : "—"} 本
             </span>
@@ -133,15 +124,19 @@ export function WeaponChestPage() {
               <Switch id={showEmptyId} checked={showEmpty} onCheckedChange={setShowEmpty} />
               <Label htmlFor={showEmptyId}>空き枠も表示</Label>
             </div>
-          </CardTitle>
-          <CardDescription>
+          </>
+        }
+        description={
+          <>
             行を押すと編集欄を開きます。
             <br />
             {showEmpty
               ? `容量の枠（${view ? slots : "—"} 枠）と、その外で武器が入っている枠を表示しています。`
               : "武器が入っている枠だけを表示しています。"}
-          </CardDescription>
-        </CardHeader>
+          </>
+        }
+        className="gap-2"
+      >
         <CardContent>
           <WeaponIndexFields />
           {weapons ? (
@@ -149,7 +144,6 @@ export function WeaponChestPage() {
               key={save?.loadId ?? 0}
               weapons={weapons}
               indices={indices}
-              update={(i) => (mutate) => update((b) => mutate(b, weaponChestOffset(i)))}
               badges={(i) =>
                 // 🟢 ゲームは先頭から容量の枠までだけを使う
                 i >= slots && !weapons[i].empty ? <Badge variant="outline">容量の外</Badge> : null

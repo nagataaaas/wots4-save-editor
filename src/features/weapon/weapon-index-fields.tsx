@@ -9,5 +9,5 @@ export function WeaponIndexFields() {
   const indexing = useIndexing()
   const { id } = useAnchor(WEAPON_ANCHORS.weapon(0))
   if (!indexing) return null
-  return <AnchorScope.Provider value={id}><WeaponEditor weapon={null} base={0} update={() => {}} /></AnchorScope.Provider>
+  return <AnchorScope.Provider value={id}><WeaponEditor weapon={null} offset={0} /></AnchorScope.Provider>
 }
