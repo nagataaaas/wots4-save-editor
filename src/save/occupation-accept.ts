@@ -90,6 +90,37 @@ export function seriesAcceptOf(flag: number, value: number): number | undefined 
   return i >= 0 && i < series.writesUntil ? series.ids[i] : undefined;
 }
 
+/**
+ * 連続なりわい（番号 4〜7）のフラグの値の読み方。
+ * - 100：すべて終えた（done）
+ * - n0・n1（n＝1〜8）：十の位が何件目、一の位が 0＝依頼する前・1＝依頼済み（step）。
+ *   job はその件のなりわい。startsAccept は受注中のなりわいにもなるか（小鳩・おっつぁんの 81 はならない 🟢）
+ * - ほか（0・8件目のあとの 90 番台・101〜）：other
+ * ✅ 野戸仏の 20・100 は書き換えで確認。ほかは 🟢
+ */
+export type SeriesValue =
+  | { kind: "done" }
+  | { kind: "step"; n: number; accepted: boolean; job: number; startsAccept: boolean }
+  | { kind: "other" };
+
+export const SERIES_DONE_VALUE = 100;
+
+export function decodeSeriesValue(flag: number, value: number): SeriesValue {
+  const series = Object.values(OCCUPATION_SERIES).find((s) => s.flag === flag);
+  if (!series) return { kind: "other" };
+  if (value === SERIES_DONE_VALUE) return { kind: "done" };
+  const n = Math.floor(value / 10);
+  const digit = value % 10;
+  if (!Number.isInteger(value) || n < 1 || n > series.ids.length || digit > 1) return { kind: "other" };
+  return {
+    kind: "step",
+    n,
+    accepted: digit === 1,
+    job: series.ids[n - 1],
+    startsAccept: seriesAcceptOf(flag, value) !== undefined,
+  };
+}
+
 export type AcceptedView = ViewStatus & {
   id: number;
   day: number;
@@ -136,7 +167,6 @@ export function acceptOccupation(bytes: Uint8Array, id: number): void {
   if (!occupationById(id)) throw new RangeError(`表にないなりわいです`);
   const date = readDate(bytes);
   if (date.problem) throw new RangeError(`日付を読めないので受注を書けません：${date.problem}`);
-  if (date.raw.dayIndex > 0xffff) throw new RangeError(`経過日数が大きすぎて受注を書けません`);
 
   const current = readU16(bytes, ACCEPT_OFFSETS.id);
   if (current !== 0 && current !== id) writeFlags(bytes, acceptRuleOf(current).onRelease);
@@ -144,8 +174,8 @@ export function acceptOccupation(bytes: Uint8Array, id: number): void {
   const stateOffset = occupationStateOffset(id);
   if (readU16(bytes, stateOffset) === OCCUPATION_NOT_APPEARED) writeU16(bytes, stateOffset, 0);
   writeU16(bytes, ACCEPT_OFFSETS.id, id);
-  writeU16(bytes, ACCEPT_OFFSETS.day, date.raw.dayIndex);
-  writeU8(bytes, ACCEPT_OFFSETS.slot, date.raw.slot);
+  writeU16(bytes, ACCEPT_OFFSETS.day, date.dayIndex);
+  writeU8(bytes, ACCEPT_OFFSETS.slot, date.slot);
   writeU8(bytes, ACCEPT_OFFSETS.active, ACCEPT_ACTIVE);
 }
 
@@ -176,7 +206,7 @@ export function writeSeriesState(
     writeFlags(bytes, flags, opts);
     return;
   }
-  for (const w of flags) writeFlag(bytes, occupationFlag(w.flag), w.value, opts);
+  writeFlags(bytes, flags, opts);
   const current = readU16(bytes, ACCEPT_OFFSETS.id);
   if (current !== 0 && acceptRuleOf(current).onAccept.some((a) => flags.some((w) => w.flag === a.flag))) clearAccepted(bytes);
 }

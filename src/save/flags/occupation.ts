@@ -6,8 +6,8 @@
 // 0x0120（番号 4、【岡っ引き】野戸仏の連続なりわい）は書き換えで確認（✅ 2026-10-07）。ほかは 🟢。
 // 受注にあわせてこれらのフラグを書く規則は occupation-accept.ts。
 import { nameOf, occupationGroupLabel } from "../master/labels";
-import { occupationById, occupationGroupByKey, type OccupationGroupKey } from "../master/occupation-names";
-import { OCCUPATION_SERIES, SHIRUBE_SERIES, seriesJobs } from "../master/occupation-series";
+import { occupationById, occupationGroupByKey, type OccupationGroup, type OccupationGroupKey } from "../master/occupation-names";
+import { OCCUPATION_SERIES, SHIRUBE_SERIES, seriesJobs, type SeriesGroupKey } from "../master/occupation-series";
 import { occupationFlagOffset } from "../townsfolk";
 import { yesNo, type ByteFlag, type FlagValue } from "./byte-flag";
 
@@ -23,11 +23,19 @@ function jobRange(from: number, to: number): number[] {
   return Array.from({ length: to - from + 1 }, (_, i) => from + i).filter((id) => occupationById(id));
 }
 
-/** なりわいのまとまりの見出し（【岡っ引き】野戸仏 など）。なりわいの画面の絞り込みと同じ */
-const groupTitle = (key: OccupationGroupKey): string => {
+function groupOf(key: OccupationGroupKey): OccupationGroup {
   const group = occupationGroupByKey(key);
   if (!group) throw new RangeError('なりわいのまとまりがありません');
-  return occupationGroupLabel(group);
+  return group;
+}
+
+/** なりわいのまとまりの見出し（【岡っ引き】野戸仏 など）。なりわいの画面の絞り込みと同じ */
+const groupTitle = (key: OccupationGroupKey): string => occupationGroupLabel(groupOf(key));
+
+/** まとまりの範囲のうち、表にあるなりわいの ID */
+const groupJobs = (key: OccupationGroupKey): number[] => {
+  const { from, to } = groupOf(key);
+  return jobRange(from, to);
 };
 
 /**
@@ -158,39 +166,30 @@ export const HOMELESS_SERIES_VALUES: readonly FlagValue[] = [
 /** 番号 n のフラグ */
 const at = (n: number) => ({ number: n, offset: occupationFlagOffset(n) });
 
-/** 連続なりわい、四天王の話、最終なりわい */
-export const OCCUPATION_SERIES_FLAGS: readonly OccupationFlag[] = [
+/** 連続なりわい4つ（番号 4〜7）の欄の説明と値 */
+const SERIES_FIELDS: readonly { key: SeriesGroupKey; note: string; values: readonly FlagValue[] }[] = [
   {
-    ...at(OCCUPATION_SERIES.police.flag),
-    label: groupTitle("police"),
+    key: "police",
     note: `代官所の同心 ${nameOf.npc(40)}新太郎の連続なりわい。書き換えると${nameOf.npc(40)}の次の依頼が変わる（2件目「督促状」から始める、完了にする、など）`,
     values: POLICE_SERIES_VALUES,
-    jobs: seriesJobs('police').filter(id => occupationById(id)),
   },
-  {
-    ...at(OCCUPATION_SERIES.gangster.flag),
-    label: groupTitle("gangster"),
-    // 🟢
-    note: `町の極道者 ${nameOf.npc(45)}戒の連続なりわい`,
-    values: GANGSTER_SERIES_VALUES,
-    jobs: seriesJobs('gangster').filter(id => occupationById(id)),
-  },
-  {
-    ...at(OCCUPATION_SERIES.thief.flag),
-    label: groupTitle("thief"),
-    // 🟢
-    note: `港の${nameOf.npc(169)}の連続なりわい`,
-    values: THIEF_SERIES_VALUES,
-    jobs: seriesJobs('thief').filter(id => occupationById(id)),
-  },
-  {
-    ...at(OCCUPATION_SERIES.homeless.flag),
-    label: groupTitle("homeless"),
-    // 🟢
-    note: `居留地の${nameOf.npc(76)}の連続なりわい`,
-    values: HOMELESS_SERIES_VALUES,
-    jobs: seriesJobs('homeless').filter(id => occupationById(id)),
-  },
+  // 🟢
+  { key: "gangster", note: `町の極道者 ${nameOf.npc(45)}戒の連続なりわい`, values: GANGSTER_SERIES_VALUES },
+  // 🟢
+  { key: "thief", note: `港の${nameOf.npc(169)}の連続なりわい`, values: THIEF_SERIES_VALUES },
+  // 🟢
+  { key: "homeless", note: `居留地の${nameOf.npc(76)}の連続なりわい`, values: HOMELESS_SERIES_VALUES },
+];
+
+/** 連続なりわい、四天王の話、最終なりわい */
+export const OCCUPATION_SERIES_FLAGS: readonly OccupationFlag[] = [
+  ...SERIES_FIELDS.map(({ key, note, values }) => ({
+    ...at(OCCUPATION_SERIES[key].flag),
+    label: groupTitle(key),
+    note,
+    values,
+    jobs: seriesJobs(key).filter(id => occupationById(id)),
+  })),
   {
     ...at(25),
     label: "四天王の話",
@@ -345,7 +344,7 @@ export const OCCUPATION_SERIES_FLAGS: readonly OccupationFlag[] = [
         group: "終わったあと",
       },
     ],
-    jobs: [207, 208],
+    jobs: groupJobs("final"),
   },
 ];
 
@@ -392,7 +391,7 @@ export const OCCUPATION_SECURITY_FLAGS: readonly OccupationFlag[] = [
       { value: 20, label: "人斬りに誘われた（断ってもこのまま）" },
       { value: 30, label: "引き受けた（治安なりわいを頼める）" },
     ],
-    jobs: jobRange(163, 166),
+    jobs: groupJobs("sakotsu"),
   },
   {
     ...at(9),
@@ -409,7 +408,7 @@ export const OCCUPATION_SECURITY_FLAGS: readonly OccupationFlag[] = [
       { value: 20, label: `${nameOf.npc(44)}の裏の顔を聞いた` },
       { value: 21, label: `${nameOf.npc(44)}に酒をおごってもらった` },
     ],
-    jobs: [167, 168, 169, 170],
+    jobs: groupJobs("okami"),
   },
 ];
 

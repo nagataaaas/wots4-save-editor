@@ -41,8 +41,8 @@ export const OCCUPATIONS: readonly OccupationEntry[] = ROWS.map((r) => ({
   client: r.client_ja,
   type: r.type,
   alignment: r.alignment,
-  reward: Number(r.reward),
-  bonus: Number(r.bonus),
+  reward: r.reward,
+  bonus: r.bonus,
   deadlineDays: r.deadline_days,
   noteJa: r.note_ja,
 }));
@@ -65,8 +65,8 @@ export type OccupationGroupKey = 'basic' | 'sakotsu' | 'okami' | SeriesGroupKey 
 export type OccupationGroup = { key: OccupationGroupKey; title: OccupationGroupTitle; from: number; to: number };
 
 /**
- * 画面で使うなりわいのまとまり。ids は ID の範囲（欠番を含む）。
- * 🟢 3〜161 は町の基本のなりわい、163〜166 は代官所の佐古津・167〜170 は賭場の女将の治安なりわい、171〜206 は4つの連続なりわい、
+ * 画面で使うなりわいのまとまり。from〜to は ID の範囲で、欠番を含み隙間なく続く。
+ * 🟢 3〜161 は町の基本のなりわい、162 は欠番（表にない。範囲は佐古津に含める）、163〜166 は代官所の佐古津・167〜170 は賭場の女将の治安なりわい、171〜206 は4つの連続なりわい、
  * 207・208 は最終なりわい、209〜212 は汁部（DLC）
  */
 export const OCCUPATION_GROUPS: readonly OccupationGroup[] = [

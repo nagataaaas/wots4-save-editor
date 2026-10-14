@@ -92,6 +92,8 @@ export function stageOf(value: number): Stage | null {
 }
 
 export type DateView = ViewStatus & {
+  /** 0x0BD8（1日目＝0） */
+  dayIndex: number
   /** 0x0BD8＋1 */
   day: number
   /** 0x0014。0＝昼（朝）、1＝夕、2＝夜 */
@@ -99,7 +101,6 @@ export type DateView = ViewStatus & {
   pending: number
   /** 0x0010 */
   stage: number
-  raw: { dayTime: number; slot: number; dayIndex: number }
 }
 
 export function readDate(bytes: Uint8Array): DateView {
@@ -121,11 +122,11 @@ export function readDate(bytes: Uint8Array): DateView {
   if (day > DAY_SEEN_MAX) warnings.push(`${DAY_SEEN_MAX}日目より後の値は確かめていません`)
 
   return {
+    dayIndex,
     day,
     slot,
     pending,
     stage,
-    raw: { dayTime: stage, slot, dayIndex },
     problem: layoutProblem ?? problem,
     warnings,
   }

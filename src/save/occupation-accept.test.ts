@@ -12,6 +12,7 @@ import {
   ACCEPT_RULES,
   acceptOccupation,
   acceptRuleOf,
+  decodeSeriesValue,
   readAccepted,
   releaseOccupation,
   seriesAcceptOf,
@@ -80,6 +81,19 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     expect(seriesAcceptOf(4, 20)).toBeUndefined()
     expect(seriesAcceptOf(4, 91)).toBeUndefined()
     expect(seriesAcceptOf(8, 11)).toBeUndefined()
+  })
+
+  it('連続なりわいの値の読み方：100 は完了、n0・n1 は n 件目、ほかは別の値（✅ 野戸仏の 20・100、ほかは 🟢）', () => {
+    expect(decodeSeriesValue(4, 100)).toEqual({ kind: 'done' })
+    expect(decodeSeriesValue(4, 20)).toEqual({ kind: 'step', n: 2, accepted: false, job: 172, startsAccept: false })
+    expect(decodeSeriesValue(4, 21)).toEqual({ kind: 'step', n: 2, accepted: true, job: 172, startsAccept: true })
+    // 🟢 おっつぁんは欠番を飛ばした順。8件目の 81 は受注中にならない
+    expect(decodeSeriesValue(7, 41)).toMatchObject({ kind: 'step', n: 4, job: 199, startsAccept: true })
+    expect(decodeSeriesValue(7, 81)).toMatchObject({ kind: 'step', n: 8, accepted: true, job: 205, startsAccept: false })
+    for (const v of [0, 5, 12, 90, 97, 101, 102]) expect(decodeSeriesValue(4, v)).toEqual({ kind: 'other' })
+    // 連続なりわいでない番号
+    expect(decodeSeriesValue(8, 10)).toEqual({ kind: 'other' })
+    expect(decodeSeriesValue(8, 100)).toEqual({ kind: 'other' })
   })
 
   it('✅ 基本のなりわいの受注は、ID・今の日・時間帯・FF と、FFFF の記録を 0 にするだけ', () => {
