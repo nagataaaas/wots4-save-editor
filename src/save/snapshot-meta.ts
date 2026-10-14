@@ -5,7 +5,7 @@ import { readHero } from './hero'
 import { CHART_FRAMES } from './master/event-chart-layout'
 import { diffRanges, innermostRegion } from './raw'
 import { readDate, TIME_SLOTS } from './scenario-date'
-import { eventNameOf, readEvents } from './scenario-events'
+import { EVENT_STATE_VALUES, eventNameOf, readEvents } from './scenario-events'
 
 export type SnapshotMeta = {
   /** 主人公名（0x00DC） */
@@ -41,7 +41,7 @@ export function lastClearedEvent(bytes: Uint8Array): string | null {
   if (!view || view.problem) return null
   let best: { col: number; eventId: number } | null = null
   for (const f of CHART_FRAMES) {
-    if (view.entries[f.eventId]?.state !== 0x04) continue
+    if (view.entries[f.eventId]?.state !== EVENT_STATE_VALUES.success) continue
     if (!best || f.col > best.col || (f.col === best.col && f.eventId > best.eventId)) best = f
   }
   return best ? eventNameOf(best.eventId) : null
@@ -65,7 +65,7 @@ export function changedRegions(prev: Uint8Array, bytes: Uint8Array): string[] {
       if (region.chunk === 'memory-garbage') other = true
       else names.add(region.label)
       // 同じ領域の残りのバイトは見なくてよい
-      i = Math.min(r.end, region.end as number)
+      i = Math.min(r.end, region.end ?? r.end)
     }
   if (prev.byteLength !== bytes.byteLength) other = true
   return other ? [...names, OTHER_REGION] : [...names]
