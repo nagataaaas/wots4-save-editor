@@ -13,7 +13,7 @@ import { PageBanner } from "@/components/page-banner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { WarningTip } from "@/components/warning-tip";
 import { useWrite } from "@/lib/use-write";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { WriteError } from "@/components/write-error";
 import { FlagSection } from "./flag-section";
 
 /** 勢力の退場（FACTION_EXIT_FLAGS） */
@@ -74,7 +74,6 @@ export function CharactersCard() {
  */
 export function PeopleCard() {
   const { view, error: readError, problem } = useSaveView(readTownsfolk, { problem: (v) => v.problem });
-  const { tryWrite, error } = useWrite();
   const groups = [...new Set(TOWNSFOLK_PEOPLE.map((x) => x.group))];
   const deadOf = (p: number) => (view ? isPersonDead(view, p) : null);
 
@@ -93,36 +92,41 @@ export function PeopleCard() {
         </>
       }
     >
-      {error && <Alert variant="destructive"><AlertTitle>書き込めません</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
       <PageBanner error={readError} problem={problem} />
       {groups.map((g) => (
         <SearchScope key={g} title={g} className="flex flex-col gap-2">
           <p className="text-sm font-medium">{g}</p>
           <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            {TOWNSFOLK_PEOPLE.filter((x) => x.group === g).map((x) => {
-              const dead = deadOf(x.p);
-              const revive = reviveNote(x.p);
-              return (
-                <SearchField key={x.p} label={x.name} className="flex items-center gap-1">
-                  <Label className="flex items-center gap-2 font-normal">
-                    <Checkbox
-                      checked={dead ?? false}
-                      disabled={dead === null || problem !== null}
-                      onCheckedChange={(on) => {
-                        tryWrite((b) => writePersonDead(b, x.p, on));
-                      }}
-                    />
-                    <span>{x.name}</span>
-                  </Label>
-                  <InfoTip offset={personOffset(x.p)} />
-                  {revive && <WarningTip warning={`外すだけでは生き返りません：${revive}`} />}
-                </SearchField>
-              );
-            })}
+            {TOWNSFOLK_PEOPLE.filter((x) => x.group === g).map((x) => (
+              <PersonRow key={x.p} p={x.p} name={x.name} dead={deadOf(x.p)} readOnly={problem !== null} />
+            ))}
           </div>
         </SearchScope>
       ))}
     </CollapsibleCard>
+  );
+}
+
+/** 町の人1人の死亡のチェック。dead が null ならセーブ未読み込み。書き込みのエラーはこの人の下に出す */
+function PersonRow({ p, name, dead, readOnly }: { p: number; name: string; dead: boolean | null; readOnly: boolean }) {
+  const { tryWrite, error } = useWrite();
+  const revive = reviveNote(p);
+  return (
+    <SearchField label={name} className="flex flex-wrap items-center gap-1">
+      <Label className="flex items-center gap-2 font-normal">
+        <Checkbox
+          checked={dead ?? false}
+          disabled={dead === null || readOnly}
+          onCheckedChange={(on) => {
+            tryWrite((b) => writePersonDead(b, p, on));
+          }}
+        />
+        <span>{name}</span>
+      </Label>
+      <InfoTip offset={personOffset(p)} />
+      {revive && <WarningTip warning={`外すだけでは生き返りません：${revive}`} />}
+      <WriteError error={error} className="basis-full" />
+    </SearchField>
   );
 }
 
