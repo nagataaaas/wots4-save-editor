@@ -5,7 +5,7 @@ import { SelectRow } from "@/components/select-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { findSkillConflicts, pickWithoutConflicts } from "@/save/custom-style";
+import { CUSTOM_SHEET_SKILL_MAX, findSkillConflicts, pickWithoutConflicts } from "@/save/custom-style";
 import {
   RANK_LABELS,
   findSect,
@@ -18,17 +18,25 @@ import {
   type SkillTreeGroup,
   type SkillTreeNode,
 } from "@/save/master/sect-data";
-import { isUsableInOreRyu } from "@/save/sects";
+import { SKILL_STATE, isUsableInOreRyu, type SkillState } from "@/save/sects";
 import { uniqueSkillSects, uniqueWeaponsForSkill } from "@/save/unique-weapons";
-import { SKILL_TREE_DESCRIPTION, STATE_LABELS, UNIQUE_WEAPON_ATTR, parseIntegerInRange } from "./sect-format";
+import { SKILL_TREE_DESCRIPTION, STATE_LABELS, UNIQUE_WEAPON_ATTR, isKnownState, parseIntegerInRange } from "./sect-format";
 import { EMPTY_FILTER, filterSortTree } from "./skill-list";
+
+const STATE_BADGE_VARIANTS: Record<SkillState, "outline" | "secondary" | "default"> = {
+  [SKILL_STATE.notLearned]: "outline",
+  [SKILL_STATE.learned]: "default",
+  [SKILL_STATE.learnedParent]: "default",
+  [SKILL_STATE.notInOreRyu]: "secondary",
+};
 
 /** state が null はセーブ未読み込み */
 export function StateBadge({ state }: { state: number | null }) {
   if (state === null) return <span className="text-muted-foreground">—</span>;
+  const known = isKnownState(state);
   return (
-    <Badge variant={state === 0 ? "outline" : state === 3 ? "secondary" : "default"} className="font-normal">
-      {STATE_LABELS[state] ?? "不明"}
+    <Badge variant={known ? STATE_BADGE_VARIANTS[state] : "outline"} className="font-normal">
+      {known ? STATE_LABELS[state] : "不明"}
     </Badge>
   );
 }
@@ -157,7 +165,7 @@ export function SkillPicker({
           選択をすべて外す
         </Button>
         <span className="text-muted-foreground text-xs">
-          {selected.size} 個選択中（最大 128）
+          {selected.size} 個選択中（最大 {CUSTOM_SHEET_SKILL_MAX}）
           {conflicts.byNo.size > 0 && <span className="text-destructive">・重なり・不足 {conflicts.byNo.size} 件</span>}
         </span>
       </div>

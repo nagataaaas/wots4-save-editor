@@ -39,7 +39,7 @@ import {
   writeSectValues,
   writeSkillPoints,
 } from './sects'
-import { SECTS, STANCE_SKILLS, findSect, findSkillSheet } from './master/sect-data'
+import { SECTS, STANCE_SKILLS, findSect, findSkillSheet, findStance } from './master/sect-data'
 import { SCROLL_SLOT_BYTES } from './sect-record'
 
 /** 🟢 鬼怒川流剣術（ID 51）の 1つめの技の表は 29（構え 3 脇） */
@@ -408,6 +408,18 @@ describe('learnStanceSkills', () => {
     const before = b.slice()
     expect(() => learnStanceSkills(b, STANCE, [3, missing.skillNo])).toThrow()
     expect(b).toEqual(before)
+  })
+})
+
+describe('流派・技の表のそろい', () => {
+  it('🟢 流派の技の表はすべて技の表にあり、構えも構えの表にある（流派の画面はこれを前提に技の表を引く）', () => {
+    for (const sect of SECTS) {
+      for (const id of sect.sheets) {
+        const sheet = findSkillSheet(id)
+        expect(sheet, `流派 ${sect.id} の技の表 ${id}`).toBeDefined()
+        expect(findStance(sheet!.stance)).toBeDefined()
+      }
+    }
   })
 })
 

@@ -1,13 +1,20 @@
 import type { ParseResult } from "@/components/field-row";
 import { parseInteger } from "@/lib/parse";
+import { SKILL_STATE, type SkillState } from "@/save/sects";
 
-/** 技の状態の表示 🟢（chunks/skill-states）。2（上位技を覚えた元の技）は 1 と同じ表示にし、上位技との関係は技の並びで示す */
-export const STATE_LABELS: Record<number, string> = {
-  0: "未習得",
-  1: "習得済",
-  2: "習得済",
-  3: "習得済（俺流には未組み込み）",
+/** 技の状態の表示 🟢（chunks/skill-states）。上位技を覚えた元の技（learnedParent）は習得済と同じ表示にし、上位技との関係は技の並びで示す */
+export const STATE_LABELS: Record<SkillState, string> = {
+  [SKILL_STATE.notLearned]: "未習得",
+  [SKILL_STATE.learned]: "習得済",
+  [SKILL_STATE.learnedParent]: "習得済",
+  [SKILL_STATE.notInOreRyu]: "習得済（俺流には未組み込み）",
 };
+
+/** 表にない状態の値か（STATE_LABELS を引く前の絞り込み） */
+export const isKnownState = (state: number): state is SkillState => Object.hasOwn(STATE_LABELS, state);
+
+/** 検証に落ちたセーブで、値の欄に出す理由（詳しい理由はページの上のバナーに出ている） */
+export const READ_ONLY_REASON = "このセーブでは変更できません";
 
 /** min〜max の整数を読む入力欄の parse */
 export function parseIntegerInRange(min: number, max: number) {

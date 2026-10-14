@@ -3,9 +3,9 @@ import { FilterSelect, type FilterOption } from "@/components/filter-select";
 import { InfoTip } from "@/components/info-tip";
 import { LazyTip } from "@/components/lazy-tip";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
+import { formatOffset } from "@/lib/format";
 import { SKILLS_ANCHORS } from "./anchors";
 import { useAnchor } from "@/lib/navigation-context";
 import { Input } from "@/components/ui/input";
@@ -17,9 +17,14 @@ import { PageBanner } from "@/components/page-banner";
 import { WriteResult } from "@/components/write-error";
 import { SECTS, SLOT_LABELS, STANCES, sheetSkillTree, stanceSkillSheet, stanceSkills, type Sect, type SkillSheet } from "@/save/master/sect-data";
 import {
+  SHEET_STATES_OFFSET,
+  STANCE_STATES_END,
+  countLearned,
   forgetStanceSkill,
+  isLearned,
   isUniqueStanceSkill,
   learnStanceSkill,
+  learnStanceSkills,
   readSects,
   showStanceSkillInOreRyu,
   stanceSkillSheets,
@@ -82,6 +87,10 @@ function stanceRows(stance: number): Map<number, Row> {
   );
 }
 
+/** 表にない技の Row（習得できない・流派なし）。行も木も stanceSkills から作るので、ふつうは使わない */
+const NO_ROW: Row = { learnable: false, unique: false, sects: [] };
+const rowOf = (rows: ReadonlyMap<number, Row>, no: number): Row => rows.get(no) ?? NO_ROW;
+
 export function SkillsPage() {
   const { advanced } = useAdvancedMode();
   const [filter, setFilter] = useState<SkillFilter>(EMPTY_FILTER);
@@ -111,23 +120,22 @@ export function SkillsPage() {
     <div className="flex flex-col gap-4">
       <PageBanner error={readError} problem={problem} />
 
-      <AnchoredCard anchor={SKILLS_ANCHORS.overview} searchLabel="技">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <ScopeAnchorLink />
-            技
-            {/* 構えごとの技の覚え状況（chunks/skill-states）。状態は構えごとの状態を出す */}
-            <InfoTip offset="0x1837C〜0x189FB、0x1417C〜" />
-          </CardTitle>
-          {/* 「習得する」は ✅（ゲームで反映を確認済み）。固有技の「習得する」は 🟢 要ゲーム内確認 */}
-          <CardDescription>
+      {/* 「習得する」は ✅（ゲームで反映を確認済み）。固有技の「習得する」は 🟢 要ゲーム内確認 */}
+      <AnchoredCard
+        anchor={SKILLS_ANCHORS.overview}
+        title="技"
+        // 技の覚え状況（chunks/skill-states）：技の表ごとの状態に続いて構えごとの状態。状態は構えごとの状態を出す
+        extra={<InfoTip offset={`${formatOffset(SHEET_STATES_OFFSET)}〜${formatOffset(STANCE_STATES_END - 1)}`} />}
+        description={
+          <>
             構えごとに全部の技を一覧し、技を習得済みにできます。
             <br />
             固有技は「俺流で表示」にすると、俺流に組み込めるようになります。
             {/* 「習得する」は、その技が入っているすべての流派の技の表と構えごとの状態に書く（流派の画面と同じ書き込み）。
                 固有技は「習得する」で習得済（俺流には未組み込み） */}
-          </CardDescription>
-        </CardHeader>
+          </>
+        }
+      >
         <CardContent className="flex flex-col gap-3 text-sm">
           <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4 lg:grid-cols-[repeat(6,minmax(0,1fr))_auto]">
             <FilterField label="技の名前">
@@ -213,7 +221,7 @@ export function SkillsPage() {
                     >
                       {stance.nameJa}
                       <span className="text-xs font-normal tabular-nums opacity-70">
-                        {filtering ? `${hits}件` : `${states ? nos.filter((no) => states[no] !== 0).length : "—"}/${nos.length}`}
+                        {filtering ? `${hits}件` : `${states ? countLearned(states, nos) : "—"}/${nos.length}`}
                       </span>
                     </TabsTrigger>
                   );
@@ -272,7 +280,7 @@ function StanceSkillTable({
   // 結果は表の上に出す（行ごとには出さない）
   const { run, message } = useWrite();
   const nos = [...shown.skillNos];
-  const pending = states ? nos.filter((no) => rows.get(no)?.learnable && states[no] === 0) : [];
+  const pending = states ? nos.filter((no) => rowOf(rows, no).learnable && !isLearned(states[no])) : [];
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
@@ -280,15 +288,13 @@ function StanceSkillTable({
           size="sm"
           disabled={readOnly || pending.length === 0}
           onClick={() =>
-            run(`${pending.length} 個の技を習得しました`, (b) => {
-              for (const no of pending) learnStanceSkill(b, stance, no);
-            })
+            run(`${pending.length} 個の技を習得しました`, (b) => learnStanceSkills(b, stance, pending))
           }
         >
           条件に合う技を全部習得する
         </Button>
         <span className="text-muted-foreground text-xs">
-          {nos.length} 件（未習得 {states ? nos.filter((no) => states[no] === 0).length : "—"}）。段や習得条件は見ずに書き込みます。
+          {nos.length} 件（未習得 {states ? nos.length - countLearned(states, nos) : "—"}）。段や習得条件は見ずに書き込みます。
           {SKILL_TREE_DESCRIPTION}
           条件に合わない前の技は薄く出します。
         </span>
@@ -315,7 +321,7 @@ function StanceSkillTable({
                 {...actions}
                 run={run}
                 sheet={sheet}
-                row={rows.get(ctx.node.skill.skillNo)!}
+                row={rowOf(rows, ctx.node.skill.skillNo)}
                 state={states ? states[ctx.node.skill.skillNo] : null}
                 dim={!shown.matched.has(ctx.node.key)}
               />

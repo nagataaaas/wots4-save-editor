@@ -6,8 +6,7 @@ import { FieldRow } from "@/components/field-row";
 import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { FilterSelect } from "@/components/filter-select";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,7 @@ import {
   CUSTOM_COUNT_OFFSET,
   customNameOffset,
   CUSTOM_SHEET_COUNT_OFFSET,
+  CUSTOM_STANCE_MAX,
   NAME_MAX,
   NAME_MAX_ADVANCED,
   addCustomStance,
@@ -33,6 +33,7 @@ import {
   initialStanceSkills,
   readCustomStyles,
   removeCustomStance,
+  styleSheets,
   validateCustomName,
   validateSkillSelection,
   writeCustomName,
@@ -44,6 +45,7 @@ import {
 } from "@/save/custom-style";
 import { RANK_LABELS, SLOT_LABELS, STANCES, findStance } from "@/save/master/sect-data";
 import { I16_MAX, MASTERY_MAX, sectValueOffset } from "@/save/sect-record";
+import { READ_ONLY_REASON } from "./sect-format";
 import { IntField, RankField, SkillPicker } from "./sect-ui";
 
 export function OreRyuPage() {
@@ -57,23 +59,21 @@ export function OreRyuPage() {
   return (
     <div className="flex flex-col gap-4">
       <PageBanner error={readError} problem={problem} />
-      <AnchoredCard anchor={ORE_RYU_ANCHORS.overview} searchLabel="俺流">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <ScopeAnchorLink />
-            俺流
-            {/* 並びは 🟢。🔶 書き換えたセーブをゲームで読めるかは要ゲーム内確認 */}
-            {/* chunks/custom-style・belt-copy（俺流の技の表）・sect-scrolls */}
-            <InfoTip offset={`${formatOffset(CUSTOM_COUNT_OFFSET)}、${formatOffset(CUSTOM_SHEET_COUNT_OFFSET)}`} />
-          </CardTitle>
-          <CardDescription>
+      {/* 並びは 🟢。🔶 書き換えたセーブをゲームで読めるかは要ゲーム内確認 */}
+      <AnchoredCard
+        anchor={ORE_RYU_ANCHORS.overview}
+        title="俺流"
+        // chunks/custom-style・belt-copy（俺流の技の表）・sect-scrolls
+        extra={<InfoTip offset={`${formatOffset(CUSTOM_COUNT_OFFSET)}、${formatOffset(CUSTOM_SHEET_COUNT_OFFSET)}`} />}
+        description={
+          <>
             俺流の名前・修練度・技の構成を書き換えたり、新しく作ったりできます。
             <br />
             書き換える前に、必ず元のセーブをバックアップしてください。
             {/* 技は構えの技の表から選ぶ（通常モードでは覚えていて俺流に入れられる技だけ、上級者モードでは構えの全部の技） */}
-          </CardDescription>
-        </CardHeader>
-      </AnchoredCard>
+          </>
+        }
+      />
 
       {view?.styles.map((style) => (
         <StyleCard key={`${k}-${style.id}`} style={style} view={view} readOnly={readOnly} advanced={advanced} />
@@ -105,8 +105,8 @@ function StyleCard({
   const [addStance, setAddStance] = useState<string>("");
   // 生きた証の写しはその人物が町に出るたびに作り直されるので、上級者モードでだけ書き換える 🔶
   const locked = readOnly || (style.kind !== "player" && !advanced);
-  const lockReason = readOnly ? "検証に落ちています" : locked ? "生きた証の写しは上級者モードでだけ書き換えられます（その人物が町に出るたびに作り直されます）" : null;
-  const sheets = style.sheetIds.filter((id) => id >= 0).map((id) => view.sheets.find((s) => s.id === id)!);
+  const lockReason = readOnly ? READ_ONLY_REASON : locked ? "生きた証の写しは上級者モードでだけ書き換えられます（その人物が町に出るたびに作り直されます）" : null;
+  const sheets = styleSheets(view, style);
   const firstStance = sheets[0] ? findStance(sheets[0].stance) : undefined;
   const addable = STANCES.filter((s) => s.slot === firstStance?.slot && !sheets.some((x) => x.stance === s.id));
   const values = { mastery: style.mastery, rank: style.rank, kills: style.kills };
@@ -198,10 +198,10 @@ function StyleCard({
           />
         ))}
 
-        {sheets.length < 3 && addable.length > 0 && (
+        {sheets.length < CUSTOM_STANCE_MAX && addable.length > 0 && (
           <div className="flex flex-wrap items-end gap-2">
             <div className="flex flex-col gap-1.5">
-              <Label>構えを足す（同じ構えの組だけ、3 つまで）</Label>
+              <Label>構えを足す（同じ構えの組だけ、{CUSTOM_STANCE_MAX} つまで）</Label>
               <FilterSelect
                 options={addable.map((s) => ({ value: String(s.id), label: s.nameJa }))}
                 value={addStance === "" ? null : addStance}
@@ -323,20 +323,18 @@ function CreateCard({
   const skillProblem = view ? validateSkillSelection(view, s, [...selected], { advanced }) : null;
 
   return (
-    <AnchoredCard anchor={ORE_RYU_ANCHORS.create} searchLabel="俺流を新しく作る">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          <ScopeAnchorLink />
-          俺流を新しく作る
-          {/* 🔶 要ゲーム内確認 */}
-        </CardTitle>
-        <CardDescription>
+    // 🔶 要ゲーム内確認。ゲームと同じ手順で書く
+    <AnchoredCard
+      anchor={ORE_RYU_ANCHORS.create}
+      title="俺流を新しく作る"
+      description={
+        <>
           白紙目録なしで新しい俺流を作り、流派の書を持ち物（いっぱいなら道場の箪笥）に入れます。
           <br />
           装備はゲーム内の流派の切り替えで行ってください。
-          {/* ゲームと同じ手順で書く */}
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent className="flex flex-col gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <SearchField label="名前" className="flex flex-col gap-1.5">

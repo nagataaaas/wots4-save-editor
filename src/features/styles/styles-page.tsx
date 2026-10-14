@@ -7,12 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
+import { formatOffset } from "@/lib/format";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
@@ -27,19 +27,23 @@ import {
   findStance,
   sheetSkillTree,
   type Sect,
-  type SheetSkill,
   type SkillSheet,
 } from "@/save/master/sect-data";
-import { I16_MAX, MASTERY_MAX, sectValueOffset } from "@/save/sect-record";
+import { I16_MAX, MASTERY_MAX, sectValueOffset, type SectValues } from "@/save/sect-record";
 import {
   LEARNED_COUNT_OFFSET,
+  SCROLLS_END,
+  SCROLL_HELD_OFFSET,
+  SECT_RECORDS_END,
+  SHEET_STATES_OFFSET,
   SKILL_POINTS_MAX,
   SKILL_POINTS_OFFSET,
+  countLearned,
   forgetSheetSkill,
   learnSectSkills,
   isUniqueSkill,
+  learnSheetSkill,
   learnSheetSkills,
-  learnUniqueSkills,
   ownedSectIds,
   rankForMastery,
   readSects,
@@ -50,7 +54,7 @@ import {
   writeSkillPoints,
   type SectsView,
 } from "@/save/sects";
-import { SKILL_TREE_DESCRIPTION, STANCE_TAB_CLASS } from "./sect-format";
+import { READ_ONLY_REASON, SKILL_TREE_DESCRIPTION, STANCE_TAB_CLASS } from "./sect-format";
 import {
   IntField,
   RankField,
@@ -62,6 +66,9 @@ import {
   type SkillTreeRowContext,
 } from "./sect-ui";
 import { SkillActionButtons } from "./skill-action-buttons";
+
+/** 流派の画面で扱う範囲：技の覚え状況〜流派の表、流派の書（持ち歩き〜箪笥の件数） */
+const OVERVIEW_OFFSETS = `${formatOffset(SHEET_STATES_OFFSET)}〜${formatOffset(SECT_RECORDS_END - 1)}、${formatOffset(SCROLL_HELD_OFFSET)}〜${formatOffset(SCROLLS_END - 1)}`;
 
 /** その流派がどこにあるか（装備・持ち歩き・箪笥） */
 function placesOf(view: SectsView, id: number): string[] {
@@ -122,24 +129,21 @@ export function StylesPage() {
     <div className="flex flex-col gap-4">
       <PageBanner error={readError} problem={problem} />
 
-      <AnchoredCard anchor={STYLES_ANCHORS.overview} searchLabel="流派">
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <ScopeAnchorLink />
-            流派
-            {/* chunks/skill-states・styles・sect-scrolls */}
-            <InfoTip offset="0x1417C〜0x1920D、0x48CC〜0x58BD" />
-          </CardTitle>
-          {/* 技の覚え状況の書き込みは ✅（ゲームで反映を確認済み）。腕前点・修練度・段・倒した数は 🟢（書き換えはゲーム内で未確認） */}
-          <CardDescription>流派ごとに技を覚えた状態にできます。</CardDescription>
-        </CardHeader>
+      {/* 技の覚え状況の書き込みは ✅（ゲームで反映を確認済み）。腕前点・修練度・段・倒した数は 🟢（書き換えはゲーム内で未確認） */}
+      <AnchoredCard
+        anchor={STYLES_ANCHORS.overview}
+        title="流派"
+        // chunks/skill-states・styles（技の覚え状況〜流派の表）・sect-scrolls（流派の書）
+        extra={<InfoTip offset={OVERVIEW_OFFSETS} />}
+        description="流派ごとに技を覚えた状態にできます。"
+      >
         <CardContent className="flex flex-col gap-3 text-sm">
           <div className="grid items-start gap-4 sm:grid-cols-3">
             <IntField
               label="腕前点"
               offset={SKILL_POINTS_OFFSET}
               value={view?.skillPoints ?? null}
-              problem={view?.problem ? "検証に落ちています" : null}
+              problem={view?.problem ? READ_ONLY_REASON : null}
               min={0}
               max={advanced ? 0xffff : SKILL_POINTS_MAX}
               apply={(v) => update((b) => writeSkillPoints(b, v, { advanced }))}
@@ -178,70 +182,42 @@ export function StylesPage() {
       </AnchoredCard>
 
       {sects.map((sect) => (
-        <SectCard
-          key={sect.id}
-          sect={sect}
-          view={view}
-          readOnly={readOnly}
-          advanced={advanced}
-          onLearnAll={() => update((b) => learnSectSkills(b, sect.id))}
-          onLearn={(sheet, skill) =>
-            update((b) =>
-              isUniqueSkill(skill) ? learnUniqueSkills(b, sheet, [skill.skillNo]) : learnSheetSkills(b, sheet, [skill.skillNo]),
-            )
-          }
-          onShowInOreRyu={(sheet, no) => update((b) => learnSheetSkills(b, sheet, [no]))}
-          onForget={(sheet, no) => update((b) => forgetSheetSkill(b, sheet, no))}
-          onValues={(v) => update((b) => writeSectValues(b, sect.id, v))}
-        />
+        <SectCard key={sect.id} sect={sect} view={view} readOnly={readOnly} />
       ))}
       {sects.length === 0 && <p className="text-muted-foreground text-sm">条件に合う流派がありません。</p>}
     </div>
   );
 }
 
+const skillNosOf = (sheet: SkillSheet) => sheet.skills.map((s) => s.skillNo);
+
 function SectCard({
   sect,
   view,
   readOnly,
-  advanced,
-  onLearnAll,
-  onLearn,
-  onShowInOreRyu,
-  onForget,
-  onValues,
 }: {
   sect: Sect;
   /** null はセーブ未読み込み */
   view: SectsView | null;
   readOnly: boolean;
-  advanced: boolean;
-  onLearnAll: () => void;
-  onLearn: (sheet: number, skill: SheetSkill) => void;
-  onShowInOreRyu: (sheet: number, no: number) => void;
-  onForget: (sheet: number, no: number) => void;
-  onValues: (v: { mastery: number; rank: number; kills: number }) => void;
 }) {
+  const { advanced } = useAdvancedMode();
   // ボタンの書き込みの結果は、このカードの「技を全部習得する」の下に出す（欄の書き込みのエラーは欄に出る）
-  const { attempt, message } = useWrite();
-  const learnAll = () => attempt(onLearnAll, `${sect.nameJa} の技を習得しました`);
-  const learn = (sheet: number, skill: SheetSkill) => attempt(() => onLearn(sheet, skill), "技を習得しました");
-  const showInOreRyu = (sheet: number, no: number) => attempt(() => onShowInOreRyu(sheet, no), "俺流に組み込めるようにしました");
-  const forget = (sheet: number, no: number) => attempt(() => onForget(sheet, no), "技を忘れさせました");
+  const { write: update, run, message } = useWrite();
   const rec = view?.records.find((r) => r.id === sect.id) ?? null;
   const places = view ? placesOf(view, sect.id) : [];
-  // 固有技は覚えられる流派でだけ出す（sectSheetSkills）。未読み込みのときは states が null
-  const sheets = sect.sheets.map((id) => {
-    const sheet = findSkillSheet(id)!;
-    return { sheet: { ...sheet, skills: sectSheetSkills(sect, sheet) }, states: view ? sheetStates(view, id) : null };
+  // 固有技は覚えられる流派でだけ出す（sectSheetSkills）。未読み込みのときは states が null。
+  // 流派の技の表はすべて技の表にある（sects.test.ts で確かめている）
+  const sheets = sect.sheets.flatMap((id) => {
+    const sheet = findSkillSheet(id);
+    return sheet ? [{ sheet: { ...sheet, skills: sectSheetSkills(sect, sheet) }, states: view ? sheetStates(view, id) : null }] : [];
   });
   const hasUnique = sheets.some((s) => s.sheet.skills.some(isUniqueSkill));
   const total = sheets.reduce((n, s) => n + s.sheet.skills.length, 0);
-  const learned = view
-    ? sheets.reduce((n, s) => n + s.sheet.skills.filter((x) => s.states?.[x.skillNo] !== 0).length, 0)
-    : null;
-  const valueProblem = !view ? null : readOnly ? "検証に落ちています" : rec ? null : "流派の表にこの流派がありません";
-  const values = rec ? { mastery: rec.mastery, rank: rec.rank, kills: rec.kills } : null;
+  const learned = view ? sheets.reduce((n, s) => n + (s.states ? countLearned(s.states, skillNosOf(s.sheet)) : 0), 0) : null;
+  const valueProblem = !view ? null : readOnly ? READ_ONLY_REASON : rec ? null : "流派の表にこの流派がありません";
+  const values: SectValues | null = rec ? { mastery: rec.mastery, rank: rec.rank, kills: rec.kills } : null;
+  const writeValues = (v: SectValues) => update((b) => writeSectValues(b, sect.id, v));
 
   return (
     <CollapsibleCard
@@ -267,7 +243,7 @@ function SectCard({
           </span>
           <span className="text-muted-foreground flex items-center gap-x-3 text-xs font-normal">
             <span className="w-[9em] shrink-0">
-              {sect.sheets.map((id) => findStance(findSkillSheet(id)!.stance)?.nameJa).join("・")}
+              {sheets.map((s) => findStance(s.sheet.stance)?.nameJa).join("・")}
             </span>
             <span className="w-[2.5em] shrink-0">{rec ? (RANK_LABELS[rec.rank] ?? "不明") : "—"}</span>
             <span className="w-[7.5em] shrink-0 tabular-nums">修練度 {rec ? rec.mastery : "—"}</span>
@@ -285,7 +261,10 @@ function SectCard({
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={learnAll} disabled={readOnly || learned === total}>
+          <Button
+            onClick={() => run(`${sect.nameJa} の技を習得しました`, (b) => learnSectSkills(b, sect.id))}
+            disabled={readOnly || learned === total}
+          >
             技を全部習得する
           </Button>
           <span className="text-muted-foreground text-xs">
@@ -305,7 +284,7 @@ function SectCard({
             problem={valueProblem}
             min={0}
             max={MASTERY_MAX}
-            apply={(m) => values && onValues({ ...values, mastery: m, rank: Math.max(values.rank, rankForMastery(sect, m)) })}
+            apply={(m) => values && writeValues({ ...values, mastery: m, rank: Math.max(values.rank, rankForMastery(sect, m)) })}
             note={`しきい値：${sect.thresholds.join("・")}。修練度に合わせて段も上げます`}
             // 🟢 要ゲーム内確認
           />
@@ -313,7 +292,7 @@ function SectCard({
             offset={rec ? sectValueOffset(rec.offset, 'rank') : 0}
             value={values?.rank ?? null}
             problem={valueProblem}
-            apply={(r) => values && onValues({ ...values, rank: r })}
+            apply={(r) => values && writeValues({ ...values, rank: r })}
             // 🟢 要ゲーム内確認
           />
           <IntField
@@ -323,7 +302,7 @@ function SectCard({
             problem={valueProblem}
             min={0}
             max={I16_MAX}
-            apply={(n) => values && onValues({ ...values, kills: n })}
+            apply={(n) => values && writeValues({ ...values, kills: n })}
             // 🟢 要ゲーム内確認
           />
         </div>
@@ -336,7 +315,7 @@ function SectCard({
                 <TabsTrigger key={sheet.id} value={String(sheet.id)} className={`${STANCE_TAB_CLASS} flex-none gap-3`}>
                   {findStance(sheet.stance)?.nameJa}
                   <span className="text-xs font-normal tabular-nums opacity-70">
-                    {states ? sheet.skills.filter((x) => states[x.skillNo] !== 0).length : "—"}/{sheet.skills.length}
+                    {states ? countLearned(states, skillNosOf(sheet)) : "—"}/{sheet.skills.length}
                   </span>
                 </TabsTrigger>
               ))}
@@ -355,9 +334,7 @@ function SectCard({
                       states={states}
                       readOnly={readOnly}
                       advanced={advanced}
-                      onLearn={learn}
-                      onShowInOreRyu={showInOreRyu}
-                      onForget={forget}
+                      run={run}
                     />
                   )}
                 />
@@ -376,21 +353,11 @@ type SkillRowProps = {
   states: readonly number[] | null;
   readOnly: boolean;
   advanced: boolean;
-  onLearn: (sheet: number, skill: SheetSkill) => void;
-  onShowInOreRyu: (sheet: number, no: number) => void;
-  onForget: (sheet: number, no: number) => void;
+  /** 書き込んで、結果を流派のカードに出す（useWrite の run） */
+  run: (label: string, mutate: (bytes: Uint8Array) => void) => void;
 };
 
-function SkillRow({
-  sheet,
-  states,
-  readOnly,
-  advanced,
-  onLearn,
-  onShowInOreRyu,
-  onForget,
-  ...ctx
-}: SkillRowProps & SkillTreeRowContext) {
+function SkillRow({ sheet, states, readOnly, advanced, run, ...ctx }: SkillRowProps & SkillTreeRowContext) {
   const s = ctx.node.skill;
   const state = states ? states[s.skillNo] : null;
   return (
@@ -412,9 +379,9 @@ function SkillRow({
         unique={isUniqueSkill(s)}
         advanced={advanced}
         disabled={readOnly}
-        onLearn={() => onLearn(sheet.id, s)}
-        onShowInOreRyu={() => onShowInOreRyu(sheet.id, s.skillNo)}
-        onForget={() => onForget(sheet.id, s.skillNo)}
+        onLearn={() => run("技を習得しました", (b) => learnSheetSkill(b, sheet.id, s.skillNo))}
+        onShowInOreRyu={() => run("俺流に組み込めるようにしました", (b) => learnSheetSkills(b, sheet.id, [s.skillNo]))}
+        onForget={() => run("技を忘れさせました", (b) => forgetSheetSkill(b, sheet.id, s.skillNo))}
       />
     </div>
   );
