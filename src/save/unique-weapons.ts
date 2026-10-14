@@ -6,20 +6,14 @@ import { findSkillInfo } from './master/sect-data'
 import { WEAPON_IDS, weaponIdName } from './weapon-ids'
 
 const WEAPONS_BY_SKILL_NAME = new Map<string, string[]>()
+// 固有武器の6バイトの +4 は流派 ID 🟢（chunks/weapon-record）。その流派で戦ったときだけ武器の斬殺数が増えるので、固有技を覚えられるのはこの流派だけ
+const SECTS_BY_SKILL_NAME = new Map<string, number[]>()
 for (const option of WEAPON_IDS) {
   const unique = option.build?.unique
   if (!unique) continue
   const name = findSkillInfo(unique[0])?.nameJa
   if (!name) continue
   WEAPONS_BY_SKILL_NAME.set(name, [...(WEAPONS_BY_SKILL_NAME.get(name) ?? []), weaponIdName(option)])
-}
-
-// 固有武器の6バイトの +4 は流派 ID 🟢（chunks/weapon-record）。その流派で戦ったときだけ武器の斬殺数が増えるので、固有技を覚えられるのはこの流派だけ
-const SECTS_BY_SKILL_NAME = new Map<string, number[]>()
-for (const option of WEAPON_IDS) {
-  const unique = option.build?.unique
-  const name = unique ? findSkillInfo(unique[0])?.nameJa : undefined
-  if (!unique || !name) continue
   const sects = SECTS_BY_SKILL_NAME.get(name) ?? []
   if (!sects.includes(unique[2])) SECTS_BY_SKILL_NAME.set(name, [...sects, unique[2]])
 }
