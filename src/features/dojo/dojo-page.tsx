@@ -2,8 +2,7 @@ import { InfoTip } from "@/components/info-tip";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { SearchPath } from "@/lib/search-context";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScopeAnchorLink } from "@/components/anchor-link";
+import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { DOJO_ANCHORS } from "./anchors";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
@@ -20,7 +19,6 @@ import {
   PUPIL_KINDS,
   PUPIL_MAX,
   RAID_OFFSET,
-  RAIDERS_OFFSET,
   REPUTATION_RANK_MAX,
   RANK_OFFSET,
   POINTS_OFFSET,
@@ -56,32 +54,37 @@ function numberDuplicates(options: SelectOption[]): SelectOption[] {
 }
 
 /** 種類の選択肢。空き、女性、男性の順。同じ性別の中は評判が高い順 */
-const KIND_OPTIONS: readonly SelectOption[] = [
-  { value: EMPTY_VALUE, label: "空き" },
-  ...numberDuplicates(
-    (["f", "m"] as const).flatMap((sex) =>
-      PUPIL_KINDS.filter((k) => k.sex === sex)
-        .slice()
-        .sort((a, b) => b.point - a.point)
-        .map(
-          (k): SelectOption => ({
-            value: String(k.id),
-            label: k.label,
-            group: sex === "f" ? "女性" : "男性",
-          }),
-        ),
+const KIND_OPTIONS: readonly SelectOption[] = (() => {
+  const kinds = (["f", "m"] as const).flatMap((sex) =>
+    PUPIL_KINDS.filter((k) => k.sex === sex)
+      .slice()
+      .sort((a, b) => b.point - a.point),
+  );
+  const named = numberDuplicates(
+    kinds.map(
+      (k): SelectOption => ({
+        value: String(k.id),
+        label: k.label,
+        group: k.sex === "f" ? "女性" : "男性",
+      }),
     ),
-  ).map((o) => {
-    const k = pupilKind(Number(o.value))!;
-    return { ...o, label: `${o.label}（評判 +${k.point}）`, selectedLabel: `${o.label}（評判 +${k.point}）` };
-  }),
-];
+  );
+  return [
+    { value: EMPTY_VALUE, label: "空き" },
+    ...named.map((o, i) => {
+      const label = `${o.label}（評判 +${kinds[i].point}）`;
+      return { ...o, label, selectedLabel: label };
+    }),
+  ];
+})();
+
+/** 空きの枠の見た目の欄に出す選択肢（選べない） */
+const EMPTY_LOOK_OPTIONS: readonly SelectOption[] = [{ value: EMPTY_VALUE, label: "—" }];
 
 const lookOption = (look: number): SelectOption => ({ value: String(look), label: lookLabel(look) ?? "不明" });
 
 /** 見た目の選択肢。通常は種類の候補、上級者モードは見た目の表の全部 */
-function lookOptions(pupil: PupilView | null, advanced: boolean): SelectOption[] {
-  if (!pupil) return [];
+function lookOptions(pupil: PupilView, advanced: boolean): SelectOption[] {
   const kind = pupilKind(pupil.kind);
   const own = kind ? kind.looks : [];
   if (!advanced) return own.map(lookOption);
@@ -122,15 +125,17 @@ function ReputationCard({ view }: { view: DojoView | null }) {
   const next = view && view.rank < REPUTATION_RANK_MAX ? REPUTATION_RANGES[view.rank + 1][0] : null;
 
   return (
-    <AnchoredCard anchor={DOJO_ANCHORS.reputation} searchLabel="道場の評判">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2"><ScopeAnchorLink />道場の評判</CardTitle>
-        <CardDescription>
+    <AnchoredCard
+      anchor={DOJO_ANCHORS.reputation}
+      title="道場の評判"
+      description={
+        <>
           弟子の評判の合計で道場の評判（☆）が決まります。☆5 で鍛冶屋の「強く」「硬く」が安くなります。
           <br />
           ☆5 で弟子が全員女性だと、留守のあいだに弟子が道場破りを追い払いやすくなります。
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
         <p className="flex items-center gap-2">
           評判：{view ? stars(view.rank) : "—"}
@@ -157,7 +162,6 @@ function ReputationCard({ view }: { view: DojoView | null }) {
               { value: "on", label: "来ている", disabled: view !== null && view.count === 0 },
             ]}
             problem={problem}
-            note={`来ている道場破りの種類は ${formatOffset(RAIDERS_OFFSET)}〜`}
             hint={
               <>
                 どんな道場破りが何人来るかは、道場に入ったときに評判に応じて決まります。
@@ -198,9 +202,10 @@ function PupilRow({ index, view }: { index: number; view: DojoView | null }) {
         <SelectRow
           label="見た目"
           offset={PUPIL_CODEC.offset(offset, 'look')}
-          value={view === null ? null : pupil ? String(pupil.look) : null}
+          // 空きの枠は「—」を出して選べなくする（null を渡すと「未読み込み」になる）
+          value={view === null ? null : pupil ? String(pupil.look) : EMPTY_VALUE}
           currentLabel={pupil ? (lookLabel(pupil.look) ?? "不明") : undefined}
-          options={lookOptions(pupil, advanced)}
+          options={pupil ? lookOptions(pupil, advanced) : EMPTY_LOOK_OPTIONS}
           problem={problem}
           disabled={view !== null && pupil === null}
           hint={view !== null && pupil === null ? "空きの枠です" : undefined}
@@ -213,20 +218,19 @@ function PupilRow({ index, view }: { index: number; view: DojoView | null }) {
 
 function PupilsCard({ view }: { view: DojoView | null }) {
   return (
-    <AnchoredCard anchor={DOJO_ANCHORS.pupils} searchLabel="弟子">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ScopeAnchorLink />
-          弟子
-          {/* 1人 PUPIL_SIZE（12）B × 20 枠 */}
-          <InfoTip offset={`${formatOffset(pupilOffset(0))}〜${formatOffset(pupilOffset(PUPIL_MAX) - 1)}`} />
-        </CardTitle>
-        <CardDescription>
+    <AnchoredCard
+      anchor={DOJO_ANCHORS.pupils}
+      title="弟子"
+      // 1人 PUPIL_SIZE（12）B × 20 枠
+      extra={<InfoTip offset={`${formatOffset(pupilOffset(0))}〜${formatOffset(pupilOffset(PUPIL_MAX) - 1)}`} />}
+      description={
+        <>
           弟子の種類と見た目を変えたり、弟子を増やしたり外したりできます。
           <br />
           弟子の数と道場の評判は、弟子に合わせて変わります。
-        </CardDescription>
-      </CardHeader>
+        </>
+      }
+    >
       <CardContent className="flex flex-col divide-y">
         {Array.from({ length: PUPIL_MAX }, (_, i) => (
           <PupilRow key={i} index={i} view={view} />
