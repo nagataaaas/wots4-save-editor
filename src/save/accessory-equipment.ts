@@ -5,7 +5,7 @@
 import { assertWritable, checkLayout } from './layout'
 import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from './field'
 import { ACCESSORIES } from './master/accessory-names'
-import { readF32, readI16, readI8, readU8, writeF32, writeI16, writeI8 } from './binary'
+import { readF32, readU8, recordCodec, writeF32 } from './binary'
 import { ACCESSORY_FLAGS_OFFSET } from './unlocks'
 
 /** 🟢 取り付け先番号。標準位置により頭は顔も、胸は背中も含む。 */
@@ -38,14 +38,14 @@ export const ACCESSORY_FIELDS = {
   joint: { relative: 0x3c, type: 'i8', min: 0, max: ACCESSORY_ATTACHMENT_LABELS.length - 1 },
 } as const
 type AccessoryIntKey = keyof typeof ACCESSORY_FIELDS
-const INT_CODECS = {
-  i16: { read: readI16, write: writeI16 },
-  i8: { read: readI8, write: writeI8 },
-} as const
-const readIntField = (bytes: Uint8Array, offset: number, key: AccessoryIntKey) =>
-  INT_CODECS[ACCESSORY_FIELDS[key].type].read(bytes, offset + ACCESSORY_FIELDS[key].relative)
-const writeIntField = (bytes: Uint8Array, offset: number, key: AccessoryIntKey, value: number) =>
-  INT_CODECS[ACCESSORY_FIELDS[key].type].write(bytes, offset + ACCESSORY_FIELDS[key].relative, value)
+const INT_CODEC = recordCodec<AccessoryIntKey>({
+  id: { rel: ACCESSORY_FIELDS.id.relative, type: ACCESSORY_FIELDS.id.type },
+  joint: { rel: ACCESSORY_FIELDS.joint.relative, type: ACCESSORY_FIELDS.joint.type },
+})
+/** float32 の丸め（表示 0.2 は約 0.199999988）を許容する幅 */
+const FLOAT_TOLERANCE = 0.000001
+const outside = (value: number, { min, max }: { min: number; max: number }) =>
+  value < min - FLOAT_TOLERANCE || value > max + FLOAT_TOLERANCE
 const floatFields = ACCESSORY_FLOAT_FIELDS
 function floatField(key: AccessoryFloatKey) {
   const field = floatFields.find(f => f.key === key)
@@ -59,9 +59,9 @@ const pairedFields = floatFields.filter(f => f.state === 'A').map(field => {
 })
 export type AccessoryEquipmentSlot = ViewStatus & {
   offset: number
-  id: number | null
-  joint: number | null
-  values: Partial<Record<AccessoryFloatKey, number>>
+  id: number
+  joint: number
+  values: Record<AccessoryFloatKey, number>
   owned: boolean
 }
 
@@ -81,26 +81,31 @@ export function accessoryFloatRange(key: AccessoryFloatKey, opts: EditOpts = NOR
 
 export function readAccessorySlot(bytes: Uint8Array, group: number, slot: number): AccessoryEquipmentSlot {
   const offset = accessorySlotOffset(group, slot)
-  const result: AccessoryEquipmentSlot = { warnings: [], offset, id: null, joint: null, values: {}, owned: false, problem: checkLayout(bytes) }
   if (offset + ACCESSORY_RECORD_SIZE > bytes.length) throw new RangeError('装飾品の領域がファイル外です')
-  result.id = readIntField(bytes, offset, 'id')
-  result.joint = readIntField(bytes, offset, 'joint')
-  if (result.id < ACCESSORY_FIELDS.id.min || result.id > ACCESSORY_FIELDS.id.max) result.problem ??= '不明な装飾品です'
-  else if (result.id >= 0) result.owned = readU8(bytes, ACCESSORY_FLAGS_OFFSET + result.id) === 1
-  if (result.joint < ACCESSORY_FIELDS.joint.min || result.joint > ACCESSORY_FIELDS.joint.max) result.problem ??= '不明な取り付け先です'
+  const id = INT_CODEC.readField(bytes, offset, 'id')
+  const joint = INT_CODEC.readField(bytes, offset, 'joint')
+  const idKnown = id >= ACCESSORY_FIELDS.id.min && id <= ACCESSORY_FIELDS.id.max
+  const problems: (string | null)[] = [
+    checkLayout(bytes),
+    idKnown ? null : '不明な装飾品です',
+    joint < ACCESSORY_FIELDS.joint.min || joint > ACCESSORY_FIELDS.joint.max ? '不明な取り付け先です' : null,
+  ]
+  const warnings: string[] = []
+  const values = {} as Record<AccessoryFloatKey, number>
   for (const field of floatFields) {
     const stored = readF32(bytes, offset + field.relative)
     const value = field.kind === 'size' ? stored + 1 : stored
-    result.values[field.key] = value
-    const { min, max } = accessoryFloatRange(field.key, { advanced: true })
-    // float32の丸め（表示0.2は約0.199999988）を許容する。
-    if (!Number.isFinite(stored) || value < min - 0.000001 || value > max + 0.000001)
-      result.problem ??= `${field.label}が許容範囲外です`
-    const normal = accessoryFloatRange(field.key)
-    if (Number.isFinite(stored) && (value < normal.min - 0.000001 || value > normal.max + 0.000001))
-      result.warnings.push(`${field.label}が通常の範囲を超えています（上級者モードでだけ書けます）`)
+    values[field.key] = value
+    if (!Number.isFinite(stored) || outside(value, accessoryFloatRange(field.key, { advanced: true })))
+      problems.push(`${field.label}が許容範囲外です`)
+    if (Number.isFinite(stored) && outside(value, accessoryFloatRange(field.key)))
+      warnings.push(`${field.label}が通常の範囲を超えています（上級者モードでだけ書けます）`)
   }
-  return result
+  return {
+    warnings, offset, id, joint, values,
+    owned: idKnown && id >= 0 && readU8(bytes, ACCESSORY_FLAGS_OFFSET + id) === 1,
+    problem: problems.find(p => p !== null) ?? null,
+  }
 }
 
 /** 指定項目だけ上書き。ID変更でも部位・調整値・未知バイト・所持フラグは維持する。 */
@@ -112,7 +117,7 @@ export function writeAccessoryField(bytes: Uint8Array, group: number, slot: numb
   if (key === 'id' || key === 'joint') {
     const { min, max } = ACCESSORY_FIELDS[key]
     if (!Number.isInteger(value) || value < min || value > max) throw new RangeError('選べない値です')
-    writeIntField(bytes, current.offset, key, value)
+    INT_CODEC.writeField(bytes, current.offset, key, value)
     return
   }
   const field = floatField(key)
@@ -127,9 +132,7 @@ export function copySheathedAccessoryToDrawn(bytes: Uint8Array, group: number, s
   const current = readAccessorySlot(bytes, group, slot)
   if (current.problem) throw new RangeError(current.problem)
   for (const field of ACCESSORY_FLOAT_FIELDS.filter(field => field.state === 'A')) {
-    const value = current.values[field.key]!
-    const { min, max } = accessoryFloatRange(field.key, opts)
-    if (value < min - 0.000001 || value > max + 0.000001) throw new RangeError(`${field.label}が入力範囲外です`)
+    if (outside(current.values[field.key], accessoryFloatRange(field.key, opts))) throw new RangeError(`${field.label}が入力範囲外です`)
   }
   const base = current.offset
   for (const { field, other } of pairedFields)
@@ -151,7 +154,7 @@ export function writeCommonAccessoryField(bytes: Uint8Array, group: number, slot
 /** 両状態の補正を0にし、取り付け先を装飾品の標準部位にする。検証は呼び出し側で済ませる */
 function applyAccessoryDefaults(bytes: Uint8Array, offset: number, accessory: (typeof ACCESSORIES)[number]): void {
   for (const field of ACCESSORY_FLOAT_FIELDS) writeF32(bytes, offset + field.relative, 0)
-  writeIntField(bytes, offset, 'joint', accessory.defaultAttachment)
+  INT_CODEC.writeField(bytes, offset, 'joint', accessory.defaultAttachment)
 }
 
 /** 🟢 標準部位をセットし、両状態の補正を0へ戻す。標準位置そのものはセーブへ書かない。 */

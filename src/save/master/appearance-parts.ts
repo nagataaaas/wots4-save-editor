@@ -105,25 +105,25 @@ export type PersonEntry = {
 export const BODY_KINDS = ["男", "女", "ローラ", "子供", "動物"] as const;
 export type BodyKind = (typeof BODY_KINDS)[number];
 
-/** 部品の CSV（face・hair・upper・lower・body・feet・extra）の行。列は CSV ごとに少しずつ違う */
+/**
+ * 部品の生成表（face・hair・upper・lower・body・feet・extra）の行のうち、使う列。どの表の行もこの形に当てはまる。
+ * 生成器は数値の列を number | null、文字列の列を空文字で出す。body.csv には特典・服・DLC の列が、extra.csv には別名・クラッシュの列がなく、extra.csv だけが種類の列を持つ
+ */
 type PartRow = {
   id_dec: number;
-  name_ja: string | null;
-  name_en: string | null;
-  gender: string | null;
+  name_ja: string;
+  name_en: string;
+  gender: "" | Gender;
   save_models: PartEntry['models'];
   layer_meshes: readonly [string, string, string, string];
   layer_textures: readonly [readonly number[], readonly number[], readonly number[], readonly number[]];
   unlock_id?: number | null;
   cloth_id?: number | null;
-  dlc?: number | string | null;
+  dlc?: number | null;
   kind?: string;
-  alias_ja?: string | null;
+  alias_ja?: string;
   crash?: number | null;
 };
-
-const optNum = (v: number | string | null | undefined) =>
-  v === undefined || v === null || v === "" ? null : Number(v);
 
 function loadParts(
   table: Readonly<Record<number, PartRow>>,
@@ -132,19 +132,18 @@ function loadParts(
   return Object.values(table)
     .filter((r) => kind === undefined || r.kind === kind)
     .map((r) => {
-      const g = r.gender;
       const layer = (i: number): PartLayer | null => r.layer_meshes[i] === '' ? null
         : { mesh: r.layer_meshes[i], textures: r.layer_textures[i] };
       const layers: PartEntry['layers'] = [layer(0), layer(1), layer(2), layer(3)];
       return {
         id: r.id_dec,
-        ja: r.name_ja ?? "",
-        en: r.name_en ?? "",
-        gender: g === "男" || g === "女" ? g : null,
+        ja: r.name_ja,
+        en: r.name_en,
+        gender: r.gender === "" ? null : r.gender,
         models: r.save_models,
-        unlockId: optNum(r.unlock_id),
-        clothId: optNum(r.cloth_id),
-        dlc: optNum(r.dlc),
+        unlockId: r.unlock_id ?? null,
+        clothId: r.cloth_id ?? null,
+        dlc: r.dlc ?? null,
         alias: r.alias_ja ?? "",
         crash: r.crash === 1,
         layers,
@@ -154,20 +153,29 @@ function loadParts(
 
 function loadPersons(): PersonEntry[] {
   return Object.values(PERSON_TABLE).map((r) => {
-    const parts = {} as Record<PartKind, number | null>;
-    for (const k of PART_KINDS) parts[k] = optNum(r[k]);
     const bodyKind = BODY_KINDS.indexOf(r.body_kind);
     if (bodyKind < 0) throw new Error(`person.csv の ${r.id_dec} の body_kind が読めません`);
     return {
       id: r.id_dec,
       ja: r.name_ja,
       en: r.name_en,
-      dlc: optNum(r.dlc),
+      dlc: r.dlc,
       height: r.height,
       bodyKind,
-      secondId: optNum(r.second_id),
+      secondId: r.second_id,
       hairColor: r.hair_color,
-      parts,
+      parts: {
+        upper: r.upper,
+        lower: r.lower,
+        face: r.face,
+        hair: r.hair,
+        body: r.body,
+        feet: r.feet,
+        gauntlet: r.gauntlet,
+        leggings: r.leggings,
+        apron: r.apron,
+        cape: r.cape,
+      },
       selectable: r.selectable === 1,
     };
   });

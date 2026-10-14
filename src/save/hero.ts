@@ -69,11 +69,10 @@ export const GAUGES: Record<GaugeKind, { current: CurrentKey; max: MaxKey }> = {
   tsuma: { current: 'tsumaCurrent', max: 'tsumaMax' },
 }
 
-const MAX_OF: Record<CurrentKey, MaxKey> = {
-  hpCurrent: 'hpMax',
-  vitalityCurrent: 'vitalityMax',
-  tsumaCurrent: 'tsumaMax',
-}
+/** 現在値の欄から、同じゲージの最大値の欄を引く（GAUGES から作る） */
+const MAX_OF = Object.fromEntries(
+  Object.values(GAUGES).map(({ current, max }) => [current, max]),
+) as Record<CurrentKey, MaxKey>
 
 function isCurrentKey(key: F32Key): key is CurrentKey {
   return key in MAX_OF

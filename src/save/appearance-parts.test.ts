@@ -7,6 +7,7 @@ import { readF32, readU32, writeF32, writeU32 } from './binary'
 import { TS_SAVE_SIZE } from './layout'
 import {
   NONE_ALLOWED,
+  canNude,
   isNude,
   partNoneWarning,
   writeNude,
@@ -50,7 +51,7 @@ const changed = (a: Uint8Array, b: Uint8Array) => Array.from(a.keys()).filter(i 
 
 describe('主人公の見た目のレコード（U-19）', () => {
   it('🟢 幕末の志士の観測値を読む', () => {
-    const view = readAppearanceParts(makeSave())!
+    const view = readAppearanceParts(makeSave())
     expect(view.problem).toBeNull()
     expect([view.person, view.secondId, view.hairColor, view.bodyKind]).toEqual([238, 0xffff, 3, 0])
     expect(view.parts.upper).toMatchObject({ offset: 0x3aae4, id: 70, models: [190, -1, -1, -1] })
@@ -63,7 +64,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
   })
 
   it('🟢 観測した部品のモデルの値が datatable と一致する', () => {
-    const view = readAppearanceParts(makeSave())!
+    const view = readAppearanceParts(makeSave())
     for (const [kind, part] of Object.entries(view.parts) as [keyof typeof view.parts, (typeof view.parts)['upper']][]) {
       if (part.id === -1) continue
       expect(PARTS[kind].find(p => p.id === part.id)!.models).toEqual(part.models)
@@ -87,7 +88,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes[0x3aada]).toBe(3)
     expect(Array.from(bytes.subarray(0x3aae0, 0x3aae4))).toEqual([0, 0, 0x20, 0x43])
     const sayo = findPerson(245)!
-    const view = readAppearanceParts(bytes)!
+    const view = readAppearanceParts(bytes)
     for (const kind of Object.keys(sayo.parts) as (keyof typeof sayo.parts)[]) expect(view.parts[kind].id).toBe(sayo.parts[kind] ?? -1)
     writePerson(bytes, 20)
     expect(Array.from(bytes.subarray(0x3aad4, 0x3aad8))).toEqual([0x14, 0, 0x14, 0])
@@ -128,7 +129,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
       expect([bytes[0x3aada], bytes[0x3aadc]]).toEqual([3, 0])
       expect(readF32(bytes, 0x3aae0)).toBe(175)
       e.parts.forEach(([partId, models], k) => {
-        const view = readAppearanceParts(bytes)!.parts
+        const view = readAppearanceParts(bytes).parts
         const kind = (['upper', 'lower', 'face', 'hair', 'body', 'feet'] as const)[k]
         expect(view[kind].id).toBe(partId)
         expect(bytes.subarray(0x3aae8 + 12 * k, 0x3aaf0 + 12 * k)).toEqual(hex(models))
@@ -204,14 +205,14 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(male.subarray(0x3aae8, 0x3aaf0)).toEqual(hex('6E 00 FF FF FF FF FF FF'))
     expect(male.subarray(0x3aaf0, 0x3aaf2)).toEqual(hex('58 00'))
     expect(male.subarray(0x3aaf4, 0x3aafc)).toEqual(hex('C4 00 FF FF FF FF FF FF'))
-    const view = readAppearanceParts(male)!
+    const view = readAppearanceParts(male)
     expect([isNude(view, 'upper'), isNude(view, 'lower')]).toEqual([true, true])
     // 足元は変えない
     expect(male.subarray(0x3ab20, 0x3ab2c)).toEqual(makeSave().subarray(0x3ab20, 0x3ab2c))
 
     const female = makeSave()
     female[0x3aadc] = 1
-    expect(isNude(readAppearanceParts(female)!, 'upper')).toBe(false)
+    expect(isNude(readAppearanceParts(female), 'upper')).toBe(false)
     writeNude(female, 'upper')
     writeNude(female, 'lower')
     expect(female.subarray(0x3aae4, 0x3aae6)).toEqual(hex('62 00'))
@@ -224,6 +225,10 @@ describe('主人公の見た目のレコード（U-19）', () => {
     const before = laura.slice()
     expect(() => writeNude(laura, 'upper')).toThrow(/男・女/)
     expect(laura).toEqual(before)
+  })
+
+  it('裸にできるのはタイプが男・女のときだけ（canNude）', () => {
+    expect([0, 1, 2, 3, 4, 255].map(bodyKind => canNude({ bodyKind }))).toEqual([true, true, false, false, false, false])
   })
 
   it('✅ [U] 2026-10-08 手（k＝4）を J.J の手（3）にした書き込みと同じバイトを書く。上級者モードだけ', () => {
@@ -245,7 +250,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(() => writeLayer(bytes, 'feet', 1, -1, { advanced: false })).toThrow(/上級者モード/)
     writeLayer(bytes, 'feet', 1, -1, { advanced: true })
     expect(changed(before, bytes)).toEqual([0x3ab26, 0x3ab27])
-    expect(readAppearanceParts(bytes)!.parts.feet).toMatchObject({ id: 0, models: [287, -1, 287, -1] })
+    expect(readAppearanceParts(bytes).parts.feet).toMatchObject({ id: 0, models: [287, -1, 287, -1] })
   })
 
   it('🟢 層の値は、その部品のその層の形の色違いだけ（✅ [U] 別の形のテクスチャは異形になった）', () => {
@@ -261,7 +266,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(findPart('feet', 1)!.layers[0]).toEqual({ mesh: '足（浪人）', textures: [299, 300, 301] })
     // 標準は 301・309・301
     writeLayer(bytes, 'feet', 0, 299, { advanced: true })
-    const view = readAppearanceParts(bytes)!
+    const view = readAppearanceParts(bytes)
     expect(view.parts.feet.models).toEqual([299, 309, 301, -1])
     expect(layersCustomized('feet', view.parts.feet)).toBe(true)
     expect(layersCustomized('upper', view.parts.upper)).toBe(false)
@@ -339,7 +344,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
       writePerson(bytes, personId)
       const person = findPerson(personId)!
       for (const kind of ['upper', 'face', 'hair', 'feet'] as const) writePart(bytes, kind, person.parts[kind]!)
-      expect(readAppearanceParts(bytes)!.parts.face.id).toBe(person.parts.face)
+      expect(readAppearanceParts(bytes).parts.face.id).toBe(person.parts.face)
     }
   })
 
@@ -372,9 +377,9 @@ describe('主人公の見た目のレコード（U-19）', () => {
     writePerson(bytes, 20) // 青年主人公は下半身なし
     writePart(bytes, 'face', 43)
     writeHairColor(bytes, 1)
-    expect(readAppearanceParts(bytes)!.person).toBe(0xffff)
+    expect(readAppearanceParts(bytes).person).toBe(0xffff)
     writePart(bytes, 'lower', -1, { advanced: true })
-    expect(readAppearanceParts(bytes)!.parts.lower.id).toBe(-1)
+    expect(readAppearanceParts(bytes).parts.lower.id).toBe(-1)
   })
 
   it('🔶 0＝男・1＝女、🟢 2＝ローラ・3＝子供・4＝動物（U-19）。範囲外は null', () => {
@@ -388,7 +393,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
     expect(bytes[0x3aadc]).toBe(1)
     // ✅ [U] 2026-10-08 ローラ・子供は人物として表示を確認
     writeBodyKind(bytes, 3, { advanced: true })
-    expect(readAppearanceParts(bytes)!.bodyKind).toBe(3)
+    expect(readAppearanceParts(bytes).bodyKind).toBe(3)
     // ✅ [U] 2026-10-08 タイプ 4（動物）はクラッシュするので上級者モードでも拒否する
     expect(() => writeBodyKind(bytes, 4, { advanced: true })).toThrow(/クラッシュ/)
     expect(bytes[0x3aadc]).toBe(3)
@@ -406,7 +411,7 @@ describe('主人公の見た目のレコード（U-19）', () => {
   it('サイズ違いのファイルには書き込まない', () => {
     const bytes = makeSave().slice(0, -1)
     const before = bytes.slice()
-    expect(readAppearanceParts(bytes)!.problem).toMatch(/ファイルサイズ/)
+    expect(readAppearanceParts(bytes).problem).toMatch(/ファイルサイズ/)
     expect(() => writePart(bytes, 'face', 0)).toThrow()
     expect(() => writePerson(bytes, 20)).toThrow()
     expect(() => writeHairColor(bytes, 3)).toThrow()

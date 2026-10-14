@@ -78,6 +78,8 @@ export const HAIR_COLOR_NAMES: Readonly<Record<number, string>> = {
 /** 通常モードで書ける髪の色の範囲（主人公設定の一覧にある色）。0・10 以上は上級者モードだけ */
 export const HAIR_COLOR_MIN = 1;
 export const HAIR_COLOR_MAX = 9;
+/** 上級者モードの選択肢に出す髪の色の上限。10 以上は色がつかない ✅ [U]（書ける値は validateHairColor の 0〜255） */
+export const HAIR_COLOR_ADVANCED_MAX = 15;
 
 /**
  * 0x3AADC（タイプ）の値の名前。0＝男・1＝女 🔶（主人公設定の人物）。
@@ -134,7 +136,6 @@ export function readAppearanceParts(bytes: Uint8Array): AppearancePartsView {
 
 function requireWritable(bytes: Uint8Array): AppearancePartsView {
   const view = readAppearanceParts(bytes);
-  if (!view) throw new RangeError("ファイルが小さすぎて読めません");
   if (view.problem) throw new RangeError(view.problem);
   return view;
 }
@@ -233,6 +234,11 @@ export const NUDE_PRESETS: Readonly<
 
 function nudePreset(bodyKind: number, kind: "upper" | "lower") {
   return bodyKind === 0 || bodyKind === 1 ? NUDE_PRESETS[kind][bodyKind] : null;
+}
+
+/** 上裸・下裸にできるとき（タイプが男・女）に true。男・女用と共通の名前のある部品を選ぶタイプとも同じ */
+export function canNude(view: Pick<AppearancePartsView, "bodyKind">): boolean {
+  return view.bodyKind === 0 || view.bodyKind === 1;
 }
 
 /** 上半身・下半身が今のタイプの裸のときに true */

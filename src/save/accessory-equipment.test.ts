@@ -176,11 +176,11 @@ describe('装飾品の装着 🟢（固定位置、未知バイトの意味は�
     for (let group = 0; group < 6; group++) for (let slot = 0; slot < 10; slot++) {
       const entry = readAccessorySlot(b, group, slot)
       expect(entry.problem).toBeNull()
-      writeAccessoryField(b, group, slot, 'id', entry.id!)
-      writeAccessoryField(b, group, slot, 'joint', entry.joint!)
+      writeAccessoryField(b, group, slot, 'id', entry.id)
+      writeAccessoryField(b, group, slot, 'joint', entry.joint)
       for (const f of ACCESSORY_FLOAT_FIELDS) {
         // サイズ境界のfloat32丸めを表示値0.2に戻して再保存する。
-        const value = entry.values[f.key]!
+        const value = entry.values[f.key]
         writeAccessoryField(b, group, slot, f.key, f.key.startsWith('size') ? 0.2 : value)
       }
     }

@@ -1,17 +1,26 @@
 // ✅ [U] 2026-10-07 体型・身長・肌色の書き込み反映、低い・高いがふつうの身長の0.9倍・1.1倍であることを確認。
 // 🟢 0x4633C は容姿設定で選んだ身長の選択肢（int32 LE）。
 // 固定オフセットを使う。サイズ・境界・身長が有限の数値であることを検証する。
-import { readF32, readU32, readU8, writeF32, writeU32, writeU8 } from './binary'
+import { recordCodec, type TypedField } from './binary'
 import { type ViewStatus, type EditOpts, NORMAL_EDIT_OPTS } from './field'
 import { assertWritable, checkLayout } from './layout'
 
 export type AppearanceCurrentKey = 'skin' | 'body' | 'height' | 'heightChoice'
 // ✅ 体型・身長・肌色の位置、🟢 身長の選択肢。差分：04 copy 2〜5。
+// rel はセーブ先頭からの位置（base 0 で読み書きする）。肌色・体型は u8、身長は float32 LE（cm）、身長の選択肢は int32 LE（0〜2 なので u32 で扱う）。
+const FIELDS = {
+  skin: { rel: 0x3aad8, type: 'u8' },
+  body: { rel: 0x3aadd, type: 'u8' },
+  height: { rel: 0x3aae0, type: 'f32' },
+  heightChoice: { rel: 0x4633c, type: 'u32' },
+} as const satisfies Record<AppearanceCurrentKey, TypedField>
+const CODEC = recordCodec<AppearanceCurrentKey>(FIELDS)
+
 export const APPEARANCE_CURRENT_OFFSETS = {
-  skin: 0x3aad8,
-  body: 0x3aadd,
-  height: 0x3aae0,
-  heightChoice: 0x4633c,
+  skin: FIELDS.skin.rel,
+  body: FIELDS.body.rel,
+  height: FIELDS.height.rel,
+  heightChoice: FIELDS.heightChoice.rel,
 } as const
 
 /** ✅ [U] 肌色の値。 */
@@ -53,8 +62,8 @@ export const APPEARANCE_CURRENT_NOTES = {
 
 export type AppearanceCurrentField = {
   warnings: string[]
-  offset: number | null
-  value: number | null
+  offset: number
+  value: number
   problem: string | null
 }
 export type AppearanceCurrentView = ViewStatus & Record<AppearanceCurrentKey, AppearanceCurrentField>
@@ -62,22 +71,22 @@ export type AppearanceCurrentView = ViewStatus & Record<AppearanceCurrentKey, Ap
 export function readAppearanceCurrent(bytes: Uint8Array): AppearanceCurrentView {
   const layoutProblem = checkLayout(bytes)
   if (bytes.length < APPEARANCE_CURRENT_OFFSETS.heightChoice + 4) throw new RangeError('ファイルが小さすぎて容姿を読めません')
-  const makeField = (offset: number, kind: 'u8' | 'u32' | 'f32'): AppearanceCurrentField => {
-    const value = kind === 'f32' ? readF32(bytes, offset) : kind === 'u32' ? readU32(bytes, offset) : readU8(bytes, offset)
-    const problem = kind === 'f32' && !Number.isFinite(value) ? '身長が有限の数値ではありません' : null
+  const makeField = (key: AppearanceCurrentKey): AppearanceCurrentField => {
+    const value = CODEC.readField(bytes, 0, key)
+    const problem = CODEC.type(key) === 'f32' && !Number.isFinite(value) ? '身長が有限の数値ではありません' : null
     return {
       warnings: [],
-      offset, value,
+      offset: CODEC.offset(0, key), value,
       problem: layoutProblem ?? problem,
     }
   }
   return {
     problem: layoutProblem,
     warnings: [],
-    skin: makeField(APPEARANCE_CURRENT_OFFSETS.skin, 'u8'),
-    body: makeField(APPEARANCE_CURRENT_OFFSETS.body, 'u8'),
-    height: makeField(APPEARANCE_CURRENT_OFFSETS.height, 'f32'),
-    heightChoice: makeField(APPEARANCE_CURRENT_OFFSETS.heightChoice, 'u32'),
+    skin: makeField('skin'),
+    body: makeField('body'),
+    height: makeField('height'),
+    heightChoice: makeField('heightChoice'),
   }
 }
 
@@ -100,8 +109,6 @@ export function writeAppearanceCurrent(bytes: Uint8Array, key: AppearanceCurrent
   const error = validateAppearanceCurrent(key, value, opts)
   if (error) throw new RangeError(error)
   const field = readAppearanceCurrent(bytes)[key]
-  if (field.problem || field.offset === null) throw new RangeError(field.problem ?? '固定位置を読めません')
-  if (key === 'height') writeF32(bytes, field.offset, value)
-  else if (key === 'heightChoice') writeU32(bytes, field.offset, value)
-  else writeU8(bytes, field.offset, value)
+  if (field.problem) throw new RangeError(field.problem)
+  CODEC.writeField(bytes, 0, key, value)
 }
