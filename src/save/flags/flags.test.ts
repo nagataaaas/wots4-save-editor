@@ -337,6 +337,8 @@ describe("なりわいのフラグ chunks/townsfolk", () => {
 
   it("欄の下に並べる依頼主のなりわい", () => {
     expect(occupationFlag(4).jobs).toEqual([171, 172, 173, 174, 175, 176, 177, 178]);
+    // 🟢 佐古津は 163〜166。162 は表にない欠番なので入らない
+    expect(occupationFlag(8).jobs).toEqual([163, 164, 165, 166]);
     expect(occupationFlag(9).jobs).toEqual([167, 168, 169, 170]);
     expect(occupationFlag(26).jobs).toEqual([207, 208]);
     expect(occupationFlag(27).jobs).toBeUndefined();
