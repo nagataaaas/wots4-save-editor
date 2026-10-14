@@ -21,8 +21,8 @@ import { WeaponChestPage } from '@/features/weapon-chest/weapon-chest-page'
 import { YobaiPage } from '@/features/yobai/yobai-page'
 import type { SectionId } from '@/features/sections'
 
-/** 実装済みの画面。ここにない項目は仮表示になる */
-export const pages: Partial<Record<SectionId, ComponentType>> = {
+/** 各項目の画面。サイドバーの項目（SectionId）を足したら、ここにも足す（抜けは型で分かる） */
+export const pages: Record<SectionId, ComponentType> = {
   hero: HeroPage,
   'hero-appearance': HeroAppearancePage,
   records: StatsPage,

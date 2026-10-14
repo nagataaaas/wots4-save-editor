@@ -4,7 +4,6 @@ import { markOpened, NavigationContext } from '@/lib/navigation-context'
 import { AppSidebar } from '@/components/app-sidebar'
 import { NoSaveNotice } from '@/components/no-save-notice'
 import { SearchDialog } from '@/components/search-dialog'
-import { SectionPlaceholder } from '@/components/section-placeholder'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -86,7 +85,7 @@ export default function App() {
                 </header>
                 <div className={`mx-auto w-full p-4 ${section.wide ? 'min-w-0' : 'max-w-5xl'}`}>
                   <NoSaveNotice />
-                  {Page ? <Page /> : <SectionPlaceholder section={section} />}
+                  <Page />
                 </div>
               </SidebarInset>
             </SidebarProvider>
