@@ -69,7 +69,10 @@ export function writeNum(bytes: Uint8Array, offset: number, type: NumType, value
     case 'i16': return writeI16(bytes, offset, value)
     case 'u32': return writeU32(bytes, offset, value)
     case 'i32': return writeI32(bytes, offset, value)
-    case 'f32': return writeF32(bytes, offset, value)
+    case 'f32':
+      // 有限で float32 に収まる値だけ（収まらない値は Infinity になる）。writeF32 そのものは NaN なども書ける（テストの合成用）
+      if (!Number.isFinite(value) || Math.abs(value) > F32_MAX) throw new RangeError("入力できる範囲を超えています")
+      return writeF32(bytes, offset, value)
   }
 }
 
@@ -171,8 +174,6 @@ export function readF32(bytes: Uint8Array, offset: number): number {
 
 export function writeF32(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 4)
-  // 有限で float32 に収まる値だけ（収まらない値は Infinity になってしまう）
-  if (!Number.isFinite(value) || Math.abs(value) > F32_MAX) throw new RangeError("入力できる範囲を超えています")
   view(bytes).setFloat32(offset, value, true)
 }
 
