@@ -25,3 +25,14 @@ export function parseInteger(input: string, validate: (value: number) => string 
   const error = validate(value)
   return error ? { ok: false, error } : { ok: true, value }
 }
+
+/** 0以上の10進の小数（「12」「1.5」）を読み、検証する。符号・指数表記・「1.」「.5」は受け付けない */
+export function parseDecimal(input: string, validate: (value: number) => string | null, options: {
+  error?: string
+} = {}): ParseResult<number> {
+  const text = input.trim()
+  if (!/^\d+(\.\d+)?$/.test(text)) return { ok: false, error: options.error ?? '数値を入力してください' }
+  const value = Number(text)
+  const error = validate(value)
+  return error ? { ok: false, error } : { ok: true, value }
+}

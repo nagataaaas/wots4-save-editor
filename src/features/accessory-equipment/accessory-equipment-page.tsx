@@ -2,8 +2,10 @@ import { useCallback, useState } from "react";
 import { useSaveView } from "@/lib/use-save-view";
 import { PageBanner } from "@/components/page-banner";
 import { FieldRow, type ParseResult } from "@/components/field-row";
+import { FieldShell } from "@/components/field-shell";
 import { SelectRow } from "@/components/select-row";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { useSave } from "@/lib/save-context";
 import { useWrite } from "@/lib/use-write";
-import { errorMessage } from "@/lib/error-message";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { ACCESSORIES } from "@/save/master/accessory-names";
 import { FilterSelect } from "@/components/filter-select";
@@ -52,6 +53,42 @@ const jointOptions = ACCESSORY_ATTACHMENT_LABELS.map((label, i) => ({
 }));
 const MODE_LABELS = { A: "納刀", B: "抜刀", common: "共通" } as const;
 
+type Pending = "common" | "reset";
+
+/** 共通にする・標準設定に戻すの確認。書き込みに失敗したら、その理由をこの中に出す */
+function PendingConfirm({ pending, disabled, onCancel, onConfirm }: {
+  pending: Pending; disabled: boolean; onCancel: () => void; onConfirm: () => void
+}) {
+  const { attempt, error } = useWrite();
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>
+          {pending === "common" ? "抜刀の調整を上書きしますか？" : "標準設定に戻しますか？"}
+        </DialogTitle>
+        <DialogDescription>
+          {pending === "common"
+            ? "納刀の位置・回転・大きさを抜刀へコピーします。抜刀側の独自の調整は失われ、その後は両方を同時に調整します。"
+            : "取り付け先をこの装飾品の標準部位に戻し、納刀・抜刀の位置・回転・大きさの補正を0にします。"}
+        </DialogDescription>
+      </DialogHeader>
+      {error && (
+        <p role="alert" className="text-destructive text-sm">
+          {error}
+        </p>
+      )}
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>
+          キャンセル
+        </Button>
+        <Button disabled={disabled} onClick={() => attempt(onConfirm)}>
+          {pending === "common" ? "上書きして共通で調整" : "標準設定に戻す"}
+        </Button>
+      </DialogFooter>
+    </>
+  );
+}
+
 function parseFloatInput(input: string, min: number, max: number): ParseResult<number> {
   if (!input.trim()) return { ok: false, error: "数値を入力してください" };
   const value = Number(input);
@@ -64,8 +101,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const [mode, setMode] = useState<keyof typeof MODE_LABELS>("A");
-  const [pending, setPending] = useState<"common" | "reset" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
   const read = useCallback((bytes: Uint8Array) => readAccessorySlot(bytes, group, slot), [group, slot]);
   const { view: current, error: readError } = useSaveView(read);
   const offset = current?.offset ?? accessorySlotOffset(group, slot);
@@ -75,18 +111,14 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
   const unowned = selected && current && !current.owned;
   const state = mode === "B" ? "B" : "A";
 
+  /** 確認した操作を書き込む。失敗したら例外のまま投げ、確認の中身（PendingConfirm）が出す */
   function confirm() {
-    try {
-      if (pending === "common") {
-        update((b) => copySheathedAccessoryToDrawn(b, group, slot, { advanced }));
-        setMode("common");
-      } else if (pending === "reset")
-        update((b) => resetAccessoryDefaults(b, group, slot));
-      setPending(null);
-      setError(null);
-    } catch (e) {
-      setError(errorMessage(e));
-    }
+    if (pending === "common") {
+      update((b) => copySheathedAccessoryToDrawn(b, group, slot, { advanced }));
+      setMode("common");
+    } else if (pending === "reset")
+      update((b) => resetAccessoryDefaults(b, group, slot));
+    setPending(null);
   }
 
   return (
@@ -108,7 +140,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
               <SelectRow
                 label="装飾品"
                 offset={offset + ACCESSORY_FIELDS.id.relative}
-                value={current?.id === null || !current ? null : String(current.id)}
+                value={current ? String(current.id) : null}
                 currentLabel="不明な装飾品"
                 options={idOptions}
                 problem={problem}
@@ -125,7 +157,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
               <SelectRow
                 label="取り付け先"
                 offset={offset + ACCESSORY_FIELDS.joint.relative}
-                value={current?.joint === null || !current ? null : String(current.joint)}
+                value={current ? String(current.joint) : null}
                 options={jointOptions}
                 problem={problem}
                 disabled={!selected}
@@ -175,10 +207,8 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
                 disabled={(value === "common" || current !== null) && disabled}
                 onClick={() => {
                   if (value === mode) return;
-                  if (value === "common") {
-                    setError(null);
-                    setPending("common");
-                  } else setMode(value);
+                  if (value === "common") setPending("common");
+                  else setMode(value);
                 }}
               >
                 {MODE_LABELS[value]}
@@ -198,13 +228,26 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
           <div className="grid gap-4 sm:grid-cols-3">
             {ACCESSORY_FLOAT_FIELDS.filter((f) => f.state === state).map((field) => {
               const { min, max } = accessoryFloatRange(field.key, { advanced });
+              // 空き枠は書き込めないので、値を見せたまま欄を無効にする
+              if (current?.id === -1 && !problem)
+                return (
+                  <FieldShell
+                    key={field.key}
+                    label={field.label}
+                    offset={offset + field.relative}
+                    problem={null}
+                    hint="装飾品を選ぶと調整できます"
+                  >
+                    <Input value={formatFloat(current.values[field.key])} disabled readOnly />
+                  </FieldShell>
+                );
               return (
                 <FieldRow
                   key={field.key}
                   label={field.label}
                   offset={offset + field.relative}
                   value={current?.values[field.key] ?? null}
-                  problem={problem ?? (current?.id === -1 ? "装飾品を選択してください" : null)}
+                  problem={problem}
                   format={formatFloat}
                   parse={(v) => parseFloatInput(v, min, max)}
                   apply={(v) =>
@@ -223,56 +266,19 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
         </div>
       </section>
       <div className="border-t pt-6">
-        <Button
-          variant="outline"
-          disabled={disabled}
-          onClick={() => {
-            setError(null);
-            setPending("reset");
-          }}
-        >
+        <Button variant="outline" disabled={disabled} onClick={() => setPending("reset")}>
           標準設定に戻す
         </Button>
       </div>
-      <Dialog
-        open={pending !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setPending(null);
-            setError(null);
-          }
-        }}
-      >
+      <Dialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {pending === "common" ? "抜刀の調整を上書きしますか？" : "標準設定に戻しますか？"}
-            </DialogTitle>
-            <DialogDescription>
-              {pending === "common"
-                ? "納刀の位置・回転・大きさを抜刀へコピーします。抜刀側の独自の調整は失われ、その後は両方を同時に調整します。"
-                : "取り付け先をこの装飾品の標準部位に戻し、納刀・抜刀の位置・回転・大きさの補正を0にします。"}
-            </DialogDescription>
-          </DialogHeader>
-          {error && (
-            <p role="alert" className="text-destructive text-sm">
-              {error}
-            </p>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setPending(null);
-                setError(null);
-              }}
-            >
-              キャンセル
-            </Button>
-            <Button disabled={disabled} onClick={confirm}>
-              {pending === "common" ? "上書きして共通で調整" : "標準設定に戻す"}
-            </Button>
-          </DialogFooter>
+          {/* DialogContent は閉じると外れるので、確認の中身の書き込みエラーも閉じれば消える */}
+          <PendingConfirm
+            pending={pending ?? "reset"}
+            disabled={disabled}
+            onCancel={() => setPending(null)}
+            onConfirm={confirm}
+          />
         </DialogContent>
       </Dialog>
       {/* 生バイトの表示（枠の 64 B）は画面から外した。❓ +0x00〜03・+0x3D の意味は未確認で、編集時も元の値を維持する */}

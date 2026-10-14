@@ -1,8 +1,7 @@
 import { HERO_APPEARANCE_ANCHORS } from "./anchors";
 import { ActionButton } from "@/components/action-button";
 import { CollapsibleCard } from "@/components/collapsible-card";
-import { InfoTip } from "@/components/info-tip";
-import { Label } from "@/components/ui/label";
+import { FieldShell } from "@/components/field-shell";
 import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
@@ -10,12 +9,13 @@ import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
-import { SearchField } from "@/lib/search-context";
 import {
   APPEARANCE_PARTS_OFFSETS,
   BODY_KIND_CRASH,
   BODY_KIND_NAMES,
   BODY_KIND_PARTS,
+  canNude,
+  HAIR_COLOR_ADVANCED_MAX,
   HAIR_COLOR_MAX,
   HAIR_COLOR_MIN,
   HAIR_COLOR_NAMES,
@@ -185,7 +185,7 @@ function partSelectionHint(kind: PartKind, bodyKind: number | null, advanced: bo
   if ((kind === "upper" || kind === "lower") && nude)
     return `今は${kind === "upper" ? "上裸" : "下裸"}です（服の層を外して体の層だけにしています）`;
   if (advanced || bodyKind === null) return undefined;
-  if (bodyKind === 0 || bodyKind === 1) return `${bodyKindName(bodyKind)}用と共通の、名前のある部品だけを表示しています`;
+  if (canNude({ bodyKind })) return `${bodyKindName(bodyKind)}用と共通の、名前のある部品だけを表示しています`;
   if (BODY_KIND_PARTS[bodyKind]) return `${bodyKindName(bodyKind)}用の部品だけを表示しています`;
   return `タイプが${bodyKindName(bodyKind) ?? "不明"}のときは、通常モードでは部品を選べません。上級者モードで選んでください`;
 }
@@ -199,21 +199,20 @@ function NudeButtons({
   onNude: (kind: "upper" | "lower") => void;
 }) {
   return (
-    <SearchField label="裸" className="flex flex-col gap-1.5 sm:col-span-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <Label>裸</Label>
-        <InfoTip offset={APPEARANCE_PARTS_OFFSETS.parts}>
-          服の層を外して、体の層だけにします
-        </InfoTip>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <ActionButton size="sm" disabled={disabled} label="上裸にする" onAction={() => onNude("upper")} />
-        <ActionButton size="sm" disabled={disabled} label="下裸にする" onAction={() => onNude("lower")} />
-      </div>
-      <p className="text-muted-foreground text-xs">
-        タイプが男・女のときだけ使えます。足元は変えません
-      </p>
-    </SearchField>
+    <div className="sm:col-span-2">
+      <FieldShell
+        label="裸"
+        offset={APPEARANCE_PARTS_OFFSETS.parts}
+        note="服の層を外して、体の層だけにします"
+        problem={null}
+        hint="タイプが男・女のときだけ使えます。足元は変えません"
+      >
+        <div className="flex flex-wrap gap-2">
+          <ActionButton size="sm" disabled={disabled} label="上裸にする" onAction={() => onNude("upper")} />
+          <ActionButton size="sm" disabled={disabled} label="下裸にする" onAction={() => onNude("lower")} />
+        </div>
+      </FieldShell>
+    </div>
   );
 }
 
@@ -235,7 +234,7 @@ export function AppearancePartsCard() {
   const person = view ? findPerson(view.person) : undefined;
 
   const hairMin = advanced ? 0 : HAIR_COLOR_MIN;
-  const hairMax = advanced ? 15 : HAIR_COLOR_MAX;
+  const hairMax = advanced ? HAIR_COLOR_ADVANCED_MAX : HAIR_COLOR_MAX;
   // 髪の色：0〜4 は ✅ [U]、5＝赤・6〜9 は 🔶（U-19）
   const hairLabel = (i: number) => HAIR_COLOR_NAMES[i] ?? "色なし";
   const hairOptions: SelectOption[] = Array.from({ length: hairMax - hairMin + 1 }, (_, i) => ({
@@ -320,7 +319,7 @@ export function AppearancePartsCard() {
         onChange={(v) => update((b) => writeHairColor(b, Number(v), { advanced }))}
       />
       <NudeButtons
-        disabled={view === null || problem !== null || (view.bodyKind !== 0 && view.bodyKind !== 1)}
+        disabled={view === null || problem !== null || !canNude(view)}
         onNude={(kind) => update((b) => writeNude(b, kind))}
       />
       {kinds.map((kind) => {

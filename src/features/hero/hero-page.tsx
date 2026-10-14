@@ -1,19 +1,18 @@
 import { ActionButton } from "@/components/action-button";
 import { FieldRow, type ParseResult } from "@/components/field-row";
-import { InfoTip } from "@/components/info-tip";
+import { FieldShell } from "@/components/field-shell";
 import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { HERO_ANCHORS } from "./anchors";
-import { Label } from "@/components/ui/label";
 import { SelectRow } from "@/components/select-row";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
-import { SearchField, SearchScope } from "@/lib/search-context";
+import { SearchScope } from "@/lib/search-context";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
-import { parseInteger } from "@/lib/parse";
+import { parseDecimal, parseInteger } from "@/lib/parse";
 import {
   AMOUNT_LIMITS,
   GAUGE_MAX,
@@ -49,11 +48,7 @@ const amountLimitNote: Record<U32Key, string> = {
 };
 
 function parseGauge(input: string): ParseResult<number> {
-  if (!/^\d+(\.\d+)?$/.test(input.trim()))
-    return { ok: false, error: "0以上の数値を入力してください" };
-  const value = Number(input.trim());
-  const error = validateGauge(value);
-  return error ? { ok: false, error } : { ok: true, value };
+  return parseDecimal(input, validateGauge, { error: "0以上の数値を入力してください" });
 }
 
 function parseName(input: string): ParseResult<string> {
@@ -134,7 +129,8 @@ export function HeroPage() {
         <h3 className="text-sm font-medium">{name}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           {gaugeRow(current, "現在", currentHint, GAUGE_CURRENT_NOTES[kind])}
-          {gaugeRow(max, "最大", `0〜${GAUGE_MAX.toLocaleString()}`, "上限は暫定")}
+          {/* GAUGE_MAX はユーザー指定の暫定の上限（ゲーム内の上限は ❓） */}
+          {gaugeRow(max, "最大", `0〜${GAUGE_MAX.toLocaleString()}`, "")}
         </div>
       </SearchScope>
     );
@@ -217,13 +213,12 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
       }
     >
       <CardContent>
-        <SearchField label="難易度と主人公設定" className="flex flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <Label>難易度と主人公設定</Label>
-            <InfoTip offset={DATE_OFFSETS.dayTime}>
-              次のロードで難易度と主人公の設定に進む状態にします。元の状態に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください
-            </InfoTip>
-          </div>
+        <FieldShell
+          label="難易度と主人公設定"
+          offset={DATE_OFFSETS.dayTime}
+          note="次のロードで難易度と主人公の設定に進む状態にします。元の状態に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください"
+          problem={null}
+        >
           <ActionButton
             size="sm"
             className="w-fit"
@@ -232,7 +227,7 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
             confirm="repeat"
             onAction={() => write(enableCharacterSetup)}
           />
-        </SearchField>
+        </FieldShell>
       </CardContent>
     </AnchoredCard>
   );
