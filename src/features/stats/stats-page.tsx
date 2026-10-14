@@ -15,6 +15,7 @@ import {
   type ScoreScope,
   type ScoreTableId,
 } from "@/save/score-tables";
+import { NUM_TYPE_RANGE } from "@/save/binary";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
 import { parseInteger } from "@/lib/parse";
@@ -89,7 +90,7 @@ export function StatsPage() {
       <PageBanner error={readError} problem={problem} />
       {/* 書き換えたときのゲーム内の表示は要ゲーム内確認 */}
       <p className="text-muted-foreground text-sm">
-        侍点は「基本情報」、周回数は「世界 / 阿弥浜」、経過日数は「世界 / 阿弥浜」の日数で編集します。上限はゲームが値を増やすときの上限で、上級者モードでは型で書ける範囲まで入力できます。
+        侍点は「基本情報」、周回数は「世界 / 阿弥浜」、経過日数は「世界 / 阿弥浜」の日数で編集します。上限はゲームが値を増やすときの上限で、上級者モードではさらに大きな値も入力できます。
       </p>
       {STAT_GROUPS.map((g) => (
         <CollapsibleCard
@@ -117,6 +118,9 @@ const SCORE_NOTES: Record<ScoreTableId, string> = {
 };
 
 const SCORE_TOP = 10;
+
+/** 🟢 回数は u32（score-tables.ts の validateScore と同じ上級者モードの上限） */
+const SCORE_SYSTEM_MAX = NUM_TYPE_RANGE.u32.max;
 
 /** 🟢 技ごとの斬殺数・道具の使用回数。1件を選んで、周回中と累計を書く */
 function ScoreTableCard({ table }: { table: ScoreTableId }) {
@@ -157,7 +161,7 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
       parse={(input) => parseInteger(input, (value) => validateScore(table, index, value, { advanced }), UNSIGNED_ERROR)}
       apply={(v) => update((b) => writeScore(b, table, scope, index, v, { advanced }))}
       inputMode="numeric"
-      hint={`0〜${(advanced ? 0xffff_ffff : t.max).toLocaleString()}`}
+      hint={`0〜${(advanced ? SCORE_SYSTEM_MAX : t.max).toLocaleString()}`}
       note={scope === "cycle" ? "周回の終わりに 0" : "周回をまたいで残る"}
     />
   );
