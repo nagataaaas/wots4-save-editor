@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { SelectItem } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
@@ -22,7 +21,7 @@ import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
 import { WriteError } from "@/components/write-error";
 import { useFieldDraft } from "@/lib/use-field-draft";
-import { SearchField } from "@/lib/search-context";
+import { FieldShell } from "@/components/field-shell";
 import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import {
@@ -125,11 +124,13 @@ function SummaryCard({ view, accepted }: { view: OccupationView | null; accepted
       description="受注中のなりわいと、これまでにクリアしたなりわいの数を編集できます。"
     >
       <CardContent className="grid gap-4 sm:grid-cols-2">
-        <SearchField label="クリアしたなりわいの数" className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2">
-            <Label>クリアしたなりわいの数</Label>
-            <InfoTip offset={OCCUPATION_CLEAR_COUNT_OFFSET}>下の記録のクリア回数の合計と同じ値にしておきます</InfoTip>
-          </div>
+        <FieldShell
+          label="クリアしたなりわいの数"
+          offset={OCCUPATION_CLEAR_COUNT_OFFSET}
+          note="下の記録のクリア回数の合計と同じ値にしておきます"
+          problem={view?.problem ?? null}
+          error={error ?? (mismatch ? "クリア数と状態の表の合計が違います" : null)}
+        >
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-sm">{view ? view.clearCount : "—"}</span>
             <span className="text-muted-foreground text-xs">
@@ -144,11 +145,7 @@ function SummaryCard({ view, accepted }: { view: OccupationView | null; accepted
               表の合計に揃える
             </Button>
           </div>
-          {mismatch && (
-            <p className="text-destructive text-xs">クリア数と状態の表の合計が違います</p>
-          )}
-          <WriteError error={error} />
-        </SearchField>
+        </FieldShell>
         <AcceptRow view={accepted} />
       </CardContent>
     </AnchoredCard>
@@ -159,25 +156,26 @@ function SummaryCard({ view, accepted }: { view: OccupationView | null; accepted
  * 受注中のなりわい。受注・外す書き込みは occupation-accept.ts（✅ 受注中の情報、🟢 受注で書くフラグ、🔶 外すときのフラグ）。
  * ❓ 書き込みのゲーム内の反映は要ゲーム内確認
  */
+const ACCEPT_OPTIONS: SelectOption[] = [
+  { value: "0", label: "受注していない" },
+  ...OCCUPATIONS.map((o) => ({
+    value: String(o.id),
+    label: entryLabel(o),
+    group: groupLabelOf(o.id),
+    keywords: [...entryKeywords(o), o.client, o.type],
+  })),
+];
+
 function AcceptRow({ view }: { view: AcceptedView | null }) {
   const { write } = useWrite();
   const entry = view && view.id !== 0 ? occupationById(view.id) : undefined;
-  const options: SelectOption[] = [
-    { value: "0", label: "受注していない" },
-    ...OCCUPATIONS.map((o) => ({
-      value: String(o.id),
-      label: entryLabel(o),
-      group: groupLabelOf(o.id),
-      keywords: [...entryKeywords(o), o.client, o.type],
-    })),
-  ];
   return (
     <SearchSelectRow
       label="受注中のなりわい"
       offset={ACCEPT_OFFSETS.id}
       value={view === null ? null : String(view.id)}
       currentLabel={view ? "不明" : undefined}
-      options={options}
+      options={ACCEPT_OPTIONS}
       problem={view?.problem ?? null}
       searchPlaceholder="名前・依頼主"
       note="受注すると、今の日・時間帯で受注したことにします。連続なりわいなら、依頼主の次の依頼も進みます。記録が「まだ出ていない」なら「出た・未クリア」にします。ほかのなりわいを受注中なら、先にそれを外します（連続なりわいは「n 件目を依頼する前」に戻ります）"
@@ -284,7 +282,7 @@ function OccupationFlagRow({ flag, separator = " → " }: { flag: OccupationFlag
   return (
     <FlagRow
       flag={flag}
-      options={isSeries ? seriesOptions(n, flag.values, flag.jobs ?? []) : undefined}
+      options={isSeries ? seriesOptions(n, flag.values) : undefined}
       note={
         isSeries
           ? `${flag.note}。「受注済」を選ぶと、そのなりわいを今の日・時間帯で受注したことにします（受注中のなりわいも書く）。ほかの値を選ぶと、この連続なりわいを受注中なら受注を外します`
