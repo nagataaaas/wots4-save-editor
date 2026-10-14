@@ -53,7 +53,8 @@ export function IntField({
   note,
 }: {
   label: string;
-  offset: number;
+  /** 省くと丸ハテナに位置を出さない（流派が表にない・未読み込みのとき） */
+  offset?: number;
   value: number | null;
   problem: string | null;
   min: number;
@@ -87,7 +88,8 @@ export function RankField({
   apply,
   note,
 }: {
-  offset: number;
+  /** 省くと丸ハテナに位置を出さない */
+  offset?: number;
   value: number | null;
   problem: string | null;
   apply: (v: number) => void;

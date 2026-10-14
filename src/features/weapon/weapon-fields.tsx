@@ -11,7 +11,6 @@ import {
   COMPLETE_WEAPONS,
   completeWeaponsUsingPart,
   completeWeaponsUsingSheath,
-  WEAPON_FIELDS,
   WEAPON_TYPES,
   WEAPON_NUMBER_RANGES,
   formatRange,
@@ -52,7 +51,7 @@ import {
   weaponIdName,
 } from "@/save/weapon-ids";
 import { OverrideRow, SwitchRow } from "./weapon-rows";
-import { NONE } from "./weapon-ui";
+import { NONE, weaponFieldOffset, weaponRecordOffset } from "./weapon-ui";
 
 // 帯刀・武器袋・刀箪笥で共通の、武器レコード1件分の編集欄。
 
@@ -183,9 +182,10 @@ function parseName(input: string): ParseResult<string> {
 
 /**
  * 武器1件分の編集欄に共通の props。weapon が null ならセーブ未読み込み。offset はレコードの先頭で、丸ハテナにも書き込みにもこれを使う。
+ * offset を省くのは、位置の決まらない欄（索引に載せるためだけに描く欄）。丸ハテナに位置を出さず、書き込めない。
  * 欄の並べ方は WeaponEditor で決める
  */
-export type WeaponFieldProps = { weapon: WeaponView | null; offset: number };
+export type WeaponFieldProps = { weapon: WeaponView | null; offset?: number };
 
 /** 攻撃力・耐久・質・斬殺数などの数値 */
 export function WeaponNumberRow({
@@ -199,13 +199,13 @@ export function WeaponNumberRow({
   return (
     <FieldRow
       label={label}
-      offset={offset + WEAPON_FIELDS[key]}
+      offset={weaponFieldOffset(offset, key)}
       value={weapon?.numbers[key].value ?? null}
       problem={weapon?.numbers[key].problem ?? null}
       warning={formatWarnings(weapon?.numbers[key].warnings)}
       format={String}
       parse={(input) => parseNumber(key, input, advanced)}
-      apply={(v) => write((b) => writeWeaponNumber(b, offset, key, v, { advanced }))}
+      apply={(v) => write((b) => writeWeaponNumber(b, weaponRecordOffset(offset), key, v, { advanced }))}
       // 負の値を書けるときは、スマホでもマイナスを打てるよう text にする
       inputMode={advanced && WEAPON_NUMBER_RANGES[key].system.min < 0 ? "text" : "numeric"}
       hint={numberHint(key, advanced)}
@@ -223,7 +223,7 @@ export function WeaponPartRow({ weapon, offset, kind }: WeaponFieldProps & { kin
     <SearchSelectRow
       searchPlaceholder="読み・名前・英語名で検索"
       label={PART_LABELS[kind]}
-      offset={offset + WEAPON_FIELDS[kind]}
+      offset={weaponFieldOffset(offset, kind)}
       value={field ? (field.value.key ?? `raw:${field.value.value}`) : null}
       currentLabel={field ? (field.value.label ?? "未登録") : undefined}
       options={PART_OPTIONS[special ? "special" : "normal"][kind]}
@@ -237,7 +237,7 @@ export function WeaponPartRow({ weapon, offset, kind }: WeaponFieldProps & { kin
             : // 🔶 X の計算は U-3 案C（要ゲーム内確認）、X 不明の刃の扱いは U-3 案B
               "一部の刃は、鞘を計算して書きます。鞘が不明な刃は鞘を元のまま残すので、ゲーム内で分解→組み立てて正しい鞘にしてください"
       }
-      onChange={(v) => write((b) => writeWeaponPart(b, offset, kind, v))}
+      onChange={(v) => write((b) => writeWeaponPart(b, weaponRecordOffset(offset), kind, v))}
     />
   );
 }
@@ -247,13 +247,13 @@ export function WeaponNameRow({ weapon, offset }: WeaponFieldProps) {
   return (
     <FieldRow
       label="武器名"
-      offset={offset + WEAPON_FIELDS.name}
+      offset={weaponFieldOffset(offset, "name")}
       value={weapon?.name.value ?? null}
       problem={weapon?.name.problem ?? null}
       warning={formatWarnings(weapon?.name.warnings)}
       format={(v) => v}
       parse={parseName}
-      apply={(v) => write((b) => writeWeaponName(b, offset, v))}
+      apply={(v) => write((b) => writeWeaponName(b, weaponRecordOffset(offset), v))}
       hint={`最大${WEAPON_NAME_MAX_CHARS}文字`}
       // 🟢
       note="完成武器の名前を使う武器では、この名前は表示されません（自作の武器だけ表示されます）"
@@ -267,14 +267,14 @@ export function WeaponIdRow({ weapon, offset }: WeaponFieldProps) {
   return (
     <SelectRow
       label="完成武器"
-      offset={offset + WEAPON_FIELDS.weaponId}
+      offset={weaponFieldOffset(offset, "weaponId")}
       value={weapon ? String(weapon.weaponId.value) : null}
       currentLabel={weapon ? "未知" : undefined}
       options={WEAPON_ID_OPTIONS}
       problem={weapon?.weaponId.problem ?? null}
       warning={formatWarnings(weapon?.weaponId.warnings)}
       note="名前・パーツは変わりません"
-      onChange={(v) => write((b) => writeWeaponId(b, offset, Number(v)))}
+      onChange={(v) => write((b) => writeWeaponId(b, weaponRecordOffset(offset), Number(v)))}
     />
   );
 }
@@ -284,7 +284,7 @@ export function WeaponTypeRow({ weapon, offset }: WeaponFieldProps) {
   return (
     <OverrideRow
       label="武器種"
-      offset={offset + WEAPON_FIELDS.weaponType}
+      offset={weaponFieldOffset(offset, "weaponType")}
       value={weapon ? String(weapon.weaponType.value) : null}
       currentLabel={weapon ? "未知" : undefined}
       options={TYPE_OPTIONS}
@@ -294,7 +294,7 @@ export function WeaponTypeRow({ weapon, offset }: WeaponFieldProps) {
       idleHint="パーツに合わせて決まります"
       overrideHint="バックアップを取ってから試してください"
       // OverrideRow は「武器種を上書き」を押したときだけ選べるので、選んだことが上書きの印になる
-      onChange={(v) => write((b) => writeWeaponType(b, offset, Number(v), { override: true }))}
+      onChange={(v) => write((b) => writeWeaponType(b, weaponRecordOffset(offset), Number(v), { override: true }))}
     />
   );
 }
@@ -304,10 +304,10 @@ export function WeaponNameHiddenRow({ weapon, offset }: WeaponFieldProps) {
   return (
     <SwitchRow
       label="名前を隠す（「*****」と表示）"
-      offset={offset + WEAPON_FIELDS.nameHidden}
+      offset={weaponFieldOffset(offset, "nameHidden")}
       checked={weapon?.nameHidden.value ?? false}
       disabled={!weapon || weapon.nameHidden.problem !== null}
-      onChange={(on) => write((b) => writeWeaponNameHidden(b, offset, on))}
+      onChange={(on) => write((b) => writeWeaponNameHidden(b, weaponRecordOffset(offset), on))}
     />
   );
 }
@@ -318,7 +318,7 @@ export function CompleteWeaponRow({ weapon, offset }: WeaponFieldProps) {
   return (
     <SearchSelectRow
       label="指定武器に変更"
-      offset={offset + WEAPON_FIELDS.weaponId}
+      offset={weaponFieldOffset(offset, "weaponId")}
       searchPlaceholder="読み・名前・英語名で検索"
       value={weapon ? (weapon.matchesComplete ? String(weapon.weaponId.value) : "mismatch") : null}
       currentLabel="どの完成武器の構成とも一致しない"
@@ -327,7 +327,7 @@ export function CompleteWeaponRow({ weapon, offset }: WeaponFieldProps) {
       hint="完成武器・武器種・刃・鞘・鍔・柄（固有武器の秘伝を含む）をその武器のものに置き換えます。名前・攻撃力・耐久・質・魅力・銘は変わりません"
       note="特殊武器との間でも変更できます"
       // 特殊武器との間の変更をゲームが読めるかは要ゲーム内確認
-      onChange={(v) => write((b) => writeCompleteWeapon(b, offset, Number(v)))}
+      onChange={(v) => write((b) => writeCompleteWeapon(b, weaponRecordOffset(offset), Number(v)))}
     />
   );
 }
@@ -337,7 +337,7 @@ export function WeaponSheathRow({ weapon, offset }: WeaponFieldProps) {
   return (
     <OverrideRow
       label="鞘"
-      offset={offset + WEAPON_FIELDS.sheath}
+      offset={weaponFieldOffset(offset, "sheath")}
       value={weapon ? String(weapon.sheath.value) : null}
       currentLabel={weapon ? "表にない鞘" : undefined}
       options={SHEATH_OPTIONS}
@@ -349,7 +349,7 @@ export function WeaponSheathRow({ weapon, offset }: WeaponFieldProps) {
       idleHint="刃を選び直すと、刃に合わせて書き換わります"
       overrideHint="バックアップを取ってから試してください"
       // OverrideRow は「鞘を上書き」を押したときだけ選べるので、選んだことが上書きの印になる
-      onChange={(v) => write((b) => writeWeaponSheath(b, offset, Number(v), { override: true }))}
+      onChange={(v) => write((b) => writeWeaponSheath(b, weaponRecordOffset(offset), Number(v), { override: true }))}
     />
   );
 }
@@ -359,13 +359,13 @@ export function WeaponTitleRow({ weapon, offset }: WeaponFieldProps) {
   return (
     <SelectRow
       label="銘"
-      offset={offset + WEAPON_FIELDS.title}
+      offset={weaponFieldOffset(offset, "title")}
       value={weapon ? (weapon.title.value === null ? NONE : String(weapon.title.value)) : null}
       currentLabel={weapon ? (weapon.title.label ?? "未知") : undefined}
       options={TITLE_OPTIONS}
       problem={weapon?.title.problem ?? null}
       warning={formatWarnings(weapon?.title.warnings)}
-      onChange={(v) => write((b) => writeWeaponTitle(b, offset, v === NONE ? null : Number(v)))}
+      onChange={(v) => write((b) => writeWeaponTitle(b, weaponRecordOffset(offset), v === NONE ? null : Number(v)))}
     />
   );
 }

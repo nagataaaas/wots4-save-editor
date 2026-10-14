@@ -4,7 +4,8 @@ import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useWrite } from "@/lib/use-write";
 import { formatWarnings } from "@/lib/format";
-import { CHARMS, WEAPON_FIELDS, writeWeaponCharms, type WeaponView } from "@/save/weapon";
+import { CHARMS, writeWeaponCharms } from "@/save/weapon";
+import type { WeaponFieldProps } from "./weapon-fields";
 import { charmIcon } from "./effect-icons";
 import {
   charmSelectionKey,
@@ -12,15 +13,15 @@ import {
   expandCharmSelections,
   type CharmSelection,
 } from "./charm-selection";
-import { NONE } from "./weapon-ui";
+import { NONE, weaponFieldOffset, weaponRecordOffset } from "./weapon-ui";
 
 const OPTIONS = [
   { value: NONE, label: "なし" },
   ...CHARMS.map((c) => ({ value: String(c.id), label: c.label, icon: charmIcon(c.id) })),
 ];
 
-/** 魅力の3枠。offset はレコードの先頭 */
-export function CharmEditor({ weapon, offset }: { weapon: WeaponView | null; offset: number }) {
+/** 魅力の3枠。offset はレコードの先頭（省くと丸ハテナに位置を出さない。WeaponFieldProps と同じ） */
+export function CharmEditor({ weapon, offset }: WeaponFieldProps) {
   const { advanced } = useAdvancedMode();
   const { write } = useWrite();
   const field = weapon?.charms;
@@ -37,7 +38,7 @@ export function CharmEditor({ weapon, offset }: { weapon: WeaponView | null; off
   function change(slot: number, patch: Partial<CharmSelection>) {
     const next = rows.map((row, i) => (i === slot ? { ...row, ...patch } : row));
     const values = expandCharmSelections(next, advanced);
-    write((bytes) => writeWeaponCharms(bytes, offset, values, { advanced }));
+    write((bytes) => writeWeaponCharms(bytes, weaponRecordOffset(offset), values, { advanced }));
     setState({ source: `${loadId}:${offset}:${charmSelectionKey(values)}`, rows: next });
   }
 
@@ -49,7 +50,7 @@ export function CharmEditor({ weapon, offset }: { weapon: WeaponView | null; off
           <div key={slot} className="flex flex-col gap-2">
             <SelectRow
               label={`魅力 ${slot + 1}`}
-              offset={offset + WEAPON_FIELDS.charms}
+              offset={weaponFieldOffset(offset, "charms")}
               value={weapon ? (row.id === null ? NONE : String(row.id)) : null}
               options={OPTIONS}
               problem={field?.problem ?? null}
@@ -70,7 +71,7 @@ export function CharmEditor({ weapon, offset }: { weapon: WeaponView | null; off
             {advanced && (
               <SelectRow
                 label={`魅力 ${slot + 1} の個数`}
-                offset={offset + WEAPON_FIELDS.charms}
+                offset={weaponFieldOffset(offset, "charms")}
                 value={weapon ? String(row.count) : null}
                 options={[1, 2, 3].map((count) => ({ value: String(count), label: `×${count}` }))}
                 problem={field?.problem ?? null}

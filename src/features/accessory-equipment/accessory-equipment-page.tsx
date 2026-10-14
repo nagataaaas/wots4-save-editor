@@ -2,10 +2,8 @@ import { useCallback, useState } from "react";
 import { useSaveView } from "@/lib/use-save-view";
 import { PageBanner } from "@/components/page-banner";
 import { FieldRow, type ParseResult } from "@/components/field-row";
-import { FieldShell } from "@/components/field-shell";
 import { SelectRow } from "@/components/select-row";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -229,18 +227,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
             {ACCESSORY_FLOAT_FIELDS.filter((f) => f.state === state).map((field) => {
               const { min, max } = accessoryFloatRange(field.key, { advanced });
               // 空き枠は書き込めないので、値を見せたまま欄を無効にする
-              if (current?.id === -1 && !problem)
-                return (
-                  <FieldShell
-                    key={field.key}
-                    label={field.label}
-                    offset={offset + field.relative}
-                    problem={null}
-                    hint="装飾品を選ぶと調整できます"
-                  >
-                    <Input value={formatFloat(current.values[field.key])} disabled readOnly />
-                  </FieldShell>
-                );
+              const empty = current?.id === -1 && !problem;
               return (
                 <FieldRow
                   key={field.key}
@@ -248,6 +235,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
                   offset={offset + field.relative}
                   value={current?.values[field.key] ?? null}
                   problem={problem}
+                  disabled={empty}
                   format={formatFloat}
                   parse={(v) => parseFloatInput(v, min, max)}
                   apply={(v) =>
@@ -258,7 +246,7 @@ function AccessorySlotEditor({ group, slot, onSelectSlot }: { group: number; slo
                     )
                   }
                   inputMode="decimal"
-                  hint={`${min}〜${max}`}
+                  hint={empty ? "装飾品を選ぶと調整できます" : `${min}〜${max}`}
                 />
               );
             })}

@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAnchoredOpen } from "@/lib/navigation-context";
 import { SearchScope } from "@/lib/search-context";
 import { useSearchBox } from "@/lib/search-hooks";
-import { WEAPON_FIELDS, type WeaponView } from "@/save/weapon";
+import type { WeaponView } from "@/save/weapon";
 import { WEAPON_EDITOR_ANCHORS } from "./anchors";
 import { charmEffects, titleEffect } from "@/save/weapon-effects";
 import { charmIcon, titleIcon } from "./effect-icons";
@@ -23,6 +23,7 @@ import {
   WeaponTypeRow,
   type WeaponFieldProps,
 } from "./weapon-fields";
+import { weaponFieldOffset } from "./weapon-ui";
 import { CharmEditor } from "./charm-editor";
 
 // 武器1件分の編集欄（帯刀・武器袋・刀箪笥で共通。開いたときの中身）。
@@ -93,7 +94,8 @@ export function WeaponEditor({
   sectionsOpen = true,
 }: {
   weapon: WeaponView | null;
-  offset: number;
+  /** 省くのは位置の決まらない欄（索引用）。丸ハテナに位置を出さない */
+  offset?: number;
   sectionsOpen?: boolean;
 }) {
   const p: WeaponFieldProps = { weapon, offset };
@@ -168,7 +170,7 @@ export function WeaponEditor({
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium">魅力</span>
-            <InfoTip offset={offset + WEAPON_FIELDS.charms} />
+            <InfoTip offset={weaponFieldOffset(offset, "charms")} />
           </div>
           <CharmEditor weapon={weapon} offset={offset} />
           {!weapon && (

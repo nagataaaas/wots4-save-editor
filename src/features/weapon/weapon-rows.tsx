@@ -30,7 +30,8 @@ export function SwitchRow({
   onChange,
 }: {
   label: string;
-  offset: number;
+  /** 丸ハテナに出す位置。省くと出さない */
+  offset?: number;
   checked: boolean;
   disabled: boolean;
   onChange: (on: boolean) => void;

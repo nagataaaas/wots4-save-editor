@@ -279,7 +279,7 @@ function SectCard({
         <div className="grid gap-4 sm:grid-cols-3">
           <IntField
             label="修練度"
-            offset={rec ? sectValueOffset(rec.offset, 'mastery') : 0}
+            offset={rec ? sectValueOffset(rec.offset, 'mastery') : undefined}
             value={values?.mastery ?? null}
             problem={valueProblem}
             min={0}
@@ -289,7 +289,7 @@ function SectCard({
             // 🟢 要ゲーム内確認
           />
           <RankField
-            offset={rec ? sectValueOffset(rec.offset, 'rank') : 0}
+            offset={rec ? sectValueOffset(rec.offset, 'rank') : undefined}
             value={values?.rank ?? null}
             problem={valueProblem}
             apply={(r) => values && writeValues({ ...values, rank: r })}
@@ -297,7 +297,7 @@ function SectCard({
           />
           <IntField
             label="この流派で倒した数"
-            offset={rec ? sectValueOffset(rec.offset, 'kills') : 0}
+            offset={rec ? sectValueOffset(rec.offset, 'kills') : undefined}
             value={values?.kills ?? null}
             problem={valueProblem}
             min={0}
