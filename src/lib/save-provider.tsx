@@ -22,22 +22,27 @@ export function SaveProvider({ children }: { children: ReactNode }) {
   const changedBytes = useMemo(() => (save ? countChangedBytes(save.original, save.working) : 0), [save])
   const unsavedBytes = useMemo(() => (save ? countChangedBytes(save.saved, save.working) : 0), [save])
 
-  const run = useCallback((action: () => void) => {
+  /** 失敗したらエラーを出して false を返す。続きは true のときだけ行う */
+  const run = useCallback((action: () => void): boolean => {
     setError(null)
     try {
       action()
+      return true
     } catch (e) {
       setError(errorMessage(e))
+      return false
     }
   }, [])
 
-  /** 履歴に残す。失敗してもエラーを出すだけで、編集は続けられる */
-  const record = useCallback(async (action: () => Promise<void>) => {
+  /** 履歴に残す。失敗してもエラーを出すだけで、編集は続けられる。残せたかを返す */
+  const record = useCallback(async (action: () => Promise<void>): Promise<boolean> => {
     try {
       await action()
       setHistoryVersion((v) => v + 1)
+      return true
     } catch (e) {
       setError(`履歴に残せませんでした: ${errorMessage(e)}`)
+      return false
     }
   }, [])
 
@@ -71,12 +76,14 @@ export function SaveProvider({ children }: { children: ReactNode }) {
   const downloadEdited = useCallback(() => {
     const save = saveRef.current
     if (!save) return
-    run(() => {
+    const downloaded = run(() => {
       assertSameSize(save.original, save.working)
       downloadBytes(save.working, save.name)
       // working は update のたびに新しい配列に差し替わるので、参照をそのまま保存済みとして持てる
       replaceSave({ ...save, saved: save.working })
     })
+    // ダウンロードできなかった版は、保存した版として履歴に残さない
+    if (!downloaded) return
     const { sessionId, working } = save
     if (sessionId !== null) void record(() => addSaved(sessionId, working))
   }, [record, replaceSave, run])
@@ -100,7 +107,8 @@ export function SaveProvider({ children }: { children: ReactNode }) {
   }, [replaceSave])
 
   const clearHistory = useCallback(async () => {
-    await record(clearAll)
+    // 消せなかったときは組が残っているので、このあとの保存もその組に残す
+    if (!(await record(clearAll))) return
     // 編集中のデータの組も消えたので、このあとの保存は履歴に残さない
     replaceSave((prev) => (prev ? { ...prev, sessionId: null } : prev))
   }, [record, replaceSave])

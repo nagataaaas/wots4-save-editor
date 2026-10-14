@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LoadedSave, SaveContextValue } from './save-context'
 import { SaveProvider } from './save-provider'
-import { addLoaded, addSaved, getBytes, getSnapshot } from './history-db'
+import { addLoaded, addSaved, clearAll, getBytes, getSnapshot } from './history-db'
 import { downloadBytes } from './file-io'
 
 // 描画を保留した状態で、同じイベント内の連続操作と同期例外を検証する。
@@ -120,5 +120,39 @@ describe('SaveProvider の同期更新', () => {
     await ctx.restore(11)
     ctx.update(b => { b[2] = b[0] })
     expect(state.save?.working).toEqual(new Uint8Array([3, 0, 3, 0]))
+  })
+})
+
+describe('SaveProvider の失敗後の続き', () => {
+  it('ダウンロードに失敗したら、保存済みにせず、履歴にも保存した版を残さない', async () => {
+    const ctx = provider()
+    await ctx.load(file())
+    ctx.update(b => { b[0] = 1 })
+    vi.mocked(downloadBytes).mockImplementationOnce(() => { throw new Error('ダウンロード失敗') })
+    ctx.downloadEdited()
+    expect(addSaved).not.toHaveBeenCalled()
+    expect(state.save?.saved).toEqual(new Uint8Array(4))
+    expect(provider().error).toBe('ダウンロード失敗')
+  })
+
+  it('履歴を消せなかったら、組との紐づけを残し、このあとの保存も履歴に残す', async () => {
+    const ctx = provider()
+    await ctx.load(file())
+    expect(state.save?.sessionId).toBe(7)
+    vi.mocked(clearAll).mockRejectedValueOnce(new Error('消去失敗'))
+    await ctx.clearHistory()
+    expect(state.save?.sessionId).toBe(7)
+    expect(provider().error).toContain('消去失敗')
+    ctx.downloadEdited()
+    expect(addSaved).toHaveBeenCalledWith(7, state.save?.working)
+  })
+
+  it('履歴を消せたら、このあとの保存は履歴に残さない', async () => {
+    const ctx = provider()
+    await ctx.load(file())
+    await ctx.clearHistory()
+    expect(state.save?.sessionId).toBeNull()
+    ctx.downloadEdited()
+    expect(addSaved).not.toHaveBeenCalled()
   })
 })
