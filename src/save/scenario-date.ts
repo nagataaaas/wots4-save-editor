@@ -37,6 +37,14 @@ export const DATE_OFFSETS = {
   dayIndex: 0xbd8,
 } as const
 
+/**
+ * 🟢 代金を踏み倒した店のビット（u32）。地域の読み込み（エリア移動・ロード）と周回の終わりに 0 になるので、
+ * エディタでは欄を出さない。周回の初期化（new-cycle.ts）だけが 0 を書く（chunks/date-location）
+ */
+export const UNPAID_SHOPS_OFFSET = 0x0018
+/** 🟢 使われていない予約の領域（i32 × 48、0x001C〜0x00DB。end は含まない）。常に FF で、新しいデータと周回の終わりに FF で埋められる（chunks/date-location） */
+export const RESERVED_AREA = { start: 0x001c, end: 0x00dc } as const
+
 /** 0 はゲーム内で「昼」とも「朝」とも表示される（1日目は昼、2日目の始まりは朝 [U]） */
 export const TIME_SLOTS = ['昼（朝）', '夕', '夜'] as const
 

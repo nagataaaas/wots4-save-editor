@@ -38,21 +38,20 @@ import { EMPTY_ID, ITEM_SLOT_BYTES } from './item-slot'
 import { VALUABLES_OFFSET, VALUABLE_SLOT_COUNT } from './valuables'
 import { MARKET_WEAPON_OFFSET, MARKET_WEAPON_SLOTS, MARKET_WEAPON_BYTES, MARKET_ELAPSED, MARKET_OTHERS } from './market-weapons'
 import { OCCUPATION_FLAG_START, PERSON_RECORDS_START, PERSON_RECORD_SIZE, PERSON_COUNT } from './townsfolk'
-import { OCCUPATION_ACCEPTED_OFFSET } from './occupation'
+import { OCCUPATION_ACCEPTED_TABLE_END, OCCUPATION_CLEAR_VALUES_OFFSET } from './occupation'
 import { statField, ACTION_COUNTS_OFFSET, ACTION_COUNT_SLOTS, DAMAGE_CYCLE_OFFSET, DAMAGE_KINDS } from './stats'
 import { SCORE_TABLES } from './score-tables'
 import { RAID_OFFSET } from './dojo'
 import { RECORDS_OFFSET, RECORD_SIZE, RECORD_CAPACITY, RECORD_EMPTY_BYTES, STAGE_OFFSET, LOVE_COUNT_OFFSET, PROMISE_OFFSET, PROMISE_CODEC } from './yobai'
 import { findItem } from './master/item-names'
-import { DATE_OFFSETS } from './scenario-date'
+import { DATE_OFFSETS, RESERVED_AREA, UNPAID_SHOPS_OFFSET } from './scenario-date'
 import { EVENT_STATE_OFFSET, EVENT_RECORD_OFFSET, EVENT_COUNT, EVENT_STATE_VALUES, EVENT_RECORD_SHOWN } from './scenario-events'
 import { WEAPON_RECORD_BYTES, WEAPON_FIELDS } from './weapon'
 import { WEAPON_BAG_COUNT, weaponBagOffset } from './weapon-bag'
 import { CAPACITY_UNIT, WEAPON_CHEST_CAPACITY, WEAPON_CHEST_COUNT, WEAPON_CHEST_OFFSET } from './weapon-chest'
-import type { ByteFlag } from './flags/byte-flag'
 import { FACILITY_FLAGS } from './flags/facilities'
-import { EVENT_FLAGS } from './flags/event-flags'
-import { NPC_DOJO_FLAGS, NPC_SMITH_FLAGS } from './flags/npc-events'
+import { MADARA_ALLY_OFFSET } from './flags/event-flags'
+import { DOJIMA_SMITH_OFFSET, SENSEI_DOJO_OFFSET } from './flags/npc-events'
 
 /** 物語の終わり方。clear＝結末を見た、gone＝町を立ち去った */
 export type CycleEnd = 'clear' | 'gone'
@@ -60,17 +59,12 @@ export type CycleEnd = 'clear' | 'gone'
 /** シナリオのフラグ（通し番号 166〜399） */
 const SCENARIO_FLAGS = { start: EVENT_STATE_OFFSET + EVENT_COUNT, end: EVENT_RECORD_OFFSET - 1 } as const
 
-/** flags の中で offset の位置にあるフラグの offset。表から消えたら読み込みの時点で気づけるよう、なければ投げる */
-function flagOffset(flags: readonly ByteFlag[], offset: number): number {
-  if (!flags.some((f) => f.offset === offset)) throw new Error(`フラグの表に 0x${offset.toString(16)} がありません`)
-  return offset
-}
 /** 🟢 シナリオのフラグのうち初期化で残すもの：施設 0x375D〜0x375F・まだらの 0x3760、堂島・先生の職 0x3799・0x379A */
 export const NEW_CYCLE_KEEP_FLAGS: readonly number[] = [
   ...FACILITY_FLAGS.map((f) => f.offset),
-  flagOffset(EVENT_FLAGS, 0x3760),
-  flagOffset(NPC_SMITH_FLAGS, 0x3799),
-  flagOffset(NPC_DOJO_FLAGS, 0x379a),
+  MADARA_ALLY_OFFSET,
+  DOJIMA_SMITH_OFFSET,
+  SENSEI_DOJO_OFFSET,
 ]
 
 /** 🟢 クリア・立ち去りで 0 にするなりわいのフラグの番号 */
@@ -84,17 +78,8 @@ const DIFFICULTY_AFTER = 1
 /** 🟢 周回の終わり方（u8）。0＝周回中、1＝死亡、2＝町を立ち去った、3＝結末を見た。周回の終わりの処理のあと 0（chunks/stats） */
 export const CYCLE_END_OFFSET = 0x0bba
 
-// 定義元のモジュール（scenario-date.ts・occupation.ts）に名前がない位置。出典：docs/save_format/chunks/date-location「周回の終わりの初期化」
-/** 🟢 代金を踏み倒した店のビット（u32）。地域の読み込みと周回の終わりに 0（chunks/date-location） */
-const UNPAID_SHOPS_OFFSET = 0x0018
-/** 🟢 使われていない予約の領域（i32 × 48、0x001C〜0x00DB）。常に FF（chunks/date-location） */
-const RESERVED_AREA = { start: 0x001c, end: 0x00dc } as const
 /** ❓ 買い物で FFFF → 0 になる u16（意味は分かっていない）。🟢 初期化で FFFF（chunks/date-location・stats の調査記録） */
 const SHOP_MARK_OFFSET = 0x6324
-/** ❓ なりわいのクリアで変わる値（14 B、0x45F40〜0x45F4D）。🟢 初期化で 0（chunks/occupation） */
-const OCCUPATION_CLEAR_VALUES_OFFSET = 0x45f40
-/** 🟢 受注中のなりわいの表（16 B × 50 件、0x45F4E〜0x4626D）。初期化で 0（chunks/occupation） */
-const OCCUPATION_ACCEPTED_TABLE_END = OCCUPATION_ACCEPTED_OFFSET + 16 * 50
 
 /** 🟢 箪笥で同じ品をまとめる上限 */
 const ITEM_CHEST_STACK = 99

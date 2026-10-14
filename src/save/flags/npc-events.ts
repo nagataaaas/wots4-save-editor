@@ -17,6 +17,11 @@ import { nameOf } from "../master/labels";
 import { occupationFlagOffset } from "../townsfolk";
 import { yesNo, type ByteFlag, type FlagValue } from "./byte-flag";
 
+/** 🟢 堂島が鍛冶屋（u8）。周回をまたいで残る（周回の初期化でも残す。new-cycle.ts） */
+export const DOJIMA_SMITH_OFFSET = 0x3799;
+/** 🟢 先生が道場の師範代（u8）。周回をまたいで残る（周回の初期化でも残す。new-cycle.ts） */
+export const SENSEI_DOJO_OFFSET = 0x379a;
+
 /** ✅ [U] 2026-10-06：0x0127 の値（書き換えで確認） */
 export const SMITH_STATES: readonly FlagValue[] = [
   { value: 0, label: "未会話", group: "後継者イベント" },
@@ -58,7 +63,7 @@ export const NPC_SMITH_FLAGS: readonly ByteFlag[] = [
     ],
   },
   {
-    offset: 0x3799,
+    offset: DOJIMA_SMITH_OFFSET,
     label: "堂島が鍛冶屋（イベント判定用）",
     // 🟢
     note: "堂島の説得に成功すると鍛冶屋で働く状態になり、死ぬと戻る。周回をまたいで残る。町に出るかはなりわいが決める",
@@ -215,7 +220,7 @@ export const NPC_DOJO_FLAGS: readonly ByteFlag[] = [
     ],
   },
   {
-    offset: 0x379a,
+    offset: SENSEI_DOJO_OFFSET,
     label: "先生が道場の師範代（イベント判定用）",
     // 🟢
     note: "先生が主人公の道場の師範代になる状態で、死ぬ・追い出す・道場を失うと戻る。周回をまたいで残る。町に出るかはなりわいが決める",

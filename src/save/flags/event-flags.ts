@@ -54,10 +54,13 @@ export const BEST_ROUTE_FLAG: ByteFlag = {
   ],
 };
 
+/** 🟢 隠しルートでまだらが味方につく（u8）。周回の初期化でも残る（new-cycle.ts）。❓ 1 になる場面は見つかっていない */
+export const MADARA_ALLY_OFFSET = 0x3760;
+
 /** 🟢 note は 1 になる場面。値の意味に推測が入るものはコメントに書く */
 export const EVENT_FLAGS: readonly ByteFlag[] = [
   {
-    offset: 0x3760,
+    offset: MADARA_ALLY_OFFSET,
     label: "隠しルートでまだらが味方につく",
     // ❓ 何が変わるかの全体は分かっていない。1 になる場面は見つかっていない
     note: "味方につく状態だと、士魂は屈せずでまだらに助け出され（拷問・戦闘なし）、鬼怒川を追えで三姉妹ととぐろが相手になり、まだらが味方につく。剣術大会の準備でなしに戻る。未実装要素のため、各種ムービーのアニメーションが存在しない。また、三姉妹に取り上げられた荷物が帰ってこなくなるため注意",

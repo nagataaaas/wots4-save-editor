@@ -8,7 +8,9 @@
 //     ✅ 209 を 1 にすると、なりわい一覧でクリア済みになった。FFFF・0 への書き込みの反映は要ゲーム内確認
 //     🔶 上限の 999 は妥当性検証のための仮の値
 //   0x433A6  u16  クリアしたなりわいの数（状態の表の合計）🟢。揃っていないときの動作は ❓
+//   0x45F40  14 B  クリアのたびに変わる値 ❓（意味は分からない。周回の初期化で 0 🟢）
 //   0x45F4E  u16  受注中のなりわいの ID。受注していなければ 0 🟢（ここでは読むだけ）
+//     0x45F4E〜0x4626D は受注中のなりわいの表（16 B × 50 件）🟢。周回の初期化で 0
 //     受注中の情報（0x45F4E〜0x45F55）の書き込みと、受注にあわせて書くなりわいのフラグは occupation-accept.ts にまとめる
 //
 // 連続なりわいの進み具合は状態の表ではなく、なりわいのフラグ（0x011C + 番号、townsfolk.ts）にある。
@@ -30,6 +32,13 @@ export const OCCUPATION_CLEAR_MAX = 999;
 export const OCCUPATION_CLEAR_COUNT_OFFSET = 0x433a6;
 /** 🟢 受注中のなりわいの ID（読むだけ。書き込みは occupation-accept.ts） */
 export const OCCUPATION_ACCEPTED_OFFSET = 0x45f4e;
+/** 🟢 受注中のなりわいの表（16 B × 50 件、0x45F4E〜0x4626D）。1件目の +0 が OCCUPATION_ACCEPTED_OFFSET */
+export const OCCUPATION_ACCEPTED_RECORD_BYTES = 16;
+export const OCCUPATION_ACCEPTED_RECORD_COUNT = 50;
+/** 受注中のなりわいの表の終わり（含まない） */
+export const OCCUPATION_ACCEPTED_TABLE_END = OCCUPATION_ACCEPTED_OFFSET + OCCUPATION_ACCEPTED_RECORD_BYTES * OCCUPATION_ACCEPTED_RECORD_COUNT;
+/** ❓ なりわいのクリアで変わる値（14 B、0x45F40〜0x45F4D。意味は分かっていない）。🟢 周回の初期化で 0 */
+export const OCCUPATION_CLEAR_VALUES_OFFSET = 0x45f40;
 
 export function occupationStateOffset(id: number): number {
   if (!Number.isInteger(id) || id < 0 || id >= OCCUPATION_STATE_COUNT) throw new RangeError(`なりわいが範囲外です`);
