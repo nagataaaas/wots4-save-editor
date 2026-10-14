@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { TS_SAVE_SIZE } from './layout'
 import {
+  PUPIL_CODEC,
   PUPIL_KINDS,
   RAIDERS_OFFSET,
   pupilOffset,
@@ -65,6 +66,18 @@ describe("道場の読み出し", () => {
     writePupilKind(b, 1, 73);
     expect(b[0x14065]).toBe(3);
     expect(b[0x14068]).toBe(8);
+  });
+
+  it("種類と名前は i32 で読む（−1 以外の負の値は空きではない）", () => {
+    expect(PUPIL_CODEC.type("kind")).toBe("i32");
+    expect(PUPIL_CODEC.type("name")).toBe("i32");
+    const b = blank();
+    b.set([0xfe, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 1, 0], pupilOffset(0));
+    b[0x14065] = 1;
+    b[0x14068] = 1;
+    const v = readDojo(b);
+    expect(v.problem).toBeNull();
+    expect(v.pupils[0]?.kind).toBe(-2);
   });
 
   it("数・点が名簿と合わなければ読み取り専用", () => {

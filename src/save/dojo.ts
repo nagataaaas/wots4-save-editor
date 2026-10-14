@@ -17,11 +17,12 @@
 // ゲームは弟子入り・破門のたびに数・点・段階を決め直す（🟢）。エディタも名簿を書いたら同じ規則で決め直す。
 // 段階 5 になったときにゲームが立てる特典 57（0x43351）は、ここでは書かない（次に弟子が増減したときにゲームが立てる 🟢）。
 // 名簿の書き換え・道場破りを帰す操作がゲームに反映されるかは要ゲーム内確認。
-import { readI16, readU16, readU32, readU8, writeI16, writeU16, writeU32, writeU8, recordCodec } from "./binary";
+import { readI16, readU16, readU8, writeI16, writeI32, writeU16, writeU8, recordCodec } from "./binary";
 import { type EditOpts, type ViewStatus } from "./field";
 import { assertWritable, checkLayout } from "./layout";
 import { PUPIL_TABLE } from "./master/dataset/pupil";
 import { NPC_LOOK_TABLE } from "./master/dataset/npc-look";
+import { lookup } from "./master/lookup";
 
 export const DOJO_OFFSET = 0x14064;
 export const DOJO_END = 0x1417b;
@@ -37,15 +38,16 @@ export const RAIDERS_OFFSET = 0x1415c;
 export const RAIDER_MAX = 8;
 export const REPUTATION_RANK_MAX = 5;
 
-const EMPTY = 0xffffffff;
+/** 🟢 弟子の種類・道場破りの種類（i32）の空き */
+const EMPTY = -1;
 
 /** 🟢 弟子のレコード（chunks/dojo）。読み書き・再集計・InfoTip で共有。 */
 export const PUPIL_CODEC = recordCodec({
-  kind: { rel: 0, size: 4 },
-  name: { rel: 4, size: 4 },
-  look: { rel: 8, size: 2 },
-  point: { rel: 0x0a, size: 1 },
-  shown: { rel: 0x0b, size: 1 },
+  kind: { rel: 0, type: 'i32' },
+  name: { rel: 4, type: 'i32' },
+  look: { rel: 8, type: 'u16' },
+  point: { rel: 0x0a, type: 'u8' },
+  shown: { rel: 0x0b, type: 'u8' },
 });
 
 /** 🟢 評判の段階ごとの点の範囲（段階 0〜5） */
@@ -86,7 +88,7 @@ export function pupilKind(id: number): PupilKind | undefined {
 
 /** 🟢 見た目の名前（npc-look.csv）。表にない値は undefined */
 export function lookLabel(look: number): string | undefined {
-  return NPC_LOOK_TABLE[look as keyof typeof NPC_LOOK_TABLE]?.name_ja;
+  return lookup(NPC_LOOK_TABLE, look)?.name_ja;
 }
 
 /** 🟢 見た目の一覧（上級者モードで種類の候補以外も選べる） */
@@ -120,7 +122,7 @@ export function pupilOffset(index: number): number {
  * 空きの枠は FF ×11 + 00 にもなる（✅ 実セーブ）
  */
 function isEmptySlot(bytes: Uint8Array, index: number): boolean {
-  return readU32(bytes, pupilOffset(index)) === EMPTY;
+  return PUPIL_CODEC.readField(bytes, pupilOffset(index), 'kind') === EMPTY;
 }
 
 /** 点から段階を決める（🟢 ゲームと同じ。どの範囲にも入らなければ今の段階のまま） */
@@ -244,7 +246,7 @@ export function writeRaid(bytes: Uint8Array, on: boolean): void {
   if (!on) {
     writeU8(bytes, RAID_OFFSET, 0);
     writeI16(bytes, RAIDER_COUNT_OFFSET, 0);
-    for (let j = 0; j < RAIDER_MAX; j++) writeU32(bytes, RAIDERS_OFFSET + j * 4, EMPTY);
+    for (let j = 0; j < RAIDER_MAX; j++) writeI32(bytes, RAIDERS_OFFSET + j * 4, EMPTY);
     return;
   }
   if (view.raid) return;
