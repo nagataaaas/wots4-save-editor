@@ -5,6 +5,7 @@ import { FieldRow, type ParseResult } from "@/components/field-row";
 import { SearchSelectRow } from "@/components/search-select-row";
 import type { SelectOption } from "@/components/select-options";
 import {
+  SCORE_SYSTEM_MAX,
   SCORE_TABLES,
   readScoreTable,
   scoreEntries,
@@ -15,7 +16,6 @@ import {
   type ScoreScope,
   type ScoreTableId,
 } from "@/save/score-tables";
-import { NUM_TYPE_RANGE } from "@/save/binary";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { formatWarnings } from "@/lib/format";
 import { parseInteger } from "@/lib/parse";
@@ -118,9 +118,6 @@ const SCORE_NOTES: Record<ScoreTableId, string> = {
 };
 
 const SCORE_TOP = 10;
-
-/** 🟢 回数は u32（score-tables.ts の validateScore と同じ上級者モードの上限） */
-const SCORE_SYSTEM_MAX = NUM_TYPE_RANGE.u32.max;
 
 /** 🟢 技ごとの斬殺数・道具の使用回数。1件を選んで、周回中と累計を書く */
 function ScoreTableCard({ table }: { table: ScoreTableId }) {

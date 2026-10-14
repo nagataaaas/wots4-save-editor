@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import { writeU32 } from './binary'
 import { TS_SAVE_SIZE } from './layout'
-import { readScoreTable, scoreEntries, scoreEntryName, scoreOffset, validateScore, writeScore } from './score-tables'
+import { SCORE_SYSTEM_MAX, SCORE_TYPE, readScoreTable, scoreEntries, scoreEntryName, scoreOffset, validateScore, writeScore } from './score-tables'
 
 function makeSave(size = TS_SAVE_SIZE): Uint8Array {
   const b = new Uint8Array(size)
@@ -58,6 +58,13 @@ describe('🟢 技ごとの斬殺数・道具の使用回数', () => {
     expect(validateScore('arts', 999, 1, { advanced: false })).not.toBeNull()
     expect(validateScore('arts', 999, 1, { advanced: true })).toBeNull()
     expect(validateScore('arts', 1000, 1, { advanced: true })).not.toBeNull()
+  })
+
+  it('🟢 回数は u32。上級者モードの上限は u32 の最大値', () => {
+    expect(SCORE_TYPE).toBe('u32')
+    expect(SCORE_SYSTEM_MAX).toBe(0xffff_ffff)
+    expect(validateScore('arts', 193, 0xffff_ffff, { advanced: true })).toBeNull()
+    expect(validateScore('arts', 193, 0x1_0000_0000, { advanced: true })).not.toBeNull()
   })
 
   it('読み出し→書き戻しでバイト列が一致する', () => {
