@@ -2,7 +2,7 @@ import { type ReactNode, useMemo } from "react";
 import { FieldShell } from "@/components/field-shell";
 import { LazySelect } from "@/components/lazy-select";
 import { groupOptions, type SelectOption } from "@/components/select-options";
-import { useFieldAction } from "@/lib/use-field-action";
+import { useWrite } from "@/lib/use-write";
 import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from "@/components/ui/select";
 
 function OptionContent({ option: o }: { option: SelectOption }) {
@@ -59,7 +59,7 @@ export function SelectRow({
   note,
   onChange,
 }: Props) {
-  const { error, run } = useFieldAction(offset);
+  const { error, attempt } = useWrite(offset);
   const listed = value === null || options.some((o) => o.value === value);
   // トリガーに出す名前（Base UI の Select は閉じている間は選択肢を描かないので、items から引く）
   // 選択肢の分は options が変わったときだけ作り直す（選択肢の多い欄で描画のたびに全件を作らない）
@@ -87,7 +87,7 @@ export function SelectRow({
         disabled={disabled || value === null || problem !== null || options.length === 0}
         onValueChange={(v) => {
           if (v === value) return;
-          run(() => onChange(v));
+          attempt(() => onChange(v));
         }}
       >
         {!listed && value !== null && (

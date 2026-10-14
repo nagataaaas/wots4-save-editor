@@ -278,7 +278,7 @@ function StanceSkillTable({
 }) {
   const { stance, readOnly } = actions;
   // 結果は表の上に出す（行ごとには出さない）
-  const { run, message } = useWrite();
+  const { tryWrite, message } = useWrite();
   const nos = [...shown.skillNos];
   const pending = states ? nos.filter((no) => rowOf(rows, no).learnable && !isLearned(states[no])) : [];
   return (
@@ -288,7 +288,7 @@ function StanceSkillTable({
           size="sm"
           disabled={readOnly || pending.length === 0}
           onClick={() =>
-            run(`${pending.length} 個の技を習得しました`, (b) => learnStanceSkills(b, stance, pending))
+            tryWrite((b) => learnStanceSkills(b, stance, pending), `${pending.length} 個の技を習得しました`)
           }
         >
           条件に合う技を全部習得する
@@ -319,7 +319,7 @@ function StanceSkillTable({
               <SkillRow
                 {...ctx}
                 {...actions}
-                run={run}
+                tryWrite={tryWrite}
                 sheet={sheet}
                 row={rowOf(rows, ctx.node.skill.skillNo)}
                 state={states ? states[ctx.node.skill.skillNo] : null}
@@ -341,14 +341,15 @@ function SkillRow({
   stance,
   readOnly,
   advanced,
-  run,
+  tryWrite,
   ...ctx
 }: RowActions & SkillTreeRowContext & {
   sheet: SkillSheet;
   row: Row;
   state: number | null;
   dim: boolean;
-  run: (label: string, f: (b: Uint8Array) => void) => void;
+  /** 書き込んで、結果を構えのカードに出す（useWrite の tryWrite） */
+  tryWrite: (f: (b: Uint8Array) => void, success: string) => void;
 }) {
   const s = ctx.node.skill;
   return (
@@ -379,9 +380,9 @@ function SkillRow({
         advanced={advanced}
         disabled={readOnly}
         learnable={row.learnable}
-        onLearn={() => run("技を習得しました", (b) => learnStanceSkill(b, stance, s.skillNo))}
-        onShowInOreRyu={() => run("俺流に組み込めるようにしました", (b) => showStanceSkillInOreRyu(b, stance, s.skillNo))}
-        onForget={() => run("技を忘れさせました", (b) => forgetStanceSkill(b, stance, s.skillNo))}
+        onLearn={() => tryWrite((b) => learnStanceSkill(b, stance, s.skillNo), "技を習得しました")}
+        onShowInOreRyu={() => tryWrite((b) => showStanceSkillInOreRyu(b, stance, s.skillNo), "俺流に組み込めるようにしました")}
+        onForget={() => tryWrite((b) => forgetStanceSkill(b, stance, s.skillNo), "技を忘れさせました")}
       />
     </div>
   );

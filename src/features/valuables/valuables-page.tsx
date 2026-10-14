@@ -111,7 +111,7 @@ function ProbeCard({
   disabled: boolean;
 }) {
   const [start, setStart] = useState(String(PROBE_CANDIDATES[0]));
-  const { tryWrite, message, setMessage } = useWrite();
+  const { tryWrite, message } = useWrite();
 
   function fill() {
     const result = tryWrite((b) => {
@@ -119,10 +119,9 @@ function ProbeCard({
       // 何も書かなかったときは失敗として出す
       if (filled.length === 0) throw new Error("入れられる空き枠か候補 ID がありません");
       return filled;
-    });
+    }, (filled) => `入れた ID：${filled.map(formatHex4).join(", ")}`);
     if (!result.ok) return;
     const filled = result.value;
-    setMessage({ error: false, text: `入れた ID：${filled.map(formatHex4).join(", ")}` });
     // 次の回は続きから
     const next = PROBE_CANDIDATES[PROBE_CANDIDATES.indexOf(filled[filled.length - 1]) + 1];
     if (next !== undefined) setStart(String(next));

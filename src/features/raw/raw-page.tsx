@@ -459,7 +459,7 @@ function SelectionForm({ bytes, offset, advanced }: {
   const [draft, setDraft] = useState(() =>
     previewBytes(bytes, offset, Math.min(bytes.byteLength - offset, 4)),
   )
-  const { run, message, error, setMessage } = useWrite()
+  const { tryWrite, message, error, setMessage } = useWrite()
 
   function submit() {
     const r = parseHexBytes(draft)
@@ -467,7 +467,7 @@ function SelectionForm({ bytes, offset, advanced }: {
       setMessage({ error: true, text: r.error })
       return
     }
-    run(`${formatOffset(offset)} から ${r.value.length} B を書き換えました`, (b) => writeRawBytes(b, offset, r.value))
+    tryWrite((b) => writeRawBytes(b, offset, r.value), `${formatOffset(offset)} から ${r.value.length} B を書き換えました`)
   }
 
   return (
@@ -703,7 +703,7 @@ function PatchCard({
   onJump: (offset: number) => void
 }) {
   const [text, setText] = useState('')
-  const { run, message, setMessage } = useWrite()
+  const { tryWrite, message, setMessage } = useWrite()
   const parsed = useMemo(() => (text.trim() === '' ? null : parsePatchScript(text, bytes.byteLength)), [text, bytes.byteLength])
   const canApply = advanced && parsed !== null && parsed.errors.length === 0 && parsed.patches.length > 0
 
@@ -711,7 +711,7 @@ function PatchCard({
     if (!parsed || !canApply) return
     const { patches } = parsed
     const total = patches.reduce((n, p) => n + p.values.length, 0)
-    run(`${patches.length} 行（${total} B）を書き込みました`, (b) => applyPatches(b, patches))
+    tryWrite((b) => applyPatches(b, patches), `${patches.length} 行（${total} B）を書き込みました`)
   }
 
   return (

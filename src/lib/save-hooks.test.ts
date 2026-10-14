@@ -110,15 +110,23 @@ describe('useWrite', () => {
     expect(render(useWrite).attempt(() => { throw '外の例外' })).toEqual({ ok: false })
     expect(render(useWrite).error).toBe('外の例外')
   })
-  it('run・attempt の label は成功したときだけ成功文にする', () => {
+  it('success は成功したときだけ成功文にする。関数なら戻り値から作る', () => {
     load()
-    expect(render(useWrite).run('変更しました', b => { b[1] = 3 })).toBe(true)
+    expect(render(useWrite).tryWrite(b => { b[1] = 3 }, '変更しました').ok).toBe(true)
     expect(render(useWrite).message).toEqual({ error: false, text: '変更しました' })
+    expect(render(useWrite).tryWrite(() => [1, 2], v => `${v.length} 件`)).toEqual({ ok: true, value: [1, 2] })
+    expect(render(useWrite).message).toEqual({ error: false, text: '2 件' })
     expect(render(useWrite).attempt(() => { throw new Error('失敗') }, '成功')).toEqual({ ok: false })
     expect(render(useWrite).message).toEqual({ error: true, text: '失敗' })
   })
+  it('scope が変わったら古い結果を隠す', () => {
+    load()
+    render(() => useWrite(1)).attempt(() => { throw '失敗' })
+    expect(render(() => useWrite(1)).error).toBe('失敗')
+    expect(render(() => useWrite(2)).error).toBeNull()
+  })
   it('未読み込みの失敗を成功扱いせず、読み込み直しで古い結果を隠す', () => {
-    expect(render(useWrite).run('成功', () => {})).toBe(false)
+    expect(render(useWrite).tryWrite(() => {}, '成功').ok).toBe(false)
     expect(render(useWrite).error).toContain('読み込まれていません')
     load()
     expect(render(useWrite).message).toBeNull()

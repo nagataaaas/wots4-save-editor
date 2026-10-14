@@ -2,7 +2,7 @@ import { useContext, useState, type ComponentProps, type ReactNode } from 'react
 import { Button } from '@/components/ui/button'
 import { WriteError } from '@/components/write-error'
 import { SaveContext } from '@/lib/save-context'
-import { useFieldAction } from '@/lib/use-field-action'
+import { useWrite } from '@/lib/use-write'
 
 /**
  * 書き込みのボタンと、その操作エラーをボタンの近くに出す。
@@ -15,9 +15,9 @@ export function ActionButton({ label, confirm, confirmLabel = 'もう一度押�
   const loadId = useContext(SaveContext)?.save?.loadId
   const [state, setState] = useState({ loadId, armed: false })
   const armed = state.loadId === loadId && state.armed && !props.disabled
-  const { error, run } = useFieldAction()
+  const { error, attempt } = useWrite()
   const arm = (armed: boolean) => setState({ loadId, armed })
-  const execute = () => { arm(false); run(onAction) }
+  const execute = () => { arm(false); attempt(onAction) }
   return <div className={className}>
     <div className="flex flex-wrap gap-2">
       <Button {...props} variant={armed ? 'destructive' : props.variant ?? 'outline'}

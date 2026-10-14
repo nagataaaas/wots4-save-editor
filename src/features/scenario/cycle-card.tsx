@@ -62,13 +62,10 @@ export function CycleCard() {
   const counts = data?.counts ?? null;
   const publicOrder = data?.publicOrder ?? null;
   // message は新しい周回の結果（成功文かエラー）。読み込み直すと消える
-  const { write: update, tryWrite, setMessage, message } = useWrite();
+  const { write: update, tryWrite, message } = useWrite();
   const { advanced } = useAdvancedMode();
 
-  const start = (end: CycleEnd) => {
-    const result = tryWrite((b) => startNewCycle(b, end));
-    if (result.ok) setMessage({ error: false, text: cycleReportText(result.value) });
-  };
+  const start = (end: CycleEnd) => tryWrite((b) => startNewCycle(b, end), cycleReportText);
   // セーブ未読み込みなら「—」。読めたが段階の表にない値なら「不明」
   const publicOrderLevelText = publicOrder ? (publicOrder.level ?? "不明") : "—";
   const clearsText = counts

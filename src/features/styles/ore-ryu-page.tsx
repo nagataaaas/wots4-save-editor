@@ -101,7 +101,7 @@ function StyleCard({
   readOnly: boolean;
   advanced: boolean;
 }) {
-  const { write: update, run, message } = useWrite();
+  const { write: update, tryWrite, message } = useWrite();
   const [addStance, setAddStance] = useState<string>("");
   // 生きた証の写しはその人物が町に出るたびに作り直されるので、上級者モードでだけ書き換える 🔶
   const locked = readOnly || (style.kind !== "player" && !advanced);
@@ -193,8 +193,8 @@ function StyleCard({
             locked={locked}
             advanced={advanced}
             canRemove={sheets.length > 1}
-            onSave={(nos) => run(`${findStance(sheet.stance)?.nameJa}の技を書き換えました`, (b) => writeCustomSheetSkills(b, sheet.id, nos, { advanced }))}
-            onRemove={() => run("構えを外しました", (b) => removeCustomStance(b, style.id, sheet.id))}
+            onSave={(nos) => tryWrite((b) => writeCustomSheetSkills(b, sheet.id, nos, { advanced }), `${findStance(sheet.stance)?.nameJa}の技を書き換えました`).ok}
+            onRemove={() => tryWrite((b) => removeCustomStance(b, style.id, sheet.id), "構えを外しました")}
           />
         ))}
 
@@ -218,7 +218,7 @@ function StyleCard({
                 const stance = Number(addStance);
                 // 足した直後は、その構えで入れられる初段の技だけを入れておく（あとで選び直す）
                 const firsts = initialStanceSkills(view.sects.stanceStates[stance], stance, { advanced });
-                run(`${findStance(stance)?.nameJa}を足しました`, (b) => addCustomStance(b, style.id, stance, firsts, { advanced }));
+                tryWrite((b) => addCustomStance(b, style.id, stance, firsts, { advanced }), `${findStance(stance)?.nameJa}を足しました`);
               }}
             >
               足す
@@ -314,7 +314,7 @@ function CreateCard({
   readOnly: boolean;
   advanced: boolean;
 }) {
-  const { run, message } = useWrite();
+  const { tryWrite, message } = useWrite();
   const [name, setName] = useState("My流");
   const [stance, setStance] = useState("0");
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -367,7 +367,7 @@ function CreateCard({
           <Button
             disabled={readOnly || nameProblem !== null || skillProblem !== null}
             onClick={() => {
-              if (run(`俺流「${name}」を作りました`, (b) => createCustomStyle(b, { name, stance: s, skillNos: [...selected] }, { advanced }))) {
+              if (tryWrite((b) => createCustomStyle(b, { name, stance: s, skillNos: [...selected] }, { advanced }), `俺流「${name}」を作りました`).ok) {
                 setSelected(new Set());
               }
             }}

@@ -203,7 +203,7 @@ function SectCard({
 }) {
   const { advanced } = useAdvancedMode();
   // ボタンの書き込みの結果は、このカードの「技を全部習得する」の下に出す（欄の書き込みのエラーは欄に出る）
-  const { write: update, run, message } = useWrite();
+  const { write: update, tryWrite, message } = useWrite();
   const rec = view?.records.find((r) => r.id === sect.id) ?? null;
   const places = view ? placesOf(view, sect.id) : [];
   // 固有技は覚えられる流派でだけ出す（sectSheetSkills）。未読み込みのときは states が null。
@@ -262,7 +262,7 @@ function SectCard({
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <Button
-            onClick={() => run(`${sect.nameJa} の技を習得しました`, (b) => learnSectSkills(b, sect.id))}
+            onClick={() => tryWrite((b) => learnSectSkills(b, sect.id), `${sect.nameJa} の技を習得しました`)}
             disabled={readOnly || learned === total}
           >
             技を全部習得する
@@ -334,7 +334,7 @@ function SectCard({
                       states={states}
                       readOnly={readOnly}
                       advanced={advanced}
-                      run={run}
+                      tryWrite={tryWrite}
                     />
                   )}
                 />
@@ -353,11 +353,11 @@ type SkillRowProps = {
   states: readonly number[] | null;
   readOnly: boolean;
   advanced: boolean;
-  /** 書き込んで、結果を流派のカードに出す（useWrite の run） */
-  run: (label: string, mutate: (bytes: Uint8Array) => void) => void;
+  /** 書き込んで、結果を流派のカードに出す（useWrite の tryWrite） */
+  tryWrite: (mutate: (bytes: Uint8Array) => void, success: string) => void;
 };
 
-function SkillRow({ sheet, states, readOnly, advanced, run, ...ctx }: SkillRowProps & SkillTreeRowContext) {
+function SkillRow({ sheet, states, readOnly, advanced, tryWrite, ...ctx }: SkillRowProps & SkillTreeRowContext) {
   const s = ctx.node.skill;
   const state = states ? states[s.skillNo] : null;
   return (
@@ -379,9 +379,9 @@ function SkillRow({ sheet, states, readOnly, advanced, run, ...ctx }: SkillRowPr
         unique={isUniqueSkill(s)}
         advanced={advanced}
         disabled={readOnly}
-        onLearn={() => run("技を習得しました", (b) => learnSheetSkill(b, sheet.id, s.skillNo))}
-        onShowInOreRyu={() => run("俺流に組み込めるようにしました", (b) => learnSheetSkills(b, sheet.id, [s.skillNo]))}
-        onForget={() => run("技を忘れさせました", (b) => forgetSheetSkill(b, sheet.id, s.skillNo))}
+        onLearn={() => tryWrite((b) => learnSheetSkill(b, sheet.id, s.skillNo), "技を習得しました")}
+        onShowInOreRyu={() => tryWrite((b) => learnSheetSkills(b, sheet.id, [s.skillNo]), "俺流に組み込めるようにしました")}
+        onForget={() => tryWrite((b) => forgetSheetSkill(b, sheet.id, s.skillNo), "技を忘れさせました")}
       />
     </div>
   );

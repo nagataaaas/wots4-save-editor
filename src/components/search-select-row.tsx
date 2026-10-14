@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { FieldShell } from '@/components/field-shell'
 import { SearchSelectControl } from '@/components/search-select-control'
 import type { SelectOption } from '@/components/select-options'
-import { useFieldAction } from '@/lib/use-field-action'
+import { useWrite } from '@/lib/use-write'
 
 type Props = {
   label: string
@@ -42,7 +42,7 @@ export function SearchSelectRow({
   searchPlaceholder = '検索',
   onChange,
 }: Props) {
-  const { error, run } = useFieldAction(offset)
+  const { error, attempt } = useWrite(offset)
   return (
     <FieldShell label={label} offset={offset} note={note} warning={warning} badges={badges} problem={problem} hint={hint} error={error}>
       <SearchSelectControl
@@ -51,7 +51,7 @@ export function SearchSelectRow({
         options={options}
         disabled={disabled || problem !== null}
         searchPlaceholder={searchPlaceholder}
-        onChange={(v) => run(() => onChange(v))}
+        onChange={(v) => attempt(() => onChange(v))}
       />
     </FieldShell>
   )

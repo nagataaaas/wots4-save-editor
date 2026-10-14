@@ -5,7 +5,7 @@ import { SearchSelectControl } from '@/components/search-select-control'
 import type { OptionGroup, SelectOption } from '@/components/select-options'
 import { Input } from '@/components/ui/input'
 import { useFieldDraft } from '@/lib/use-field-draft'
-import { useFieldAction } from '@/lib/use-field-action'
+import { useWrite } from '@/lib/use-write'
 import { integerValue, parseInteger } from '@/lib/parse'
 import { formatWarnings } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -79,7 +79,7 @@ export function ItemSlotRow({
   normalCountMaxFor?: (id: number) => number
   onChange: (id: number, count: number) => void
 }) {
-  const { error: actionError, setError, run } = useFieldAction(`${offset}:${slot?.id}`)
+  const { error: actionError, setMessage, attempt } = useWrite(`${offset}:${slot?.id}`)
 
   const readOnly = slot === null || slot.problem !== null
   const warning = formatWarnings(slot?.warnings)
@@ -95,7 +95,7 @@ export function ItemSlotRow({
 
   function choose(id: number) {
     if (!slot || id === slot.id) return
-    run(() => onChange(id, countFor(id)))
+    attempt(() => onChange(id, countFor(id)))
   }
 
   const idInput = useFieldDraft({
@@ -163,7 +163,7 @@ export function ItemSlotRow({
             placeholder="ID"
             className={cn('h-8 font-mono', showCount && 'col-start-1 row-start-2 sm:col-auto sm:row-auto')}
             aria-label={`${index + 1}件目の ID（16進）`}
-            onChange={(e) => { setError(null); idInput.change(e.target.value) }}
+            onChange={(e) => { setMessage(null); idInput.change(e.target.value) }}
             onFocus={idInput.focus}
             onBlur={idInput.blur}
           />
@@ -182,7 +182,7 @@ export function ItemSlotRow({
               inputMode="numeric"
               aria-label={`${index + 1}件目の個数`}
               aria-invalid={error !== null}
-              onChange={(e) => { setError(null); countInput.change(e.target.value) }}
+              onChange={(e) => { setMessage(null); countInput.change(e.target.value) }}
               onFocus={countInput.focus}
               onBlur={countInput.blur}
             />
