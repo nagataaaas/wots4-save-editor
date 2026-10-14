@@ -1,7 +1,7 @@
 // 銘・魅力のゲーム内の効果（表示用）。
 // ✅ 出典は [W] 侍道4攻略@wiki「鍛冶屋」（https://w.atwiki.jp/samuraidou4/pages/20.html、2026-10-04 更新版）の
 // 「銘一覧」と「魅力」の表。Steam版のゲーム内では未確認だが、確定として扱う（ユーザー判断 2026-10-05）。
-import { CHARMS } from './weapon'
+import { CHARMS, countCharms } from './weapon'
 
 export type TitleEffect = { effect: string; note?: string }
 
@@ -71,9 +71,7 @@ export type CharmEffect = { id: number; label: string; count: number; summary: s
  * 個数が 4 以上・未知の ID は、効果が分からないので amount を null にする
  */
 export function charmEffects(charms: readonly (number | null)[]): CharmEffect[] {
-  const counts = new Map<number, number>()
-  for (const c of charms) if (c !== null) counts.set(c, (counts.get(c) ?? 0) + 1)
-  return [...counts].map(([id, count]) => {
+  return countCharms(charms).map(({ id, count }) => {
     const label = CHARMS.find((c) => c.id === id)?.label ?? '未知'
     const def = CHARM_EFFECTS[id]
     if (!def) return { id, label, count, summary: '効果は不明', amount: null }
