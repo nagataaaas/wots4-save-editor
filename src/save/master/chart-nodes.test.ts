@@ -11,6 +11,7 @@ const name = (id: number) => {
 describe("🟢 チャートのノード datatable/event/chart-node.csv", () => {
   it("0〜118 の119件。ID は欠番なしの昇順", () => {
     expect(CHART_NODES).toHaveLength(119);
+    expect(CHART_NODE_MAX).toBe(118);
     expect(CHART_NODES.map((n) => n.id)).toEqual([...Array(CHART_NODE_MAX + 1).keys()]);
   });
 

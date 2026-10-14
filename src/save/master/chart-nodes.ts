@@ -26,6 +26,10 @@ export type ChartNodeEntry = {
 export type ChartRoute = "prajna" | "shogunate" | "foreigners" | "other" | "best" | "tutorial";
 
 const ROWS = Object.values(CHART_NODE_TABLE);
+// 添字でノードを引く（chartNode）ので、ID は 0 からの欠番のない並び
+ROWS.forEach((r, i) => {
+  if (r.id_dec !== i) throw new Error(`chart-node.csv の ID が 0 からの連番ではありません: ${r.id_dec}`);
+});
 
 /** 🟢 ノード 0〜118（ID 昇順、欠番なし） */
 export const CHART_NODES: readonly ChartNodeEntry[] = ROWS.map((r) => ({
@@ -46,8 +50,8 @@ export const CHART_NODE_OWN_LABELS: ReadonlyMap<number, LocalizedLabel> = new Ma
   }),
 );
 
-/** 🟢 ノード番号の最大値 */
-export const CHART_NODE_MAX = 118;
+/** 🟢 ノード番号の最大値（118） */
+export const CHART_NODE_MAX = ROWS.length - 1;
 
 /** ノード番号からノードを引く。表にない値は undefined */
 export function chartNode(id: number): ChartNodeEntry | undefined {

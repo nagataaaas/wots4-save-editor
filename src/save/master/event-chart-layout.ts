@@ -69,9 +69,15 @@ export type ChartCell = ChartFrame | ChartLine
 
 const FRAME_ARMS = LINE_SHAPES[1]
 
+function hiddenOf(r: { id_dec: number; hidden: number | null }): CellBase['hidden'] {
+  const h = r.hidden
+  if (h !== 0 && h !== 1 && h !== 2) throw new Error(`chart-cell.csv の升 ${r.id_dec} の隠しの値が分かりません: ${h}`)
+  return h
+}
+
 /** 🟢 全部の升（chart-cell.csv の順） */
 export const CHART_CELLS: readonly ChartCell[] = Object.values(CHART_CELL_TABLE).map((r): ChartCell => {
-  const base = { id: r.id_dec, col: r.col, row: r.row, hidden: r.hidden as 0 | 1 | 2 }
+  const base = { id: r.id_dec, col: r.col, row: r.row, hidden: hiddenOf(r) }
   if (r.type === 'frame') {
     const node = CHART_NODES[r.node ?? -1]
     if (!node || node.eventId === null) throw new Error(`chart-cell.csv の升 ${r.id_dec} のノードがイベントに当たりません: ${r.node}`)
