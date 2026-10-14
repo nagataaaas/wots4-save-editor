@@ -6,24 +6,32 @@ import { describe, expect, it } from "vitest";
 import { TS_SAVE_SIZE } from './layout'
 import { DATE_OFFSETS } from "./scenario-date";
 import {
-  PROMISE_PARTNERS,
   PROMISE_ROWS,
   buildPromiseBytes,
   createPromise,
-  createProblem,
   choosePromisePlace,
   choosePromiseAt,
   layoutForPlace,
   initialPromiseSpec,
   nameCandidates,
-  partnerDeathWarning,
-  promisePartner,
+  partnerHomeMismatch,
+  promisePlaceChoices,
   randomSpec,
   rowsFor,
   validateSpec,
   type PromiseSpec,
 } from "./yobai-create";
-import { PROMISE_OFFSET, STAGE_OFFSET, readYobai } from "./yobai";
+import {
+  PROMISE_OFFSET,
+  PROMISE_PARTNERS,
+  PROMISE_PLACES,
+  STAGE_OFFSET,
+  createProblem,
+  layoutsForPlace,
+  partnerDeathWarning,
+  promisePartner,
+  readYobai,
+} from "./yobai";
 
 const hex = (s: string) => Uint8Array.from(s.replace(/\s/g, "").match(/../g)!.map((h) => Number.parseInt(h, 16)));
 
@@ -203,5 +211,37 @@ describe("夜の約束を作る chunks/night-visit「約束の作り方」", () 
     // 名前だけを出す（場所・姿の注記は付けない）。❓ 死んだ相手が夜這いの場に出るかは書かない
     expect(partnerDeathWarning(b, 442)).toBe("朱美 は死亡しています。約束は消えずに残ります");
     expect(partnerDeathWarning(b, 0x25)).toBeNull();
+  });
+
+  it("場所と配置の選択肢：通常モードは相手の組から、上級者モードは場所で使える配置から", () => {
+    const akemi = promisePartner(442)!;
+    // 名前のある相手は決まった1組（🟢 朱美は 1F・16）
+    expect(promisePlaceChoices(akemi, 0, 0x1f, { advanced: false })).toEqual({ places: [0x1f], layouts: [0x16] });
+    expect(promisePlaceChoices(akemi, 0, 0x0c, { advanced: false }).layouts).toEqual([]);
+    expect(promisePlaceChoices(akemi, 0, 0x0c, { advanced: true })).toEqual({
+      places: [...PROMISE_PLACES],
+      layouts: layoutsForPlace(0x0c),
+    });
+
+    // 町の人：まとまりの組のうち、通常モードは段階以下の組の場所。場所は小さい順で重ならない
+    const maid = promisePartner(0x25)!;
+    const rows0 = rowsFor(maid, 0, { advanced: false });
+    const { places } = promisePlaceChoices(maid, 0, rows0[0].place, { advanced: false });
+    expect(places).toEqual([...new Set(rows0.map((r) => r.place))].sort((a, b) => a - b));
+    const { layouts } = promisePlaceChoices(maid, 0, rows0[0].place, { advanced: false });
+    expect(layouts.length).toBeGreaterThan(0);
+    for (const l of layouts) expect(rows0.some((r) => r.place === rows0[0].place && r.layout === l)).toBe(true);
+    // 段階が上がると、選べる場所は減らない
+    const places3 = promisePlaceChoices(maid, 3, rows0[0].place, { advanced: false }).places;
+    for (const p of places) expect(places3).toContain(p);
+  });
+
+  it("名前のある相手の場所・配置との違い", () => {
+    // 朱美の組は 1F・16
+    expect(partnerHomeMismatch({ type: 442, place: 0x1f, layout: 0x16 })).toBeNull();
+    expect(partnerHomeMismatch({ type: 442, place: 0x0c, layout: 0x06 })).toEqual({ place: 0x1f, layout: 0x16 });
+    // 町の人の種類・表にない種類は比べない
+    expect(partnerHomeMismatch({ type: 0x25, place: 0x0c, layout: 0x06 })).toBeNull();
+    expect(partnerHomeMismatch({ type: 0xffff, place: 0x0c, layout: 0x06 })).toBeNull();
   });
 });

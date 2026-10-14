@@ -40,7 +40,7 @@
 //
 // 空の枠に新しく約束を作るのは yobai-create.ts。記録を作る・消す機能は持たない。
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
-import { readU16, readU32, readU8, readSized, writeU16, writeSized, recordCodec, type SizedField } from "./binary";
+import { readU16, readU32, readU8, readSized, writeSized, recordCodec, type SizedField } from "./binary";
 import { type EditOpts, type ViewStatus } from "./field";
 import { validateKnownValue } from "./flags/byte-flag";
 import { assertWritable, checkLayout } from "./layout";
@@ -51,6 +51,7 @@ import { NIGHT_VISIT_LAYOUT_TABLE } from "./master/dataset/night-visit-layout";
 import { NIGHT_VISIT_PLACE_TABLE } from "./master/dataset/night-visit-place";
 import { NPC_LOOK_TABLE } from "./master/dataset/npc-look";
 import { labelOf, nameOf } from "./master/labels";
+import { lookup } from "./master/lookup";
 import { npcName } from "./master/npc-names";
 import { characterStatusForPromise, CHARACTER_DEAD } from "./flags/characters";
 
@@ -146,6 +147,9 @@ export const PLACE_LAYOUTS: readonly {
 )
   .sort((a, b) => a.place - b.place || a.layout - b.layout);
 
+/** 🟢 約束で使われる場所（PLACE_LAYOUTS に出てくる場所。小さい順） */
+export const PROMISE_PLACES: readonly number[] = [...new Set(PLACE_LAYOUTS.map((p) => p.place))];
+
 export type LayoutInfo = {
   /** 家の種類（町人の家・外国人の家・般若党の家・侍の家）。使われない配置は空 */
   house: string;
@@ -168,7 +172,7 @@ export type LayoutInfo = {
  * 同心・岡っ引きは家の中にいる人ではなく、失敗したときに出てくる捕り方
  */
 export function layoutInfo(layout: number): LayoutInfo | null {
-  const r = NIGHT_VISIT_LAYOUT_TABLE[layout as keyof typeof NIGHT_VISIT_LAYOUT_TABLE];
+  const r = lookup(NIGHT_VISIT_LAYOUT_TABLE, layout);
   if (!r) return null;
   return {
     house: r.house,
@@ -184,7 +188,7 @@ export function layoutInfo(layout: number): LayoutInfo | null {
 
 /** 配置の表示（「町人の家・家の人2人・布団2枚」）。表にない値は 16進数 */
 export function layoutLabel(layout: number): string {
-  const r = NIGHT_VISIT_LAYOUT_TABLE[layout as keyof typeof NIGHT_VISIT_LAYOUT_TABLE];
+  const r = lookup(NIGHT_VISIT_LAYOUT_TABLE, layout);
   return r ? r.name_ja : "不明な配置";
 }
 
@@ -206,15 +210,59 @@ export type KnownValue = { value: number; label: string };
 /** 相手の種類の区分（選択肢の見出し） */
 export type TypeKind = "名前のある相手" | "町の人（女性）" | "町の人（男性）";
 
+export type PromisePartner = {
+  /** 相手の種類（約束の枠の +0x04） */
+  type: number;
+  label: string;
+  kind: "special" | "town";
+  sex: "m" | "f";
+  /** 町の人の名前の候補（7＝7000 台、8＝8000 台）。名前のある相手は null */
+  nameList: 7 | 8 | null;
+  /** 名前のある相手の名前の ID */
+  name: number | null;
+  looks: readonly number[];
+  age: number;
+  ageRandom: boolean;
+  /** 0＝1〜4 から選ぶ */
+  blood: number;
+  group: number;
+  /** 名前のある相手の行 */
+  row: number | null;
+  note: string;
+};
+
 /**
- * 🟢 セリフと戦闘力の型（+0x04、町の人の種類）。約束できる相手の種類（datatable/npc/night-visit-partner.csv）。
+ * 🟢 約束できる相手の種類（datatable/npc/night-visit-partner.csv）。種類の選択肢（KNOWN_TYPES）・死亡の警告・約束の作成はこの表から引く
+ */
+export const PROMISE_PARTNERS: readonly PromisePartner[] = Object.values(NIGHT_VISIT_PARTNER_TABLE).map((p) => ({
+  type: p.id_dec,
+  label: p.name_ja,
+  kind: p.kind === "special" ? "special" : "town",
+  sex: p.sex === "f" ? "f" : "m",
+  nameList: p.name_list === 7 || p.name_list === 8 ? p.name_list : null,
+  name: p.name,
+  looks: p.looks,
+  age: p.age,
+  ageRandom: p.age_random === 1,
+  blood: p.blood,
+  group: p.group,
+  row: p.row,
+  note: p.note_ja,
+}));
+
+const PARTNER_BY_TYPE: ReadonlyMap<number, PromisePartner> = new Map(PROMISE_PARTNERS.map((p) => [p.type, p]));
+
+export function promisePartner(type: number): PromisePartner | undefined {
+  return PARTNER_BY_TYPE.get(type);
+}
+
+/**
+ * 🟢 セリフと戦闘力の型（+0x04、町の人の種類）。約束できる相手の種類（PROMISE_PARTNERS）。
  * 通常モードではこれだけを書ける。名前・見た目とは別々に効く（✅ [U]）
  */
-export const KNOWN_TYPES: readonly (KnownValue & { kind: TypeKind })[] = Object.values(
-  NIGHT_VISIT_PARTNER_TABLE,
-).map((p) => ({
-  value: p.id_dec,
-  label: p.note_ja ? `${p.name_ja}（${p.note_ja}）` : p.name_ja,
+export const KNOWN_TYPES: readonly (KnownValue & { kind: TypeKind })[] = PROMISE_PARTNERS.map((p) => ({
+  value: p.type,
+  label: p.note ? `${p.label}（${p.note}）` : p.label,
   kind:
     p.kind === "special" ? "名前のある相手" : p.sex === "f" ? "町の人（女性）" : "町の人（男性）",
 }));
@@ -325,7 +373,7 @@ export type RecordView = { index: number; building: number } & Record<RecordFiel
 export function partnerDeathWarning(bytes: Uint8Array, type: number): string | null {
   const status = characterStatusForPromise(type);
   if (!status || readU8(bytes, status.offset) !== CHARACTER_DEAD) return null;
-  const name = NIGHT_VISIT_PARTNER_TABLE[type as keyof typeof NIGHT_VISIT_PARTNER_TABLE]?.name_ja ?? "相手";
+  const name = promisePartner(type)?.label ?? "相手";
   return `${name} は死亡しています。約束は消えずに残ります`;
 }
 export function currentStage(bytes: Uint8Array): number {
@@ -365,6 +413,21 @@ function isEmptyRecord(bytes: Uint8Array, index: number): boolean {
   return RECORD_EMPTY_BYTES.every((v, i) => bytes[o + i] === v);
 }
 
+/**
+ * 使用中の記録の数と、記録の検証に落ちた理由。
+ * 🟢 記録は最初の空いている件に書かれるので、使用中の件は先頭から続く。途中に空きがあれば読み取り専用にする
+ */
+function readRecordsStatus(bytes: Uint8Array, layoutProblem: string | null): { count: number; problem: string | null } {
+  let count = 0;
+  while (count < RECORD_CAPACITY && !isEmptyRecord(bytes, count)) count++;
+  if (layoutProblem) return { count, problem: layoutProblem };
+  for (let i = count + 1; i < RECORD_CAPACITY; i++) {
+    if (!isEmptyRecord(bytes, i))
+      return { count, problem: `${count + 1}件目が空なのに、${i + 1}件目に値があります` };
+  }
+  return { count, problem: null };
+}
+
 export function readYobai(bytes: Uint8Array): YobaiView {
   if (bytes.byteLength < PROMISE_OFFSET + PROMISE_LENGTH)
     throw new RangeError("ファイルが小さすぎて夜這いの領域を読めません");
@@ -380,18 +443,7 @@ export function readYobai(bytes: Uint8Array): YobaiView {
     layout: PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, 'layout'),
   };
 
-  // 🟢 記録は最初の空いている件に書かれるので、使用中の件は先頭から続く。途中に空きがあれば読み取り専用にする
-  let count = 0;
-  while (count < RECORD_CAPACITY && !isEmptyRecord(bytes, count)) count++;
-  let recordsProblem = layoutProblem;
-  if (!recordsProblem) {
-    for (let i = count + 1; i < RECORD_CAPACITY; i++) {
-      if (!isEmptyRecord(bytes, i)) {
-        recordsProblem = `${count + 1}件目が空なのに、${i + 1}件目に値があります`;
-        break;
-      }
-    }
-  }
+  const { count, problem: recordsProblem } = readRecordsStatus(bytes, layoutProblem);
   const records = Array.from({ length: count }, (_, index): RecordView => {
     return { ...RECORD_CODEC.read(bytes, recordOffset(index)), index };
   });
@@ -471,10 +523,12 @@ export function validatePersonValue(
   return null;
 }
 
+/** 約束の枠に書けるか（readYobai の promise.problem と active と同じ条件だけを見る） */
 function assertPromiseEditable(bytes: Uint8Array): void {
-  const view = readYobai(bytes);
-  if (view.promise.problem) throw new RangeError(view.promise.problem);
-  if (!view.promise.active) throw new RangeError("約束がありません（空の枠には書きません）");
+  const problem = checkLayout(bytes);
+  if (problem) throw new RangeError(problem);
+  if (PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, "type") === PROMISE_EMPTY)
+    throw new RangeError("約束がありません（空の枠には書きません）");
 }
 
 /** 約束の人物の項目を1つ書く。その項目のバイトだけを変える */
@@ -520,13 +574,13 @@ export function writePromisePlace(
   assertWritable(bytes);
   assertPromiseEditable(bytes);
   const current = {
-    place: readU16(bytes, PROMISE_OFFSET + PROMISE_PLACE_REL),
-    layout: readU16(bytes, PROMISE_OFFSET + PROMISE_LAYOUT_REL),
+    place: PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, "place"),
+    layout: PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, "layout"),
   };
   const error = validatePlaceLayout(place, layout, current, opts);
   if (error) throw new RangeError(error);
-  writeU16(bytes, PROMISE_OFFSET + PROMISE_PLACE_REL, place);
-  writeU16(bytes, PROMISE_OFFSET + PROMISE_LAYOUT_REL, layout);
+  PROMISE_CODEC.writeField(bytes, PROMISE_OFFSET, "place", place);
+  PROMISE_CODEC.writeField(bytes, PROMISE_OFFSET, "layout", layout);
 }
 
 /** 夜這いの記録の項目を1つ書く（使用中の件だけ）。その項目のバイトだけを変える */
@@ -538,9 +592,9 @@ export function writeRecordField(
   opts: EditOpts,
 ): void {
   assertWritable(bytes);
-  const view = readYobai(bytes);
-  if (view.recordsStatus.problem) throw new RangeError(view.recordsStatus.problem);
-  if (!Number.isInteger(index) || index < 0 || index >= view.records.length)
+  const { count, problem } = readRecordsStatus(bytes, checkLayout(bytes));
+  if (problem) throw new RangeError(problem);
+  if (!Number.isInteger(index) || index < 0 || index >= count)
     throw new RangeError(`使用中の記録ではありません: ${index + 1}件目`);
   const { size } = RECORD_FIELDS[field];
   const offset = recordFieldOffset(index, field);

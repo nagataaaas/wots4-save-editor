@@ -26,11 +26,12 @@ import { readU16 } from "./binary";
 import { type EditOpts } from "./field";
 import { assertWritable } from "./layout";
 import { DATE_OFFSETS } from "./scenario-date";
-import { NIGHT_VISIT_PARTNER_TABLE } from "./master/dataset/night-visit-partner";
 import { NIGHT_VISIT_ROW_TABLE } from "./master/dataset/night-visit-row";
 import { NPC_NAMES } from "./master/npc-names";
-import { PLACE_LAYOUTS, PROMISE_OFFSET, PROMISE_CODEC, validatePersonValue, layoutsForPlace, currentStage, createProblem } from "./yobai";
-export { STAGE_MAX, currentStage, createProblem, partnerDeathWarning } from "./yobai";
+import {
+  PLACE_LAYOUTS, PROMISE_OFFSET, PROMISE_CODEC, PROMISE_PLACES, validatePersonValue, layoutsForPlace, layoutHeadcount,
+  currentStage, createProblem, promisePartner, type PromisePartner,
+} from "./yobai";
 
 /** 書くバイト数（+0x00〜+0x29） */
 export const PROMISE_WRITE_LENGTH = 0x2a;
@@ -59,45 +60,11 @@ export const PROMISE_ROWS: readonly PromiseRow[] = Object.values(NIGHT_VISIT_ROW
   bytes: r.save_bytes_le,
 }));
 
-export type PromisePartner = {
-  /** 相手の種類（約束の枠の +0x04） */
-  type: number;
-  label: string;
-  kind: "special" | "town";
-  sex: "m" | "f";
-  /** 町の人の名前の候補（7＝7000 台、8＝8000 台）。名前のある相手は null */
-  nameList: 7 | 8 | null;
-  /** 名前のある相手の名前の ID */
-  name: number | null;
-  looks: readonly number[];
-  age: number;
-  ageRandom: boolean;
-  /** 0＝1〜4 から選ぶ */
-  blood: number;
-  group: number;
-  /** 名前のある相手の行 */
-  row: number | null;
-  note: string;
-};
+const ROW_BY_INDEX: ReadonlyMap<number, PromiseRow> = new Map(PROMISE_ROWS.map((r) => [r.index, r]));
 
-export const PROMISE_PARTNERS: readonly PromisePartner[] = Object.values(NIGHT_VISIT_PARTNER_TABLE).map((p) => ({
-  type: p.id_dec,
-  label: p.name_ja,
-  kind: p.kind === "special" ? "special" : "town",
-  sex: p.sex === "f" ? "f" : "m",
-  nameList: p.name_list === 7 || p.name_list === 8 ? p.name_list : null,
-  name: p.name,
-  looks: p.looks,
-  age: p.age,
-  ageRandom: p.age_random === 1,
-  blood: p.blood,
-  group: p.group,
-  row: p.row,
-  note: p.note_ja,
-}));
-
-export function promisePartner(type: number): PromisePartner | undefined {
-  return PROMISE_PARTNERS.find((p) => p.type === type);
+/** 組の表の行。表にない行は undefined */
+export function promiseRow(index: number): PromiseRow | undefined {
+  return ROW_BY_INDEX.get(index);
 }
 
 export function requirePromisePartner(type: number): PromisePartner {
@@ -151,8 +118,45 @@ export function choosePromiseAt(spec: PromiseSpec, rows: readonly PromiseRow[], 
 
 /** 選べる組。名前のある相手は決まった1行。町の人はまとまりの行のうち、通常モードでは段階 stage 以下のもの */
 export function rowsFor(partner: PromisePartner, stage: number, opts: EditOpts): PromiseRow[] {
-  if (partner.row !== null) return PROMISE_ROWS.filter((r) => r.index === partner.row);
+  if (partner.row !== null) {
+    const row = promiseRow(partner.row);
+    return row ? [row] : [];
+  }
   return PROMISE_ROWS.filter((r) => r.group === partner.group && r.stage !== null && (opts.advanced || r.stage <= stage));
+}
+
+/** 並べ替え：家の中の人が少ない順（同じなら配置の値の順） */
+const byHeadcount = (a: number, b: number) => layoutHeadcount(a) - layoutHeadcount(b) || a - b;
+
+/**
+ * 新しく作る約束の場所と配置の選択肢。
+ * 通常モード：この相手の組（rowsFor）にある場所と、場所 place の組の配置だけ。
+ * 上級者モード：約束で使われる全部の場所（PROMISE_PLACES）と、場所 place で使える配置（layoutsForPlace）。
+ * 場所は小さい順、配置は家の中の人が少ない順
+ */
+export function promisePlaceChoices(
+  partner: PromisePartner,
+  stage: number,
+  place: number,
+  opts: EditOpts,
+): { places: number[]; layouts: number[] } {
+  if (opts.advanced) return { places: [...PROMISE_PLACES], layouts: layoutsForPlace(place) };
+  const rows = rowsFor(partner, stage, opts);
+  return {
+    places: [...new Set(rows.map((r) => r.place))].sort((a, b) => a - b),
+    layouts: rows.filter((r) => r.place === place).map((r) => r.layout).sort(byHeadcount),
+  };
+}
+
+/**
+ * 約束の相手の種類が名前のある相手で、場所と配置がその相手の組（組の表の行）と違えば、その相手の場所と配置を返す。
+ * 町の人の種類・表にない種類・同じ場所と配置なら null
+ */
+export function partnerHomeMismatch(promise: { type: number; place: number; layout: number }): { place: number; layout: number } | null {
+  const partner = promisePartner(promise.type);
+  const home = partner?.row != null ? promiseRow(partner.row) : undefined;
+  if (!home || (home.place === promise.place && home.layout === promise.layout)) return null;
+  return { place: home.place, layout: home.layout };
 }
 
 /** 町の人の名前の候補（7000 台・8000 台のうち相手と同じ性別）。名前のある相手は決まった1つ */
@@ -189,7 +193,7 @@ export type PromiseSpec = {
 
 /** 実際に書く場所と配置（上書きがなければ組の値） */
 export function specPlace(spec: PromiseSpec): { place: number; layout: number } {
-  const row = PROMISE_ROWS.find((r) => r.index === spec.row);
+  const row = promiseRow(spec.row);
   return { place: spec.place ?? row?.place ?? 0, layout: spec.layout ?? row?.layout ?? 0 };
 }
 
@@ -240,11 +244,11 @@ export function randomSpec(partner: PromisePartner, stage: number, rand: () => n
 export function validateSpec(spec: PromiseSpec, stage: number, opts: EditOpts): string | null {
   const partner = promisePartner(spec.type);
   if (!partner) return "約束できる相手の種類ではありません";
-  if (!rowsFor(partner, stage, opts).some((r) => r.index === spec.row))
+  const row = rowsFor(partner, stage, opts).find((r) => r.index === spec.row);
+  if (!row)
     return opts.advanced || partner.row !== null
       ? "この相手には使えない組です"
       : "いまの段階より上の組です（上級者モードで選べます）";
-  const row = PROMISE_ROWS.find((r) => r.index === spec.row)!;
   const { place, layout } = specPlace(spec);
   if (place !== row.place || layout !== row.layout) {
     if (!opts.advanced) return "この相手の組と違う場所・配置は、上級者モードでだけ選べます";
@@ -261,7 +265,7 @@ export function validateSpec(spec: PromiseSpec, stage: number, opts: EditOpts): 
 
 /** 約束の枠の +0x00〜+0x29 */
 export function buildPromiseBytes(spec: PromiseSpec, day: number): Uint8Array {
-  const row = PROMISE_ROWS.find((r) => r.index === spec.row);
+  const row = promiseRow(spec.row);
   if (!row) throw new RangeError("組の表にない行です");
   const out = new Uint8Array(PROMISE_WRITE_LENGTH);
   out.set(row.bytes, 0);
