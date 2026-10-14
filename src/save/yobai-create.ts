@@ -45,8 +45,6 @@ export type PromiseRow = {
   layout: number;
   /** 特別な相手の行の相手の名前 */
   partnerName: string;
-  /** 確かめた組（実データか書き込み） */
-  checked: boolean;
   /** +0x00〜+0x1B */
   bytes: readonly number[];
 };
@@ -58,7 +56,6 @@ export const PROMISE_ROWS: readonly PromiseRow[] = Object.values(NIGHT_VISIT_ROW
   place: r.place,
   layout: r.layout,
   partnerName: r.name_ja,
-  checked: r.checked,
   bytes: r.save_bytes_le,
 }));
 
@@ -80,8 +77,6 @@ export type PromisePartner = {
   group: number;
   /** 名前のある相手の行 */
   row: number | null;
-  /** ゲームの反映を確かめたもの（CSV の status が ✅）。false は 🟢 */
-  checked: boolean;
   note: string;
 };
 
@@ -98,7 +93,6 @@ export const PROMISE_PARTNERS: readonly PromisePartner[] = Object.values(NIGHT_V
   blood: p.blood,
   group: p.group,
   row: p.row,
-  checked: p.checked,
   note: p.note_ja,
 }));
 

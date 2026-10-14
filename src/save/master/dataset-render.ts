@@ -4,10 +4,13 @@
 //
 // 生成物：id_dec をキーにした `as const` のオブジェクト。型の上でも値（名前など）が分かるので、
 // nameOf.npc(40) にカーソルを当てると返り値の文字列が見える。
-// 列の型：空でない値がすべて整数・小数なら数値、すべて 0x で始まる16進数なら数値（空は null）。それ以外は文字列（空は ""）。
-// すべての行が空の列は null（CSV ごとに "" と null に分かれないように）。
-// 並びを持つ列は LIST_COLUMNS で指定し、生成時に形式を検証して配列へ変換する（空は []）。
-// id_hex は id_dec と同じ値なので出さない。備考・status は確度が入るので出さない（下の DERIVED_COLUMNS で変換したものだけ出す）。
+// 出す列は DATASET_COLUMNS の許可リストで CSV ごとに決める（AGENTS.md「datatable から生成するデータは、画面で使う列だけを出力する」）。
+// リストにない列（id_hex・save_bytes_le・source・備考・status など）は出さない。id_dec はいつも出す。
+// 列の種類もリストで決める（全部空の列でも CSV ごとに "" と null に分かれないように）：
+//   'string'：そのままの文字列（空は ""）
+//   'number'：整数・小数・0x で始まる16進数を数値にする（空は null）。読めない値があれば生成を止める
+//   並びの形式（ListKind）：生成時に形式を検証して配列へ変換する（空は []）
+// 備考・status は確度が入るので出さない（下の DERIVED_COLUMNS で変換したものだけ出す）。
 
 /** RFC 4180 の CSV を行・列に分ける（"..." の中のカンマ・改行・"" に対応） */
 export function parseCsv(text: string): string[][] {
@@ -62,27 +65,103 @@ type ListKind =
   /** "投げ・防御" → ["投げ", "防御"] */
   | 'attrs';
 
-const APPEARANCE_LIST_COLUMNS = { save_models: 'models', layer_meshes: 'meshes', layer_textures: 'textures' } as const;
+export type ColumnKind = 'string' | 'number' | ListKind;
+/** 出す列（列名 → 種類）。id_dec は書かない（いつも数値で出す） */
+export type DatasetColumns = Readonly<Record<string, ColumnKind>>;
 
-/** 並びを持つ列（datatable からの相対パス → 列 → 形式）。生成時に検証し、実行時には配列として使う */
-const LIST_COLUMNS: Readonly<Record<string, Readonly<Record<string, ListKind>>>> = {
-  'weapon/blade.csv': { save_bytes_le: 'bytes' },
-  'weapon/guard.csv': { save_bytes_le: 'bytes' },
-  'weapon/grip.csv': { save_bytes_le: 'bytes' },
-  'weapon/complete.csv': { unique_bytes: 'bytes-6' },
-  'place/night-visit-row.csv': { save_bytes_le: 'bytes' },
-  'place/night-visit-place.csv': { layout: 'hex-list' },
-  'npc/pupil.csv': { looks: 'hex-list' },
-  'npc/night-visit-partner.csv': { looks: 'hex-list' },
-  'appearance/upper.csv': APPEARANCE_LIST_COLUMNS,
-  'appearance/lower.csv': APPEARANCE_LIST_COLUMNS,
-  'appearance/face.csv': APPEARANCE_LIST_COLUMNS,
-  'appearance/hair.csv': APPEARANCE_LIST_COLUMNS,
-  'appearance/body.csv': APPEARANCE_LIST_COLUMNS,
-  'appearance/feet.csv': APPEARANCE_LIST_COLUMNS,
-  'appearance/extra.csv': APPEARANCE_LIST_COLUMNS,
-  'sect/stance-skill.csv': { next: 'numbers', prev: 'numbers' },
-  'sect/skill.csv': { attrs: 'attrs' },
+const S = 'string';
+const N = 'number';
+
+const NAMES = { name_ja: S, name_en: S } as const;
+const APPEARANCE_PART = {
+  ...NAMES,
+  gender: S,
+  save_models: 'models',
+  layer_meshes: 'meshes',
+  layer_textures: 'textures',
+} as const;
+const APPEARANCE_PART_FULL = { ...APPEARANCE_PART, alias_ja: S, crash: N, cloth_id: N, unlock_id: N, dlc: N } as const;
+
+/**
+ * 出す列の許可リスト（datatable からの相対パス → 列 → 種類）。コードから使う列だけを書く。
+ * 使う列を増やすときはここに足す。CSV にない列を書くと生成を止める
+ */
+export const DATASET_COLUMNS: Readonly<Record<string, DatasetColumns>> = {
+  'accessory/accessory.csv': {
+    ...NAMES, part: S, dlc: N, shop: N, menu_order: N, description_ja: S,
+    default_attachment_id: N,
+    default_position_x: N, default_position_y: N, default_position_z: N,
+    default_rotation_x: N, default_rotation_y: N, default_rotation_z: N,
+    default_size: N,
+  },
+  'appearance/body.csv': { ...APPEARANCE_PART, alias_ja: S, crash: N },
+  'appearance/cloth.csv': { ...NAMES, category: S, dlc: N, description_ja: S },
+  'appearance/extra.csv': { ...APPEARANCE_PART, kind: S, cloth_id: N, unlock_id: N, dlc: N },
+  'appearance/face.csv': APPEARANCE_PART_FULL,
+  'appearance/feet.csv': APPEARANCE_PART_FULL,
+  'appearance/hair.csv': APPEARANCE_PART_FULL,
+  'appearance/lower.csv': APPEARANCE_PART_FULL,
+  'appearance/upper.csv': APPEARANCE_PART_FULL,
+  'appearance/outfit.csv': { ...NAMES, description_ja: S, cloth_id: N, unlock_id: N },
+  'appearance/person.csv': {
+    ...NAMES, dlc: N, height: N,
+    upper: N, lower: N, face: N, hair: N, body: N, feet: N, gauntlet: N, leggings: N, apron: N, cape: N,
+    body_kind: S, second_id: N, hair_color: N, selectable: N,
+  },
+  'event/chart-cell.csv': { col: N, row: N, type: S, node: N, shape: N, hidden: N },
+  'event/chart-node.csv': { ...NAMES, event_id: N, phase: N, route: S },
+  'event/event.csv': { ...NAMES, day: S },
+  'item/item.csv': {
+    ...NAMES, reading: S, kind: N, max_stack: N, use_action: N, description_ja: S, description_en: S,
+  },
+  // 今はどこからも使わない
+  'item/valuable.csv': {},
+  'npc/night-visit-count.csv': { npc: N },
+  'npc/night-visit-partner.csv': {
+    name_ja: S, kind: S, sex: S, name_list: N, name: N, looks: 'hex-list',
+    age: N, age_random: N, blood: N, group: N, row: N,
+  },
+  'npc/npc-look.csv': { name_ja: S, sex: S, used_by: S },
+  'npc/npc-name.csv': { ...NAMES, sex: S },
+  'npc/pupil.csv': { name_ja: S, sex: S, point: N, name: N, looks: 'hex-list' },
+  'npc/townsfolk-person.csv': { npc: N, second_npc: N, separator: S, suffix: S, group: S, display_order: N },
+  'occupation/occupation.csv': {
+    ...NAMES, client_ja: S, type: S, alignment: S, reward: N, bonus: N, deadline_days: N,
+  },
+  'place/night-visit-layout.csv': {
+    name_ja: S, house: S, people: N, people_maybe: N, dog: N, futon: N, rival: N, doshin: N, okappiki: N,
+  },
+  'place/night-visit-place.csv': { name_ja: S, layout: 'hex-list' },
+  'place/night-visit-row.csv': { save_bytes_le: 'bytes', name_ja: S, stage: N, group: N, place: N, layout: N },
+  'place/start-location.csv': { name_ja: S, crash: N, warning_ja: S },
+  'sect/sect.csv': {
+    ...NAMES, stance: N, slot: N, sheet1: N, sheet2: N, sheet3: N,
+    thr1: N, thr2: N, thr3: N, thr4: N, scroll_no: N,
+  },
+  'sect/sheet-skill.csv': {
+    sheet: N, skill_no: N, skill_id: N, ...NAMES, cond: N, cond_ja: S, rank: N, points: N, parent: N,
+  },
+  'sect/skill-sheet.csv': { stance: N, name_ja: S },
+  'sect/skill.csv': {
+    name_ja: S, command: N, command_ja: S, defense_group: N, attack: N, points: N, attrs: 'attrs',
+  },
+  'sect/stance-skill.csv': {
+    stance: N, skill_no: N, skill_id: N, ...NAMES, first: N, next: 'numbers', prev: 'numbers',
+  },
+  'sect/stance.csv': { ...NAMES, slot: N },
+  'unlock/unlock.csv': { ...NAMES, category: S, condition_ja: S, effect_ja: S },
+  'weapon/blade.csv': { save_bytes_le: 'bytes', ...NAMES, sheath_x: N },
+  'weapon/blade-special.csv': { name_ja: S },
+  // 今はどこからも使わない
+  'weapon/charm.csv': {},
+  'weapon/complete.csv': {
+    ...NAMES, reading: S, blade: N, sheath_x: N, guard: N, grip: N, weapon_type: N,
+    unique_bytes: 'bytes-6', name_no: N, flag_22: N, image_url: S,
+  },
+  'weapon/grip.csv': { save_bytes_le: 'bytes', name_ja: S },
+  'weapon/guard.csv': { save_bytes_le: 'bytes', name_ja: S },
+  // 今はどこからも使わない
+  'weapon/title.csv': {},
 };
 
 function listValue(kind: ListKind, text: string): unknown {
@@ -117,42 +196,42 @@ function listValue(kind: ListKind, text: string): unknown {
   });
 }
 
+/** 1つの値を生成物の式にする */
+function columnValue(kind: ColumnKind, text: string): string {
+  if (kind === 'string') return JSON.stringify(text);
+  if (kind === 'number') {
+    if (text === "") return "null";
+    if (!DECIMAL.test(text) && !HEX.test(text)) throw new Error(`数値ではありません: ${text}`);
+    return String(Number(text));
+  }
+  return JSON.stringify(listValue(kind, text));
+}
+
 /** 読めない値のエラーに、どのファイル・列・行かを添える */
-function listValueAt(kind: ListKind, text: string, where: string): unknown {
+function columnValueAt(kind: ColumnKind, text: string, where: string): string {
   try {
-    return listValue(kind, text);
+    return columnValue(kind, text);
   } catch (e) {
     throw new Error(`${where}: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
   }
 }
 
-// 確度の入る列（備考・status）はバンドルに入れない（AGENTS.md「UI に確度を出さない」）。
-// 画面で使うものだけを DERIVED_COLUMNS で確度を含まない列に変えて出す。
-const OMIT_COLUMNS = new Set(["id_hex", "備考", "status"]);
-
 /** 確度の記号・語・U-n / D-n。これを含む文字列は生成物に出さない */
 export const CERTAINTY_PATTERN =
   /✅|🟢|🟡|🔶|❓|未確認|要ゲーム内確認|確認済み|未検証|推測|推定|確度|判定待ち|U-[0-9]+|D-[0-9]+/;
 
-type DerivedColumn =
-  /** from 列の値を、確度を含まない文字列としてそのまま出す（含んでいたら生成を止める） */
-  | { name: string; from: string; kind: "text" }
-  /** from 列の値から true / false を作る */
-  | { name: string; from: string; kind: "boolean"; test: (value: string) => boolean };
+/** 確度の入る列。許可リストに書けない（AGENTS.md「UI に確度を出さない」）。画面で使うものだけを DERIVED_COLUMNS で変えて出す */
+const CERTAINTY_COLUMNS = new Set(["備考", "status"]);
 
-/** 省いた列から作る列（datatable からの相対パス → 列）。画面で使うものだけ */
+/** from 列の値を、確度を含まない文字列としてそのまま出す（含んでいたら生成を止める） */
+type DerivedColumn = { name: string; from: string };
+
+/** 確度の入る列から作る列（datatable からの相対パス → 列）。画面で使うものだけ */
 const DERIVED_COLUMNS: Readonly<Record<string, readonly DerivedColumn[]>> = {
-  // 選択肢のラベルに添える注記（「夜這い用の姿」など）と、反映を確かめた相手か（status が ✅）
-  "npc/night-visit-partner.csv": [
-    { name: "note_ja", from: "備考", kind: "text" },
-    { name: "checked", from: "status", kind: "boolean", test: (v) => v.startsWith("✅") },
-  ],
-  // 確かめた組（実データか書き込み）か
-  "place/night-visit-row.csv": [
-    { name: "checked", from: "備考", kind: "boolean", test: (v) => v.includes("確かめた組") },
-  ],
+  // 選択肢のラベルに添える注記（「夜這い用の姿」など）
+  "npc/night-visit-partner.csv": [{ name: "note_ja", from: "備考" }],
   // なりわいの一覧の InfoTip
-  "occupation/occupation.csv": [{ name: "note_ja", from: "備考", kind: "text" }],
+  "occupation/occupation.csv": [{ name: "note_ja", from: "備考" }],
 };
 
 /** "npc/npc-name.csv" → { file: "npc-name.ts", name: "NPC_NAME_TABLE" } */
@@ -161,29 +240,25 @@ export function datasetNameOf(csvPath: string): { file: string; name: string } {
   return { file: `${base}.ts`, name: `${base.replace(/-/g, "_").toUpperCase()}_TABLE` };
 }
 
-/** csvPath は datatable からの相対パス（"npc/npc-name.csv"） */
-export function renderDataset(csvPath: string, text: string): string {
+/**
+ * csvPath は datatable からの相対パス（"npc/npc-name.csv"）。
+ * spec は出す列（省略時は DATASET_COLUMNS の csvPath の行。テストで別の列を渡す）
+ */
+export function renderDataset(csvPath: string, text: string, spec: DatasetColumns | undefined = DATASET_COLUMNS[csvPath]): string {
+  if (!spec) throw new Error(`${csvPath} の出す列が DATASET_COLUMNS にありません`);
   const [header, ...body] = parseCsv(text.replace(/^﻿/, ""));
   const rows = body.filter((r) => r.length > 1);
   const idCol = header.indexOf("id_dec");
   if (idCol < 0) throw new Error(`${csvPath} に id_dec 列がありません`);
-  const listColumns: Readonly<Record<string, ListKind | undefined>> = LIST_COLUMNS[csvPath] ?? {};
 
+  for (const name of Object.keys(spec)) {
+    if (name === "id_dec" || CERTAINTY_COLUMNS.has(name)) throw new Error(`${csvPath} の ${name} 列は出す列に書けません`);
+    if (!header.includes(name)) throw new Error(`${csvPath} に ${name} 列がありません`);
+  }
+  // CSV の列の順に出す
   const columns = header
-    .map((name, i) => ({ name, i }))
-    .filter((c) => !OMIT_COLUMNS.has(c.name))
-    .map((c) => {
-      const values = rows.map((r) => r[c.i] ?? "").filter((v) => v !== "");
-      const kind: ListKind | 'empty' | 'decimal' | 'hex' | 'string' = listColumns[c.name] ?? (
-        values.length === 0
-          ? "empty"
-          : values.every((v) => DECIMAL.test(v))
-            ? "decimal"
-            : values.every((v) => HEX.test(v))
-              ? "hex"
-              : "string");
-      return { ...c, kind };
-    });
+    .map((name, i) => ({ name, i, kind: spec[name] }))
+    .filter((c): c is { name: string; i: number; kind: ColumnKind } => Object.hasOwn(spec, c.name));
 
   const derived = (DERIVED_COLUMNS[csvPath] ?? []).map((d) => {
     const i = header.indexOf(d.from);
@@ -201,20 +276,13 @@ export function renderDataset(csvPath: string, text: string): string {
     if (id < prev) throw new Error(`${csvPath} の id_dec が昇順ではありません: ${id}`);
     seen.add(id);
     prev = id;
-    const fields = columns.map((c) => {
-      const v = r[c.i] ?? "";
-      const value =
-        c.kind === "empty" ? "null" : c.kind === "string" ? JSON.stringify(v)
-          : c.kind === 'decimal' || c.kind === 'hex' ? (v === "" ? "null" : String(Number(v)))
-          : JSON.stringify(listValueAt(c.kind, v, `${csvPath} の ${c.name} 列（id_dec ${id}）`));
-      return `${JSON.stringify(c.name)}: ${value}`;
-    });
+    const fields = [`"id_dec": ${id}`];
+    for (const c of columns) {
+      const value = columnValueAt(c.kind, r[c.i] ?? "", `${csvPath} の ${c.name} 列（id_dec ${id}）`);
+      fields.push(`${JSON.stringify(c.name)}: ${value}`);
+    }
     for (const d of derived) {
       const v = r[d.i] ?? "";
-      if (d.kind === "boolean") {
-        fields.push(`${JSON.stringify(d.name)}: ${d.test(v)}`);
-        continue;
-      }
       if (CERTAINTY_PATTERN.test(v))
         throw new Error(`${csvPath} の ${d.from} 列（id_dec ${id}）に確度の表記があり、${d.name} に出せません: ${v}`);
       fields.push(`${JSON.stringify(d.name)}: ${JSON.stringify(v)}`);
