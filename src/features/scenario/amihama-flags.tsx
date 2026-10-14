@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useNavigation } from "@/lib/navigation-context";
 import { SearchScope } from "@/lib/search-context";
 import { AMIHAMA_ANCHORS, EVENTS_LINKS } from "./anchors";
@@ -8,7 +7,7 @@ import { useFlag } from "@/lib/use-flag";
 import { flagProblem, readFlag } from "@/save/flags/byte-flag";
 import { FACILITY_FLAGS, facilitiesReadyForLightOfHope, facilitySlotEvent, type FacilityFlag } from "@/save/flags/facilities";
 import { GATE_CLOSE_FLAGS, GATE_DOOR_FLAGS, GATE_RECRUIT_FLAGS } from "@/save/flags/gates";
-import { useSave } from "@/lib/save-context";
+import { useSaveView } from "@/lib/use-save-view";
 import { FlagSection } from "./flag-section";
 
 /** 門・柵の状態（GATE_RECRUIT_FLAGS・GATE_CLOSE_FLAGS・GATE_DOOR_FLAGS） */
@@ -53,13 +52,16 @@ export function GateFlagsCard() {
   );
 }
 
+const readFacilityValues = (b: Uint8Array) => ({
+  problem: flagProblem(b),
+  values: FACILITY_FLAGS.map((f) => readFlag(b, f).value),
+});
+
 /** 施設の状態（FACILITY_FLAGS。✅ 書き換えで反映を確認） */
 export function FacilityFlagsCard() {
-  const { save } = useSave();
-  const values = useMemo(() => {
-    if (!save || flagProblem(save.working)) return null;
-    return FACILITY_FLAGS.map((f) => readFlag(save.working, f).value);
-  }, [save]);
+  const { view, problem } = useSaveView(readFacilityValues, { problem: (v) => v.problem });
+  // 読めないセーブでは判定を出さない
+  const values = view && !problem ? view.values : null;
 
   return (
     <CollapsibleCard
