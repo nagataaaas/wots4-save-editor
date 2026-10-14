@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useNavigation } from './navigation-context'
 import { findNavigationTarget, NavigationTargetContext, type NavigationTargetRegistry } from './navigation-target-context'
 
 /** 欄を探す移動で、箱だけが見つかったあと、欄が後から描かれるのを待つ時間 */
@@ -47,9 +48,8 @@ function createHighlight() {
  * 箱・欄のマウント完了を受けて、一か所でスクロールする。
  * 欄への移動で欄がまだなく箱だけがあるときは、いったん箱へ移り、FIELD_WAIT_MS のあいだ欄が登録されるのを待って欄へ移り直す
  */
-export function NavigationTargets({ anchor, field, seq, children }: {
-  anchor: string | null; field: readonly string[] | null; seq: number; children: ReactNode
-}) {
+export function NavigationTargets({ children }: { children: ReactNode }) {
+  const { anchor, field, seq } = useNavigation()
   const changed = useRef(() => {})
   const targets = useMemo<NavigationTargetRegistry>(() => ({ boxes: new Map(), fields: new Set(), changed }), [changed])
   useLayoutEffect(() => {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavigationTargets } from '@/lib/navigation-targets'
-import { NavigationContext } from '@/lib/navigation-context'
+import { markOpened, NavigationContext } from '@/lib/navigation-context'
 import { AppSidebar } from '@/components/app-sidebar'
 import { NoSaveNotice } from '@/components/no-save-notice'
 import { SearchDialog } from '@/components/search-dialog'
@@ -23,12 +23,12 @@ export default function App() {
     anchor: string | null
     field: readonly string[] | null
     seq: number
-    targetSeqs: ReadonlyMap<string, number>
+    openedSeqs: ReadonlyMap<string, number>
   }>(() => ({
     anchor: initial?.anchor ?? null,
     field: initial?.field ?? null,
     seq: 0,
-    targetSeqs: new Map(initial?.anchor ? [[initial.anchor, 0]] : []),
+    openedSeqs: markOpened(new Map(), initial?.anchor ?? null, 0),
   }))
   const section = sections.find((s) => s.id === active) ?? sections[0]
   const Page = pages[section.id]
@@ -37,8 +37,7 @@ export default function App() {
     setActive(route.section)
     setTarget((t) => {
       const seq = t.seq + 1
-      const targetSeqs = route.anchor ? new Map(t.targetSeqs).set(route.anchor, seq) : t.targetSeqs
-      return { anchor: route.anchor, field: route.field ?? null, seq, targetSeqs }
+      return { anchor: route.anchor, field: route.field ?? null, seq, openedSeqs: markOpened(t.openedSeqs, route.anchor, seq) }
     })
   }, [])
 
@@ -68,7 +67,7 @@ export default function App() {
 
   return (
     <NavigationContext.Provider value={navigation}>
-      <NavigationTargets anchor={target.anchor} field={target.field} seq={target.seq}>
+      <NavigationTargets>
       <SaveProvider>
         <AdvancedModeProvider>
           <TooltipProvider>

@@ -22,26 +22,41 @@ export type NavigationValue = {
   /** go を呼ぶたびに増える。同じ anchor へもう一度飛んだときにも開いてスクロールし直すために使う */
   seq: number
   /**
-   * これまでに移動先になった anchor と、最後に移動先になったときの seq。
+   * 箱の id ごとの、最後に移動で開いた seq（箱そのものか、その中が移動先になったとき）。
    * 開閉できる箱が、移動で開いたことを覚えておくのに使う（useAnchoredOpen）。省略は移動なし
    */
-  targetSeqs?: ReadonlyMap<string, number>
+  openedSeqs?: ReadonlyMap<string, number>
+}
+
+/**
+ * anchor への移動（seq）で開く箱として、anchor とその外側の箱の id の seq を更新した表を返す。
+ * 表は移動先になった箱とその外側の箱の数までしか増えない
+ */
+export function markOpened(
+  openedSeqs: ReadonlyMap<string, number>,
+  anchor: string | null,
+  seq: number,
+): ReadonlyMap<string, number> {
+  if (!anchor) return openedSeqs
+  const next = new Map(openedSeqs)
+  const names = anchor.split('/')
+  for (let n = 1; n <= names.length; n++) next.set(names.slice(0, n).join('/'), seq)
+  return next
 }
 
 /**
  * 開閉できる箱 id が開いているか。manual は手で開閉したとき（マウント時はその時点）の seq と開閉。
  * 箱かその中が manual.seq より後に移動先になっていれば開く。
- * 次の移動先が別の箱でも、移動で開いた箱は閉じない（最後に移動先になった seq は変わらないため）。
+ * 次の移動先が別の箱でも、移動で開いた箱は閉じない（最後に移動で開いた seq は変わらないため）。
  * 移動で開いたあとも手で閉じられる（manual.seq が移動の seq に追いつく）
  */
 export function anchoredOpen(
-  targetSeqs: ReadonlyMap<string, number> | undefined,
+  openedSeqs: ReadonlyMap<string, number> | undefined,
   id: string,
   manual: { seq: number; open: boolean },
 ): boolean {
-  for (const [anchor, seq] of targetSeqs ?? [])
-    if ((anchor === id || anchor.startsWith(`${id}/`)) && seq > manual.seq) return true
-  return manual.open
+  const seq = openedSeqs?.get(id)
+  return (seq !== undefined && seq > manual.seq) || manual.open
 }
 
 /**
@@ -93,9 +108,9 @@ export function useAnchor(name: string): AnchorState {
 export function useAnchoredOpen(name: string, defaultOpen = false) {
   const indexing = useIndexing()
   const { id, targeted, seq, ref } = useAnchor(name)
-  const { targetSeqs } = useNavigation()
+  const { openedSeqs } = useNavigation()
   // マウント時に移動先なら、その移動で開く（seq を -1 にして、移動の seq より前に開閉したことにする）
   const [manual, setManual] = useState(() => ({ seq: targeted ? -1 : seq, open: defaultOpen }))
   const setOpen = (value: boolean) => setManual({ seq, open: value })
-  return { id, ref, open: anchoredOpen(targetSeqs, id, manual) || indexing, setOpen }
+  return { id, ref, open: anchoredOpen(openedSeqs, id, manual) || indexing, setOpen }
 }
