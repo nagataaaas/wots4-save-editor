@@ -3,8 +3,7 @@ import { InfoTip } from '@/components/info-tip'
 import { ItemSlotRow } from '@/components/item-slot-row'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScopeAnchorLink } from '@/components/anchor-link'
+import { CardContent } from '@/components/ui/card'
 import { AnchoredCard } from '@/components/anchored-card'
 import { ITEM_ANCHORS } from './anchors'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
@@ -100,20 +99,19 @@ function ItemBoxPage({
         </Alert>
       )}
 
-      <AnchoredCard anchor={ITEM_ANCHORS.items} searchLabel={title}>
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <ScopeAnchorLink />
-            {title}
-            {/* チップ・木札は ❓ U-12 */}
-            <InfoTip offset={`${formatOffset(area.offset)}〜${formatOffset(area.offset + ITEM_SLOT_BYTES * area.slotCount - 1)}`}>
-              上級者モードでは、種別が料理（料理屋の料理）・宿・なし（手に入る経路がない）のものも選べ、個数も最大数を超えて書けます。
-              チップ・木札は書くとゲーム内でセーブできなくなるため、どのモードでも選べません。
-              会談の手紙・鉄・鍵は「重要品」の画面で扱います
-            </InfoTip>
-          </CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
+      <AnchoredCard
+        anchor={ITEM_ANCHORS.items}
+        title={title}
+        extra={
+          // チップ・木札は ❓ U-12
+          <InfoTip offset={`${formatOffset(area.offset)}〜${formatOffset(area.offset + ITEM_SLOT_BYTES * area.slotCount - 1)}`}>
+            上級者モードでは、種別が料理（料理屋の料理）・宿・なし（手に入る経路がない）のものも選べ、個数も最大数を超えて書けます。
+            チップ・木札は書くとゲーム内でセーブできなくなるため、どのモードでも選べません。
+            会談の手紙・鉄・鍵は「重要品」の画面で扱います
+          </InfoTip>
+        }
+        description={description}
+      >
         <CardContent className="flex flex-col divide-y">
           {Array.from({ length: area.slotCount }, (_, i) => {
             const slot = view?.slots[i] ?? null
