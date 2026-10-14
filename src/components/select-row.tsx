@@ -24,7 +24,8 @@ function OptionItem({ option: o }: { option: SelectOption }) {
 
 type Props = {
   label: string;
-  offset: number;
+  /** 丸ハテナに出す位置。省くと出さない */
+  offset?: number;
   badges?: ReactNode;
   /** null はセーブ未読み込み */
   value: string | null;

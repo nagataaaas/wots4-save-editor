@@ -7,12 +7,15 @@ export type { ParseResult } from '@/lib/use-field-draft'
 
 type Props<T> = {
   label: string
-  offset: number
+  /** 丸ハテナに出す位置。省くと出さない */
+  offset?: number
   badges?: ReactNode
   /** null はセーブ未読み込み。入力欄を無効にして空欄で表示する */
   value: T | null
   /** 妥当性検証に落ちた理由。あれば読み取り専用 */
   problem: string | null
+  /** 検証は通っているが、今は変更させないとき（例：その状態では効かない欄）。値と hint はそのまま表示する */
+  disabled?: boolean
   /** 編集はできるが注意が必要な理由（正規範囲外の値など）。項目名の横の警告アイコンにホバーで表示する */
   warning?: string | null
   format: (value: T) => string
@@ -32,9 +35,10 @@ type Props<T> = {
  * 1フィールド分の入力欄。入力途中の文字列は手元に持ち、妥当な値になったときだけセーブに反映する。
  * フォーカスが外れているときは最新の値を表示し、読み込み直し・位置の変更で入力途中の値を捨てる。
  */
-export function FieldRow<T>({ label, offset, badges, value, problem, warning, format, display, parse, apply, inputMode, hint, note }: Props<T>) {
+export function FieldRow<T>({ label, offset, badges, value, problem, disabled = false, warning, format, display, parse, apply, inputMode, hint, note }: Props<T>) {
   const id = useId()
-  const draft = useFieldDraft({ value, format, parse, apply, identity: offset })
+  // 入力途中の値はこの欄のもの。位置が変わったら（同じ欄で別の記録を出したら）捨てる
+  const draft = useFieldDraft({ value, format, parse, apply, identity: `${id}:${offset ?? ''}` })
   const { error, focused } = draft
 
   return (
@@ -42,9 +46,9 @@ export function FieldRow<T>({ label, offset, badges, value, problem, warning, fo
       <Input
         id={id}
         value={
-          value === null ? '' : display && !focused ? display(value) : problem ? format(value) : draft.input
+          value === null ? '' : display && !focused ? display(value) : problem || disabled ? format(value) : draft.input
         }
-        disabled={value === null}
+        disabled={value === null || disabled}
         placeholder={value === null ? '未読み込み' : undefined}
         readOnly={problem !== null}
         inputMode={inputMode}

@@ -6,7 +6,8 @@ import { useWrite } from '@/lib/use-write'
 
 type Props = {
   label: string
-  offset: number
+  /** 丸ハテナに出す位置。省くと出さない */
+  offset?: number
   badges?: ReactNode
   /** null はセーブ未読み込み */
   value: string | null

@@ -19,9 +19,12 @@ export function FieldFeedback({ problem, hint, error, warning, className = '' }:
   </>
 }
 
-/** 入力欄の共通の枠。項目名・丸ハテナ・警告・badges の行、入力（children）、下の段の順に並べる */
+/**
+ * 入力欄の共通の枠。項目名・丸ハテナ・警告・badges の行、入力（children）、下の段の順に並べる。
+ * offset を省いたとき（位置がない・決まらないとき）は、丸ハテナに位置を出さない
+ */
 export function FieldShell({ label, offset, htmlFor, note, warning, badges, problem, hint, error, children }: {
-  label: string; offset: number; htmlFor?: string; note?: ReactNode; warning?: string | null;
+  label: string; offset?: number; htmlFor?: string; note?: ReactNode; warning?: string | null;
   badges?: ReactNode; problem: string | null; hint?: ReactNode; error?: string | null; children: ReactNode
 }) {
   return <SearchField label={label} className="flex flex-col gap-1.5">
