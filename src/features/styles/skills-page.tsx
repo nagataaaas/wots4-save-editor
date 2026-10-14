@@ -111,7 +111,7 @@ export function SkillsPage() {
   const shownByStance = useMemo(() => trees.map((t) => filterSortTree(t.groups, filter, sort)), [trees, filter, sort]);
   const filtering = JSON.stringify(filter) !== JSON.stringify(EMPTY_FILTER);
 
-  const { view, error: readError, problem, readOnly } = useSaveView(readSects, { problem: (v) => v.problem });
+  const { view, error: readError, problem, readOnly } = useSaveView(readSects);
 
   // 未読み込みのときは view が null。技の表から同じ一覧を描き、状態を「—」・操作を無効にする
   const set = (patch: Partial<SkillFilter>) => setFilter((f) => ({ ...f, ...patch }));

@@ -59,7 +59,7 @@ const readFacilityValues = (b: Uint8Array) => ({
 
 /** 施設の状態（FACILITY_FLAGS。✅ 書き換えで反映を確認） */
 export function FacilityFlagsCard() {
-  const { view, problem } = useSaveView(readFacilityValues, { problem: (v) => v.problem });
+  const { view, problem } = useSaveView(readFacilityValues);
   // 読めないセーブでは判定を出さない
   const values = view && !problem ? view.values : null;
 

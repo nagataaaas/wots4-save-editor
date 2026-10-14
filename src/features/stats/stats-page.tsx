@@ -61,7 +61,7 @@ function unitHint(field: StatField, value: number | null): string {
 export function StatsPage() {
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
-  const { view, error: readError, problem } = useSaveView(readStats, { problem: (v) => v.problem });
+  const { view, error: readError, problem } = useSaveView(readStats);
   const byKey = new Map(view?.values.map((v) => [v.field.key, v]));
 
   const row = (field: StatField) => {
@@ -125,7 +125,7 @@ function ScoreTableCard({ table }: { table: ScoreTableId }) {
   const { advanced } = useAdvancedMode();
   const t = SCORE_TABLES[table];
   const read = useCallback((bytes: Uint8Array) => readScoreTable(bytes, table), [table]);
-  const { view, error, problem } = useSaveView(read, { problem: (v) => v.problem });
+  const { view, error, problem } = useSaveView(read);
   const entries = useMemo(() => scoreEntries(table), [table]);
   const [index, setIndex] = useState(() => entries[0]?.index ?? 0);
 

@@ -12,7 +12,7 @@ import { WeaponIndexFields } from "@/features/weapon/weapon-index-fields";
 /** 武器袋の10本。帯刀と同じ欄を、細い一覧で編集する */
 export function WeaponBagPage() {
   const { save } = useSave();
-  const { view, error: readError, problem } = useSaveView(readWeaponBag, { problem: (v) => v.problem });
+  const { view, error: readError, problem } = useSaveView(readWeaponBag);
 
   const k = save?.loadId ?? 0;
   const filled = view ? view.weapons.filter((w) => !w.empty).length : "—";

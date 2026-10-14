@@ -73,7 +73,7 @@ export function CharactersCard() {
  * ほかの人が外せば町に出てくるかは ❓ 要ゲーム内確認
  */
 export function PeopleCard() {
-  const { view, error: readError, problem } = useSaveView(readTownsfolk, { problem: (v) => v.problem });
+  const { view, error: readError, problem } = useSaveView(readTownsfolk);
   const groups = [...new Set(TOWNSFOLK_PEOPLE.map((x) => x.group))];
   const deadOf = (p: number) => (view ? isPersonDead(view, p) : null);
 

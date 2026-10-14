@@ -82,6 +82,12 @@ describe('useSaveView', () => {
     const ng = render(() => useSaveView(() => ({ inner: { problem: 'サイズが違います' } }), { problem: v => v.inner.problem }))
     expect(ng).toMatchObject({ problem: 'サイズが違います', readOnly: true })
   })
+  it('problem の指定がなければ view 自身の problem を使う', () => {
+    load()
+    expect(render(() => useSaveView(() => ({ problem: '範囲外です' })))).toMatchObject({ problem: '範囲外です', readOnly: true })
+    expect(render(() => useSaveView(() => ({ problem: null })))).toMatchObject({ problem: null, readOnly: false })
+    expect(render(() => useSaveView(() => [1, 2]))).toMatchObject({ problem: null, readOnly: false })
+  })
   it('例外と null の読取結果をエラーにする', () => {
     load()
     // 関数が毎回違うので、描画ごとに読み直す

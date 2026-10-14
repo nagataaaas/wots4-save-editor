@@ -32,7 +32,7 @@ const DESTINATION_LABELS: Record<MarketDestination, string> = {
 
 /** 流通中の武器・道具・部品（🟢）。読み取り専用 */
 export function MarketWeaponsPage() {
-  const { view, error: readError, problem } = useSaveView(readMarket, { problem: (v) => v.problem });
+  const { view, error: readError, problem } = useSaveView(readMarket);
 
   return (
     <div className="flex flex-col gap-4">

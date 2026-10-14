@@ -241,7 +241,7 @@ function PupilsCard({ view }: { view: DojoView | null }) {
 }
 
 export function DojoPage() {
-  const { view, error: readError, problem } = useSaveView(readDojo, { problem: (v) => v.problem });
+  const { view, error: readError, problem } = useSaveView(readDojo);
 
   return (
     <div className="flex flex-col gap-4">

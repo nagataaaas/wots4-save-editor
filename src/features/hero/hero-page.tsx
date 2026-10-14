@@ -79,7 +79,7 @@ export function HeroPage() {
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
 
-  const { view, error: readError, problem } = useSaveView(readHero, { problem: (v) => v.problem });
+  const { view, error: readError, problem } = useSaveView(readHero);
 
   // 未読み込みのときは view が null。同じ項目を無効状態で表示し、何を編集できるかを見せる
   const k = save?.loadId ?? 0;

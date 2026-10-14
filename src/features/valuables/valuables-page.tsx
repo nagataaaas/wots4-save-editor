@@ -43,7 +43,7 @@ export function ValuablesPage() {
   const opts = useMemo(() => ({ advanced: probing }), [probing]);
 
   const read = useCallback((bytes: Uint8Array) => readValuables(bytes, opts), [opts]);
-  const { view, error: readError, problem, readOnly } = useSaveView(read, { problem: (v) => v.problem });
+  const { view, error: readError, problem, readOnly } = useSaveView(read);
 
   const k = save?.loadId ?? 0;
 

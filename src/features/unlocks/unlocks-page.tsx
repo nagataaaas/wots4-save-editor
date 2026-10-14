@@ -52,7 +52,7 @@ import {
  * ボタンの書き込みは失敗を受け止めて error に入れるので、カードの中の操作の近くに出す
  */
 function usePageState<T extends { problem: string | null; }>(read: (bytes: Uint8Array) => T) {
-  const { view, error: readError, problem, readOnly } = useSaveView(read, { problem: (v) => v.problem });
+  const { view, error: readError, problem, readOnly } = useSaveView(read);
   const { tryWrite: write, error } = useWrite();
   const banner = <PageBanner error={readError} problem={problem} />;
   return { view, readOnly, write, error, banner };
@@ -319,8 +319,8 @@ const CLOTH_FILTER_OPTIONS: FilterOption<ClothFilter>[] = [
 
 export function AppearancePage() {
   // 服と顔・髪型などの特典は別の領域なので別々に読み、片方が読めなくてももう片方は編集できるようにする
-  const clothes = useSaveView(readAppearance, { problem: (v) => v.problem });
-  const unlocks = useSaveView(readUnlockStates, { problem: (v) => v.problem });
+  const clothes = useSaveView(readAppearance);
+  const unlocks = useSaveView(readUnlockStates);
   const { view, readOnly } = clothes;
   const { tryWrite: write, error } = useWrite();
   // 同じ理由（ファイルが短い・サイズが違うなど）で両方が落ちたときは1つにまとめて出す

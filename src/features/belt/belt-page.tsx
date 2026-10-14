@@ -39,7 +39,7 @@ const weaponTitle = (w: WeaponView | null, i: number) =>
 
 export function BeltPage() {
   const { save } = useSave();
-  const { view, error: readError, problem } = useSaveView(readBelt, { problem: (v) => v.problem });
+  const { view, error: readError, problem } = useSaveView(readBelt);
   const k = save?.loadId ?? 0;
 
   return (

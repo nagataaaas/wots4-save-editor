@@ -220,7 +220,7 @@ function NudeButtons({
 export function AppearancePartsCard() {
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
-  const { view, error, problem } = useSaveView(readAppearanceParts, { problem: (v) => v.problem });
+  const { view, error, problem } = useSaveView(readAppearanceParts);
   const heroBodyKind = view?.bodyKind ?? null;
 
   // タイプ（男・女）の順に主人公設定の人物、続けて主人公設定に出ない見た目の組（ローラ・男の子・女の子 ✅ [U]）。どのモードでも出す（ユーザー判断 2026-10-09）

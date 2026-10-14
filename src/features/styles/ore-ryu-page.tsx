@@ -51,7 +51,7 @@ import { IntField, RankField, SkillPicker } from "./sect-ui";
 export function OreRyuPage() {
   const { save } = useSave();
   const { advanced } = useAdvancedMode();
-  const { view, error: readError, problem, readOnly } = useSaveView(readCustomStyles, { problem: (v) => v.problem });
+  const { view, error: readError, problem, readOnly } = useSaveView(readCustomStyles);
 
   // 未読み込みのときは view が null。俺流の一覧は空、作る欄は無効にして描く
   const k = save?.loadId ?? 0;

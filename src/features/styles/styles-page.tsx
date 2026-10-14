@@ -115,7 +115,7 @@ export function StylesPage() {
   const [placeFilter, setPlaceFilter] = useState<PlaceFilter>("owned");
   const [uniqueOnly, setUniqueOnly] = useState(false);
 
-  const { view, error: readError, problem, readOnly } = useSaveView(readSects, { problem: (v) => v.problem });
+  const { view, error: readError, problem, readOnly } = useSaveView(readSects);
 
   // 未読み込みのときは view が null。流派の表から同じカードを描き、値を空・操作を無効にする
   const owned = view ? ownedSectIds(view) : null;

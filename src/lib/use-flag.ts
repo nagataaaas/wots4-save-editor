@@ -11,6 +11,6 @@ export function useFlag(flag: ByteFlag): { state: FlagState | null; error: strin
     (bytes: Uint8Array) => ({ state: readFlag(bytes, flag), problem: flagProblem(bytes) }),
     [flag],
   );
-  const { view, error, problem } = useSaveView(read, { problem: (v) => v.problem });
+  const { view, error, problem } = useSaveView(read);
   return { state: view?.state ?? null, error, problem };
 }

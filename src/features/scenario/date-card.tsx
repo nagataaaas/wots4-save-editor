@@ -33,7 +33,7 @@ const stageOptions: SelectOption[] = STAGES.map((s) => ({
  * 確度：日数・時間帯は ✅ 書き換えの反映を確認。段階と保留量は ❓ 要ゲーム内確認（docs: date-location）
  */
 export function DateCard() {
-  const { view, error: readError, problem: readProblem } = useSaveView(readDate, { problem: (v) => v.problem });
+  const { view, error: readError, problem: readProblem } = useSaveView(readDate);
   const { write: update } = useWrite();
   const { advanced } = useAdvancedMode();
   const range = advanced ? DAY_RANGE.system : DAY_RANGE.normal;
