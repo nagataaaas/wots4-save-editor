@@ -70,6 +70,7 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
   `weapon_type` はその完成武器の武器種（[weapon-record](../chunks/weapon-record/README.md) +0x18。0＝刀 1＝槍 2＝爪 3＝拳銃 4＝ライフル）🟢
 - `weapon/complete.csv` の `unique_bytes`・`name_no`・`flag_22`：その完成武器のレコードに入る値 🟢。[weapon-record](../chunks/weapon-record/README.md) の
   +0x0A〜+0x0F（固有武器の6バイト。空欄は `FF` × 6）、+0x6C（名前の番号。特殊武器は +0x1A にも入る）、+0x1C（列の名前の 22 は [TS] の配置での位置）
+- `weapon/complete.csv` の `image_url`：その完成武器の画像の URL。空欄は画像なし
 - `weapon/blade-special.csv`・`weapon/complete.csv` の `name_en`：英語版のゲーム内の表記 🟢
 - `place/night-visit-place.csv` の `name_ja`：約束の画面に出る場所の名前（✅ [U]）。
   `layout`：その場所で正しく表示される「人と布団の配置」（約束の枠 +0x0A）。実データで見た組と 🟢 の組を書く。複数あるときは `;` で区切る。どれが実データで見た組かは `備考` に書く。
