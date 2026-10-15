@@ -19,6 +19,7 @@ import {
   SidebarMenuSubItem,
   SidebarSeparator,
 } from '@/components/ui/sidebar'
+import { ChangelogDialog } from '@/components/changelog-dialog'
 import { DeveloperContact, RepositoryLink } from '@/components/developer-contact'
 import { LicensesDialog } from '@/components/licenses-dialog'
 import { RestoreDialog } from '@/components/restore-dialog'
@@ -70,6 +71,7 @@ export function AppSidebar({ active, onSelect }: Props) {
       <SidebarFooter>
         <DeveloperContact />
         <div className="flex items-center">
+          <ChangelogDialog />
           <LicensesDialog />
           <RepositoryLink />
         </div>
