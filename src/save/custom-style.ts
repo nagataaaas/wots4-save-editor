@@ -6,11 +6,13 @@
 //
 // 書き込みはすべて 🟢（要ゲーム内確認）。
 // 固定オフセットを使い、ファイルサイズ・件数・相互参照を検証する。検証に落ちたら読み取り専用。
+import { tr } from '@/lib/i18n'
 import { readI16, readU16, readUtf16Fixed, recordCodec, writeI16, writeU16, writeU8, writeUtf16Fixed } from './binary'
 import { type EditOpts, NORMAL_EDIT_OPTS, validateText, type ViewStatus } from './field'
 import { assertWritable } from './layout'
 import {
   STANCE_COUNT,
+  commandLabel,
   findSkillInfo,
   findStance,
   findStanceSkill,
@@ -160,17 +162,18 @@ const sheetOffset = (index: number) => CUSTOM_SHEET_OFFSET + index * CUSTOM_SHEE
 function readSheet(bytes: Uint8Array, index: number, problems: string[]): CustomSheet {
   const offset = sheetOffset(index)
   const { id, type, stance, count: n } = sheetHeaderCodec.read(bytes, offset)
-  if (type !== CUSTOM_SHEET_TYPE) problems.push('俺流の技の表の種類が正しくありません')
-  if (stance < 0 || stance >= STANCE_COUNT) problems.push('俺流の技の表の構えが正しくありません')
-  if (n < 0 || n > CUSTOM_SHEET_SKILL_MAX) problems.push('俺流の技の表の技の数が正しくありません')
+  if (type !== CUSTOM_SHEET_TYPE) problems.push(tr({ ja: '俺流の技の表の種類が正しくありません', en: 'Invalid My Style move list type' }))
+  if (stance < 0 || stance >= STANCE_COUNT) problems.push(tr({ ja: '俺流の技の表の構えが正しくありません', en: 'Invalid stance in a My Style move list' }))
+  if (n < 0 || n > CUSTOM_SHEET_SKILL_MAX)
+    problems.push(tr({ ja: '俺流の技の表の技の数が正しくありません', en: 'Invalid number of moves in a My Style move list' }))
   const skills: CustomSkill[] = []
   for (let j = 0; j < Math.max(0, Math.min(n, CUSTOM_SHEET_SKILL_MAX)); j++) {
     const { skill, linkCount } = readCustomSkill(bytes, customSkillOffset(offset, j))
-    if (linkCount > LINK_MAX) problems.push('俺流の技の表の、続けて出す技の数が多すぎます')
+    if (linkCount > LINK_MAX) problems.push(tr({ ja: '俺流の技の表の、続けて出す技の数が多すぎます', en: 'Too many follow-up moves in a My Style move list' }))
     skills.push(skill)
   }
   const nos = new Set(skills.map((s) => s.skillNo))
-  if (skills.some((s) => s.next.some((x) => !nos.has(x)))) problems.push('俺流の技の表に、表にない技へのつながりがあります')
+  if (skills.some((s) => s.next.some((x) => !nos.has(x)))) problems.push(tr({ ja: '俺流の技の表に、表にない技へのつながりがあります', en: 'A My Style move list links to a move not in the list' }))
   return { index, offset, id, type, stance, skills }
 }
 
@@ -179,8 +182,8 @@ export function readCustomStyles(bytes: Uint8Array): CustomStylesView {
   const problems: string[] = sects.problem ? [sects.problem] : []
   const count = readU16(bytes, CUSTOM_COUNT_OFFSET)
   const sheetCount = readU16(bytes, CUSTOM_SHEET_COUNT_OFFSET)
-  if (count > CUSTOM_SLOTS) problems.push('俺流の件数が大きすぎます')
-  if (sheetCount > CUSTOM_SHEET_SLOTS) problems.push('俺流の技の表の件数が大きすぎます')
+  if (count > CUSTOM_SLOTS) problems.push(tr({ ja: '俺流の件数が大きすぎます', en: 'Too many My Styles' }))
+  if (sheetCount > CUSTOM_SHEET_SLOTS) problems.push(tr({ ja: '俺流の技の表の件数が大きすぎます', en: 'Too many My Style move lists' }))
 
   const sheets = Array.from({ length: Math.min(sheetCount, CUSTOM_SHEET_SLOTS) }, (_, i) => readSheet(bytes, i, problems))
   const scrolls = [...sects.held, ...sects.stored]
@@ -191,7 +194,7 @@ export function readCustomStyles(bytes: Uint8Array): CustomStylesView {
     const id = fields.id
     const sheetIds = CUSTOM_SHEET_RELS.map((d) => readI16(bytes, offset + d))
     for (const sid of sheetIds) {
-      if (sid >= 0 && !sheets.some((s) => s.id === sid)) problems.push('俺流に対応する技の表がありません')
+      if (sid >= 0 && !sheets.some((s) => s.id === sid)) problems.push(tr({ ja: '俺流に対応する技の表がありません', en: 'A My Style has no matching move list' }))
     }
     styles.push({
       index: i,
@@ -217,7 +220,7 @@ function requireEditable(bytes: Uint8Array): CustomStylesView {
 
 function findStyle(view: CustomStylesView, id: number): CustomStyle {
   const s = view.styles.find((x) => x.id === id)
-  if (!s) throw new RangeError('その俺流がありません')
+  if (!s) throw new RangeError(tr({ ja: 'その俺流がありません', en: 'That My Style does not exist' }))
   return s
 }
 
@@ -278,14 +281,17 @@ export function findSkillConflicts(stance: number, skillNos: readonly number[]):
   })
   const info = (no: number) => findSkillInfo(findStanceSkill(stance, no)?.skillId ?? -1)
   const name = (no: number) => skillName(findStanceSkill(stance, no) ?? { nameJa: String(no) })
+  const names = (nos: number[]) => nos.map(name).join(tr({ ja: '・', en: ', ' }))
   const isAttack = (no: number) => (info(no)?.defenseGroup ?? null) === null
 
   for (const { no, s } of entries) {
     if (!s.first && !s.prev.some((p) => set.has(p))) {
-      add(no, `前に出す技（${s.prev.map(name).join('・')}）が入っていません`)
+      const prev = names(s.prev)
+      add(no, tr({ ja: `前に出す技（${prev}）が入っていません`, en: `The preceding move (${prev}) is not included` }))
     }
   }
-  const sameCommand = (nos: number[], where: string) => {
+  /** where は重なる場所（「初段」「〇〇の次」）。日本語は「〜で」の前、英語は文の後ろに置く */
+  const sameCommand = (nos: number[], where: { ja: string; en: string }) => {
     const byCmd = new Map<number, number[]>()
     for (const no of nos) {
       const cmd = info(no)?.command ?? 0
@@ -295,18 +301,25 @@ export function findSkillConflicts(stance: number, skillNos: readonly number[]):
     for (const [cmd, group] of byCmd) {
       if (group.length < 2) continue
       for (const no of group) {
-        const others = group.filter((x) => x !== no).map(name).join('・')
-        add(no, `${where}でコマンド（${info(no)?.commandJa || cmd}）が ${others} と重なっています`)
+        const others = names(group.filter((x) => x !== no))
+        const command = commandLabel(info(no)?.commandJa ?? '') || String(cmd)
+        add(
+          no,
+          tr({
+            ja: `${where.ja}でコマンド（${command}）が ${others} と重なっています`,
+            en: `Command (${command}) overlaps with ${others} ${where.en}`,
+          }),
+        )
       }
     }
   }
   sameCommand(
     entries.filter(({ no, s }) => s.first && isAttack(no)).map(({ no }) => no),
-    '初段',
+    { ja: '初段', en: 'among first moves' },
   )
   for (const parent of set) {
     const children = entries.filter(({ s }) => s.prev.includes(parent)).map(({ no }) => no)
-    sameCommand(children, `${name(parent)}の次`)
+    sameCommand(children, { ja: `${name(parent)}の次`, en: `after ${name(parent)}` })
   }
   const byGroup = new Map<number, number[]>()
   for (const { no } of entries) {
@@ -315,10 +328,13 @@ export function findSkillConflicts(stance: number, skillNos: readonly number[]):
   }
   for (const group of byGroup.values()) {
     if (group.length < 2) continue
-    for (const no of group) add(no, `同じ種類の防御技（${group.filter((x) => x !== no).map(name).join('・')}）と一緒には入れられません`)
+    for (const no of group) {
+      const others = names(group.filter((x) => x !== no))
+      add(no, tr({ ja: `同じ種類の防御技（${others}）と一緒には入れられません`, en: `Cannot be set together with a defensive move of the same type (${others})` }))
+    }
   }
   const sheet: string[] = []
-  if (entries.length > 0 && !entries.some(({ no }) => isAttack(no))) sheet.push('攻撃技が 1 つもありません')
+  if (entries.length > 0 && !entries.some(({ no }) => isAttack(no))) sheet.push(tr({ ja: '攻撃技が 1 つもありません', en: 'There are no combat moves' }))
   return { byNo, sheet }
 }
 
@@ -359,16 +375,21 @@ export function validateSkillSelection(
   skillNos: readonly number[],
   options: EditOpts = NORMAL_EDIT_OPTS,
 ): string | null {
-  if (skillNos.length === 0) return '技が 1 つもありません'
-  if (skillNos.length > CUSTOM_SHEET_SKILL_MAX) return `技は ${CUSTOM_SHEET_SKILL_MAX} 個までです`
+  if (skillNos.length === 0) return tr({ ja: '技が 1 つもありません', en: 'There are no moves' })
+  if (skillNos.length > CUSTOM_SHEET_SKILL_MAX)
+    return tr({ ja: `技は ${CUSTOM_SHEET_SKILL_MAX} 個までです`, en: `Up to ${CUSTOM_SHEET_SKILL_MAX} moves` })
   const set = new Set(skillNos)
-  if (set.size !== skillNos.length) return '同じ技が 2 回入っています'
+  if (set.size !== skillNos.length) return tr({ ja: '同じ技が 2 回入っています', en: 'The same move is included twice' })
   for (const no of skillNos) {
     const s = findStanceSkill(stance, no)
-    if (!s) return 'この構えにない技が含まれています'
+    if (!s) return tr({ ja: 'この構えにない技が含まれています', en: 'Includes a move not in this stance' })
     if (options.advanced) continue
     if (!isUsableInOreRyu(view.sects.stanceStates[stance][no])) {
-      return `${s.nameJa || 'この技'} はまだ俺流に入れられません（覚えていないか、斬殺数が足りない技）`
+      const label = tr({ ja: s.nameJa, en: s.nameEn })
+      return tr({
+        ja: `${label || 'この技'} はまだ俺流に入れられません（覚えていないか、斬殺数が足りない技）`,
+        en: `${label || 'This move'} cannot be added to My Style yet (not learned, or not enough kills with it)`,
+      })
     }
   }
   if (options.advanced) return null
@@ -389,7 +410,7 @@ export function buildCustomSkills(stance: number, skillNos: readonly number[]): 
     .sort((a, b) => a - b)
     .map((no) => {
       const s = findStanceSkill(stance, no)
-      if (!s) throw new RangeError('この構えにない技が含まれています')
+      if (!s) throw new RangeError(tr({ ja: 'この構えにない技が含まれています', en: 'Includes a move not in this stance' }))
       return { skillNo: no, first: s.first, skillId: s.skillId, next: s.next.filter((x) => set.has(x)).slice(0, LINK_MAX) }
     })
 }
@@ -408,7 +429,7 @@ export function writeCustomSheetSkills(bytes: Uint8Array, sheetId: number, skill
   assertWritable(bytes)
   const view = requireEditable(bytes)
   const sheet = view.sheets.find((s) => s.id === sheetId)
-  if (!sheet) throw new RangeError('その構えの技の表がありません')
+  if (!sheet) throw new RangeError(tr({ ja: 'その構えの技の表がありません', en: 'That stance has no move list' }))
   const problem = validateSkillSelection(view, sheet.stance, skillNos, options)
   if (problem) throw new RangeError(problem)
   writeSheetBody(bytes, sheet.offset, sheet.id, sheet.stance, buildCustomSkills(sheet.stance, skillNos))
@@ -416,7 +437,7 @@ export function writeCustomSheetSkills(bytes: Uint8Array, sheetId: number, skill
 
 function unusedId(min: number, max: number, used: Set<number>): number {
   for (let id = min; id <= max; id++) if (!used.has(id)) return id
-  throw new RangeError('俺流を作る空きがありません')
+  throw new RangeError(tr({ ja: '俺流を作る空きがありません', en: 'No free space to create a My Style' }))
 }
 
 /** 技の覚え状況（chunks/skill-states）に残っている ID も避ける（捨てた俺流の状態を引き継がないため 🔶） */
@@ -431,12 +452,14 @@ export function addCustomStance(bytes: Uint8Array, id: number, stance: number, s
   const view = requireEditable(bytes)
   const style = findStyle(view, id)
   const free = style.sheetIds.indexOf(-1)
-  if (free < 0) throw new RangeError(`構えは ${CUSTOM_STANCE_MAX} つまでです`)
+  if (free < 0) throw new RangeError(tr({ ja: `構えは ${CUSTOM_STANCE_MAX} つまでです`, en: `Up to ${CUSTOM_STANCE_MAX} stances` }))
   const stances = styleSheets(view, style).map((s) => s.stance)
   const slot = findStance(stances[0])?.slot
-  if (findStance(stance)?.slot !== slot) throw new RangeError('構えはすべて同じ構えの組にします')
-  if (stances.includes(stance)) throw new RangeError('同じ構えがすでに入っています')
-  if (view.sheets.length >= CUSTOM_SHEET_SLOTS) throw new RangeError('俺流の技の表に空きがありません')
+  if (findStance(stance)?.slot !== slot)
+    throw new RangeError(tr({ ja: '構えはすべて同じ構えの組にします', en: 'All stances must use the same weapon type' }))
+  if (stances.includes(stance)) throw new RangeError(tr({ ja: '同じ構えがすでに入っています', en: 'The same stance is already included' }))
+  if (view.sheets.length >= CUSTOM_SHEET_SLOTS)
+    throw new RangeError(tr({ ja: '俺流の技の表に空きがありません', en: 'No free space for My Style move lists' }))
   const problem = validateSkillSelection(view, stance, skillNos, options)
   if (problem) throw new RangeError(problem)
   const sheetId = newSheetId(view)
@@ -468,8 +491,8 @@ export function removeCustomStance(bytes: Uint8Array, id: number, sheetId: numbe
   const view = requireEditable(bytes)
   const style = findStyle(view, id)
   const ids = style.sheetIds.filter((s) => s >= 0)
-  if (!ids.includes(sheetId)) throw new RangeError('この俺流にその構えはありません')
-  if (ids.length === 1) throw new RangeError('最後の構えは外せません')
+  if (!ids.includes(sheetId)) throw new RangeError(tr({ ja: 'この俺流にその構えはありません', en: 'This My Style does not have that stance' }))
+  if (ids.length === 1) throw new RangeError(tr({ ja: '最後の構えは外せません', en: 'The last stance cannot be removed' }))
   const rest = ids.filter((s) => s !== sheetId)
   CUSTOM_SHEET_RELS.forEach((_, k) => writeI16(bytes, customSheetOffset(style.offset, k), rest[k] ?? -1))
   removeSheets(bytes, view, [sheetId])
@@ -479,7 +502,9 @@ export function removeCustomStance(bytes: Uint8Array, id: number, sheetId: numbe
 function freeScroll(view: SectsView): ScrollSlot {
   const held = view.held.find((s) => s.empty)
   if (held) return held
-  if (view.storedCount >= view.stored.length) throw new RangeError('流派の書の持ち歩き・箪笥に空きがありません')
+  if (view.storedCount >= view.stored.length) throw new RangeError(
+      tr({ ja: '流派の書の持ち歩き・箪笥に空きがありません', en: 'No free space for style books in the Style Library or on the shelf' }),
+    )
   return view.stored[view.storedCount]
 }
 
@@ -494,8 +519,9 @@ export function createCustomStyle(bytes: Uint8Array, spec: NewCustomStyle, optio
   const view = requireEditable(bytes)
   const nameProblem = validateCustomName(spec.name, options)
   if (nameProblem) throw new RangeError(nameProblem)
-  if (view.styles.length >= CUSTOM_SLOTS) throw new RangeError('俺流に空きがありません')
-  if (view.sheets.length >= CUSTOM_SHEET_SLOTS) throw new RangeError('俺流の技の表に空きがありません')
+  if (view.styles.length >= CUSTOM_SLOTS) throw new RangeError(tr({ ja: '俺流に空きがありません', en: 'No free space for My Styles' }))
+  if (view.sheets.length >= CUSTOM_SHEET_SLOTS)
+    throw new RangeError(tr({ ja: '俺流の技の表に空きがありません', en: 'No free space for My Style move lists' }))
   const selection = validateSkillSelection(view, spec.stance, spec.skillNos, options)
   if (selection) throw new RangeError(selection)
   const scroll = freeScroll(view.sects)
@@ -537,8 +563,9 @@ export function deleteCustomStyle(bytes: Uint8Array, id: number, options: EditOp
   assertWritable(bytes)
   const view = requireEditable(bytes)
   const style = findStyle(view, id)
-  if (style.equipped) throw new RangeError('装備している俺流は消せません')
-  if (style.kind !== 'player' && !options.advanced) throw new RangeError('生きた証の写しは上級者モードでだけ消せます')
+  if (style.equipped) throw new RangeError(tr({ ja: '装備している俺流は消せません', en: 'A My Style in use cannot be deleted' }))
+  if (style.kind !== 'player' && !options.advanced)
+    throw new RangeError(tr({ ja: '生きた証の写しは上級者モードでだけ消せます', en: "Copies of past heroes' styles can be deleted only in Advanced mode" }))
   if (style.scroll) removeScroll(bytes, view.sects, style.scroll)
   removeSheets(bytes, view, style.sheetIds.filter((s) => s >= 0))
   const last = view.styles.length - 1
@@ -550,7 +577,8 @@ export function deleteCustomStyle(bytes: Uint8Array, id: number, options: EditOp
 /** 技の番号の名前（構えの技の表から） */
 export function customSkillLabel(stance: number, skillNo: number): string {
   const s = findStanceSkill(stance, skillNo)
-  return s ? s.nameJa || `（名前なし ${skillNo}）` : `技 ${skillNo}`
+  if (!s) return tr({ ja: `技 ${skillNo}`, en: `Move ${skillNo}` })
+  return tr({ ja: s.nameJa, en: s.nameEn }) || tr({ ja: `（名前なし ${skillNo}）`, en: `(No name ${skillNo})` })
 }
 
 /**

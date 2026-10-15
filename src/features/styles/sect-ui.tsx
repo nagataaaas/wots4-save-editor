@@ -5,12 +5,16 @@ import { SelectRow } from "@/components/select-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { tr, type Localized } from "@/lib/i18n";
 import { CUSTOM_SHEET_SKILL_MAX, findSkillConflicts, pickWithoutConflicts } from "@/save/custom-style";
 import {
   RANK_LABELS,
+  commandLabel,
   findSect,
   findSkillInfo,
+  sectName,
   sheetSkillTree,
+  skillAttrLabel,
   skillName,
   stanceSkillSheet,
   stanceSkills,
@@ -20,7 +24,7 @@ import {
 } from "@/save/master/sect-data";
 import { SKILL_STATE, isUsableInOreRyu, type SkillState } from "@/save/sects";
 import { uniqueSkillSects, uniqueWeaponsForSkill } from "@/save/unique-weapons";
-import { SKILL_TREE_DESCRIPTION, STATE_LABELS, UNIQUE_WEAPON_ATTR, isKnownState, parseIntegerInRange } from "./sect-format";
+import { UNIQUE_WEAPON_ATTR, isKnownState, parseIntegerInRange, skillTreeDescription, stateLabel } from "./sect-format";
 import { EMPTY_FILTER, filterSortTree } from "./skill-list";
 
 const STATE_BADGE_VARIANTS: Record<SkillState, "outline" | "secondary" | "default"> = {
@@ -36,7 +40,7 @@ export function StateBadge({ state }: { state: number | null }) {
   const known = isKnownState(state);
   return (
     <Badge variant={known ? STATE_BADGE_VARIANTS[state] : "outline"} className="font-normal">
-      {known ? STATE_LABELS[state] : "不明"}
+      {known ? stateLabel(state) : tr({ ja: "不明", en: "Unknown" })}
     </Badge>
   );
 }
@@ -72,13 +76,13 @@ export function IntField({
       parse={parseIntegerInRange(min, max)}
       apply={apply}
       inputMode="numeric"
-      hint={`${min}〜${max}`}
+      hint={tr({ ja: `${min}〜${max}`, en: `${min}–${max}` })}
       note={note}
     />
   );
 }
 
-const RANK_OPTIONS = RANK_LABELS.map((label, v) => ({ value: String(v), label }));
+const rankOptions = () => RANK_LABELS.map((label, v) => ({ value: String(v), label: tr(label) }));
 
 /** 段の選択欄（内部の値は 0 初段〜5 極） */
 export function RankField({
@@ -97,11 +101,11 @@ export function RankField({
 }) {
   return (
     <SelectRow
-      label="段"
+      label={tr({ ja: "段", en: "Rank" })}
       offset={offset}
       value={value === null ? null : String(value)}
-      currentLabel={value === null ? undefined : "不明"}
-      options={RANK_OPTIONS}
+      currentLabel={value === null ? undefined : tr({ ja: "不明", en: "Unknown" })}
+      options={rankOptions()}
       problem={problem}
       note={note}
       onChange={(v) => apply(Number(v))}
@@ -149,7 +153,7 @@ export function SkillPicker({
       <div className="flex flex-wrap items-center gap-2">
         <Input
           className="w-48"
-          placeholder="技の名前で絞り込む"
+          placeholder={tr({ ja: "技の名前で絞り込む", en: "Filter by move name" })}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
@@ -161,14 +165,21 @@ export function SkillPicker({
             onChange(pickWithoutConflicts(stance, skills.filter((s) => usable(s.skillNo)).map((s) => s.skillNo), selected))
           }
         >
-          重ならないように入れられるだけ選ぶ
+          {tr({ ja: "重ならないように入れられるだけ選ぶ", en: "Select as many as fit without conflicts" })}
         </Button>
         <Button variant="outline" size="sm" disabled={disabled} onClick={() => onChange(new Set())}>
-          選択をすべて外す
+          {tr({ ja: "選択をすべて外す", en: "Clear selection" })}
         </Button>
         <span className="text-muted-foreground text-xs">
-          {selected.size} 個選択中（最大 {CUSTOM_SHEET_SKILL_MAX}）
-          {conflicts.byNo.size > 0 && <span className="text-destructive">・重なり・不足 {conflicts.byNo.size} 件</span>}
+          {tr({
+            ja: `${selected.size} 個選択中（最大 ${CUSTOM_SHEET_SKILL_MAX}）`,
+            en: `${selected.size} selected (max ${CUSTOM_SHEET_SKILL_MAX})`,
+          })}
+          {conflicts.byNo.size > 0 && (
+            <span className="text-destructive">
+              {tr({ ja: `・重なり・不足 ${conflicts.byNo.size} 件`, en: ` · ${conflicts.byNo.size} conflicts or missing moves` })}
+            </span>
+          )}
         </span>
       </div>
       {conflicts.sheet.map((p) => (
@@ -177,21 +188,21 @@ export function SkillPicker({
         </p>
       ))}
       <p className="text-muted-foreground text-xs">
-        {SKILL_TREE_DESCRIPTION}
+        {skillTreeDescription()}
       </p>
       {shown.skillNos.size === 0 ? (
-        <p className="text-muted-foreground text-sm">条件に合う技がありません。</p>
+        <p className="text-muted-foreground text-sm">{tr({ ja: "条件に合う技がありません。", en: "No moves match." })}</p>
       ) : (
         <div className="max-h-[32rem] overflow-y-auto rounded border px-2">
           {/* 欄は技の一覧と揃える（行は subgrid） */}
           <div className="grid grid-cols-[auto_auto_auto_auto_auto_minmax(0,1fr)] gap-x-3 text-sm">
             <div className="text-muted-foreground bg-card sticky top-0 z-10 col-span-full grid grid-cols-subgrid border-b py-1 text-xs">
               <span />
-              <span>技</span>
-              <span>状態</span>
-              <span>入力</span>
-              <span>攻撃力</span>
-              <span>効果</span>
+              <span>{tr({ ja: "技", en: "Move" })}</span>
+              <span>{tr({ ja: "状態", en: "Status" })}</span>
+              <span>{tr({ ja: "入力", en: "Command" })}</span>
+              <span>{tr({ ja: "攻撃力", en: "Strength" })}</span>
+              <span>{tr({ ja: "効果", en: "Effects" })}</span>
             </div>
             <SkillTreeRows
               groups={shown.groups}
@@ -237,15 +248,15 @@ export function SkillPicker({
 }
 
 /** 技の属性の略称。ホバーで元の名前を出す */
-const ATTR_SHORT: Record<string, string> = {
-  浮かせる: "浮",
-  吹き飛ばす: "飛",
-  投げ: "投",
-  当て身投げ: "当投",
-  打撃投げ: "打投",
-  防御崩し: "崩",
-  防御不可能: "防不可",
-  攻撃を受けてものけぞらない: "剛",
+const ATTR_SHORT: Record<string, Localized> = {
+  浮かせる: { ja: "浮", en: "Lift" },
+  吹き飛ばす: { ja: "飛", en: "Blow" },
+  投げ: { ja: "投", en: "Throw" },
+  当て身投げ: { ja: "当投", en: "S.Throw" },
+  打撃投げ: { ja: "打投", en: "G.Throw" },
+  防御崩し: { ja: "崩", en: "Break" },
+  防御不可能: { ja: "防不可", en: "Unblk" },
+  攻撃を受けてものけぞらない: { ja: "剛", en: "Armor" },
 };
 
 
@@ -272,27 +283,37 @@ export function SkillCommandCells({ skillId }: { skillId: number }) {
     return (
       <span className="col-span-2 text-xs">
         <Badge variant="secondary" className="font-normal">
-          防御技
+          {tr({ ja: "防御技", en: "Defensive move" })}
         </Badge>
       </span>
     );
   }
   return (
     <>
-      <span className="font-mono text-xs">{info.commandJa || "—"}</span>
-      <span className="text-muted-foreground text-xs">攻 {info.attack}</span>
+      <span className="font-mono text-xs">{commandLabel(info.commandJa) || "—"}</span>
+      <span className="text-muted-foreground text-xs">{tr({ ja: `攻 ${info.attack}`, en: `Str ${info.attack}` })}</span>
     </>
   );
 }
 
 /** 固有技を覚えられる流派（🟢）と使える武器（✅ [U] 2026-10-09）の説明 */
 function uniqueSkillTip(skillId: number): ReactNode {
-  const sects = uniqueSkillSects(skillId).map((id) => findSect(id)?.nameJa ?? String(id));
+  const sep = tr({ ja: "・", en: ", " });
+  const sects = uniqueSkillSects(skillId).map((id) => {
+    const sect = findSect(id);
+    return sect ? sectName(sect) : String(id);
+  });
   return (
     <span className="flex flex-col">
-      <span>{UNIQUE_WEAPON_ATTR}</span>
-      <span>流派：{sects.join("・") || "（流派が見つかりません）"}</span>
-      <span>武器：{uniqueWeaponsForSkill(skillId).join("・") || "（武器が見つかりません）"}</span>
+      <span>{skillAttrLabel(UNIQUE_WEAPON_ATTR)}</span>
+      <span>
+        {tr({ ja: "流派：", en: "Styles: " })}
+        {sects.join(sep) || tr({ ja: "（流派が見つかりません）", en: "(No style found)" })}
+      </span>
+      <span>
+        {tr({ ja: "武器：", en: "Weapons: " })}
+        {uniqueWeaponsForSkill(skillId).join(sep) || tr({ ja: "（武器が見つかりません）", en: "(No weapon found)" })}
+      </span>
     </span>
   );
 }
@@ -304,9 +325,9 @@ export function SkillAttrs({ skillId }: { skillId: number }) {
     <span className="flex flex-wrap items-center gap-1 text-xs">
       {info?.attrs.map((a) =>
         a === UNIQUE_WEAPON_ATTR ? (
-          <AttrTag key={a} label="固有技" tip={uniqueSkillTip(skillId)} />
+          <AttrTag key={a} label={tr({ ja: "固有技", en: "Unique" })} tip={uniqueSkillTip(skillId)} />
         ) : (
-          <AttrTag key={a} label={ATTR_SHORT[a] ?? a} tip={a} />
+          <AttrTag key={a} label={ATTR_SHORT[a] ? tr(ATTR_SHORT[a]) : skillAttrLabel(a)} tip={skillAttrLabel(a)} />
         ),
       )}
     </span>
@@ -372,7 +393,11 @@ export function SkillTreeName({
         {depth > 0 && first && <span className="text-muted-foreground mr-1">└</span>}
         {skillName(node.skill)}
       </span>
-      {upgradeOf && <span className="text-muted-foreground text-xs">⇧ {skillName(upgradeOf)}の上位</span>}
+      {upgradeOf && (
+        <span className="text-muted-foreground text-xs">
+          {tr({ ja: `⇧ ${skillName(upgradeOf)}の上位`, en: `⇧ Upgrade of ${skillName(upgradeOf)}` })}
+        </span>
+      )}
     </span>
   );
 }

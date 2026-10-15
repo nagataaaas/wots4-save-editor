@@ -1,4 +1,5 @@
 // 🟢 流派・俺流の先頭8 B（chunks/styles・custom-style）、書の24 B枠（chunks/sect-scrolls）。
+import { tr } from '@/lib/i18n'
 import { NUM_TYPE_RANGE, readI16, recordCodec, writeU16 } from './binary'
 
 export const MASTERY_MAX = 10000
@@ -18,9 +19,11 @@ const SECT_VALUE_KEYS = ['mastery', 'rank', 'kills'] as const satisfies readonly
 export const sectValueOffset = (base: number, key: keyof SectValues) => sectRecordFields.offset(base, key)
 
 export function validateSectValues(v: SectValues): string | null {
-  if (!Number.isInteger(v.mastery) || v.mastery < 0 || v.mastery > MASTERY_MAX) return `修練度は 0〜${MASTERY_MAX} です`
-  if (!Number.isInteger(v.rank) || v.rank < 0 || v.rank > RANK_MAX) return '段が正しくありません'
-  if (!Number.isInteger(v.kills) || v.kills < 0 || v.kills > I16_MAX) return `倒した数は 0〜${I16_MAX} です`
+  if (!Number.isInteger(v.mastery) || v.mastery < 0 || v.mastery > MASTERY_MAX)
+    return tr({ ja: `修練度は 0〜${MASTERY_MAX} です`, en: `Mastery must be 0–${MASTERY_MAX}` })
+  if (!Number.isInteger(v.rank) || v.rank < 0 || v.rank > RANK_MAX) return tr({ ja: '段が正しくありません', en: 'Invalid rank' })
+  if (!Number.isInteger(v.kills) || v.kills < 0 || v.kills > I16_MAX)
+    return tr({ ja: `倒した数は 0〜${I16_MAX} です`, en: `Kills must be 0–${I16_MAX}` })
   return null
 }
 
@@ -58,7 +61,7 @@ export const scrollSlotCodec = {
     scrollSlotFields.writeField(bytes, offset, 'customId', -1)
   },
   writeCustom(bytes: Uint8Array, offset: number, id: number) {
-    if (!Number.isInteger(id) || id < 0 || id > I16_MAX) throw new RangeError('流派が範囲外です')
+    if (!Number.isInteger(id) || id < 0 || id > I16_MAX) throw new RangeError(tr({ ja: '流派が範囲外です', en: 'Style is out of range' }))
     scrollSlotCodec.clear(bytes, offset)
     scrollSlotFields.writeField(bytes, offset, 'customId', id)
   },

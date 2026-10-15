@@ -15,6 +15,7 @@
 //   0xA6AD u8  🟢 保存したときの構えが無手なら 1。ロード時に読まれない
 //   0xA6AE〜0xA6AF  🟢 使われない（0）
 // 右手・左手・二刀流の書き込みの反映は要ゲーム内確認。峰打・無手はエディタに出さない（ユーザー判断 2026-10-08）。
+import { tr, type Localized } from '@/lib/i18n'
 import { readU8, writeU8 } from './binary'
 import { type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
@@ -37,7 +38,7 @@ export const NO_LEFT = 0xff
 export const NO_RIGHT = 0xff
 
 export function beltOffset(index: number): number {
-  if (!Number.isInteger(index) || index < 0 || index >= BELT_COUNT) throw new RangeError("帯刀の番号が範囲外です")
+  if (!Number.isInteger(index) || index < 0 || index >= BELT_COUNT) throw new RangeError(tr({ ja: "帯刀の番号が範囲外です", en: "Equipped weapon slot out of range" }))
   return BELT_OFFSET + index * WEAPON_RECORD_BYTES
 }
 
@@ -64,22 +65,54 @@ function readState(bytes: Uint8Array, weapons: readonly WeaponView[], layoutProb
   const dual = readU8(bytes, BELT_STATE.dual)
 
   let problem: string | null = null
-  if (count > BELT_COUNT) problem = "帯刀の本数が範囲外です"
-  else if (right !== null && right >= BELT_COUNT) problem = "右手の指定が範囲外です"
-  else if (dual > 1) problem = "二刀流の状態が想定外です"
-  else if (dual === 0 && leftRaw !== NO_LEFT) problem = "二刀流でないのに左手の指定が入っています"
-  else if (dual === 1 && right === null) problem = '右手に何も持たずに二刀流になっています'
-  else if (dual === 1 && (leftRaw >= BELT_COUNT || leftRaw === right)) problem = "左手の指定が想定外です"
+  if (count > BELT_COUNT)
+    problem = tr({ ja: "帯刀の本数が範囲外です", en: "The number of equipped weapons is out of range." })
+  else if (right !== null && right >= BELT_COUNT)
+    problem = tr({ ja: "右手の指定が範囲外です", en: "The right-hand weapon is out of range." })
+  else if (dual > 1) problem = tr({ ja: "二刀流の状態が想定外です", en: "The Dual Arms setting has an unexpected value." })
+  else if (dual === 0 && leftRaw !== NO_LEFT)
+    problem = tr({
+      ja: "二刀流でないのに左手の指定が入っています",
+      en: "A left-hand weapon is set without Dual Arms.",
+    })
+  else if (dual === 1 && right === null)
+    problem = tr({ ja: '右手に何も持たずに二刀流になっています', en: 'Dual Arms is on with nothing in the right hand.' })
+  else if (dual === 1 && (leftRaw >= BELT_COUNT || leftRaw === right))
+    problem = tr({ ja: "左手の指定が想定外です", en: "The left-hand weapon has an unexpected value." })
 
   // 🟢 ロード時の扱いと食い違う点。値はそのまま編集できる
   const warnings: string[] = []
   if (!problem) {
     weapons.forEach((w, i) => {
-      if (i < count && w.empty) warnings.push(`${i + 1}本目は帯刀の本数（${count}）の内側ですが空きです`)
-      if (i >= count && !w.empty) warnings.push(`${i + 1}本目は帯刀の本数（${count}）より後ろなので、ゲームでは読まれません`)
+      if (i < count && w.empty)
+        warnings.push(
+          tr({
+            ja: `${i + 1}本目は帯刀の本数（${count}）の内側ですが空きです`,
+            en: `Weapon ${i + 1} is empty although it is within the number of equipped weapons (${count}).`,
+          }),
+        )
+      if (i >= count && !w.empty)
+        warnings.push(
+          tr({
+            ja: `${i + 1}本目は帯刀の本数（${count}）より後ろなので、ゲームでは読まれません`,
+            en: `Weapon ${i + 1} is beyond the number of equipped weapons (${count}), so the game does not load it.`,
+          }),
+        )
     })
-    if (right !== null && right >= count) warnings.push('右手が帯刀の本数より後ろの武器です。ロード時に右手・左手・二刀流が解除されます')
-    else if (dual === 1 && leftRaw >= count) warnings.push('左手が帯刀の本数より後ろの武器です。ロード時に二刀流が解除されます')
+    if (right !== null && right >= count)
+      warnings.push(
+        tr({
+          ja: '右手が帯刀の本数より後ろの武器です。ロード時に右手・左手・二刀流が解除されます',
+          en: 'The right-hand weapon is beyond the number of equipped weapons. The right hand, left hand and Dual Arms are cleared on load.',
+        }),
+      )
+    else if (dual === 1 && leftRaw >= count)
+      warnings.push(
+        tr({
+          ja: '左手が帯刀の本数より後ろの武器です。ロード時に二刀流が解除されます',
+          en: 'The left-hand weapon is beyond the number of equipped weapons. Dual Arms is cleared on load.',
+        }),
+      )
   }
 
   return {
@@ -92,7 +125,9 @@ function readState(bytes: Uint8Array, weapons: readonly WeaponView[], layoutProb
 }
 
 export function readBelt(bytes: Uint8Array): BeltView {
-  if (bytes.byteLength < BELT_STATE.dual + 1) throw new RangeError('ファイルが小さすぎて帯刀を読めません')
+  if (bytes.byteLength < BELT_STATE.dual + 1) throw new RangeError(
+      tr({ ja: 'ファイルが小さすぎて帯刀を読めません', en: 'The file is too small to read the equipped weapons.' }),
+    )
   const layoutProblem = checkLayout(bytes)
   const weapons = Array.from({ length: BELT_COUNT }, (_, i) => readWeapon(bytes, beltOffset(i), layoutProblem))
   return { warnings: [], problem: layoutProblem, weapons, state: readState(bytes, weapons, layoutProblem) }
@@ -121,11 +156,27 @@ export function defaultDualLeft(view: BeltView): number | null {
 }
 
 /** 🟢 手に持てるのは、帯刀の本数の内側にある空きでない武器 */
-function assertUsable(view: BeltView, index: number, hand: string): void {
-  if (!Number.isInteger(index) || index < 0 || index >= BELT_COUNT) throw new RangeError(`${hand}の指定が範囲外です`)
-  if (view.weapons[index].empty) throw new RangeError(`${index + 1}本目は空きなので${hand}に持てません`)
-  if (index >= view.state.count) throw new RangeError(`${index + 1}本目は帯刀の本数（${view.state.count}）より後ろなので${hand}に持てません`)
+function assertUsable(view: BeltView, index: number, hand: Localized): void {
+  if (!Number.isInteger(index) || index < 0 || index >= BELT_COUNT)
+    throw new RangeError(tr({ ja: `${hand.ja}の指定が範囲外です`, en: `The ${hand.en}-hand weapon is out of range.` }))
+  if (view.weapons[index].empty)
+    throw new RangeError(
+      tr({
+        ja: `${index + 1}本目は空きなので${hand.ja}に持てません`,
+        en: `Weapon ${index + 1} is empty, so it cannot be held in the ${hand.en} hand.`,
+      }),
+    )
+  if (index >= view.state.count)
+    throw new RangeError(
+      tr({
+        ja: `${index + 1}本目は帯刀の本数（${view.state.count}）より後ろなので${hand.ja}に持てません`,
+        en: `Weapon ${index + 1} is beyond the number of equipped weapons (${view.state.count}), so it cannot be held in the ${hand.en} hand.`,
+      }),
+    )
 }
+
+const RIGHT_HAND: Localized = { ja: '右手', en: 'right' }
+const LEFT_HAND: Localized = { ja: '左手', en: 'left' }
 
 /**
  * 右手（選んでいる）帯刀武器の番号（0xA6A9）だけを書く。null は何も選んでいない（0xFF）。
@@ -135,12 +186,24 @@ export function writeBeltRight(bytes: Uint8Array, index: number | null): void {
   assertWritable(bytes)
   const view = editableState(bytes)
   if (index === null) {
-    if (view.state.left !== null) throw new RangeError('二刀流のままでは右手を空にできません。先に二刀流をやめてください')
+    if (view.state.left !== null)
+      throw new RangeError(
+        tr({
+          ja: '二刀流のままでは右手を空にできません。先に二刀流をやめてください',
+          en: 'The right hand cannot be emptied while Dual Arms is on. Turn off Dual Arms first.',
+        }),
+      )
     writeU8(bytes, BELT_STATE.right, NO_RIGHT)
     return
   }
-  assertUsable(view, index, '右手')
-  if (view.state.left === index) throw new RangeError('左手と同じ武器は右手に持てません')
+  assertUsable(view, index, RIGHT_HAND)
+  if (view.state.left === index)
+    throw new RangeError(
+      tr({
+        ja: '左手と同じ武器は右手に持てません',
+        en: 'The weapon in the left hand cannot also be held in the right hand.',
+      }),
+    )
   writeU8(bytes, BELT_STATE.right, index)
 }
 
@@ -157,9 +220,21 @@ export function writeBeltDual(bytes: Uint8Array, left: number | null): void {
     writeU8(bytes, BELT_STATE.dual, 0)
     return
   }
-  assertUsable(view, left, '左手')
-  if (view.state.right === null) throw new RangeError('右手に何も持っていないときは二刀流にできません')
-  if (left === view.state.right) throw new RangeError('右手と同じ武器は左手に持てません')
+  assertUsable(view, left, LEFT_HAND)
+  if (view.state.right === null)
+    throw new RangeError(
+      tr({
+        ja: '右手に何も持っていないときは二刀流にできません',
+        en: 'Dual Arms cannot be turned on with nothing in the right hand.',
+      }),
+    )
+  if (left === view.state.right)
+    throw new RangeError(
+      tr({
+        ja: '右手と同じ武器は左手に持てません',
+        en: 'The weapon in the right hand cannot also be held in the left hand.',
+      }),
+    )
   writeU8(bytes, BELT_STATE.left, left)
   writeU8(bytes, BELT_STATE.dual, 1)
 }
@@ -172,6 +247,7 @@ export function writeBeltDualEnabled(bytes: Uint8Array, on: boolean): void {
   if (!on) return writeBeltDual(bytes, null)
   assertWritable(bytes)
   const left = defaultDualLeft(editableState(bytes))
-  if (left === null) throw new RangeError('左手に持てる武器がありません')
+  if (left === null)
+    throw new RangeError(tr({ ja: '左手に持てる武器がありません', en: 'No weapon can be held in the left hand.' }))
   writeBeltDual(bytes, left)
 }

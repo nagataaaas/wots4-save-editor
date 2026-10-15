@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { InfoTip } from '@/components/info-tip'
 import { WarningTip } from '@/components/warning-tip'
 import { Label } from '@/components/ui/label'
+import { tr } from '@/lib/i18n'
 import { SearchField } from '@/lib/search-context'
 
 /**
@@ -11,7 +12,7 @@ import { SearchField } from '@/lib/search-context'
 export function FieldFeedback({ problem, hint, error, warning, className = '' }: {
   problem?: string | null; hint?: ReactNode; error?: string | null; warning?: string | null; className?: string
 }) {
-  if (problem) return <p className={`text-muted-foreground text-xs ${className}`}>読み取り専用：{problem}</p>
+  if (problem) return <p className={`text-muted-foreground text-xs ${className}`}>{tr({ ja: `読み取り専用：${problem}`, en: `Read-only: ${problem}` })}</p>
   return <>
     {hint && <p className={`text-muted-foreground text-xs ${className}`}>{hint}</p>}
     {error ? <p className={`text-destructive text-xs ${className}`}>{error}</p>

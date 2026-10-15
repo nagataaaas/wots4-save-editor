@@ -35,21 +35,27 @@ import {
 import { findLocation, selectableLocations } from "@/save/locations";
 import { enableCharacterSetup } from "@/save/new-cycle";
 import { DATE_OFFSETS } from "@/save/scenario-date";
+import { tr, type Localized } from "@/lib/i18n";
 
 function parseAmount(key: U32Key, input: string): ParseResult<number> {
-  return parseInteger(input, value => validateAmount(key, value), { error: "0以上の整数を入力してください" });
+  return parseInteger(input, value => validateAmount(key, value), {
+    error: tr({ ja: "0以上の整数を入力してください", en: "Enter a whole number of 0 or more" }),
+  });
 }
 
 /** 上限の出典。所持金・金庫はゲーム内の上限 [U]、侍点はユーザー指定の上限 */
-const amountLimitNote: Record<U32Key, string> = {
-  money: "上限はゲーム内の上限",
-  cashbox: "上限はゲーム内の上限",
-  samuraiPoint: "上限は実用上の上限",
+const amountLimitNote: Record<U32Key, Localized> = {
+  money: { ja: "上限はゲーム内の上限", en: "The limit is the in-game limit" },
+  cashbox: { ja: "上限はゲーム内の上限", en: "The limit is the in-game limit" },
+  samuraiPoint: { ja: "上限は実用上の上限", en: "The limit is a practical limit" },
 };
 
 function parseGauge(input: string): ParseResult<number> {
-  return parseDecimal(input, validateGauge, { error: "0以上の数値を入力してください" });
+  return parseDecimal(input, validateGauge, { error: tr({ ja: "0以上の数値を入力してください", en: "Enter a number of 0 or more" }) });
 }
+
+/** 0 から max までの範囲の表示 */
+const rangeText = (max: string) => tr({ ja: `0〜${max}`, en: `0–${max}` });
 
 function parseName(input: string): ParseResult<string> {
   const error = validateName(input);
@@ -61,17 +67,20 @@ const formatAmount = (v: number) => String(v);
 const formatGauge = (v: number) => String(Number(v.toPrecision(7)));
 const formatName = (v: string) => v;
 
-const GAUGE_LABELS: Record<GaugeKind, string> = {
-  hp: "HP",
-  vitality: "活力",
-  tsuma: "つま斬りゲージ",
+const GAUGE_LABELS: Record<GaugeKind, Localized> = {
+  hp: { ja: "HP", en: "HP" },
+  vitality: { ja: "活力", en: "Vitality" },
+  tsuma: { ja: "つま斬りゲージ", en: "Spring Harvest gauge" },
 };
 
 /** 現在値の備考。現在HP・つま斬りゲージは 🟢（ゲーム内の反映は未確認）、活力の現在値は ✅ [U] */
-const GAUGE_CURRENT_NOTES: Record<GaugeKind, string> = {
-  hp: "0 以下はゲームが 1 として保存します",
-  vitality: "時間とともに減ります",
-  tsuma: "最大値の半分以上たまっていると発動できます",
+const GAUGE_CURRENT_NOTES: Record<GaugeKind, Localized> = {
+  hp: { ja: "0 以下はゲームが 1 として保存します", en: "The game saves 0 or less as 1" },
+  vitality: { ja: "時間とともに減ります", en: "Decreases over time" },
+  tsuma: {
+    ja: "最大値の半分以上たまっていると発動できます",
+    en: "Can be activated when it is at least half full",
+  },
 };
 
 export function HeroPage() {
@@ -96,8 +105,8 @@ export function HeroPage() {
       parse={(input) => parseAmount(key, input)}
       apply={(v) => update((b) => writeAmount(b, key, v))}
       inputMode="numeric"
-      hint={`0〜${AMOUNT_LIMITS[key].toLocaleString()}`}
-      note={amountLimitNote[key]}
+      hint={rangeText(AMOUNT_LIMITS[key].toLocaleString())}
+      note={tr(amountLimitNote[key])}
     />
   );
 
@@ -120,17 +129,17 @@ export function HeroPage() {
 
   const gaugeGroup = (kind: GaugeKind) => {
     const { current, max } = GAUGES[kind];
-    const name = GAUGE_LABELS[kind];
+    const name = tr(GAUGE_LABELS[kind]);
     const currentHint = advanced
-      ? `0〜${GAUGE_MAX.toLocaleString()}（上級者モード）`
-      : `0〜最大値`;
+      ? tr({ ja: `0〜${GAUGE_MAX.toLocaleString()}（上級者モード）`, en: `0–${GAUGE_MAX.toLocaleString()} (Advanced mode)` })
+      : tr({ ja: `0〜最大値`, en: `0–max` });
     return (
       <SearchScope key={kind} title={name} className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">{name}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          {gaugeRow(current, "現在", currentHint, GAUGE_CURRENT_NOTES[kind])}
+          {gaugeRow(current, tr({ ja: "現在", en: "Current" }), currentHint, tr(GAUGE_CURRENT_NOTES[kind]))}
           {/* GAUGE_MAX はユーザー指定の暫定の上限（ゲーム内の上限は ❓） */}
-          {gaugeRow(max, "最大", `0〜${GAUGE_MAX.toLocaleString()}`, "")}
+          {gaugeRow(max, tr({ ja: "最大", en: "Max" }), rangeText(GAUGE_MAX.toLocaleString()), "")}
         </div>
       </SearchScope>
     );
@@ -140,40 +149,46 @@ export function HeroPage() {
     <div className="flex flex-col gap-4">
       <PageBanner error={readError} problem={problem} />
 
-      <AnchoredCard anchor={HERO_ANCHORS.name} title="名前">
+      <AnchoredCard anchor={HERO_ANCHORS.name} title={tr({ ja: "名前", en: "Name" })}>
         <CardContent>
           <FieldRow
             key="name"
-            label="主人公名"
+            label={tr({ ja: "主人公名", en: "Name" })}
             offset={HERO_OFFSETS.name}
             value={view?.name.value ?? null}
             problem={view?.name.problem ?? null}
             format={formatName}
             parse={parseName}
             apply={(v) => update((b) => writeName(b, v))}
-            hint={`最大${NAME_MAX_CHARS}文字`}
+            hint={tr({ ja: `最大${NAME_MAX_CHARS}文字`, en: `Up to ${NAME_MAX_CHARS} characters` })}
             // 出典：docs/save_format/README.md §6
-            note="長すぎる名前はロードできなくなる原因になります"
+            note={tr({ ja: "長すぎる名前はロードできなくなる原因になります", en: "A name that is too long can make the save fail to load" })}
           />
         </CardContent>
       </AnchoredCard>
 
-      <AnchoredCard anchor={HERO_ANCHORS.money} title="所持金・侍点">
+      <AnchoredCard anchor={HERO_ANCHORS.money} title={tr({ ja: "所持金・侍点", en: "Funds & Samurai Points" })}>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          {amountRow("money", "所持金")}
-          {amountRow("cashbox", "金庫")}
-          {amountRow("samuraiPoint", "侍点")}
+          {amountRow("money", tr({ ja: "所持金", en: "Funds" }))}
+          {amountRow("cashbox", tr({ ja: "金庫", en: "Treasury" }))}
+          {amountRow("samuraiPoint", tr({ ja: "侍点", en: "Samurai Points" }))}
         </CardContent>
       </AnchoredCard>
 
       <AnchoredCard
         anchor={HERO_ANCHORS.vitals}
-        title="HP・活力・つま斬り"
+        title={tr({ ja: "HP・活力・つま斬り", en: "HP, Vitality & Spring Harvest" })}
         description={
           <>
-            HP・活力・つま斬りの現在値と最大値を編集できます。
+            {tr({
+              ja: "HP・活力・つま斬りの現在値と最大値を編集できます。",
+              en: "Edit the current and max values of HP, Vitality and the Spring Harvest gauge.",
+            })}
             <br />
-            現在値は最大値まで入力できます（上級者モードでは超えられます）。
+            {tr({
+              ja: "現在値は最大値まで入力できます（上級者モードでは超えられます）。",
+              en: "Current values can be up to the max (Advanced mode allows going over).",
+            })}
             {/* ロード時、現在値は最大値で頭打ちになる */}
           </>
         }
@@ -202,28 +217,37 @@ function CharacterSetupCard({ view }: { view: HeroView | null }) {
   return (
     <AnchoredCard
       anchor={HERO_ANCHORS.difficulty}
-      title="難易度・主人公設定のやり直し"
+      title={tr({ ja: "難易度・主人公設定のやり直し", en: "Redo difficulty & Character Settings" })}
       description={
         <>
-          今の周回のまま、難易度と主人公の設定だけをやり直せます。
+          {tr({
+            ja: "今の周回のまま、難易度と主人公の設定だけをやり直せます。",
+            en: "Redo only the difficulty and Character Settings while staying in the current playthrough.",
+          })}
           <br />
-          周回をはじめからやり直すときは、「世界 / 阿弥浜」画面の「新しい周回」を使います。
+          {tr({
+            ja: "周回をはじめからやり直すときは、「世界 / 阿弥浜」画面の「新しい周回」を使います。",
+            en: "To restart the playthrough from the beginning, use \"New playthrough\" on the World / Amihama screen.",
+          })}
           {/* 次のロードの「続きから」で難易度と主人公の設定に進む。イベントの状態は今の周回のままなので、序章のイベントは始まらず、セーブした場所から続く */}
         </>
       }
     >
       <CardContent>
         <FieldShell
-          label="難易度と主人公設定"
+          label={tr({ ja: "難易度と主人公設定", en: "Difficulty & Character Settings" })}
           offset={DATE_OFFSETS.dayTime}
-          note="次のロードで難易度と主人公の設定に進む状態にします。元の状態に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください"
+          note={tr({
+            ja: "次のロードで難易度と主人公の設定に進む状態にします。元の状態に戻すときは「世界 / 阿弥浜」画面の段階の欄で選び直してください",
+            en: "Makes the next load go to the difficulty and Character Settings. To undo, pick the stage again on the World / Amihama screen",
+          })}
           problem={null}
         >
           <ActionButton
             size="sm"
             className="w-fit"
             disabled={!view || view.problem !== null}
-            label="難易度と主人公設定を行えるようにする"
+            label={tr({ ja: "難易度と主人公設定を行えるようにする", en: "Enable difficulty & Character Settings" })}
             confirm="repeat"
             onAction={() => write(enableCharacterSetup)}
           />
@@ -246,13 +270,13 @@ function LocationCard({
   return (
     <AnchoredCard
       anchor={HERO_ANCHORS.location}
-      title="現在地（開始地点）"
+      title={tr({ ja: "現在地（開始地点）", en: "Location (starting point)" })}
       // クラッシュが報告されている値は選択肢に出さない（selectableLocations）
-      description="次にロードしたときに出現する場所を選べます。"
+      description={tr({ ja: "次にロードしたときに出現する場所を選べます。", en: "Choose where you appear the next time you load." })}
     >
       <CardContent>
         <SelectRow
-          label="場所"
+          label={tr({ ja: "場所", en: "Place" })}
           offset={HERO_OFFSETS.location}
           value={current === null ? null : String(current)}
           currentLabel={currentLoc?.label}

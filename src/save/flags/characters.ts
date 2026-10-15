@@ -28,8 +28,15 @@
 //   0x37F9  🟢 寿司屋の状態（chunks/scenario-flags、通し番号 337）。寿司屋の店主を殺すと 0 → 1。
 //           伯爵に刺激を・傷心の帰国船の開始条件。町の人の死亡のビット（0x02C4）とは別のバイト
 // 書き換えの効果は人物ごとに要ゲーム内確認（朱美・ローラ・J.J. に 1 を書くといなくなるのは ✅）。
-import { nameOf } from "../master/labels";
-import { ALIVE_DEAD, type ByteFlag } from "./byte-flag";
+import { npcLabelId } from "../master/label-types";
+import { npcLabel } from "../master/labels";
+import { ALIVE_DEAD, flagValue, flagValues, localizedFlag, type ByteFlag } from "./byte-flag";
+
+/** 人物の名前（今の言語） */
+const npc = (id: number) => () => npcLabel(npcLabelId(id));
+
+const NORMAL = { ja: "通常", en: "Normal" };
+const DEAD = { ja: "死亡", en: "Dead" };
 
 /** 🟢 人物の状態と、町の人の番号・夜の約束の種類との対応（chunks/characters・townsfolk・night-visit）。 */
 export const CHARACTER_STATUS = {
@@ -64,113 +71,149 @@ export function characterStatusForTown(person: number) {
 
 /** 0x374E〜0x375C の人物と、寿司屋 */
 export const CHARACTER_FLAGS: readonly ByteFlag[] = [
-  {
+  localizedFlag({
     offset: CHARACTER_STATUS.akagi.offset,
-    label: nameOf.npc(1),
+    label: npc(1),
     // 🟢
-    note: "将の器は病院に運ばれて助かった状態、怒りの矛先は死亡の状態のときに起きる",
-    values: [...ALIVE_DEAD, { value: 3, label: "病院に運ばれて助かった" }],
-  },
-  {
+    note: {
+      ja: "将の器は病院に運ばれて助かった状態、怒りの矛先は死亡の状態のときに起きる",
+      en: "Ability to Lead happens when he was saved at the hospital, and The Sting of Hatred when he is dead",
+    },
+    values: [...ALIVE_DEAD, flagValue({ value: 3, label: { ja: "病院に運ばれて助かった", en: "Saved at the hospital" } })],
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.kogure.offset,
-    label: nameOf.npc(2),
+    label: npc(2),
     // 🟢
-    note: "願い虚しくは、生存のとき小暮本人が敵になる",
+    note: {
+      ja: "願い虚しくは、生存のとき小暮本人が敵になる",
+      en: "In Wasted Wish, Kogure himself is the enemy while he is alive",
+    },
     values: ALIVE_DEAD,
-  },
-  {
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.akemi.offset,
-    label: nameOf.npc(3),
+    label: npc(3),
     // 🟢
-    note: "真実でまだら（朱美）に勝つと死亡する",
-    values: [
-      { value: 0, label: "通常" },
-      { value: 1, label: "死亡" },
-    ],
-  },
-  {
+    note: { ja: "真実でまだら（朱美）に勝つと死亡する", en: "Dies when you defeat Madara (Akemi) in The Truth" },
+    values: flagValues([
+      { value: 0, label: NORMAL },
+      { value: 1, label: DEAD },
+    ]),
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.kotobuki.offset,
-    label: nameOf.npc(4),
+    label: npc(4),
     // 🟢
-    note: "死亡になる場面はない（武人 琴吹光で死んでも変わらない）",
+    note: {
+      ja: "死亡になる場面はない（武人 琴吹光で死んでも変わらない）",
+      en: "Never becomes dead in play (not even when he dies in Hikaru Kotobuki, Military Man)",
+    },
     values: ALIVE_DEAD,
-  },
-  {
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.moro.offset,
-    label: nameOf.npc(5),
+    label: npc(5),
     // 🟢
-    note: "死亡だと剣術大会の準備で建築現場にいない。大寄せで幕府ルートに入るには生存していることが要る",
+    note: {
+      ja: "死亡だと剣術大会の準備で建築現場にいない。大寄せで幕府ルートに入るには生存していることが要る",
+      en: "When dead, he is not at the construction site in Preparing for the Battle Tournament. He must be alive to enter the Shogunate route in The Chief Minister's Big Move",
+    },
     values: ALIVE_DEAD,
-  },
-  { offset: CHARACTER_STATUS.mayu.offset, label: nameOf.npc(6), values: ALIVE_DEAD },
-  { offset: CHARACTER_STATUS.chika.offset, label: nameOf.npc(7), values: ALIVE_DEAD },
-  { offset: CHARACTER_STATUS.yuri.offset, label: nameOf.npc(8), values: ALIVE_DEAD },
-  {
+  }),
+  localizedFlag({ offset: CHARACTER_STATUS.mayu.offset, label: npc(6), values: ALIVE_DEAD }),
+  localizedFlag({ offset: CHARACTER_STATUS.chika.offset, label: npc(7), values: ALIVE_DEAD }),
+  localizedFlag({ offset: CHARACTER_STATUS.yuri.offset, label: npc(8), values: ALIVE_DEAD }),
+  localizedFlag({
     offset: CHARACTER_STATUS.kinugawa.offset,
-    label: "鬼怒川怨仙",
+    label: { ja: "鬼怒川怨仙", en: "Onsen Kinugawa" },
     // 🟢
-    note: "船上の侍（周回の始め）で生存の状態になり、大老暗殺計画で倒すと偽物が死亡の状態になる",
-    values: [
-      { value: 0, label: "偽物が死亡" },
-      { value: 2, label: "生存" },
-    ],
-  },
-  {
+    note: {
+      ja: "船上の侍（周回の始め）で生存の状態になり、大老暗殺計画で倒すと偽物が死亡の状態になる",
+      en: "Becomes alive in Samurai On Board (start of a playthrough). Defeating him in Plot to Assassinate the Chief Minister sets it to the impostor being dead",
+    },
+    values: flagValues([
+      { value: 0, label: { ja: "偽物が死亡", en: "Impostor dead" } },
+      { value: 2, label: { ja: "生存", en: "Alive" } },
+    ]),
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.laura.offset,
-    label: nameOf.npc(11),
+    label: npc(11),
     // 🟢
-    note: "鬼怒川の魔手で死亡する。ローラの決意の導入で、領事館を出て代官所（鬼怒川のもと）へ向かう。領事館に出るのは生存のときだけ",
-    values: [...ALIVE_DEAD, { value: 2, label: "代官所へ向かった" }],
-  },
-  {
+    note: {
+      ja: "鬼怒川の魔手で死亡する。ローラの決意の導入で、領事館を出て代官所（鬼怒川のもと）へ向かう。領事館に出るのは生存のときだけ",
+      en: "Dies in Kinugawa's Evil Influence. At the start of Laura's Determination she leaves the consulate for the Magistrate's Office (to Kinugawa). She appears at the consulate only while alive",
+    },
+    values: [
+      ...ALIVE_DEAD,
+      flagValue({ value: 2, label: { ja: "代官所へ向かった", en: "Left for the Magistrate's Office" } }),
+    ],
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.jj.offset,
-    label: "J.J.",
+    label: { ja: "J.J.", en: "J.J." },
     // 🟢
-    note: "伯爵救出の成功で療養中、伯爵に刺激をの成功で打ち解け、刺激が欲しいの成功で逮捕される。ローラ奪還で通常に戻る",
-    values: [
-      { value: 0, label: "通常" },
-      { value: 1, label: "死亡" },
-      { value: 3, label: "伯爵救出に成功（療養中）" },
-      { value: 4, label: "打ち解けた" },
-      { value: 5, label: "逮捕された" },
-    ],
-  },
-  {
+    note: {
+      ja: "伯爵救出の成功で療養中、伯爵に刺激をの成功で打ち解け、刺激が欲しいの成功で逮捕される。ローラ奪還で通常に戻る",
+      en: "Recovering after success in Rescuing the Count, friendly after success in Down for the Count, and arrested after success in In Need of Encouragement. Returns to normal in Rescuing Laura",
+    },
+    values: flagValues([
+      { value: 0, label: NORMAL },
+      { value: 1, label: DEAD },
+      { value: 3, label: { ja: "伯爵救出に成功（療養中）", en: "Rescued (recovering)" } },
+      { value: 4, label: { ja: "打ち解けた", en: "Friendly" } },
+      { value: 5, label: { ja: "逮捕された", en: "Arrested" } },
+    ]),
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.melinda.offset,
-    label: nameOf.npc(13),
+    label: npc(13),
     // 🟢
-    note: "講師ご到着・祝 病院開業・傷心の帰国船の戦闘、魔鱗組としてで死亡する",
+    note: {
+      ja: "講師ご到着・祝 病院開業・傷心の帰国船の戦闘、魔鱗組としてで死亡する",
+      en: "Dies in the battles of The Lecturer Arrives, Hooray! The Hospital's Grand Opening and The Sad Boat Home, and in As a Demonscale",
+    },
     values: ALIVE_DEAD,
-  },
-  {
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.dojima.offset,
-    label: nameOf.npc(14),
+    label: npc(14),
     // 🟢
-    note: "表彰式でほかの優勝者として並ぶと釜茹でになる。町の人の生死の「堂島」とは別の欄",
-    values: [
-      { value: 0, label: "通常" },
-      { value: 1, label: "表彰式で釜茹でになった" },
-    ],
-  },
-  {
+    note: {
+      ja: "表彰式でほかの優勝者として並ぶと釜茹でになる。町の人の生死の「堂島」とは別の欄",
+      en: "Gets boiled when he lines up as another victor at the award ceremony. Separate from \"Dojima\" in the townsfolk alive/dead list",
+    },
+    values: flagValues([
+      { value: 0, label: NORMAL },
+      { value: 1, label: { ja: "表彰式で釜茹でになった", en: "Boiled at the award ceremony" } },
+    ]),
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.teacher.offset,
-    label: nameOf.npc(15),
+    label: npc(15),
     // 🟢
-    note: "通常のプレイで変わる場面はない",
+    note: { ja: "通常のプレイで変わる場面はない", en: "Never changes in normal play" },
     values: ALIVE_DEAD,
-  },
-  {
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.pharmacist.offset,
-    label: "薬屋",
+    label: { ja: "薬屋", en: "Pharmacy" },
     // 🟢
-    note: "変わる場面はない。小公女倒れるで生存でないと町に入った時点で失敗",
+    note: {
+      ja: "変わる場面はない。小公女倒れるで生存でないと町に入った時点で失敗",
+      en: "Never changes in play. If not alive, The Ambassador Collapses fails as soon as you enter town",
+    },
     values: ALIVE_DEAD,
-  },
-  {
+  }),
+  localizedFlag({
     offset: CHARACTER_STATUS.sushi.offset,
-    label: "寿司屋",
+    label: { ja: "寿司屋", en: "Sushi-ya" },
     // 🟢
-    note: "寿司屋の店主を殺すと死亡になる。伯爵に刺激を・傷心の帰国船の開始条件に関わる。町の人の生死の「寿司屋」とは別の欄で、両方を生存にしないと店とイベントは死んだ扱いのまま",
+    note: {
+      ja: "寿司屋の店主を殺すと死亡になる。伯爵に刺激を・傷心の帰国船の開始条件に関わる。町の人の生死の「寿司屋」とは別の欄で、両方を生存にしないと店とイベントは死んだ扱いのまま",
+      en: "Becomes dead when you kill the Sushi-ya owner. Affects the start conditions of Down for the Count and The Sad Boat Home. Separate from \"Sushi-ya\" in the townsfolk alive/dead list; unless both are alive, the shop and events treat him as dead",
+    },
     values: ALIVE_DEAD,
-  },
+  }),
 ];

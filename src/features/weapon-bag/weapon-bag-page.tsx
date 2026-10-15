@@ -2,6 +2,7 @@ import { InfoTip } from "@/components/info-tip";
 import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
 import { WEAPON_LIST_ANCHORS } from "@/features/weapon/anchors";
+import { tr } from "@/lib/i18n";
 import { useSave } from "@/lib/save-context";
 import { useSaveView } from "@/lib/use-save-view";
 import { PageBanner } from "@/components/page-banner";
@@ -24,16 +25,16 @@ export function WeaponBagPage() {
       {/* 未読み込みのときは枠だけを描き、一覧は「—」にする */}
       <AnchoredCard
         anchor={WEAPON_LIST_ANCHORS.weapons}
-        title="武器袋"
+        title={tr({ ja: "武器袋", en: "Weapon sack" })}
         extra={
           <>
             <span className="text-muted-foreground text-sm font-normal">
-              {filled} / {WEAPON_BAG_COUNT} 本
+              {tr({ ja: `${filled} / ${WEAPON_BAG_COUNT} 本`, en: `${filled} / ${WEAPON_BAG_COUNT}` })}
             </span>
             <InfoTip offset={WEAPON_BAG_OFFSET} />
           </>
         }
-        description="行を押すと編集欄を開きます。"
+        description={tr({ ja: "行を押すと編集欄を開きます。", en: "Click a row to open its editor." })}
         className="gap-2"
       >
         <CardContent>
@@ -48,7 +49,10 @@ export function WeaponBagPage() {
 
       {/* ❓ 用途不明の領域。🟢 レコードの先頭は完成武器ID（既存エディタ [TS] の位置より 6 B 後ろ） */}
       <p className="text-muted-foreground text-xs">
-        用途が分かっていない領域は変更しません。空き枠は編集できません（武器を新しく作る機能はありません）。
+        {tr({
+          ja: "用途が分かっていない領域は変更しません。空き枠は編集できません（武器を新しく作る機能はありません）。",
+          en: "Areas whose purpose is not known are left unchanged. Empty slots cannot be edited (there is no feature for creating new weapons).",
+        })}
       </p>
     </div>
   );

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { SearchField, SearchScope } from "@/lib/search-context";
 import { NPC_ANCHORS } from "./anchors";
 import { CollapsibleCard } from "@/components/collapsible-card";
@@ -22,13 +23,19 @@ export function FactionExitCard() {
   return (
     <CollapsibleCard
       anchor={NPC_ANCHORS.factionExit}
-      title="勢力の退場"
+      title={tr({ ja: "勢力の退場", en: "Faction exit" })}
       contentClassName="grid gap-4 sm:grid-cols-3"
       description={
         <>
-          幕府・外国・攘夷の勢力を、町から退場させるかを選べます。
+          {tr({
+            ja: "幕府・外国・攘夷の勢力を、町から退場させるかを選べます。",
+            en: "Choose whether the Shogunate, the Foreigners or the Prajnas leave town.",
+          })}
           <br />
-          退場した勢力の人物は町に出てこなくなります。
+          {tr({
+            ja: "退場した勢力の人物は町に出てこなくなります。",
+            en: "People of a faction that has left no longer appear in town.",
+          })}
           {/* 外国・攘夷は物語の中でも退場する（ローラの死・帰国、般若党の壊滅など）。幕府が退場する場面はない */}
         </>
       }
@@ -48,13 +55,19 @@ export function CharactersCard() {
   return (
     <CollapsibleCard
       anchor={NPC_ANCHORS.characters}
-      title="人物の状態"
+      title={tr({ ja: "人物の状態", en: "Character status" })}
       contentClassName="grid gap-4 sm:grid-cols-3 lg:grid-cols-5"
       description={
         <>
-          重要人物と寿司屋の生死などの状態を選べます。
+          {tr({
+            ja: "重要人物と寿司屋の生死などの状態を選べます。",
+            en: "Choose whether key characters and the Sushi-ya are alive or dead, and other states.",
+          })}
           <br />
-          各欄の説明に、状態が変わる場面と、影響するイベントを書いています。
+          {tr({
+            ja: "各欄の説明に、状態が変わる場面と、影響するイベントを書いています。",
+            en: "Each field's help explains when the state changes and which events it affects.",
+          })}
           {/* 周回の始めはすべて生存（通常）。赤城には病院に運ばれて助かった状態、J.J. には伯爵救出の成功・打ち解けた・逮捕された状態がある。
               鬼怒川怨仙は船上の侍で生存になり、大老暗殺計画で倒すと偽物が死亡になる。朱美・ローラ・J.J. は死亡にするといなくなる */}
         </>
@@ -80,13 +93,19 @@ export function PeopleCard() {
   return (
     <CollapsibleCard
       anchor={NPC_ANCHORS.townsfolk}
-      title="町の人の生死"
+      title={tr({ ja: "町の人の生死", en: "Townsfolk alive/dead" })}
       contentClassName="flex flex-col gap-4"
       description={
         <>
-          死亡した（町からいなくなった）町の人を、チェックを外して生き返らせられます。
+          {tr({
+            ja: "死亡した（町からいなくなった）町の人を、チェックを外して生き返らせられます。",
+            en: "Uncheck townsfolk who died (left town) to bring them back.",
+          })}
           <br />
-          警告のアイコンが付いた人は、外すだけでは生き返りません。
+          {tr({
+            ja: "警告のアイコンが付いた人は、外すだけでは生き返りません。",
+            en: "People with a warning icon don't come back just by unchecking.",
+          })}
           {/* チェックの付いた人は町に出てこない（引退なども含む）。周回の終わりに全員が生き返る。
               重要人物・寿司屋・薬屋は、警告のアイコンに一緒に戻すものを書く */}
         </>
@@ -124,7 +143,14 @@ function PersonRow({ p, name, dead, readOnly }: { p: number; name: string; dead:
         <span>{name}</span>
       </Label>
       <InfoTip offset={personOffset(p)} />
-      {revive && <WarningTip warning={`外すだけでは生き返りません：${revive}`} />}
+      {revive && (
+        <WarningTip
+          warning={tr({
+            ja: `外すだけでは生き返りません：${revive}`,
+            en: `Unchecking alone won't bring them back: ${revive}`,
+          })}
+        />
+      )}
       <WriteError error={error} className="basis-full" />
     </SearchField>
   );
@@ -139,20 +165,26 @@ export function NpcFlagsCard() {
   return (
     <CollapsibleCard
       anchor={NPC_ANCHORS.flags.card}
-      title="NPCイベントフラグ"
+      title={tr({ ja: "NPCイベントフラグ", en: "NPC event flags" })}
       contentClassName="flex flex-col gap-6"
       description={
         <>
-          鍛冶屋・道場・堂島・先生など、町の人のイベントの進み具合を編集できます。
+          {tr({
+            ja: "鍛冶屋・道場・堂島・先生など、町の人のイベントの進み具合を編集できます。",
+            en: "Edit the progress of townsfolk events, such as the Smithy, the dojo, Dojima and Sensei.",
+          })}
           <br />
-          連続なりわいの進み具合は「なりわい」画面にあります。
+          {tr({
+            ja: "連続なりわいの進み具合は「なりわい」画面にあります。",
+            en: "Progress of mission series is on the Missions screen.",
+          })}
           {/* 堂島が鍛冶屋を継いだかは、周回後に誰が鍛冶屋になるかを決める */}
         </>
       }
     >
-      <FlagSection anchor={NPC_ANCHORS.flags.smith} title="鍛冶屋" flags={NPC_SMITH_FLAGS} />
-      <FlagSection anchor={NPC_ANCHORS.flags.dojo} title="道場・先生" flags={NPC_DOJO_FLAGS} />
-      <FlagSection anchor={NPC_ANCHORS.flags.other} title="その他" flags={NPC_OTHER_FLAGS} />
+      <FlagSection anchor={NPC_ANCHORS.flags.smith} title={tr({ ja: "鍛冶屋", en: "Smithy" })} flags={NPC_SMITH_FLAGS} />
+      <FlagSection anchor={NPC_ANCHORS.flags.dojo} title={tr({ ja: "道場・先生", en: "Dojo & Sensei" })} flags={NPC_DOJO_FLAGS} />
+      <FlagSection anchor={NPC_ANCHORS.flags.other} title={tr({ ja: "その他", en: "Others" })} flags={NPC_OTHER_FLAGS} />
     </CollapsibleCard>
   );
 }

@@ -16,6 +16,7 @@
 // 連続なりわいの進み具合は状態の表ではなく、なりわいのフラグ（0x011C + 番号、townsfolk.ts）にある。
 //
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+import { tr } from "@/lib/i18n";
 import { readU16, writeU16 } from "./binary";
 import { type EditOpts, type ViewStatus } from "./field";
 import { assertWritable, checkLayout } from "./layout";
@@ -41,7 +42,7 @@ export const OCCUPATION_ACCEPTED_TABLE_END = OCCUPATION_ACCEPTED_OFFSET + OCCUPA
 export const OCCUPATION_CLEAR_VALUES_OFFSET = 0x45f40;
 
 export function occupationStateOffset(id: number): number {
-  if (!Number.isInteger(id) || id < 0 || id >= OCCUPATION_STATE_COUNT) throw new RangeError(`なりわいが範囲外です`);
+  if (!Number.isInteger(id) || id < 0 || id >= OCCUPATION_STATE_COUNT) throw new RangeError(tr({ ja: `なりわいが範囲外です`, en: "Mission out of range" }));
   return OCCUPATION_STATE_OFFSET + id * 2;
 }
 
@@ -69,13 +70,16 @@ export function sumClears(states: readonly number[]): number {
 }
 
 export function readOccupations(bytes: Uint8Array): OccupationView {
-  if (bytes.byteLength < OCCUPATION_ACCEPTED_OFFSET + 2) throw new RangeError("ファイルが小さすぎてなりわいを読めません");
+  if (bytes.byteLength < OCCUPATION_ACCEPTED_OFFSET + 2) throw new RangeError(tr({ ja: "ファイルが小さすぎてなりわいを読めません", en: "The file is too small to read the missions" }));
   const states = Array.from({ length: OCCUPATION_STATE_COUNT }, (_, id) => readU16(bytes, OCCUPATION_STATE_OFFSET + id * 2));
   const bad = states.findIndex((v) => !isValidState(v));
   const layoutProblem =
     checkLayout(bytes) ??
     (bad >= 0
-      ? `なりわいの記録に想定外の値があります。位置がずれている可能性があるため読み取り専用にしています。`
+      ? tr({
+          ja: `なりわいの記録に想定外の値があります。位置がずれている可能性があるため読み取り専用にしています。`,
+          en: "The mission records contain unexpected values. They are read-only because the positions may be shifted.",
+        })
       : null);
   return {
     warnings: [],
@@ -92,10 +96,14 @@ export function readOccupations(bytes: Uint8Array): OccupationView {
  * 今の値と同じ値の書き戻しは許す。問題がなければ null
  */
 export function validateOccupationState(id: number, value: number, current: number, opts: EditOpts): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff) return `指定できる範囲を超えています: ${value}`;
+  if (!Number.isInteger(value) || value < 0 || value > 0xffff) return tr({ ja: `指定できる範囲を超えています: ${value}`, en: `Out of range: ${value}` });
   if (opts.advanced || value === current) return null;
-  if (!occupationById(id)) return `表にないなりわいです`;
-  if (!isValidState(value)) return `クリア回数は ${OCCUPATION_CLEAR_MAX} 回までです: ${value}`;
+  if (!occupationById(id)) return tr({ ja: `表にないなりわいです`, en: "This mission is not in the list" });
+  if (!isValidState(value))
+    return tr({
+      ja: `クリア回数は ${OCCUPATION_CLEAR_MAX} 回までです: ${value}`,
+      en: `Clears can be up to ${OCCUPATION_CLEAR_MAX}: ${value}`,
+    });
   return null;
 }
 
@@ -132,6 +140,8 @@ export function writeOccupationStates(bytes: Uint8Array, ids: readonly number[],
 export function syncClearCount(bytes: Uint8Array): void {
   assertEditable(bytes);
   const sum = readOccupations(bytes).stateSum;
-  if (sum > 0xffff) throw new RangeError(`クリア回数の合計が大きすぎて書けません: ${sum}`);
+  if (sum > 0xffff) throw new RangeError(
+      tr({ ja: `クリア回数の合計が大きすぎて書けません: ${sum}`, en: `The total clears is too large to write: ${sum}` }),
+    );
   writeU16(bytes, OCCUPATION_CLEAR_COUNT_OFFSET, sum);
 }

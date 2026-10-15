@@ -11,6 +11,7 @@
 // - kind：sword（刀）／spear（槍）／special（特殊武器）。槍は刃の [CT] の英語名が「Spear Blade」のもの
 //   （ユーザー判断で [CT] を確定扱い 2026-10-05）。焔魔・霜柱・立奈美の刃と藤奈美（武器種 1）はゲーム内でも槍と確認した（[U] 2026-10-05）
 //   特殊武器は鍔・柄のない完成武器（刃が blade-special.csv の ID）
+import { getLanguage } from "@/lib/i18n";
 import { BLADE_TABLE } from "./dataset/blade";
 import { BLADE_SPECIAL_TABLE } from "./dataset/blade-special";
 import { COMPLETE_TABLE } from "./dataset/complete";
@@ -60,8 +61,8 @@ export function isWeaponKey(name: string): name is WeaponKey {
 
 const entry = (key: WeaponKey): WeaponNameEntry => WEAPON_NAMES[key];
 
-/** 表示名。英語名がなければ日本語名で代用する */
-export function weaponName(key: WeaponKey, lang: Lang = "ja"): string {
+/** 表示名。英語名がなければ日本語名で代用する。lang を省くと今の言語 */
+export function weaponName(key: WeaponKey, lang: Lang = getLanguage()): string {
   const e = entry(key);
   return lang === "en" ? (e.en ?? e.ja) : e.ja;
 }
@@ -76,20 +77,25 @@ export function weaponKind(key: WeaponKey): WeaponKind {
   return entry(key).kind;
 }
 
-/** 種別の表示名（選択肢の見出しなど） */
+/** 種別の表示名（選択肢の見出しなど）。使う所で tr() するか weaponKindLabel() で引く */
 export const WEAPON_KIND_LABELS: Record<WeaponKind, Record<Lang, string>> = {
   sword: { ja: "刀", en: "Sword" },
   spear: { ja: "槍", en: "Spear" },
   special: { ja: "特殊", en: "Special" },
 };
 
+/** 種別の表示名。lang を省くと今の言語 */
+export function weaponKindLabel(kind: WeaponKind, lang: Lang = getLanguage()): string {
+  return WEAPON_KIND_LABELS[kind][lang];
+}
+
 const collators: Record<Lang, Intl.Collator> = {
   ja: new Intl.Collator("ja"),
   en: new Intl.Collator("en"),
 };
 
-/** 名前順に比べる。ja は読み（なければ ja）の五十音順、en は表示名のアルファベット順 */
-export function compareWeaponNames(a: WeaponKey, b: WeaponKey, lang: Lang = "ja"): number {
+/** 名前順に比べる。ja は読み（なければ ja）の五十音順、en は表示名のアルファベット順。lang を省くと今の言語 */
+export function compareWeaponNames(a: WeaponKey, b: WeaponKey, lang: Lang = getLanguage()): number {
   const sortKey = (k: WeaponKey) => (lang === "ja" ? (entry(k).reading ?? entry(k).ja) : weaponName(k, "en"));
   return collators[lang].compare(sortKey(a), sortKey(b));
 }

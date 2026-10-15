@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { errorMessage } from '@/lib/error-message'
 import { listSnapshots, type SnapshotRecord } from '@/lib/history-db'
+import { getLanguage, tr } from '@/lib/i18n'
 import { useSave } from '@/lib/save-context'
+import { regionDisplayName } from '@/save/snapshot-meta'
 
 const DASH = '—'
 
 function formatTime(ms: number): string {
-  return new Date(ms).toLocaleString('ja-JP', { dateStyle: 'short', timeStyle: 'medium' })
+  return new Date(ms).toLocaleString(getLanguage() === 'en' ? 'en-US' : 'ja-JP', { dateStyle: 'short', timeStyle: 'medium' })
 }
 
 /** 組ごと（新しい組が先）に、組の中は古い順に並べる */
@@ -34,7 +36,10 @@ export function RestoreDialog() {
     let alive = true
     listSnapshots()
       .then((rs) => alive && (setRecords(rs), setError(null)))
-      .catch((e: unknown) => alive && setError(`履歴を読めませんでした: ${errorMessage(e)}`))
+      .catch((e: unknown) => alive && setError(tr({
+        ja: `履歴を読めませんでした: ${errorMessage(e)}`,
+        en: `Could not read the history: ${errorMessage(e)}`,
+      })))
     return () => {
       alive = false
     }
@@ -52,32 +57,35 @@ export function RestoreDialog() {
     >
       <DialogTrigger render={<Button size="sm" variant="outline" />}>
         <History />
-        復元
+        {tr({ ja: '復元', en: 'Restore' })}
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>復元</DialogTitle>
+          <DialogTitle>{tr({ ja: '復元', en: 'Restore' })}</DialogTitle>
           <DialogDescription>
-            読み込んだセーブと、それを編集して保存した版です。選んだ版を編集中のデータにします。履歴はこのブラウザの中にだけ残ります。
+            {tr({
+              ja: '読み込んだセーブと、それを編集して保存した版です。選んだ版を編集中のデータにします。履歴はこのブラウザの中にだけ残ります。',
+              en: 'Saves you loaded, and the versions you edited and saved from them. The selected version becomes the data being edited. The history is kept only in this browser.',
+            })}
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-auto">
           {error ? (
             <p className="text-destructive text-sm">{error}</p>
           ) : records === null ? (
-            <p className="text-muted-foreground text-sm">読み込み中…</p>
+            <p className="text-muted-foreground text-sm">{tr({ ja: '読み込み中…', en: 'Loading…' })}</p>
           ) : groups.length === 0 ? (
-            <p className="text-muted-foreground text-sm">まだ履歴はありません</p>
+            <p className="text-muted-foreground text-sm">{tr({ ja: 'まだ履歴はありません', en: 'No history yet' })}</p>
           ) : (
             <table className="w-full text-xs">
               <thead className="text-muted-foreground bg-popover sticky top-0 text-left">
                 <tr>
-                  <th className="p-1.5 font-medium">種類</th>
-                  <th className="p-1.5 font-medium">ファイル</th>
-                  <th className="p-1.5 font-medium">主人公</th>
-                  <th className="p-1.5 font-medium">日数</th>
-                  <th className="p-1.5 font-medium">直近でクリアしたイベント</th>
-                  <th className="p-1.5 font-medium">残した日時</th>
+                  <th className="p-1.5 font-medium">{tr({ ja: '種類', en: 'Type' })}</th>
+                  <th className="p-1.5 font-medium">{tr({ ja: 'ファイル', en: 'File' })}</th>
+                  <th className="p-1.5 font-medium">{tr({ ja: '主人公', en: 'Hero' })}</th>
+                  <th className="p-1.5 font-medium">{tr({ ja: '日数', en: 'Day' })}</th>
+                  <th className="p-1.5 font-medium">{tr({ ja: '直近でクリアしたイベント', en: 'Last cleared event' })}</th>
+                  <th className="p-1.5 font-medium">{tr({ ja: '残した日時', en: 'Saved at' })}</th>
                   <th className="p-1.5" />
                 </tr>
               </thead>
@@ -102,7 +110,7 @@ export function RestoreDialog() {
           {confirmClear ? (
             <>
               <Button size="sm" variant="outline" onClick={() => setConfirmClear(false)}>
-                やめる
+                {tr({ ja: 'やめる', en: 'Cancel' })}
               </Button>
               <Button
                 size="sm"
@@ -113,13 +121,13 @@ export function RestoreDialog() {
                 }}
               >
                 <Trash2 />
-                本当に全て削除する
+                {tr({ ja: '本当に全て削除する', en: 'Really delete all' })}
               </Button>
             </>
           ) : (
             <Button size="sm" variant="outline" disabled={!records?.length} onClick={() => setConfirmClear(true)}>
               <Trash2 />
-              全削除
+              {tr({ ja: '全削除', en: 'Delete all' })}
             </Button>
           )}
         </div>
@@ -133,36 +141,41 @@ function HistoryRow({ record: r, onRestore }: { record: SnapshotRecord; onRestor
     <tr className="hover:bg-muted/50">
       <td className="p-1.5 whitespace-nowrap">
         {r.kind === 'loaded' ? (
-          <Badge variant="secondary">読み込み</Badge>
+          <Badge variant="secondary">{tr({ ja: '読み込み', en: 'Loaded' })}</Badge>
         ) : r.changedRegions.length > 0 ? (
           <LazyTip
             className="cursor-default"
-            aria-label="変わった項目"
+            aria-label={tr({ ja: '変わった項目', en: 'Changed items' })}
             content={
               <div className="flex flex-col gap-0.5">
-                <span className="font-medium">変わった項目</span>
+                <span className="font-medium">{tr({ ja: '変わった項目', en: 'Changed items' })}</span>
                 {r.changedRegions.map((name) => (
-                  <span key={name}>・{name}</span>
+                  <span key={name}>・{regionDisplayName(name)}</span>
                 ))}
               </div>
             }
           >
-            <Badge variant="outline">保存（{r.changedRegions.length} 項目）</Badge>
+            <Badge variant="outline">
+              {tr({
+                ja: `保存（${r.changedRegions.length} 項目）`,
+                en: `Saved (${r.changedRegions.length} ${r.changedRegions.length === 1 ? 'item' : 'items'})`,
+              })}
+            </Badge>
           </LazyTip>
         ) : (
-          <Badge variant="outline">保存</Badge>
+          <Badge variant="outline">{tr({ ja: '保存', en: 'Saved' })}</Badge>
         )}
       </td>
       <td className="max-w-40 truncate p-1.5 font-mono" title={r.fileName}>
         {r.fileName}
       </td>
       <td className="p-1.5">{r.playerName ?? DASH}</td>
-      <td className="p-1.5 whitespace-nowrap">{r.day !== null && r.slot !== null ? `${r.day}日目 ${r.slot}` : DASH}</td>
+      <td className="p-1.5 whitespace-nowrap">{r.day !== null && r.slot !== null ? tr({ ja: `${r.day}日目 ${r.slot}`, en: `Day ${r.day} ${r.slot}` }) : DASH}</td>
       <td className="p-1.5">{r.lastClearedEvent ?? DASH}</td>
       <td className="p-1.5 whitespace-nowrap">{formatTime(r.createdAt)}</td>
       <td className="p-1.5 text-right">
         <Button size="xs" variant="outline" onClick={onRestore}>
-          復元
+          {tr({ ja: '復元', en: 'Restore' })}
         </Button>
       </td>
     </tr>

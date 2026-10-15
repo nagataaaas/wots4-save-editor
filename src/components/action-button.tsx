@@ -1,6 +1,7 @@
 import { useContext, useState, type ComponentProps, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { WriteError } from '@/components/write-error'
+import { tr } from '@/lib/i18n'
 import { SaveContext } from '@/lib/save-context'
 import { useWrite } from '@/lib/use-write'
 
@@ -9,7 +10,7 @@ import { useWrite } from '@/lib/use-write'
  * confirm を渡すと、1回目は確認に進み、2回目で実行する。repeat はフォーカスを外すと、inline は「やめる」で確認を解除する。
  * 読み込み直したら確認を解除する。
  */
-export function ActionButton({ label, confirm, confirmLabel = 'もう一度押すと書き込みます', onAction, className, ...props }: Omit<ComponentProps<typeof Button>, 'onClick' | 'children' | 'className'> & {
+export function ActionButton({ label, confirm, confirmLabel = tr({ ja: 'もう一度押すと書き込みます', en: 'Press again to write' }),onAction, className, ...props }: Omit<ComponentProps<typeof Button>, 'onClick' | 'children' | 'className'> & {
   className?: string; label: ReactNode; confirm?: 'repeat' | 'inline'; confirmLabel?: ReactNode; onAction: () => void
 }) {
   const loadId = useContext(SaveContext)?.save?.loadId
@@ -25,7 +26,7 @@ export function ActionButton({ label, confirm, confirmLabel = 'もう一度押�
         onClick={() => confirm === undefined || armed ? execute() : arm(true)}>
         {armed ? confirmLabel : label}
       </Button>
-      {armed && confirm === 'inline' && <Button variant="ghost" onClick={() => arm(false)}>やめる</Button>}
+      {armed && confirm === 'inline' && <Button variant="ghost" onClick={() => arm(false)}>{tr({ ja: 'やめる', en: 'Cancel' })}</Button>}
     </div>
     <WriteError error={error} />
   </div>

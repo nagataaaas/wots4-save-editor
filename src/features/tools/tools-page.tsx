@@ -8,6 +8,7 @@ import { AnchoredCard } from '@/components/anchored-card'
 import { ITEM_ANCHORS } from './anchors'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { formatOffset } from '@/lib/format'
+import { tr } from '@/lib/i18n'
 import { useSaveView } from '@/lib/use-save-view'
 import { useWrite } from '@/lib/use-write'
 import { PageBanner } from '@/components/page-banner'
@@ -32,11 +33,14 @@ export function ToolsPage() {
   return (
     <ItemBoxPage
       area={TOOLS_AREA}
-      title="道具"
+      title={tr({ ja: '道具', en: 'Items' })}
       // 個数は1枠にまとめて持てる最大数まで（ほとんどの道具は 1）
-      description="持ち歩いている道具と個数を設定できます。"
+      description={tr({ ja: '持ち歩いている道具と個数を設定できます。', en: 'Set the items you carry and their quantities.' })}
       // [U] 2026-10-05 +0x04 が 0x06 でないと、売却一覧でゲームが落ちた
-      missingMarkNote="このままだと、店で売却一覧を開くときにゲームが落ちます。"
+      missingMarkNote={tr({
+        ja: 'このままだと、店で売却一覧を開くときにゲームが落ちます。',
+        en: 'If left as is, the game crashes when you open the sell list at a shop.',
+      })}
     />
   )
 }
@@ -46,10 +50,13 @@ export function ChestPage() {
   return (
     <ItemBoxPage
       area={CHEST_AREA}
-      title="箪笥"
-      description="道場の箪笥に入っている道具と個数を設定できます。"
+      title={tr({ ja: '箪笥', en: 'Chest' })}
+      description={tr({ ja: '道場の箪笥に入っている道具と個数を設定できます。', en: 'Set the items in the dojo chest and their quantities.' })}
       // ゲームが書く枠の +0x04 が 0x06 なのは 🟢。手持ちで 0x06 でないと落ちたのは [U]
-      missingMarkNote="手持ちの道具では、このままだと店で売却一覧を開くときにゲームが落ちます。"
+      missingMarkNote={tr({
+        ja: '手持ちの道具では、このままだと店で売却一覧を開くときにゲームが落ちます。',
+        en: 'For carried items, if left as is, the game crashes when you open the sell list at a shop.',
+      })}
     />
   )
 }
@@ -83,16 +90,18 @@ function ItemBoxPage({
 
       {missingMark.length > 0 && (
         <Alert variant="destructive">
-          <AlertTitle>道具として扱えない状態の枠があります</AlertTitle>
+          <AlertTitle>{tr({ ja: '道具として扱えない状態の枠があります', en: 'Some slots are not in a usable item state' })}</AlertTitle>
           <AlertDescription className="flex flex-col items-start gap-2">
             <p>
-              {missingMark.map((i) => `${i + 1}件目`).join('、')} は道具として扱えない状態です。{missingMarkNote}
-              修復すると、これらの枠を道具として扱える状態にします。
+              {tr({
+                ja: `${missingMark.map((i) => `${i + 1}件目`).join('、')} は道具として扱えない状態です。${missingMarkNote} 修復すると、これらの枠を道具として扱える状態にします。`,
+                en: `${missingMark.length === 1 ? 'Slot' : 'Slots'} ${missingMark.map((i) => i + 1).join(', ')} ${missingMark.length === 1 ? 'is' : 'are'} not in a usable item state. ${missingMarkNote} Repairing makes these slots usable as items.`,
+              })}
             </p>
             <Button size="sm" variant="outline" disabled={problem !== null} onClick={() => {
               tryWrite((b) => repairItemMarks(b, area))
             }}>
-              修復
+              {tr({ ja: '修復', en: 'Repair' })}
             </Button>
             <WriteError error={repairError} />
           </AlertDescription>
@@ -105,9 +114,14 @@ function ItemBoxPage({
         extra={
           // チップ・木札は ❓ U-12
           <InfoTip offset={`${formatOffset(area.offset)}〜${formatOffset(area.offset + ITEM_SLOT_BYTES * area.slotCount - 1)}`}>
-            上級者モードでは、種別が料理（料理屋の料理）・宿・なし（手に入る経路がない）のものも選べ、個数も最大数を超えて書けます。
-            チップ・木札は書くとゲーム内でセーブできなくなるため、どのモードでも選べません。
-            会談の手紙・鉄・鍵は「重要品」の画面で扱います
+            {tr({
+              ja: '上級者モードでは、種別が料理（料理屋の料理）・宿・なし（手に入る経路がない）のものも選べ、個数も最大数を超えて書けます。 '
+                + 'チップ・木札は書くとゲーム内でセーブできなくなるため、どのモードでも選べません。 '
+                + '会談の手紙・鉄・鍵は「重要品」の画面で扱います',
+              en: 'In Advanced mode you can also choose meals (served at restaurants), inn rooms, and items that cannot be obtained, and write quantities over the maximum. '
+                + 'Casino Chips and Wooden Tags cannot be chosen in any mode because the game can no longer save once they are written. '
+                + 'The Meeting Invitation, metals, and keys are handled on the Key Items screen',
+            })}
           </InfoTip>
         }
         description={description}
@@ -123,7 +137,7 @@ function ItemBoxPage({
                 slot={slot}
                 groups={groups}
                 noun={title}
-                searchPlaceholder="道具を検索"
+                searchPlaceholder={tr({ ja: '道具を検索', en: 'Search items' })}
                 countMaxFor={(id) => itemCountMax(area, id, { advanced })}
                 normalCountMaxFor={(id) => itemNormalCountMax(area, id)}
                 onChange={(id, count) => update((b) => writeItemBoxSlot(b, area, i, id, count, { advanced }))}
@@ -138,7 +152,10 @@ function ItemBoxPage({
           既にアイテムが入っている枠の +0x04〜+0x07 は変えない。❓ +0x05〜+0x07 の意味。
           箪笥に書いた値をゲームで読めるかは要ゲーム内確認 */}
       <p className="text-muted-foreground text-xs">
-        空き枠にアイテムを入れると、道具として扱える枠にします。「なし」にすると枠を空にします。
+        {tr({
+          ja: '空き枠にアイテムを入れると、道具として扱える枠にします。「なし」にすると枠を空にします。',
+          en: 'Putting an item in an empty slot makes the slot usable as an item. Choosing "None" empties the slot.',
+        })}
       </p>
     </div>
   )

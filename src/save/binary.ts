@@ -1,5 +1,6 @@
 // セーブのバイト列に対する読み書きの基本操作。PC版はリトルエンディアン（docs/save_format/README.md §2 ✅）。
 // 書き込みはすべて既存バイトの上書きで、範囲外への書き込みは例外にする。
+import { tr } from '@/lib/i18n'
 
 function view(bytes: Uint8Array): DataView {
   return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
@@ -7,8 +8,14 @@ function view(bytes: Uint8Array): DataView {
 
 function assertRange(bytes: Uint8Array, offset: number, length: number): void {
   if (!Number.isInteger(offset) || offset < 0 || offset + length > bytes.byteLength) {
-    throw new RangeError(`範囲外のアクセスです（0x${offset.toString(16)} から ${length} B）`)
+    const at = offset.toString(16)
+    throw new RangeError(tr({ ja: `範囲外のアクセスです（0x${at} から ${length} B）`, en: `Access out of range (${length} B from 0x${at})` }))
   }
+}
+
+/** 値が型に収まらないときの例外 */
+function valueOutOfRange(): RangeError {
+  return new RangeError(tr({ ja: '入力できる範囲を超えています', en: 'The value is out of range' }))
 }
 
 export function readU8(bytes: Uint8Array, offset: number): number {
@@ -23,7 +30,7 @@ export function readI8(bytes: Uint8Array, offset: number): number {
 
 export function writeI8(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 1)
-  if (!Number.isInteger(value) || value < -128 || value > 127) throw new RangeError("入力できる範囲を超えています")
+  if (!Number.isInteger(value) || value < -128 || value > 127) throw valueOutOfRange()
   view(bytes).setInt8(offset, value)
 }
 
@@ -71,7 +78,7 @@ export function writeNum(bytes: Uint8Array, offset: number, type: NumType, value
     case 'i32': return writeI32(bytes, offset, value)
     case 'f32':
       // 有限で float32 に収まる値だけ（収まらない値は Infinity になる）。writeF32 そのものは NaN なども書ける（テストの合成用）
-      if (!Number.isFinite(value) || Math.abs(value) > F32_MAX) throw new RangeError("入力できる範囲を超えています")
+      if (!Number.isFinite(value) || Math.abs(value) > F32_MAX) throw valueOutOfRange()
       return writeF32(bytes, offset, value)
   }
 }
@@ -119,7 +126,7 @@ export function recordCodec<K extends string>(fields: Record<K, FieldSpec>) {
 
 export function writeU8(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 1)
-  if (!Number.isInteger(value) || value < 0 || value > 0xff) throw new RangeError("入力できる範囲を超えています")
+  if (!Number.isInteger(value) || value < 0 || value > 0xff) throw valueOutOfRange()
   bytes[offset] = value
 }
 
@@ -130,7 +137,7 @@ export function readU16(bytes: Uint8Array, offset: number): number {
 
 export function writeU16(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 2)
-  if (!Number.isInteger(value) || value < 0 || value > 0xffff) throw new RangeError("入力できる範囲を超えています")
+  if (!Number.isInteger(value) || value < 0 || value > 0xffff) throw valueOutOfRange()
   view(bytes).setUint16(offset, value, true)
 }
 
@@ -141,7 +148,7 @@ export function readI16(bytes: Uint8Array, offset: number): number {
 
 export function writeI16(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 2)
-  if (!Number.isInteger(value) || value < -0x8000 || value > 0x7fff) throw new RangeError("入力できる範囲を超えています")
+  if (!Number.isInteger(value) || value < -0x8000 || value > 0x7fff) throw valueOutOfRange()
   view(bytes).setInt16(offset, value, true)
 }
 
@@ -152,7 +159,7 @@ export function readU32(bytes: Uint8Array, offset: number): number {
 
 export function writeU32(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 4)
-  if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) throw new RangeError("入力できる範囲を超えています")
+  if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) throw valueOutOfRange()
   view(bytes).setUint32(offset, value, true)
 }
 
@@ -163,7 +170,7 @@ export function readI32(bytes: Uint8Array, offset: number): number {
 
 export function writeI32(bytes: Uint8Array, offset: number, value: number): void {
   assertRange(bytes, offset, 4)
-  if (!Number.isInteger(value) || value < -0x8000_0000 || value > 0x7fff_ffff) throw new RangeError("入力できる範囲を超えています")
+  if (!Number.isInteger(value) || value < -0x8000_0000 || value > 0x7fff_ffff) throw valueOutOfRange()
   view(bytes).setInt32(offset, value, true)
 }
 
@@ -217,7 +224,7 @@ export function readUtf16Fixed(
 export function writeUtf16Fixed(bytes: Uint8Array, offset: number, byteLength: number, text: string): void {
   assertRange(bytes, offset, byteLength)
   const maxChars = byteLength / 2 - 1
-  if (text.length > maxChars) throw new RangeError(`文字数が上限（${maxChars}文字）を超えています`)
+  if (text.length > maxChars) throw new RangeError(tr({ ja: `文字数が上限（${maxChars}文字）を超えています`, en: `Longer than the limit (${maxChars} characters)` }))
   const v = view(bytes)
   for (let i = 0; i < byteLength / 2; i++) {
     v.setUint16(offset + i * 2, i < text.length ? text.charCodeAt(i) : 0, true)

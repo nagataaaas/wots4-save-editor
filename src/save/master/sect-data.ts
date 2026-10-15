@@ -1,5 +1,6 @@
 // 流派・構え・技の表・技のマスターデータ。docs/save_format/datatable/sect/*.csv から生成した dataset/*.ts を使う。
 // 全行 🟢（技の表の名前と番号の対応だけ 🔶。datatable/README.md）。
+import { tr, type Localized } from '@/lib/i18n'
 import { SECT_TABLE } from './dataset/sect'
 import { SHEET_SKILL_TABLE } from './dataset/sheet-skill'
 import { SKILL_TABLE } from './dataset/skill'
@@ -13,7 +14,17 @@ export const SKILL_NO_COUNT = 128
 
 /** 構えの組の数（装備の枠）と呼び名 🟢 */
 export const SLOT_COUNT = 6
-export const SLOT_LABELS = ['刀', '槍', '無手', '拳銃', 'ライフル', '二刀'] as const
+export const SLOT_LABELS: readonly Localized[] = [
+  { ja: '刀', en: 'Sword' },
+  { ja: '槍', en: 'Spear' },
+  { ja: '無手', en: 'Hand-to-Hand' },
+  { ja: '拳銃', en: 'Pistol' },
+  { ja: 'ライフル', en: 'Rifle' },
+  { ja: '二刀', en: 'Dual Arms' },
+]
+
+/** 構えの組の呼び名（今の言語）。表にない組は「不明」 */
+export const slotLabel = (slot: number): string => tr(SLOT_LABELS[slot] ?? { ja: '不明', en: 'Unknown' })
 
 export type Stance = { id: number; nameJa: string; nameEn: string; slot: number }
 
@@ -42,6 +53,7 @@ export type SheetSkill = {
   /** 習得条件の番号。0＝流派を装備したときに覚える基本の技 */
   cond: number
   condJa: string
+  condEn: string
   /** 必要な段（0＝初段 … 4＝伍段、−1＝なし） */
   rank: number
   points: number
@@ -92,6 +104,7 @@ const SHEET_SKILLS: readonly SheetSkill[] = Object.values(SHEET_SKILL_TABLE).map
   nameEn: r.name_en,
   cond: r.cond,
   condJa: r.cond_ja,
+  condEn: r.cond_en,
   rank: r.rank,
   points: r.points,
   parent: r.parent,
@@ -129,10 +142,21 @@ export const findStanceSkill = (stance: number, skillNo: number): StanceSkill | 
   STANCE_SKILL_BY_KEY.get(stance * SKILL_NO_COUNT + skillNo)
 export const stanceSkills = (stance: number): StanceSkill[] => STANCE_SKILLS.filter((s) => s.stance === stance)
 
+/** 構え・流派の名前（今の言語。英語の名前がなければ日本語） */
+export const stanceName = (s: Pick<Stance, 'nameJa' | 'nameEn'>): string => tr({ ja: s.nameJa, en: s.nameEn })
+export const sectName = (s: Pick<Sect, 'nameJa' | 'nameEn'>): string => tr({ ja: s.nameJa, en: s.nameEn })
+/** 構え ID の名前。表にない構えは空文字 */
+export const stanceNameById = (id: number): string => {
+  const s = findStance(id)
+  return s ? stanceName(s) : ''
+}
+
 /** 技ごとの値 🟢（datatable/sect/skill.csv） */
 export type SkillInfo = {
   id: number
   nameJa: string
+  /** 英語の名前（なければ空） */
+  nameEn: string
   /** コマンドの値（0＝なし）。同じ値なら同じコマンド */
   command: number
   /** コマンドの表記（弱・強・ガード・方向） */
@@ -151,6 +175,7 @@ const SKILL_BY_ID = new Map<number, SkillInfo>(
     {
       id: r.id_dec,
       nameJa: r.name_ja,
+      nameEn: r.name_en,
       command: r.command,
       commandJa: r.command_ja,
       defenseGroup: r.defense_group,
@@ -163,11 +188,53 @@ const SKILL_BY_ID = new Map<number, SkillInfo>(
 
 export const findSkillInfo = (skillId: number): SkillInfo | undefined => SKILL_BY_ID.get(skillId)
 
-/** 技の名前。名前のない技は「（名前なし）」 */
-export const skillName = (s: { nameJa: string }): string => s.nameJa || '（名前なし）'
+/** 技の名前（今の言語。英語の名前がなければ日本語）。名前のない技は「（名前なし）」 */
+export const skillName = (s: { nameJa: string; nameEn?: string }): string =>
+  tr({ ja: s.nameJa, en: s.nameEn ?? '' }) || tr({ ja: '（名前なし）', en: '(No name)' })
 
 /** 段の呼び名（0 初段 … 4 伍段、5 極）。値と呼び名の対応はユーザー指定（2026-10-09） */
-export const RANK_LABELS = ['初段', '弐段', '参段', '四段', '伍段', '極'] as const
+export const RANK_LABELS: readonly Localized[] = [
+  { ja: '初段', en: 'First' },
+  { ja: '弐段', en: 'Second' },
+  { ja: '参段', en: 'Third' },
+  { ja: '四段', en: 'Fourth' },
+  { ja: '伍段', en: 'Fifth' },
+  { ja: '極', en: 'Master' },
+]
+
+/** 段の呼び名（今の言語）。表にない段は null */
+export const rankLabel = (rank: number): string | null => {
+  const label = RANK_LABELS[rank]
+  return label ? tr(label) : null
+}
+
+/** コマンドの日本語の表記から英語の表記（skill.csv の command_ja → command_en） */
+const COMMAND_EN = new Map<string, string>(Object.values(SKILL_TABLE).map((r) => [r.command_ja, r.command_en]))
+
+/** 技のコマンドの表記（今の言語）。日本語の表記（弱・強・ガード・方向を「＋」でつないだもの）で引く */
+export function commandLabel(commandJa: string): string {
+  if (!commandJa) return ''
+  return tr({ ja: commandJa, en: COMMAND_EN.get(commandJa) ?? '' })
+}
+
+/** 技の性質の英語（skill.csv の attrs の日本語ごと） */
+const ATTR_EN: Record<string, string> = {
+  吹き飛ばす: 'Blow Away',
+  当て身投げ: 'Strike Throw',
+  打撃投げ: 'Grapple Throw',
+  投げ: 'Throw',
+  攻撃を受けてものけぞらない: 'No Knockback When Attacked',
+  特定の武器でしか使えない: 'Only Usable With Specific Weapon(s)',
+  浮かせる: 'Lift',
+  防御不可能: 'Unblockable',
+  防御崩し: 'Defense Break',
+}
+
+/** 技の性質（今の言語） */
+export const skillAttrLabel = (attrJa: string): string => tr({ ja: attrJa, en: ATTR_EN[attrJa] ?? '' })
+
+/** 習得条件（今の言語） */
+export const condLabel = (s: Pick<SheetSkill, 'condJa' | 'condEn'>): string => tr({ ja: s.condJa, en: s.condEn })
 
 /** 技の表の技 1 つ。next はこの技に続けて出す技 */
 export type SkillTreeNode = {
@@ -266,6 +333,7 @@ export function stanceSkillSheet(stance: number): SkillSheet {
       nameEn: s.nameEn,
       cond: 0,
       condJa: '',
+      condEn: '',
       rank: -1,
       points: findSkillInfo(s.skillId)?.points ?? 0,
       parent: parentOf(s.skillNo),

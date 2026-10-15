@@ -5,6 +5,7 @@ import { InfoTip } from "@/components/info-tip";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { isOnButton } from "@/lib/click-target";
+import { tr } from "@/lib/i18n";
 import { useAnchoredOpen } from "@/lib/navigation-context";
 import { charmSummary, weaponDisplayName, type WeaponView } from "@/save/weapon";
 import { WEAPON_ANCHORS } from "./anchors";
@@ -28,11 +29,13 @@ function Stats({ weapon }: { weapon: WeaponView }) {
   const charms = charmSummary(weapon.charms.value);
   return (
     <span className="text-muted-foreground hidden shrink-0 items-center gap-3 font-mono text-xs tabular-nums sm:flex">
-      <span>攻 <Num value={n("attack")} digits={4} /></span>
-      <span>耐 <Num value={n("durability")} digits={4} />/<Num value={n("durabilityMax")} digits={4} /></span>
-      <span>質 <Num value={n("quality")} digits={2} />/<Num value={n("qualityMax")} digits={2} /></span>
-      <span className="hidden md:inline">斬 <Num value={n("kills")} digits={4} /></span>
-      <span className="hidden w-36 truncate font-sans lg:inline">{charms.length ? charms.join("・") : "---"}</span>
+      <span>{tr({ ja: "攻", en: "Str" })} <Num value={n("attack")} digits={4} /></span>
+      <span>{tr({ ja: "耐", en: "Dur" })} <Num value={n("durability")} digits={4} />/<Num value={n("durabilityMax")} digits={4} /></span>
+      <span>{tr({ ja: "質", en: "Deg" })} <Num value={n("quality")} digits={2} />/<Num value={n("qualityMax")} digits={2} /></span>
+      <span className="hidden md:inline">{tr({ ja: "斬", en: "Kills" })} <Num value={n("kills")} digits={4} /></span>
+      <span className="hidden w-36 truncate font-sans lg:inline">
+        {charms.length ? charms.join(tr({ ja: "・", en: ", " })) : "---"}
+      </span>
     </span>
   );
 }
@@ -56,7 +59,7 @@ function CompactWeaponRow({
         <span className="size-4 shrink-0" aria-hidden />
         <AnchorLink id={id} />
         {no}
-        <span>空き</span>
+        <span>{tr({ ja: "空き", en: "Empty" })}</span>
         {badges}
         {offsetTip}
       </li>
@@ -72,7 +75,7 @@ function CompactWeaponRow({
           if (!isOnButton(e)) setOpen(!open);
         }}
       >
-        <CollapsibleTrigger className="group flex shrink-0 items-center" aria-label={`${index + 1}：${name} を編集`}>
+        <CollapsibleTrigger className="group flex shrink-0 items-center" aria-label={tr({ ja: `${index + 1}：${name} を編集`, en: `Edit ${index + 1}: ${name}` })}>
           <Chevron />
         </CollapsibleTrigger>
         <AnchorLink id={id} />
@@ -84,13 +87,17 @@ function CompactWeaponRow({
           )}
           <span className="truncate font-medium">{name}</span>
           {/* バッジは名前の側に置き、右の能力値の列が武器ごとにずれないようにする */}
-          {weapon.nameHidden.value && <Badge variant="outline">名前を隠す</Badge>}
+          {weapon.nameHidden.value && <Badge variant="outline">{tr({ ja: "名前を隠す", en: "Name hidden" })}</Badge>}
           {badges}
         </span>
         <Stats weapon={weapon} />
         {offsetTip}
       </div>
-      {weapon.problem && <p className="text-destructive px-2 pb-1 pl-17 text-xs">読み取り専用：{weapon.problem}</p>}
+      {weapon.problem && (
+        <p className="text-destructive px-2 pb-1 pl-17 text-xs">
+          {tr({ ja: `読み取り専用：${weapon.problem}`, en: `Read-only: ${weapon.problem}` })}
+        </p>
+      )}
       {/* 閉じているあいだは中身を描画しない（Base UI の Panel の既定）ので、200枠でも重くならない */}
       <DisclosureContent id={id}>
         <div className="px-2 pt-4 pb-6 sm:pl-17">
@@ -115,7 +122,8 @@ export function CompactWeaponList({
   badges?: (index: number) => ReactNode;
 }) {
   const list = indices ?? weapons.map((_, i) => i);
-  if (list.length === 0) return <p className="text-muted-foreground px-2 py-1 text-sm">武器はありません。</p>;
+  if (list.length === 0)
+    return <p className="text-muted-foreground px-2 py-1 text-sm">{tr({ ja: "武器はありません。", en: "No weapons." })}</p>;
   return (
     <ul className="flex flex-col">
       {list.map((i) => (

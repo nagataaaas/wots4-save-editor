@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { CircleQuestionMark } from 'lucide-react'
 import { LazyTip } from '@/components/lazy-tip'
 import { formatOffset } from '@/lib/format'
+import { tr } from '@/lib/i18n'
 
 /** 項目名の端に置く丸ハテナ。オフセットや備考をホバーで表示する */
 export function InfoTip({ offset, children }: { offset?: ReactNode; children?: ReactNode }) {
@@ -9,7 +10,7 @@ export function InfoTip({ offset, children }: { offset?: ReactNode; children?: R
   return (
     <LazyTip
       className="text-muted-foreground hover:text-foreground inline-flex"
-      aria-label="補足"
+      aria-label={tr({ ja: '補足', en: 'More info' })}
       contentClassName="flex max-w-xs flex-col gap-1"
       content={
         <>

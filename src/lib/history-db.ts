@@ -5,6 +5,7 @@
 // store は2つに分ける。一覧ではメタデータ（snapshots）だけを読み、バイト列（snapshotBytes）は復元のときだけ読む。
 import { snapshotMeta, type SnapshotMeta } from '@/save/snapshot-meta'
 import { sameBytes } from './byte-diff'
+import { tr } from './i18n'
 
 const DB_NAME = 'wots4-save-editor'
 const DB_VERSION = 1
@@ -54,7 +55,7 @@ let dbPromise: Promise<IDBDatabase> | null = null
 function openDb(): Promise<IDBDatabase> {
   if (!dbPromise) {
     dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
-      if (typeof indexedDB === 'undefined') throw new Error('このブラウザでは履歴を使えません')
+      if (typeof indexedDB === 'undefined') throw new Error(tr({ ja: 'このブラウザでは履歴を使えません', en: 'History is not available in this browser' }))
       const req = indexedDB.open(DB_NAME, DB_VERSION)
       req.onupgradeneeded = () => {
         const db = req.result
@@ -84,7 +85,7 @@ function done(tx: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve()
     tx.onerror = () => reject(tx.error)
-    tx.onabort = () => reject(tx.error ?? new Error('履歴の書き込みが中断されました'))
+    tx.onabort = () => reject(tx.error ?? new Error(tr({ ja: '履歴の書き込みが中断されました', en: 'Writing to the history was aborted' })))
   })
 }
 
@@ -136,14 +137,14 @@ export async function listSnapshots(): Promise<SnapshotRecord[]> {
 export async function getSnapshot(id: number): Promise<SnapshotRecord> {
   const db = await openDb()
   const record = (await request(db.transaction(META).objectStore(META).get(id))) as SnapshotRecord | undefined
-  if (!record) throw new Error('履歴の版が見つかりません')
+  if (!record) throw new Error(tr({ ja: '履歴の版が見つかりません', en: 'Version not found in the history' }))
   return record
 }
 
 export async function getBytes(id: number): Promise<Uint8Array> {
   const db = await openDb()
   const bytes = (await request(db.transaction(BYTES).objectStore(BYTES).get(id))) as Uint8Array | undefined
-  if (!bytes) throw new Error('履歴の版が見つかりません')
+  if (!bytes) throw new Error(tr({ ja: '履歴の版が見つかりません', en: 'Version not found in the history' }))
   return bytes
 }
 
@@ -163,7 +164,7 @@ export async function addLoaded(fileName: string, bytes: Uint8Array): Promise<nu
 export async function addSaved(sessionId: number, bytes: Uint8Array): Promise<void> {
   const records = await sessionRecords(sessionId)
   const latest = records.at(-1)
-  if (!latest) throw new Error('履歴の読み込みの版が見つかりません')
+  if (!latest) throw new Error(tr({ ja: '履歴の読み込みの版が見つかりません', en: 'Loaded version not found in the history' }))
   const prev = await getBytes(latest.id)
   if (sameBytes(prev, bytes)) return
   await add('saved', records[0].fileName, sessionId, bytes, snapshotMeta(bytes, prev), await sha256Hex(bytes))

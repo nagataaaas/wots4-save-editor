@@ -15,11 +15,14 @@
 //       寿司屋と鍛冶屋のおやじは 0 に戻すと生き返った。さよ（p 81、0x0528）は差分1回で死亡を見た（生き返りは要ゲーム内確認）
 //
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+import { tr } from "@/lib/i18n";
 import { readU8, writeU8 } from "./binary";
 import { type ViewStatus } from "./field";
+import { defineLocalized } from "./flags/byte-flag";
 import { CHARACTER_STATUS, characterStatusForTown } from "./flags/characters";
 import { assertWritable, checkLayout } from "./layout";
-import { nameOf } from "./master/labels";
+import { npcLabelId } from "./master/label-types";
+import { npcLabel } from "./master/labels";
 import { TOWNSFOLK_PERSON_TABLE } from "./master/dataset/townsfolk-person";
 
 /** 🟢 主人公名（〜0x011B）の直後 */
@@ -56,14 +59,41 @@ export function personOffset(p: number): number {
 
 export type TownsfolkPerson = { p: number; name: string; group: string };
 
-/** 🟢 人物番号と人物（chunks/townsfolk「人物のレコード」）。堂島・寿司屋・鍛冶屋のおやじは死亡の位置が ✅ [U] */
+/** townsfolk-person.csv の区切り・後ろに付ける語・区分の英語 */
+const PART_EN: Readonly<Record<string, string>> = {
+  "": "",
+  "（": " (",
+  "（DLCの": " (DLC: ",
+  "・": " / ",
+  "）": ")",
+  "（おやじ）": " (old man)",
+  "（道場主）": " (dojo master)",
+  重要人物: "Key characters",
+  店主: "Shopkeepers",
+  "依頼主・四天王など": "Clients, Four Samurai Lords, etc.",
+  その他: "Others",
+};
+
+const partText = (ja: string) => tr({ ja, en: PART_EN[ja] ?? "" });
+const npcName = (id: number) => npcLabel(npcLabelId(id));
+
+/**
+ * 🟢 人物番号と人物（chunks/townsfolk「人物のレコード」）。堂島・寿司屋・鍛冶屋のおやじは死亡の位置が ✅ [U]。
+ * name・group は読むたびに今の言語で返す
+ */
 export const TOWNSFOLK_PEOPLE: readonly TownsfolkPerson[] = Object.values(TOWNSFOLK_PERSON_TABLE)
   .sort((a, b) => a.display_order - b.display_order)
-  .map(r => ({
-    p: r.id_dec,
-    name: `${nameOf.npc(r.npc)}${r.separator}${r.second_npc === null ? '' : nameOf.npc(r.second_npc)}${r.suffix}`,
-    group: r.group,
-  }));
+  .map(r => {
+    const out = { p: r.id_dec } as TownsfolkPerson;
+    defineLocalized(
+      out,
+      "name",
+      () =>
+        `${npcName(r.npc)}${partText(r.separator)}${r.second_npc === null ? '' : npcName(r.second_npc)}${partText(r.suffix)}`,
+    );
+    defineLocalized(out, "group", () => partText(r.group));
+    return out;
+  });
 
 const PERSON_BY_NUMBER = new Map(TOWNSFOLK_PEOPLE.map((x) => [x.p, x]));
 
@@ -75,16 +105,27 @@ const PERSON_BY_NUMBER = new Map(TOWNSFOLK_PEOPLE.map((x) => [x.p, x]));
 export function reviveNote(p: number): string | null {
   const status = characterStatusForTown(p);
   if (status && status !== CHARACTER_STATUS.sushi && status !== CHARACTER_STATUS.pharmacist) {
-    return "「人物の状態」の同じ人物も生存にしないと町に出てこない";
+    return tr({
+      ja: "「人物の状態」の同じ人物も生存にしないと町に出てこない",
+      en: "Won't appear in town unless the same person is also set to alive in \"Character status\"",
+    });
   }
-  if (status === CHARACTER_STATUS.sushi) return "「人物の状態」の寿司屋も生存にしないと死んだ扱いのまま";
-  if (status === CHARACTER_STATUS.pharmacist) return "「人物の状態」の同じ人物も生存にしないと死んだ扱いのまま";
+  if (status === CHARACTER_STATUS.sushi)
+    return tr({
+      ja: "「人物の状態」の寿司屋も生存にしないと死んだ扱いのまま",
+      en: "Still treated as dead unless Sushi-ya is also set to alive in \"Character status\"",
+    });
+  if (status === CHARACTER_STATUS.pharmacist)
+    return tr({
+      ja: "「人物の状態」の同じ人物も生存にしないと死んだ扱いのまま",
+      en: "Still treated as dead unless the same person is also set to alive in \"Character status\"",
+    });
   return null;
 }
 
 /** 人物番号の名前。表にない番号は「人物 p（空き）」 */
 export function personName(p: number): string {
-  return PERSON_BY_NUMBER.get(p)?.name ?? `人物 ${p}（空き）`;
+  return PERSON_BY_NUMBER.get(p)?.name ?? tr({ ja: `人物 ${p}（空き）`, en: `Person ${p} (empty)` });
 }
 
 export type TownsfolkView = ViewStatus & {
@@ -98,7 +139,9 @@ export function isPersonDead(view: TownsfolkView, p: number): boolean {
 
 export function readTownsfolk(bytes: Uint8Array): TownsfolkView {
   if (bytes.byteLength <= TOWNSFOLK_END)
-    throw new RangeError("ファイルが小さすぎて町の人の状態を読めません");
+    throw new RangeError(
+      tr({ ja: "ファイルが小さすぎて町の人の状態を読めません", en: "The file is too small to read the townsfolk status" }),
+    );
   const values = Array.from({ length: TOWNSFOLK_LENGTH }, (_, i) =>
     readU8(bytes, TOWNSFOLK_START + i),
   );
@@ -134,7 +177,7 @@ export function readPeople(bytes: Uint8Array): PersonState[] {
 export function writePersonDead(bytes: Uint8Array, p: number, dead: boolean): void {
   assertWritable(bytes);
   if (!Number.isInteger(p) || p < 0 || p >= PERSON_COUNT)
-    throw new RangeError("人物の指定が正しくありません");
+    throw new RangeError(tr({ ja: "人物の指定が正しくありません", en: "Invalid person" }));
   const offset = personOffset(p);
   const old = readU8(bytes, offset);
   writeU8(bytes, offset, dead ? old | 1 : old & 0xfe);

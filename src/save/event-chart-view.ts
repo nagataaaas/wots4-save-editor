@@ -35,6 +35,7 @@ import {
   type ChartDir,
   type ChartFrame,
 } from './master/event-chart-layout'
+import { tr } from '@/lib/i18n'
 import { PLAY_COUNT_REVEALS_BEST_ROUTE } from './cycle-counts'
 import { EVENT_RECORD_SHOWN, EVENT_STATE_VALUES, type EventEntry } from './scenario-events'
 
@@ -277,9 +278,18 @@ function markMissedSlots(w: (c: ChartCell) => Work): void {
 
 /** 枠の見え方の短い説明 */
 export function frameLookLabel(look: FrameLook): string {
-  if (!look.visible) return 'ゲームでは枠ごと出ない'
-  const parts = [look.named ? '名前が出る' : '名前が隠れる（？？？）']
-  if (look.inProgress) parts.push('進行中')
-  if (look.failed) parts.push(look.missed ? '失敗（時間帯を過ぎた）' : '失敗')
-  return parts.join('・')
+  if (!look.visible) return tr({ ja: 'ゲームでは枠ごと出ない', en: "The box doesn't appear in the game" })
+  const parts = [
+    look.named
+      ? tr({ ja: '名前が出る', en: 'Name shown' })
+      : tr({ ja: '名前が隠れる（？？？）', en: 'Name hidden (???)' }),
+  ]
+  if (look.inProgress) parts.push(tr({ ja: '進行中', en: 'In progress' }))
+  if (look.failed)
+    parts.push(
+      look.missed
+        ? tr({ ja: '失敗（時間帯を過ぎた）', en: 'Failed (time passed)' })
+        : tr({ ja: '失敗', en: 'Failed' }),
+    )
+  return parts.join(tr({ ja: '・', en: ', ' }))
 }

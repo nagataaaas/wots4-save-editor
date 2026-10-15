@@ -3,7 +3,8 @@
 // どれもセーブから読めなければ null にし、例外にはしない（サイズ違いのファイルも履歴には残す）。
 import { readHero } from './hero'
 import { CHART_FRAMES } from './master/event-chart-layout'
-import { diffRanges, innermostRegion } from './raw'
+import { tr } from '@/lib/i18n'
+import { diffRanges, innermostRegion, RAW_REGIONS } from './raw'
 import { readDate, TIME_SLOTS } from './scenario-date'
 import { EVENT_STATE_VALUES, eventNameOf, readEvents } from './scenario-events'
 
@@ -16,12 +17,22 @@ export type SnapshotMeta = {
   slot: string | null
   /** 直近でクリアしたイベントの名前（lastClearedEvent） */
   lastClearedEvent: string | null
-  /** 直前の版から変わった領域の名前（changedRegions）。読み込み時の版は [] */
+  /** 直前の版から変わった領域の名前（changedRegions。日本語で残す）。読み込み時の版は [] */
   changedRegions: string[]
 }
 
-/** どの領域にも入らないバイトと、ゲームの状態ではない領域をまとめる名前 */
+/**
+ * どの領域にも入らないバイトと、ゲームの状態ではない領域をまとめる名前。
+ * 履歴には言語によらず日本語の名前で残し、表示するときに regionDisplayName で今の言語にする
+ */
 export const OTHER_REGION = 'その他'
+
+/** 履歴に残した領域の名前（日本語）を、今の言語の名前にする。表にない名前（前の版で残したもの）はそのまま */
+export function regionDisplayName(name: string): string {
+  if (name === OTHER_REGION) return tr({ ja: OTHER_REGION, en: 'Other' })
+  const region = RAW_REGIONS.find((r) => r.label.ja === name)
+  return region ? tr(region.label) : name
+}
 
 function attempt<T>(read: () => T): T | null {
   try {
@@ -63,7 +74,7 @@ export function changedRegions(prev: Uint8Array, bytes: Uint8Array): string[] {
         continue
       }
       if (region.chunk === 'memory-garbage') other = true
-      else names.add(region.label)
+      else names.add(region.label.ja)
       // 同じ領域の残りのバイトは見なくてよい
       i = Math.min(r.end, region.end ?? r.end)
     }

@@ -11,6 +11,7 @@
 //
 // 周回の終わりの処理（🟢。ゲーム内では未確認）：経過の数 +1 → 武器が消える → 精錬 → 銘。
 // 確率は「+1 したあとの経過の数」で決まる。道具・部品は経過では消えない。
+import { tr, type Localized } from '@/lib/i18n'
 import { readI16, readI32, readU16 } from './binary'
 import { type ViewStatus } from './field'
 import { checkLayout } from './layout'
@@ -28,17 +29,17 @@ export const MARKET_HOLDER = WEAPON_RECORD_BYTES
 
 /** 🟢 道具・刃・鍔・柄の記録。elapsed は経過の数の位置 */
 export const MARKET_OTHERS = [
-  { key: 'item', label: '道具', offset: 0x44a74, slots: 10, bytes: 0x0c, elapsed: 0x08 },
-  { key: 'blade', label: '刃', offset: 0x44aec, slots: 100, bytes: 0x14, elapsed: 0x12 },
-  { key: 'guard', label: '鍔', offset: 0x452bc, slots: 100, bytes: 0x10, elapsed: 0x0c },
-  { key: 'grip', label: '柄', offset: 0x458fc, slots: 100, bytes: 0x10, elapsed: 0x0c },
-] as const
+  { key: 'item', label: { ja: '道具', en: 'Items' }, offset: 0x44a74, slots: 10, bytes: 0x0c, elapsed: 0x08 },
+  { key: 'blade', label: { ja: '刃', en: 'Blades' }, offset: 0x44aec, slots: 100, bytes: 0x14, elapsed: 0x12 },
+  { key: 'guard', label: { ja: '鍔', en: 'Guards' }, offset: 0x452bc, slots: 100, bytes: 0x10, elapsed: 0x0c },
+  { key: 'grip', label: { ja: '柄', en: 'Grips' }, offset: 0x458fc, slots: 100, bytes: 0x10, elapsed: 0x0c },
+] as const satisfies readonly { key: string; label: Localized; offset: number; slots: number; bytes: number; elapsed: number }[]
 
 /** 🟢 記録全体の終わり（含む） */
 export const MARKET_END = 0x45f3b
 
 export function marketWeaponOffset(index: number): number {
-  if (!Number.isInteger(index) || index < 0 || index >= MARKET_WEAPON_SLOTS) throw new RangeError("流通の武器の番号が範囲外です")
+  if (!Number.isInteger(index) || index < 0 || index >= MARKET_WEAPON_SLOTS) throw new RangeError(tr({ ja: "流通の武器の番号が範囲外です", en: "Reclamation weapon slot out of range" }))
   return MARKET_WEAPON_OFFSET + index * MARKET_WEAPON_BYTES
 }
 
@@ -142,7 +143,9 @@ export type MarketView = ViewStatus & {
 }
 
 export function readMarket(bytes: Uint8Array): MarketView {
-  if (bytes.byteLength <= MARKET_END) throw new RangeError('ファイルが小さすぎて流通の記録を読めません')
+  if (bytes.byteLength <= MARKET_END) throw new RangeError(
+      tr({ ja: 'ファイルが小さすぎて流通の記録を読めません', en: 'The file is too small to read the reclamation records.' }),
+    )
   const layoutProblem = checkLayout(bytes)
   const weapons: MarketWeaponEntry[] = []
   for (let i = 0; i < MARKET_WEAPON_SLOTS; i++) {
@@ -162,7 +165,7 @@ export function readMarket(bytes: Uint8Array): MarketView {
     const entries: MarketOtherEntry[] = []
     // 🟢 先頭の i16 が負なら空き
     for (let i = 0; i < o.slots; i++) if (readI16(bytes, o.offset + i * o.bytes) >= 0) entries.push(readOther(bytes, o, i))
-    return { key: o.key, label: o.label, offset: o.offset, slots: o.slots, filled: entries.length, entries }
+    return { key: o.key, label: tr(o.label), offset: o.offset, slots: o.slots, filled: entries.length, entries }
   })
   return { warnings: [], problem: layoutProblem, weapons, others }
 }

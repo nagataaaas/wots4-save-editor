@@ -34,7 +34,8 @@
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from './binary'
 import { type EditOpts, type ViewStatus } from './field'
-import { validateKnownValue } from './flags/byte-flag'
+import { tr } from '@/lib/i18n'
+import { flagValues, validateKnownValue, type FlagValue } from './flags/byte-flag'
 import { assertWritable, checkLayout } from './layout'
 import { eventLabelId } from './master/label-types'
 import { eventLabel, findLabel } from './master/labels'
@@ -55,24 +56,24 @@ export const EVENT_RECORD_SHOWN = 0x04
  * 周回中の状態（A）。FF・05 は書き込みでゲーム内の表示を確かめた（✅ [U]）。
  * 01〜04 の意味は 🟢（chunks/event-chart）。00 は ❓ 書き込みでの表示は未確認
  */
-export const EVENT_STATES = [
-  { value: 0x00, label: '未到達' },
-  { value: 0xff, label: '未到達（初期状態）' }, // 🔶 FF の呼び名は仮。00 との違いは ❓
-  { value: 0x01, label: '導入を見た' },
-  { value: 0x02, label: '断った・保留した' },
-  { value: EVENT_STATE_VALUES.inProgress, label: '引き受けた・進行中' },
-  { value: EVENT_STATE_VALUES.success, label: '成功' },
-  { value: EVENT_STATE_VALUES.failed, label: '失敗' },
-] as const
+export const EVENT_STATES: readonly FlagValue[] = flagValues([
+  { value: 0x00, label: { ja: '未到達', en: 'Not reached' } },
+  { value: 0xff, label: { ja: '未到達（初期状態）', en: 'Not reached (initial state)' } }, // 🔶 FF の呼び名は仮。00 との違いは ❓
+  { value: 0x01, label: { ja: '導入を見た', en: 'Saw the introduction' } },
+  { value: 0x02, label: { ja: '断った・保留した', en: 'Refused or put on hold' } },
+  { value: EVENT_STATE_VALUES.inProgress, label: { ja: '引き受けた・進行中', en: 'Accepted / in progress' } },
+  { value: EVENT_STATE_VALUES.success, label: { ja: '成功', en: 'Succeeded' } },
+  { value: EVENT_STATE_VALUES.failed, label: { ja: '失敗', en: 'Failed' } },
+])
 
 /**
  * 周回をまたぐ記録（B）のうち、チャート表示に効く値。✅ [U] 2026-10-05。
  * FF は枠だけ出て名前が隠れる。FF でも状態が成功（04）なら名前が出る（✅ [U] 2026-10-06）。枠が出るかどうかは B では決まらない
  */
-export const EVENT_RECORDS = [
-  { value: 0xff, label: '名前を隠す（成功なら出る）' },
-  { value: EVENT_RECORD_SHOWN, label: '名前を出す' },
-] as const
+export const EVENT_RECORDS: readonly FlagValue[] = flagValues([
+  { value: 0xff, label: { ja: '名前を隠す（成功なら出る）', en: 'Hide the name (shown if succeeded)' } },
+  { value: EVENT_RECORD_SHOWN, label: { ja: '名前を出す', en: 'Show the name' } },
+])
 
 /** 読み込み時に妥当とみなす状態（A）の値。EVENT_STATES と同じ */
 const PLAUSIBLE_STATES = new Set<number>(EVENT_STATES.map(s => s.value))
@@ -110,9 +111,29 @@ export const NAMED_EVENTS: readonly NamedEvent[] = Object.values(EVENT_TABLE)
 /** NAMED_EVENTS の添字。昇順 */
 export const NAMED_EVENT_INDICES: readonly number[] = NAMED_EVENTS.map((e) => e.index)
 
-/** 添字のイベントの時間帯。名前の付いていない添字は null */
+/** event.csv の時間帯・区分（day 列）の英語 */
+const DAY_EN: Readonly<Record<string, string>> = {
+  '1日目昼': 'Day 1 daytime',
+  '1日目夕': 'Day 1 evening',
+  '1日目夜': 'Day 1 night',
+  '2日目昼': 'Day 2 daytime',
+  '2日目夕': 'Day 2 evening',
+  '2日目夜': 'Day 2 night',
+  '3日目昼': 'Day 3 daytime',
+  '3日目夕': 'Day 3 evening',
+  '3日目夜': 'Day 3 night',
+  '4日目以降': 'Day 4 and later',
+  幕府ルート: 'Shogunate route',
+  外国ルート: 'Foreigners route',
+  攘夷ルート: 'Prajna route',
+  真ルート: 'True route',
+  エンディング: 'Ending',
+}
+
+/** 添字のイベントの時間帯（今の言語）。名前の付いていない添字は null */
 export function eventDayOf(index: number): string | null {
-  return NAMED_EVENTS.find((e) => e.index === index)?.day ?? null
+  const day = NAMED_EVENTS.find((e) => e.index === index)?.day
+  return day === undefined ? null : tr({ ja: day, en: DAY_EN[day] ?? '' })
 }
 
 /** 添字（通し番号）のイベント名。名前の分からない添字は null */
@@ -135,7 +156,7 @@ export type EventsView = ViewStatus & {
 }
 
 export function stateLabel(value: number): string {
-  return EVENT_STATES.find((s) => s.value === value)?.label ?? '不明'
+  return EVENT_STATES.find((s) => s.value === value)?.label ?? tr({ ja: '不明', en: 'Unknown' })
 }
 
 /**
@@ -146,11 +167,17 @@ export function stateLabel(value: number): string {
  *   00 ❓ 名無し侍の添字 13・21・24・48
  * 🔶 B は通し番号では 400＋添字に当たる（chunks/event-chart）
  */
-export const EVENT_RECORDS_SEEN = [
-  { value: 0x05, label: '不明（書いてもチャートに出ない）' },
-  { value: 0x03, label: '不明（志士との出会いで見た値）' },
-  { value: 0x00, label: '不明（名無し侍の一部で見た値）' },
-] as const
+export const EVENT_RECORDS_SEEN: readonly FlagValue[] = flagValues([
+  { value: 0x05, label: { ja: '不明（書いてもチャートに出ない）', en: "Unknown (doesn't show on the chart)" } },
+  {
+    value: 0x03,
+    label: { ja: '不明（志士との出会いで見た値）', en: 'Unknown (seen in Encounter with the "Patriots")' },
+  },
+  {
+    value: 0x00,
+    label: { ja: '不明（名無し侍の一部で見た値）', en: 'Unknown (seen in some Nameless Samurai saves)' },
+  },
+])
 
 /**
  * 読み込み時に妥当とみなす記録（B）の値。チャート表示に効く値（EVENT_RECORDS）と、記録で見た値（EVENT_RECORDS_SEEN）に加えて、
@@ -166,12 +193,17 @@ export function recordLabel(value: number): string {
   return (
     EVENT_RECORDS.find((s) => s.value === value)?.label ??
     EVENT_RECORDS_SEEN.find((s) => s.value === value)?.label ??
-    '不明'
+    tr({ ja: '不明', en: 'Unknown' })
   )
 }
 
+const eventOutOfRange = () => tr({ ja: 'イベントの指定が範囲外です', en: 'The event is out of range' })
+
 export function readEvents(bytes: Uint8Array): EventsView {
-  if (bytes.byteLength < EVENT_RECORD_OFFSET + EVENT_COUNT) throw new RangeError('ファイルが小さすぎてイベントの状態を読めません')
+  if (bytes.byteLength < EVENT_RECORD_OFFSET + EVENT_COUNT)
+    throw new RangeError(
+      tr({ ja: 'ファイルが小さすぎてイベントの状態を読めません', en: 'The file is too small to read the event states' }),
+    )
   const layoutProblem = checkLayout(bytes)
   const entries = Array.from({ length: EVENT_COUNT }, (_, index) => ({
     index,
@@ -181,7 +213,11 @@ export function readEvents(bytes: Uint8Array): EventsView {
 
   let problem: string | null = null
   const bad = entries.find((e) => !PLAUSIBLE_STATES.has(e.state) || !PLAUSIBLE_RECORDS.has(e.record))
-  if (bad) problem = '一部のイベントの状態が想定外です。位置がずれている可能性があります'
+  if (bad)
+    problem = tr({
+      ja: '一部のイベントの状態が想定外です。位置がずれている可能性があります',
+      en: 'Some event states are unexpected. The data may be misaligned',
+    })
   return { warnings: [], entries, problem: layoutProblem ?? problem }
 }
 
@@ -191,7 +227,7 @@ export const validateEventRecord = (value: number, opts: EditOpts) => validateKn
 function editable(bytes: Uint8Array, index: number): void {
   const view = readEvents(bytes)
   if (view.problem) throw new RangeError(view.problem)
-  if (!Number.isInteger(index) || index < 0 || index >= EVENT_COUNT) throw new RangeError('イベントの指定が範囲外です')
+  if (!Number.isInteger(index) || index < 0 || index >= EVENT_COUNT) throw new RangeError(eventOutOfRange())
 }
 
 /**
@@ -225,7 +261,7 @@ function writeBulk(bytes: Uint8Array, base: number, indices: readonly number[], 
   if (view.problem) throw new RangeError(view.problem)
   if (problem) throw new RangeError(problem)
   for (const i of indices)
-    if (!Number.isInteger(i) || i < 0 || i >= EVENT_COUNT) throw new RangeError('イベントの指定が範囲外です')
+    if (!Number.isInteger(i) || i < 0 || i >= EVENT_COUNT) throw new RangeError(eventOutOfRange())
   for (const i of indices) writeU8(bytes, base + i, value)
 }
 

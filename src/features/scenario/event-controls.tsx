@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { tr } from "@/lib/i18n";
 import { SearchScope } from "@/lib/search-context";
 import { FilterSelect } from "@/components/filter-select";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,15 @@ export function BestRouteRow({ sisters }: { sisters: number | null }) {
           hint={
             sisters === null
               ? undefined
-              : `今の三姉妹見参の状態：${stateLabel(sisters)}${sisters === EVENT_STATE_VALUES.success ? "（真ルートに分岐）" : "（成功ではないので、「真ルート」にしても通常ルートのまま）"}`
+              : sisters === EVENT_STATE_VALUES.success
+                ? tr({
+                    ja: `今の三姉妹見参の状態：${stateLabel(sisters)}（真ルートに分岐）`,
+                    en: `Meeting with the Three Sisters is now: ${stateLabel(sisters)} (branches to the true route)`,
+                  })
+                : tr({
+                    ja: `今の三姉妹見参の状態：${stateLabel(sisters)}（成功ではないので、「真ルート」にしても通常ルートのまま）`,
+                    en: `Meeting with the Three Sisters is now: ${stateLabel(sisters)} (not succeeded, so you stay on the normal route even with "True route")`,
+                  })
           }
         />
       </div>
@@ -43,21 +52,23 @@ export function BulkEventsPanel({ problem, disabled }: { problem: string | null;
   const locked = disabled || problem !== null;
 
   return (
-    <SearchScope title="一括設定（デバッグ用）" className="flex flex-col gap-3">
+    <SearchScope title={tr({ ja: "一括設定（デバッグ用）", en: "Bulk set (for debugging)" })} className="flex flex-col gap-3">
       <h3 className="flex flex-wrap items-center gap-2 text-sm font-medium">
         {/* ❓ ゲームへの影響は未確認 */}
-        一括設定（デバッグ用）
+        {tr({ ja: "一括設定（デバッグ用）", en: "Bulk set (for debugging)" })}
       </h3>
       <p className="text-muted-foreground text-xs">
-        名前の付いたイベント（{NAMED_EVENT_INDICES.length}件）すべてに、同じ値をまとめて書きます。
-        チャートに出ない項目は対象にしません。
+        {tr({
+          ja: `名前の付いたイベント（${NAMED_EVENT_INDICES.length}件）すべてに、同じ値をまとめて書きます。チャートに出ない項目は対象にしません。`,
+          en: `Writes the same value to all ${NAMED_EVENT_INDICES.length} named events at once. Entries that don't appear on the chart are skipped.`,
+        })}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex items-end gap-2">
           <BulkSelect
-            label="状態"
+            label={tr({ ja: "状態", en: "State" })}
             value={state}
-            options={stateOptions}
+            options={stateOptions()}
             disabled={locked}
             onChange={setState}
           />
@@ -69,12 +80,12 @@ export function BulkEventsPanel({ problem, disabled }: { problem: string | null;
               run((b) => writeEventStates(b, NAMED_EVENT_INDICES, Number(state), { advanced }))
             }
           >
-            書く
+            {tr({ ja: "書く", en: "Write" })}
           </Button>
         </div>
         <div className="flex items-end gap-2">
           <BulkSelect
-            label="チャート表示"
+            label={tr({ ja: "チャート表示", en: "Chart display" })}
             value={record}
             options={recordOptions(advanced)}
             disabled={locked}
@@ -88,11 +99,15 @@ export function BulkEventsPanel({ problem, disabled }: { problem: string | null;
               run((b) => writeEventRecords(b, NAMED_EVENT_INDICES, Number(record), { advanced }))
             }
           >
-            書く
+            {tr({ ja: "書く", en: "Write" })}
           </Button>
         </div>
       </div>
-      {problem && <p className="text-muted-foreground text-xs">読み取り専用：{problem}</p>}
+      {problem && (
+        <p className="text-muted-foreground text-xs">
+          {tr({ ja: `読み取り専用：${problem}`, en: `Read-only: ${problem}` })}
+        </p>
+      )}
       <WriteError error={error} />
     </SearchScope>
   );
@@ -120,7 +135,7 @@ function BulkSelect({
         onChange={onChange}
         disabled={disabled}
         className="w-full"
-        placeholder="選ぶ"
+        placeholder={tr({ ja: "選ぶ", en: "Choose" })}
       />
     </div>
   );

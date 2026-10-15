@@ -17,6 +17,7 @@
 // 受注の書き込み・外す書き込みは、この1か所にまとめる（受注中の欄、連続なりわいの欄、汁部の欄はここを呼ぶ）。
 // 書き込みの反映は要ゲーム内確認。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+import { tr } from "@/lib/i18n";
 import { readU16, readU8, writeU16, writeU8 } from "./binary";
 import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from "./field";
 import { assertWritable } from "./layout";
@@ -129,7 +130,9 @@ export type AcceptedView = ViewStatus & {
 };
 
 export function readAccepted(bytes: Uint8Array): AcceptedView {
-  if (bytes.byteLength < ACCEPT_OFFSETS.active + 1) throw new RangeError("ファイルが小さすぎて受注中のなりわいを読めません");
+  if (bytes.byteLength < ACCEPT_OFFSETS.active + 1) throw new RangeError(
+      tr({ ja: "ファイルが小さすぎて受注中のなりわいを読めません", en: "The file is too small to read the accepted mission" }),
+    );
   return {
     warnings: [],
     id: readU16(bytes, ACCEPT_OFFSETS.id),
@@ -164,9 +167,15 @@ function clearAccepted(bytes: Uint8Array): void {
  */
 export function acceptOccupation(bytes: Uint8Array, id: number): void {
   assertEditable(bytes);
-  if (!occupationById(id)) throw new RangeError(`表にないなりわいです`);
+  if (!occupationById(id)) throw new RangeError(tr({ ja: `表にないなりわいです`, en: "This mission is not in the list" }));
   const date = readDate(bytes);
-  if (date.problem) throw new RangeError(`日付を読めないので受注を書けません：${date.problem}`);
+  if (date.problem)
+    throw new RangeError(
+      tr({
+        ja: `日付を読めないので受注を書けません：${date.problem}`,
+        en: `Cannot accept the mission because the date cannot be read: ${date.problem}`,
+      }),
+    );
 
   const current = readU16(bytes, ACCEPT_OFFSETS.id);
   if (current !== 0 && current !== id) writeFlags(bytes, acceptRuleOf(current).onRelease);

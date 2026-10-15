@@ -5,6 +5,7 @@ import { Command, CommandDialog, CommandEmpty, CommandInput, CommandItem, Comman
 import { itemsForMode, loadSearchIndex, searchItems, type SearchItem } from '@/features/search-index'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { errorMessage } from '@/lib/error-message'
+import { tr } from '@/lib/i18n'
 import { useNavigation } from '@/lib/navigation-context'
 
 /** 一覧に出す上限。これより多いときは語を足して絞ってもらう */
@@ -66,7 +67,7 @@ export function SearchDialog() {
 
   return (
     <>
-      <Button variant="ghost" size="icon" className="ml-auto" aria-label="検索" title="検索（Ctrl+K）" onClick={() => setOpen(true)}>
+      <Button variant="ghost" size="icon" className="ml-auto" aria-label={tr({ ja: '検索', en: 'Search' })} title={tr({ ja: '検索（Ctrl+K）', en: 'Search (Ctrl+K)' })} onClick={() => setOpen(true)}>
         <Search />
       </Button>
       <CommandDialog
@@ -75,22 +76,27 @@ export function SearchDialog() {
           setOpen(o)
           if (!o) setQuery('')
         }}
-        title="検索"
-        description="項目の名前で探して移動します"
+        title={tr({ ja: '検索', en: 'Search' })}
+        description={tr({ ja: '項目の名前で探して移動します', en: 'Find an item by name and jump to it' })}
         className="sm:max-w-2xl"
       >
         <Command shouldFilter={false}>
-          <CommandInput autoFocus value={query} onValueChange={setQuery} placeholder="項目の名前で探す（例：主人公名、HP）" />
+          <CommandInput autoFocus value={query} onValueChange={setQuery} placeholder={tr({ ja: '項目の名前で探す（例：主人公名、HP）', en: 'Search by item name (e.g. Name, HP)' })} />
           <CommandList className="max-h-[60vh]">
             {error ? (
-              <p className="text-destructive py-6 text-center text-sm">検索の準備に失敗しました：{error}</p>
+              <p className="text-destructive py-6 text-center text-sm">{tr({ ja: `検索の準備に失敗しました：${error}`, en: `Failed to prepare search: ${error}` })}</p>
             ) : index === null ? (
-              <p className="text-muted-foreground py-6 text-center text-sm">読み込み中…</p>
+              <p className="text-muted-foreground py-6 text-center text-sm">{tr({ ja: '読み込み中…', en: 'Loading…' })}</p>
             ) : query.trim() === '' ? (
-              <p className="text-muted-foreground py-6 text-center text-sm">箱の見出し・小見出し・欄の名前で探せます。空白で区切ると、すべての語を含むものに絞ります</p>
+              <p className="text-muted-foreground py-6 text-center text-sm">
+                {tr({
+                  ja: '箱の見出し・小見出し・欄の名前で探せます。空白で区切ると、すべての語を含むものに絞ります',
+                  en: 'Search by section heading, subheading, or field name. Separate words with spaces to match all of them',
+                })}
+              </p>
             ) : (
               <>
-                <CommandEmpty>見つかりません</CommandEmpty>
+                <CommandEmpty>{tr({ ja: '見つかりません', en: 'No matches' })}</CommandEmpty>
                 {hits.slice(0, MAX_RESULTS).map((item) => (
                   <CommandItem key={itemKey(item)} value={itemKey(item)} onSelect={() => select(item)}>
                     <span className="flex min-w-0 flex-wrap items-center gap-x-1">
@@ -105,7 +111,10 @@ export function SearchDialog() {
                 ))}
                 {hits.length > MAX_RESULTS && (
                   <p className="text-muted-foreground px-2 py-1.5 text-xs">
-                    ほか {hits.length - MAX_RESULTS} 件。語を足して絞ってください
+                    {tr({
+                      ja: `ほか ${hits.length - MAX_RESULTS} 件。語を足して絞ってください`,
+                      en: `${hits.length - MAX_RESULTS} more. Add words to narrow down`,
+                    })}
                   </p>
                 )}
               </>

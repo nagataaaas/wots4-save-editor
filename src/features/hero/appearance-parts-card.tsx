@@ -21,7 +21,7 @@ import {
   HAIR_COLOR_NAMES,
   PERSON_CUSTOM,
   partNoneWarning,
-  bodyKindName,
+  bodyKindLabel,
   isNude,
   LAYER_COUNT,
   layersCustomized,
@@ -38,7 +38,9 @@ import {
   type PartValue,
 } from "@/save/appearance-parts";
 import {
+  BODY_KIND_LABELS,
   PARTS,
+  PART_GROUP_LABELS,
   PART_KINDS,
   PART_KIND_LABELS,
   PERSONS,
@@ -50,17 +52,22 @@ import {
   type PartGroup,
   type PartKind,
 } from "@/save/master/appearance-parts";
+import { tr } from "@/lib/i18n";
 
 const GROUP_ORDER: readonly PartGroup[] = ["男", "女", "共通", "セット用", "未使用"];
-const PERSON_HIDDEN_GROUP = "主人公設定に出ない人物";
+const personHiddenGroup = () => tr({ ja: "主人公設定に出ない人物", en: "Not in Character Settings" });
+const noneLabel = () => tr({ ja: "なし", en: "None" });
 
 function partLabel(p: PartEntry): string {
-  const tags = [p.dlc !== null ? "DLC" : null, p.unlockId !== null ? "特典" : null].filter(Boolean);
+  const tags = [p.dlc !== null ? "DLC" : null, p.unlockId !== null ? tr({ ja: "特典", en: "Unlock" }) : null].filter(Boolean);
   // 同じ名前の色違い（下半身のさらしなど）は、見た目の別名を添えて区別する
-  const name = p.ja
-    ? p.alias ? `${p.ja}：${p.alias}` : p.ja
-    : p.alias ? `名前なし：${p.alias}` : "名前なし";
-  return `${name}${tags.length ? ` [${tags.join("・")}]` : ""}`;
+  const name = p.ja ? tr({ ja: p.ja, en: p.en }) : "";
+  const unnamed = tr({ ja: "名前なし", en: "Unnamed" });
+  const alias = tr({ ja: p.alias, en: p.aliasEn });
+  const label = name
+    ? alias ? `${name}${tr({ ja: "：", en: ": " })}${alias}` : name
+    : alias ? `${unnamed}${tr({ ja: "：", en: ": " })}${alias}` : unnamed;
+  return `${label}${tags.length ? ` [${tags.join(tr({ ja: "・", en: ", " }))}]` : ""}`;
 }
 
 /**
@@ -70,13 +77,13 @@ function partLabel(p: PartEntry): string {
 function partOptions(kind: PartKind, heroBodyKind: number, advanced: boolean): SelectOption[] {
   const none: SelectOption[] =
     validatePart(kind, -1, heroBodyKind, { advanced }) === null
-      ? [{ value: "-1", label: "なし", group: advanced ? "なし" : undefined }]
+      ? [{ value: "-1", label: noneLabel(), group: advanced ? noneLabel() : undefined }]
       : [];
   const parts = PARTS[kind].filter((p) => validatePart(kind, p.id, heroBodyKind, { advanced }) === null);
   if (!advanced)
     return [
       ...none,
-      ...parts.map((p) => ({ value: String(p.id), label: partLabel(p), keywords: [String(p.id)] })),
+      ...parts.map((p) => ({ value: String(p.id), label: partLabel(p), keywords: [String(p.id), p.ja, p.en] })),
     ];
   const opts = GROUP_ORDER.flatMap((g) =>
     parts
@@ -84,8 +91,8 @@ function partOptions(kind: PartKind, heroBodyKind: number, advanced: boolean): S
       .map((p) => ({
         value: String(p.id),
         label: partLabel(p),
-        group: g,
-        keywords: [String(p.id), g, p.alias],
+        group: tr(PART_GROUP_LABELS[g]),
+        keywords: [String(p.id), tr(PART_GROUP_LABELS[g]), p.alias, p.aliasEn, p.ja, p.en],
       })),
   );
   return [...none, ...opts];
@@ -94,10 +101,13 @@ function partOptions(kind: PartKind, heroBodyKind: number, advanced: boolean): S
 /** 層の選択肢：なし＋その形の色違い。部品の標準の色に印を付ける（ユーザー判断 2026-10-08） */
 function layerOptions(def: PartLayer, standard: number): SelectOption[] {
   return [
-    { value: "-1", label: "なし（この層を消す）" },
+    { value: "-1", label: tr({ ja: "なし（この層を消す）", en: "None (remove this layer)" }) },
     ...def.textures.map((t, i) => ({
       value: String(t),
-      label: `色${i + 1}${t === standard ? "［標準］" : ""}`,
+      label: tr({
+        ja: `色${i + 1}${t === standard ? "［標準］" : ""}`,
+        en: `Color ${i + 1}${t === standard ? " [default]" : ""}`,
+      }),
     })),
   ];
 }
@@ -127,14 +137,19 @@ function LayerEditor({
   return (
     <details className="rounded-md border px-3 py-2" open={customized}>
       <summary className="cursor-pointer text-sm">
-        層ごとに選ぶ
+        {tr({ ja: "層ごとに選ぶ", en: "Choose per layer" })}
         {customized && (
-          <span className="text-muted-foreground ml-2 text-xs">（今は部品の標準と違います）</span>
+          <span className="text-muted-foreground ml-2 text-xs">
+            {tr({ ja: "（今は部品の標準と違います）", en: "(differs from the part's default)" })}
+          </span>
         )}
       </summary>
       <div className="mt-2 grid gap-3">
         <p className="text-muted-foreground text-xs">
-          形は部品で決まります。層ごとに、消すか色違いを選べます。部品を選び直すと標準に戻ります。
+          {tr({
+            ja: "形は部品で決まります。層ごとに、消すか色違いを選べます。部品を選び直すと標準に戻ります。",
+            en: "The shape is set by the part. For each layer, you can remove it or choose a color variant. Choosing the part again restores the default.",
+          })}
         </p>
         {layers.map((layer) => {
           const def = entry.layers[layer];
@@ -142,16 +157,22 @@ function LayerEditor({
           return (
             <SelectRow
               key={layer}
-              label={`層${layer + 1}：${def?.mesh ?? "この部品にない層"}`}
+              label={tr({
+                ja: `層${layer + 1}：${def?.mesh ?? "この部品にない層"}`,
+                en: `Layer ${layer + 1}: ${def?.mesh ?? "not in this part"}`,
+              })}
               offset={partLayerOffset(kind, layer)}
               value={String(value)}
-              currentLabel={def ? "この形にない色" : "不明"}
+              currentLabel={def ? tr({ ja: "この形にない色", en: "Color not for this shape" }) : tr({ ja: "不明", en: "Unknown" })}
               options={def ? layerOptions(def, entry.models[layer]) : []}
               problem={problem}
               disabled={!def}
-              hint={def ? undefined : "この部品にはない層です"}
+              hint={def ? undefined : tr({ ja: "この部品にはない層です", en: "This part does not have this layer" })}
               // 🟢 値はテクスチャの番号、形は部品の番号（✅ [U] 2026-10-08）。なしで層が消える（足元の層2で履物が消えた ✅ [U]）
-              note="形は部品で決まる。なしにすると層が消える（足元の層2なら履物が消える）"
+              note={tr({
+                ja: "形は部品で決まる。なしにすると層が消える（足元の層2なら履物が消える）",
+                en: "The shape is set by the part. None removes the layer (for Feet layer 2, the footwear disappears)",
+              })}
               onChange={(v) => onChange(layer, Number(v))}
             />
           );
@@ -167,27 +188,46 @@ function LayerEditor({
  * 籠手・脛当て・前掛け・外套は ✅ [U]
  * 書く内容：部品の番号とモデルの値（u16 × 4。籠手などは色違いまで含めた値）。男の裸は上半身 117（110）・下半身 88（196）、女は上半身 98（152）・下半身 26（233）
  */
-const PART_NOTES: Record<PartKind, string> = {
-  upper: "",
-  lower: "",
-  face: "",
-  hair: "",
-  body: "手のモデル（名前のない15種）。上級者モードだけ",
-  feet: "",
-  gauntlet: "色違いも含めて選ぶ",
-  leggings: "色違いも含めて選ぶ",
-  apron: "色違いも含めて選ぶ",
-  cape: "色違いも含めて選ぶ",
+const VARIANT_NOTE = { ja: "色違いも含めて選ぶ", en: "Includes color variants" };
+const NO_NOTE = { ja: "", en: "" };
+const PART_NOTES: Record<PartKind, { ja: string; en: string }> = {
+  upper: NO_NOTE,
+  lower: NO_NOTE,
+  face: NO_NOTE,
+  hair: NO_NOTE,
+  body: { ja: "手のモデル（名前のない15種）。上級者モードだけ", en: "Hand models (15 unnamed kinds). Advanced mode only" },
+  feet: NO_NOTE,
+  gauntlet: VARIANT_NOTE,
+  leggings: VARIANT_NOTE,
+  apron: VARIANT_NOTE,
+  cape: VARIANT_NOTE,
 };
 
 /** 部品の欄の下に出す説明。裸のときはそのことを、通常モードでは体の種類で絞った選択肢であることを出す */
 function partSelectionHint(kind: PartKind, bodyKind: number | null, advanced: boolean, nude: boolean): string | undefined {
   if ((kind === "upper" || kind === "lower") && nude)
-    return `今は${kind === "upper" ? "上裸" : "下裸"}です（服の層を外して体の層だけにしています）`;
+    return kind === "upper"
+      ? tr({
+          ja: "今は上裸です（服の層を外して体の層だけにしています）",
+          en: "Currently bare upper body (clothing layers removed, only the body layer remains)",
+        })
+      : tr({
+          ja: "今は下裸です（服の層を外して体の層だけにしています）",
+          en: "Currently bare lower body (clothing layers removed, only the body layer remains)",
+        });
   if (advanced || bodyKind === null) return undefined;
-  if (canNude({ bodyKind })) return `${bodyKindName(bodyKind)}用と共通の、名前のある部品だけを表示しています`;
-  if (BODY_KIND_PARTS[bodyKind]) return `${bodyKindName(bodyKind)}用の部品だけを表示しています`;
-  return `タイプが${bodyKindName(bodyKind) ?? "不明"}のときは、通常モードでは部品を選べません。上級者モードで選んでください`;
+  const label = bodyKindLabel(bodyKind) ?? tr({ ja: "不明", en: "Unknown" });
+  if (canNude({ bodyKind }))
+    return tr({
+      ja: `${label}用と共通の、名前のある部品だけを表示しています`,
+      en: `Showing only named parts for ${label} and shared parts`,
+    });
+  if (BODY_KIND_PARTS[bodyKind])
+    return tr({ ja: `${label}用の部品だけを表示しています`, en: `Showing only parts for ${label}` });
+  return tr({
+    ja: `タイプが${label}のときは、通常モードでは部品を選べません。上級者モードで選んでください`,
+    en: `Parts cannot be chosen in normal mode when the type is ${label}. Use Advanced mode`,
+  });
 }
 
 /** 上裸・下裸のボタン。体の種類が男・女のときだけ使える（✅ [U] 2026-10-08、ユーザー判断 2026-10-08） */
@@ -201,15 +241,28 @@ function NudeButtons({
   return (
     <div className="sm:col-span-2">
       <FieldShell
-        label="裸"
+        label={tr({ ja: "裸", en: "Undress" })}
         offset={APPEARANCE_PARTS_OFFSETS.parts}
-        note="服の層を外して、体の層だけにします"
+        note={tr({ ja: "服の層を外して、体の層だけにします", en: "Removes the clothing layers, leaving only the body layer" })}
         problem={null}
-        hint="タイプが男・女のときだけ使えます。足元は変えません"
+        hint={tr({
+          ja: "タイプが男・女のときだけ使えます。足元は変えません",
+          en: "Only available when the type is Male or Female. Feet are not changed",
+        })}
       >
         <div className="flex flex-wrap gap-2">
-          <ActionButton size="sm" disabled={disabled} label="上裸にする" onAction={() => onNude("upper")} />
-          <ActionButton size="sm" disabled={disabled} label="下裸にする" onAction={() => onNude("lower")} />
+          <ActionButton
+            size="sm"
+            disabled={disabled}
+            label={tr({ ja: "上裸にする", en: "Bare upper body" })}
+            onAction={() => onNude("upper")}
+          />
+          <ActionButton
+            size="sm"
+            disabled={disabled}
+            label={tr({ ja: "下裸にする", en: "Bare lower body" })}
+            onAction={() => onNude("lower")}
+          />
         </div>
       </FieldShell>
     </div>
@@ -224,19 +277,24 @@ export function AppearancePartsCard() {
   const heroBodyKind = view?.bodyKind ?? null;
 
   // タイプ（男・女）の順に主人公設定の人物、続けて主人公設定に出ない見た目の組（ローラ・男の子・女の子 ✅ [U]）。どのモードでも出す（ユーザー判断 2026-10-09）
-  const personGroups: string[] = [...BODY_KIND_NAMES, PERSON_HIDDEN_GROUP];
+  const bodyKindNames = BODY_KIND_NAMES.map((k) => tr(BODY_KIND_LABELS[k]));
+  const hiddenGroup = personHiddenGroup();
+  const personGroups: string[] = [...bodyKindNames, hiddenGroup];
   const personOptions: SelectOption[] = PERSONS.map((p) => ({
       value: String(p.id),
-      label: `${p.ja}${p.dlc !== null ? " [DLC]" : ""}`,
-      group: p.selectable ? BODY_KIND_NAMES[p.bodyKind] : PERSON_HIDDEN_GROUP,
-      keywords: [String(p.id), p.en],
+      label: `${tr({ ja: p.ja, en: p.en })}${p.dlc !== null ? " [DLC]" : ""}`,
+      group: p.selectable ? bodyKindNames[p.bodyKind] : hiddenGroup,
+      keywords: [String(p.id), p.ja, p.en],
     })).sort((a, b) => personGroups.indexOf(a.group) - personGroups.indexOf(b.group));
   const person = view ? findPerson(view.person) : undefined;
 
   const hairMin = advanced ? 0 : HAIR_COLOR_MIN;
   const hairMax = advanced ? HAIR_COLOR_ADVANCED_MAX : HAIR_COLOR_MAX;
   // 髪の色：0〜4 は ✅ [U]、5＝赤・6〜9 は 🔶（U-19）
-  const hairLabel = (i: number) => HAIR_COLOR_NAMES[i] ?? "色なし";
+  const hairLabel = (i: number) => {
+    const name = HAIR_COLOR_NAMES[i];
+    return name ? tr(name) : tr({ ja: "色なし", en: "No color" });
+  };
   const hairOptions: SelectOption[] = Array.from({ length: hairMax - hairMin + 1 }, (_, i) => ({
     value: String(hairMin + i),
     label: hairLabel(hairMin + i),
@@ -246,12 +304,18 @@ export function AppearancePartsCard() {
   return (
     <CollapsibleCard
       anchor={HERO_APPEARANCE_ANCHORS.parts}
-      title="容姿"
+      title={tr({ ja: "容姿", en: "Appearance" })}
       description={
         <>
-          主人公の見た目を変えられます。人物を選ぶと、その人物の見た目にまとめて揃えます。
+          {tr({
+            ja: "主人公の見た目を変えられます。人物を選ぶと、その人物の見た目にまとめて揃えます。",
+            en: "Change how the player character looks. Choosing a character applies that character's whole look.",
+          })}
           <br />
-          顔・髪型・服などを1つずつ選ぶこともできます。
+          {tr({
+            ja: "顔・髪型・服などを1つずつ選ぶこともできます。",
+            en: "You can also choose the face, hairstyle, clothes and so on one by one.",
+          })}
           {/* 人物を選ぶと、タイプ・身長・髪の色・顔・髪型・服をその人物の値で書く（体型・肌色は変えない）。
               人物を選んでいる間、ゲームは顔・髪型・服・髪の色を人物の値で表示する。部品や髪の色を変えると「個別に設定」になる */}
         </>
@@ -261,49 +325,60 @@ export function AppearancePartsCard() {
       <PageBanner error={error} problem={problem} className="sm:col-span-2" />
       <SearchSelectRow
         key="person"
-        label="人物"
+        label={tr({ ja: "人物", en: "Character" })}
         offset={APPEARANCE_PARTS_OFFSETS.person}
         value={view ? String(view.person) : null}
         currentLabel={
-          view?.person === PERSON_CUSTOM ? "個別に設定" : "不明な人物"
+          view?.person === PERSON_CUSTOM
+            ? tr({ ja: "個別に設定", en: "Custom" })
+            : tr({ ja: "不明な人物", en: "Unknown character" })
         }
         options={personOptions}
         problem={problem}
         hint={
           person
-            ? `身長 ${person.height}cm（ふつう）`
+            ? tr({ ja: `身長 ${person.height}cm（ふつう）`, en: `Height ${person.height} cm (Average)` })
             : view?.person === PERSON_CUSTOM
-              ? "顔・髪型・服を個別に設定しています"
+              ? tr({ ja: "顔・髪型・服を個別に設定しています", en: "Face, hairstyle and clothes are set individually" })
               : undefined
         }
         // 🟢 人物の番号。✅ [U] 選び直して見た目が変わることを確認。0x3AAD6 に書く値は 🔶（U-19）
-        note="選び直すと見た目が変わる。身長は今の低い・高いの倍率を引き継ぐ"
-        searchPlaceholder="人物を検索"
+        note={tr({
+          ja: "選び直すと見た目が変わる。身長は今の低い・高いの倍率を引き継ぐ",
+          en: "Choosing another character changes the look. The height keeps the current Short/Tall ratio",
+        })}
+        searchPlaceholder={tr({ ja: "人物を検索", en: "Search characters" })}
         onChange={(v) => update((b) => writePerson(b, Number(v)))}
       />
       <SelectRow
         key="body-kind"
-        label="タイプ"
+        label={tr({ ja: "タイプ", en: "Type" })}
         offset={APPEARANCE_PARTS_OFFSETS.bodyKind}
         value={view ? String(view.bodyKind) : null}
-        currentLabel="不明"
-        options={BODY_KIND_NAMES.flatMap((g, i) =>
+        currentLabel={tr({ ja: "不明", en: "Unknown" })}
+        options={bodyKindNames.flatMap((g, i) =>
           BODY_KIND_CRASH.includes(i) ? [] : [{ value: String(i), label: g }],
         )}
         problem={problem}
         disabled={!advanced}
         hint={
           advanced
-            ? "上級者モード：タイプだけを書き換えます。異なるタイプの部品と組み合わさると表示が崩れるおそれがあります"
-            : "人物を選ぶと決まります"
+            ? tr({
+                ja: "上級者モード：タイプだけを書き換えます。異なるタイプの部品と組み合わさると表示が崩れるおそれがあります",
+                en: "Advanced mode: changes only the type. Combined with parts for a different type, the display may break",
+              })
+            : tr({ ja: "人物を選ぶと決まります", en: "Set by choosing a character" })
         }
         // 🔶 0＝男、1＝女。2＝ローラ・3＝子供は ✅ [U] 人物として表示を確認。4＝動物のクラッシュは ✅ [U]
-        note="男・女のほか、ローラ・子供がある。動物はロードでゲームが止まるので出さない"
+        note={tr({
+          ja: "男・女のほか、ローラ・子供がある。動物はロードでゲームが止まるので出さない",
+          en: "Besides Male and Female, there are Laura and Child. Animal is not offered because the game stops on load",
+        })}
         onChange={(v) => update((b) => writeBodyKind(b, Number(v), { advanced }))}
       />
       <SelectRow
         key="hair-color"
-        label="髪の色"
+        label={tr({ ja: "髪の色", en: "Hair color" })}
         offset={APPEARANCE_PARTS_OFFSETS.hairColor}
         value={view ? String(view.hairColor) : null}
         currentLabel={hairLabel(view?.hairColor ?? 0)}
@@ -311,11 +386,17 @@ export function AppearancePartsCard() {
         problem={problem}
         hint={
           advanced
-            ? "上級者モード：名前のない色を選ぶと髪の色がつきません"
+            ? tr({
+                ja: "上級者モード：名前のない色を選ぶと髪の色がつきません",
+                en: "Advanced mode: choosing an unnamed color leaves the hair uncolored",
+              })
             : undefined
         }
         // ✅ [U] 0〜4。🔶 5＝赤・6〜9（U-19）
-        note="主人公設定の髪の色の一覧と同じ順に並ぶ"
+        note={tr({
+          ja: "主人公設定の髪の色の一覧と同じ順に並ぶ",
+          en: "Listed in the same order as the hair colors in Character Settings",
+        })}
         onChange={(v) => update((b) => writeHairColor(b, Number(v), { advanced }))}
       />
       <NudeButtons
@@ -328,15 +409,15 @@ export function AppearancePartsCard() {
         return (
           <div key={kind} className="flex flex-col gap-1">
             <SearchSelectRow
-              label={PART_KIND_LABELS[kind]}
+              label={tr(PART_KIND_LABELS[kind])}
               offset={part?.offset ?? partOffset(kind)}
               value={part ? String(part.id) : null}
               currentLabel={
                 part?.id === -1
-                  ? "なし"
+                  ? noneLabel()
                   : current
                     ? partLabel(current)
-                    : "表にない部品"
+                    : tr({ ja: "表にない部品", en: "Unknown part" })
               }
               options={heroBodyKind === null ? [] : partOptions(kind, heroBodyKind, advanced)}
               problem={problem}
@@ -348,8 +429,11 @@ export function AppearancePartsCard() {
               )}
               // その項目が「なし」のときだけ（止めない。ユーザー判断 2026-10-08）
               warning={part ? partNoneWarning(kind, part.id) : null}
-              note={PART_NOTES[kind]}
-              searchPlaceholder={`${PART_KIND_LABELS[kind]}を検索`}
+              note={tr(PART_NOTES[kind])}
+              searchPlaceholder={tr({
+                ja: `${PART_KIND_LABELS[kind].ja}を検索`,
+                en: `Search ${PART_KIND_LABELS[kind].en.toLowerCase()}`,
+              })}
               onChange={(v) => update((b) => writePart(b, kind, Number(v), { advanced }))}
             />
             {advanced && part && (

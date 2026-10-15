@@ -1,19 +1,20 @@
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { tr } from "@/lib/i18n";
 
 /** 開発者への連絡先。サイドバーの一番下（LICENCE の上）に、名前とソーシャルのアイコンを1行で置く */
 export function DeveloperContact() {
   return (
     <div className="flex items-center justify-between gap-2 pl-2">
       <div className="flex min-w-0 flex-col">
-        <span className="text-muted-foreground text-[10px] leading-tight">開発者</span>
+        <span className="text-muted-foreground text-[10px] leading-tight">{tr({ ja: "開発者", en: "Developer" })}</span>
         <span className="truncate text-sm font-medium">nagataaaas</span>
       </div>
       <div className="flex items-center">
-        <ContactLink href="https://x.com/nagataaaas" label="X（@nagataaaas）">
+        <ContactLink href="https://x.com/nagataaaas" label={tr({ ja: "X（@nagataaaas）", en: "X (@nagataaaas)" })}>
           <XIcon />
         </ContactLink>
-        <ContactLink href="https://github.com/nagataaaas" label="GitHub（nagataaaas）">
+        <ContactLink href="https://github.com/nagataaaas" label={tr({ ja: "GitHub（nagataaaas）", en: "GitHub (nagataaaas)" })}>
           <GitHubIcon />
         </ContactLink>
       </div>
@@ -31,7 +32,7 @@ export function RepositoryLink() {
       className="text-muted-foreground hover:text-foreground flex items-center gap-1 px-2 text-xs"
     >
       <GitHubIcon className="size-3" />
-      ソースコード
+      {tr({ ja: "ソースコード", en: "Source code" })}
     </a>
   );
 }

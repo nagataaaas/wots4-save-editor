@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ImageIcon } from 'lucide-react'
 import { Tooltip, TooltipContent } from '@/components/ui/tooltip'
+import { tr } from '@/lib/i18n'
 import { weaponIdLabel } from '@/save/weapon'
 import { weaponImageUrl } from '@/save/master/weapon-images'
 
@@ -12,7 +13,9 @@ function CompleteWeaponImage({ id, url }: { id: number; url: string }) {
     <figure className="flex flex-col gap-1">
       <div className="relative aspect-10/3 w-60">
         {status === 'failed' ? (
-          <div className="flex size-full items-center justify-center opacity-70">画像を読み込めません</div>
+          <div className="flex size-full items-center justify-center opacity-70">
+            {tr({ ja: '画像を読み込めません', en: 'Could not load the image' })}
+          </div>
         ) : (
           <>
             {status === 'loading' && <div className="image-shimmer absolute inset-0 rounded-sm" aria-hidden="true" />}
@@ -54,7 +57,10 @@ export function PartImageTip({ completeIds }: { completeIds: readonly number[] }
       <span
         ref={setAnchor}
         role="img"
-        aria-label={`このパーツを使う武器の画像：${images.map((i) => weaponIdLabel(i.id)).join('、')}`}
+        aria-label={tr({
+          ja: `このパーツを使う武器の画像：${images.map((i) => weaponIdLabel(i.id)).join('、')}`,
+          en: `Images of weapons that use this part: ${images.map((i) => weaponIdLabel(i.id)).join(', ')}`,
+        })}
         // 無効の欄（鞘を上書きしていないとき。ボタンは pointer-events: none）でもホバーできるようにする
         className="text-muted-foreground hover:text-foreground pointer-events-auto inline-flex shrink-0"
         onPointerEnter={() => setOpen(true)}

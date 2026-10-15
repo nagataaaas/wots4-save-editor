@@ -50,7 +50,9 @@ import { NIGHT_VISIT_COUNT_TABLE } from "./master/dataset/night-visit-count";
 import { NIGHT_VISIT_LAYOUT_TABLE } from "./master/dataset/night-visit-layout";
 import { NIGHT_VISIT_PLACE_TABLE } from "./master/dataset/night-visit-place";
 import { NPC_LOOK_TABLE } from "./master/dataset/npc-look";
-import { labelOf, nameOf } from "./master/labels";
+import { tr, type Localized } from "@/lib/i18n";
+import { labelOf, npcLabel } from "./master/labels";
+import { npcLabelId } from "./master/label-types";
 import { lookup } from "./master/lookup";
 import { npcName } from "./master/npc-names";
 import { characterStatusForPromise, CHARACTER_DEAD } from "./flags/characters";
@@ -75,57 +77,92 @@ export const RECORD_EMPTY_BYTES: readonly number[] = [
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
 ];
 
-/** 夜這いの回数など。表示だけ */
-export const YOBAI_COUNTERS: readonly {
+type YobaiCounter = {
   offset: number;
   size: 1 | 4;
   label: string;
   note: string;
   hidden?: boolean;
-}[] = [
-  {
-    offset: YOBAI_TOTAL_OFFSET,
-    size: 4,
-    label: "夜這い回数",
+};
+
+/** 表はモジュールの定数なので、label・note は getter にして読むたびに今の言語で返す */
+function counter(base: Omit<YobaiCounter, "label" | "note">, label: Localized, note: Localized): YobaiCounter {
+  return {
+    ...base,
+    get label() {
+      return tr(label);
+    },
+    get note() {
+      return tr(note);
+    },
+  };
+}
+
+/** 夜這いの回数など。表示だけ */
+export const YOBAI_COUNTERS: readonly YobaiCounter[] = [
+  counter(
+    { offset: YOBAI_TOTAL_OFFSET, size: 4 },
+    { ja: "夜這い回数", en: "Night crawls" },
     // ✅ 約束の画面の「夜這い回数」
-    note: "約束の画面の「夜這い回数」。上限 9999。周回で消えない",
-  },
-  {
-    offset: STAGE_OFFSET,
-    hidden: true,
-    size: 4,
-    label: "段階",
+    {
+      ja: "約束の画面の「夜這い回数」。上限 9999。周回で消えない",
+      en: "The night crawl count on the promise screen. Up to 9999. Kept across playthroughs",
+    },
+  ),
+  counter(
+    { offset: STAGE_OFFSET, hidden: true, size: 4 },
+    { ja: "段階", en: "Level" },
     // 🟢
-    note: "夜這い回数が 10・45・85 に届くたびに上がる。高いほど家の中の人が多い場所になりやすい",
-  },
-  {
-    offset: LOVE_COUNT_OFFSET,
-    size: 4,
-    label: "愛の証の回数",
+    {
+      ja: "夜這い回数が 10・45・85 に届くたびに上がる。高いほど家の中の人が多い場所になりやすい",
+      en: "Goes up each time the night crawl count reaches 10, 45, and 85. The higher it is, the more people tend to be in the house",
+    },
+  ),
+  counter(
+    { offset: LOVE_COUNT_OFFSET, size: 4 },
+    { ja: "愛の証の回数", en: "Proofs of love" },
     // 🟢
-    note: "「愛の証をもらった」で終わった夜這いの回数",
-  },
-  {
-    offset: 0x37c8,
-    size: 1,
-    label: "褒美の順番",
+    {
+      ja: "「愛の証をもらった」で終わった夜這いの回数",
+      en: 'The number of night crawls that ended with "Received proof of love."',
+    },
+  ),
+  counter(
+    { offset: 0x37c8, size: 1 },
+    { ja: "褒美の順番", en: "Reward order" },
     // 🟢
-    note: "1〜50 を回る。5 回ごとに決まった品、50 回目は緋緋色金",
-  },
+    {
+      ja: "1〜50 を回る。5 回ごとに決まった品、50 回目は緋緋色金",
+      en: "Cycles through 1 to 50. A fixed item every 5th time, and Hihiirokane on the 50th",
+    },
+  ),
 ];
 
 /** 🟢 特別な相手ごとの夜這い回数 0x13E38 + 4k（u32、上限 9999）。k は枠（slot）、npc は名前の表の ID。さよと町の人は数えない */
 export const PARTNER_COUNTS_OFFSET = 0x13e38;
+/** label は読むたびに今の言語の名前を返す */
 export const PARTNER_COUNT_NPCS: readonly { slot: number; npc: number; label: string }[] = Object.values(NIGHT_VISIT_COUNT_TABLE)
-  .map(r => ({ slot: r.id_dec, npc: r.npc, label: nameOf.npc(r.npc) }));
+  .map(r => ({
+    slot: r.id_dec,
+    npc: r.npc,
+    get label() {
+      return npcLabel(npcLabelId(r.npc));
+    },
+  }));
 
 const PLACE_ROWS = Object.values(NIGHT_VISIT_PLACE_TABLE);
 
 /**
  * ✅ [U] 2026-10-06：約束の場所 +0x08（書き換えて、約束の画面に出る名前を見た）。
- * datatable/place/night-visit-place.csv の name_ja（添字＝場所の値）
+ * datatable/place/night-visit-place.csv の name_ja（添字＝場所の値）。画面に出すときは placeName（今の言語）
  */
 export const PLACES: readonly string[] = PLACE_ROWS.map((r) => r.name_ja);
+
+/** 場所の今の言語の名前。表にない場所は undefined */
+export function placeName(place: number): string | undefined {
+  const r = lookup(NIGHT_VISIT_PLACE_TABLE, place);
+  return r ? tr({ ja: r.name_ja, en: r.name_en }) : undefined;
+}
 
 /**
  * 🟢 約束で使われる（場所、配置）の組（候補75行の重なりを除いて72組。datatable/place/night-visit-place.csv の layout 列）。
@@ -189,7 +226,7 @@ export function layoutInfo(layout: number): LayoutInfo | null {
 /** 配置の表示（「町人の家・家の人2人・布団2枚」）。表にない値は 16進数 */
 export function layoutLabel(layout: number): string {
   const r = lookup(NIGHT_VISIT_LAYOUT_TABLE, layout);
-  return r ? r.name_ja : "不明な配置";
+  return r ? tr({ ja: r.name_ja, en: r.name_en }) : tr({ ja: "不明な配置", en: "Unknown layout" });
 }
 
 /** 家の人の数（並べ替え用） */
@@ -207,12 +244,13 @@ export function layoutsForPlace(place: number): number[] {
 
 export type KnownValue = { value: number; label: string };
 
-/** 相手の種類の区分（選択肢の見出し） */
-export type TypeKind = "名前のある相手" | "町の人（女性）" | "町の人（男性）";
+/** 相手の種類の区分（選択肢の見出し）。名前のある相手・町の人（女性）・町の人（男性） */
+export type TypeKind = "special" | "townFemale" | "townMale";
 
 export type PromisePartner = {
   /** 相手の種類（約束の枠の +0x04） */
   type: number;
+  /** 今の言語の名前（読むたびに今の言語で返す） */
   label: string;
   kind: "special" | "town";
   sex: "m" | "f";
@@ -228,6 +266,7 @@ export type PromisePartner = {
   group: number;
   /** 名前のある相手の行 */
   row: number | null;
+  /** 今の言語の補足（「ふだんは町にいない」など）。なければ空 */
   note: string;
 };
 
@@ -236,7 +275,9 @@ export type PromisePartner = {
  */
 export const PROMISE_PARTNERS: readonly PromisePartner[] = Object.values(NIGHT_VISIT_PARTNER_TABLE).map((p) => ({
   type: p.id_dec,
-  label: p.name_ja,
+  get label() {
+    return tr({ ja: p.name_ja, en: p.name_en });
+  },
   kind: p.kind === "special" ? "special" : "town",
   sex: p.sex === "f" ? "f" : "m",
   nameList: p.name_list === 7 || p.name_list === 8 ? p.name_list : null,
@@ -247,7 +288,9 @@ export const PROMISE_PARTNERS: readonly PromisePartner[] = Object.values(NIGHT_V
   blood: p.blood,
   group: p.group,
   row: p.row,
-  note: p.note_ja,
+  get note() {
+    return tr({ ja: p.note_ja, en: p.note_en });
+  },
 }));
 
 const PARTNER_BY_TYPE: ReadonlyMap<number, PromisePartner> = new Map(PROMISE_PARTNERS.map((p) => [p.type, p]));
@@ -262,27 +305,35 @@ export function promisePartner(type: number): PromisePartner | undefined {
  */
 export const KNOWN_TYPES: readonly (KnownValue & { kind: TypeKind })[] = PROMISE_PARTNERS.map((p) => ({
   value: p.type,
-  label: p.note ? `${p.label}（${p.note}）` : p.label,
-  kind:
-    p.kind === "special" ? "名前のある相手" : p.sex === "f" ? "町の人（女性）" : "町の人（男性）",
+  // 読むたびに今の言語で返す
+  get label() {
+    return p.note ? tr({ ja: `${p.label}（${p.note}）`, en: `${p.label} (${p.note})` }) : p.label;
+  },
+  kind: p.kind === "special" ? "special" : p.sex === "f" ? "townFemale" : "townMale",
 }));
 
 /**
  * 🟢 見た目（モデル）と声（+0x20）。datatable/npc/npc-look.csv の222件。番号は人物（容姿、appearance/person.csv）と同じ。
- * 通常モードではこれだけを書ける。型・名前とは別々に効く（✅ [U]）。usedBy はその見た目を使う町の人の種類
+ * 通常モードではこれだけを書ける。型・名前とは別々に効く（✅ [U]）。usedBy はその見た目を使う町の人の種類。
+ * label は読むたびに今の言語で返す。keywords は検索用（日本語・英語の名前と usedBy）
  */
-export const KNOWN_LOOKS: readonly (KnownValue & { sex: "f" | "m"; usedBy: string })[] =
+export const KNOWN_LOOKS: readonly (KnownValue & { sex: "f" | "m"; usedBy: string; keywords: readonly string[] })[] =
   Object.values(NPC_LOOK_TABLE).map((l) => ({
     value: l.id_dec,
-    label: l.name_ja,
+    get label() {
+      return tr({ ja: l.name_ja, en: l.name_en });
+    },
     sex: l.sex === "f" ? "f" : "m",
-    usedBy: l.used_by,
+    get usedBy() {
+      return tr({ ja: l.used_by, en: l.used_by_en });
+    },
+    keywords: [l.name_ja, l.name_en, l.used_by, l.used_by_en].filter((k) => k !== ""),
   }));
 
 /** 名前の表示。🟢 名前の表（npc-names）にない ID は「不明」 */
 export function nameLabel(id: number): string {
   const entry = npcName(id);
-  return entry ? labelOf({ kind: "npc", id: entry.labelId }) : "不明";
+  return entry ? labelOf({ kind: "npc", id: entry.labelId }) : tr({ ja: "不明", en: "Unknown" });
 }
 
 /** ✅ [U] 血液型（1〜4 は書き換えで確認。5 はさよの「？」） */
@@ -373,15 +424,22 @@ export type RecordView = { index: number; building: number } & Record<RecordFiel
 export function partnerDeathWarning(bytes: Uint8Array, type: number): string | null {
   const status = characterStatusForPromise(type);
   if (!status || readU8(bytes, status.offset) !== CHARACTER_DEAD) return null;
-  const name = promisePartner(type)?.label ?? "相手";
-  return `${name} は死亡しています。約束は消えずに残ります`;
+  const name = promisePartner(type)?.label;
+  return tr({
+    ja: `${name ?? "相手"} は死亡しています。約束は消えずに残ります`,
+    en: `${name ?? "The partner"} is dead. The promise stays and is not removed`,
+  });
 }
 export function currentStage(bytes: Uint8Array): number {
   return Math.min(readU32(bytes, STAGE_OFFSET), STAGE_MAX);
 }
 export function createProblem(bytes: Uint8Array): string | null {
   return checkLayout(bytes) ?? (PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, 'type') !== PROMISE_EMPTY
-    ? "すでに約束があります（空の枠にだけ作れます）" : null);
+    ? tr({
+        ja: "すでに約束があります（空の枠にだけ作れます）",
+        en: "There is already a promise (one can only be made when there is none)",
+      })
+    : null);
 }
 export type PromiseContext = {
   today: number; stage: number; createProblem: string | null; deathWarnings: ReadonlyMap<number, string>;
@@ -423,14 +481,22 @@ function readRecordsStatus(bytes: Uint8Array, layoutProblem: string | null): { c
   if (layoutProblem) return { count, problem: layoutProblem };
   for (let i = count + 1; i < RECORD_CAPACITY; i++) {
     if (!isEmptyRecord(bytes, i))
-      return { count, problem: `${count + 1}件目が空なのに、${i + 1}件目に値があります` };
+      return {
+        count,
+        problem: tr({
+          ja: `${count + 1}件目が空なのに、${i + 1}件目に値があります`,
+          en: `Record ${count + 1} is empty, but record ${i + 1} has values`,
+        }),
+      };
   }
   return { count, problem: null };
 }
 
 export function readYobai(bytes: Uint8Array): YobaiView {
   if (bytes.byteLength < PROMISE_OFFSET + PROMISE_LENGTH)
-    throw new RangeError("ファイルが小さすぎて夜這いの領域を読めません");
+    throw new RangeError(
+      tr({ ja: "ファイルが小さすぎて夜這いの領域を読めません", en: "The file is too small to read the night crawling data" }),
+    );
   const layoutProblem = checkLayout(bytes);
 
   const fields = PROMISE_PERSON_CODEC.read(bytes, PROMISE_OFFSET);
@@ -472,6 +538,8 @@ export function readYobai(bytes: Uint8Array): YobaiView {
   };
 }
 
+const OUT_OF_RANGE = () => tr({ ja: "範囲外の値です", en: "Out of range" });
+
 function knownList(field: PersonField): readonly KnownValue[] | null {
   if (field === "type") return KNOWN_TYPES;
   if (field === "look") return KNOWN_LOOKS;
@@ -502,24 +570,45 @@ export function validatePersonValue(
 ): string | null {
   const size = PROMISE_FIELDS[field].size;
   const max = size === 1 ? 0xff : size === 2 ? 0xffff : 0xffffffff;
-  if (!Number.isInteger(value) || value < 0 || value > max) return "範囲外の値です";
-  if (field === "type" && value === PROMISE_EMPTY) return "空きを表す値なので書けません";
+  if (!Number.isInteger(value) || value < 0 || value > max) return OUT_OF_RANGE();
+  if (field === "type" && value === PROMISE_EMPTY)
+    return tr({ ja: "空きを表す値なので書けません", en: "This value means empty and cannot be written" });
   if (opts.advanced) return null;
   const known = knownList(field);
   if (known)
-    return validateKnownValue(value, known, opts, max, "表にない値です（上級者モードで書けます）");
+    return validateKnownValue(
+      value,
+      known,
+      opts,
+      max,
+      tr({ ja: "表にない値です（上級者モードで書けます）", en: "This value is not in the list (can be written in Advanced mode)" }),
+    );
   if (field === "age")
     return value <= AGE_NORMAL_MAX || value === AGE_UNKNOWN
       ? null
-      : `通常モードでは 0〜${AGE_NORMAL_MAX} か「？」を指定してください`;
+      : tr({
+          ja: `通常モードでは 0〜${AGE_NORMAL_MAX} か「？」を指定してください`,
+          en: `In normal mode, enter 0 to ${AGE_NORMAL_MAX} or "？"`,
+        });
   if (field === "name")
-    return npcName(value) ? null : "名前の表にない名前です（上級者モードで書けます）";
+    return npcName(value)
+      ? null
+      : tr({
+          ja: "名前の表にない名前です（上級者モードで書けます）",
+          en: "This name is not in the name list (can be written in Advanced mode)",
+        });
   if (field === "day")
     return value <= DAY_NORMAL_MAX
       ? null
-      : `通常モードでは 1〜${DAY_NORMAL_MAX + 1}日目を指定してください`;
+      : tr({
+          ja: `通常モードでは 1〜${DAY_NORMAL_MAX + 1}日目を指定してください`,
+          en: `In normal mode, enter Day 1 to ${DAY_NORMAL_MAX + 1}`,
+        });
   if (field === "group")
-    return "書き換えの効果が分かっていない値なので、上級者モードでだけ書けます";
+    return tr({
+      ja: "書き換えの効果が分かっていない値なので、上級者モードでだけ書けます",
+      en: "The effect of changing this value is not known, so it can only be written in Advanced mode",
+    });
   return null;
 }
 
@@ -528,7 +617,7 @@ function assertPromiseEditable(bytes: Uint8Array): void {
   const problem = checkLayout(bytes);
   if (problem) throw new RangeError(problem);
   if (PROMISE_CODEC.readField(bytes, PROMISE_OFFSET, "type") === PROMISE_EMPTY)
-    throw new RangeError("約束がありません（空の枠には書きません）");
+    throw new RangeError(tr({ ja: "約束がありません（空の枠には書きません）", en: "There is no promise (nothing is written to an empty slot)" }));
 }
 
 /** 約束の人物の項目を1つ書く。その項目のバイトだけを変える */
@@ -558,11 +647,14 @@ export function validatePlaceLayout(
   opts: EditOpts,
 ): string | null {
   for (const v of [place, layout])
-    if (!Number.isInteger(v) || v < 0 || v > 0xffff) return "範囲外の値です";
+    if (!Number.isInteger(v) || v < 0 || v > 0xffff) return OUT_OF_RANGE();
   if (opts.advanced || (place === current.place && layout === current.layout)) return null;
   return PLACE_LAYOUTS.some((p) => p.place === place && p.layout === layout)
     ? null
-    : "表にある場所と配置の組ではありません（上級者モードで書けます）";
+    : tr({
+        ja: "表にある場所と配置の組ではありません（上級者モードで書けます）",
+        en: "This location and layout pair is not in the list (can be written in Advanced mode)",
+      });
 }
 
 export function writePromisePlace(
@@ -595,7 +687,7 @@ export function writeRecordField(
   const { count, problem } = readRecordsStatus(bytes, checkLayout(bytes));
   if (problem) throw new RangeError(problem);
   if (!Number.isInteger(index) || index < 0 || index >= count)
-    throw new RangeError(`使用中の記録ではありません: ${index + 1}件目`);
+    throw new RangeError(tr({ ja: `使用中の記録ではありません: ${index + 1}件目`, en: `Not a record in use: record ${index + 1}` }));
   const { size } = RECORD_FIELDS[field];
   const offset = recordFieldOffset(index, field);
   const error = validatePersonField(field, value, readSized(bytes, offset, size), opts);

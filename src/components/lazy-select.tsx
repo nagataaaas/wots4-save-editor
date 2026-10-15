@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { ChevronDownIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { tr } from '@/lib/i18n'
 import { Select, SelectContent, SelectTrigger, SelectValue, selectTriggerClassName } from '@/components/ui/select'
 
 type Props = {
@@ -47,7 +48,7 @@ export function LazySelect({ value, items, placeholder, disabled, className, onV
         }}
       >
         <span data-slot="select-value" className="flex flex-1 text-left">
-          {label ?? placeholder ?? (value === null ? '' : '不明')}
+          {label ?? placeholder ?? (value === null ? '' : tr({ ja: '不明', en: 'Unknown' }))}
         </span>
         <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4" />
       </button>

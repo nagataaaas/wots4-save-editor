@@ -6,6 +6,7 @@
 // - 7001〜7150・8001〜8200：町の人の名前の候補。約束の相手の町の人の名前はここから選ばれる 🟢
 //   （女性 7001〜7100・8001〜8104、男性 7101〜7150・8105〜8200。8000 台は外国人の町の人）
 // 名前の文字列は NPC_LABELS にだけ持つ。画面やほかのモジュールでは labels.ts の npcLabel(NpcLabelId) で引く。
+import { tr } from "@/lib/i18n";
 import { NPC_NAME_TABLE } from "./dataset/npc-name";
 import { npcId, npcLabelId, type LocalizedLabel, type NpcId, type NpcLabelId } from "./label-types";
 
@@ -34,7 +35,7 @@ export function npcName(id: number): NpcNameEntry | undefined {
 
 /** 名前の ID の区分（選択肢の見出しに使う） */
 export function npcNameGroup(id: number): string {
-  if (id <= 215) return "固有の名前";
-  if (id < 7000) return "仮の名前";
-  return "町の人の名前";
+  if (id <= 215) return tr({ ja: "固有の名前", en: "Unique names" });
+  if (id < 7000) return tr({ ja: "仮の名前", en: "Placeholder names" });
+  return tr({ ja: "町の人の名前", en: "Townsfolk names" });
 }

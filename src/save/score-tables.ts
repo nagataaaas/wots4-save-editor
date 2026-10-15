@@ -13,6 +13,7 @@ import { assertWritable, checkLayout } from './layout'
 import { ITEMS } from './master/item-names'
 import { itemLabel } from './master/labels'
 import { findSkillInfo, skillName } from './master/sect-data'
+import { tr, type Localized } from '@/lib/i18n'
 
 export type ScoreTableId = 'arts' | 'items'
 export type ScoreScope = 'cycle' | 'total'
@@ -24,7 +25,7 @@ export const SCORE_SYSTEM_MAX = NUM_TYPE_RANGE[SCORE_TYPE].max
 
 export type ScoreTable = {
   id: ScoreTableId
-  label: string
+  label: Localized
   cycleStart: number
   totalStart: number
   count: number
@@ -33,8 +34,22 @@ export type ScoreTable = {
 }
 
 export const SCORE_TABLES: Readonly<Record<ScoreTableId, ScoreTable>> = {
-  arts: { id: 'arts', label: '技ごとの斬殺数', cycleStart: 0x0c64, totalStart: 0x1c04, count: 1000, max: 9_999_999 },
-  items: { id: 'items', label: '道具の使用回数', cycleStart: 0x2ba4, totalStart: 0x2fa4, count: 256, max: 9_999_999 },
+  arts: {
+    id: 'arts',
+    label: { ja: '技ごとの斬殺数', en: 'Kills per move' },
+    cycleStart: 0x0c64,
+    totalStart: 0x1c04,
+    count: 1000,
+    max: 9_999_999,
+  },
+  items: {
+    id: 'items',
+    label: { ja: '道具の使用回数', en: 'Item uses' },
+    cycleStart: 0x2ba4,
+    totalStart: 0x2fa4,
+    count: 256,
+    max: 9_999_999,
+  },
 }
 
 export function scoreOffset(table: ScoreTableId, scope: ScoreScope, index: number): number {
@@ -69,7 +84,10 @@ export type ScoreTableView = ViewStatus & {
 
 export function readScoreTable(bytes: Uint8Array, table: ScoreTableId): ScoreTableView {
   const t = SCORE_TABLES[table]
-  if (bytes.byteLength < t.totalStart + 4 * t.count) throw new RangeError(`ファイルが小さすぎて${t.label}を読めません`)
+  if (bytes.byteLength < t.totalStart + 4 * t.count)
+    throw new RangeError(
+      tr({ ja: `ファイルが小さすぎて${t.label.ja}を読めません`, en: `The file is too small to read ${t.label.en.toLowerCase()}` }),
+    )
   const read = (start: number) => Array.from({ length: t.count }, (_, i) => readU32(bytes, start + 4 * i))
   return { warnings: [], cycle: read(t.cycleStart), total: read(t.totalStart), problem: checkLayout(bytes) }
 }
@@ -77,8 +95,10 @@ export function readScoreTable(bytes: Uint8Array, table: ScoreTableId): ScoreTab
 /** 問題がなければ null */
 export function validateScore(table: ScoreTableId, index: number, value: number, opts: EditOpts): string | null {
   const t = SCORE_TABLES[table]
-  if (!Number.isInteger(index) || index < 0 || index >= t.count) return "範囲外の技・道具です"
-  if (!opts.advanced && scoreEntryName(table, index) === null) return "表にない技・道具です（上級者モードで書けます）"
+  if (!Number.isInteger(index) || index < 0 || index >= t.count)
+    return tr({ ja: "範囲外の技・道具です", en: "The move or item is out of range" })
+  if (!opts.advanced && scoreEntryName(table, index) === null)
+    return tr({ ja: "表にない技・道具です（上級者モードで書けます）", en: "Unknown move or item (can be written in Advanced mode)" })
   return validateRange(value, { systemMax: SCORE_SYSTEM_MAX, normalMax: t.max }, opts)
 }
 

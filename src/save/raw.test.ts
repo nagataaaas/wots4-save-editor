@@ -30,9 +30,10 @@ describe('領域の一覧（docs/save_format/README.md §3）', () => {
     for (const region of RAW_REGIONS) for (const boundary of [region.start, region.end ?? region.start])
       for (const offset of [boundary - 1, boundary, boundary + 1]) if (offset >= 0 && offset < TS_SAVE_SIZE) offsets.add(offset)
     for (const offset of offsets) expect(RAW_REGIONS[table[offset]] ?? null).toBe(innermostRegion(offset))
-    const regions = [{ start: 1, end: 5, label: '広い', chunk: '' },
-      { start: 2, end: 3, label: '先', chunk: '' }, { start: 2, end: 3, label: '後', chunk: '' },
-      { start: 0, end: null, label: '終端なし', chunk: '' }]
+    const label = (ja: string) => ({ ja, en: ja })
+    const regions = [{ start: 1, end: 5, label: label('広い'), chunk: '' },
+      { start: 2, end: 3, label: label('先'), chunk: '' }, { start: 2, end: 3, label: label('後'), chunk: '' },
+      { start: 0, end: null, label: label('終端なし'), chunk: '' }]
     expect([...regionIndexTable(7, regions)]).toEqual([-1, 0, 1, 1, 0, 0, -1])
   })
   it('終了は開始以上で、ファイルの範囲に収まる', () => {
@@ -46,12 +47,12 @@ describe('領域の一覧（docs/save_format/README.md §3）', () => {
   })
 
   it('領域どうしは、離れているか片方がもう片方を含む（一部だけ重なるものはない）', () => {
-    const known = RAW_REGIONS.filter((r) => r.end !== null) as { start: number; end: number; label: string }[]
+    const known = RAW_REGIONS.filter((r) => r.end !== null) as { start: number; end: number; label: { ja: string } }[]
     for (const a of known)
       for (const b of known) {
         if (a === b || a.end < b.start || b.end < a.start) continue
         const nested = (a.start <= b.start && b.end <= a.end) || (b.start <= a.start && a.end <= b.end)
-        expect(nested, `${a.label} と ${b.label}`).toBe(true)
+        expect(nested, `${a.label.ja} と ${b.label.ja}`).toBe(true)
       }
   })
 
@@ -72,15 +73,15 @@ describe('領域の一覧（docs/save_format/README.md §3）', () => {
     expect(innermostRegion(0x0001)).toBeNull()
     // 🟢 先頭付近は 0x0010〜0x2BA3 まで切れ目なく領域が続く
     expect(innermostRegion(0x0b3c)?.chunk).toBe('stats')
-    expect(innermostRegion(0x0c64)?.label).toBe('技ごとの斬殺数（周回中）')
-    expect(innermostRegion(0x01e0)?.label).toBe('町の人のレコード（死亡のビット）')
+    expect(innermostRegion(0x0c64)?.label.ja).toBe('技ごとの斬殺数（周回中）')
+    expect(innermostRegion(0x01e0)?.label.ja).toBe('町の人のレコード（死亡のビット）')
     expect(positionInRegion(innermostRegion(0x01e0)!, 0x01e0)).toBe('#11 +0x00')
   })
 
   it('武器レコード（0xA0）とアイテム（8 B）は「#n +0xNN」で位置を表す', () => {
     // 🟢 武器箪笥の本当の先頭は 0xACF4
     const chest = innermostRegion(0xacf4 + 0xa0 * 12 + 0x1c)
-    expect(chest?.label).toBe('武器箪笥')
+    expect(chest?.label.ja).toBe('武器箪笥')
     expect(positionInRegion(chest!, 0xacf4 + 0xa0 * 12 + 0x1c)).toBe('#12 +0x1C')
     const carried = innermostRegion(0x5b40 + 8 * 3 + 2)
     expect(positionInRegion(carried!, 0x5b40 + 8 * 3 + 2)).toBe('#3 +0x02')

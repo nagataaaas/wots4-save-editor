@@ -7,29 +7,44 @@ import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from './field'
 import { ACCESSORIES } from './master/accessory-names'
 import { readF32, readU8, recordCodec, writeF32 } from './binary'
 import { ACCESSORY_FLAGS_OFFSET } from './unlocks'
+import { tr, type Localized } from '@/lib/i18n'
 
 /** 🟢 取り付け先番号。標準位置により頭は顔も、胸は背中も含む。 */
-export const ACCESSORY_ATTACHMENT_LABELS = ['頭', '胸・背中', '腰', '右肩', '左肩', '右腕', '左腕', '右足', '左足', '右ひざ', '左ひざ', '右手', '左手'] as const
+export const ACCESSORY_ATTACHMENT_LABELS: readonly Localized[] = [
+  { ja: '頭', en: 'Head' },
+  { ja: '胸・背中', en: 'Chest/Back' },
+  { ja: '腰', en: 'Waist' },
+  { ja: '右肩', en: 'Right Shoulder' },
+  { ja: '左肩', en: 'Left Shoulder' },
+  { ja: '右腕', en: 'Right Arm' },
+  { ja: '左腕', en: 'Left Arm' },
+  { ja: '右足', en: 'Right Leg' },
+  { ja: '左足', en: 'Left Leg' },
+  { ja: '右ひざ', en: 'Right Knee' },
+  { ja: '左ひざ', en: 'Left Knee' },
+  { ja: '右手', en: 'Right Hand' },
+  { ja: '左手', en: 'Left Hand' },
+]
 
 export const ACCESSORY_SLOT_COUNT = 10
 export const ACCESSORY_RECORD_SIZE = 0x40
 export const ACCESSORY_EQUIPMENT_BASES = [0x39cc, 0x3c4c, 0x3ecc, 0x414c, 0x43cc, 0x464c] as const
 export const ACCESSORY_FLOAT_FIELDS = [
-  { key: 'positionAX', kind: 'position', label: '位置 X', state: 'A', relative: 0x04, min: -10, max: 10 },
-  { key: 'positionAY', kind: 'position', label: '位置 Y', state: 'A', relative: 0x08, min: -10, max: 10 },
-  { key: 'positionAZ', kind: 'position', label: '位置 Z', state: 'A', relative: 0x0c, min: -10, max: 10 },
-  { key: 'positionBX', kind: 'position', label: '位置 X', state: 'B', relative: 0x10, min: -10, max: 10 },
-  { key: 'positionBY', kind: 'position', label: '位置 Y', state: 'B', relative: 0x14, min: -10, max: 10 },
-  { key: 'positionBZ', kind: 'position', label: '位置 Z', state: 'B', relative: 0x18, min: -10, max: 10 },
-  { key: 'rotationAX', kind: 'rotation', label: '回転 X（度）', state: 'A', relative: 0x1c, min: -180, max: 180 },
-  { key: 'rotationAY', kind: 'rotation', label: '回転 Y（度）', state: 'A', relative: 0x20, min: -180, max: 180 },
-  { key: 'rotationAZ', kind: 'rotation', label: '回転 Z（度）', state: 'A', relative: 0x24, min: -180, max: 180 },
-  { key: 'rotationBX', kind: 'rotation', label: '回転 X（度）', state: 'B', relative: 0x28, min: -180, max: 180 },
-  { key: 'rotationBY', kind: 'rotation', label: '回転 Y（度）', state: 'B', relative: 0x2c, min: -180, max: 180 },
-  { key: 'rotationBZ', kind: 'rotation', label: '回転 Z（度）', state: 'B', relative: 0x30, min: -180, max: 180 },
+  { key: 'positionAX', kind: 'position', label: { ja: '位置 X', en: 'Position X' }, state: 'A', relative: 0x04, min: -10, max: 10 },
+  { key: 'positionAY', kind: 'position', label: { ja: '位置 Y', en: 'Position Y' }, state: 'A', relative: 0x08, min: -10, max: 10 },
+  { key: 'positionAZ', kind: 'position', label: { ja: '位置 Z', en: 'Position Z' }, state: 'A', relative: 0x0c, min: -10, max: 10 },
+  { key: 'positionBX', kind: 'position', label: { ja: '位置 X', en: 'Position X' }, state: 'B', relative: 0x10, min: -10, max: 10 },
+  { key: 'positionBY', kind: 'position', label: { ja: '位置 Y', en: 'Position Y' }, state: 'B', relative: 0x14, min: -10, max: 10 },
+  { key: 'positionBZ', kind: 'position', label: { ja: '位置 Z', en: 'Position Z' }, state: 'B', relative: 0x18, min: -10, max: 10 },
+  { key: 'rotationAX', kind: 'rotation', label: { ja: '回転 X（度）', en: 'Rotation X (deg)' }, state: 'A', relative: 0x1c, min: -180, max: 180 },
+  { key: 'rotationAY', kind: 'rotation', label: { ja: '回転 Y（度）', en: 'Rotation Y (deg)' }, state: 'A', relative: 0x20, min: -180, max: 180 },
+  { key: 'rotationAZ', kind: 'rotation', label: { ja: '回転 Z（度）', en: 'Rotation Z (deg)' }, state: 'A', relative: 0x24, min: -180, max: 180 },
+  { key: 'rotationBX', kind: 'rotation', label: { ja: '回転 X（度）', en: 'Rotation X (deg)' }, state: 'B', relative: 0x28, min: -180, max: 180 },
+  { key: 'rotationBY', kind: 'rotation', label: { ja: '回転 Y（度）', en: 'Rotation Y (deg)' }, state: 'B', relative: 0x2c, min: -180, max: 180 },
+  { key: 'rotationBZ', kind: 'rotation', label: { ja: '回転 Z（度）', en: 'Rotation Z (deg)' }, state: 'B', relative: 0x30, min: -180, max: 180 },
   // 🟢 UIのサイズは保存補正+1。負の補正でもサイズが負という意味ではない。
-  { key: 'sizeA', kind: 'size', label: '大きさ', state: 'A', relative: 0x34, min: 0.2, max: 5 },
-  { key: 'sizeB', kind: 'size', label: '大きさ', state: 'B', relative: 0x38, min: 0.2, max: 5 },
+  { key: 'sizeA', kind: 'size', label: { ja: '大きさ', en: 'Size' }, state: 'A', relative: 0x34, min: 0.2, max: 5 },
+  { key: 'sizeB', kind: 'size', label: { ja: '大きさ', en: 'Size' }, state: 'B', relative: 0x38, min: 0.2, max: 5 },
 ] as const
 export type AccessoryFloatKey = typeof ACCESSORY_FLOAT_FIELDS[number]['key']
 /** 🟢 装着レコードの種類と符号付きフィールド。 */
@@ -49,11 +64,11 @@ const outside = (value: number, { min, max }: { min: number; max: number }) =>
 const floatFields = ACCESSORY_FLOAT_FIELDS
 function floatField(key: AccessoryFloatKey) {
   const field = floatFields.find(f => f.key === key)
-  if (!field) throw new RangeError('未知の調整項目です')
+  if (!field) throw new RangeError(tr({ ja: '未知の調整項目です', en: 'Unknown adjustment field' }))
   return field
 }
 const pairedFields = floatFields.filter(f => f.state === 'A').map(field => {
-  const other = floatFields.find(f => f.state === 'B' && f.kind === field.kind && f.label === field.label)
+  const other = floatFields.find(f => f.state === 'B' && f.kind === field.kind && f.label.ja === field.label.ja)
   if (!other) throw new Error('装飾品の調整項目が対応していません')
   return { field, other }
 })
@@ -67,7 +82,8 @@ export type AccessoryEquipmentSlot = ViewStatus & {
 
 export function accessorySlotOffset(group: number, slot: number): number {
   if (!Number.isInteger(group) || group < 0 || group >= ACCESSORY_EQUIPMENT_BASES.length ||
-      !Number.isInteger(slot) || slot < 0 || slot >= ACCESSORY_SLOT_COUNT) throw new RangeError('装飾品の枠が範囲外です')
+      !Number.isInteger(slot) || slot < 0 || slot >= ACCESSORY_SLOT_COUNT)
+    throw new RangeError(tr({ ja: '装飾品の枠が範囲外です', en: 'The accessory slot is out of range' }))
   return ACCESSORY_EQUIPMENT_BASES[group] + ACCESSORY_RECORD_SIZE * slot
 }
 
@@ -81,14 +97,17 @@ export function accessoryFloatRange(key: AccessoryFloatKey, opts: EditOpts = NOR
 
 export function readAccessorySlot(bytes: Uint8Array, group: number, slot: number): AccessoryEquipmentSlot {
   const offset = accessorySlotOffset(group, slot)
-  if (offset + ACCESSORY_RECORD_SIZE > bytes.length) throw new RangeError('装飾品の領域がファイル外です')
+  if (offset + ACCESSORY_RECORD_SIZE > bytes.length)
+    throw new RangeError(tr({ ja: '装飾品の領域がファイル外です', en: 'The accessory data is outside the file' }))
   const id = INT_CODEC.readField(bytes, offset, 'id')
   const joint = INT_CODEC.readField(bytes, offset, 'joint')
   const idKnown = id >= ACCESSORY_FIELDS.id.min && id <= ACCESSORY_FIELDS.id.max
   const problems: (string | null)[] = [
     checkLayout(bytes),
-    idKnown ? null : '不明な装飾品です',
-    joint < ACCESSORY_FIELDS.joint.min || joint > ACCESSORY_FIELDS.joint.max ? '不明な取り付け先です' : null,
+    idKnown ? null : tr({ ja: '不明な装飾品です', en: 'Unknown accessory' }),
+    joint < ACCESSORY_FIELDS.joint.min || joint > ACCESSORY_FIELDS.joint.max
+      ? tr({ ja: '不明な取り付け先です', en: 'Unknown attachment point' })
+      : null,
   ]
   const warnings: string[] = []
   const values = {} as Record<AccessoryFloatKey, number>
@@ -97,9 +116,14 @@ export function readAccessorySlot(bytes: Uint8Array, group: number, slot: number
     const value = field.kind === 'size' ? stored + 1 : stored
     values[field.key] = value
     if (!Number.isFinite(stored) || outside(value, accessoryFloatRange(field.key, { advanced: true })))
-      problems.push(`${field.label}が許容範囲外です`)
+      problems.push(tr({ ja: `${field.label.ja}が許容範囲外です`, en: `${field.label.en} is outside the allowed range` }))
     if (Number.isFinite(stored) && outside(value, accessoryFloatRange(field.key)))
-      warnings.push(`${field.label}が通常の範囲を超えています（上級者モードでだけ書けます）`)
+      warnings.push(
+        tr({
+          ja: `${field.label.ja}が通常の範囲を超えています（上級者モードでだけ書けます）`,
+          en: `${field.label.en} is outside the normal range (can only be written in Advanced mode)`,
+        }),
+      )
   }
   return {
     warnings, offset, id, joint, values,
@@ -113,16 +137,18 @@ export function writeAccessoryField(bytes: Uint8Array, group: number, slot: numb
   assertWritable(bytes)
   const current = readAccessorySlot(bytes, group, slot)
   if (current.problem) throw new RangeError(current.problem)
-  if (!Number.isFinite(value)) throw new RangeError('有限の数値を入力してください')
+  if (!Number.isFinite(value)) throw new RangeError(tr({ ja: '有限の数値を入力してください', en: 'Enter a finite number' }))
   if (key === 'id' || key === 'joint') {
     const { min, max } = ACCESSORY_FIELDS[key]
-    if (!Number.isInteger(value) || value < min || value > max) throw new RangeError('選べない値です')
+    if (!Number.isInteger(value) || value < min || value > max)
+      throw new RangeError(tr({ ja: '選べない値です', en: 'This value cannot be chosen' }))
     INT_CODEC.writeField(bytes, current.offset, key, value)
     return
   }
   const field = floatField(key)
   const { min, max } = accessoryFloatRange(key, opts)
-  if (value < min || value > max) throw new RangeError(`${min}〜${max}を入力してください`)
+  if (value < min || value > max)
+    throw new RangeError(tr({ ja: `${min}〜${max}を入力してください`, en: `Enter a value from ${min} to ${max}` }))
   writeF32(bytes, current.offset + field.relative, field.kind === 'size' ? value - 1 : value)
 }
 
@@ -132,7 +158,8 @@ export function copySheathedAccessoryToDrawn(bytes: Uint8Array, group: number, s
   const current = readAccessorySlot(bytes, group, slot)
   if (current.problem) throw new RangeError(current.problem)
   for (const field of ACCESSORY_FLOAT_FIELDS.filter(field => field.state === 'A')) {
-    if (outside(current.values[field.key], accessoryFloatRange(field.key, opts))) throw new RangeError(`${field.label}が入力範囲外です`)
+    if (outside(current.values[field.key], accessoryFloatRange(field.key, opts)))
+      throw new RangeError(tr({ ja: `${field.label.ja}が入力範囲外です`, en: `${field.label.en} is outside the input range` }))
   }
   const base = current.offset
   for (const { field, other } of pairedFields)
@@ -144,7 +171,8 @@ export function writeCommonAccessoryField(bytes: Uint8Array, group: number, slot
   assertWritable(bytes)
   // pairedFields は納刀側の項目すべてに抜刀側の対応を持つ（モジュールの読み込み時に検査済み）
   const pair = pairedFields.find(p => p.field.key === key)
-  if (!pair) throw new RangeError('共通の編集は納刀側の項目を指定してください')
+  if (!pair)
+    throw new RangeError(tr({ ja: '共通の編集は納刀側の項目を指定してください', en: 'For Both, specify a Sheathed field' }))
   // 両状態の範囲は同じ。1回の検証後、対応する4 Bだけを複製する。
   writeAccessoryField(bytes, group, slot, key, value, opts)
   const base = accessorySlotOffset(group, slot)
@@ -163,7 +191,7 @@ export function resetAccessoryDefaults(bytes: Uint8Array, group: number, slot: n
   const current = readAccessorySlot(bytes, group, slot)
   if (current.problem) throw new RangeError(current.problem)
   const accessory = ACCESSORIES.find(a => a.id === current.id)
-  if (!accessory) throw new RangeError('装飾品を選択してください')
+  if (!accessory) throw new RangeError(tr({ ja: '装飾品を選択してください', en: 'Choose an accessory' }))
   applyAccessoryDefaults(bytes, current.offset, accessory)
 }
 
@@ -171,7 +199,7 @@ export function resetAccessoryDefaults(bytes: Uint8Array, group: number, slot: n
 export function equipAccessory(bytes: Uint8Array, group: number, slot: number, id: number, opts: EditOpts = NORMAL_EDIT_OPTS): void {
   assertWritable(bytes)
   const accessory = ACCESSORIES.find(a => a.id === id)
-  if (id !== -1 && !accessory) throw new RangeError('装飾品を選択してください')
+  if (id !== -1 && !accessory) throw new RangeError(tr({ ja: '装飾品を選択してください', en: 'Choose an accessory' }))
   writeAccessoryField(bytes, group, slot, 'id', id, opts)
   if (accessory) applyAccessoryDefaults(bytes, accessorySlotOffset(group, slot), accessory)
 }

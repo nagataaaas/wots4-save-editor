@@ -38,34 +38,67 @@
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU8, writeU8 } from "./binary";
 import { validateRange, warningsOf, type EditOpts, type ViewStatus } from "./field";
-import { validateFlag, writeFlag, type ByteFlag } from "./flags/byte-flag";
+import { tr } from "@/lib/i18n";
+import {
+  defineLocalized,
+  flagValues,
+  localizedFlag,
+  localizedStrings,
+  validateFlag,
+  writeFlag,
+  type ByteFlag,
+  type FlagValue,
+} from "./flags/byte-flag";
 import { CHARACTER_STATUS, CHARACTER_DEAD } from "./flags/characters";
 import { assertWritable, checkLayout } from "./layout";
 
 export const FACTION_TABLE_OFFSET = 0x3780; // 🔶 chunks/factions
 
-export const FACTIONS = ["幕府", "外国", "攘夷"] as const;
-export const FACTION_ROWS = [
-  {
-    label: "友好ポイント（協力・成功）",
-    note: "その勢力のイベントに参加・成功するたびに +1。友好度＝この値 − 下の「対立ポイント」",
-  },
-  {
-    label: "対立ポイント（不利益・敵対行為）",
-    note: "その勢力の人物と戦う・斬る・戦闘から逃げるなど、不利益を与えるたびに +1（場面によっては +3）。会話で断っただけの失敗では増えない。剣術大会以後のルート分岐では上の値から引かれる",
-  },
-  {
-    label: "敵対状態",
-    note: "敵対中だと、その勢力のイベントで門前払いされたり、謝罪の選択肢が出たりする。謝罪して成功させるとなしに戻る。三姉妹見参の成功・ローラ奪還で3勢力ともなしに戻る。剣術大会以後のルート分岐には使われない",
-  },
-] as const;
+/** 勢力の名前。要素は読むたびに今の言語で返す */
+export const FACTIONS = localizedStrings([
+  { ja: "幕府", en: "Shogunate" },
+  { ja: "外国", en: "Foreigners" },
+  { ja: "攘夷", en: "Prajnas" },
+]);
+
+/** 行の見出しと説明。読むたびに今の言語で返す */
+export const FACTION_ROWS: readonly { label: string; note: string }[] = (
+  [
+    {
+      label: { ja: "友好ポイント（協力・成功）", en: "Friendship points (cooperation, success)" },
+      note: {
+        ja: "その勢力のイベントに参加・成功するたびに +1。友好度＝この値 − 下の「対立ポイント」",
+        en: "+1 each time you take part in or succeed at an event for that faction. Friendship = this value − \"Hostility points\" below",
+      },
+    },
+    {
+      label: { ja: "対立ポイント（不利益・敵対行為）", en: "Hostility points (harm, hostile acts)" },
+      note: {
+        ja: "その勢力の人物と戦う・斬る・戦闘から逃げるなど、不利益を与えるたびに +1（場面によっては +3）。会話で断っただけの失敗では増えない。剣術大会以後のルート分岐では上の値から引かれる",
+        en: "+1 (+3 in some scenes) each time you harm the faction, such as fighting or cutting down its people or fleeing from a battle. Simply refusing in conversation doesn't add to it. Subtracted from the value above for the route split after the Battle Tournament",
+      },
+    },
+    {
+      label: { ja: "敵対状態", en: "Hostile" },
+      note: {
+        ja: "敵対中だと、その勢力のイベントで門前払いされたり、謝罪の選択肢が出たりする。謝罪して成功させるとなしに戻る。三姉妹見参の成功・ローラ奪還で3勢力ともなしに戻る。剣術大会以後のルート分岐には使われない",
+        en: "While hostile, you get turned away at that faction's events or are offered the option to apologize. Apologizing and succeeding clears it. Success of Meeting with the Three Sisters and Rescuing Laura clear it for all three factions. Not used for the route split after the Battle Tournament",
+      },
+    },
+  ] as const
+).map((r) => {
+  const out = {} as { label: string; note: string };
+  defineLocalized(out, "label", r.label);
+  defineLocalized(out, "note", r.note);
+  return out;
+});
 
 /** 敵対状態の行（行2）。値は 0 か 1（✅ [U]） */
 export const HOSTILE_ROW = 2;
-export const HOSTILE_VALUES = [
-  { value: 0, label: "なし" },
-  { value: 1, label: "敵対中" },
-] as const;
+export const HOSTILE_VALUES: readonly FlagValue[] = flagValues([
+  { value: 0, label: { ja: "なし", en: "None" } },
+  { value: 1, label: { ja: "敵対中", en: "Hostile" } },
+]);
 
 /**
  * 値の範囲。🔶 正規の範囲は推測：行0 は1〜3日目の各勢力のイベント数（3日×3枠）の 9 まで。行1 も同じく 9 まで。
@@ -77,9 +110,9 @@ const PLAUSIBLE_MAX = 50;
 
 export function factionOffset(row: number, col: number): number {
   if (!Number.isInteger(row) || row < 0 || row >= FACTION_ROWS.length)
-    throw new RangeError(`行が範囲外です: ${row}`);
+    throw new RangeError(tr({ ja: `行が範囲外です: ${row}`, en: `Row out of range: ${row}` }));
   if (!Number.isInteger(col) || col < 0 || col >= FACTIONS.length)
-    throw new RangeError(`列が範囲外です: ${col}`);
+    throw new RangeError(tr({ ja: `列が範囲外です: ${col}`, en: `Column out of range: ${col}` }));
   return FACTION_TABLE_OFFSET + row * FACTIONS.length + col;
 }
 
@@ -92,21 +125,28 @@ export type FactionsView = ViewStatus & {
 
 export function readFactions(bytes: Uint8Array): FactionsView {
   if (bytes.byteLength < FACTION_TABLE_OFFSET + 9)
-    throw new RangeError("ファイルが小さすぎて勢力の記録を読めません");
+    throw new RangeError(
+      tr({ ja: "ファイルが小さすぎて勢力の記録を読めません", en: "The file is too small to read the faction records" }),
+    );
   const layoutProblem = checkLayout(bytes);
   const values = FACTION_ROWS.map((_, r) =>
     FACTIONS.map((_, c) => readU8(bytes, factionOffset(r, c))),
   );
   const max = Math.max(...values.flat());
   const problem =
-    max > PLAUSIBLE_MAX ? "値が大きすぎます。位置がずれている可能性があります" : null;
+    max > PLAUSIBLE_MAX
+      ? tr({
+          ja: "値が大きすぎます。位置がずれている可能性があります",
+          en: "The values are too large. The data may be misaligned",
+        })
+      : null;
   const moro = readU8(bytes, MORO_OFFSET);
   return { warnings: [], values, moro, problem: layoutProblem ?? problem };
 }
 
 /** 勢力 col の敵対状態（行2）。表にある 0・1 だけを通す ByteFlag */
 export function hostileFlag(col: number): ByteFlag {
-  return { offset: factionOffset(HOSTILE_ROW, col), label: FACTIONS[col], values: HOSTILE_VALUES };
+  return localizedFlag({ offset: factionOffset(HOSTILE_ROW, col), label: () => FACTIONS[col], values: HOSTILE_VALUES });
 }
 
 /** 行2（敵対状態）は hostileFlag と同じ検証。それ以外の行は通常モード 0〜9、上級者モード 0〜255 */
@@ -165,20 +205,22 @@ export function predictRouteJudge(
 
 export const ROUTE_JUDGE_OFFSET = 0x3789; // ✅ [U] chunks/factions 剣術大会以後のルート分岐（勢力ごと 3 B）
 export const ROUTE_NONE_OFFSET = 0x378c; // ✅ [U] chunks/factions 無所属
-export const ROUTE_JUDGE_VALUES = [
-  { value: 0x00, label: "大寄せ前" },
-  { value: 0x01, label: "ルートに入れる" },
-  { value: 0x02, label: "入れない" },
-] as const;
-export const ROUTE_NONE_VALUES = [
-  { value: 0x00, label: "勢力あり／大寄せ前" },
-  { value: 0x01, label: "根無し草" },
-] as const;
+export const ROUTE_JUDGE_VALUES: readonly FlagValue[] = flagValues([
+  { value: 0x00, label: { ja: "大寄せ前", en: "Before The Chief Minister's Big Move" } },
+  { value: 0x01, label: { ja: "ルートに入れる", en: "Can enter the route" } },
+  { value: 0x02, label: { ja: "入れない", en: "Can't enter" } },
+]);
+export const ROUTE_NONE_VALUES: readonly FlagValue[] = flagValues([
+  { value: 0x00, label: { ja: "勢力あり／大寄せ前", en: "Has a faction / before The Chief Minister's Big Move" } },
+  { value: 0x01, label: { ja: "根無し草", en: "Idle Chatter" } },
+]);
 
 /** ✅ [U] 勢力3つと無所属のルート分岐。 */
 export const ROUTE_JUDGE_FLAGS: readonly ByteFlag[] = [
-  ...FACTIONS.map((label, col) => ({ offset: ROUTE_JUDGE_OFFSET + col, label, values: ROUTE_JUDGE_VALUES })),
-  { offset: ROUTE_NONE_OFFSET, label: "無所属", values: ROUTE_NONE_VALUES },
+  ...FACTIONS.map((_, col) =>
+    localizedFlag({ offset: ROUTE_JUDGE_OFFSET + col, label: () => FACTIONS[col], values: ROUTE_JUDGE_VALUES }),
+  ),
+  localizedFlag({ offset: ROUTE_NONE_OFFSET, label: { ja: "無所属", en: "Independent" }, values: ROUTE_NONE_VALUES }),
 ];
 
 /** warnings は、無所属が 01 でも効かない組み合わせのとき */
@@ -190,18 +232,29 @@ export type RouteJudgeView = ViewStatus & {
 
 export function readRouteJudge(bytes: Uint8Array): RouteJudgeView {
   if (bytes.byteLength < ROUTE_NONE_OFFSET + 1)
-    throw new RangeError("ファイルが小さすぎて剣術大会以後のルート分岐を読めません");
+    throw new RangeError(
+      tr({
+        ja: "ファイルが小さすぎて剣術大会以後のルート分岐を読めません",
+        en: "The file is too small to read the route split after the Battle Tournament",
+      }),
+    );
   const layoutProblem = checkLayout(bytes);
   const judges = FACTIONS.map((_, c) => readU8(bytes, ROUTE_JUDGE_OFFSET + c));
   const none = readU8(bytes, ROUTE_NONE_OFFSET);
   const known = (list: readonly { value: number }[], v: number) => list.some((x) => x.value === v);
   let problem: string | null = null;
   if (!judges.every((v) => known(ROUTE_JUDGE_VALUES, v)) || !known(ROUTE_NONE_VALUES, none))
-    problem = "剣術大会以後のルート分岐が想定外の状態になっています";
+    problem = tr({
+      ja: "剣術大会以後のルート分岐が想定外の状態になっています",
+      en: "The route split after the Battle Tournament is in an unexpected state",
+    });
   // ✅ [U] 勢力の 01 が無所属より優先される
   const warning =
     none === 0x01 && judges.includes(0x01)
-      ? "勢力のどれかが「ルートに入れる」なので、無所属（根無し草）にはなりません"
+      ? tr({
+          ja: "勢力のどれかが「ルートに入れる」なので、無所属（根無し草）にはなりません",
+          en: "One of the factions is set to \"Can enter the route\", so you won't become independent (Idle Chatter)",
+        })
       : null;
   return { judges, none, problem: layoutProblem ?? problem, warnings: warningsOf(warning) };
 }
@@ -220,7 +273,7 @@ export function writeRouteJudge(
   const view = readRouteJudge(bytes);
   if (view.problem) throw new RangeError(view.problem);
   if (!Number.isInteger(col) || col < 0 || col > FACTIONS.length)
-    throw new RangeError(`列が範囲外です: ${col}`);
+    throw new RangeError(tr({ ja: `列が範囲外です: ${col}`, en: `Column out of range: ${col}` }));
   writeFlag(bytes, ROUTE_JUDGE_FLAGS[col], value, opts);
 }
 

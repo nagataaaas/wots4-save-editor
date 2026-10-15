@@ -1,5 +1,6 @@
 import { ChevronRight, Hash } from 'lucide-react'
 import { useContext } from 'react'
+import { tr } from '@/lib/i18n'
 import { AnchorScope, useNavigation } from '@/lib/navigation-context'
 import { formatHash } from '@/lib/route'
 import { cn } from '@/lib/utils'
@@ -15,8 +16,8 @@ export function AnchorLink({ id, className }: { id: string; className?: string }
     <a
       href={formatHash({ section, anchor: id })}
       onClick={(e) => e.stopPropagation()}
-      aria-label="この欄へのリンク"
-      title="この欄へのリンク"
+      aria-label={tr({ ja: 'この欄へのリンク', en: 'Link to this section' })}
+      title={tr({ ja: 'この欄へのリンク', en: 'Link to this section' })}
       className={cn(
         'text-muted-foreground/40 hover:text-foreground focus-visible:text-foreground inline-flex size-4 shrink-0 items-center justify-center rounded-sm',
         className,

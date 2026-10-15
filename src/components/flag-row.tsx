@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { SelectOption } from "@/components/select-options";
 import { SelectRow } from "@/components/select-row";
 import { useFlag } from "@/lib/use-flag";
+import { tr } from "@/lib/i18n";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useWrite } from "@/lib/use-write";
 import { cn } from "@/lib/utils";
@@ -37,14 +38,14 @@ export function FlagRow({
       label={flag.label}
       offset={flag.offset}
       value={state === null ? null : state.mismatch ? MISMATCH : String(state.value)}
-      currentLabel={state?.mismatch ? "状態が食い違っています" : "不明"}
+      currentLabel={state?.mismatch ? tr({ ja: "状態が食い違っています", en: "Inconsistent state" }) : tr({ ja: "不明", en: "Unknown" })}
       options={
         options ??
         flag.values.map((v) => ({ value: String(v.value), label: v.label, group: v.group }))
       }
       // 読めないときは、読み取り専用の理由として欄の下に出す（未読み込みと見分けられるように）
       problem={error ?? problem}
-      warning={state && !state.known ? "通常のプレイでは取らない状態です" : null}
+      warning={state && !state.known ? tr({ ja: "通常のプレイでは取らない状態です", en: "This state does not occur in normal play" }) : null}
       note={note ?? flag.note}
       hint={hint ?? flag.hint}
       onChange={(v) =>

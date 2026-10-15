@@ -1,23 +1,24 @@
 // 技の画面の絞り込みと並べ替え。技の値（コマンド・攻撃力・属性・防御技）は 🟢（datatable/sect/skill.csv）。
 import { STANCE_SKILLS, findSkillInfo, skillName, type SkillTreeGroup } from '@/save/master/sect-data'
+import type { Localized } from '@/lib/i18n'
 import { matchesSearch } from '@/lib/search'
 
 export type SkillSort = 'id-asc' | 'id-desc' | 'attack-desc' | 'attack-asc'
 
-export const SKILL_SORT_LABELS: Record<SkillSort, string> = {
+export const SKILL_SORT_LABELS: Record<SkillSort, Localized> = {
   // 内部の並びはキー（id-asc / id-desc）のまま。画面には ID を出さない
-  'id-asc': 'ゲームの並び順',
-  'id-desc': 'ゲームの並びの逆順',
-  'attack-desc': 'ダメージ（大きい順）',
-  'attack-asc': 'ダメージ（小さい順）',
+  'id-asc': { ja: 'ゲームの並び順', en: 'Game order' },
+  'id-desc': { ja: 'ゲームの並びの逆順', en: 'Reverse game order' },
+  'attack-desc': { ja: 'ダメージ（大きい順）', en: 'Damage (high to low)' },
+  'attack-asc': { ja: 'ダメージ（小さい順）', en: 'Damage (low to high)' },
 }
 
 export type SkillKind = 'all' | 'attack' | 'defense'
 
-export const SKILL_KIND_LABELS: Record<SkillKind, string> = {
-  all: 'すべての技',
-  attack: '攻撃技',
-  defense: '防御技',
+export const SKILL_KIND_LABELS: Record<SkillKind, Localized> = {
+  all: { ja: 'すべての技', en: 'All moves' },
+  attack: { ja: '攻撃技', en: 'Combat moves' },
+  defense: { ja: '防御技', en: 'Defensive moves' },
 }
 
 /** 「すべて」を表す選択肢の値 */
@@ -53,7 +54,8 @@ type SkillLike = { skillId: number; skillNo: number; nameJa: string; nameEn: str
 
 export function matchesSkillFilter(s: SkillLike, f: SkillFilter): boolean {
   const info = findSkillInfo(s.skillId)
-  if (!matchesSearch(f.query, [skillName(s), s.nameEn])) return false
+  // 名前は日本語・英語のどちらでも引けるようにする（skillName は今の言語の名前か「名前なし」）
+  if (!matchesSearch(f.query, [skillName(s), s.nameJa, s.nameEn])) return false
   if (f.command !== ANY && (info?.commandJa ?? '') !== f.command) return false
   const defense = info?.defenseGroup != null
   if (f.kind === 'attack' && (!info || defense)) return false

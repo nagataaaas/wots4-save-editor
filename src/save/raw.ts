@@ -3,6 +3,7 @@
 // §3 の表の確度の欄は各行のコメントに写す（画面には出さない）。終了が ❓ の領域は end を null にし、色分けには使わない。
 // ラベルは画面（生データ・履歴の変わった領域）に出すので、アドレスや格納のしかたは書かずにコメントへ回す。
 // 位置は固定オフセット（サイズ 0x48BB0）。
+import { tr, type Localized } from '@/lib/i18n'
 import { integerValue } from '@/lib/parse'
 import { changedByteOffsets } from '@/lib/byte-diff'
 import { readF32 } from './binary'
@@ -14,86 +15,87 @@ export type RawRegion = {
   end: number | null
   /** docs/save_format/chunks/{chunk} */
   chunk: string
-  label: string
+  /** 画面に出す名前。tr() で今の言語の方を出す */
+  label: Localized
   /** 固定長のレコードが並ぶ領域の1件のバイト数。位置を「#n +0xNN」で表すのに使う */
   recordSize?: number
 }
 
 export const RAW_REGIONS: readonly RawRegion[] = [
-  { start: 0x000000, end: 0x000000, chunk: 'difficulty', label: '難易度' }, // ✅ 0・3 ／ 🟢 1・2
-  { start: 0x000008, end: 0x00000f, chunk: 'money', label: '所持金・金庫' }, // ✅
-  { start: 0x000010, end: 0x0000db, chunk: 'date-location', label: 'シナリオの段階・時間帯・現在地・治安・踏み倒した店' }, // 0x001C〜 は予約。✅位置 ／ 🟢 ／ 一部 🔶❓
-  { start: 0x0000dc, end: 0x00011b, chunk: 'player-name', label: '主人公名' }, // ✅
-  { start: 0x00011c, end: 0x00015b, chunk: 'townsfolk', label: 'なりわいのフラグ' }, // 🟢 ／ 一部 ✅
-  { start: 0x00015c, end: 0x000b33, chunk: 'townsfolk', label: '町の人のレコード（死亡のビット）', recordSize: 12 }, // 🟢 ／ 一部 ✅
-  { start: 0x000b34, end: 0x000c63, chunk: 'stats', label: '侍評価・プレイ時間・移動距離・斬殺数・経過日数・人物ごとの痛手' }, // 🟢 ／ 一部 ✅
-  { start: 0x000c64, end: 0x001c03, chunk: 'kill-counts', label: '技ごとの斬殺数（周回中）', recordSize: 4 }, // 🟢
-  { start: 0x001c04, end: 0x002ba3, chunk: 'kill-counts', label: '技ごとの斬殺数（累計）', recordSize: 4 }, // 🟢
-  { start: 0x002ba4, end: 0x002fa3, chunk: 'item-uses', label: '道具の使用回数（周回中）', recordSize: 4 }, // 🟢
-  { start: 0x002fa4, end: 0x0033a3, chunk: 'item-uses', label: '道具の使用回数（累計）', recordSize: 4 }, // 🟢
-  { start: 0x0033a4, end: 0x0035a3, chunk: 'occupation', label: 'なりわいの状態の表' }, // ✅
-  { start: 0x0035a4, end: 0x0035bf, chunk: 'vitals', label: 'HP・活力・つま斬りゲージ' }, // 一部 ✅ ／ 🟢
+  { start: 0x000000, end: 0x000000, chunk: 'difficulty', label: { ja: '難易度', en: 'Difficulty' } }, // ✅ 0・3 ／ 🟢 1・2
+  { start: 0x000008, end: 0x00000f, chunk: 'money', label: { ja: '所持金・金庫', en: 'Funds / treasury' } }, // ✅
+  { start: 0x000010, end: 0x0000db, chunk: 'date-location', label: { ja: 'シナリオの段階・時間帯・現在地・治安・踏み倒した店', en: 'Story stage / time of day / location / public order / unpaid shops' } }, // 0x001C〜 は予約。✅位置 ／ 🟢 ／ 一部 🔶❓
+  { start: 0x0000dc, end: 0x00011b, chunk: 'player-name', label: { ja: '主人公名', en: 'Hero name' } }, // ✅
+  { start: 0x00011c, end: 0x00015b, chunk: 'townsfolk', label: { ja: 'なりわいのフラグ', en: 'Mission flags' } }, // 🟢 ／ 一部 ✅
+  { start: 0x00015c, end: 0x000b33, chunk: 'townsfolk', label: { ja: '町の人のレコード（死亡のビット）', en: 'Townsfolk records (dead flags)' }, recordSize: 12 }, // 🟢 ／ 一部 ✅
+  { start: 0x000b34, end: 0x000c63, chunk: 'stats', label: { ja: '侍評価・プレイ時間・移動距離・斬殺数・経過日数・人物ごとの痛手', en: 'Samurai Evaluation / play time / distance traveled / kills / days passed / damage per character' } }, // 🟢 ／ 一部 ✅
+  { start: 0x000c64, end: 0x001c03, chunk: 'kill-counts', label: { ja: '技ごとの斬殺数（周回中）', en: 'Kills per move (this playthrough)' }, recordSize: 4 }, // 🟢
+  { start: 0x001c04, end: 0x002ba3, chunk: 'kill-counts', label: { ja: '技ごとの斬殺数（累計）', en: 'Kills per move (total)' }, recordSize: 4 }, // 🟢
+  { start: 0x002ba4, end: 0x002fa3, chunk: 'item-uses', label: { ja: '道具の使用回数（周回中）', en: 'Item uses (this playthrough)' }, recordSize: 4 }, // 🟢
+  { start: 0x002fa4, end: 0x0033a3, chunk: 'item-uses', label: { ja: '道具の使用回数（累計）', en: 'Item uses (total)' }, recordSize: 4 }, // 🟢
+  { start: 0x0033a4, end: 0x0035a3, chunk: 'occupation', label: { ja: 'なりわいの状態の表', en: 'Mission states' } }, // ✅
+  { start: 0x0035a4, end: 0x0035bf, chunk: 'vitals', label: { ja: 'HP・活力・つま斬りゲージ', en: 'HP / Vitality / Spring Harvest gauge' } }, // 一部 ✅ ／ 🟢
   // 🟢 読み込みでは使われない。各枠の +0x08〜+0x0F はゲームの状態ではない値（memory-garbage）
-  { start: 0x003634, end: 0x0036a3, chunk: 'item-effects', label: '時間で切れる道具の効果', recordSize: 0x10 }, // 🟢
-  { start: 0x0036a4, end: 0x0036a7, chunk: 'item-effects', label: '時間で切れる道具の効果（効いている枠）' }, // 🟢
-  { start: 0x0036a8, end: 0x00374d, chunk: 'event-chart', label: 'イベントの状態 A（周回中）' }, // 🟢範囲 ／ 一部 ✅
-  { start: 0x00374e, end: 0x003837, chunk: 'scenario-flags', label: 'シナリオのフラグ列' }, // 🟢範囲 ／ 一部 ✅
-  { start: 0x00374e, end: 0x00375c, chunk: 'characters', label: '重要人物の状態' }, // 🟢人物 ／ 一部 ✅
-  { start: 0x00375d, end: 0x00375f, chunk: 'facilities', label: '施設（病院・カジノ・語学所）' }, // ✅
-  { start: 0x003761, end: 0x0037fb, chunk: 'gates', label: '門・柵の開閉の条件' }, // 飛び飛びの u8 × 8。✅ ／ 0x37FB 🟢
-  { start: 0x003780, end: 0x00378c, chunk: 'factions', label: '勢力の友好度・敵対状態・ルート分岐' }, // ✅値 ／ 🔶範囲
-  { start: 0x00378d, end: 0x0037aa, chunk: 'best-route', label: '真ルートと、その周りの好感度・職・勢力の退場など' }, // ✅ 0x378E・退場の効果 ／ ほか 🟢 ／ 🔶範囲
-  { start: 0x0037c8, end: 0x0037c8, chunk: 'night-visit', label: '夜這いの褒美の順番' }, // 🟢
-  { start: 0x003838, end: 0x0038ff, chunk: 'event-chart', label: 'イベントの記録 B（周回をまたぐ）' }, // 🟢範囲 ／ 一部 ✅
-  { start: 0x003900, end: 0x003901, chunk: 'hint', label: '次のイベントのヒント' }, // ✅位置 ／ 🟢値 ／ ❓文との対応 ／ 終了 🔶
-  { start: 0x003902, end: 0x00399f, chunk: 'accessories', label: '装飾品の所持フラグ' }, // ✅
-  { start: 0x0039cc, end: 0x003c4b, chunk: 'accessories', label: '付けている装飾品', recordSize: 0x40 }, // 🟢
-  { start: 0x003c4c, end: 0x0048cb, chunk: 'accessories', label: '俺のおしゃれ（5組）', recordSize: 0x40 }, // 🟢 1組 0x280 B（64 B × 10枠）
-  { start: 0x0048cc, end: 0x004aab, chunk: 'sect-scrolls', label: '流派の書（持ち歩き）', recordSize: 24 }, // 🟢
-  { start: 0x004aac, end: 0x0058bb, chunk: 'sect-scrolls', label: '流派の書（道場の箪笥）', recordSize: 24 }, // 🟢
-  { start: 0x0058bc, end: 0x0058bd, chunk: 'sect-scrolls', label: '流派の書（箪笥の件数）' }, // 🟢
-  { start: 0x0058c0, end: 0x005b3f, chunk: 'items', label: '箪笥のアイテム', recordSize: 8 }, // ✅
-  { start: 0x005b40, end: 0x005b8f, chunk: 'items', label: '手持ちのアイテム', recordSize: 8 }, // ✅
-  { start: 0x005b90, end: 0x005bdf, chunk: 'items', label: '貴重品', recordSize: 8 }, // ✅
-  { start: 0x005c3c, end: 0x006197, chunk: 'memory-garbage', label: 'アドレス風の値' }, // 🔶
+  { start: 0x003634, end: 0x0036a3, chunk: 'item-effects', label: { ja: '時間で切れる道具の効果', en: 'Timed item effects' }, recordSize: 0x10 }, // 🟢
+  { start: 0x0036a4, end: 0x0036a7, chunk: 'item-effects', label: { ja: '時間で切れる道具の効果（効いている枠）', en: 'Timed item effects (active slots)' } }, // 🟢
+  { start: 0x0036a8, end: 0x00374d, chunk: 'event-chart', label: { ja: 'イベントの状態 A（周回中）', en: 'Event state A (this playthrough)' } }, // 🟢範囲 ／ 一部 ✅
+  { start: 0x00374e, end: 0x003837, chunk: 'scenario-flags', label: { ja: 'シナリオのフラグ列', en: 'Story flags' } }, // 🟢範囲 ／ 一部 ✅
+  { start: 0x00374e, end: 0x00375c, chunk: 'characters', label: { ja: '重要人物の状態', en: 'Key character states' } }, // 🟢人物 ／ 一部 ✅
+  { start: 0x00375d, end: 0x00375f, chunk: 'facilities', label: { ja: '施設（病院・カジノ・語学所）', en: 'Facilities (Hospital / Casino / Language School)' } }, // ✅
+  { start: 0x003761, end: 0x0037fb, chunk: 'gates', label: { ja: '門・柵の開閉の条件', en: 'Gate and fence conditions' } }, // 飛び飛びの u8 × 8。✅ ／ 0x37FB 🟢
+  { start: 0x003780, end: 0x00378c, chunk: 'factions', label: { ja: '勢力の友好度・敵対状態・ルート分岐', en: 'Faction friendship / hostility / route branches' } }, // ✅値 ／ 🔶範囲
+  { start: 0x00378d, end: 0x0037aa, chunk: 'best-route', label: { ja: '真ルートと、その周りの好感度・職・勢力の退場など', en: 'True route and related affection, jobs, faction exits, etc.' } }, // ✅ 0x378E・退場の効果 ／ ほか 🟢 ／ 🔶範囲
+  { start: 0x0037c8, end: 0x0037c8, chunk: 'night-visit', label: { ja: '夜這いの褒美の順番', en: 'Night crawling reward order' } }, // 🟢
+  { start: 0x003838, end: 0x0038ff, chunk: 'event-chart', label: { ja: 'イベントの記録 B（周回をまたぐ）', en: 'Event record B (across playthroughs)' } }, // 🟢範囲 ／ 一部 ✅
+  { start: 0x003900, end: 0x003901, chunk: 'hint', label: { ja: '次のイベントのヒント', en: 'Next event hint' } }, // ✅位置 ／ 🟢値 ／ ❓文との対応 ／ 終了 🔶
+  { start: 0x003902, end: 0x00399f, chunk: 'accessories', label: { ja: '装飾品の所持フラグ', en: 'Owned accessories' } }, // ✅
+  { start: 0x0039cc, end: 0x003c4b, chunk: 'accessories', label: { ja: '付けている装飾品', en: 'Worn accessories' }, recordSize: 0x40 }, // 🟢
+  { start: 0x003c4c, end: 0x0048cb, chunk: 'accessories', label: { ja: '俺のおしゃれ（5組）', en: 'My Ensembles (5 sets)' }, recordSize: 0x40 }, // 🟢 1組 0x280 B（64 B × 10枠）
+  { start: 0x0048cc, end: 0x004aab, chunk: 'sect-scrolls', label: { ja: '流派の書（持ち歩き）', en: 'Style scrolls (carried)' }, recordSize: 24 }, // 🟢
+  { start: 0x004aac, end: 0x0058bb, chunk: 'sect-scrolls', label: { ja: '流派の書（道場の箪笥）', en: 'Style scrolls (dojo chest)' }, recordSize: 24 }, // 🟢
+  { start: 0x0058bc, end: 0x0058bd, chunk: 'sect-scrolls', label: { ja: '流派の書（箪笥の件数）', en: 'Style scrolls (chest count)' } }, // 🟢
+  { start: 0x0058c0, end: 0x005b3f, chunk: 'items', label: { ja: '箪笥のアイテム', en: 'Chest items' }, recordSize: 8 }, // ✅
+  { start: 0x005b40, end: 0x005b8f, chunk: 'items', label: { ja: '手持ちのアイテム', en: 'Carried items' }, recordSize: 8 }, // ✅
+  { start: 0x005b90, end: 0x005bdf, chunk: 'items', label: { ja: '貴重品', en: 'Key items' }, recordSize: 8 }, // ✅
+  { start: 0x005c3c, end: 0x006197, chunk: 'memory-garbage', label: { ja: 'アドレス風の値', en: 'Address-like values' } }, // 🔶
   // 🟢 武器レコードの本当の先頭は [TS] の配置の +0x06
-  { start: 0x00a4c8, end: 0x00a6a7, chunk: 'weapon-record', label: '帯刀中の武器', recordSize: 0xa0 }, // ✅ ／ 🟢境界
-  { start: 0x00a6a8, end: 0x00a6af, chunk: 'belt-state', label: '帯刀の状態' }, // ✅読み ／ 🟢読み込み ／ ❓書き込み
-  { start: 0x00a6b0, end: 0x00acef, chunk: 'weapon-record', label: '武器袋', recordSize: 0xa0 }, // ✅ ／ 🟢境界
-  { start: 0x00acf4, end: 0x0129f3, chunk: 'weapon-record', label: '武器箪笥', recordSize: 0xa0 }, // ✅ ／ 🟢境界
-  { start: 0x0129f4, end: 0x0129f6, chunk: 'weapon-record', label: '武器箪笥の本数と容量' }, // 🟢
-  { start: 0x0137ec, end: 0x0137ef, chunk: 'night-visit', label: '夜這いの回数' }, // ✅
-  { start: 0x0137f0, end: 0x013e2f, chunk: 'night-visit', label: '夜這いの記録', recordSize: 0x10 }, // 🟢
-  { start: 0x013e30, end: 0x013e37, chunk: 'night-visit', label: '夜這いの段階・愛の証の回数' }, // 🟢
-  { start: 0x013e38, end: 0x013e6f, chunk: 'night-visit', label: '相手ごとの夜這いの回数', recordSize: 4 }, // 🟢
-  { start: 0x013e70, end: 0x014037, chunk: 'night-visit', label: '使われない値' }, // 🟢 いつも 0
-  { start: 0x014038, end: 0x014063, chunk: 'night-visit', label: '夜の約束の枠' }, // ✅
-  { start: 0x014064, end: 0x01406b, chunk: 'dojo', label: '道場の評判・弟子の数・道場破り' }, // 🟢
-  { start: 0x01406c, end: 0x01415b, chunk: 'dojo', label: '弟子の名簿', recordSize: 12 }, // 🟢
-  { start: 0x01415c, end: 0x01417b, chunk: 'dojo', label: '来ている道場破り', recordSize: 4 }, // 🟢
-  { start: 0x01417c, end: 0x01837b, chunk: 'skill-states', label: '技の覚え状況（技の表ごと）', recordSize: 0x84 }, // 🟢 ／ 書き込み ✅
-  { start: 0x01837c, end: 0x0189fb, chunk: 'skill-states', label: '技の覚え状況（構えごと）', recordSize: 0x80 }, // 🟢 ／ 書き込み ✅
-  { start: 0x0189fc, end: 0x018a0d, chunk: 'styles', label: '習得技数・腕前点・装備' }, // 🟢
-  { start: 0x018a0e, end: 0x01920d, chunk: 'styles', label: '流派の表', recordSize: 16 }, // 🟢
-  { start: 0x01920e, end: 0x01920f, chunk: 'custom-style', label: '俺流の件数' }, // 🟢
-  { start: 0x019210, end: 0x01a60f, chunk: 'custom-style', label: '俺流', recordSize: 80 }, // 🟢
-  { start: 0x01a610, end: 0x01a611, chunk: 'belt-copy', label: '俺流の技の表の件数' }, // 🟢
-  { start: 0x01a612, end: 0x03aa11, chunk: 'belt-copy', label: '俺流の技の表', recordSize: 0x408 }, // 🟢 後半はゲームの状態ではない値
-  { start: 0x03aa12, end: 0x03aad1, chunk: 'skill-kills', label: '技ごとの斬殺数', recordSize: 6 }, // 🟢
-  { start: 0x03aad4, end: 0x03ab5b, chunk: 'appearance', label: '主人公の見た目' }, // ✅肌色・髪の色・体型・身長・手甲〜合羽 ／ 🟢部品 ／ 🔶タイプ ／ 一部 ❓
-  { start: 0x03ab5c, end: 0x03ab7a, chunk: 'appearance', label: '容姿の解放ビット' }, // ✅位置 ／ 🟢服の対応
-  { start: 0x043318, end: 0x043381, chunk: 'unlocks', label: '特典解除の状態' }, // 先頭16件・31・101 ✅ ／ ほか 🔶 U-17
-  { start: 0x0433a6, end: 0x0433a7, chunk: 'occupation', label: 'クリアしたなりわいの数' }, // 🟢
+  { start: 0x00a4c8, end: 0x00a6a7, chunk: 'weapon-record', label: { ja: '帯刀中の武器', en: 'Equipped weapons' }, recordSize: 0xa0 }, // ✅ ／ 🟢境界
+  { start: 0x00a6a8, end: 0x00a6af, chunk: 'belt-state', label: { ja: '帯刀の状態', en: 'Equip state' } }, // ✅読み ／ 🟢読み込み ／ ❓書き込み
+  { start: 0x00a6b0, end: 0x00acef, chunk: 'weapon-record', label: { ja: '武器袋', en: 'Weapon sack' }, recordSize: 0xa0 }, // ✅ ／ 🟢境界
+  { start: 0x00acf4, end: 0x0129f3, chunk: 'weapon-record', label: { ja: '武器箪笥', en: 'Weapon chest' }, recordSize: 0xa0 }, // ✅ ／ 🟢境界
+  { start: 0x0129f4, end: 0x0129f6, chunk: 'weapon-record', label: { ja: '武器箪笥の本数と容量', en: 'Weapon chest count and capacity' } }, // 🟢
+  { start: 0x0137ec, end: 0x0137ef, chunk: 'night-visit', label: { ja: '夜這いの回数', en: 'Night crawling count' } }, // ✅
+  { start: 0x0137f0, end: 0x013e2f, chunk: 'night-visit', label: { ja: '夜這いの記録', en: 'Night crawling records' }, recordSize: 0x10 }, // 🟢
+  { start: 0x013e30, end: 0x013e37, chunk: 'night-visit', label: { ja: '夜這いの段階・愛の証の回数', en: 'Night crawling stage / love token count' } }, // 🟢
+  { start: 0x013e38, end: 0x013e6f, chunk: 'night-visit', label: { ja: '相手ごとの夜這いの回数', en: 'Night crawling count per partner' }, recordSize: 4 }, // 🟢
+  { start: 0x013e70, end: 0x014037, chunk: 'night-visit', label: { ja: '使われない値', en: 'Unused values' } }, // 🟢 いつも 0
+  { start: 0x014038, end: 0x014063, chunk: 'night-visit', label: { ja: '夜の約束の枠', en: 'Nighttime promise slots' } }, // ✅
+  { start: 0x014064, end: 0x01406b, chunk: 'dojo', label: { ja: '道場の評判・弟子の数・道場破り', en: 'Dojo reputation / pupil count / challengers' } }, // 🟢
+  { start: 0x01406c, end: 0x01415b, chunk: 'dojo', label: { ja: '弟子の名簿', en: 'Pupil roster' }, recordSize: 12 }, // 🟢
+  { start: 0x01415c, end: 0x01417b, chunk: 'dojo', label: { ja: '来ている道場破り', en: 'Visiting challengers' }, recordSize: 4 }, // 🟢
+  { start: 0x01417c, end: 0x01837b, chunk: 'skill-states', label: { ja: '技の覚え状況（技の表ごと）', en: 'Learned moves (per move list)' }, recordSize: 0x84 }, // 🟢 ／ 書き込み ✅
+  { start: 0x01837c, end: 0x0189fb, chunk: 'skill-states', label: { ja: '技の覚え状況（構えごと）', en: 'Learned moves (per stance)' }, recordSize: 0x80 }, // 🟢 ／ 書き込み ✅
+  { start: 0x0189fc, end: 0x018a0d, chunk: 'styles', label: { ja: '習得技数・腕前点・装備', en: 'Moves learned / skill points / equipment' } }, // 🟢
+  { start: 0x018a0e, end: 0x01920d, chunk: 'styles', label: { ja: '流派の表', en: 'Style table' }, recordSize: 16 }, // 🟢
+  { start: 0x01920e, end: 0x01920f, chunk: 'custom-style', label: { ja: '俺流の件数', en: 'My Style count' } }, // 🟢
+  { start: 0x019210, end: 0x01a60f, chunk: 'custom-style', label: { ja: '俺流', en: 'My Style' }, recordSize: 80 }, // 🟢
+  { start: 0x01a610, end: 0x01a611, chunk: 'belt-copy', label: { ja: '俺流の技の表の件数', en: 'My Style move list count' } }, // 🟢
+  { start: 0x01a612, end: 0x03aa11, chunk: 'belt-copy', label: { ja: '俺流の技の表', en: 'My Style move lists' }, recordSize: 0x408 }, // 🟢 後半はゲームの状態ではない値
+  { start: 0x03aa12, end: 0x03aad1, chunk: 'skill-kills', label: { ja: '技ごとの斬殺数', en: 'Kills per move' }, recordSize: 6 }, // 🟢
+  { start: 0x03aad4, end: 0x03ab5b, chunk: 'appearance', label: { ja: '主人公の見た目', en: 'Hero appearance' } }, // ✅肌色・髪の色・体型・身長・手甲〜合羽 ／ 🟢部品 ／ 🔶タイプ ／ 一部 ❓
+  { start: 0x03ab5c, end: 0x03ab7a, chunk: 'appearance', label: { ja: '容姿の解放ビット', en: 'Unlocked appearance parts' } }, // ✅位置 ／ 🟢服の対応
+  { start: 0x043318, end: 0x043381, chunk: 'unlocks', label: { ja: '特典解除の状態', en: 'Unlocks' } }, // 先頭16件・31・101 ✅ ／ ほか 🔶 U-17
+  { start: 0x0433a6, end: 0x0433a7, chunk: 'occupation', label: { ja: 'クリアしたなりわいの数', en: 'Missions cleared' } }, // 🟢
   // 🟢 流通の記録。武器は武器レコード 0xA0 B ＋ 持っている町の人の番号 4 B
-  { start: 0x0440d8, end: 0x044a73, chunk: 'market-weapons', label: '流通中の武器', recordSize: 0xa4 }, // 🟢
-  { start: 0x044a74, end: 0x044aeb, chunk: 'market-weapons', label: '流通中の道具', recordSize: 0x0c }, // 🟢
-  { start: 0x044aec, end: 0x0452bb, chunk: 'market-weapons', label: '流通中の刃', recordSize: 0x14 }, // 🟢
-  { start: 0x0452bc, end: 0x0458fb, chunk: 'market-weapons', label: '流通中の鍔', recordSize: 0x10 }, // 🟢
-  { start: 0x0458fc, end: 0x045f3b, chunk: 'market-weapons', label: '流通中の柄', recordSize: 0x10 }, // 🟢
-  { start: 0x045f3c, end: 0x045f3f, chunk: 'money', label: '死亡したときの所持金' }, // 🟢 ／ 取り戻せる額か 🔶
-  { start: 0x045f40, end: 0x045f4d, chunk: 'occupation', label: 'なりわいのクリアで変わる値' }, // ❓
-  { start: 0x045f4e, end: 0x04626d, chunk: 'occupation', label: '受注中のなりわい', recordSize: 0x10 }, // 🟢 ／ 1件目の項目 ✅
-  { start: 0x046338, end: 0x04633f, chunk: 'appearance', label: '基準の身長・身長の選択肢' }, // 🟢
+  { start: 0x0440d8, end: 0x044a73, chunk: 'market-weapons', label: { ja: '流通中の武器', en: 'Weapons in circulation' }, recordSize: 0xa4 }, // 🟢
+  { start: 0x044a74, end: 0x044aeb, chunk: 'market-weapons', label: { ja: '流通中の道具', en: 'Items in circulation' }, recordSize: 0x0c }, // 🟢
+  { start: 0x044aec, end: 0x0452bb, chunk: 'market-weapons', label: { ja: '流通中の刃', en: 'Blades in circulation' }, recordSize: 0x14 }, // 🟢
+  { start: 0x0452bc, end: 0x0458fb, chunk: 'market-weapons', label: { ja: '流通中の鍔', en: 'Guards in circulation' }, recordSize: 0x10 }, // 🟢
+  { start: 0x0458fc, end: 0x045f3b, chunk: 'market-weapons', label: { ja: '流通中の柄', en: 'Grips in circulation' }, recordSize: 0x10 }, // 🟢
+  { start: 0x045f3c, end: 0x045f3f, chunk: 'money', label: { ja: '死亡したときの所持金', en: 'Funds at death' } }, // 🟢 ／ 取り戻せる額か 🔶
+  { start: 0x045f40, end: 0x045f4d, chunk: 'occupation', label: { ja: 'なりわいのクリアで変わる値', en: 'Values changed by clearing missions' } }, // ❓
+  { start: 0x045f4e, end: 0x04626d, chunk: 'occupation', label: { ja: '受注中のなりわい', en: 'Accepted missions' }, recordSize: 0x10 }, // 🟢 ／ 1件目の項目 ✅
+  { start: 0x046338, end: 0x04633f, chunk: 'appearance', label: { ja: '基準の身長・身長の選択肢', en: 'Base height / height options' } }, // 🟢
 ]
 
 /** offset を含む領域（終了の分かっているもの）のうち、いちばん狭いもの。どこにも入らなければ null */
@@ -166,9 +168,12 @@ export function diffRanges(a: Uint8Array, b: Uint8Array, limit = Infinity): { ra
 /** オフセットの入力（16進。0x は付けても付けなくてもよい）を読む */
 export function parseOffset(input: string, size: number): { ok: true; value: number } | { ok: false; error: string } {
   const s = input.trim().replace(/^0x/i, '')
-  if (!/^[0-9a-f]+$/i.test(s)) return { ok: false, error: '16進数で入力してください（例：0x36A8）' }
+  if (!/^[0-9a-f]+$/i.test(s)) return { ok: false, error: tr({ ja: '16進数で入力してください（例：0x36A8）', en: 'Enter a hexadecimal number (e.g. 0x36A8)' }) }
   const value = parseInt(s, 16)
-  if (value >= size) return { ok: false, error: `ファイルの範囲（0x0〜0x${(size - 1).toString(16).toUpperCase()}）の外です` }
+  if (value >= size) {
+    const last = (size - 1).toString(16).toUpperCase()
+    return { ok: false, error: tr({ ja: `ファイルの範囲（0x0〜0x${last}）の外です`, en: `Outside the file (0x0–0x${last})` }) }
+  }
   return { ok: true, value }
 }
 
@@ -178,12 +183,14 @@ export const RAW_WRITE_MAX = 256
 /** 16進のバイト列（「12 34 AB」「1234AB」）を読む */
 export function parseHexBytes(input: string): { ok: true; value: number[] } | { ok: false; error: string } {
   const s = input.replace(/\s+/g, '')
-  if (s.length === 0) return { ok: false, error: 'バイト列が空です' }
-  if (!/^[0-9a-f]+$/i.test(s)) return { ok: false, error: '16進数（0〜9、A〜F）と空白だけで入力してください' }
-  if (s.length % 2 !== 0) return { ok: false, error: '桁数が奇数です（1バイトは2桁）' }
+  if (s.length === 0) return { ok: false, error: tr({ ja: 'バイト列が空です', en: 'No bytes entered' }) }
+  if (!/^[0-9a-f]+$/i.test(s)) return { ok: false, error: tr({ ja: '16進数（0〜9、A〜F）と空白だけで入力してください', en: 'Use only hex digits (0–9, A–F) and spaces' }) }
+  if (s.length % 2 !== 0) return { ok: false, error: tr({ ja: '桁数が奇数です（1バイトは2桁）', en: 'Odd number of digits (1 byte is 2 digits)' }) }
   const value: number[] = []
   for (let i = 0; i < s.length; i += 2) value.push(parseInt(s.slice(i, i + 2), 16))
-  if (value.length > RAW_WRITE_MAX) return { ok: false, error: `一度に書けるのは ${RAW_WRITE_MAX} B までです（${value.length} B）` }
+  if (value.length > RAW_WRITE_MAX) {
+    return { ok: false, error: tr({ ja: `一度に書けるのは ${RAW_WRITE_MAX} B までです（${value.length} B）`, en: `You can write at most ${RAW_WRITE_MAX} B at once (${value.length} B)` }) }
+  }
   return { ok: true, value }
 }
 
@@ -216,16 +223,16 @@ export function parsePatchScript(text: string, size: number): PatchScriptResult 
     if (body === '') return
     const m = /^(\S+?)(?::\s*|\s+|$)(.*)$/.exec(body)
     if (!m) {
-      errors.push({ line, message: '「オフセット バイト列」の形ではありません' })
+      errors.push({ line, message: tr({ ja: '「オフセット バイト列」の形ではありません', en: 'Not in the form "offset bytes"' }) })
       return
     }
     const offset = parseOffset(m[1], size)
     if (!offset.ok) {
-      errors.push({ line, message: `オフセット「${m[1]}」：${offset.error}` })
+      errors.push({ line, message: tr({ ja: `オフセット「${m[1]}」：${offset.error}`, en: `Offset "${m[1]}": ${offset.error}` }) })
       return
     }
     if (!m[2]) {
-      errors.push({ line, message: 'バイト列がありません' })
+      errors.push({ line, message: tr({ ja: 'バイト列がありません', en: 'No bytes' }) })
       return
     }
     const values = parseHexBytes(m[2].replace(/^:\s*/, ''))
@@ -235,14 +242,22 @@ export function parsePatchScript(text: string, size: number): PatchScriptResult 
     }
     const end = offset.value + values.value.length
     if (end > size) {
-      errors.push({ line, message: `ファイルの末尾を越えます（${values.value.length} B）` })
+      errors.push({ line, message: tr({ ja: `ファイルの末尾を越えます（${values.value.length} B）`, en: `Goes past the end of the file (${values.value.length} B)` }) })
       return
     }
     const overlap = patches.find((p) => offset.value < p.offset + p.values.length && p.offset < end)
-    if (overlap) warnings.push({ line, message: `${overlap.line} 行目と範囲が重なります。この行の値が残ります` })
+    if (overlap) {
+      warnings.push({
+        line,
+        message: tr({
+          ja: `${overlap.line} 行目と範囲が重なります。この行の値が残ります`,
+          en: `Overlaps line ${overlap.line}. This line's values are kept`,
+        }),
+      })
+    }
     patches.push({ line, offset: offset.value, values: values.value })
   })
-  if (patches.length === 0 && errors.length === 0) errors.push({ line: 0, message: '書き込む行がありません' })
+  if (patches.length === 0 && errors.length === 0) errors.push({ line: 0, message: tr({ ja: '書き込む行がありません', en: 'No lines to write' }) })
   return { patches, errors, warnings }
 }
 
@@ -250,7 +265,11 @@ export function parsePatchScript(text: string, size: number): PatchScriptResult 
 export function applyPatches(bytes: Uint8Array, patches: readonly RawPatch[]): void {
   for (const p of patches) {
     if (p.offset < 0 || p.offset + p.values.length > bytes.byteLength || p.values.some((v) => !Number.isInteger(v) || v < 0 || v > 0xff)) {
-      throw new RangeError(`${p.line} 行目：範囲外の書き込みです（0x${p.offset.toString(16).toUpperCase()} から ${p.values.length} B）`)
+      const at = p.offset.toString(16).toUpperCase()
+      throw new RangeError(tr({
+        ja: `${p.line} 行目：範囲外の書き込みです（0x${at} から ${p.values.length} B）`,
+        en: `Line ${p.line}: write out of range (${p.values.length} B from 0x${at})`,
+      }))
     }
   }
   for (const p of patches) bytes.set(p.values, p.offset)
@@ -263,22 +282,27 @@ export function applyPatches(bytes: Uint8Array, patches: readonly RawPatch[]): v
 export function writeRawBytes(bytes: Uint8Array, offset: number, values: readonly number[]): void {
   assertWritable(bytes)
   if (!Number.isInteger(offset) || offset < 0 || offset + values.length > bytes.byteLength) {
-    throw new RangeError(`範囲外の書き込みです（0x${offset.toString(16).toUpperCase()} から ${values.length} B）`)
+    const at = offset.toString(16).toUpperCase()
+    throw new RangeError(tr({
+      ja: `範囲外の書き込みです（0x${at} から ${values.length} B）`,
+      en: `Write out of range (${values.length} B from 0x${at})`,
+    }))
   }
   for (const v of values) {
-    if (!Number.isInteger(v) || v < 0 || v > 0xff) throw new RangeError(`バイトの範囲外です: ${v}`)
+    if (!Number.isInteger(v) || v < 0 || v > 0xff) throw new RangeError(tr({ ja: `バイトの範囲外です: ${v}`, en: `Not a byte value: ${v}` }))
   }
   bytes.set(values, offset)
 }
 
 export type SearchKind = 'hex' | 'u8' | 'u16' | 'u32' | 'utf16'
 
-export const SEARCH_KINDS: readonly { kind: SearchKind; label: string; placeholder: string }[] = [
-  { kind: 'hex', label: 'バイト列', placeholder: '例：FF ?? 00 01（?? は任意の1バイト）' },
-  { kind: 'u8', label: 'u8', placeholder: '例：255 または 0xFF' },
-  { kind: 'u16', label: 'u16 LE', placeholder: '例：1000 または 0x03E8' },
-  { kind: 'u32', label: 'u32 LE', placeholder: '例：100000' },
-  { kind: 'utf16', label: '文字列（UTF-16LE）', placeholder: '例：主人公の名前' },
+/** 検索の種類。label・placeholder は使う所で tr() する */
+export const SEARCH_KINDS: readonly { kind: SearchKind; label: Localized; placeholder: Localized }[] = [
+  { kind: 'hex', label: { ja: 'バイト列', en: 'Bytes' }, placeholder: { ja: '例：FF ?? 00 01（?? は任意の1バイト）', en: 'e.g. FF ?? 00 01 (?? matches any byte)' } },
+  { kind: 'u8', label: { ja: 'u8', en: 'u8' }, placeholder: { ja: '例：255 または 0xFF', en: 'e.g. 255 or 0xFF' } },
+  { kind: 'u16', label: { ja: 'u16 LE', en: 'u16 LE' }, placeholder: { ja: '例：1000 または 0x03E8', en: 'e.g. 1000 or 0x03E8' } },
+  { kind: 'u32', label: { ja: 'u32 LE', en: 'u32 LE' }, placeholder: { ja: '例：100000', en: 'e.g. 100000' } },
+  { kind: 'utf16', label: { ja: '文字列（UTF-16LE）', en: 'Text (UTF-16LE)' }, placeholder: { ja: '例：主人公の名前', en: "e.g. the hero's name" } },
 ]
 
 /** 検索の条件。null は任意の1バイト */
@@ -295,18 +319,18 @@ export function buildSearchPattern(kind: SearchKind, input: string): { ok: true;
     const tokens = input.trim().split(/\s+/).filter(Boolean)
     // 空白なしの「1234AB」も受け付ける
     const units = tokens.length === 1 && tokens[0].length > 2 ? (tokens[0].match(/.{1,2}/g) ?? []) : tokens
-    if (units.length === 0) return { ok: false, error: 'バイト列が空です' }
+    if (units.length === 0) return { ok: false, error: tr({ ja: 'バイト列が空です', en: 'No bytes entered' }) }
     const value: SearchPattern = []
     for (const u of units) {
       if (u === '??') value.push(null)
       else if (/^[0-9a-f]{2}$/i.test(u)) value.push(parseInt(u, 16))
-      else return { ok: false, error: `「${u}」は1バイトの16進数（2桁）でも ?? でもありません` }
+      else return { ok: false, error: tr({ ja: `「${u}」は1バイトの16進数（2桁）でも ?? でもありません`, en: `"${u}" is neither a 2-digit hex byte nor ??` }) }
     }
-    if (value.every((v) => v === null)) return { ok: false, error: '?? だけでは検索できません' }
+    if (value.every((v) => v === null)) return { ok: false, error: tr({ ja: '?? だけでは検索できません', en: 'Cannot search with only ??' }) }
     return { ok: true, value }
   }
   if (kind === 'utf16') {
-    if (input.length === 0) return { ok: false, error: '文字列が空です' }
+    if (input.length === 0) return { ok: false, error: tr({ ja: '文字列が空です', en: 'No text entered' }) }
     const value: SearchPattern = []
     for (let i = 0; i < input.length; i++) {
       const c = input.charCodeAt(i)
@@ -315,8 +339,9 @@ export function buildSearchPattern(kind: SearchKind, input: string): { ok: true;
     return { ok: true, value }
   }
   const width = kind === 'u8' ? 1 : kind === 'u16' ? 2 : 4
-  const v = parseUint(input, 2 ** (width * 8) - 1)
-  if (v === null) return { ok: false, error: `${kind} の範囲（0〜${2 ** (width * 8) - 1}）の整数を入力してください` }
+  const max = 2 ** (width * 8) - 1
+  const v = parseUint(input, max)
+  if (v === null) return { ok: false, error: tr({ ja: `${kind} の範囲（0〜${max}）の整数を入力してください`, en: `Enter a whole number in the ${kind} range (0–${max})` }) }
   const value: SearchPattern = []
   for (let i = 0; i < width; i++) value.push(Math.floor(v / 2 ** (i * 8)) & 0xff)
   return { ok: true, value }
@@ -344,16 +369,18 @@ export function inspectAt(bytes: Uint8Array, offset: number): InspectedValue[] {
   const has = (n: number) => offset >= 0 && offset + n <= bytes.byteLength
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   const hex = (v: number, digits: number) => `0x${v.toString(16).toUpperCase().padStart(digits, '0')}`
+  // 値と16進の併記。日本語は全角の括弧
+  const withHex = (v: number, digits: number) => tr({ ja: `${v}（${hex(v, digits)}）`, en: `${v} (${hex(v, digits)})` })
   const u16 = has(2) ? dv.getUint16(offset, true) : null
   const u32 = has(4) ? dv.getUint32(offset, true) : null
   const f32 = has(4) ? readF32(bytes, offset) : null
   return [
-    { label: 'u8', value: has(1) ? `${bytes[offset]}（${hex(bytes[offset], 2)}）` : null },
+    { label: 'u8', value: has(1) ? withHex(bytes[offset], 2) : null },
     { label: 'i8', value: has(1) ? String(dv.getInt8(offset)) : null },
-    { label: '2進', value: has(1) ? bytes[offset].toString(2).padStart(8, '0') : null },
-    { label: 'u16', value: u16 === null ? null : `${u16}（${hex(u16, 4)}）` },
+    { label: tr({ ja: '2進', en: 'Binary' }), value: has(1) ? bytes[offset].toString(2).padStart(8, '0') : null },
+    { label: 'u16', value: u16 === null ? null : withHex(u16, 4) },
     { label: 'i16', value: has(2) ? String(dv.getInt16(offset, true)) : null },
-    { label: 'u32', value: u32 === null ? null : `${u32}（${hex(u32, 8)}）` },
+    { label: 'u32', value: u32 === null ? null : withHex(u32, 8) },
     { label: 'i32', value: has(4) ? String(dv.getInt32(offset, true)) : null },
     { label: 'f32', value: f32 === null ? null : formatFloat(f32) },
     { label: 'UTF-16', value: u16 === null ? null : utf16Char(u16) },

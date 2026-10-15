@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react'
 import { FieldShell } from '@/components/field-shell'
 import { Input } from '@/components/ui/input'
+import { tr } from '@/lib/i18n'
 import { useFieldDraft, type ParseResult } from '@/lib/use-field-draft'
 
 export type { ParseResult } from '@/lib/use-field-draft'
@@ -49,7 +50,7 @@ export function FieldRow<T>({ label, offset, badges, value, problem, disabled = 
           value === null ? '' : display && !focused ? display(value) : problem || disabled ? format(value) : draft.input
         }
         disabled={value === null || disabled}
-        placeholder={value === null ? '未読み込み' : undefined}
+        placeholder={value === null ? tr({ ja: '未読み込み', en: 'Not loaded' }) : undefined}
         readOnly={problem !== null}
         inputMode={inputMode}
         aria-invalid={error !== null}

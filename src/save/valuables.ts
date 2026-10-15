@@ -5,6 +5,7 @@
 // 一覧にない ID・通常の上限を超える個数は警告にとどめ、書き込みのときにモードで制限する。
 //
 // 枠の構造（8 B）と書き込み方は手持ちの道具と共通（item-slot.ts）。
+import { tr, type Localized } from '@/lib/i18n'
 import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
 import {
@@ -52,13 +53,22 @@ export type Valuable = ItemOption
 export const U12_VALUABLE_IDS: ReadonlySet<number> = new Set([0x002d, 0x002e])
 
 /** 選択肢の ID ごとの注意。あれば、その ID が入った枠に警告として出す */
-const VALUABLE_CAUTIONS: Readonly<Record<number, string>> = {
+const VALUABLE_CAUTIONS: Readonly<Record<number, Localized>> = {
   // ✅ 表示（U-14）。❓ ゲーム内でセーブできるか・イベントで使えるか
-  0x0000: 'イベントで使えない、またはゲーム内でセーブできなくなることがあります',
+  0x0000: {
+    ja: 'イベントで使えない、またはゲーム内でセーブできなくなることがあります',
+    en: 'It may not be usable in events, or the game may no longer be able to save',
+  },
   // 🟢 ID（U-14）。❓ ゲーム内での表示・イベントで使えるか
-  0x00ed: 'ゲーム内で表示されない、またはイベントで使えないことがあります',
+  0x00ed: {
+    ja: 'ゲーム内で表示されない、またはイベントで使えないことがあります',
+    en: 'It may not be shown in the game, or may not be usable in events',
+  },
   // 🟢 ID（U-14）。❓ ゲーム内での表示・ローラの部屋の扉で使えるか
-  0x00ee: 'ゲーム内で表示されない、またはローラの部屋の扉で使えないことがあります',
+  0x00ee: {
+    ja: 'ゲーム内で表示されない、またはローラの部屋の扉で使えないことがあります',
+    en: "It may not be shown in the game, or may not open the door to Laura's room",
+  },
 }
 
 /** 貴重品の表（valuable.csv）の ID。「なし」（0xFFFF）は除く。表の順（ID の昇順） */
@@ -69,19 +79,34 @@ const VALUABLE_TABLE_IDS: readonly number[] = Object.values(VALUABLE_TABLE)
 /**
  * 表の ID のうち U-12 を除いたもの。名前はアイテムの表（item.csv）の名前（貴重品の表の name_ja は読みを省いた形なので使わない）
  */
+// label・caution は読むたびに今の言語の文言を返す（モジュールの定数でも、言語を変えると変わるように）
 export const VALUABLES: readonly Valuable[] = VALUABLE_TABLE_IDS.filter((id) => !U12_VALUABLE_IDS.has(id)).map(
   (id): Valuable => {
     const caution = VALUABLE_CAUTIONS[id]
-    return { id, label: itemLabel(itemLabelId(id)), ...(caution ? { caution } : {}) }
+    const valuable: Valuable = {
+      id,
+      get label() {
+        return itemLabel(itemLabelId(id))
+      },
+    }
+    if (caution) Object.defineProperty(valuable, 'caution', { get: () => tr(caution), enumerable: true })
+    return valuable
   },
 )
 
 /** 重要品の画面で扱う ID（選択肢にある ID）。道具・箪笥の選択肢からは外す */
 export const VALUABLE_IDS: ReadonlySet<number> = new Set(VALUABLES.map((v) => v.id))
 
+/** アイテムの表の名前（日本語・英語） */
+const itemNames = (id: number): Localized => ({ ja: itemLabel(itemLabelId(id), 'ja'), en: itemLabel(itemLabelId(id), 'en') })
+
 /** ❓ U-12：PS3版での意味 [SE-BBS]。PC版では未確認のため、表示だけに使い書き込まない。表の名前に「？」を付ける */
-const U12_LABELS: Record<number, string> = Object.fromEntries(
-  [...U12_VALUABLE_IDS].map((id) => [id, `${lookup(VALUABLE_TABLE, id)?.name_ja ?? itemLabel(itemLabelId(id))}？`]),
+const U12_LABELS: Record<number, Localized> = Object.fromEntries(
+  [...U12_VALUABLE_IDS].map((id) => {
+    const row = lookup(VALUABLE_TABLE, id)
+    const names = row ? { ja: row.name_ja, en: row.name_en } : itemNames(id)
+    return [id, { ja: `${names.ja}？`, en: `${names.en}?` }]
+  }),
 )
 
 /**
@@ -90,11 +115,11 @@ const U12_LABELS: Record<number, string> = Object.fromEntries(
  * 表示だけに使い選択肢には出さない（ID調査モードでは書ける）。
  * 見た名前がアイテムの表の名前と同じものは表から引く（itemsByIds）。注記を付けたものだけ文字列で書く。
  */
-const itemsByIds = (...ids: number[]): Record<number, string> =>
-  Object.fromEntries(ids.map((id) => [id, itemLabel(itemLabelId(id))]))
+const itemsByIds = (...ids: number[]): Record<number, Localized> =>
+  Object.fromEntries(ids.map((id) => [id, itemNames(id)]))
 const itemRange = (first: number, last: number): number[] => Array.from({ length: last - first + 1 }, (_, i) => first + i)
 
-const PROBED_LABELS: Record<number, string> = {
+const PROBED_LABELS: Record<number, Localized> = {
   // 1回目：チラシ・うなぎ丼・天丼・鉄火丼・熱燗・ししゃも
   ...itemsByIds(...itemRange(0x2f, 0x34)),
   // 2回目（[U] 2026-10-05）。空き枠に 0x35〜0x3E を順に入れ、一覧の並び順で対応させた
@@ -107,8 +132,8 @@ const PROBED_LABELS: Record<number, string> = {
   // 4回目（[U] 2026-10-05）。空き枠に 0x4A〜0x4F、0x60〜0x62、0x70 を順に入れ、一覧の並び順で対応させた
   //   かけうどん・きつねうどん・たぬきうどん・月見うどん・饅頭・箸、空き缶
   ...itemsByIds(...itemRange(0x4a, 0x4f), 0x62),
-  0x0060: '伝説の魚（中、売却用）',
-  0x0061: '伝説の魚（大、売却用）',
+  0x0060: { ja: '伝説の魚（中、売却用）', en: 'Legendary Fish (medium, for sale)' },
+  0x0061: { ja: '伝説の魚（大、売却用）', en: 'Legendary Fish (large, for sale)' },
   // 竹の間（0x70）は宿泊設備で、アイテムではない（[U]）
   // 5回目（[U] 2026-10-05）。空き枠に 0x71〜0x73、0x75〜0x7B を順に入れ、一覧の並び順で対応させた
   // 松の間・入院（0x71・0x72）は宿泊設備で、アイテムではない（[U]）
@@ -123,9 +148,9 @@ const PROBED_LABELS: Record<number, string> = {
   // 0x00 は会談の手紙で、VALUABLES に昇格した
   //   伯爵の寿司・お金袋（小〜特大）・がらくた
   ...itemsByIds(0x01, ...itemRange(0x14, 0x18)),
-  0x000d: '部品箱（刃？）',
-  0x000e: '部品箱（鍔？）',
-  0x000f: '部品箱（柄？）',
+  0x000d: { ja: '部品箱（刃？）', en: 'Parts Box (Blade?)' },
+  0x000e: { ja: '部品箱（鍔？）', en: 'Parts Box (Guard?)' },
+  0x000f: { ja: '部品箱（柄？）', en: 'Parts Box (Grip?)' },
   // 8回目（[U] 2026-10-05）。空き枠に 0x19、0x1B、0x1C、0x20、0x21、0x9A〜0x9E を順に入れ、一覧の並び順で対応させた
   //   お宝・百両箱・茶器・プリセット目録・オレ流目録、0x9A〜0x9E は茶器
   // 0x1C は本来の茶器（ユーザー確認）。0x73 以降の「茶器」はこれと同じ表示の仮データと推測（🔶）
@@ -137,21 +162,21 @@ const PROBED_LABELS: Record<number, string> = {
   // 梅の間（0x6F）は宿泊設備で、アイテムではない（0x70 竹の間、0x71 松の間と続く）
   ...itemsByIds(0x54, 0x56, 0x66, 0x6a, 0x6b, 0x6c, 0x6f, 0xc0, 0xc1),
   // 0x51 は魚のアナゴ（シロギス 0x50 などの釣果の並び）。料理のアナゴ 0x39 と区別するため「（魚）」を付けた
-  0x0051: 'アナゴ（魚）',
+  0x0051: { ja: 'アナゴ（魚）', en: 'Sea Eel (fish)' },
   // 11回目（[U] 2026-10-05）。0xC2、0xC3、0x9F、0xA1〜0xA7 もすべて「茶器」
   ...itemsByIds(0xc2, 0xc3, 0x9f, ...itemRange(0xa1, 0xa7)),
   // 12回目（[U] 2026-10-05）。空き枠に 0xCD〜0xD6 を順に入れ、一覧の並び順で対応させた。
   // 🔶 すべて開発用のアイテムとユーザーは推測
-  0x00cd: '疲労に効く薬（開発用？）',
-  0x00ce: '熱燗（お猪口）（開発用？）',
-  0x00cf: '熱燗（徳利）（開発用？）',
-  0x00d0: '熱燗（セット）（開発用？）',
-  0x00d1: '三色団子（1串）（開発用？）',
-  0x00d2: '三色団子（皿）（開発用？）',
-  0x00d3: '三色団子（セット）（開発用？）',
-  0x00d4: 'あんころもち（1串）（開発用？）',
-  0x00d5: 'あんころもち（皿）（開発用？）',
-  0x00d6: 'あんころもち（セット）（開発用？）',
+  0x00cd: { ja: '疲労に効く薬（開発用？）', en: 'Energy Medicine (for development?)' },
+  0x00ce: { ja: '熱燗（お猪口）（開発用？）', en: 'Hot Sake (cup) (for development?)' },
+  0x00cf: { ja: '熱燗（徳利）（開発用？）', en: 'Hot Sake (flask) (for development?)' },
+  0x00d0: { ja: '熱燗（セット）（開発用？）', en: 'Hot Sake (set) (for development?)' },
+  0x00d1: { ja: '三色団子（1串）（開発用？）', en: '3 Flavor Dango (1 skewer) (for development?)' },
+  0x00d2: { ja: '三色団子（皿）（開発用？）', en: '3 Flavor Dango (plate) (for development?)' },
+  0x00d3: { ja: '三色団子（セット）（開発用？）', en: '3 Flavor Dango (set) (for development?)' },
+  0x00d4: { ja: 'あんころもち（1串）（開発用？）', en: 'Sweet Bean Mochi (1 skewer) (for development?)' },
+  0x00d5: { ja: 'あんころもち（皿）（開発用？）', en: 'Sweet Bean Mochi (plate) (for development?)' },
+  0x00d6: { ja: 'あんころもち（セット）（開発用？）', en: 'Sweet Bean Mochi (set) (for development?)' },
 }
 
 /**
@@ -192,7 +217,7 @@ export type ValuablesView = ViewStatus & {
 
 export function slotOffset(index: number): number {
   if (!Number.isInteger(index) || index < 0 || index >= VALUABLE_SLOT_COUNT) {
-    throw new RangeError(`重要品の枠番号が範囲外です: ${index}`)
+    throw new RangeError(tr({ ja: `重要品の枠番号が範囲外です: ${index}`, en: `Key item slot number out of range: ${index}` }))
   }
   return VALUABLES_OFFSET + index * VALUABLE_SLOT_BYTES
 }
@@ -201,9 +226,13 @@ export function findValuable(id: number): Valuable | undefined {
   return VALUABLES.find((v) => v.id === id)
 }
 
+/** 表の名前を今の言語で引く。表にない ID は undefined */
+const localizedIn = (table: Record<number, Localized>, id: number): string | undefined =>
+  id in table ? tr(table[id]) : undefined
+
 export function valuableLabel(id: number): string | null {
-  if (id === EMPTY_ID) return 'なし'
-  return findValuable(id)?.label ?? U12_LABELS[id] ?? PROBED_LABELS[id] ?? null
+  if (id === EMPTY_ID) return tr({ ja: 'なし', en: 'None' })
+  return findValuable(id)?.label ?? localizedIn(U12_LABELS, id) ?? localizedIn(PROBED_LABELS, id) ?? null
 }
 
 /**
@@ -216,14 +245,23 @@ export function valuableLabel(id: number): string | null {
  * U-12 の ID（0x2D／0x2E）はセーブできなくなることが分かっているので、このモードでも拒否する。
  */
 export function validateValuableId(id: number, options: EditOpts = NORMAL_EDIT_OPTS): string | null {
-  if (!Number.isInteger(id) || id < 0 || id > 0xffff) return '重要品の一覧から選んでください'
+  if (!Number.isInteger(id) || id < 0 || id > 0xffff) return tr({ ja: '重要品の一覧から選んでください', en: 'Choose from the key item list' })
   if (id === EMPTY_ID || findValuable(id)) return null
+  // ❓ U-12
   if (id in U12_LABELS) {
-    return `${U12_LABELS[id]}は書き込むとゲーム内でセーブできなくなるため書き込めません` // ❓ U-12
+    const name = U12_LABELS[id]
+    return tr({
+      ja: `${name.ja}は書き込むとゲーム内でセーブできなくなるため書き込めません`,
+      en: `${name.en} cannot be written because the game can no longer save once it is written`,
+    })
   }
   if (options.advanced) return null
-  if (id in PROBED_LABELS) return `${PROBED_LABELS[id]}は重要品の枠には書けません` // ❓ U-14
-  return '重要品の一覧にない値です'
+  // ❓ U-14
+  if (id in PROBED_LABELS) {
+    const name = PROBED_LABELS[id]
+    return tr({ ja: `${name.ja}は重要品の枠には書けません`, en: `${name.en} cannot be written to a key item slot` })
+  }
+  return tr({ ja: '重要品の一覧にない値です', en: 'Not in the key item list' })
 }
 
 export function validateValuableCount(count: number, opts: EditOpts = NORMAL_EDIT_OPTS): string | null {
@@ -232,7 +270,7 @@ export function validateValuableCount(count: number, opts: EditOpts = NORMAL_EDI
 
 export function readValuables(bytes: Uint8Array, options: EditOpts = NORMAL_EDIT_OPTS): ValuablesView {
   const end = VALUABLES_OFFSET + VALUABLE_SLOT_BYTES * VALUABLE_SLOT_COUNT
-  if (bytes.byteLength < end) throw new RangeError('ファイルが小さすぎて重要品を読めません')
+  if (bytes.byteLength < end) throw new RangeError(tr({ ja: 'ファイルが小さすぎて重要品を読めません', en: 'The file is too small to read key items' }))
   const layoutProblem = checkLayout(bytes)
 
   const slots: ValuableSlot[] = []
@@ -244,16 +282,31 @@ export function readValuables(bytes: Uint8Array, options: EditOpts = NORMAL_EDIT
     const warnings: string[] = []
     if (id !== EMPTY_ID) {
       const first = seen.get(id)
-      if (first !== undefined) warnings.push(`${first + 1}件目と同じ重要品です`)
+      if (first !== undefined) warnings.push(tr({ ja: `${first + 1}件目と同じ重要品です`, en: `Same key item as slot ${first + 1}` }))
       else seen.set(id, index)
-      if (count === 0) warnings.push('個数が 0 です')
+      if (count === 0) warnings.push(tr({ ja: '個数が 0 です', en: 'The quantity is 0' }))
       // 🔶 個数の正規上限は item-slot.ts の ITEM_COUNT_MAX。位置の検査とは分ける。
-      if (count > VALUABLE_COUNT_MAX) warnings.push('個数が通常の上限を超えています（上級者モードでだけ書けます）')
-      if (idProblem) warnings.push(`${idProblem}。ほかの値に変更してください`)
+      if (count > VALUABLE_COUNT_MAX) {
+        warnings.push(tr({
+          ja: '個数が通常の上限を超えています（上級者モードでだけ書けます）',
+          en: 'The quantity is over the normal limit (only writable in Advanced mode)',
+        }))
+      }
+      if (idProblem) warnings.push(tr({ ja: `${idProblem}。ほかの値に変更してください`, en: `${idProblem}. Change it to another value` }))
       const caution = findValuable(id)?.caution
       if (caution) warnings.push(caution)
-      if (!idProblem && id in PROBED_LABELS) warnings.push(`${PROBED_LABELS[id]} は重要品ではありません`) // ❓ U-14
-      if (!idProblem && valuableLabel(id) === null) warnings.push('重要品の一覧にない値です。ゲーム内の表示を確認してください') // ❓ U-14
+      // ❓ U-14
+      if (!idProblem && id in PROBED_LABELS) {
+        const name = PROBED_LABELS[id]
+        warnings.push(tr({ ja: `${name.ja} は重要品ではありません`, en: `${name.en} is not a key item` }))
+      }
+      // ❓ U-14
+      if (!idProblem && valuableLabel(id) === null) {
+        warnings.push(tr({
+          ja: '重要品の一覧にない値です。ゲーム内の表示を確認してください',
+          en: 'Not in the key item list. Check how it appears in the game',
+        }))
+      }
     }
 
     slots.push({
@@ -302,7 +355,7 @@ export function fillEmptySlotsWithProbes(bytes: Uint8Array, start: number): numb
   if (view.problem) throw new RangeError(view.problem)
   const used = new Set(view.slots.map((s) => s.id))
   const from = PROBE_CANDIDATES.indexOf(start)
-  if (from < 0) throw new RangeError('開始 ID が調査の候補にありません')
+  if (from < 0) throw new RangeError(tr({ ja: '開始 ID が調査の候補にありません', en: 'The starting ID is not in the candidate list' }))
   const ids = PROBE_CANDIDATES.slice(from).filter((id) => !used.has(id))
   const filled: number[] = []
   for (const slot of view.slots) {

@@ -1,4 +1,5 @@
 // 帯刀・武器袋・刀箪笥の画面で共通の定数と小さな関数（コンポーネントは weapon-rows.tsx）。
+import { tr } from "@/lib/i18n";
 import { WEAPON_FIELDS } from "@/save/weapon";
 
 export const NONE = "none";
@@ -12,6 +13,7 @@ export const weaponFieldOffset = (offset: number | undefined, key: keyof typeof 
 
 /** 書き込み先のレコードの先頭。位置のない欄からは書き込まない */
 export function weaponRecordOffset(offset: number | undefined): number {
-  if (offset === undefined) throw new Error("セーブファイルが読み込まれていません");
+  if (offset === undefined)
+    throw new Error(tr({ ja: "セーブファイルが読み込まれていません", en: "No save file is loaded." }));
   return offset;
 }

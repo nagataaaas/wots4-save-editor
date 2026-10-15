@@ -15,7 +15,20 @@ import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
 import { WriteResult } from "@/components/write-error";
-import { SECTS, SLOT_LABELS, STANCES, sheetSkillTree, stanceSkillSheet, stanceSkills, type Sect, type SkillSheet } from "@/save/master/sect-data";
+import { tr, type Localized } from "@/lib/i18n";
+import {
+  SECTS,
+  SLOT_LABELS,
+  STANCES,
+  commandLabel,
+  sectName,
+  sheetSkillTree,
+  stanceName,
+  stanceSkillSheet,
+  stanceSkills,
+  type Sect,
+  type SkillSheet,
+} from "@/save/master/sect-data";
 import {
   SHEET_STATES_OFFSET,
   STANCE_STATES_END,
@@ -29,7 +42,7 @@ import {
   showStanceSkillInOreRyu,
   stanceSkillSheets,
 } from "@/save/sects";
-import { SKILL_TREE_DESCRIPTION, STANCE_TAB_CLASS, attrLabel } from "./sect-format";
+import { STANCE_TAB_CLASS, attrLabel, skillTreeDescription } from "./sect-format";
 import { SkillAttrs, SkillCommandCells, SkillTreeName, SkillTreeRows, StateBadge, type SkillTreeRowContext } from "./sect-ui";
 import { SkillActionButtons } from "./skill-action-buttons";
 import {
@@ -46,21 +59,29 @@ import {
   type SkillSort,
 } from "./skill-list";
 
-const COMMAND_FILTER_OPTIONS: FilterOption<string>[] = [
-  { value: ANY, label: "すべての入力" },
-  ...COMMAND_OPTIONS.map((c) => ({ value: c, label: c || "入力なし" })),
-];
-const ATTR_FILTER_OPTIONS: FilterOption<string>[] = [
-  { value: ANY, label: "すべての効果" },
-  ...ATTR_OPTIONS.map((a) => ({ value: a, label: attrLabel(a) })),
-];
-const KIND_FILTER_OPTIONS = (Object.keys(SKILL_KIND_LABELS) as SkillKind[]).map((value) => ({ value, label: SKILL_KIND_LABELS[value] }));
-const SORT_OPTIONS = (Object.keys(SKILL_SORT_LABELS) as SkillSort[]).map((value) => ({ value, label: SKILL_SORT_LABELS[value] }));
+/** 絞り込み・並べ替えの選択肢（今の言語で作るので描画中に呼ぶ） */
+function filterOptions() {
+  const command: FilterOption<string>[] = [
+    { value: ANY, label: tr({ ja: "すべての入力", en: "All commands" }) },
+    ...COMMAND_OPTIONS.map((c) => ({ value: c, label: commandLabel(c) || tr({ ja: "入力なし", en: "No command" }) })),
+  ];
+  const attr: FilterOption<string>[] = [
+    { value: ANY, label: tr({ ja: "すべての効果", en: "All effects" }) },
+    ...ATTR_OPTIONS.map((a) => ({ value: a, label: attrLabel(a) })),
+  ];
+  const kind = (Object.keys(SKILL_KIND_LABELS) as SkillKind[]).map((value) => ({ value, label: tr(SKILL_KIND_LABELS[value]) }));
+  const sort = (Object.keys(SKILL_SORT_LABELS) as SkillSort[]).map((value) => ({ value, label: tr(SKILL_SORT_LABELS[value]) }));
+  return { command, attr, kind, sort };
+}
 
-/** タブの段：刀の構え（構えの組 0）と、それ以外（構えの組の順 🟢：槍・無手・拳銃・ライフル・二刀） */
-const STANCE_ROWS = [
-  { label: SLOT_LABELS[0], stances: STANCES.filter((s) => s.slot === 0) },
-  { label: `${SLOT_LABELS[0]}以外`, stances: STANCES.filter((s) => s.slot !== 0).toSorted((a, b) => a.slot - b.slot || a.id - b.id) },
+/** タブの段：刀の構え（構えの組 0）と、それ以外（構えの組の順 🟢：槍・無手・拳銃・ライフル・二刀）。key は段の識別子 */
+const STANCE_ROWS: { key: string; label: Localized; stances: typeof STANCES }[] = [
+  { key: "sword", label: SLOT_LABELS[0], stances: STANCES.filter((s) => s.slot === 0) },
+  {
+    key: "other",
+    label: { ja: `${SLOT_LABELS[0].ja}以外`, en: "Other" },
+    stances: STANCES.filter((s) => s.slot !== 0).toSorted((a, b) => a.slot - b.slot || a.id - b.id),
+  },
 ];
 
 /** 構えの技 1 つが入っている技の表・流派 */
@@ -110,6 +131,7 @@ export function SkillsPage() {
   );
   const shownByStance = useMemo(() => trees.map((t) => filterSortTree(t.groups, filter, sort)), [trees, filter, sort]);
   const filtering = JSON.stringify(filter) !== JSON.stringify(EMPTY_FILTER);
+  const options = useMemo(() => filterOptions(), []);
 
   const { view, error: readError, problem, readOnly } = useSaveView(readSects);
 
@@ -123,14 +145,17 @@ export function SkillsPage() {
       {/* 「習得する」は ✅（ゲームで反映を確認済み）。固有技の「習得する」は 🟢 要ゲーム内確認 */}
       <AnchoredCard
         anchor={SKILLS_ANCHORS.overview}
-        title="技"
+        title={tr({ ja: "技", en: "Moves" })}
         // 技の覚え状況（chunks/skill-states）：技の表ごとの状態に続いて構えごとの状態。状態は構えごとの状態を出す
         extra={<InfoTip offset={`${formatOffset(SHEET_STATES_OFFSET)}〜${formatOffset(STANCE_STATES_END - 1)}`} />}
         description={
           <>
-            構えごとに全部の技を一覧し、技を習得済みにできます。
+            {tr({ ja: "構えごとに全部の技を一覧し、技を習得済みにできます。", en: "Lists every move for each stance and lets you mark moves as learned." })}
             <br />
-            固有技は「俺流で表示」にすると、俺流に組み込めるようになります。
+            {tr({
+              ja: "固有技は「俺流で表示」にすると、俺流に組み込めるようになります。",
+              en: 'Unique moves can be added to My Style after you use "Show in My Style".',
+            })}
             {/* 「習得する」は、その技が入っているすべての流派の技の表と構えごとの状態に書く（流派の画面と同じ書き込み）。
                 固有技は「習得する」で習得済（俺流には未組み込み） */}
           </>
@@ -138,31 +163,35 @@ export function SkillsPage() {
       >
         <CardContent className="flex flex-col gap-3 text-sm">
           <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4 lg:grid-cols-[repeat(6,minmax(0,1fr))_auto]">
-            <FilterField label="技の名前">
-              <Input placeholder="名前で絞り込み" value={filter.query} onChange={(e) => set({ query: e.target.value })} />
+            <FilterField label={tr({ ja: "技の名前", en: "Move name" })}>
+              <Input
+                placeholder={tr({ ja: "名前で絞り込み", en: "Filter by name" })}
+                value={filter.query}
+                onChange={(e) => set({ query: e.target.value })}
+              />
             </FilterField>
-            <FilterField label="入力">
+            <FilterField label={tr({ ja: "入力", en: "Command" })}>
               <FilterSelect
-                options={COMMAND_FILTER_OPTIONS}
+                options={options.command}
                 value={filter.command}
                 onChange={(command) => set({ command })}
                 className="w-full"
-                aria-label="入力で絞り込み"
+                aria-label={tr({ ja: "入力で絞り込み", en: "Filter by command" })}
               />
             </FilterField>
-            <FilterField label="種類">
+            <FilterField label={tr({ ja: "種類", en: "Type" })}>
               <FilterSelect
-                options={KIND_FILTER_OPTIONS}
+                options={options.kind}
                 value={filter.kind}
                 onChange={(kind) => set({ kind })}
                 className="w-full"
-                aria-label="技の種類で絞り込み"
+                aria-label={tr({ ja: "技の種類で絞り込み", en: "Filter by move type" })}
               />
             </FilterField>
-            <FilterField label="攻撃力（以上）">
+            <FilterField label={tr({ ja: "攻撃力（以上）", en: "Strength (min)" })}>
               <Input
                 inputMode="numeric"
-                placeholder="指定なし"
+                placeholder={tr({ ja: "指定なし", en: "Any" })}
                 value={minAttackText}
                 onChange={(e) => {
                   const t = e.target.value;
@@ -170,20 +199,26 @@ export function SkillsPage() {
                   const n = Number(t.normalize("NFKC").trim());
                   set({ minAttack: t.trim() === "" || !Number.isFinite(n) ? null : n });
                 }}
-                aria-label="攻撃力の下限"
+                aria-label={tr({ ja: "攻撃力の下限", en: "Minimum strength" })}
               />
             </FilterField>
-            <FilterField label="効果">
+            <FilterField label={tr({ ja: "効果", en: "Effects" })}>
               <FilterSelect
-                options={ATTR_FILTER_OPTIONS}
+                options={options.attr}
                 value={filter.attr}
                 onChange={(attr) => set({ attr })}
                 className="w-full"
-                aria-label="効果で絞り込み"
+                aria-label={tr({ ja: "効果で絞り込み", en: "Filter by effect" })}
               />
             </FilterField>
-            <FilterField label="並べ替え">
-              <FilterSelect options={SORT_OPTIONS} value={sort} onChange={setSort} className="w-full" aria-label="並べ替え" />
+            <FilterField label={tr({ ja: "並べ替え", en: "Sort" })}>
+              <FilterSelect
+                options={options.sort}
+                value={sort}
+                onChange={setSort}
+                className="w-full"
+                aria-label={tr({ ja: "並べ替え", en: "Sort" })}
+              />
             </FilterField>
             <Button
               variant="outline"
@@ -195,7 +230,7 @@ export function SkillsPage() {
                 setSort("id-asc");
               }}
             >
-              条件を戻す
+              {tr({ ja: "条件を戻す", en: "Reset filters" })}
             </Button>
           </div>
         </CardContent>
@@ -205,8 +240,8 @@ export function SkillsPage() {
         {/* 構えは「刀」と「刀以外」の 2 段に、同じ幅の枠で並べる。数は 習得済/技の数、絞り込み中は条件に合う技の数 */}
         <TabsList className="h-auto w-full flex-col items-stretch gap-1.5 p-2 group-data-horizontal/tabs:h-auto">
           {STANCE_ROWS.map((row) => (
-            <div key={row.label} className="flex items-center gap-2">
-              <span className="text-muted-foreground w-12 shrink-0 pl-1 text-xs font-medium">{row.label}</span>
+            <div key={row.key} className="flex items-center gap-2">
+              <span className="text-muted-foreground w-12 shrink-0 pl-1 text-xs font-medium">{tr(row.label)}</span>
               <div className="grid flex-1 grid-cols-3 gap-1 sm:grid-cols-4 lg:grid-cols-7">
                 {row.stances.map((stance) => {
                   const states = view?.stanceStates[stance.id];
@@ -219,9 +254,11 @@ export function SkillsPage() {
                       className={`${STANCE_TAB_CLASS} w-full justify-between`}
                       disabled={filtering && hits === 0}
                     >
-                      {stance.nameJa}
+                      {stanceName(stance)}
                       <span className="text-xs font-normal tabular-nums opacity-70">
-                        {filtering ? `${hits}件` : `${states ? countLearned(states, nos) : "—"}/${nos.length}`}
+                        {filtering
+                          ? tr({ ja: `${hits}件`, en: String(hits) })
+                          : `${states ? countLearned(states, nos) : "—"}/${nos.length}`}
                       </span>
                     </TabsTrigger>
                   );
@@ -288,29 +325,38 @@ function StanceSkillTable({
           size="sm"
           disabled={readOnly || pending.length === 0}
           onClick={() =>
-            tryWrite((b) => learnStanceSkills(b, stance, pending), `${pending.length} 個の技を習得しました`)
+            tryWrite(
+              (b) => learnStanceSkills(b, stance, pending),
+              tr({
+                ja: `${pending.length} 個の技を習得しました`,
+                en: pending.length === 1 ? "Learned 1 move" : `Learned ${pending.length} moves`,
+              }),
+            )
           }
         >
-          条件に合う技を全部習得する
+          {tr({ ja: "条件に合う技を全部習得する", en: "Learn all matching moves" })}
         </Button>
         <span className="text-muted-foreground text-xs">
-          {nos.length} 件（未習得 {states ? nos.length - countLearned(states, nos) : "—"}）。段や習得条件は見ずに書き込みます。
-          {SKILL_TREE_DESCRIPTION}
-          条件に合わない前の技は薄く出します。
+          {tr({
+            ja: `${nos.length} 件（未習得 ${states ? nos.length - countLearned(states, nos) : "—"}）。段や習得条件は見ずに書き込みます。`,
+            en: `${nos.length} moves (${states ? nos.length - countLearned(states, nos) : "—"} not learned). Writes without checking rank or learning conditions. `,
+          })}
+          {skillTreeDescription()}
+          {tr({ ja: "条件に合わない前の技は薄く出します。", en: " Preceding moves that do not match are dimmed." })}
         </span>
       </div>
       <WriteResult message={message} />
       {nos.length === 0 ? (
-        <p className="text-muted-foreground text-sm">条件に合う技がありません。</p>
+        <p className="text-muted-foreground text-sm">{tr({ ja: "条件に合う技がありません。", en: "No moves match." })}</p>
       ) : (
         <div className="grid grid-cols-[auto_auto_auto_auto_auto_minmax(0,1fr)_auto] gap-x-3 text-sm">
           <div className="text-muted-foreground col-span-full grid grid-cols-subgrid border-b py-1 text-xs">
-            <span>技</span>
-            <span>状態</span>
-            <span>入力</span>
-            <span>攻撃力</span>
-            <span>効果</span>
-            <span>流派</span>
+            <span>{tr({ ja: "技", en: "Move" })}</span>
+            <span>{tr({ ja: "状態", en: "Status" })}</span>
+            <span>{tr({ ja: "入力", en: "Command" })}</span>
+            <span>{tr({ ja: "攻撃力", en: "Strength" })}</span>
+            <span>{tr({ ja: "効果", en: "Effects" })}</span>
+            <span>{tr({ ja: "流派", en: "Styles" })}</span>
             <span />
           </div>
           <SkillTreeRows
@@ -365,12 +411,19 @@ function SkillRow({
           <LazyTip
             className="text-muted-foreground hover:text-foreground underline decoration-dotted"
             contentClassName="max-w-sm"
-            content={row.sects.map((x) => x.nameJa).join("・")}
+            content={row.sects.map(sectName).join(tr({ ja: "・", en: ", " }))}
           >
-            {row.sects.length === 1 ? row.sects[0].nameJa : `${row.sects[0].nameJa} ほか ${row.sects.length - 1}`}
+            {row.sects.length === 1
+              ? sectName(row.sects[0])
+              : tr({
+                  ja: `${sectName(row.sects[0])} ほか ${row.sects.length - 1}`,
+                  en: `${sectName(row.sects[0])} and ${row.sects.length - 1} more`,
+                })}
           </LazyTip>
         ) : (
-          <span className="text-muted-foreground">{row.learnable ? "（手に入れられない流派のみ）" : "—"}</span>
+          <span className="text-muted-foreground">
+            {row.learnable ? tr({ ja: "（手に入れられない流派のみ）", en: "(Only styles you cannot obtain)" }) : "—"}
+          </span>
         )}
       </span>
       {/* 流派の画面と同じ：固有技は 0 →「習得する」（3）→「俺流で表示」（1）。ほかの技は 0・3 から「習得する」（1） */}
@@ -380,9 +433,14 @@ function SkillRow({
         advanced={advanced}
         disabled={readOnly}
         learnable={row.learnable}
-        onLearn={() => tryWrite((b) => learnStanceSkill(b, stance, s.skillNo), "技を習得しました")}
-        onShowInOreRyu={() => tryWrite((b) => showStanceSkillInOreRyu(b, stance, s.skillNo), "俺流に組み込めるようにしました")}
-        onForget={() => tryWrite((b) => forgetStanceSkill(b, stance, s.skillNo), "技を忘れさせました")}
+        onLearn={() => tryWrite((b) => learnStanceSkill(b, stance, s.skillNo), tr({ ja: "技を習得しました", en: "Learned the move" }))}
+        onShowInOreRyu={() =>
+          tryWrite(
+            (b) => showStanceSkillInOreRyu(b, stance, s.skillNo),
+            tr({ ja: "俺流に組み込めるようにしました", en: "The move can now be used in My Style" }),
+          )
+        }
+        onForget={() => tryWrite((b) => forgetStanceSkill(b, stance, s.skillNo), tr({ ja: "技を忘れさせました", en: "Forgot the move" }))}
       />
     </div>
   );

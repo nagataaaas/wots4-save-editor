@@ -6,6 +6,7 @@ import { SelectRow } from "@/components/select-row";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { tr } from "@/lib/i18n";
 import { SearchField } from "@/lib/search-context";
 import { weaponIdLabel } from "@/save/weapon";
 import { weaponImageUrl } from "@/save/master/weapon-images";
@@ -77,13 +78,16 @@ export function OverrideRow({
         disabled={props.value === null}
         onClick={() => setOverride(!override)}
       >
-        {override ? "上書きをやめる" : `${label}を上書き`}
+        {override
+          ? tr({ ja: "上書きをやめる", en: "Stop overriding" })
+          : tr({ ja: `${label}を上書き`, en: `Override ${label.toLowerCase()}` })}
       </Button>
     ),
     disabled: !override,
     hint: override ? (
       <span className="text-amber-600 dark:text-amber-400">
-        データ破損のおそれ。{overrideHint}
+        {tr({ ja: "データ破損のおそれ。", en: "This may corrupt the save. " })}
+        {overrideHint}
       </span>
     ) : (
       idleHint
@@ -117,7 +121,12 @@ export function WeaponImage({ id, small = false }: { id: number | null; small?: 
         />
       ) : small ? null : (
         <div className="text-wots-label flex size-full items-center justify-center p-2 text-center font-serif text-xs">
-          {url ? "画像を読み込めません" : "完成武器と部品が一致しないため画像なし"}
+          {url
+            ? tr({ ja: "画像を読み込めません", en: "Could not load the image" })
+            : tr({
+                ja: "完成武器と部品が一致しないため画像なし",
+                en: "No image because the parts do not match a finished weapon",
+              })}
         </div>
       )}
     </div>

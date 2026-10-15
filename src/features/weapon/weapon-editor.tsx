@@ -4,6 +4,7 @@ import { AnchorLink, ToggleChevron } from "@/components/anchor-link";
 import { DisclosureContent } from "@/components/disclosure-content";
 import { InfoTip } from "@/components/info-tip";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { tr } from "@/lib/i18n";
 import { useAnchoredOpen } from "@/lib/navigation-context";
 import { SearchScope } from "@/lib/search-context";
 import { useSearchBox } from "@/lib/search-hooks";
@@ -39,7 +40,7 @@ function EffectIcon({ icon }: { icon: LucideIcon | null }) {
 function EffectBox({ children }: { children: ReactNode }) {
   return (
     <div className="bg-muted/40 flex flex-col gap-1 rounded-md border p-3 text-sm">
-      <span className="text-muted-foreground text-xs font-medium">今の効果</span>
+      <span className="text-muted-foreground text-xs font-medium">{tr({ ja: "今の効果", en: "Current effect" })}</span>
       {children}
     </div>
   );
@@ -124,21 +125,29 @@ export function WeaponEditor({
         <WeaponPartRow {...p} kind="grip" />
       </div>
 
-      <Section anchor={WEAPON_EDITOR_ANCHORS.numbers} title="攻撃力・耐久・質" defaultOpen={sectionsOpen}>
+      <Section
+        anchor={WEAPON_EDITOR_ANCHORS.numbers}
+        title={tr({ ja: "攻撃力・耐久・質", en: "Strength, durability & degradation" })}
+        defaultOpen={sectionsOpen}
+      >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><WeaponNumberRow {...p} field="attack" /></div>
         <div className="grid gap-4 lg:grid-cols-2">
-          <NumberPair title="耐久">
-            <WeaponNumberRow {...p} field="durability" label="現在" />
-            <WeaponNumberRow {...p} field="durabilityMax" label="最大" />
+          <NumberPair title={tr({ ja: "耐久", en: "Durability" })}>
+            <WeaponNumberRow {...p} field="durability" label={tr({ ja: "現在", en: "Current" })} />
+            <WeaponNumberRow {...p} field="durabilityMax" label={tr({ ja: "最大", en: "Max" })} />
           </NumberPair>
-          <NumberPair title="質">
-            <WeaponNumberRow {...p} field="quality" label="現在" />
-            <WeaponNumberRow {...p} field="qualityMax" label="最大" />
+          <NumberPair title={tr({ ja: "質", en: "Degradation" })}>
+            <WeaponNumberRow {...p} field="quality" label={tr({ ja: "現在", en: "Current" })} />
+            <WeaponNumberRow {...p} field="qualityMax" label={tr({ ja: "最大", en: "Max" })} />
           </NumberPair>
         </div>
       </Section>
 
-      <Section anchor={WEAPON_EDITOR_ANCHORS.titleCharms} title="銘・魅力" defaultOpen={sectionsOpen}>
+      <Section
+        anchor={WEAPON_EDITOR_ANCHORS.titleCharms}
+        title={tr({ ja: "銘・魅力", en: "Signature & charms" })}
+        defaultOpen={sectionsOpen}
+      >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
             <WeaponTitleRow {...p} />
@@ -159,7 +168,9 @@ export function WeaponEditor({
                   </>
                 ) : (
                   <p className="text-muted-foreground">
-                    {weapon.title.value === null ? "銘なし" : "効果は不明"}
+                    {weapon.title.value === null
+                      ? tr({ ja: "銘なし", en: "No signature" })
+                      : tr({ ja: "効果は不明", en: "Effect unknown" })}
                   </p>
                 )}
               </EffectBox>
@@ -169,7 +180,7 @@ export function WeaponEditor({
 
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium">魅力</span>
+            <span className="text-sm font-medium">{tr({ ja: "魅力", en: "Charms" })}</span>
             <InfoTip offset={weaponFieldOffset(offset, "charms")} />
           </div>
           <CharmEditor weapon={weapon} offset={offset} />
@@ -181,7 +192,7 @@ export function WeaponEditor({
           {weapon && !charms?.problem && (
             <EffectBox>
               {effects.length === 0 ? (
-                <p className="text-muted-foreground">魅力なし</p>
+                <p className="text-muted-foreground">{tr({ ja: "魅力なし", en: "No charms" })}</p>
               ) : (
                 <ul className="flex flex-col gap-1">
                   {effects.map((e) => (
@@ -191,8 +202,11 @@ export function WeaponEditor({
                         <span className="font-medium">
                           {e.label} ×{e.count}
                         </span>
-                        ：{e.summary}
-                        {e.amount && <span className="font-medium">（{e.amount}）</span>}
+                        {tr({ ja: "：", en: ": " })}
+                        {e.summary}
+                        {e.amount && (
+                          <span className="font-medium">{tr({ ja: `（${e.amount}）`, en: ` (${e.amount})` })}</span>
+                        )}
                       </span>
                     </li>
                   ))}
@@ -203,14 +217,22 @@ export function WeaponEditor({
         </div>
       </Section>
 
-      <Section anchor={WEAPON_EDITOR_ANCHORS.kills} title="斬殺数・つま斬り数" defaultOpen={sectionsOpen}>
+      <Section
+        anchor={WEAPON_EDITOR_ANCHORS.kills}
+        title={tr({ ja: "斬殺数・つま斬り数", en: "Kills & Spring Harvest kills" })}
+        defaultOpen={sectionsOpen}
+      >
         <div className="grid gap-4 sm:grid-cols-2">
           <WeaponNumberRow {...p} field="kills" />
           <WeaponNumberRow {...p} field="tsumaKills" />
         </div>
       </Section>
 
-      <Section anchor={WEAPON_EDITOR_ANCHORS.durability} title="耐久回復の累積値・手に持っていた時間" defaultOpen={sectionsOpen}>
+      <Section
+        anchor={WEAPON_EDITOR_ANCHORS.durability}
+        title={tr({ ja: "耐久回復の累積値・手に持っていた時間", en: "Total durability restored & time held" })}
+        defaultOpen={sectionsOpen}
+      >
         <div className="grid gap-4 sm:grid-cols-2">
           <WeaponNumberRow {...p} field="durabilityRecovery" />
           <WeaponNumberRow {...p} field="heldTime" />

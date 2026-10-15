@@ -11,6 +11,7 @@
 // - maxStack：手持ちの1枠にまとめて持てる最大数 🟢。ほとんど 1。箪笥はこの上限を超えて入る（[U] sample）
 import { ITEM_TABLE } from "./dataset/item";
 import { itemId, itemLabelId, type ItemId, type ItemLabelId, type LocalizedLabel } from "./label-types";
+import type { Localized } from "@/lib/i18n";
 
 /** 0＝道具、1＝料理、2＝宿、3＝なし（手に入る経路がない） */
 export type ItemKind = 0 | 1 | 2 | 3;
@@ -27,11 +28,11 @@ export type ItemEntry = {
 };
 
 /** 種別の見出し。3 は「なし」だと選択肢の「なし」（空き枠）と紛らわしいので補足をつける */
-export const ITEM_KIND_LABELS: Record<ItemKind, string> = {
-  0: "道具",
-  1: "料理",
-  2: "宿",
-  3: "なし（手に入る経路がない）",
+export const ITEM_KIND_LABELS: Record<ItemKind, Localized> = {
+  0: { ja: "道具", en: "Items" },
+  1: { ja: "料理", en: "Meals" },
+  2: { ja: "宿", en: "Inn" },
+  3: { ja: "なし（手に入る経路がない）", en: "None (cannot be obtained)" },
 };
 
 // 0xFFFF は「なし」で、アイテムではない
@@ -67,11 +68,11 @@ export function findItem(id: number): ItemEntry | undefined {
 /** 表示用の分類。ゲームの kind（道具・料理・宿・なし）や編集可否とは別。 */
 export type ItemCategory = "food" | "drink" | "reading" | "usable";
 
-export const ITEM_CATEGORY_LABELS: Record<ItemCategory, string> = {
-  food: "食べ物・食べて使うもの",
-  drink: "飲み物",
-  reading: "読み物",
-  usable: "使用アイテム",
+export const ITEM_CATEGORY_LABELS: Record<ItemCategory, Localized> = {
+  food: { ja: "食べ物・食べて使うもの", en: "Food / eaten to use" },
+  drink: { ja: "飲み物", en: "Drink" },
+  reading: { ja: "読み物", en: "Reading" },
+  usable: { ja: "使用アイテム", en: "Usable item" },
 };
 
 // 🔶 CSV の use_action の分類候補（docs/save_format/datatable/item/README.md）。

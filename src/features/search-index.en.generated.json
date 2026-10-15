@@ -1,0 +1,8906 @@
+[
+ {
+  "section": "hero",
+  "anchor": "name",
+  "path": [],
+  "label": "Name",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "name",
+  "path": [
+   "Name"
+  ],
+  "label": "Name",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "money",
+  "path": [],
+  "label": "Funds & Samurai Points",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "money",
+  "path": [
+   "Funds & Samurai Points"
+  ],
+  "label": "Funds",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "money",
+  "path": [
+   "Funds & Samurai Points"
+  ],
+  "label": "Treasury",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "money",
+  "path": [
+   "Funds & Samurai Points"
+  ],
+  "label": "Samurai Points",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [],
+  "label": "HP, Vitality & Spring Harvest",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP, Vitality & Spring Harvest"
+  ],
+  "label": "HP",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP, Vitality & Spring Harvest",
+   "HP"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP, Vitality & Spring Harvest",
+   "HP"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP, Vitality & Spring Harvest"
+  ],
+  "label": "Vitality",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP, Vitality & Spring Harvest",
+   "Vitality"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP, Vitality & Spring Harvest",
+   "Vitality"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP, Vitality & Spring Harvest"
+  ],
+  "label": "Spring Harvest gauge",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP, Vitality & Spring Harvest",
+   "Spring Harvest gauge"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "vitals",
+  "path": [
+   "HP, Vitality & Spring Harvest",
+   "Spring Harvest gauge"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "location",
+  "path": [],
+  "label": "Location (starting point)",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "location",
+  "path": [
+   "Location (starting point)"
+  ],
+  "label": "Place",
+  "box": false
+ },
+ {
+  "section": "hero",
+  "anchor": "difficulty",
+  "path": [],
+  "label": "Redo difficulty & Character Settings",
+  "box": true
+ },
+ {
+  "section": "hero",
+  "anchor": "difficulty",
+  "path": [
+   "Redo difficulty & Character Settings"
+  ],
+  "label": "Difficulty & Character Settings",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [],
+  "label": "Body",
+  "box": true
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [
+   "Body"
+  ],
+  "label": "Figure",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [
+   "Body"
+  ],
+  "label": "Skin color",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [
+   "Body"
+  ],
+  "label": "Height option",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "current",
+  "path": [
+   "Body"
+  ],
+  "label": "Height (cm)",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [],
+  "label": "Appearance",
+  "box": true
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Character",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Type",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Hair color",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Undress",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Upper",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Lower",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Face & voice",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Hairstyle",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Feet",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Armguards",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Leggings",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Apron",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Cloak",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [],
+  "label": "Accessories",
+  "box": true
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "Accessories"
+  ],
+  "label": "Accessory",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "Accessories"
+  ],
+  "label": "Body part",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "Accessories"
+  ],
+  "label": "Position X",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "Accessories"
+  ],
+  "label": "Position Y",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "Accessories"
+  ],
+  "label": "Position Z",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "Accessories"
+  ],
+  "label": "Rotation X (deg)",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "Accessories"
+  ],
+  "label": "Rotation Y (deg)",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "Accessories"
+  ],
+  "label": "Rotation Z (deg)",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "accessories",
+  "path": [
+   "Accessories"
+  ],
+  "label": "Size",
+  "box": false
+ },
+ {
+  "section": "hero-appearance",
+  "anchor": "parts",
+  "path": [
+   "Appearance"
+  ],
+  "label": "Hands",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [],
+  "label": "Samurai Evaluation",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "Samurai Evaluation"
+  ],
+  "label": "Best Samurai Level",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "Samurai Evaluation"
+  ],
+  "label": "Samurai Level (last evaluation)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "Samurai Evaluation"
+  ],
+  "label": "Samurai Pts from this evaluation",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "Samurai Evaluation"
+  ],
+  "label": "Samurai Level numerator",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "Samurai Evaluation"
+  ],
+  "label": "Samurai Level denominator",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-evaluation",
+  "path": [
+   "Samurai Evaluation"
+  ],
+  "label": "Stage at death",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [],
+  "label": "Action counts",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Picked up items people dropped",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Bumped into people",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Struck down non-fighting townsfolk",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Skipped out on a bill",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Samurai-Like Decisions",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Embarrassing Decisions",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Approached someone with a drawn weapon during an event",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Hit someone during an event",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Successes in Virtuous Tasks",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-actions",
+  "path": [
+   "Action counts"
+  ],
+  "label": "Successes in Seedy Tasks",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [],
+  "label": "Times each title was earned",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Samurai Lord",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "True Samurai",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Great Samurai",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Splendid Samurai",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Almost Samurai",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Pseudo-Samurai",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Apprentice",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Incompetent",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Drifter",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Good-For-Nothing",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Delinquent",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Shameless",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Miscreant",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Foul Heretic",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-titles",
+  "path": [
+   "Times each title was earned"
+  ],
+  "label": "Lord of the Damned",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-time",
+  "path": [],
+  "label": "Play time",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-time",
+  "path": [
+   "Play time"
+  ],
+  "label": "Play time (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-time",
+  "path": [
+   "Play time"
+  ],
+  "label": "Total Play Time (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-time",
+  "path": [
+   "Play time"
+  ],
+  "label": "Shortest Clear Time",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [],
+  "label": "Distance traveled and kills",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "Distance traveled and kills"
+  ],
+  "label": "Distance traveled (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "Distance traveled and kills"
+  ],
+  "label": "Distance Traveled (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "Distance traveled and kills"
+  ],
+  "label": "Kills (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "Distance traveled and kills"
+  ],
+  "label": "Total Kills (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "Distance traveled and kills"
+  ],
+  "label": "Highest Combo (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-combat",
+  "path": [
+   "Distance traveled and kills"
+  ],
+  "label": "Highest Combo (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [],
+  "label": "Damage dealt per character",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "J.J. (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "J.J. (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Kotobuki (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Kotobuki (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Moro (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Moro (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Kinugawa (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Kinugawa (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Akagi (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Akagi (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Kogure (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Kogure (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Dojima (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Dojima (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Mayu (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Mayu (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Chika (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Chika (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Yuri (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Yuri (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Melinda (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Melinda (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Madara (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Madara (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Sensei (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Sensei (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Toguro (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Toguro (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Charles (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Charles (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Black Mask (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Black Mask (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Demonscale Clan (this playthrough)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "stat-damage",
+  "path": [
+   "Damage dealt per character"
+  ],
+  "label": "Demonscale Clan (all-time)",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-arts",
+  "path": [],
+  "label": "Kills per move",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "score-arts",
+  "path": [
+   "Kills per move"
+  ],
+  "label": "Move",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-arts",
+  "path": [
+   "Kills per move"
+  ],
+  "label": "This playthrough",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-arts",
+  "path": [
+   "Kills per move"
+  ],
+  "label": "All-time",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-items",
+  "path": [],
+  "label": "Item uses",
+  "box": true
+ },
+ {
+  "section": "records",
+  "anchor": "score-items",
+  "path": [
+   "Item uses"
+  ],
+  "label": "Item",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-items",
+  "path": [
+   "Item uses"
+  ],
+  "label": "This playthrough",
+  "box": false
+ },
+ {
+  "section": "records",
+  "anchor": "score-items",
+  "path": [
+   "Item uses"
+  ],
+  "label": "All-time",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "state",
+  "path": [],
+  "label": "Equipped state",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "state",
+  "path": [
+   "Equipped state"
+  ],
+  "label": "Dual Arms",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "state",
+  "path": [
+   "Equipped state"
+  ],
+  "label": "Right hand (selected weapon)",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "state",
+  "path": [
+   "Equipped state"
+  ],
+  "label": "Left hand",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [],
+  "label": "Weapon 1",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Weapon name",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Finished weapon",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Weapon type",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Hide name (shown as \"*****\")",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Change to weapon",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Blade",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Sheath",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Guard",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Grip",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Strength, durability & degradation",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "Weapon 1",
+   "Strength, durability & degradation"
+  ],
+  "label": "Strength",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "Weapon 1",
+   "Strength, durability & degradation"
+  ],
+  "label": "Durability",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "Weapon 1",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "Weapon 1",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "Weapon 1",
+   "Strength, durability & degradation"
+  ],
+  "label": "Degradation",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "Weapon 1",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/numbers",
+  "path": [
+   "Weapon 1",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Signature & charms",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "Weapon 1",
+   "Signature & charms"
+  ],
+  "label": "Signature",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "Weapon 1",
+   "Signature & charms"
+  ],
+  "label": "Charm 1",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "Weapon 1",
+   "Signature & charms"
+  ],
+  "label": "Charm 2",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "Weapon 1",
+   "Signature & charms"
+  ],
+  "label": "Charm 3",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/kills",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Kills & Spring Harvest kills",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/kills",
+  "path": [
+   "Weapon 1",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Kills",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/kills",
+  "path": [
+   "Weapon 1",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Spring Harvest kills",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/durability",
+  "path": [
+   "Weapon 1"
+  ],
+  "label": "Total durability restored & time held",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/durability",
+  "path": [
+   "Weapon 1",
+   "Total durability restored & time held"
+  ],
+  "label": "Total durability restored",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/durability",
+  "path": [
+   "Weapon 1",
+   "Total durability restored & time held"
+  ],
+  "label": "Time held (seconds)",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [],
+  "label": "Weapon 2",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Weapon name",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Finished weapon",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Weapon type",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Hide name (shown as \"*****\")",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Change to weapon",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Blade",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Sheath",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Guard",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Grip",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Strength, durability & degradation",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "Weapon 2",
+   "Strength, durability & degradation"
+  ],
+  "label": "Strength",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "Weapon 2",
+   "Strength, durability & degradation"
+  ],
+  "label": "Durability",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "Weapon 2",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "Weapon 2",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "Weapon 2",
+   "Strength, durability & degradation"
+  ],
+  "label": "Degradation",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "Weapon 2",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/numbers",
+  "path": [
+   "Weapon 2",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Signature & charms",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "Weapon 2",
+   "Signature & charms"
+  ],
+  "label": "Signature",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "Weapon 2",
+   "Signature & charms"
+  ],
+  "label": "Charm 1",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "Weapon 2",
+   "Signature & charms"
+  ],
+  "label": "Charm 2",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "Weapon 2",
+   "Signature & charms"
+  ],
+  "label": "Charm 3",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/kills",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Kills & Spring Harvest kills",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/kills",
+  "path": [
+   "Weapon 2",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Kills",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/kills",
+  "path": [
+   "Weapon 2",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Spring Harvest kills",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/durability",
+  "path": [
+   "Weapon 2"
+  ],
+  "label": "Total durability restored & time held",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/durability",
+  "path": [
+   "Weapon 2",
+   "Total durability restored & time held"
+  ],
+  "label": "Total durability restored",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/durability",
+  "path": [
+   "Weapon 2",
+   "Total durability restored & time held"
+  ],
+  "label": "Time held (seconds)",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [],
+  "label": "Weapon 3",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Weapon name",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Finished weapon",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Weapon type",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Hide name (shown as \"*****\")",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Change to weapon",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Blade",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Sheath",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Guard",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Grip",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Strength, durability & degradation",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "Weapon 3",
+   "Strength, durability & degradation"
+  ],
+  "label": "Strength",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "Weapon 3",
+   "Strength, durability & degradation"
+  ],
+  "label": "Durability",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "Weapon 3",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "Weapon 3",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "Weapon 3",
+   "Strength, durability & degradation"
+  ],
+  "label": "Degradation",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "Weapon 3",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/numbers",
+  "path": [
+   "Weapon 3",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Signature & charms",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "Weapon 3",
+   "Signature & charms"
+  ],
+  "label": "Signature",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "Weapon 3",
+   "Signature & charms"
+  ],
+  "label": "Charm 1",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "Weapon 3",
+   "Signature & charms"
+  ],
+  "label": "Charm 2",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "Weapon 3",
+   "Signature & charms"
+  ],
+  "label": "Charm 3",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/kills",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Kills & Spring Harvest kills",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/kills",
+  "path": [
+   "Weapon 3",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Kills",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/kills",
+  "path": [
+   "Weapon 3",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Spring Harvest kills",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/durability",
+  "path": [
+   "Weapon 3"
+  ],
+  "label": "Total durability restored & time held",
+  "box": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/durability",
+  "path": [
+   "Weapon 3",
+   "Total durability restored & time held"
+  ],
+  "label": "Total durability restored",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/durability",
+  "path": [
+   "Weapon 3",
+   "Total durability restored & time held"
+  ],
+  "label": "Time held (seconds)",
+  "box": false
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "Weapon 1",
+   "Signature & charms"
+  ],
+  "label": "Charm 1 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "Weapon 1",
+   "Signature & charms"
+  ],
+  "label": "Charm 2 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-1/title-charms",
+  "path": [
+   "Weapon 1",
+   "Signature & charms"
+  ],
+  "label": "Charm 3 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "Weapon 2",
+   "Signature & charms"
+  ],
+  "label": "Charm 1 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "Weapon 2",
+   "Signature & charms"
+  ],
+  "label": "Charm 2 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-2/title-charms",
+  "path": [
+   "Weapon 2",
+   "Signature & charms"
+  ],
+  "label": "Charm 3 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "Weapon 3",
+   "Signature & charms"
+  ],
+  "label": "Charm 1 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "Weapon 3",
+   "Signature & charms"
+  ],
+  "label": "Charm 2 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "belt",
+  "anchor": "weapon-3/title-charms",
+  "path": [
+   "Weapon 3",
+   "Signature & charms"
+  ],
+  "label": "Charm 3 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons",
+  "path": [],
+  "label": "Weapon sack",
+  "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Weapon name",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Finished weapon",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Weapon type",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Hide name (shown as \"*****\")",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Change to weapon",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Blade",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Sheath",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Guard",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Grip",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Strength, durability & degradation",
+  "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapon sack",
+   "Strength, durability & degradation"
+  ],
+  "label": "Strength",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapon sack",
+   "Strength, durability & degradation"
+  ],
+  "label": "Durability",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapon sack",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapon sack",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapon sack",
+   "Strength, durability & degradation"
+  ],
+  "label": "Degradation",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapon sack",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapon sack",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Signature & charms",
+  "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapon sack",
+   "Signature & charms"
+  ],
+  "label": "Signature",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapon sack",
+   "Signature & charms"
+  ],
+  "label": "Charm 1",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapon sack",
+   "Signature & charms"
+  ],
+  "label": "Charm 2",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapon sack",
+   "Signature & charms"
+  ],
+  "label": "Charm 3",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Kills & Spring Harvest kills",
+  "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "Weapon sack",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Kills",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "Weapon sack",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Spring Harvest kills",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "Weapon sack"
+  ],
+  "label": "Total durability restored & time held",
+  "box": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "Weapon sack",
+   "Total durability restored & time held"
+  ],
+  "label": "Total durability restored",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "Weapon sack",
+   "Total durability restored & time held"
+  ],
+  "label": "Time held (seconds)",
+  "box": false
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapon sack",
+   "Signature & charms"
+  ],
+  "label": "Charm 1 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapon sack",
+   "Signature & charms"
+  ],
+  "label": "Charm 2 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-bag",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapon sack",
+   "Signature & charms"
+  ],
+  "label": "Charm 3 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "capacity",
+  "path": [],
+  "label": "Weapon chest count & capacity",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "capacity",
+  "path": [
+   "Weapon chest count & capacity"
+  ],
+  "label": "Capacity",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons",
+  "path": [],
+  "label": "Weapons in the weapon chest",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Weapon name",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Finished weapon",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Weapon type",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Hide name (shown as \"*****\")",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Change to weapon",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Blade",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Sheath",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Guard",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Grip",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Strength, durability & degradation",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapons in the weapon chest",
+   "Strength, durability & degradation"
+  ],
+  "label": "Strength",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapons in the weapon chest",
+   "Strength, durability & degradation"
+  ],
+  "label": "Durability",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapons in the weapon chest",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapons in the weapon chest",
+   "Strength, durability & degradation",
+   "Durability"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapons in the weapon chest",
+   "Strength, durability & degradation"
+  ],
+  "label": "Degradation",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapons in the weapon chest",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Current",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/numbers",
+  "path": [
+   "Weapons in the weapon chest",
+   "Strength, durability & degradation",
+   "Degradation"
+  ],
+  "label": "Max",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Signature & charms",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapons in the weapon chest",
+   "Signature & charms"
+  ],
+  "label": "Signature",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapons in the weapon chest",
+   "Signature & charms"
+  ],
+  "label": "Charm 1",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapons in the weapon chest",
+   "Signature & charms"
+  ],
+  "label": "Charm 2",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapons in the weapon chest",
+   "Signature & charms"
+  ],
+  "label": "Charm 3",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Kills & Spring Harvest kills",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "Weapons in the weapon chest",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Kills",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/kills",
+  "path": [
+   "Weapons in the weapon chest",
+   "Kills & Spring Harvest kills"
+  ],
+  "label": "Spring Harvest kills",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "Weapons in the weapon chest"
+  ],
+  "label": "Total durability restored & time held",
+  "box": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "Weapons in the weapon chest",
+   "Total durability restored & time held"
+  ],
+  "label": "Total durability restored",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/durability",
+  "path": [
+   "Weapons in the weapon chest",
+   "Total durability restored & time held"
+  ],
+  "label": "Time held (seconds)",
+  "box": false
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapons in the weapon chest",
+   "Signature & charms"
+  ],
+  "label": "Charm 1 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapons in the weapon chest",
+   "Signature & charms"
+  ],
+  "label": "Charm 2 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "weapon-chest",
+  "anchor": "weapons/weapon-1/title-charms",
+  "path": [
+   "Weapons in the weapon chest",
+   "Signature & charms"
+  ],
+  "label": "Charm 3 count",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "tools",
+  "anchor": "items",
+  "path": [],
+  "label": "Items",
+  "box": true
+ },
+ {
+  "section": "chest",
+  "anchor": "items",
+  "path": [],
+  "label": "Chest",
+  "box": true
+ },
+ {
+  "section": "valuables",
+  "anchor": "probe",
+  "path": [],
+  "label": "ID probe mode",
+  "box": true
+ },
+ {
+  "section": "valuables",
+  "anchor": "items",
+  "path": [],
+  "label": "Key items",
+  "box": true
+ },
+ {
+  "section": "accessories",
+  "anchor": "accessories",
+  "path": [],
+  "label": "Accessories",
+  "box": true
+ },
+ {
+  "section": "appearance",
+  "anchor": "faces",
+  "path": [],
+  "label": "Face, hairstyle and other unlocks",
+  "box": true
+ },
+ {
+  "section": "appearance",
+  "anchor": "clothes",
+  "path": [],
+  "label": "Appearance clothes",
+  "box": true
+ },
+ {
+  "section": "unlocks",
+  "anchor": "unlocks",
+  "path": [],
+  "label": "Unlocks",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [],
+  "label": "Difficulty, public order & playthroughs",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [
+   "Difficulty, public order & playthroughs"
+  ],
+  "label": "Difficulty",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [
+   "Difficulty, public order & playthroughs"
+  ],
+  "label": "Public order",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [
+   "Difficulty, public order & playthroughs"
+  ],
+  "label": "Playthroughs",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "cycle",
+  "path": [
+   "Difficulty, public order & playthroughs"
+  ],
+  "label": "New playthrough",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [],
+  "label": "Story stage, day & time",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [
+   "Story stage, day & time"
+  ],
+  "label": "Story stage",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [
+   "Story stage, day & time"
+  ],
+  "label": "Day",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [
+   "Story stage, day & time"
+  ],
+  "label": "Time of day",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "progress",
+  "path": [
+   "Story stage, day & time"
+  ],
+  "label": "Queued time advance",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "facilities",
+  "path": [],
+  "label": "Facilities",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "facilities",
+  "path": [
+   "Facilities"
+  ],
+  "label": "Hospital",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "facilities",
+  "path": [
+   "Facilities"
+  ],
+  "label": "Casino",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "facilities",
+  "path": [
+   "Facilities"
+  ],
+  "label": "Language School",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates",
+  "path": [],
+  "label": "Gates and fences",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "gates/recruit",
+  "path": [
+   "Gates and fences"
+  ],
+  "label": "First-day invitations (affects Day 1 daytime only)",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "gates/recruit",
+  "path": [
+   "Gates and fences",
+   "First-day invitations (affects Day 1 daytime only)"
+  ],
+  "label": "Magistrate's Office gate",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/recruit",
+  "path": [
+   "Gates and fences",
+   "First-day invitations (affects Day 1 daytime only)"
+  ],
+  "label": "Little Britain gate",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/recruit",
+  "path": [
+   "Gates and fences",
+   "First-day invitations (affects Day 1 daytime only)"
+  ],
+  "label": "Shrine entrance fence",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "Gates and fences"
+  ],
+  "label": "Closures (Day 1 evening to The Chief Minister's Big Move)",
+  "box": true
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "Gates and fences",
+   "Closures (Day 1 evening to The Chief Minister's Big Move)"
+  ],
+  "label": "Magistrate's Office front gate",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "Gates and fences",
+   "Closures (Day 1 evening to The Chief Minister's Big Move)"
+  ],
+  "label": "Magistrate's Office back gate",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "Gates and fences",
+   "Closures (Day 1 evening to The Chief Minister's Big Move)"
+  ],
+  "label": "Little Britain outer gate",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "Gates and fences",
+   "Closures (Day 1 evening to The Chief Minister's Big Move)"
+  ],
+  "label": "Shrine entrance fence",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates/close",
+  "path": [
+   "Gates and fences",
+   "Closures (Day 1 evening to The Chief Minister's Big Move)"
+  ],
+  "label": "Shrine cave fence",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates",
+  "path": [
+   "Gates and fences"
+  ],
+  "label": "After The Chief Minister's Big Move",
+  "box": false
+ },
+ {
+  "section": "world",
+  "anchor": "gates",
+  "path": [
+   "Gates and fences"
+  ],
+  "label": "Magistrate's Office torture room door",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "faction-exit",
+  "path": [],
+  "label": "Faction exit",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "faction-exit",
+  "path": [
+   "Faction exit"
+  ],
+  "label": "Shogunate",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "faction-exit",
+  "path": [
+   "Faction exit"
+  ],
+  "label": "Foreigners",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "faction-exit",
+  "path": [
+   "Faction exit"
+  ],
+  "label": "Prajnas",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [],
+  "label": "Character status",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Akagi",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Kogure",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Akemi",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Kotobuki",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Moro",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Mayu",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Chika",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Yuri",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Onsen Kinugawa",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Laura",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "J.J.",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Melinda",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Dojima",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Sensei",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Pharmacy",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "characters",
+  "path": [
+   "Character status"
+  ],
+  "label": "Sushi-ya",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [],
+  "label": "Townsfolk alive/dead",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead"
+  ],
+  "label": "Key characters",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Akagi",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Kogure",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Akemi / Madara",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Kotobuki",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Moro",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Mayu",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Chika",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Yuri",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Kinugawa",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Laura",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "J.J.",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Melinda",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Dojima",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Sensei (Sensei)",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Key characters"
+  ],
+  "label": "Toguro",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead"
+  ],
+  "label": "Shopkeepers",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Sushi-ya",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Inn",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Soba-ya",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Eatery",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Restaurant",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Bar",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Hospital",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Draper",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Clearing House",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Bookmaker",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Curio Shop (DLC: Specter)",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Souvenir Shop",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Curio Shop",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Western Noodle House",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "General Store",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Bait & Grub",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Pharmacy",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Sweets Shop",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Emporium",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Teahouse",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Onigiri-ya",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Used Goods",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Lost & Found",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Shopkeepers"
+  ],
+  "label": "Smithy (old man)",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead"
+  ],
+  "label": "Clients, Four Samurai Lords, etc.",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Sakotsu",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Boss / Mistress",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Nodobotoke",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Kobato",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Thief / Orochi",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Gramps / Kumagami",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Suspicious Ronin / Kotetsu",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Kirizame",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Hiyoko",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Suzume",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Mozu / Manmaru",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Clients, Four Samurai Lords, etc."
+  ],
+  "label": "Commander",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead"
+  ],
+  "label": "Others",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Others"
+  ],
+  "label": "Old Fossil (dojo master)",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Others"
+  ],
+  "label": "Sakamoto",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Others"
+  ],
+  "label": "Shirube",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Others"
+  ],
+  "label": "Sayo",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "townsfolk",
+  "path": [
+   "Townsfolk alive/dead",
+   "Others"
+  ],
+  "label": "Charles",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags",
+  "path": [],
+  "label": "NPC event flags",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/smith",
+  "path": [
+   "NPC event flags"
+  ],
+  "label": "Smithy",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/smith",
+  "path": [
+   "NPC event flags",
+   "Smithy"
+  ],
+  "label": "Smithy successor event & smithy status",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/smith",
+  "path": [
+   "NPC event flags",
+   "Smithy"
+  ],
+  "label": "Dojima is the smith",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/smith",
+  "path": [
+   "NPC event flags",
+   "Smithy"
+  ],
+  "label": "Dojima is the smith (for events)",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPC event flags"
+  ],
+  "label": "Dojo & Sensei",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPC event flags",
+   "Dojo & Sensei"
+  ],
+  "label": "Sensei's progress (job hunting & dojo)",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPC event flags",
+   "Dojo & Sensei"
+  ],
+  "label": "Talks with Old Fossil",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPC event flags",
+   "Dojo & Sensei"
+  ],
+  "label": "Apprentice fell once to a Dojo Challenger",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPC event flags",
+   "Dojo & Sensei"
+  ],
+  "label": "What Old Fossil bought with the tuition",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPC event flags",
+   "Dojo & Sensei"
+  ],
+  "label": "Has been the dojo master",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPC event flags",
+   "Dojo & Sensei"
+  ],
+  "label": "Sensei is the dojo's acting master",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/dojo",
+  "path": [
+   "NPC event flags",
+   "Dojo & Sensei"
+  ],
+  "label": "Sensei is the dojo's acting master (for events)",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/other",
+  "path": [
+   "NPC event flags"
+  ],
+  "label": "Others",
+  "box": true
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/other",
+  "path": [
+   "NPC event flags",
+   "Others"
+  ],
+  "label": "Heard the Photographer's first explanation",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/other",
+  "path": [
+   "NPC event flags",
+   "Others"
+  ],
+  "label": "Duelist and Revenge Horse",
+  "box": false
+ },
+ {
+  "section": "npc",
+  "anchor": "npc-flags/other",
+  "path": [
+   "NPC event flags",
+   "Others"
+  ],
+  "label": "Heard the night crawling partner's first explanation",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "chart",
+  "path": [],
+  "label": "Event chart",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "chart",
+  "path": [
+   "Event chart"
+  ],
+  "label": "Route",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "chart",
+  "path": [
+   "Event chart"
+  ],
+  "label": "Bulk set (for debugging)",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions",
+  "path": [],
+  "label": "Factions",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "Factions"
+  ],
+  "label": "Route split after the Battle Tournament",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "Factions",
+   "Route split after the Battle Tournament"
+  ],
+  "label": "Shogunate",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "Factions",
+   "Route split after the Battle Tournament"
+  ],
+  "label": "Foreigners",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "Factions",
+   "Route split after the Battle Tournament"
+  ],
+  "label": "Prajnas",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions/post-tournament-route",
+  "path": [
+   "Factions",
+   "Route split after the Battle Tournament"
+  ],
+  "label": "Independent",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions",
+  "path": [
+   "Factions"
+  ],
+  "label": "Shogunate",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions",
+  "path": [
+   "Factions"
+  ],
+  "label": "Foreigners",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "factions",
+  "path": [
+   "Factions"
+  ],
+  "label": "Prajnas",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [],
+  "label": "Event flags",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "Event flags"
+  ],
+  "label": "Madara joins you on the hidden route",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "Event flags"
+  ],
+  "label": "Medicine for Laura",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "Event flags"
+  ],
+  "label": "Prajna base",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "Event flags"
+  ],
+  "label": "Meeting letter",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "Event flags"
+  ],
+  "label": "Black Ship",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "Event flags"
+  ],
+  "label": "Defied the Final Warning",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "Event flags"
+  ],
+  "label": "Handed over the Black Ship's cannon",
+  "box": false
+ },
+ {
+  "section": "event-chart",
+  "anchor": "event-flags",
+  "path": [
+   "Event flags"
+  ],
+  "label": "Can't enter the consulate",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "reputation",
+  "path": [],
+  "label": "Dojo reputation",
+  "box": true
+ },
+ {
+  "section": "dojo",
+  "anchor": "reputation",
+  "path": [
+   "Dojo reputation"
+  ],
+  "label": "Challengers",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [],
+  "label": "Pupils",
+  "box": true
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 1",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 1"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 2",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 2"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 3",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 3"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 4",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 4"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 5",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 5"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 6",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 6"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 7",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 7"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 8",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 8"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 9",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 9"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 10",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 10"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 11",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 11"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 12",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 12"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 13",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 13"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 14",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 14"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 15",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 15"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 16",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 16"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 17",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 17"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 18",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 18"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 19",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 19"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils"
+  ],
+  "label": "Pupil 20",
+  "box": false
+ },
+ {
+  "section": "dojo",
+  "anchor": "pupils",
+  "path": [
+   "Pupils",
+   "Pupil 20"
+  ],
+  "label": "Look",
+  "box": false
+ },
+ {
+  "section": "skills",
+  "anchor": "overview",
+  "path": [],
+  "label": "Moves",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "overview",
+  "path": [],
+  "label": "Styles",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "overview",
+  "path": [
+   "Styles"
+  ],
+  "label": "Ability points",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-15",
+  "path": [],
+  "label": "Mushin Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-15",
+  "path": [
+   "Mushin Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-15",
+  "path": [
+   "Mushin Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-15",
+  "path": [
+   "Mushin Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-16",
+  "path": [],
+  "label": "Gekisho Spearfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-16",
+  "path": [
+   "Gekisho Spearfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-16",
+  "path": [
+   "Gekisho Spearfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-16",
+  "path": [
+   "Gekisho Spearfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-17",
+  "path": [],
+  "label": "Adamantine Martial Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-17",
+  "path": [
+   "Adamantine Martial Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-17",
+  "path": [
+   "Adamantine Martial Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-17",
+  "path": [
+   "Adamantine Martial Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-18",
+  "path": [],
+  "label": "Ulster Gun Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-18",
+  "path": [
+   "Ulster Gun Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-18",
+  "path": [
+   "Ulster Gun Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-18",
+  "path": [
+   "Ulster Gun Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-19",
+  "path": [],
+  "label": "Sailor Rifle Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-19",
+  "path": [
+   "Sailor Rifle Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-19",
+  "path": [
+   "Sailor Rifle Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-19",
+  "path": [
+   "Sailor Rifle Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-20",
+  "path": [],
+  "label": "Dual Manifest Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-20",
+  "path": [
+   "Dual Manifest Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-20",
+  "path": [
+   "Dual Manifest Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-20",
+  "path": [
+   "Dual Manifest Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-22",
+  "path": [],
+  "label": "Yato Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-22",
+  "path": [
+   "Yato Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-22",
+  "path": [
+   "Yato Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-22",
+  "path": [
+   "Yato Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-23",
+  "path": [],
+  "label": "Asahi Noir-Draft Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-23",
+  "path": [
+   "Asahi Noir-Draft Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-23",
+  "path": [
+   "Asahi Noir-Draft Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-23",
+  "path": [
+   "Asahi Noir-Draft Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-24",
+  "path": [],
+  "label": "Ayade Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-24",
+  "path": [
+   "Ayade Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-24",
+  "path": [
+   "Ayade Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-24",
+  "path": [
+   "Ayade Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-25",
+  "path": [],
+  "label": "Kudoi Jo-dan",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-25",
+  "path": [
+   "Kudoi Jo-dan"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-25",
+  "path": [
+   "Kudoi Jo-dan"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-25",
+  "path": [
+   "Kudoi Jo-dan"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-26",
+  "path": [],
+  "label": "Sadaha Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-26",
+  "path": [
+   "Sadaha Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-26",
+  "path": [
+   "Sadaha Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-26",
+  "path": [
+   "Sadaha Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-27",
+  "path": [],
+  "label": "Hoodlum Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-27",
+  "path": [
+   "Hoodlum Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-27",
+  "path": [
+   "Hoodlum Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-27",
+  "path": [
+   "Hoodlum Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-28",
+  "path": [],
+  "label": "Hassu Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-28",
+  "path": [
+   "Hassu Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-28",
+  "path": [
+   "Hassu Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-28",
+  "path": [
+   "Hassu Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-29",
+  "path": [],
+  "label": "Impenetra Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-29",
+  "path": [
+   "Impenetra Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-29",
+  "path": [
+   "Impenetra Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-29",
+  "path": [
+   "Impenetra Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-30",
+  "path": [],
+  "label": "Goshi Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-30",
+  "path": [
+   "Goshi Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-30",
+  "path": [
+   "Goshi Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-30",
+  "path": [
+   "Goshi Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-31",
+  "path": [],
+  "label": "Jackson Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-31",
+  "path": [
+   "Jackson Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-31",
+  "path": [
+   "Jackson Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-31",
+  "path": [
+   "Jackson Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-32",
+  "path": [],
+  "label": "Mushin Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-32",
+  "path": [
+   "Mushin Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-32",
+  "path": [
+   "Mushin Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-32",
+  "path": [
+   "Mushin Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-33",
+  "path": [],
+  "label": "Zabi Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-33",
+  "path": [
+   "Zabi Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-33",
+  "path": [
+   "Zabi Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-33",
+  "path": [
+   "Zabi Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-34",
+  "path": [],
+  "label": "Gan Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-34",
+  "path": [
+   "Gan Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-34",
+  "path": [
+   "Gan Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-34",
+  "path": [
+   "Gan Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-35",
+  "path": [],
+  "label": "Shamei Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-35",
+  "path": [
+   "Shamei Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-35",
+  "path": [
+   "Shamei Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-35",
+  "path": [
+   "Shamei Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-36",
+  "path": [],
+  "label": "Kudoi Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-36",
+  "path": [
+   "Kudoi Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-36",
+  "path": [
+   "Kudoi Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-36",
+  "path": [
+   "Kudoi Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-37",
+  "path": [],
+  "label": "Kinugawa Chu-dan",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-37",
+  "path": [
+   "Kinugawa Chu-dan"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-37",
+  "path": [
+   "Kinugawa Chu-dan"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-37",
+  "path": [
+   "Kinugawa Chu-dan"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-38",
+  "path": [],
+  "label": "Invinciba Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-38",
+  "path": [
+   "Invinciba Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-38",
+  "path": [
+   "Invinciba Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-38",
+  "path": [
+   "Invinciba Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-39",
+  "path": [],
+  "label": "Tsubo Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-39",
+  "path": [
+   "Tsubo Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-39",
+  "path": [
+   "Tsubo Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-39",
+  "path": [
+   "Tsubo Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-40",
+  "path": [],
+  "label": "Osha Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-40",
+  "path": [
+   "Osha Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-40",
+  "path": [
+   "Osha Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-40",
+  "path": [
+   "Osha Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-41",
+  "path": [],
+  "label": "Nightly Delights Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-41",
+  "path": [
+   "Nightly Delights Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-41",
+  "path": [
+   "Nightly Delights Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-41",
+  "path": [
+   "Nightly Delights Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-42",
+  "path": [],
+  "label": "Bokunen Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-42",
+  "path": [
+   "Bokunen Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-42",
+  "path": [
+   "Bokunen Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-42",
+  "path": [
+   "Bokunen Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-43",
+  "path": [],
+  "label": "Tenshin Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-43",
+  "path": [
+   "Tenshin Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-43",
+  "path": [
+   "Tenshin Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-43",
+  "path": [
+   "Tenshin Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-44",
+  "path": [],
+  "label": "Kuki Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-44",
+  "path": [
+   "Kuki Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-44",
+  "path": [
+   "Kuki Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-44",
+  "path": [
+   "Kuki Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-45",
+  "path": [],
+  "label": "Sekoi Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-45",
+  "path": [
+   "Sekoi Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-45",
+  "path": [
+   "Sekoi Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-45",
+  "path": [
+   "Sekoi Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-46",
+  "path": [],
+  "label": "Cantgetmi Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-46",
+  "path": [
+   "Cantgetmi Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-46",
+  "path": [
+   "Cantgetmi Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-46",
+  "path": [
+   "Cantgetmi Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-47",
+  "path": [],
+  "label": "Flannel Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-47",
+  "path": [
+   "Flannel Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-47",
+  "path": [
+   "Flannel Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-47",
+  "path": [
+   "Flannel Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-48",
+  "path": [],
+  "label": "Tokyu Fighting Style",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-48",
+  "path": [
+   "Tokyu Fighting Style"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-48",
+  "path": [
+   "Tokyu Fighting Style"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-48",
+  "path": [
+   "Tokyu Fighting Style"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-49",
+  "path": [],
+  "label": "Bugyo Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-49",
+  "path": [
+   "Bugyo Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-49",
+  "path": [
+   "Bugyo Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-49",
+  "path": [
+   "Bugyo Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-50",
+  "path": [],
+  "label": "Windsor Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-50",
+  "path": [
+   "Windsor Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-50",
+  "path": [
+   "Windsor Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-50",
+  "path": [
+   "Windsor Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-51",
+  "path": [],
+  "label": "Kinugawa Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-51",
+  "path": [
+   "Kinugawa Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-51",
+  "path": [
+   "Kinugawa Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-51",
+  "path": [
+   "Kinugawa Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-52",
+  "path": [],
+  "label": "Isobe Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-52",
+  "path": [
+   "Isobe Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-52",
+  "path": [
+   "Isobe Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-52",
+  "path": [
+   "Isobe Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-53",
+  "path": [],
+  "label": "Hanima Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-53",
+  "path": [
+   "Hanima Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-53",
+  "path": [
+   "Hanima Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-53",
+  "path": [
+   "Hanima Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-54",
+  "path": [],
+  "label": "Noble Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-54",
+  "path": [
+   "Noble Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-54",
+  "path": [
+   "Noble Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-54",
+  "path": [
+   "Noble Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-55",
+  "path": [],
+  "label": "Sa-Muraitto Iai Jutsu",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-55",
+  "path": [
+   "Sa-Muraitto Iai Jutsu"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-55",
+  "path": [
+   "Sa-Muraitto Iai Jutsu"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-55",
+  "path": [
+   "Sa-Muraitto Iai Jutsu"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-56",
+  "path": [],
+  "label": "Hanza Iai Jutsu",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-56",
+  "path": [
+   "Hanza Iai Jutsu"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-56",
+  "path": [
+   "Hanza Iai Jutsu"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-56",
+  "path": [
+   "Hanza Iai Jutsu"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-57",
+  "path": [],
+  "label": "Jochaku Iai Jutsu",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-57",
+  "path": [
+   "Jochaku Iai Jutsu"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-57",
+  "path": [
+   "Jochaku Iai Jutsu"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-57",
+  "path": [
+   "Jochaku Iai Jutsu"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-58",
+  "path": [],
+  "label": "Kasshin Iai Jutsu",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-58",
+  "path": [
+   "Kasshin Iai Jutsu"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-58",
+  "path": [
+   "Kasshin Iai Jutsu"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-58",
+  "path": [
+   "Kasshin Iai Jutsu"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-59",
+  "path": [],
+  "label": "Sexua Iai Jutsu",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-59",
+  "path": [
+   "Sexua Iai Jutsu"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-59",
+  "path": [
+   "Sexua Iai Jutsu"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-59",
+  "path": [
+   "Sexua Iai Jutsu"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-60",
+  "path": [],
+  "label": "Kinen Iai Jutsu",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-60",
+  "path": [
+   "Kinen Iai Jutsu"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-60",
+  "path": [
+   "Kinen Iai Jutsu"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-60",
+  "path": [
+   "Kinen Iai Jutsu"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-61",
+  "path": [],
+  "label": "Victorious Iai Jutsu",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-61",
+  "path": [
+   "Victorious Iai Jutsu"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-61",
+  "path": [
+   "Victorious Iai Jutsu"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-61",
+  "path": [
+   "Victorious Iai Jutsu"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-62",
+  "path": [],
+  "label": "Perfect Iai Jutsu",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-62",
+  "path": [
+   "Perfect Iai Jutsu"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-62",
+  "path": [
+   "Perfect Iai Jutsu"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-62",
+  "path": [
+   "Perfect Iai Jutsu"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-63",
+  "path": [],
+  "label": "Torikata Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-63",
+  "path": [
+   "Torikata Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-63",
+  "path": [
+   "Torikata Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-63",
+  "path": [
+   "Torikata Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-64",
+  "path": [],
+  "label": "Wisdom Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-64",
+  "path": [
+   "Wisdom Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-64",
+  "path": [
+   "Wisdom Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-64",
+  "path": [
+   "Wisdom Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-65",
+  "path": [],
+  "label": "Senba Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-65",
+  "path": [
+   "Senba Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-65",
+  "path": [
+   "Senba Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-65",
+  "path": [
+   "Senba Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-66",
+  "path": [],
+  "label": "Ulster Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-66",
+  "path": [
+   "Ulster Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-66",
+  "path": [
+   "Ulster Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-66",
+  "path": [
+   "Ulster Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-67",
+  "path": [],
+  "label": "Kyoji Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-67",
+  "path": [
+   "Kyoji Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-67",
+  "path": [
+   "Kyoji Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-67",
+  "path": [
+   "Kyoji Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-68",
+  "path": [],
+  "label": "South Range Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-68",
+  "path": [
+   "South Range Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-68",
+  "path": [
+   "South Range Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-68",
+  "path": [
+   "South Range Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-69",
+  "path": [],
+  "label": "Goyo Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-69",
+  "path": [
+   "Goyo Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-69",
+  "path": [
+   "Goyo Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-69",
+  "path": [
+   "Goyo Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-70",
+  "path": [],
+  "label": "Saiga Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-70",
+  "path": [
+   "Saiga Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-70",
+  "path": [
+   "Saiga Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-70",
+  "path": [
+   "Saiga Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-71",
+  "path": [],
+  "label": "Urahara Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-71",
+  "path": [
+   "Urahara Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-71",
+  "path": [
+   "Urahara Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-71",
+  "path": [
+   "Urahara Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-72",
+  "path": [],
+  "label": "Genba Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-72",
+  "path": [
+   "Genba Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-72",
+  "path": [
+   "Genba Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-72",
+  "path": [
+   "Genba Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-73",
+  "path": [],
+  "label": "Asuka Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-73",
+  "path": [
+   "Asuka Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-73",
+  "path": [
+   "Asuka Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-73",
+  "path": [
+   "Asuka Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-74",
+  "path": [],
+  "label": "Toho Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-74",
+  "path": [
+   "Toho Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-74",
+  "path": [
+   "Toho Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-74",
+  "path": [
+   "Toho Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-75",
+  "path": [],
+  "label": "Oniwa Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-75",
+  "path": [
+   "Oniwa Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-75",
+  "path": [
+   "Oniwa Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-75",
+  "path": [
+   "Oniwa Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-76",
+  "path": [],
+  "label": "Fumo Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-76",
+  "path": [
+   "Fumo Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-76",
+  "path": [
+   "Fumo Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-76",
+  "path": [
+   "Fumo Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-77",
+  "path": [],
+  "label": "Climactic Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-77",
+  "path": [
+   "Climactic Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-77",
+  "path": [
+   "Climactic Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-77",
+  "path": [
+   "Climactic Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-78",
+  "path": [],
+  "label": "Blossom Spearfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-78",
+  "path": [
+   "Blossom Spearfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-78",
+  "path": [
+   "Blossom Spearfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-78",
+  "path": [
+   "Blossom Spearfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-79",
+  "path": [],
+  "label": "Aido Spearfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-79",
+  "path": [
+   "Aido Spearfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-79",
+  "path": [
+   "Aido Spearfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-79",
+  "path": [
+   "Aido Spearfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-80",
+  "path": [],
+  "label": "Fukuo Spearfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-80",
+  "path": [
+   "Fukuo Spearfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-80",
+  "path": [
+   "Fukuo Spearfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-80",
+  "path": [
+   "Fukuo Spearfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-81",
+  "path": [],
+  "label": "Masuo Spearfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-81",
+  "path": [
+   "Masuo Spearfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-81",
+  "path": [
+   "Masuo Spearfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-81",
+  "path": [
+   "Masuo Spearfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-82",
+  "path": [],
+  "label": "Scripturist Spearfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-82",
+  "path": [
+   "Scripturist Spearfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-82",
+  "path": [
+   "Scripturist Spearfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-82",
+  "path": [
+   "Scripturist Spearfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-83",
+  "path": [],
+  "label": "Kongo Spearfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-83",
+  "path": [
+   "Kongo Spearfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-83",
+  "path": [
+   "Kongo Spearfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-83",
+  "path": [
+   "Kongo Spearfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-84",
+  "path": [],
+  "label": "Daido Spearfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-84",
+  "path": [
+   "Daido Spearfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-84",
+  "path": [
+   "Daido Spearfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-84",
+  "path": [
+   "Daido Spearfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-85",
+  "path": [],
+  "label": "Gekisho Spearfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-85",
+  "path": [
+   "Gekisho Spearfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-85",
+  "path": [
+   "Gekisho Spearfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-85",
+  "path": [
+   "Gekisho Spearfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-86",
+  "path": [],
+  "label": "Harmonious Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-86",
+  "path": [
+   "Harmonious Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-86",
+  "path": [
+   "Harmonious Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-86",
+  "path": [
+   "Harmonious Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-87",
+  "path": [],
+  "label": "Haten Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-87",
+  "path": [
+   "Haten Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-87",
+  "path": [
+   "Haten Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-87",
+  "path": [
+   "Haten Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-88",
+  "path": [],
+  "label": "Kantetsu Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-88",
+  "path": [
+   "Kantetsu Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-88",
+  "path": [
+   "Kantetsu Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-88",
+  "path": [
+   "Kantetsu Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-89",
+  "path": [],
+  "label": "Gokon Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-89",
+  "path": [
+   "Gokon Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-89",
+  "path": [
+   "Gokon Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-89",
+  "path": [
+   "Gokon Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-90",
+  "path": [],
+  "label": "Dual Manifest Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-90",
+  "path": [
+   "Dual Manifest Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-90",
+  "path": [
+   "Dual Manifest Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-90",
+  "path": [
+   "Dual Manifest Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-91",
+  "path": [],
+  "label": "Junky Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-91",
+  "path": [
+   "Junky Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-91",
+  "path": [
+   "Junky Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-91",
+  "path": [
+   "Junky Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-92",
+  "path": [],
+  "label": "Kogara Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-92",
+  "path": [
+   "Kogara Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-92",
+  "path": [
+   "Kogara Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-92",
+  "path": [
+   "Kogara Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-93",
+  "path": [],
+  "label": "Mosu Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-93",
+  "path": [
+   "Mosu Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-93",
+  "path": [
+   "Mosu Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-93",
+  "path": [
+   "Mosu Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-94",
+  "path": [],
+  "label": "Hara Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-94",
+  "path": [
+   "Hara Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-94",
+  "path": [
+   "Hara Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-94",
+  "path": [
+   "Hara Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-95",
+  "path": [],
+  "label": "Adamantine Martial Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-95",
+  "path": [
+   "Adamantine Martial Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-95",
+  "path": [
+   "Adamantine Martial Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-95",
+  "path": [
+   "Adamantine Martial Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-96",
+  "path": [],
+  "label": "Gachinko Martial Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-96",
+  "path": [
+   "Gachinko Martial Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-96",
+  "path": [
+   "Gachinko Martial Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-96",
+  "path": [
+   "Gachinko Martial Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-97",
+  "path": [],
+  "label": "Shoji Martial Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-97",
+  "path": [
+   "Shoji Martial Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-97",
+  "path": [
+   "Shoji Martial Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-97",
+  "path": [
+   "Shoji Martial Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-98",
+  "path": [],
+  "label": "Casual Martial Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-98",
+  "path": [
+   "Casual Martial Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-98",
+  "path": [
+   "Casual Martial Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-98",
+  "path": [
+   "Casual Martial Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-99",
+  "path": [],
+  "label": "Yubari Martial Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-99",
+  "path": [
+   "Yubari Martial Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-99",
+  "path": [
+   "Yubari Martial Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-99",
+  "path": [
+   "Yubari Martial Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-105",
+  "path": [],
+  "label": "Ulster Gun Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-105",
+  "path": [
+   "Ulster Gun Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-105",
+  "path": [
+   "Ulster Gun Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-105",
+  "path": [
+   "Ulster Gun Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-106",
+  "path": [],
+  "label": "Sailor Rifle Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-106",
+  "path": [
+   "Sailor Rifle Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-106",
+  "path": [
+   "Sailor Rifle Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-106",
+  "path": [
+   "Sailor Rifle Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-108",
+  "path": [],
+  "label": "Nightly Pleasure Martial Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-108",
+  "path": [
+   "Nightly Pleasure Martial Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-108",
+  "path": [
+   "Nightly Pleasure Martial Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-108",
+  "path": [
+   "Nightly Pleasure Martial Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-109",
+  "path": [],
+  "label": "Common Swordfighting",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-109",
+  "path": [
+   "Common Swordfighting"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-109",
+  "path": [
+   "Common Swordfighting"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-109",
+  "path": [
+   "Common Swordfighting"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-110",
+  "path": [],
+  "label": "Charlie Rifle Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-110",
+  "path": [
+   "Charlie Rifle Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-110",
+  "path": [
+   "Charlie Rifle Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-110",
+  "path": [
+   "Charlie Rifle Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-111",
+  "path": [],
+  "label": "Asasho Martial Arts",
+  "box": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-111",
+  "path": [
+   "Asasho Martial Arts"
+  ],
+  "label": "Mastery",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-111",
+  "path": [
+   "Asasho Martial Arts"
+  ],
+  "label": "Rank",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-111",
+  "path": [
+   "Asasho Martial Arts"
+  ],
+  "label": "Kills with this style",
+  "box": false
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-0",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-0",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-0",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-0",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-1",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-1",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-1",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-1",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-2",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-2",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-2",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-2",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-3",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-3",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-3",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-3",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-4",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-4",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-4",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-4",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-5",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-5",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-5",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-5",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-6",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-6",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-6",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-6",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-7",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-7",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-7",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-7",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-8",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-8",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-8",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-8",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-9",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-9",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-9",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-9",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-10",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-10",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-10",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-10",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-11",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-11",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-11",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-11",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-12",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-12",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-12",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-12",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-13",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-13",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-13",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-13",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-14",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-14",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-14",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-14",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-21",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-21",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-21",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-21",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-100",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-100",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-100",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-100",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-101",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-101",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-101",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-101",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-107",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-107",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-107",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-107",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-112",
+  "path": [],
+  "label": "...",
+  "box": true,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-112",
+  "path": [
+   "..."
+  ],
+  "label": "Mastery",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-112",
+  "path": [
+   "..."
+  ],
+  "label": "Rank",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "styles",
+  "anchor": "sect-112",
+  "path": [
+   "..."
+  ],
+  "label": "Kills with this style",
+  "box": false,
+  "advanced": true
+ },
+ {
+  "section": "ore-ryu",
+  "anchor": "overview",
+  "path": [],
+  "label": "My Style",
+  "box": true
+ },
+ {
+  "section": "ore-ryu",
+  "anchor": "create",
+  "path": [],
+  "label": "Create a new My Style",
+  "box": true
+ },
+ {
+  "section": "ore-ryu",
+  "anchor": "create",
+  "path": [
+   "Create a new My Style"
+  ],
+  "label": "Name",
+  "box": false
+ },
+ {
+  "section": "ore-ryu",
+  "anchor": "create",
+  "path": [
+   "Create a new My Style"
+  ],
+  "label": "Stance",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "current",
+  "path": [],
+  "label": "Current mission and clears",
+  "box": true
+ },
+ {
+  "section": "occupation",
+  "anchor": "current",
+  "path": [
+   "Current mission and clears"
+  ],
+  "label": "Missions cleared",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "current",
+  "path": [
+   "Current mission and clears"
+  ],
+  "label": "Current mission",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [],
+  "label": "Mission chains",
+  "box": true
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "Mission chains"
+  ],
+  "label": "【Thief-taker】Nodobotoke",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "Mission chains"
+  ],
+  "label": "【Scoundrel】Kobato",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "Mission chains"
+  ],
+  "label": "【Thief】Thief",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "Mission chains"
+  ],
+  "label": "【Vagabond】Gramps",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "Mission chains"
+  ],
+  "label": "Four Samurai Lords story",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "chain",
+  "path": [
+   "Mission chains"
+  ],
+  "label": "Final missions",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [],
+  "label": "DLC missions",
+  "box": true
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC missions"
+  ],
+  "label": "Met Shirube (DLC)",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC missions"
+  ],
+  "label": "Shirube: \"A Thirst For Blood\"",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC missions"
+  ],
+  "label": "Shirube: \"Medicine Seller\"",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC missions"
+  ],
+  "label": "Shirube: \"Foreign Dine-and-Ditcher\"",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "dlc",
+  "path": [
+   "DLC missions"
+  ],
+  "label": "Shirube: \"Rice Guard\"",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "security",
+  "path": [],
+  "label": "Public order missions",
+  "box": true
+ },
+ {
+  "section": "occupation",
+  "anchor": "security",
+  "path": [
+   "Public order missions"
+  ],
+  "label": "【Head Constable】Sakotsu",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "security",
+  "path": [
+   "Public order missions"
+  ],
+  "label": "【Gambling Den】Mistress",
+  "box": false
+ },
+ {
+  "section": "occupation",
+  "anchor": "records",
+  "path": [],
+  "label": "Mission records (across playthroughs)",
+  "box": true
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [],
+  "label": "Nighttime promise",
+  "box": true
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "Nighttime promise"
+  ],
+  "label": "Partner type (lines and combat strength)",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "Nighttime promise"
+  ],
+  "label": "Location",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "Nighttime promise"
+  ],
+  "label": "Layout (people in the house)",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "Nighttime promise"
+  ],
+  "label": "Promise day",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "Nighttime promise"
+  ],
+  "label": "Name",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "Nighttime promise"
+  ],
+  "label": "Looks and voice",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "Nighttime promise"
+  ],
+  "label": "Age",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "current-promise",
+  "path": [
+   "Nighttime promise"
+  ],
+  "label": "Blood type",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [],
+  "label": "Night crawling promise conditions",
+  "box": true
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "Night crawling promise conditions"
+  ],
+  "label": "Akemi's affection",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "Night crawling promise conditions"
+  ],
+  "label": "Laura's affection",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "Night crawling promise conditions"
+  ],
+  "label": "Mayu's torture points",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "Night crawling promise conditions"
+  ],
+  "label": "Chika's torture points",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "Night crawling promise conditions"
+  ],
+  "label": "Yuri's torture points",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "promise",
+  "path": [
+   "Night crawling promise conditions"
+  ],
+  "label": "Melinda's blunt-strike points",
+  "box": false
+ },
+ {
+  "section": "yobai",
+  "anchor": "records",
+  "path": [],
+  "label": "Night crawling records",
+  "box": true
+ },
+ {
+  "section": "yobai",
+  "anchor": "counts",
+  "path": [],
+  "label": "Night crawl counts (view only)",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "summary",
+  "path": [],
+  "label": "Reclamation",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "weapons",
+  "path": [],
+  "label": "Weapons",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "item",
+  "path": [],
+  "label": "Items",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "blade",
+  "path": [],
+  "label": "Blades",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "guard",
+  "path": [],
+  "label": "Guards",
+  "box": true
+ },
+ {
+  "section": "circulating",
+  "anchor": "grip",
+  "path": [],
+  "label": "Grips",
+  "box": true
+ }
+]

@@ -3,6 +3,7 @@ import { FieldShell } from '@/components/field-shell'
 import { SearchSelectControl } from '@/components/search-select-control'
 import type { SelectOption } from '@/components/select-options'
 import { useWrite } from '@/lib/use-write'
+import { tr } from '@/lib/i18n'
 
 type Props = {
   label: string
@@ -40,7 +41,7 @@ export function SearchSelectRow({
   warning,
   hint,
   note,
-  searchPlaceholder = '検索',
+  searchPlaceholder = tr({ ja: '検索', en: 'Search' }),
   onChange,
 }: Props) {
   const { error, attempt } = useWrite(offset)

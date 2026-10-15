@@ -1,3 +1,4 @@
+import { tr } from './i18n'
 import type { ParseResult } from './use-field-draft'
 
 /** 桁・符号・基数を明示して整数を読む。Number の指数表記や丸めを受け付けない。 */
@@ -21,7 +22,7 @@ export function parseInteger(input: string, validate: (value: number) => string 
   hex?: boolean; signed?: boolean; error?: string
 } = {}): ParseResult<number> {
   const value = integerValue(input, options)
-  if (value === null) return { ok: false, error: options.error ?? '整数を入力してください' }
+  if (value === null) return { ok: false, error: options.error ?? tr({ ja: '整数を入力してください', en: 'Enter a whole number' }) }
   const error = validate(value)
   return error ? { ok: false, error } : { ok: true, value }
 }
@@ -31,7 +32,7 @@ export function parseDecimal(input: string, validate: (value: number) => string 
   error?: string
 } = {}): ParseResult<number> {
   const text = input.trim()
-  if (!/^\d+(\.\d+)?$/.test(text)) return { ok: false, error: options.error ?? '数値を入力してください' }
+  if (!/^\d+(\.\d+)?$/.test(text)) return { ok: false, error: options.error ?? tr({ ja: '数値を入力してください', en: 'Enter a number' }) }
   const value = Number(text)
   const error = validate(value)
   return error ? { ok: false, error } : { ok: true, value }

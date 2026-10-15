@@ -6,6 +6,7 @@
 // 修練度・段・倒した数の書き込みは 🟢（要ゲーム内確認）。
 //
 // 固定オフセットを使い、ファイルサイズと各値の範囲を検証する。検証に落ちたら読み取り専用。
+import { tr } from '@/lib/i18n'
 import { readI16, readU16, recordCodec, writeU16, writeU8 } from './binary'
 import { type EditOpts, NORMAL_EDIT_OPTS, validateRange, type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
@@ -37,7 +38,7 @@ const sheetSlotFields = recordCodec({
 const SHEET_STATES_REL = 4
 export const STANCE_STATES_OFFSET = 0x1837c
 export function stanceStateOffset(stance: number, skillNo: number): number {
-  if (!Number.isInteger(stance) || stance < 0 || stance >= STANCE_COUNT || !Number.isInteger(skillNo) || skillNo < 0 || skillNo >= SKILL_NO_COUNT) throw new RangeError('構えの技が範囲外です')
+  if (!Number.isInteger(stance) || stance < 0 || stance >= STANCE_COUNT || !Number.isInteger(skillNo) || skillNo < 0 || skillNo >= SKILL_NO_COUNT) throw new RangeError(tr({ ja: '構えの技が範囲外です', en: 'Stance move is out of range' }))
   return STANCE_STATES_OFFSET + stance * SKILL_NO_COUNT + skillNo
 }
 /** 構えごとの状態の終わり（この位置は含まない） */
@@ -164,30 +165,30 @@ const readSheetSlots = (bytes: Uint8Array): SheetStateSlot[] =>
 
 export function readSects(bytes: Uint8Array): SectsView {
   if (bytes.byteLength < SECT_RECORDS_END) {
-    throw new RangeError('ファイルが小さすぎて流派を読めません')
+    throw new RangeError(tr({ ja: 'ファイルが小さすぎて流派を読めません', en: 'The file is too small to read styles' }))
   }
   const problems: string[] = []
   const layout = checkLayout(bytes)
   if (layout) problems.push(layout)
 
   const sectCount = readU16(bytes, SECT_COUNT_OFFSET)
-  if (sectCount > SECT_RECORD_SLOTS) problems.push('流派の件数が大きすぎます')
+  if (sectCount > SECT_RECORD_SLOTS) problems.push(tr({ ja: '流派の件数が大きすぎます', en: 'Too many styles' }))
   const records: SectRecord[] = []
   for (let i = 0; i < Math.min(sectCount, SECT_RECORD_SLOTS); i++) {
     const offset = SECT_RECORDS_OFFSET + i * SECT_RECORD_BYTES
     const fields = sectRecordCodec.read(bytes, offset)
     const sect = findSect(fields.id) ?? null
-    if (!sect) problems.push('流派の表に知らない流派があります')
+    if (!sect) problems.push(tr({ ja: '流派の表に知らない流派があります', en: 'The style list contains an unknown style' }))
     records.push({ index: i, offset, ...fields, sect })
   }
 
   const held = Array.from({ length: SCROLL_HELD_SLOTS }, (_, i) => readScroll(bytes, 'held', i))
   const stored = Array.from({ length: SCROLL_STORED_SLOTS }, (_, i) => readScroll(bytes, 'stored', i))
   const storedCount = readU16(bytes, SCROLL_STORED_COUNT_OFFSET)
-  if (storedCount > SCROLL_STORED_SLOTS) problems.push('流派の箪笥の件数が大きすぎます')
+  if (storedCount > SCROLL_STORED_SLOTS) problems.push(tr({ ja: '流派の箪笥の件数が大きすぎます', en: 'Too many styles in the chest' }))
 
   const sheetSlots = readSheetSlots(bytes)
-  if (sheetSlots.some((s) => s.states.some((v) => v > SKILL_STATE_MAX))) problems.push('技の覚え状況に不明な値があります')
+  if (sheetSlots.some((s) => s.states.some((v) => v > SKILL_STATE_MAX))) problems.push(tr({ ja: '技の覚え状況に不明な値があります', en: 'Move learning status contains an unknown value' }))
   const stanceStates = Array.from({ length: STANCE_COUNT }, (_, c) =>
     Array.from(bytes.subarray(stanceStateOffset(c, 0), stanceStateOffset(c, 0) + SKILL_NO_COUNT)),
   )
@@ -239,7 +240,7 @@ function requireEditable(bytes: Uint8Array): SectsView {
 
 function requireSheet(sheetId: number): SkillSheet {
   const sheet = findSkillSheet(sheetId)
-  if (!sheet) throw new RangeError('知らない技の表です')
+  if (!sheet) throw new RangeError(tr({ ja: '知らない技の表です', en: 'Unknown move list' }))
   return sheet
 }
 
@@ -264,7 +265,7 @@ function ensureSheetSlot(bytes: Uint8Array, sheetId: number): SheetStateSlot {
   const found = slots.find((s) => s.sheetId === sheetId)
   if (found) return found
   const free = slots.find((s) => s.sheetId < 0)
-  if (!free) throw new RangeError('技の覚え状況に空きがありません')
+  if (!free) throw new RangeError(tr({ ja: '技の覚え状況に空きがありません', en: 'No free space for move learning status' }))
   sheetSlotFields.writeField(bytes, free.offset, 'sheetId', sheetId)
   sheetSlotFields.writeField(bytes, free.offset, 'count', 0)
   bytes.fill(SKILL_STATE.notLearned, free.offset + SHEET_STATES_REL, free.offset + SHEET_STATES_REL + SKILL_NO_COUNT)
@@ -353,7 +354,7 @@ function applyLearnUniqueSkills(bytes: Uint8Array, sheet: SkillSheet, skillNos: 
 /** 技の表の技 1 つを習得する。固有技は状態 3（applyLearnUniqueSkills）、ほかは 1（applyLearnSheetSkills） */
 function applyLearnSheetSkill(bytes: Uint8Array, sheet: SkillSheet, skillNo: number): void {
   const skill = sheet.skills.find((s) => s.skillNo === skillNo)
-  if (!skill) throw new RangeError('この技の表にない技です')
+  if (!skill) throw new RangeError(tr({ ja: 'この技の表にない技です', en: 'This move is not in this move list' }))
   if (isUniqueSkill(skill)) applyLearnUniqueSkills(bytes, sheet, [skillNo])
   else applyLearnSheetSkills(bytes, sheet, [skillNo])
 }
@@ -394,7 +395,7 @@ export const isUniqueSkill = (s: SheetSkill) => isSpecialCond(s.cond) || uniqueS
 export function learnSectSkills(bytes: Uint8Array, sectId: number): void {
   assertWritable(bytes)
   const sect = findSect(sectId)
-  if (!sect) throw new RangeError('知らない流派です')
+  if (!sect) throw new RangeError(tr({ ja: '知らない流派です', en: 'Unknown style' }))
   requireEditable(bytes)
   for (const id of sect.sheets) {
     const sheet = findSkillSheet(id)
@@ -442,7 +443,7 @@ export function writeSectValues(bytes: Uint8Array, sectId: number, v: SectValues
   assertWritable(bytes)
   const view = requireEditable(bytes)
   const rec = view.records.find((r) => r.id === sectId)
-  if (!rec) throw new RangeError('この流派が流派の表にありません')
+  if (!rec) throw new RangeError(tr({ ja: 'この流派が流派の表にありません', en: 'This style is not in the style list' }))
   // 値の検証は codec が書く前に1回だけ行う（validateSectValues）
   sectRecordCodec.writeValues(bytes, rec.offset, v)
 }
@@ -501,7 +502,7 @@ export function learnStanceSkills(bytes: Uint8Array, stance: number, skillNos: r
   requireEditable(bytes)
   const plans = skillNos.map((skillNo) => {
     const sheets = stanceSkillSheets(stance, skillNo)
-    if (sheets.length === 0) throw new RangeError('この技が入っている流派がないので習得できません')
+    if (sheets.length === 0) throw new RangeError(tr({ ja: 'この技が入っている流派がないので習得できません', en: 'No style includes this move, so it cannot be learned' }))
     return { skillNo, sheets }
   })
   for (const { skillNo, sheets } of plans) {
@@ -519,7 +520,7 @@ export function showStanceSkillInOreRyu(bytes: Uint8Array, stance: number, skill
   assertWritable(bytes)
   requireEditable(bytes)
   const sheets = stanceSkillSheets(stance, skillNo)
-  if (sheets.length === 0) throw new RangeError('この技が入っている流派がありません')
+  if (sheets.length === 0) throw new RangeError(tr({ ja: 'この技が入っている流派がありません', en: 'No style includes this move' }))
   for (const sheet of sheets) applyLearnSheetSkills(bytes, sheet, [skillNo])
 }
 

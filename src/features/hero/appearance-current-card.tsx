@@ -8,6 +8,7 @@ import { parseDecimal } from "@/lib/parse";
 import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
+import { tr } from "@/lib/i18n";
 import {
   APPEARANCE_CURRENT_NOTES,
   APPEARANCE_CURRENT_OFFSETS,
@@ -21,13 +22,16 @@ import {
 } from "@/save/appearance-current";
 
 const selectRows = [
-  { key: "body", label: "体型", names: BODY_TYPES, hint: undefined },
-  { key: "skin", label: "肌色", names: SKIN_COLORS, hint: undefined },
+  { key: "body", label: { ja: "体型", en: "Figure" }, names: BODY_TYPES, hint: undefined },
+  { key: "skin", label: { ja: "肌色", en: "Skin color" }, names: SKIN_COLORS, hint: undefined },
   {
     key: "heightChoice",
-    label: "身長の選択肢",
+    label: { ja: "身長の選択肢", en: "Height option" },
     names: HEIGHT_CHOICES,
-    hint: "容姿設定を開いたときの表示。身長（cm）は変わらない",
+    hint: {
+      ja: "容姿設定を開いたときの表示。身長（cm）は変わらない",
+      en: "What is shown when the Appearance settings open. Does not change the height (cm)",
+    },
   },
 ] as const;
 
@@ -38,7 +42,7 @@ export function AppearanceCurrentCard() {
   const { view, error } = useSaveView(readAppearanceCurrent);
   const height = view?.height;
   return (
-    <AnchoredCard anchor={HERO_APPEARANCE_ANCHORS.current} title="体">
+    <AnchoredCard anchor={HERO_APPEARANCE_ANCHORS.current} title={tr({ ja: "体", en: "Body" })}>
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <PageBanner error={error} className="sm:col-span-2" />
         {selectRows.map(({ key, label, names, hint }) => {
@@ -46,14 +50,14 @@ export function AppearanceCurrentCard() {
           return (
             <div key={key} className="flex flex-col gap-1">
               <SelectRow
-                label={label}
+                label={tr(label)}
                 offset={APPEARANCE_CURRENT_OFFSETS[key]}
                 value={field ? String(field.value) : null}
-                currentLabel={field ? "不明" : undefined}
-                options={names.map((name, i) => ({ value: String(i), label: name }))}
+                currentLabel={field ? tr({ ja: "不明", en: "Unknown" }) : undefined}
+                options={names.map((name, i) => ({ value: String(i), label: tr(name) }))}
                 problem={field?.problem ?? null}
-                hint={hint}
-                note={APPEARANCE_CURRENT_NOTES[key]}
+                hint={hint && tr(hint)}
+                note={tr(APPEARANCE_CURRENT_NOTES[key])}
                 onChange={(v) =>
                   update((bytes) => writeAppearanceCurrent(bytes, key, Number(v), { advanced }))
                 }
@@ -63,7 +67,7 @@ export function AppearanceCurrentCard() {
         })}
         <div className="flex flex-col gap-1">
           <FieldRow
-            label="身長（cm）"
+            label={tr({ ja: "身長（cm）", en: "Height (cm)" })}
             offset={APPEARANCE_CURRENT_OFFSETS.height}
             value={height?.value ?? null}
             problem={height?.problem ?? null}
@@ -76,8 +80,8 @@ export function AppearanceCurrentCard() {
               update((bytes) => writeAppearanceCurrent(bytes, "height", value, { advanced }))
             }
             inputMode="decimal"
-            hint="数値（小数可）"
-            note={APPEARANCE_CURRENT_NOTES.height}
+            hint={tr({ ja: "数値（小数可）", en: "Number (decimals allowed)" })}
+            note={tr(APPEARANCE_CURRENT_NOTES.height)}
           />
         </div>
       </CardContent>

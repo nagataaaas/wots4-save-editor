@@ -4,6 +4,7 @@
 import { recordCodec, type TypedField } from './binary'
 import { type ViewStatus, type EditOpts, NORMAL_EDIT_OPTS } from './field'
 import { assertWritable, checkLayout } from './layout'
+import { tr, type Localized } from '@/lib/i18n'
 
 export type AppearanceCurrentKey = 'skin' | 'body' | 'height' | 'heightChoice'
 // ✅ 体型・身長・肌色の位置、🟢 身長の選択肢。差分：04 copy 2〜5。
@@ -24,16 +25,33 @@ export const APPEARANCE_CURRENT_OFFSETS = {
 } as const
 
 /** ✅ [U] 肌色の値。 */
-export const SKIN_COLORS = ['ふつう', '褐色', '色黒', '色白', '赤', '白', '緑', '青'] as const
+export const SKIN_COLORS: readonly Localized[] = [
+  { ja: 'ふつう', en: 'Default' },
+  { ja: '褐色', en: 'Brown' },
+  { ja: '色黒', en: 'Dark' },
+  { ja: '色白', en: 'Light' },
+  { ja: '赤', en: 'Red' },
+  { ja: '白', en: 'White' },
+  { ja: '緑', en: 'Green' },
+  { ja: '青', en: 'Blue' },
+]
 
 /** ✅ [U] 体型の値。 */
-export const BODY_TYPES = ['ふつう', '細め', '太め'] as const
+export const BODY_TYPES: readonly Localized[] = [
+  { ja: 'ふつう', en: 'Average' },
+  { ja: '細め', en: 'Thin' },
+  { ja: '太め', en: 'Meaty' },
+]
 
 /**
  * 🟢 容姿設定の「身長」で選んだ選択肢。値の順は身長の倍率 ×1.0・×1.1・×0.9。
  * ゲームは容姿設定を開いたときのカーソル位置にだけ使い、実際の身長は 0x3AAE0 で決まる。
  */
-export const HEIGHT_CHOICES = ['ふつう', '高い', '低い'] as const
+export const HEIGHT_CHOICES: readonly Localized[] = [
+  { ja: 'ふつう', en: 'Average' },
+  { ja: '高い', en: 'Tall' },
+  { ja: '低い', en: 'Short' },
+]
 /** ✅ 身長の倍率。🟢 身長の選択肢と同じ並び（chunks/appearance）。 */
 export const HEIGHT_RATIOS = [1, 1.1, 0.9] as const
 
@@ -46,19 +64,30 @@ export const HEIGHT_NORMAL_RANGE = [135, 220] as const
 /** 身長がゲーム内でありうる範囲の外なら警告文を返す。 */
 export function heightWarning(value: number): string | null {
   const [min, max] = HEIGHT_NORMAL_RANGE
-  return value >= min && value <= max ? null : `ゲーム内で存在しうる値(${min}~${max}cm)の範囲を超えているため、不具合が発生する可能性があります`
+  return value >= min && value <= max
+    ? null
+    : tr({
+        ja: `ゲーム内で存在しうる値(${min}~${max}cm)の範囲を超えているため、不具合が発生する可能性があります`,
+        en: `This is outside the range possible in the game (${min}–${max} cm) and may cause problems`,
+      })
 }
 
-export const APPEARANCE_CURRENT_NOTES = {
+export const APPEARANCE_CURRENT_NOTES: Record<AppearanceCurrentKey, Localized> = {
   // ✅ [U] 肌色（1 B。0＝ふつう、1＝褐色、2＝色黒、3＝色白、4＝赤、5＝白、6＝緑、7＝青）。1 B の変更による反映をゲーム内で確認済み。選択肢のラベルが値の意味を表すので、補足は不要
-  skin: '',
+  skin: { ja: '', en: '' },
   // ✅ 体型（1 B。0＝ふつう、1＝細め、2＝太め）。1 B の変更による反映をゲーム内で確認済み
-  body: '',
+  body: { ja: '', en: '' },
   // ✅ float32 LE（4 B）、cm 単位
-  height: '単位は cm。低い・高いは、ふつうの身長の0.9倍・1.1倍の値になる。',
+  height: {
+    ja: '単位は cm。低い・高いは、ふつうの身長の0.9倍・1.1倍の値になる。',
+    en: 'In cm. Short and Tall are 0.9 and 1.1 times the Average height.',
+  },
   // 🟢 int32 LE（4 B）。0＝ふつう、1＝高い、2＝低い
-  heightChoice: '容姿設定の「身長」で選んだ選択肢。容姿設定を開いたときのカーソル位置に使われ、実際の身長は「身長（cm）」で決まる。身長を変えたら合わせておく。',
-} as const
+  heightChoice: {
+    ja: '容姿設定の「身長」で選んだ選択肢。容姿設定を開いたときのカーソル位置に使われ、実際の身長は「身長（cm）」で決まる。身長を変えたら合わせておく。',
+    en: 'The option chosen for Height in the Appearance settings. It only sets the cursor position when the Appearance settings open; the actual height is set by "Height (cm)". Match it when you change the height.',
+  },
+}
 
 export type AppearanceCurrentField = {
   warnings: string[]
@@ -70,10 +99,14 @@ export type AppearanceCurrentView = ViewStatus & Record<AppearanceCurrentKey, Ap
 
 export function readAppearanceCurrent(bytes: Uint8Array): AppearanceCurrentView {
   const layoutProblem = checkLayout(bytes)
-  if (bytes.length < APPEARANCE_CURRENT_OFFSETS.heightChoice + 4) throw new RangeError('ファイルが小さすぎて容姿を読めません')
+  if (bytes.length < APPEARANCE_CURRENT_OFFSETS.heightChoice + 4)
+    throw new RangeError(tr({ ja: 'ファイルが小さすぎて容姿を読めません', en: 'The file is too small to read the appearance' }))
   const makeField = (key: AppearanceCurrentKey): AppearanceCurrentField => {
     const value = CODEC.readField(bytes, 0, key)
-    const problem = CODEC.type(key) === 'f32' && !Number.isFinite(value) ? '身長が有限の数値ではありません' : null
+    const problem =
+      CODEC.type(key) === 'f32' && !Number.isFinite(value)
+        ? tr({ ja: '身長が有限の数値ではありません', en: 'The height is not a finite number' })
+        : null
     return {
       warnings: [],
       offset: CODEC.offset(0, key), value,
@@ -92,15 +125,16 @@ export function readAppearanceCurrent(bytes: Uint8Array): AppearanceCurrentView 
 
 /** 通常モードは意味の分かる値だけ。身長は有限の数値なら許可する。上級者モードでは 0〜255 を許可する（身長の選択肢も 0〜255）。 */
 export function validateAppearanceCurrent(key: AppearanceCurrentKey, value: number, opts: EditOpts = NORMAL_EDIT_OPTS): string | null {
-  if (!Number.isFinite(value)) return '有限の数値を入力してください'
+  if (!Number.isFinite(value)) return tr({ ja: '有限の数値を入力してください', en: 'Enter a finite number' })
   if (key === 'height') {
     // 範囲外は heightWarning で警告するだけ（ユーザー判断 2026-10-07）。
     return null
   }
-  if (!Number.isInteger(value) || value < 0 || value > 255) return '0〜255の整数を入力してください'
+  if (!Number.isInteger(value) || value < 0 || value > 255)
+    return tr({ ja: '0〜255の整数を入力してください', en: 'Enter a whole number from 0 to 255' })
   if (opts.advanced) return null
   const max = (key === 'skin' ? SKIN_COLORS : key === 'body' ? BODY_TYPES : HEIGHT_CHOICES).length - 1
-  return value <= max ? null : `通常モードでは0〜${max}を入力してください`
+  return value <= max ? null : tr({ ja: `通常モードでは0〜${max}を入力してください`, en: `In normal mode, enter 0 to ${max}` })
 }
 
 /** 指定した1項目だけ上書きする。体型・身長・肌色は ✅、身長の選択肢は 🟢。 */

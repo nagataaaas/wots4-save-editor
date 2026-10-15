@@ -4,6 +4,7 @@ import { ItemCategoryIcon } from '@/components/item-category-icon'
 import { SearchSelectControl } from '@/components/search-select-control'
 import type { OptionGroup, SelectOption } from '@/components/select-options'
 import { Input } from '@/components/ui/input'
+import { getLanguage, tr, type Language } from '@/lib/i18n'
 import { useFieldDraft } from '@/lib/use-field-draft'
 import { useWrite } from '@/lib/use-write'
 import { integerValue, parseInteger } from '@/lib/parse'
@@ -22,14 +23,19 @@ type SlotSelectOptions = { groups: OptionGroup[]; options: SelectOption[] }
  * groups から作った選択肢。同じ groups（呼び出し側で useMemo した配列やモジュールの定数）なら全行で使い回す。
  * 箪笥は80行あり、行ごと・描画ごとに全アイテムの選択肢を作ると重いため
  */
-const selectOptionsCache = new WeakMap<readonly ItemOptionGroup[], SlotSelectOptions>()
+// 「なし」の名前とアイコンの title は言語で変わるので、言語ごとに分けて持つ
+const selectOptionsCache: Record<Language, WeakMap<readonly ItemOptionGroup[], SlotSelectOptions>> = {
+  ja: new WeakMap(),
+  en: new WeakMap(),
+}
 
 function selectOptionsFor(groups: readonly ItemOptionGroup[]): SlotSelectOptions {
-  const cached = selectOptionsCache.get(groups)
+  const cache = selectOptionsCache[getLanguage()]
+  const cached = cache.get(groups)
   if (cached) return cached
   // 「なし」は見出しのないまとまりにして、道具の一覧（通常モードは見出しなし）と区切り線で分ける
   const optionGroups: OptionGroup[] = [
-    { name: undefined, items: [{ value: String(EMPTY_ID), label: 'なし', keywords: ['FFFF'], leading: <ItemCategoryIcon id={EMPTY_ID} /> }] },
+    { name: undefined, items: [{ value: String(EMPTY_ID), label: tr({ ja: 'なし', en: 'None' }), keywords: ['FFFF', 'なし'], leading: <ItemCategoryIcon id={EMPTY_ID} /> }] },
     ...groups.map((g) => ({
       name: g.label,
       items: g.items.map((item) => ({
@@ -42,7 +48,7 @@ function selectOptionsFor(groups: readonly ItemOptionGroup[]): SlotSelectOptions
     })),
   ]
   const result = { groups: optionGroups, options: optionGroups.flatMap((g) => g.items) }
-  selectOptionsCache.set(groups, result)
+  cache.set(groups, result)
   return result
 }
 
@@ -104,7 +110,9 @@ export function ItemSlotRow({
       const text = input.trim().replace(/^0x/i, '')
       const parsed = text.length <= 4 ? integerValue(input, { radix: 16 }) : null
       const id = parsed !== null && parsed <= 0xffff ? parsed : null
-      return id === null ? { ok: false, error: 'ID は16進4桁まで（例：2F）で入力してください' } : { ok: true, value: id }
+      return id === null
+        ? { ok: false, error: tr({ ja: 'ID は16進4桁まで（例：2F）で入力してください', en: 'Enter the ID as up to 4 hex digits (e.g. 2F)' }) }
+        : { ok: true, value: id }
     },
     apply: (id) => onChange(id, countFor(id)),
   })
@@ -113,7 +121,7 @@ export function ItemSlotRow({
     format: String, identity: `${offset}:${slot?.id}`,
     parse: (input) =>
       parseInteger(input, (count) => validateItemCount(count, slot ? countMaxFor?.(slot.id) : undefined), {
-        error: '1以上の整数を入力してください',
+        error: tr({ ja: '1以上の整数を入力してください', en: 'Enter a whole number of 1 or more' }),
       }),
     apply: (count) => { if (slot) onChange(slot.id, count) },
   })
@@ -127,7 +135,11 @@ export function ItemSlotRow({
   const normalMax = slot && !isEmpty ? (normalCountMaxFor?.(slot.id) ?? countMax) : undefined
   const overLimitAllowed = countMax !== undefined && normalMax !== undefined && countMax > normalMax
   const countLimitText =
-    showCount && normalMax !== undefined ? (overLimitAllowed ? `最大 ${normalMax}（超過可）` : `最大 ${normalMax}`) : null
+    showCount && normalMax !== undefined
+      ? overLimitAllowed
+        ? tr({ ja: `最大 ${normalMax}（超過可）`, en: `Max ${normalMax} (can exceed)` })
+        : tr({ ja: `最大 ${normalMax}`, en: `Max ${normalMax}` })
+      : null
 
   return (
     <div className="grid grid-cols-[3.5rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1 py-1.5 first:pt-0 last:pb-0">
@@ -148,8 +160,8 @@ export function ItemSlotRow({
           options={options}
           groups={optionGroups}
           disabled={readOnly}
-          aria-label={`${index + 1}件目の${noun}`}
-          searchPlaceholder={searchPlaceholder ?? `${noun}を検索（名前・読み・英語名）`}
+          aria-label={tr({ ja: `${index + 1}件目の${noun}`, en: `${noun} ${index + 1}` })}
+          searchPlaceholder={searchPlaceholder ?? tr({ ja: `${noun}を検索（名前・読み・英語名）`, en: `Search ${noun} (Japanese or English name)` })}
           className="h-8 px-2 text-sm"
           contentClassName="min-w-64"
           leading={<ItemCategoryIcon id={slot?.id ?? EMPTY_ID} />}
@@ -162,7 +174,7 @@ export function ItemSlotRow({
             readOnly={readOnly}
             placeholder="ID"
             className={cn('h-8 font-mono', showCount && 'col-start-1 row-start-2 sm:col-auto sm:row-auto')}
-            aria-label={`${index + 1}件目の ID（16進）`}
+            aria-label={tr({ ja: `${index + 1}件目の ID（16進）`, en: `ID of slot ${index + 1} (hex)` })}
             onChange={(e) => { setMessage(null); idInput.change(e.target.value) }}
             onFocus={idInput.focus}
             onBlur={idInput.blur}
@@ -175,12 +187,12 @@ export function ItemSlotRow({
               value={slot === null || isEmpty ? '' : countLocked ? String(slot.count) : countInput.input}
               disabled={slot === null || isEmpty}
               readOnly={countLocked}
-              placeholder={slot === null ? '未読み込み' : isEmpty ? '—' : undefined}
+              placeholder={slot === null ? tr({ ja: '未読み込み', en: 'Not loaded' }) : isEmpty ? '—' : undefined}
               type="number"
               min={overLimitAllowed || normalMax === undefined ? undefined : 1}
               max={overLimitAllowed ? undefined : normalMax}
               inputMode="numeric"
-              aria-label={`${index + 1}件目の個数`}
+              aria-label={tr({ ja: `${index + 1}件目の個数`, en: `Quantity of slot ${index + 1}` })}
               aria-invalid={error !== null}
               onChange={(e) => { setMessage(null); countInput.change(e.target.value) }}
               onFocus={countInput.focus}

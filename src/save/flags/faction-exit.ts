@@ -10,27 +10,36 @@
 //   0x3791  攘夷。✅ [U] 2026-10-09：1 にすると、般若党（神社・港・大通り・街道など）、神社の赤城・小暮・雑貨屋、朱美と客が消えた。
 //           🟢 再起の望み（赤城が死んだとき）・般若党壊滅・三匹で斬るの成功で 1。
 // どれも周回の始めに 0 になる（🟢）。3つとも書き換えで反映を確認した（✅）。
-import { yesNo, type ByteFlag } from "./byte-flag";
+import { localizedFlag, yesNo, type ByteFlag } from "./byte-flag";
 
-const VALUES = yesNo("町にいる", "退場した");
+const VALUES = yesNo({ ja: "町にいる", en: "In town" }, { ja: "退場した", en: "Gone" });
 
 export const FACTION_EXIT_FLAGS: readonly ByteFlag[] = [
-  {
+  localizedFlag({
     offset: 0x378f,
-    label: "幕府",
-    note: "退場すると同心・岡っ引き・魔鱗組・武士、代官所の門の外と牢屋の人物（茂呂・佐古津・野戸仏・琴吹・三姉妹・鬼怒川など）、治安が高いときの取り締まり役、夜の暗闇脳天の巡回が消える。通常のプレイで退場する場面はない",
+    label: { ja: "幕府", en: "Shogunate" },
+    note: {
+      ja: "退場すると同心・岡っ引き・魔鱗組・武士、代官所の門の外と牢屋の人物（茂呂・佐古津・野戸仏・琴吹・三姉妹・鬼怒川など）、治安が高いときの取り締まり役、夜の暗闇脳天の巡回が消える。通常のプレイで退場する場面はない",
+      en: "When gone, Constables, Thief-takers, Demonscales and Samurai disappear, along with the people outside the Magistrate's gate and in the jail (Moro, Sakotsu, Nodobotoke, Kotobuki, the three sisters, Kinugawa, etc.), the enforcers who appear when public order is high, and the Black Mask night patrols. This never happens in normal play",
+    },
     values: VALUES,
-  },
-  {
+  }),
+  localizedFlag({
     offset: 0x3790,
-    label: "外国",
-    note: "退場すると外国人・外国商人・海兵隊・船乗り・貴婦人・パツキン隊、領事館のローラ・J.J・メリンダ、居留地・病院・語学所・カジノ・レストラン・黒船の人が消える。鬼怒川の魔手（ローラが死んだとき）・夕暮れの船上（断ったとき）・傷心の帰国船で退場する",
+    label: { ja: "外国", en: "Foreigners" },
+    note: {
+      ja: "退場すると外国人・外国商人・海兵隊・船乗り・貴婦人・パツキン隊、領事館のローラ・J.J・メリンダ、居留地・病院・語学所・カジノ・レストラン・黒船の人が消える。鬼怒川の魔手（ローラが死んだとき）・夕暮れの船上（断ったとき）・傷心の帰国船で退場する",
+      en: "When gone, Foreigners, Foreign Merchants, Royal Marines, Sailors, Foreign Ladies and Blondie Soldiers disappear, along with Laura, J.J. and Melinda at the consulate and the people in Little Britain, the Hospital, the Language School, the Casino, the Restaurant and the Black Ship. Happens in Kinugawa's Evil Influence (when Laura dies), Twilight On Board (when you refuse) and The Sad Boat Home",
+    },
     values: VALUES,
-  },
-  {
+  }),
+  localizedFlag({
     offset: 0x3791,
-    label: "攘夷",
-    note: "退場すると般若党（神社・港・大通り・街道など）、神社の赤城・小暮・雑貨屋、朱美と客が消える。再起の望み（赤城が死んだとき）・般若党壊滅・三匹で斬るの成功で退場する",
+    label: { ja: "攘夷", en: "Prajnas" },
+    note: {
+      ja: "退場すると般若党（神社・港・大通り・街道など）、神社の赤城・小暮・雑貨屋、朱美と客が消える。再起の望み（赤城が死んだとき）・般若党壊滅・三匹で斬るの成功で退場する",
+      en: "When gone, Prajna Members (at the Shrine, Harbor, Main Plaza, Back Roads, etc.), Akagi, Kogure and the Emporium at the Shrine, and Akemi and her customers disappear. Happens in Praying for Recovery (when Akagi dies) and on success of Annihilation of the Prajnas or The Three Kataneers",
+    },
     values: VALUES,
-  },
+  }),
 ];

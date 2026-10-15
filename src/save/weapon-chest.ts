@@ -8,6 +8,7 @@
 //   0x129F6 i8   🟢 武器箪笥の容量 ÷ 10。新しく始めたとき 2（20本）、上限 20（200本）。
 //                ゲームは先頭から「容量」件の中だけで空きを探し、本数が容量以上なら入れない
 // 書き込みの反映は要ゲーム内確認。
+import { tr } from '@/lib/i18n'
 import { readI16, readI8, writeI16, writeU8 } from './binary'
 import { warningsOf, type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
@@ -23,7 +24,7 @@ export const CAPACITY_MAX = 20
 export const CAPACITY_UNIT = 10
 
 export function weaponChestOffset(index: number): number {
-  if (!Number.isInteger(index) || index < 0 || index >= WEAPON_CHEST_SLOTS) throw new RangeError("武器箪笥の番号が範囲外です")
+  if (!Number.isInteger(index) || index < 0 || index >= WEAPON_CHEST_SLOTS) throw new RangeError(tr({ ja: "武器箪笥の番号が範囲外です", en: "Weapon chest slot out of range" }))
   return WEAPON_CHEST_OFFSET + index * WEAPON_RECORD_BYTES
 }
 
@@ -38,7 +39,7 @@ export type WeaponChestView = ViewStatus & {
 }
 
 export function readWeaponChest(bytes: Uint8Array): WeaponChestView {
-  if (bytes.byteLength < WEAPON_CHEST_CAPACITY + 1) throw new RangeError('ファイルが小さすぎて武器箪笥を読めません')
+  if (bytes.byteLength < WEAPON_CHEST_CAPACITY + 1) throw new RangeError(tooSmall())
   const layoutProblem = checkLayout(bytes)
   const count = readI16(bytes, WEAPON_CHEST_COUNT)
   const capacity = readI8(bytes, WEAPON_CHEST_CAPACITY)
@@ -46,16 +47,27 @@ export function readWeaponChest(bytes: Uint8Array): WeaponChestView {
   for (let i = 0; i < WEAPON_CHEST_SLOTS; i++) if (!isEmptyWeapon(bytes, weaponChestOffset(i))) filled.push(i)
 
   let problem: string | null = null
-  if (capacity < CAPACITY_MIN || capacity > CAPACITY_MAX) problem = "容量が想定外です"
-  else if (count < 0 || count > WEAPON_CHEST_SLOTS) problem = "本数が想定外です"
+  if (capacity < CAPACITY_MIN || capacity > CAPACITY_MAX)
+    problem = tr({ ja: "容量が想定外です", en: "The capacity has an unexpected value." })
+  else if (count < 0 || count > WEAPON_CHEST_SLOTS)
+    problem = tr({ ja: "本数が想定外です", en: "The weapon count has an unexpected value." })
   const countWarning =
-    count === filled.length ? null : `本数（${count}）が、武器が入っている枠の数（${filled.length}）と合いません`
+    count === filled.length
+      ? null
+      : tr({
+          ja: `本数（${count}）が、武器が入っている枠の数（${filled.length}）と合いません`,
+          en: `The weapon count (${count}) does not match the number of filled slots (${filled.length}).`,
+        })
   return { count, capacity, filled, problem: layoutProblem ?? problem, warnings: warningsOf(countWarning) }
+}
+
+function tooSmall(): string {
+  return tr({ ja: 'ファイルが小さすぎて武器箪笥を読めません', en: 'The file is too small to read the weapon chest.' })
 }
 
 /** 200枠すべての武器（容量の外の枠も含む）。各武器の書き込みは weapon.ts の関数に weaponChestOffset(i) を渡す */
 export function readWeaponChestWeapons(bytes: Uint8Array): WeaponView[] {
-  if (bytes.byteLength < WEAPON_CHEST_COUNT) throw new RangeError('ファイルが小さすぎて武器箪笥を読めません')
+  if (bytes.byteLength < WEAPON_CHEST_COUNT) throw new RangeError(tooSmall())
   const layoutProblem = checkLayout(bytes)
   return Array.from({ length: WEAPON_CHEST_SLOTS }, (_, i) => readWeapon(bytes, weaponChestOffset(i), layoutProblem))
 }
@@ -63,11 +75,22 @@ export function readWeaponChestWeapons(bytes: Uint8Array): WeaponView[] {
 /** 容量の値（÷10）を検証する。武器が入っている枠と本数が、新しい容量に収まること */
 export function validateWeaponChestCapacity(view: WeaponChestView, capacity: number): string | null {
   if (!Number.isInteger(capacity) || capacity < CAPACITY_MIN || capacity > CAPACITY_MAX)
-    return `容量は ${CAPACITY_MIN * CAPACITY_UNIT}〜${CAPACITY_MAX * CAPACITY_UNIT} 本（10本単位）です`
+    return tr({
+      ja: `容量は ${CAPACITY_MIN * CAPACITY_UNIT}〜${CAPACITY_MAX * CAPACITY_UNIT} 本（10本単位）です`,
+      en: `The capacity is ${CAPACITY_MIN * CAPACITY_UNIT}–${CAPACITY_MAX * CAPACITY_UNIT} weapons (in steps of 10).`,
+    })
   const slots = capacity * CAPACITY_UNIT
   const outside = view.filled.find((i) => i >= slots)
-  if (outside !== undefined) return `${outside + 1}枠目に武器が入っているので、容量を ${slots} 本にできません`
-  if (view.count > slots) return `本数（${view.count}）が容量 ${slots} 本を超えます`
+  if (outside !== undefined)
+    return tr({
+      ja: `${outside + 1}枠目に武器が入っているので、容量を ${slots} 本にできません`,
+      en: `Slot ${outside + 1} holds a weapon, so the capacity cannot be set to ${slots}.`,
+    })
+  if (view.count > slots)
+    return tr({
+      ja: `本数（${view.count}）が容量 ${slots} 本を超えます`,
+      en: `The weapon count (${view.count}) exceeds the capacity of ${slots}.`,
+    })
   return null
 }
 
@@ -99,6 +122,8 @@ export function writeWeaponChestCountToFilled(bytes: Uint8Array): void {
   assertWritable(bytes)
   const view = readWeaponChest(bytes)
   if (view.problem) throw new RangeError(view.problem)
-  if (view.filled.length > view.capacity * CAPACITY_UNIT) throw new RangeError('武器が入っている枠の数が容量を超えています')
+  if (view.filled.length > view.capacity * CAPACITY_UNIT) throw new RangeError(
+      tr({ ja: '武器が入っている枠の数が容量を超えています', en: 'The number of filled slots exceeds the capacity.' }),
+    )
   writeI16(bytes, WEAPON_CHEST_COUNT, view.filled.length)
 }

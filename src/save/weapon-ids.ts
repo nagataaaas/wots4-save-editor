@@ -12,6 +12,7 @@
 // U-13 は案A（CT の刃 305〜316 は +1 ずれている）で決着した（ユーザー判断 2026-10-05）。CSV の ID は −1 した値
 // 正道刀の鍔（[TS] の定義値 0xAC0109）は作者が異常値と注記しており I-3 の対象外なので載せない。
 
+import { getLanguage } from "@/lib/i18n";
 import { BLADE_TABLE } from "./master/dataset/blade";
 import { BLADE_SPECIAL_TABLE } from "./master/dataset/blade-special";
 import { COMPLETE_TABLE } from "./master/dataset/complete";
@@ -105,7 +106,7 @@ export const SPECIAL_BLADES: readonly PartOption[] = Object.values(BLADE_SPECIAL
 });
 
 /** パーツの表示名 */
-export function partName(option: PartOption, lang: Lang = "ja"): string {
+export function partName(option: PartOption, lang: Lang = getLanguage()): string {
   return weaponName(option.name, lang);
 }
 
@@ -137,7 +138,7 @@ export function sheathKind(sheath: SheathOption): WeaponKind | null {
 }
 
 /** 鞘の表示名。同じ鞘を使う刃の名前を「・」でつなぐ。鞘なしは「鞘なし」 */
-export function sheathName(sheath: SheathOption, lang: Lang = "ja"): string {
+export function sheathName(sheath: SheathOption, lang: Lang = getLanguage()): string {
   if (sheath.names.length === 0) return lang === "en" ? "No sheath" : "鞘なし";
   return sheath.names.map((n) => weaponName(n, lang)).join(lang === "en" ? " / " : "・");
 }
@@ -198,7 +199,7 @@ export const WEAPON_IDS: readonly WeaponIdOption[] = Object.values(COMPLETE_TABL
 );
 
 /** 完成武器ID の表示名。自作は「自作」 */
-export function weaponIdName(option: WeaponIdOption, lang: Lang = "ja"): string {
+export function weaponIdName(option: WeaponIdOption, lang: Lang = getLanguage()): string {
   if (option.name === null) return lang === "en" ? "Custom" : "自作";
   return weaponName(option.name, lang);
 }

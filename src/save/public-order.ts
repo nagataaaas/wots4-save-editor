@@ -8,7 +8,9 @@
 //   🔶 範囲と段階の境目は [W] の仕様で、セーブの値との照合はしていない
 //
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+import { tr } from "@/lib/i18n";
 import { readU8, writeU8 } from "./binary";
+import { defineLocalized } from "./flags/byte-flag";
 import { validateRange, warningsOf, type EditOpts, type ViewStatus } from "./field";
 import { assertWritable, checkLayout } from "./layout";
 
@@ -19,13 +21,15 @@ export const PUBLIC_ORDER_OFFSET = 0x15;
 export const PUBLIC_ORDER_MAX = 99;
 
 /** [W] 治安の段階（下限の大きい順） */
-export const PUBLIC_ORDER_LEVELS: readonly { min: number; label: string }[] = [
-  { min: 90, label: "とても良い" },
-  { min: 70, label: "良い" },
-  { min: 30, label: "普通" },
-  { min: 10, label: "悪い" },
-  { min: 0, label: "とても悪い" },
-];
+export const PUBLIC_ORDER_LEVELS: readonly { min: number; label: string }[] = (
+  [
+    { min: 90, label: { ja: "とても良い", en: "Very good" } },
+    { min: 70, label: { ja: "良い", en: "Good" } },
+    { min: 30, label: { ja: "普通", en: "Normal" } },
+    { min: 10, label: { ja: "悪い", en: "Bad" } },
+    { min: 0, label: { ja: "とても悪い", en: "Very bad" } },
+  ] as const
+).map((l) => defineLocalized({ min: l.min } as { min: number; label: string }, "label", l.label));
 
 /** warnings は、範囲外の値のとき。編集はできる */
 export type PublicOrderView = ViewStatus & {
@@ -40,12 +44,20 @@ export function publicOrderLevel(value: number): string | null {
 }
 
 export function readPublicOrder(bytes: Uint8Array): PublicOrderView {
-  if (bytes.byteLength < PUBLIC_ORDER_OFFSET + 1) throw new RangeError("ファイルが小さすぎて治安を読めません");
+  if (bytes.byteLength < PUBLIC_ORDER_OFFSET + 1)
+    throw new RangeError(tr({ ja: "ファイルが小さすぎて治安を読めません", en: "The file is too small to read public order" }));
   const value = readU8(bytes, PUBLIC_ORDER_OFFSET);
   return {
     value,
     level: publicOrderLevel(value),
-    warnings: warningsOf(value > PUBLIC_ORDER_MAX ? `治安がゲームの範囲（0〜${PUBLIC_ORDER_MAX}）を超えています` : null),
+    warnings: warningsOf(
+      value > PUBLIC_ORDER_MAX
+        ? tr({
+            ja: `治安がゲームの範囲（0〜${PUBLIC_ORDER_MAX}）を超えています`,
+            en: `Public order exceeds the game's range (0–${PUBLIC_ORDER_MAX})`,
+          })
+        : null,
+    ),
     problem: checkLayout(bytes),
   };
 }

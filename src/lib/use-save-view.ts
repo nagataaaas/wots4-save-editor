@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useSave } from './save-context'
 import { errorMessage } from './error-message'
+import { tr } from './i18n'
 
 /** view 自身の problem（多くのモジュールの View が持つ「読み取り専用にする理由」）。持たなければ null */
 function ownProblem(view: unknown): string | null {
@@ -24,7 +25,7 @@ export function useSaveView<T>(
     if (!save) return { view: null, error: null }
     try {
       const view = read(save.working)
-      if (view === null) throw new RangeError('ファイルが小さすぎて読めません')
+      if (view === null) throw new RangeError(tr({ ja: 'ファイルが小さすぎて読めません', en: 'The file is too small to read' }))
       return { view, error: null }
     } catch (error) {
       return { view: null, error: errorMessage(error) }

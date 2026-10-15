@@ -17,6 +17,7 @@
 // ゲームは弟子入り・破門のたびに数・点・段階を決め直す（🟢）。エディタも名簿を書いたら同じ規則で決め直す。
 // 段階 5 になったときにゲームが立てる特典 57（0x43351）は、ここでは書かない（次に弟子が増減したときにゲームが立てる 🟢）。
 // 名簿の書き換え・道場破りを帰す操作がゲームに反映されるかは要ゲーム内確認。
+import { tr, type Localized } from "@/lib/i18n";
 import { readI16, readU16, readU8, writeI16, writeI32, writeU16, writeU8, recordCodec } from "./binary";
 import { type EditOpts, type ViewStatus } from "./field";
 import { assertWritable, checkLayout } from "./layout";
@@ -62,7 +63,7 @@ export const REPUTATION_RANGES: readonly (readonly [number, number])[] = [
 
 export type PupilKind = {
   id: number;
-  label: string;
+  label: Localized;
   sex: "f" | "m";
   /** 評判の点（1〜5） */
   point: number;
@@ -75,7 +76,7 @@ export type PupilKind = {
 /** 🟢 弟子にできる町の人の種類（datatable/npc/pupil.csv） */
 export const PUPIL_KINDS: readonly PupilKind[] = Object.values(PUPIL_TABLE).map((r) => ({
   id: r.id_dec,
-  label: r.name_ja,
+  label: { ja: r.name_ja, en: r.name_en },
   sex: r.sex === "f" ? "f" : "m",
   point: r.point,
   name: r.name,
@@ -86,9 +87,10 @@ export function pupilKind(id: number): PupilKind | undefined {
   return PUPIL_KINDS.find((k) => k.id === id);
 }
 
-/** 🟢 見た目の名前（npc-look.csv）。表にない値は undefined */
+/** 🟢 見た目の名前（npc-look.csv。今の言語）。表にない値は undefined */
 export function lookLabel(look: number): string | undefined {
-  return lookup(NPC_LOOK_TABLE, look)?.name_ja;
+  const row = lookup(NPC_LOOK_TABLE, look);
+  return row ? tr({ ja: row.name_ja, en: row.name_en }) : undefined;
 }
 
 /** 🟢 見た目の一覧（上級者モードで種類の候補以外も選べる） */
@@ -132,7 +134,8 @@ export function rankForPoints(points: number, current: number): number {
 }
 
 export function readDojo(bytes: Uint8Array): DojoView {
-  if (bytes.byteLength <= DOJO_END) throw new RangeError("ファイルが小さすぎて道場の領域を読めません");
+  if (bytes.byteLength <= DOJO_END)
+    throw new RangeError(tr({ ja: "ファイルが小さすぎて道場の領域を読めません", en: "The file is too small to read the dojo" }));
   const pupils = Array.from({ length: PUPIL_MAX }, (_, i): PupilView | null => {
     if (isEmptySlot(bytes, i)) return null;
     const o = pupilOffset(i);
@@ -154,15 +157,18 @@ export function readDojo(bytes: Uint8Array): DojoView {
 
 function validateDojo(bytes: Uint8Array, view: DojoView): string | null {
   const raid = readU8(bytes, RAID_OFFSET);
-  if (raid > 1) return "道場破りの状態が想定外の値です";
+  if (raid > 1) return tr({ ja: "道場破りの状態が想定外の値です", en: "Unexpected challenger status" });
   const occupied = view.pupils.filter((p) => p !== null);
-  if (view.count > PUPIL_MAX) return "弟子の数が多すぎます";
-  if (view.count !== occupied.length) return "弟子の数と名簿の人数が合いません";
-  if (view.rank > REPUTATION_RANK_MAX) return "評判の段階が想定外の値です";
-  if (view.raiderCount < 0 || view.raiderCount > RAIDER_MAX) return "道場破りの人数が想定外の値です";
-  if (occupied.some((p) => p.point < 1 || p.point > 5)) return "名簿に想定外の値があります";
+  if (view.count > PUPIL_MAX) return tr({ ja: "弟子の数が多すぎます", en: "Too many pupils" });
+  if (view.count !== occupied.length)
+    return tr({ ja: "弟子の数と名簿の人数が合いません", en: "The number of pupils does not match the roster" });
+  if (view.rank > REPUTATION_RANK_MAX) return tr({ ja: "評判の段階が想定外の値です", en: "Unexpected reputation level" });
+  if (view.raiderCount < 0 || view.raiderCount > RAIDER_MAX)
+    return tr({ ja: "道場破りの人数が想定外の値です", en: "Unexpected number of challengers" });
+  if (occupied.some((p) => p.point < 1 || p.point > 5)) return tr({ ja: "名簿に想定外の値があります", en: "The roster contains an unexpected value" });
   const sum = occupied.reduce((s, p) => s + p.point, 0);
-  if (sum !== view.points) return "評判の点と名簿の合計が合いません";
+  if (sum !== view.points)
+    return tr({ ja: "評判の点と名簿の合計が合いません", en: "Reputation points do not match the roster total" });
   return null;
 }
 
@@ -194,7 +200,7 @@ function recompute(bytes: Uint8Array): void {
 export function writePupilKind(bytes: Uint8Array, index: number, kindId: number | null): void {
   assertWritable(bytes);
   assertEditable(bytes);
-  if (!Number.isInteger(index) || index < 0 || index >= PUPIL_MAX) throw new RangeError("枠の番号が範囲外です");
+  if (!Number.isInteger(index) || index < 0 || index >= PUPIL_MAX) throw new RangeError(tr({ ja: "枠の番号が範囲外です", en: "Slot is out of range" }));
   const o = pupilOffset(index);
   if (kindId === null) {
     bytes.fill(0xff, o, o + PUPIL_SIZE);
@@ -202,7 +208,7 @@ export function writePupilKind(bytes: Uint8Array, index: number, kindId: number 
     return;
   }
   const kind = pupilKind(kindId);
-  if (!kind) throw new RangeError("弟子にできない種類です");
+  if (!kind) throw new RangeError(tr({ ja: "弟子にできない種類です", en: "This type cannot be a pupil" }));
   const current = isEmptySlot(bytes, index) ? null : PUPIL_CODEC.readField(bytes, o, 'look');
   const look = current !== null && kind.looks.includes(current) ? current : kind.looks[0];
   PUPIL_CODEC.writeField(bytes, o, 'kind', kind.id);
@@ -218,17 +224,19 @@ export function writePupilKind(bytes: Uint8Array, index: number, kindId: number 
  * 今の値の書き戻しは許す
  */
 export function validatePupilLook(kindId: number, look: number, current: number, opts: EditOpts): string | null {
-  if (!Number.isInteger(look) || look < 0 || look > 0xffff) return "範囲外の値です";
+  if (!Number.isInteger(look) || look < 0 || look > 0xffff) return tr({ ja: "範囲外の値です", en: "Value is out of range" });
   if (look === current) return null;
-  if (opts.advanced) return lookLabel(look) !== undefined ? null : "見た目の表にない値です";
-  return pupilKind(kindId)?.looks.includes(look) ? null : "この種類の見た目ではありません（上級者モードで選べます）";
+  if (opts.advanced) return lookLabel(look) !== undefined ? null : tr({ ja: "見た目の表にない値です", en: "Not in the list of looks" });
+  return pupilKind(kindId)?.looks.includes(look)
+    ? null
+    : tr({ ja: "この種類の見た目ではありません（上級者モードで選べます）", en: "Not a look for this type (available in Advanced mode)" });
 }
 
 export function writePupilLook(bytes: Uint8Array, index: number, look: number, opts: EditOpts): void {
   assertWritable(bytes);
   const view = assertEditable(bytes);
   const pupil = view.pupils[index];
-  if (!pupil) throw new RangeError("空きの枠です");
+  if (!pupil) throw new RangeError(tr({ ja: "空きの枠です", en: "This slot is empty" }));
   const error = validatePupilLook(pupil.kind, look, pupil.look, opts);
   if (error) throw new RangeError(error);
   PUPIL_CODEC.writeField(bytes, pupilOffset(index), 'look', look);
@@ -250,6 +258,6 @@ export function writeRaid(bytes: Uint8Array, on: boolean): void {
     return;
   }
   if (view.raid) return;
-  if (view.count === 0) throw new RangeError("弟子がいないと道場破りは来ません");
+  if (view.count === 0) throw new RangeError(tr({ ja: "弟子がいないと道場破りは来ません", en: "Challengers do not come when there are no pupils" }));
   writeU8(bytes, RAID_OFFSET, 1);
 }

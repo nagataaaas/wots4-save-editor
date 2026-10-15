@@ -3,6 +3,7 @@ import { FieldShell } from "@/components/field-shell";
 import { LazySelect } from "@/components/lazy-select";
 import { groupOptions, type SelectOption } from "@/components/select-options";
 import { useWrite } from "@/lib/use-write";
+import { tr } from "@/lib/i18n";
 import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from "@/components/ui/select";
 
 function OptionContent({ option: o }: { option: SelectOption }) {
@@ -72,9 +73,11 @@ export function SelectRow({
       );
     return items;
   }, [options]);
+  const current = currentLabel ?? tr({ ja: "不明", en: "Unknown" });
+  const currentText = tr({ ja: `${current}（現在の値）`, en: `${current} (current value)` });
   const items =
     !listed && value !== null
-      ? { ...optionItems, [value]: `${currentLabel ?? "不明"}（現在の値）` }
+      ? { ...optionItems, [value]: currentText }
       : optionItems;
 
   return (
@@ -83,7 +86,7 @@ export function SelectRow({
         // null でプレースホルダー表示になる
         value={value}
         items={items}
-        placeholder="未読み込み"
+        placeholder={tr({ ja: "未読み込み", en: "Not loaded" })}
         className="w-full"
         disabled={disabled || value === null || problem !== null || options.length === 0}
         onValueChange={(v) => {
@@ -93,7 +96,7 @@ export function SelectRow({
       >
         {!listed && value !== null && (
           <SelectItem value={value} disabled>
-            {currentLabel ?? "不明"}（現在の値）
+            {currentText}
           </SelectItem>
         )}
         {groupOptions(options).map((g, i) =>

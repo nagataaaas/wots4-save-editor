@@ -37,89 +37,119 @@
 // 画面に出さないバイト（[U] 2026-10-06 の要望）：
 //   0x377C  ❓ 神社の柵の候補だったが、初期開放条件は 0x377F だった。3件とも 0
 //   0x37A2  🟢 大寄せで攘夷ルートに入れないと 2（般若党の本拠。イベント関連フラグ event-flags.ts に出す）
-import type { ByteFlag, FlagValue } from "./byte-flag";
+import { flagValues, localizedFlag, type ByteFlag, type FlagValue } from "./byte-flag";
 
 /** 1 で開く門・柵 */
-const OPEN_VALUES: readonly FlagValue[] = [
-  { value: 0, label: "閉じている" },
-  { value: 1, label: "開いている" },
-];
+const OPEN_VALUES: readonly FlagValue[] = flagValues([
+  { value: 0, label: { ja: "閉じている", en: "Closed" } },
+  { value: 1, label: { ja: "開いている", en: "Open" } },
+]);
 
 /** 1 で閉じる門・柵。🟢 0 はほかの条件による閉鎖を打ち消さない */
-const CLOSE_VALUES: readonly FlagValue[] = [
-  { value: 0, label: "閉鎖指定なし" },
-  { value: 1, label: "閉じる" },
-];
+const CLOSE_VALUES: readonly FlagValue[] = flagValues([
+  { value: 0, label: { ja: "閉鎖指定なし", en: "Not set to close" } },
+  { value: 1, label: { ja: "閉じる", en: "Close" } },
+]);
 
 /** 初日勧誘（1日目昼のみ影響）。🟢 1 になる場面 */
 export const GATE_RECRUIT_FLAGS: readonly ByteFlag[] = [
-  {
+  localizedFlag({
     offset: 0x377d,
-    label: "代官所の門",
-    note: "阿弥浜港争乱の結末（3連勝・琴吹に助太刀）と三姉妹見参の成功で開く。代官所の面々は開いているときだけ起きる。幕府からの勧誘のフラグを兼ねる",
+    label: { ja: "代官所の門", en: "Magistrate's Office gate" },
+    note: {
+      ja: "阿弥浜港争乱の結末（3連勝・琴吹に助太刀）と三姉妹見参の成功で開く。代官所の面々は開いているときだけ起きる。幕府からの勧誘のフラグを兼ねる",
+      en: "Opens at the end of Amihama Harbor Skirmish (three wins in a row, or helping Kotobuki) and on success of Meeting with the Three Sisters. The Magistrate's Offices happens only while it is open. Also serves as the Shogunate's invitation",
+    },
     values: OPEN_VALUES,
-  },
-  {
+  }),
+  localizedFlag({
     offset: 0x377e,
-    label: "居留地の門",
+    label: { ja: "居留地の門", en: "Little Britain gate" },
     // 🔶 外国からの勧誘のフラグを兼ねる
-    note: "阿弥浜港争乱の結末（3連勝・4人に手間取る）と三姉妹見参の成功で開く。小公女謁見は開いているときだけ起きる。外国からの勧誘のフラグを兼ねる",
+    note: {
+      ja: "阿弥浜港争乱の結末（3連勝・4人に手間取る）と三姉妹見参の成功で開く。小公女謁見は開いているときだけ起きる。外国からの勧誘のフラグを兼ねる",
+      en: "Opens at the end of Amihama Harbor Skirmish (three wins in a row, or struggling against the four) and on success of Meeting with the Three Sisters. Audience with the Littlest Public Servant happens only while it is open. Also serves as the Foreigners' invitation",
+    },
     values: OPEN_VALUES,
-  },
-  {
+  }),
+  localizedFlag({
     offset: 0x377f,
-    label: "神社入口の柵",
+    label: { ja: "神社入口の柵", en: "Shrine entrance fence" },
     // ✅ 入口の柵
-    note: "序章〜1日目昼の開放条件で、洞窟内の柵にも共通。志士との出会いの導入と三姉妹見参の成功で開く。導入を見たあとに閉じた状態にすると、近づいても開かない",
+    note: {
+      ja: "序章〜1日目昼の開放条件で、洞窟内の柵にも共通。志士との出会いの導入と三姉妹見参の成功で開く。導入を見たあとに閉じた状態にすると、近づいても開かない",
+      en: "Opening condition from the prologue to Day 1 daytime, shared with the fence inside the cave. Opens at the start of Encounter with the \"Patriots\" and on success of Meeting with the Three Sisters. If set to closed after seeing that start, it won't open when you approach",
+    },
     values: OPEN_VALUES,
-  },
+  }),
 ];
 
 /** 閉鎖（1日目夕～大老の大寄せまで）。🟢 1 になる場面 */
 export const GATE_CLOSE_FLAGS: readonly ByteFlag[] = [
-  {
+  localizedFlag({
     offset: 0x37fa,
-    label: "代官所の表門",
-    note: "大寄せで幕府ルートに入れないと閉じる（根無し草では閉じ、幕府ルートでは閉じない）。裏門とそろえる",
+    label: { ja: "代官所の表門", en: "Magistrate's Office front gate" },
+    note: {
+      ja: "大寄せで幕府ルートに入れないと閉じる（根無し草では閉じ、幕府ルートでは閉じない）。裏門とそろえる",
+      en: "Closes if you don't enter the Shogunate route in The Chief Minister's Big Move (closes in Idle Chatter, not on the Shogunate route). Keep it the same as the back gate",
+    },
     values: CLOSE_VALUES,
-  },
-  {
+  }),
+  localizedFlag({
     offset: 0x37fb,
-    label: "代官所の裏門",
+    label: { ja: "代官所の裏門", en: "Magistrate's Office back gate" },
     // 🔶 1 で閉じる。❓ 0 にして裏門が開くか（要ゲーム内確認）
-    note: "表門と同じ場面で同じ状態になる。表門とそろえる",
+    note: {
+      ja: "表門と同じ場面で同じ状態になる。表門とそろえる",
+      en: "Changes together with the front gate. Keep it the same as the front gate",
+    },
     values: CLOSE_VALUES,
-  },
-  {
+  }),
+  localizedFlag({
     offset: 0x3764,
-    label: "居留地の外門",
-    note: "大寄せで外国ルートに入れないと閉じる。鬼怒川の魔手でローラが死んだとき・夕暮れの船上で断ったとき・傷心の帰国船の成功でも閉じる",
+    label: { ja: "居留地の外門", en: "Little Britain outer gate" },
+    note: {
+      ja: "大寄せで外国ルートに入れないと閉じる。鬼怒川の魔手でローラが死んだとき・夕暮れの船上で断ったとき・傷心の帰国船の成功でも閉じる",
+      en: "Closes if you don't enter the Foreigners route in The Chief Minister's Big Move. Also closes when Laura dies in Kinugawa's Evil Influence, when you refuse in Twilight On Board, and on success of The Sad Boat Home",
+    },
     values: CLOSE_VALUES,
-  },
-  {
+  }),
+  localizedFlag({
     offset: 0x37c3,
-    label: "神社入口の柵",
-    note: "大寄せで攘夷ルートに入れないと閉じる。同士救出の成功・般若党壊滅の成功でも閉じる",
+    label: { ja: "神社入口の柵", en: "Shrine entrance fence" },
+    note: {
+      ja: "大寄せで攘夷ルートに入れないと閉じる。同士救出の成功・般若党壊滅の成功でも閉じる",
+      en: "Closes if you don't enter the Prajna route in The Chief Minister's Big Move. Also closes on success of Mutual Rescue or Annihilation of the Prajnas",
+    },
     values: CLOSE_VALUES,
-  },
-  {
+  }),
+  localizedFlag({
     offset: 0x3761,
-    label: "神社の洞窟内の柵",
+    label: { ja: "神社の洞窟内の柵", en: "Shrine cave fence" },
     // ✅ 1 で柵が降りて通行を塞ぐ。❓ 0 に戻したときの上昇・通行の回復は要ゲーム内確認
-    note: "閉じると柵が降り、洞窟の通行を塞ぐ（入口の柵を開けた状態と併用）。大寄せで攘夷ルートに入れないと閉じる。同士救出・般若党壊滅の成功でも閉じる",
+    note: {
+      ja: "閉じると柵が降り、洞窟の通行を塞ぐ（入口の柵を開けた状態と併用）。大寄せで攘夷ルートに入れないと閉じる。同士救出・般若党壊滅の成功でも閉じる",
+      en: "When closed, the fence comes down and blocks the cave (works together with the entrance fence being open). Closes if you don't enter the Prajna route in The Chief Minister's Big Move. Also closes on success of Mutual Rescue or Annihilation of the Prajnas",
+    },
     values: CLOSE_VALUES,
-  },
+  }),
 ];
 
 /** 建物の中の扉 */
 export const GATE_DOOR_FLAGS: readonly ByteFlag[] = [
-  {
+  localizedFlag({
     offset: 0x3762,
     alsoAt: [0x3763],
-    label: "代官所 拷問部屋の扉",
+    label: { ja: "代官所 拷問部屋の扉", en: "Magistrate's Office torture room door" },
     // 🟢 ❓ 扉の見た目は要ゲーム内確認
-    note: "拷問部屋の扉と、屋内から拷問塔の区画へ入る扉の2つをまとめて書く。周回の始めは閉じていて、大老と三姉妹の成功で開く",
-    hint: "1日目昼または「大老と三姉妹」が成功していない場合はフラグに関わらず閉じます",
+    note: {
+      ja: "拷問部屋の扉と、屋内から拷問塔の区画へ入る扉の2つをまとめて書く。周回の始めは閉じていて、大老と三姉妹の成功で開く",
+      en: "Sets both the torture room door and the indoor door into the torture tower. Closed at the start of a playthrough; opens on success of The Chief Minister & The Three Sisters",
+    },
+    hint: {
+      ja: "1日目昼または「大老と三姉妹」が成功していない場合はフラグに関わらず閉じます",
+      en: "Stays closed regardless of this on Day 1 daytime or while \"The Chief Minister & The Three Sisters\" hasn't succeeded",
+    },
     values: CLOSE_VALUES,
-  },
+  }),
 ];

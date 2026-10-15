@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { CHARM_SLOTS, countCharms, validateCharms } from "@/save/weapon";
 
 export type CharmSelection = { id: number | null; count: number };
@@ -13,11 +14,15 @@ export function charmSelections(values: readonly (number | null)[]): CharmSelect
 
 /** 選択項目を個数分に展開する。保存時に同じIDを合算するため、合算後も検証する。 */
 export function expandCharmSelections(rows: readonly CharmSelection[], advanced: boolean): (number | null)[] {
-  if (rows.length > CHARM_SLOTS) throw new RangeError("魅力項目は3つまでです");
+  if (rows.length > CHARM_SLOTS) throw new RangeError(tr({ ja: "魅力項目は3つまでです", en: "Up to 3 charm slots." }));
   const values: (number | null)[] = [];
   for (const { id, count } of rows) {
-    if (!Number.isInteger(count) || count < 1 || count > 3) throw new RangeError("個数は1〜3の整数で入力してください");
-    if (!advanced && id !== null && count !== 1) throw new RangeError("個数を変更するには上級者モードをオンにしてください");
+    if (!Number.isInteger(count) || count < 1 || count > 3)
+      throw new RangeError(tr({ ja: "個数は1〜3の整数で入力してください", en: "Enter a whole number from 1 to 3 for the count." }));
+    if (!advanced && id !== null && count !== 1)
+      throw new RangeError(
+        tr({ ja: "個数を変更するには上級者モードをオンにしてください", en: "Turn on Advanced mode to change the count." }),
+      );
     if (id === null) values.push(null);
     else for (let i = 0; i < count; i++) values.push(id);
   }

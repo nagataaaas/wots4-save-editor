@@ -2,6 +2,7 @@
 //
 // 1枠は 8 B：+0x00 ID（u16）、+0x02 個数（u16）、+0x04 用途不明（4 B ❓）。
 // 書き込むのは ID と個数の 4 B だけで、+0x04 の 4 B は変えない。
+import { tr } from '@/lib/i18n'
 import { readU16, writeU16 } from './binary'
 import type { ViewStatus } from './field'
 import { assertWritable } from './layout'
@@ -52,8 +53,8 @@ export type ItemSlot = ViewStatus & {
 }
 
 export function validateItemCount(count: number, max: number = ITEM_COUNT_MAX): string | null {
-  if (!Number.isInteger(count)) return '整数を入力してください'
-  if (count < 1 || count > max) return `1〜${max} の範囲で入力してください`
+  if (!Number.isInteger(count)) return tr({ ja: '整数を入力してください', en: 'Enter a whole number' })
+  if (count < 1 || count > max) return tr({ ja: `1〜${max} の範囲で入力してください`, en: `Enter a value from 1 to ${max}` })
   return null
 }
 
@@ -78,7 +79,7 @@ export function writeItemSlotRaw(
 ): void {
   assertWritable(bytes, offset, ITEM_SLOT_BYTES)
   if (id === EMPTY_ID) {
-    if (count !== 0) throw new RangeError('「なし」の個数は 0 です')
+    if (count !== 0) throw new RangeError(tr({ ja: '「なし」の個数は 0 です', en: 'An empty slot must have a quantity of 0' }))
   } else {
     const countProblem = validateItemCount(count, max)
     if (countProblem) throw new RangeError(countProblem)

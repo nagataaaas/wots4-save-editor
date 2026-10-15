@@ -21,6 +21,7 @@ import { readU8, writeU8 } from "./binary";
 import { warningsOf, type EditOpts, type ViewStatus } from "./field";
 import { validateKnownValue } from "./flags/byte-flag";
 import { assertWritable, checkLayout } from "./layout";
+import { tr, type Localized } from "@/lib/i18n";
 
 // ---------------------------------------------------------------- 装飾品
 
@@ -43,7 +44,8 @@ export type AccessoryFlagsView = ViewStatus & {
 };
 
 function readBytes(bytes: Uint8Array, offset: number, count: number): number[] {
-  if (bytes.byteLength < offset + count) throw new RangeError("ファイルが小さすぎて読めません");
+  if (bytes.byteLength < offset + count)
+    throw new RangeError(tr({ ja: "ファイルが小さすぎて読めません", en: "The file is too small to read" }));
   return Array.from({ length: count }, (_, i) => readU8(bytes, offset + i));
 }
 
@@ -55,7 +57,14 @@ export function readAccessoryFlags(bytes: Uint8Array): AccessoryFlagsView {
     owned: values.map((v) => v !== 0),
     known,
     problem: checkLayout(bytes),
-    warnings: warningsOf(known.includes(false) ? "所持の状態が想定外の装飾品があります。切り替えは上級者モードでだけできます" : null),
+    warnings: warningsOf(
+      known.includes(false)
+        ? tr({
+            ja: "所持の状態が想定外の装飾品があります。切り替えは上級者モードでだけできます",
+            en: "Some accessories have an unexpected ownership state. They can only be toggled in Advanced mode",
+          })
+        : null,
+    ),
   };
 }
 
@@ -67,7 +76,7 @@ function assertValue(value: number, known: readonly { value: number }[], opts: E
 /** 装飾品 id の所持フラグを書く。通常モードでは 0・1、上級者モードでは任意の u8 */
 export function writeAccessoryFlag(bytes: Uint8Array, id: number, value: number, opts: EditOpts): void {
   assertWritable(bytes);
-  if (!Number.isInteger(id) || id < 0 || id >= ACCESSORY_COUNT) throw new RangeError("装飾品が範囲外です");
+  if (!Number.isInteger(id) || id < 0 || id >= ACCESSORY_COUNT) throw new RangeError(tr({ ja: "装飾品が範囲外です", en: "The accessory is out of range" }));
   assertValue(value, ACCESSORY_FLAG_VALUES, opts);
   writeU8(bytes, ACCESSORY_FLAGS_OFFSET + id, value);
 }
@@ -77,7 +86,7 @@ export function writeAccessoryFlags(bytes: Uint8Array, ids: readonly number[], v
   assertWritable(bytes);
   assertValue(value, ACCESSORY_FLAG_VALUES, { advanced: false });
   for (const id of ids)
-    if (!Number.isInteger(id) || id < 0 || id >= ACCESSORY_COUNT) throw new RangeError("装飾品が範囲外です");
+    if (!Number.isInteger(id) || id < 0 || id >= ACCESSORY_COUNT) throw new RangeError(tr({ ja: "装飾品が範囲外です", en: "The accessory is out of range" }));
   for (const id of ids) writeU8(bytes, ACCESSORY_FLAGS_OFFSET + id, value);
 }
 
@@ -90,15 +99,19 @@ export const APPEARANCE_BYTES = 31;
 export const APPEARANCE_BIT_COUNT = APPEARANCE_BYTES * 8;
 
 /** なりわいの報酬のセット（✅ 差分。名前は 🟢） */
-export const APPEARANCE_REWARDS: Readonly<Record<number, string>> = {
-  238: "新撰組 近藤セット（なりわい「今宵の虎徹は」）",
-  239: "ドナドナセット（なりわい「食い逃げ外国人」）",
-  240: "さよセット（なりわい「おにぎり屋の用心棒」）",
-  241: "新撰組 土方セット（なりわい「薬売り」）",
+export const APPEARANCE_REWARDS: Readonly<Record<number, Localized>> = {
+  238: {
+    ja: "新撰組 近藤セット（なりわい「今宵の虎徹は」）",
+    en: "Shinsengumi Kondo set (mission \"A Thirst For Blood\")",
+  },
+  239: { ja: "ドナドナセット（なりわい「食い逃げ外国人」）", en: "Dona Dona set (mission \"Foreign Dine-and-Ditcher\")" },
+  240: { ja: "さよセット（なりわい「おにぎり屋の用心棒」）", en: "Sayo set (mission \"Rice Guard\")" },
+  241: { ja: "新撰組 土方セット（なりわい「薬売り」）", en: "Shinsengumi Hijikata set (mission \"Medicine Seller\")" },
 };
 
 export function appearanceBitPosition(bit: number): { offset: number; mask: number } {
-  if (!Number.isInteger(bit) || bit < 0 || bit >= APPEARANCE_BIT_COUNT) throw new RangeError("服が範囲外です");
+  if (!Number.isInteger(bit) || bit < 0 || bit >= APPEARANCE_BIT_COUNT)
+    throw new RangeError(tr({ ja: "服が範囲外です", en: "The clothing is out of range" }));
   return { offset: APPEARANCE_OFFSET + (bit >> 3), mask: 1 << (bit & 7) };
 }
 
@@ -142,10 +155,10 @@ export const UNLOCK_STATES_OFFSET = 0x43318;
 // ✅ [U] 2026-10-07 番号31「J.J. の顔」はゲーム内で解除した前後の差分で対応を確認。書き込みの反映は 🔶 U-17。
 // ✅ [U] 2026-10-07 番号101（ライフルの免許）は値 2 の書き込みによる反映をゲーム内で確認。
 
-export const UNLOCK_STATE_LABELS: Record<number, string> = {
-  0: "非表示",
-  1: "未取得", // 表示中・未取得
-  2: "取得済み",
+export const UNLOCK_STATE_LABELS: Record<number, Localized> = {
+  0: { ja: "非表示", en: "Hidden" },
+  1: { ja: "未取得", en: "Not obtained" }, // 表示中・未取得
+  2: { ja: "取得済み", en: "Obtained" },
 };
 
 /** 添字は特典の番号 */
@@ -163,14 +176,21 @@ export function readUnlockStates(bytes: Uint8Array): UnlockStatesView {
     known,
     problem: checkLayout(bytes),
     // 🔶 U-17：0〜2 以外の値は上級者モードで書けるので、読み取り専用にはせず注意だけ出す
-    warnings: warningsOf(known.includes(false) ? "状態が想定外の特典があります。切り替えは上級者モードでだけできます" : null),
+    warnings: warningsOf(
+      known.includes(false)
+        ? tr({
+            ja: "状態が想定外の特典があります。切り替えは上級者モードでだけできます",
+            en: "Some unlocks have an unexpected state. They can only be toggled in Advanced mode",
+          })
+        : null,
+    ),
   };
 }
 
 /** 🔶 U-17 特典 index の状態を書く。固定位置でサイズ・境界・値の範囲を検証する。 */
 export function writeUnlockState(bytes: Uint8Array, index: number, value: number, opts: EditOpts): void {
   assertWritable(bytes);
-  if (!Number.isInteger(index) || index < 0 || index >= UNLOCK_COUNT) throw new RangeError("特典が範囲外です");
+  if (!Number.isInteger(index) || index < 0 || index >= UNLOCK_COUNT) throw new RangeError(tr({ ja: "特典が範囲外です", en: "The unlock is out of range" }));
   assertValue(value, UNLOCK_STATE_VALUES, opts); // 🔶 U-17：3 以上は上級者モードだけ
   writeU8(bytes, UNLOCK_STATES_OFFSET + index, value);
 }
@@ -180,6 +200,6 @@ export function writeUnlockStates(bytes: Uint8Array, indexes: readonly number[],
   assertWritable(bytes);
   assertValue(value, UNLOCK_STATE_VALUES, { advanced: false });
   for (const i of indexes)
-    if (!Number.isInteger(i) || i < 0 || i >= UNLOCK_COUNT) throw new RangeError("特典が範囲外です");
+    if (!Number.isInteger(i) || i < 0 || i >= UNLOCK_COUNT) throw new RangeError(tr({ ja: "特典が範囲外です", en: "The unlock is out of range" }));
   for (const i of indexes) writeU8(bytes, UNLOCK_STATES_OFFSET + i, value);
 }

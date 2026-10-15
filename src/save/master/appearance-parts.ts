@@ -21,6 +21,7 @@ import { HAIR_TABLE } from "./dataset/hair";
 import { LOWER_TABLE } from "./dataset/lower";
 import { PERSON_TABLE } from "./dataset/person";
 import { UPPER_TABLE } from "./dataset/upper";
+import type { Localized } from "@/lib/i18n";
 
 /**
  * 部品の組（セーブの 0x3AAE4 + 12k）の並び。k＝0 上半身 … 9 合羽。
@@ -40,17 +41,17 @@ export const PART_KINDS = [
 ] as const;
 export type PartKind = (typeof PART_KINDS)[number];
 
-export const PART_KIND_LABELS: Record<PartKind, string> = {
-  upper: "上半身",
-  lower: "下半身",
-  face: "顔・声",
-  hair: "髪型",
-  body: "手",
-  feet: "足元",
-  gauntlet: "手甲",
-  leggings: "脚絆",
-  apron: "前掛け",
-  cape: "合羽",
+export const PART_KIND_LABELS: Record<PartKind, Localized> = {
+  upper: { ja: "上半身", en: "Upper" },
+  lower: { ja: "下半身", en: "Lower" },
+  face: { ja: "顔・声", en: "Face & voice" },
+  hair: { ja: "髪型", en: "Hairstyle" },
+  body: { ja: "手", en: "Hands" },
+  feet: { ja: "足元", en: "Feet" },
+  gauntlet: { ja: "手甲", en: "Armguards" },
+  leggings: { ja: "脚絆", en: "Leggings" },
+  apron: { ja: "前掛け", en: "Apron" },
+  cape: { ja: "合羽", en: "Cloak" },
 };
 
 /** 部品の性別（CSV の gender）。部品は男用・女用・どちらでもない（null）のどれか。主人公のタイプ（BodyKind）とは別 */
@@ -68,6 +69,8 @@ export type PartEntry = {
   dlc: number | null;
   /** 名前のない部品の見た目（ゲーム内で確認 ✅ [U]、選べる人物の部品 🟢、推定 🔶。確度は CSV の備考）。空文字はなし */
   alias: string;
+  /** alias の英語。空なら画面では alias を出す */
+  aliasEn: string;
   /** ✅ [U] ロードでクラッシュする。選択肢に出さない */
   crash: boolean;
   /** 層1〜4。null はその層なし。値（テクスチャ）は色違いの順 🟢 */
@@ -105,6 +108,15 @@ export type PersonEntry = {
 export const BODY_KINDS = ["男", "女", "ローラ", "子供", "動物"] as const;
 export type BodyKind = (typeof BODY_KINDS)[number];
 
+/** タイプの表示名（BODY_KINDS は表の値なので日本語のまま持つ） */
+export const BODY_KIND_LABELS: Record<BodyKind, Localized> = {
+  男: { ja: "男", en: "Male" },
+  女: { ja: "女", en: "Female" },
+  ローラ: { ja: "ローラ", en: "Laura" },
+  子供: { ja: "子供", en: "Child" },
+  動物: { ja: "動物", en: "Animal" },
+};
+
 /**
  * 部品の生成表（face・hair・upper・lower・body・feet・extra）の行のうち、使う列。どの表の行もこの形に当てはまる。
  * 生成器は数値の列を number | null、文字列の列を空文字で出す。body.csv には特典・服・DLC の列が、extra.csv には別名・クラッシュの列がなく、extra.csv だけが種類の列を持つ
@@ -122,6 +134,7 @@ type PartRow = {
   dlc?: number | null;
   kind?: string;
   alias_ja?: string;
+  alias_en?: string;
   crash?: number | null;
 };
 
@@ -145,6 +158,7 @@ function loadParts(
         clothId: r.cloth_id ?? null,
         dlc: r.dlc ?? null,
         alias: r.alias_ja ?? "",
+        aliasEn: r.alias_en ?? "",
         crash: r.crash === 1,
         layers,
       };
@@ -208,6 +222,15 @@ export function findPerson(id: number): PersonEntry | undefined {
 
 /** 部品の組の分け方（ユーザー判断 2026-10-08） */
 export type PartGroup = "男" | "女" | "共通" | "セット用" | "未使用";
+
+/** 部品の組の表示名 */
+export const PART_GROUP_LABELS: Record<PartGroup, Localized> = {
+  男: { ja: "男", en: "Male" },
+  女: { ja: "女", en: "Female" },
+  共通: { ja: "共通", en: "Shared" },
+  セット用: { ja: "セット用", en: "For sets" },
+  未使用: { ja: "未使用", en: "Unused" },
+};
 
 const usedByPerson: Record<PartKind, Set<number>> = Object.fromEntries(
   PART_KINDS.map((k) => [

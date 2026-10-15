@@ -8,6 +8,7 @@ import { readF32, readU32, readU8, readUtf16Fixed, writeF32, writeU32, writeU8, 
 import { warningsOf, type EditOpts, NORMAL_EDIT_OPTS, type Field, type ViewStatus, fixedStringProblem, validateText } from './field'
 import { assertWritable, checkLayout } from './layout'
 import { findLocation } from './locations'
+import { tr } from '@/lib/i18n'
 
 export const HERO_OFFSETS = {
   money: 0x08, // u32 ✅
@@ -100,14 +101,16 @@ export function validateName(text: string): string | null {
 /** 入力値の検証（正規の上限まで） */
 export function validateAmount(key: U32Key, value: number): string | null {
   const max = AMOUNT_LIMITS[key]
-  if (!Number.isInteger(value)) return '整数を入力してください'
-  if (value < 0 || value > max) return `0〜${max.toLocaleString()} の範囲で入力してください`
+  if (!Number.isInteger(value)) return tr({ ja: '整数を入力してください', en: 'Enter a whole number' })
+  if (value < 0 || value > max)
+    return tr({ ja: `0〜${max.toLocaleString()} の範囲で入力してください`, en: `Enter a value from 0 to ${max.toLocaleString()}` })
   return null
 }
 
 export function validateGauge(value: number): string | null {
-  if (!Number.isFinite(value)) return '数値を入力してください'
-  if (value < 0 || value > GAUGE_MAX) return `0〜${GAUGE_MAX.toLocaleString()} の範囲で入力してください`
+  if (!Number.isFinite(value)) return tr({ ja: '数値を入力してください', en: 'Enter a number' })
+  if (value < 0 || value > GAUGE_MAX)
+    return tr({ ja: `0〜${GAUGE_MAX.toLocaleString()} の範囲で入力してください`, en: `Enter a value from 0 to ${GAUGE_MAX.toLocaleString()}` })
   return null
 }
 
@@ -118,14 +121,17 @@ export function validateGauge(value: number): string | null {
 export function validateCurrent(value: number, max: number, opts: EditOpts = NORMAL_EDIT_OPTS): string | null {
   const base = validateGauge(value)
   if (base) return base
-  if (!opts.advanced && value > max) return `最大値（${Number(max.toPrecision(7)).toLocaleString()}）以下で入力してください`
+  if (!opts.advanced && value > max) {
+    const shown = Number(max.toPrecision(7)).toLocaleString()
+    return tr({ ja: `最大値（${shown}）以下で入力してください`, en: `Enter a value no greater than the max (${shown})` })
+  }
   return null
 }
 
 export function validateLocation(value: number): string | null {
   const loc = findLocation(value)
-  if (!loc) return '未調査の場所です'
-  if (loc.crash) return 'クラッシュが報告されている値です'
+  if (!loc) return tr({ ja: '未調査の場所です', en: 'Unknown location' })
+  if (loc.crash) return tr({ ja: 'クラッシュが報告されている値です', en: 'This location has been reported to crash the game' })
   return null
 }
 
@@ -137,16 +143,24 @@ export function readHero(bytes: Uint8Array): HeroView {
   const layoutProblem = checkLayout(bytes)
   // サイズが違うファイルでも、範囲内なら値は表示する（読み取り専用）
   const canRead = bytes.byteLength >= HERO_OFFSETS.tsumaMax + 4
-  if (!canRead) throw new RangeError('ファイルが小さすぎて主人公の情報を読めません')
+  if (!canRead)
+    throw new RangeError(tr({ ja: 'ファイルが小さすぎて主人公の情報を読めません', en: 'The file is too small to read the player character' }))
 
   const name = readUtf16Fixed(bytes, HERO_OFFSETS.name, NAME_BYTES)
-  const nameProblem = fixedStringProblem(name, '名前') ?? validateName(name.text)
+  const nameProblem = fixedStringProblem(name, tr({ ja: '名前', en: 'Name' })) ?? validateName(name.text)
 
   const u32 = (key: U32Key) => {
     const v = readU32(bytes, HERO_OFFSETS[key])
-    const implausible = v > AMOUNT_PLAUSIBLE_MAX ? `値が大きすぎます（${v.toLocaleString()}）` : null
+    const implausible =
+      v > AMOUNT_PLAUSIBLE_MAX ? tr({ ja: `値が大きすぎます（${v.toLocaleString()}）`, en: `The value is too large (${v.toLocaleString()})` }) : null
+    const limit = AMOUNT_LIMITS[key].toLocaleString()
     const outOfRange =
-      v > AMOUNT_LIMITS[key] ? `現在の値（${v.toLocaleString()}）は正規の上限（${AMOUNT_LIMITS[key].toLocaleString()}）を超えています` : null
+      v > AMOUNT_LIMITS[key]
+        ? tr({
+            ja: `現在の値（${v.toLocaleString()}）は正規の上限（${limit}）を超えています`,
+            en: `The current value (${v.toLocaleString()}) exceeds the normal limit (${limit})`,
+          })
+        : null
     return { ...field(layoutProblem, v, implausible), warnings: warningsOf(outOfRange) }
   }
   const f32 = (key: MaxKey) => {
@@ -156,7 +170,9 @@ export function readHero(bytes: Uint8Array): HeroView {
   const current = (key: CurrentKey) => {
     const v = readF32(bytes, HERO_OFFSETS[key])
     const max = readF32(bytes, HERO_OFFSETS[MAX_OF[key]])
-    const overMax = v > max ? `現在値が最大値（${Number(max.toPrecision(7)).toLocaleString()}）を超えています` : null
+    const shownMax = Number(max.toPrecision(7)).toLocaleString()
+    const overMax =
+      v > max ? tr({ ja: `現在値が最大値（${shownMax}）を超えています`, en: `The current value exceeds the max (${shownMax})` }) : null
     return { ...field(layoutProblem, v, validateGauge(v)), warnings: warningsOf(overMax) }
   }
   const location = readU8(bytes, HERO_OFFSETS.location)

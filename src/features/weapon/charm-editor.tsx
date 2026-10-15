@@ -4,6 +4,7 @@ import { SelectRow } from "@/components/select-row";
 import { useAdvancedMode } from "@/lib/advanced-mode-context";
 import { useWrite } from "@/lib/use-write";
 import { formatWarnings } from "@/lib/format";
+import { tr } from "@/lib/i18n";
 import { CHARMS, writeWeaponCharms } from "@/save/weapon";
 import type { WeaponFieldProps } from "./weapon-fields";
 import { charmIcon } from "./effect-icons";
@@ -15,8 +16,9 @@ import {
 } from "./charm-selection";
 import { NONE, weaponFieldOffset, weaponRecordOffset } from "./weapon-ui";
 
-const OPTIONS = [
-  { value: NONE, label: "なし" },
+/** 選択肢（描画のたびに今の言語で作る） */
+const charmOptions = () => [
+  { value: NONE, label: tr({ ja: "なし", en: "None" }) },
   ...CHARMS.map((c) => ({ value: String(c.id), label: c.label, icon: charmIcon(c.id) })),
 ];
 
@@ -43,16 +45,17 @@ export function CharmEditor({ weapon, offset }: WeaponFieldProps) {
   }
 
   const advancedOnly = !advanced && rows.some((row) => row.id !== null && row.count !== 1);
+  const options = charmOptions();
   return (
     <div className="flex flex-col gap-2">
       <div className="grid gap-4 sm:grid-cols-3">
         {rows.map((row, slot) => (
           <div key={slot} className="flex flex-col gap-2">
             <SelectRow
-              label={`魅力 ${slot + 1}`}
+              label={tr({ ja: `魅力 ${slot + 1}`, en: `Charm ${slot + 1}` })}
               offset={weaponFieldOffset(offset, "charms")}
               value={weapon ? (row.id === null ? NONE : String(row.id)) : null}
-              options={OPTIONS}
+              options={options}
               problem={field?.problem ?? null}
               disabled={advancedOnly}
               warning={formatWarnings(field?.warnings)}
@@ -70,13 +73,13 @@ export function CharmEditor({ weapon, offset }: WeaponFieldProps) {
             />
             {advanced && (
               <SelectRow
-                label={`魅力 ${slot + 1} の個数`}
+                label={tr({ ja: `魅力 ${slot + 1} の個数`, en: `Charm ${slot + 1} count` })}
                 offset={weaponFieldOffset(offset, "charms")}
                 value={weapon ? String(row.count) : null}
                 options={[1, 2, 3].map((count) => ({ value: String(count), label: `×${count}` }))}
                 problem={field?.problem ?? null}
                 disabled={row.id === null}
-                hint="×1〜3（同じ魅力は合算して最大3）"
+                hint={tr({ ja: "×1〜3（同じ魅力は合算して最大3）", en: "×1–3 (up to 3 of the same charm in total)" })}
                 onChange={(count) => change(slot, { count: Number(count) })}
               />
             )}
@@ -85,13 +88,23 @@ export function CharmEditor({ weapon, offset }: WeaponFieldProps) {
       </div>
       {advancedOnly && (
         <p className="text-muted-foreground text-xs">
-          個数を保持しています。編集するには上級者モードをオンにしてください。
+          {tr({
+            ja: "個数を保持しています。編集するには上級者モードをオンにしてください。",
+            en: "The charm counts are kept as they are. Turn on Advanced mode to edit them.",
+          })}
         </p>
       )}
       {(advanced || (field?.value.filter((id) => id !== null).length ?? 0) > 3) && (
         <p className="text-destructive text-xs" role="note">
-          注意：魅力の合計4以上は、帯刀済みの武器で各魅力の効果が反映されますが、武器袋・武器箪笥での選択や帯刀への変更時にクラッシュする可能性があります。元のセーブをバックアップして使用してください。
-          {advanced && " 同じ魅力を合算して4以上にする設定は拒否します。"}
+          {tr({
+            ja: "注意：魅力の合計4以上は、帯刀済みの武器で各魅力の効果が反映されますが、武器袋・武器箪笥での選択や帯刀への変更時にクラッシュする可能性があります。元のセーブをバックアップして使用してください。",
+            en: "Caution: with 4 or more charms in total, each charm works on an equipped weapon, but the game may crash when you select the weapon in the weapon sack or weapon chest or equip it. Back up your original save before using this.",
+          })}
+          {advanced &&
+            tr({
+              ja: " 同じ魅力を合算して4以上にする設定は拒否します。",
+              en: " Setting 4 or more of the same charm in total is refused.",
+            })}
         </p>
       )}
     </div>

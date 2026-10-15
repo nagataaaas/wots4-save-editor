@@ -18,14 +18,18 @@ import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
 import { WriteResult } from "@/components/write-error";
 import { matchesSearch } from "@/lib/search";
+import { getLanguage, tr, type Localized } from "@/lib/i18n";
 import {
-  RANK_LABELS,
   SECTS,
   SLOT_LABELS,
+  condLabel,
   findSect,
   findSkillSheet,
-  findStance,
+  rankLabel,
+  sectName,
   sheetSkillTree,
+  slotLabel,
+  stanceNameById,
   type Sect,
   type SkillSheet,
 } from "@/save/master/sect-data";
@@ -54,7 +58,7 @@ import {
   writeSkillPoints,
   type SectsView,
 } from "@/save/sects";
-import { READ_ONLY_REASON, SKILL_TREE_DESCRIPTION, STANCE_TAB_CLASS } from "./sect-format";
+import { STANCE_TAB_CLASS, readOnlyReason, skillTreeDescription } from "./sect-format";
 import {
   IntField,
   RankField,
@@ -74,21 +78,21 @@ const OVERVIEW_OFFSETS = `${formatOffset(SHEET_STATES_OFFSET)}〜${formatOffset(
 function placesOf(view: SectsView, id: number): string[] {
   const places: string[] = [];
   const slot = view.equipped.indexOf(id);
-  if (slot >= 0) places.push(`装備中（${SLOT_LABELS[slot]}）`);
-  if (view.held.some((s) => s.sect?.id === id)) places.push("持ち歩き");
-  if (view.stored.some((s) => s.sect?.id === id)) places.push("道場の箪笥");
+  if (slot >= 0) places.push(tr({ ja: `装備中（${slotLabel(slot)}）`, en: `Equipped (${slotLabel(slot)})` }));
+  if (view.held.some((s) => s.sect?.id === id)) places.push(tr(PLACE_FILTER_LABELS.held));
+  if (view.stored.some((s) => s.sect?.id === id)) places.push(tr(PLACE_FILTER_LABELS.stored));
   return places;
 }
 
 type PlaceFilter = "owned" | "equipped" | "held" | "stored" | "missing" | "all";
 
-const PLACE_FILTER_LABELS: Record<PlaceFilter, string> = {
-  owned: "持っている",
-  equipped: "装備中",
-  held: "持ち歩き",
-  stored: "道場の箪笥",
-  missing: "持っていない",
-  all: "すべて",
+const PLACE_FILTER_LABELS: Record<PlaceFilter, Localized> = {
+  owned: { ja: "持っている", en: "Owned" },
+  equipped: { ja: "装備中", en: "Equipped" },
+  held: { ja: "持ち歩き", en: "Style Library" },
+  stored: { ja: "道場の箪笥", en: "Dojo shelf" },
+  missing: { ja: "持っていない", en: "Not owned" },
+  all: { ja: "すべて", en: "All" },
 };
 
 function matchesPlace(filter: PlaceFilter, view: SectsView, owned: ReadonlySet<number>, id: number): boolean {
@@ -132,51 +136,72 @@ export function StylesPage() {
       {/* 技の覚え状況の書き込みは ✅（ゲームで反映を確認済み）。腕前点・修練度・段・倒した数は 🟢（書き換えはゲーム内で未確認） */}
       <AnchoredCard
         anchor={STYLES_ANCHORS.overview}
-        title="流派"
+        title={tr({ ja: "流派", en: "Styles" })}
         // chunks/skill-states・styles（技の覚え状況〜流派の表）・sect-scrolls（流派の書）
         extra={<InfoTip offset={OVERVIEW_OFFSETS} />}
-        description="流派ごとに技を覚えた状態にできます。"
+        description={tr({ ja: "流派ごとに技を覚えた状態にできます。", en: "Mark moves as learned for each style." })}
       >
         <CardContent className="flex flex-col gap-3 text-sm">
           <div className="grid items-start gap-4 sm:grid-cols-3">
             <IntField
-              label="腕前点"
+              label={tr({ ja: "腕前点", en: "Ability points" })}
               offset={SKILL_POINTS_OFFSET}
               value={view?.skillPoints ?? null}
-              problem={view?.problem ? READ_ONLY_REASON : null}
+              problem={view?.problem ? readOnlyReason() : null}
               min={0}
               max={advanced ? 0xffff : SKILL_POINTS_MAX}
               apply={(v) => update((b) => writeSkillPoints(b, v, { advanced }))}
-              note={`俺流を作るとき、選んだ技の腕前点の合計がこれ以下である必要があります。上限は ${SKILL_POINTS_MAX} です（上級者モードではそれ以上も入力できます）`}
+              note={tr({
+                ja: `俺流を作るとき、選んだ技の腕前点の合計がこれ以下である必要があります。上限は ${SKILL_POINTS_MAX} です（上級者モードではそれ以上も入力できます）`,
+                en: `When creating a My Style, the total ability points of the chosen moves must not exceed this. The maximum is ${SKILL_POINTS_MAX} (Advanced mode allows more)`,
+              })}
               // 🟢 要ゲーム内確認
             />
             <span className="sm:pt-7">
-              習得技数：{view?.learnedCount ?? "—"}
-              <InfoTip offset={LEARNED_COUNT_OFFSET}>戦闘中に閃いて覚えた数。ここでの書き換えでは増やしません</InfoTip>
+              {tr({ ja: "習得技数：", en: "Moves learned: " })}
+              {view?.learnedCount ?? "—"}
+              <InfoTip offset={LEARNED_COUNT_OFFSET}>
+                {tr({
+                  ja: "戦闘中に閃いて覚えた数。ここでの書き換えでは増やしません",
+                  en: "The number of moves learned by inspiration in battle. Edits here do not increase it",
+                })}
+              </InfoTip>
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {SLOT_LABELS.map((label, s) => (
-              <Badge key={s} variant="outline" className="font-normal">
-                {label}：{view ? (findSect(view.equipped[s])?.nameJa ?? "俺流など") : "—"}
-              </Badge>
-            ))}
+            {SLOT_LABELS.map((label, s) => {
+              const sect = view ? findSect(view.equipped[s]) : undefined;
+              return (
+                <Badge key={s} variant="outline" className="font-normal">
+                  {tr(label)}
+                  {tr({ ja: "：", en: ": " })}
+                  {view ? (sect ? sectName(sect) : tr({ ja: "俺流など", en: "My Style, etc." })) : "—"}
+                </Badge>
+              );
+            })}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Input className="w-56" placeholder="流派名で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Input
+              className="w-56"
+              placeholder={tr({ ja: "流派名で絞り込み", en: "Filter by style name" })}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
             <FilterSelect
-              options={(Object.keys(PLACE_FILTER_LABELS) as PlaceFilter[]).map((value) => ({ value, label: PLACE_FILTER_LABELS[value] }))}
+              options={(Object.keys(PLACE_FILTER_LABELS) as PlaceFilter[]).map((value) => ({ value, label: tr(PLACE_FILTER_LABELS[value]) }))}
               value={placeFilter}
               onChange={setPlaceFilter}
               disabled={!view}
               className="w-36"
-              aria-label="置き場所で絞り込み"
+              aria-label={tr({ ja: "置き場所で絞り込み", en: "Filter by location" })}
             />
             <Label className="font-normal">
               <Checkbox checked={uniqueOnly} onCheckedChange={(on) => setUniqueOnly(on)} />
-              固有技がある流派のみ
+              {tr({ ja: "固有技がある流派のみ", en: "Only styles with unique moves" })}
             </Label>
-            <span className="text-muted-foreground text-xs">{sects.length} 件</span>
+            <span className="text-muted-foreground text-xs">
+              {tr({ ja: `${sects.length} 件`, en: sects.length === 1 ? "1 style" : `${sects.length} styles` })}
+            </span>
           </div>
         </CardContent>
       </AnchoredCard>
@@ -184,7 +209,9 @@ export function StylesPage() {
       {sects.map((sect) => (
         <SectCard key={sect.id} sect={sect} view={view} readOnly={readOnly} />
       ))}
-      {sects.length === 0 && <p className="text-muted-foreground text-sm">条件に合う流派がありません。</p>}
+      {sects.length === 0 && (
+        <p className="text-muted-foreground text-sm">{tr({ ja: "条件に合う流派がありません。", en: "No styles match." })}</p>
+      )}
     </div>
   );
 }
@@ -215,14 +242,24 @@ function SectCard({
   const hasUnique = sheets.some((s) => s.sheet.skills.some(isUniqueSkill));
   const total = sheets.reduce((n, s) => n + s.sheet.skills.length, 0);
   const learned = view ? sheets.reduce((n, s) => n + (s.states ? countLearned(s.states, skillNosOf(s.sheet)) : 0), 0) : null;
-  const valueProblem = !view ? null : readOnly ? READ_ONLY_REASON : rec ? null : "流派の表にこの流派がありません";
+  const valueProblem = !view
+    ? null
+    : readOnly
+      ? readOnlyReason()
+      : rec
+        ? null
+        : tr({ ja: "流派の表にこの流派がありません", en: "This style is not in the style list" });
   const values: SectValues | null = rec ? { mastery: rec.mastery, rank: rec.rank, kills: rec.kills } : null;
   const writeValues = (v: SectValues) => update((b) => writeSectValues(b, sect.id, v));
+  const name = sectName(sect);
+  const uniqueMark = tr({ ja: "固有技がある流派です", en: "This style has unique moves" });
+  // 英語の段の名前（Second など）は日本語より長いので欄を広げる
+  const rankWidth = getLanguage() === "en" ? "w-[4em]" : "w-[2.5em]";
 
   return (
     <CollapsibleCard
       anchor={STYLES_ANCHORS.sect(sect.id)}
-      searchLabel={sect.nameJa}
+      searchLabel={name}
       title={
         // 流派名・構え・段・修練度・技の数は、流派のカードどうしで縦に揃うように幅を決めておく
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -232,23 +269,27 @@ function SectCard({
               {hasUnique && (
                 <span
                   className="text-muted-foreground rounded border px-1 text-xs leading-4 font-normal"
-                  title="固有技がある流派です"
-                  aria-label="固有技がある流派です"
+                  title={uniqueMark}
+                  aria-label={uniqueMark}
                 >
-                  固
+                  {tr({ ja: "固", en: "U" })}
                 </span>
               )}
             </span>
-            {sect.nameJa}
+            {name}
           </span>
           <span className="text-muted-foreground flex items-center gap-x-3 text-xs font-normal">
             <span className="w-[9em] shrink-0">
-              {sheets.map((s) => findStance(s.sheet.stance)?.nameJa).join("・")}
+              {sheets.map((s) => stanceNameById(s.sheet.stance)).join(tr({ ja: "・", en: ", " }))}
             </span>
-            <span className="w-[2.5em] shrink-0">{rec ? (RANK_LABELS[rec.rank] ?? "不明") : "—"}</span>
-            <span className="w-[7.5em] shrink-0 tabular-nums">修練度 {rec ? rec.mastery : "—"}</span>
+            <span className={`${rankWidth} shrink-0`}>{rec ? (rankLabel(rec.rank) ?? tr({ ja: "不明", en: "Unknown" })) : "—"}</span>
+            <span className="w-[7.5em] shrink-0 tabular-nums">
+              {tr({ ja: "修練度 ", en: "Mastery " })}
+              {rec ? rec.mastery : "—"}
+            </span>
             <span className="w-[5em] shrink-0 tabular-nums">
-              技 {learned ?? "—"}/{total}
+              {tr({ ja: "技 ", en: "Moves " })}
+              {learned ?? "—"}/{total}
             </span>
           </span>
         </span>
@@ -262,30 +303,40 @@ function SectCard({
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <Button
-            onClick={() => tryWrite((b) => learnSectSkills(b, sect.id), `${sect.nameJa} の技を習得しました`)}
+            onClick={() =>
+              tryWrite(
+                (b) => learnSectSkills(b, sect.id),
+                tr({ ja: `${name} の技を習得しました`, en: `Learned the moves of ${name}` }),
+              )
+            }
             disabled={readOnly || learned === total}
           >
-            技を全部習得する
+            {tr({ ja: "技を全部習得する", en: "Learn all moves" })}
           </Button>
           <span className="text-muted-foreground text-xs">
             {/* 固有技の「習得する」は 🟢 要ゲーム内確認 */}
-            段は「極」にはならないので、必要なら下の段を変更してください。
-            固有技は「習得する」で習得済（俺流には未組み込み）、「俺流で表示」で俺流に組み込める状態にします。
-            {SKILL_TREE_DESCRIPTION}
+            {tr({
+              ja: "段は「極」にはならないので、必要なら下の段を変更してください。固有技は「習得する」で習得済（俺流には未組み込み）、「俺流で表示」で俺流に組み込める状態にします。",
+              en: 'The rank does not become "Master", so change the rank below if needed. "Learn" marks unique moves as learned (not yet usable in My Style); "Show in My Style" makes them usable in My Style. ',
+            })}
+            {skillTreeDescription()}
           </span>
           <WriteResult message={message} className="basis-full" />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <IntField
-            label="修練度"
+            label={tr({ ja: "修練度", en: "Mastery" })}
             offset={rec ? sectValueOffset(rec.offset, 'mastery') : undefined}
             value={values?.mastery ?? null}
             problem={valueProblem}
             min={0}
             max={MASTERY_MAX}
             apply={(m) => values && writeValues({ ...values, mastery: m, rank: Math.max(values.rank, rankForMastery(sect, m)) })}
-            note={`しきい値：${sect.thresholds.join("・")}。修練度に合わせて段も上げます`}
+            note={tr({
+              ja: `しきい値：${sect.thresholds.join("・")}。修練度に合わせて段も上げます`,
+              en: `Thresholds: ${sect.thresholds.join(", ")}. The rank is raised to match the mastery`,
+            })}
             // 🟢 要ゲーム内確認
           />
           <RankField
@@ -296,7 +347,7 @@ function SectCard({
             // 🟢 要ゲーム内確認
           />
           <IntField
-            label="この流派で倒した数"
+            label={tr({ ja: "この流派で倒した数", en: "Kills with this style" })}
             offset={rec ? sectValueOffset(rec.offset, 'kills') : undefined}
             value={values?.kills ?? null}
             problem={valueProblem}
@@ -313,7 +364,7 @@ function SectCard({
             <TabsList className="h-auto gap-1.5 p-1.5 group-data-horizontal/tabs:h-auto">
               {sheets.map(({ sheet, states }) => (
                 <TabsTrigger key={sheet.id} value={String(sheet.id)} className={`${STANCE_TAB_CLASS} flex-none gap-3`}>
-                  {findStance(sheet.stance)?.nameJa}
+                  {stanceNameById(sheet.stance)}
                   <span className="text-xs font-normal tabular-nums opacity-70">
                     {states ? countLearned(states, skillNosOf(sheet)) : "—"}/{sheet.skills.length}
                   </span>
@@ -369,9 +420,12 @@ function SkillRow({ sheet, states, readOnly, advanced, tryWrite, ...ctx }: Skill
       <SkillCommandCells skillId={s.skillId} />
       <SkillAttrs skillId={s.skillId} />
       <span className="text-muted-foreground text-xs">
-        {[s.rank >= 0 ? `${RANK_LABELS[s.rank]}以上` : "", s.condJa || (s.cond === 0 ? "流派を装備すると覚える" : "")]
+        {[
+          s.rank >= 0 ? tr({ ja: `${rankLabel(s.rank)}以上`, en: `${rankLabel(s.rank)} or higher` }) : "",
+          condLabel(s) || (s.cond === 0 ? tr({ ja: "流派を装備すると覚える", en: "Learned by equipping the style" }) : ""),
+        ]
           .filter(Boolean)
-          .join("：")}
+          .join(tr({ ja: "：", en: ": " }))}
       </span>
       {/* 固有技は 0 →「習得する」（3）→「俺流で表示」（1）の 2 段階。ほかの技は 0・3 から「習得する」（1） */}
       <SkillActionButtons
@@ -379,9 +433,14 @@ function SkillRow({ sheet, states, readOnly, advanced, tryWrite, ...ctx }: Skill
         unique={isUniqueSkill(s)}
         advanced={advanced}
         disabled={readOnly}
-        onLearn={() => tryWrite((b) => learnSheetSkill(b, sheet.id, s.skillNo), "技を習得しました")}
-        onShowInOreRyu={() => tryWrite((b) => learnSheetSkills(b, sheet.id, [s.skillNo]), "俺流に組み込めるようにしました")}
-        onForget={() => tryWrite((b) => forgetSheetSkill(b, sheet.id, s.skillNo), "技を忘れさせました")}
+        onLearn={() => tryWrite((b) => learnSheetSkill(b, sheet.id, s.skillNo), tr({ ja: "技を習得しました", en: "Learned the move" }))}
+        onShowInOreRyu={() =>
+          tryWrite(
+            (b) => learnSheetSkills(b, sheet.id, [s.skillNo]),
+            tr({ ja: "俺流に組み込めるようにしました", en: "The move can now be used in My Style" }),
+          )
+        }
+        onForget={() => tryWrite((b) => forgetSheetSkill(b, sheet.id, s.skillNo), tr({ ja: "技を忘れさせました", en: "Forgot the move" }))}
       />
     </div>
   );

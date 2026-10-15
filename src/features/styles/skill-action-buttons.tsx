@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { tr } from "@/lib/i18n";
 import { skillActions } from "@/save/sects";
 
 /**
@@ -30,7 +31,7 @@ export function SkillActionButtons({
     <span className="flex justify-end gap-1">
       {actions.showInOreRyu && (
         <Button size="sm" variant="outline" disabled={learnDisabled} onClick={onShowInOreRyu}>
-          俺流で表示
+          {tr({ ja: "俺流で表示", en: "Show in My Style" })}
         </Button>
       )}
       {actions.learn && (
@@ -38,15 +39,19 @@ export function SkillActionButtons({
           size="sm"
           variant="outline"
           disabled={learnDisabled}
-          title={learnable ? undefined : "この技が入っている流派がないので習得できません"}
+          title={
+            learnable
+              ? undefined
+              : tr({ ja: "この技が入っている流派がないので習得できません", en: "No style includes this move, so it cannot be learned" })
+          }
           onClick={onLearn}
         >
-          習得する
+          {tr({ ja: "習得する", en: "Learn" })}
         </Button>
       )}
       {actions.forget && (
         <Button size="sm" variant="ghost" disabled={disabled} onClick={onForget}>
-          忘れさせる
+          {tr({ ja: "忘れさせる", en: "Forget" })}
         </Button>
       )}
     </span>

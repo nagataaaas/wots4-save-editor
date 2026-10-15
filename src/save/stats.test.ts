@@ -78,8 +78,8 @@ describe('侍評価・活動記録 0x0B34〜0x0C63', () => {
       9, // 🟢
       10, // 🟢
     ])
-    expect(statField('damageCycle15').label).toBe('暗闇脳天（周回中）')
-    expect(statField('damageTotal16').label).toBe('魔鱗組（累計）')
+    expect(statField('damageCycle15').label.ja).toBe('暗闇脳天（周回中）')
+    expect(statField('damageTotal16').label.ja).toBe('魔鱗組（累計）')
     expect(statField('damageTotal4').offset).toBe(0x0c30) // 赤城（累計）
   })
 

@@ -22,8 +22,10 @@ import {
   CLOTHES,
   UNLOCKS,
   appearanceUnlockInformation,
+  categoryLabel,
   type UnlockEntry,
 } from "@/save/master/accessory-names";
+import { tr, type Localized } from "@/lib/i18n";
 import {
   ACCESSORY_COUNT,
   ACCESSORY_FLAGS_OFFSET,
@@ -71,15 +73,31 @@ function WarningLines({ warnings }: { warnings: readonly string[] | undefined })
 
 type AccessoryFilter = "all" | "owned" | "missing";
 
-const ACCESSORY_FILTER_OPTIONS: FilterOption<AccessoryFilter>[] = [
-  { value: "all", label: "すべての所有状態" },
-  { value: "owned", label: "所持" },
-  { value: "missing", label: "未所持" },
+const ALL_OWNERSHIP = { ja: "すべての所有状態", en: "Any ownership" };
+const ALL_PARTS = { ja: "すべての部位", en: "All body parts" };
+const OWNED_LABELS: readonly [Localized, Localized] = [
+  { ja: "未所持", en: "Not owned" },
+  { ja: "所持", en: "Owned" },
 ];
-const ACCESSORY_PART_OPTIONS: FilterOption<string>[] = [
-  { value: "all", label: "すべての部位" },
-  ...Object.entries(ACCESSORY_PART_LABELS).map(([value, label]) => ({ value, label })),
+const UNLOCKED_LABELS: readonly [Localized, Localized] = [
+  { ja: "未解放", en: "Locked" },
+  { ja: "解放済み", en: "Unlocked" },
 ];
+const NAME_DESC_PLACEHOLDER = { ja: "名前・説明で絞り込み", en: "Filter by name or description" };
+
+const accessoryFilterOptions = (): FilterOption<AccessoryFilter>[] => [
+  { value: "all", label: tr(ALL_OWNERSHIP) },
+  { value: "owned", label: tr(OWNED_LABELS[1]) },
+  { value: "missing", label: tr(OWNED_LABELS[0]) },
+];
+const accessoryPartOptions = (): FilterOption<string>[] => [
+  { value: "all", label: tr(ALL_PARTS) },
+  ...Object.entries(ACCESSORY_PART_LABELS).map(([value, label]) => ({ value, label: tr(label) })),
+];
+const dlcLabel = (dlc: number) => {
+  const label = ACCESSORY_DLC_LABELS[dlc];
+  return label ? tr(label) : "DLC";
+};
 
 export function AccessoriesPage() {
   const { advanced } = useAdvancedMode();
@@ -92,7 +110,7 @@ export function AccessoriesPage() {
     () =>
       [...ACCESSORIES]
         .sort((a, b) => a.menuOrder - b.menuOrder)
-        .filter((a) => matchesSearch(query, [a.ja, a.en, a.descJa]))
+        .filter((a) => matchesSearch(query, [a.ja, a.en, a.descJa, a.descEn]))
         .filter((a) => part === "all" || a.part === part)
         .filter((a) => {
           if (filter === "all" || !view) return true;
@@ -107,18 +125,21 @@ export function AccessoriesPage() {
       {banner}
       <AnchoredCard
         anchor={UNLOCKS_ANCHORS.accessories}
-        title="装飾品"
+        title={tr({ ja: "装飾品", en: "Accessories" })}
         extra={
           <InfoTip offset={`${formatOffset(ACCESSORY_FLAGS_OFFSET)}〜${formatOffset(ACCESSORY_FLAGS_OFFSET + ACCESSORY_COUNT - 1)}`}>
             {/* ✅ 書き換えが装飾品設定に反映されることを確認。並びがゲーム内の一覧の順なのは 🔶 */}
-            書き換えは装飾品設定に反映されます
+            {tr({ ja: "書き換えは装飾品設定に反映されます", en: "Changes show up in the in-game Accessories settings" })}
           </InfoTip>
         }
         description={
           <>
-            持っている装飾品を切り替えられます（並びはゲーム内の一覧の順）。
+            {tr({
+              ja: "持っている装飾品を切り替えられます（並びはゲーム内の一覧の順）。",
+              en: "Toggle which accessories you own (listed in the in-game order).",
+            })}
             <br />
-            所持 {ownedCount} / {ACCESSORY_COUNT}
+            {tr({ ja: `所持 ${ownedCount} / ${ACCESSORY_COUNT}`, en: `Owned ${ownedCount} / ${ACCESSORY_COUNT}` })}
           </>
         }
         headerExtra={<WarningLines warnings={view?.warnings} />}
@@ -127,27 +148,33 @@ export function AccessoriesPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Input
               className="w-56"
-              placeholder="名前・説明で絞り込み"
+              placeholder={tr(NAME_DESC_PLACEHOLDER)}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
             {/* 所有状態はセーブで決まるので、未読み込みのときは無効にして絞り込まない */}
             <FilterSelect
-              options={ACCESSORY_FILTER_OPTIONS}
+              options={accessoryFilterOptions()}
               value={filter}
               onChange={setFilter}
               disabled={!view}
               className="w-44"
-              aria-label="装飾品の所有状態"
+              aria-label={tr({ ja: "装飾品の所有状態", en: "Accessory ownership" })}
             />
-            <FilterSelect options={ACCESSORY_PART_OPTIONS} value={part} onChange={setPart} className="w-40" aria-label="装飾品の部位" />
+            <FilterSelect
+              options={accessoryPartOptions()}
+              value={part}
+              onChange={setPart}
+              className="w-40"
+              aria-label={tr({ ja: "装飾品の部位", en: "Accessory body part" })}
+            />
             <Button
               variant="outline"
               size="sm"
               disabled={readOnly || rows.length === 0}
               onClick={() => write((b) => writeAccessoryFlags(b, rows.map((a) => a.id), 1))}
             >
-              表示中を全部所持
+              {tr({ ja: "表示中を全部所持", en: "Own all shown" })}
             </Button>
             <Button
               variant="outline"
@@ -155,41 +182,49 @@ export function AccessoriesPage() {
               disabled={readOnly || rows.length === 0}
               onClick={() => write((b) => writeAccessoryFlags(b, rows.map((a) => a.id), 0))}
             >
-              表示中を全部外す
+              {tr({ ja: "表示中を全部外す", en: "Remove all shown" })}
             </Button>
           </div>
           <WriteError error={error} />
           <div className="flex flex-col divide-y">
             {rows.map((a) => {
               const known = view ? view.known[a.id] : true;
+              const name = tr({ ja: a.ja, en: a.en });
+              const partLabel = ACCESSORY_PART_LABELS[a.part];
               return (
                 <div key={a.id} className="flex items-center gap-3 py-1.5">
                   <OwnershipStateButton
                     owned={view ? view.owned[a.id] : null}
-                    name={a.ja}
-                    labels={["未所持", "所持"]}
+                    name={name}
+                    labels={[tr(OWNED_LABELS[0]), tr(OWNED_LABELS[1])]}
                     disabled={readOnly || (!known && !advanced)}
                     onChange={(on) => write((b) => writeAccessoryFlag(b, a.id, on ? 1 : 0, { advanced }))}
                   />
                   <ItemInformation
-                    name={a.ja}
-                    category={ACCESSORY_PART_LABELS[a.part] ?? a.part}
-                    description={a.descJa}
+                    name={name}
+                    category={partLabel ? tr(partLabel) : a.part}
+                    description={tr({ ja: a.descJa, en: a.descEn })}
                     offset={ACCESSORY_FLAGS_OFFSET + a.id}
-                    condition={a.shop ? "店で購入" : a.dlc !== null ? ACCESSORY_DLC_LABELS[a.dlc] : "特典解除"}
+                    condition={
+                      a.shop
+                        ? tr({ ja: "店で購入", en: "Buy at a shop" })
+                        : a.dlc !== null
+                          ? dlcLabel(a.dlc)
+                          : tr({ ja: "特典解除", en: "Unlocks" })
+                    }
                   >
                       {a.dlc !== null && (
                         <Badge variant="outline" className="font-normal">
-                          {ACCESSORY_DLC_LABELS[a.dlc] ?? "DLC"}
+                          {dlcLabel(a.dlc)}
                         </Badge>
                       )}
                       {!a.shop && a.dlc === null && (
                         <Badge variant="outline" className="font-normal">
-                          特典
+                          {tr({ ja: "特典", en: "Unlock" })}
                         </Badge>
                       )}
                   </ItemInformation>
-                  {!known && <span className="text-destructive text-xs">状態不明</span>}
+                  {!known && <span className="text-destructive text-xs">{tr({ ja: "状態不明", en: "Unknown state" })}</span>}
                 </div>
               );
             })}
@@ -198,8 +233,10 @@ export function AccessoriesPage() {
       </AnchoredCard>
       {/* 各装飾品の 1 B だけを書き換える（0＝なし、1＝所持）。❓ 2 以上の値の意味は未確認 */}
       <p className="text-muted-foreground text-xs">
-        状態不明の装飾品は、上級者モードでだけ切り替えられます。
-        「特典」は店で買えず、特典解除で手に入る物です。
+        {tr({
+          ja: "状態不明の装飾品は、上級者モードでだけ切り替えられます。「特典」は店で買えず、特典解除で手に入る物です。",
+          en: "Accessories in an unknown state can only be toggled in Advanced mode. \"Unlock\" items cannot be bought in shops and are obtained through Unlocks.",
+        })}
       </p>
     </div>
   );
@@ -211,9 +248,12 @@ export function AccessoriesPage() {
 const APPEARANCE_UNLOCK_CATEGORIES = ["肌の色", "髪の色", "体型", "顔", "髪型", "服"] as const;
 
 /** 種類の名前で絞り込む選択肢。先頭は絞り込まない「すべて」 */
-const categoryOptions = (categories: readonly string[], allLabel = "すべての種別"): FilterOption<string>[] => [
-  { value: "all", label: allLabel },
-  ...categories.map((c) => ({ value: c, label: c })),
+const categoryOptions = (
+  categories: readonly string[],
+  allLabel: Localized = { ja: "すべての種別", en: "All kinds" },
+): FilterOption<string>[] => [
+  { value: "all", label: tr(allLabel) },
+  ...categories.map((c) => ({ value: c, label: categoryLabel(c) })),
 ];
 
 /**
@@ -234,22 +274,25 @@ function UnlockStateRows({
   return (
     <div className="flex flex-col divide-y">
       {rows.map((u) => {
-        const info = appearance ? appearanceUnlockInformation(u) : { ja: u.ja, en: u.en, descriptionJa: u.effectJa };
+        const info = appearance
+          ? appearanceUnlockInformation(u)
+          : { ja: u.ja, en: u.en, descriptionJa: u.effectJa, descriptionEn: u.effectEn };
+        const name = tr({ ja: info.ja, en: info.en });
 
         return (
           <div key={u.id} className="flex flex-wrap items-center gap-3 py-1.5">
             <UnlockStateButton
               value={view ? view.values[u.id] : null}
-              name={info.ja}
+              name={name}
               disabled={readOnly || (view !== null && !view.known[u.id] && !advanced)}
               onChange={(v) => write((b) => writeUnlockState(b, u.id, v, { advanced }))}
             />
             <ItemInformation
-              name={info.ja}
-              category={u.category}
-              description={info.descriptionJa}
+              name={name}
+              category={categoryLabel(u.category)}
+              description={tr({ ja: info.descriptionJa, en: info.descriptionEn })}
               offset={UNLOCK_STATES_OFFSET + u.id}
-              condition={u.conditionJa}
+              condition={tr({ ja: u.conditionJa, en: u.conditionEn })}
             />
           </div>
         );
@@ -267,38 +310,54 @@ function AppearanceUnlocksCard({ view, readOnly }: { view: UnlockStatesView | nu
     .filter((u) => category === "all" || u.category === category)
     .filter((u) => {
       const info = appearanceUnlockInformation(u);
-      return matchesSearch(query, [info.ja, info.en, info.descriptionJa, u.ja, u.conditionJa]);
+      return matchesSearch(query, [
+        info.ja, info.en, info.descriptionJa, info.descriptionEn, u.ja, u.en, u.conditionJa, u.conditionEn,
+      ]);
     });
 
   return (
     <>
       <AnchoredCard
         anchor={UNLOCKS_ANCHORS.faces}
-        title="顔・髪型などの特典"
+        title={tr({ ja: "顔・髪型などの特典", en: "Face, hairstyle and other unlocks" })}
         extra={
           <InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)}〜${formatOffset(UNLOCK_STATES_OFFSET + UNLOCK_COUNT - 1)}`}>
             {/* 🔶 U-17：多くの番号の対応と書き込みの反映は要ゲーム内確認。J.J. の顔は ✅ 解除前後の差分で対応を確認（書き込みは ❓） */}
-            顔・髪型・服・肌の色・髪の色・体型の特典は、特典解除の画面でも切り替えられます。
+            {tr({
+              ja: "顔・髪型・服・肌の色・髪の色・体型の特典は、特典解除の画面でも切り替えられます。",
+              en: "Face, hairstyle, clothes, skin color, hair color and figure unlocks can also be toggled on the Unlocks screen.",
+            })}
           </InfoTip>
         }
         description={
           <>
-            主人公設定で選べる顔・髪型などの特典を解除できます。
+            {tr({
+              ja: "主人公設定で選べる顔・髪型などの特典を解除できます。",
+              en: "Unlock faces, hairstyles and more that can be chosen in Character Settings.",
+            })}
             <br />
-            クリックするたびに 非表示 → 未取得 → 取得済み の順に切り替わります。
+            {tr({
+              ja: "クリックするたびに 非表示 → 未取得 → 取得済み の順に切り替わります。",
+              en: "Each click cycles through Hidden → Not obtained → Obtained.",
+            })}
           </>
         }
         headerExtra={<WarningLines warnings={view?.warnings} />}
       >
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Input className="w-56" placeholder="顔・髪型・名前で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Input
+              className="w-56"
+              placeholder={tr({ ja: "顔・髪型・名前で絞り込み", en: "Filter by face, hairstyle or name" })}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
             <FilterSelect
               options={categoryOptions(APPEARANCE_UNLOCK_CATEGORIES)}
               value={category}
               onChange={setCategory}
               className="w-40"
-              aria-label="特典の種別"
+              aria-label={tr({ ja: "特典の種別", en: "Unlock kind" })}
             />
           </div>
           <WriteError error={error} />
@@ -311,10 +370,10 @@ function AppearanceUnlocksCard({ view, readOnly }: { view: UnlockStatesView | nu
 
 type ClothFilter = "all" | "on" | "off";
 
-const CLOTH_FILTER_OPTIONS: FilterOption<ClothFilter>[] = [
-  { value: "all", label: "すべての所有状態" },
-  { value: "on", label: "解放済み" },
-  { value: "off", label: "未解放" },
+const clothFilterOptions = (): FilterOption<ClothFilter>[] => [
+  { value: "all", label: tr(ALL_OWNERSHIP) },
+  { value: "on", label: tr(UNLOCKED_LABELS[1]) },
+  { value: "off", label: tr(UNLOCKED_LABELS[0]) },
 ];
 
 export function AppearancePage() {
@@ -332,7 +391,7 @@ export function AppearancePage() {
   const categories = useMemo(() => [...new Set(CLOTHES.flatMap((c) => c.category.split("・")))], []);
 
   const rows = CLOTHES.filter((c) => category === "all" || c.category.split("・").includes(category))
-    .filter((c) => matchesSearch(query, [c.ja, c.en, c.descJa]))
+    .filter((c) => matchesSearch(query, [c.ja, c.en, c.descJa, c.descEn]))
     .filter((c) => {
       if (filter === "all" || !view) return true;
       return isAppearanceBitSet(view, c.id) === (filter === "on");
@@ -345,66 +404,71 @@ export function AppearancePage() {
       <AppearanceUnlocksCard view={unlocks.view} readOnly={unlocks.readOnly} />
       <AnchoredCard
         anchor={UNLOCKS_ANCHORS.clothes}
-        title="容姿の服"
+        title={tr({ ja: "容姿の服", en: "Appearance clothes" })}
         // 服の番号ごとに1ビット（番号 n は APPEARANCE_OFFSET + n/8 の bit n%8）。番号32〜46・238は ✅ ゲーム内で書き換えを確認、ほかは 🟢
         extra={<InfoTip offset={`${formatOffset(APPEARANCE_OFFSET)}〜${formatOffset(APPEARANCE_OFFSET + APPEARANCE_BYTES - 1)}`} />}
         description={
           <>
-            容姿設定で選べる服を解放できます。
+            {tr({
+              ja: "容姿設定で選べる服を解放できます。",
+              en: "Unlock clothes that can be chosen in the Appearance settings.",
+            })}
             <br />
-            解放 {onCount} / {CLOTHES.length}
+            {tr({ ja: `解放 ${onCount} / ${CLOTHES.length}`, en: `Unlocked ${onCount} / ${CLOTHES.length}` })}
           </>
         }
       >
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Input className="w-56" placeholder="名前・説明で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Input className="w-56" placeholder={tr(NAME_DESC_PLACEHOLDER)} value={query} onChange={(e) => setQuery(e.target.value)} />
             <FilterSelect
-              options={categoryOptions(categories, "すべての部位")}
+              options={categoryOptions(categories, ALL_PARTS)}
               value={category}
               onChange={setCategory}
               className="w-40"
-              aria-label="服の部位"
+              aria-label={tr({ ja: "服の部位", en: "Clothing body part" })}
             />
             {/* 解放の状態はセーブで決まるので、未読み込みのときは無効にして絞り込まない */}
             <FilterSelect
-              options={CLOTH_FILTER_OPTIONS}
+              options={clothFilterOptions()}
               value={filter}
               onChange={setFilter}
               disabled={!view}
               className="w-44"
-              aria-label="服の所有状態"
+              aria-label={tr({ ja: "服の所有状態", en: "Clothing unlock state" })}
             />
             <Button variant="outline" size="sm" disabled={readOnly || rows.length === 0} onClick={() => write((b) => writeAppearanceBits(b, rows.map((c) => c.id), true))}>
-              表示中を全部解放
+              {tr({ ja: "表示中を全部解放", en: "Unlock all shown" })}
             </Button>
             <Button variant="outline" size="sm" disabled={readOnly || rows.length === 0} onClick={() => write((b) => writeAppearanceBits(b, rows.map((c) => c.id), false))}>
-              表示中を全部消す
+              {tr({ ja: "表示中を全部消す", en: "Lock all shown" })}
             </Button>
           </div>
           <WriteError error={error} />
           <div className="flex flex-col divide-y">
             {rows.map((c) => {
               const { offset } = appearanceBitPosition(c.id); // ビット位置（bit 番号）は画面に出さない
+              const name = tr({ ja: c.ja, en: c.en });
+              const reward = APPEARANCE_REWARDS[c.id];
               return (
                 <div key={c.id} className="flex items-center gap-3 py-1.5">
                   <OwnershipStateButton
                     owned={view ? isAppearanceBitSet(view, c.id) : null}
-                    name={c.ja}
-                    labels={["未解放", "解放済み"]}
+                    name={name}
+                    labels={[tr(UNLOCKED_LABELS[0]), tr(UNLOCKED_LABELS[1])]}
                     disabled={readOnly}
                     onChange={(on) => write((b) => writeAppearanceBit(b, c.id, on))}
                   />
                   <ItemInformation
-                    name={c.ja}
-                    category={c.category}
-                    description={c.descJa || "説明なし"}
+                    name={name}
+                    category={categoryLabel(c.category)}
+                    description={tr({ ja: c.descJa, en: c.descEn }) || tr({ ja: "説明なし", en: "No description" })}
                     offset={offset}
-                    condition={APPEARANCE_REWARDS[c.id]}
+                    condition={reward ? tr(reward) : undefined}
                   >
                     {c.dlc !== null && (
                       <Badge variant="outline" className="font-normal">
-                        {ACCESSORY_DLC_LABELS[c.dlc] ?? "DLC"}
+                        {dlcLabel(c.dlc)}
                       </Badge>
                     )}
                   </ItemInformation>
@@ -429,7 +493,7 @@ export function UnlocksPage() {
   const categories = useMemo(() => [...new Set(UNLOCKS.map((u) => u.category))], []);
 
   const rows = UNLOCKS.filter((u) => category === "all" || u.category === category).filter((u) =>
-    matchesSearch(query, [u.ja, u.en, u.conditionJa, u.effectJa]),
+    matchesSearch(query, [u.ja, u.en, u.conditionJa, u.conditionEn, u.effectJa, u.effectEn]),
   );
   const ids = rows.map((u) => u.id);
 
@@ -438,15 +502,18 @@ export function UnlocksPage() {
       {banner}
       <AnchoredCard
         anchor={UNLOCKS_ANCHORS.unlocks}
-        title="特典解除"
+        title={tr({ ja: "特典解除", en: "Unlocks" })}
         // 0＝非表示、1＝表示中・未取得、2＝取得済み。
         // 先頭16件と J.J. の顔は ✅ ゲーム内の状態と照合、ライフルの免許は ✅ 2 への変更の反映を確認。ほかは 🔶 U-17（書き込みは要ゲーム内確認）
         extra={<InfoTip offset={`${formatOffset(UNLOCK_STATES_OFFSET)}〜${formatOffset(UNLOCK_STATES_OFFSET + UNLOCK_COUNT - 1)}`} />}
         description={
           <>
-            ゲームの特典を解除できます。
+            {tr({ ja: "ゲームの特典を解除できます。", en: "Unlock the game's bonus features." })}
             <br />
-            全部を解除すると Steam の実績が取れることがあります（取れた実績は戻せません）。
+            {tr({
+              ja: "全部を解除すると Steam の実績が取れることがあります（取れた実績は戻せません）。",
+              en: "Unlocking everything may earn Steam achievements (earned achievements cannot be undone).",
+            })}
             {/* 実績の例：すべての容姿設定を解除 */}
           </>
         }
@@ -454,11 +521,25 @@ export function UnlocksPage() {
       >
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Input className="w-56" placeholder="名前・条件で絞り込み" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <FilterSelect options={categoryOptions(categories)} value={category} onChange={setCategory} className="w-40" aria-label="特典の種別" />
+            <Input
+              className="w-56"
+              placeholder={tr({ ja: "名前・条件で絞り込み", en: "Filter by name or condition" })}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <FilterSelect
+              options={categoryOptions(categories)}
+              value={category}
+              onChange={setCategory}
+              className="w-40"
+              aria-label={tr({ ja: "特典の種別", en: "Unlock kind" })}
+            />
             {([0, 1, 2] as const).map((v) => (
               <Button key={v} variant="outline" size="sm" disabled={readOnly || ids.length === 0} onClick={() => write((b) => writeUnlockStates(b, ids, v))}>
-                表示中を{UNLOCK_STATE_LABELS[v]}にする
+                {tr({
+                  ja: `表示中を${UNLOCK_STATE_LABELS[v].ja}にする`,
+                  en: `Set all shown to ${UNLOCK_STATE_LABELS[v].en}`,
+                })}
               </Button>
             ))}
           </div>
@@ -469,7 +550,10 @@ export function UnlocksPage() {
       {/* 各特典の 1 B だけを書き換える。値は 0〜2 の範囲。
           ❓ ライフルの免許以外の書き込み後の反映は要ゲーム内確認。装飾品の所持フラグと連動するかは ❓ */}
       <p className="text-muted-foreground text-xs">
-        装飾品の特典を取得済みにしても、装飾品の所持は変わりません。所持は「装飾品」の画面で切り替えます。
+        {tr({
+          ja: "装飾品の特典を取得済みにしても、装飾品の所持は変わりません。所持は「装飾品」の画面で切り替えます。",
+          en: "Setting an accessory unlock to Obtained does not change accessory ownership. Toggle ownership on the Accessories screen.",
+        })}
       </p>
     </div>
   );

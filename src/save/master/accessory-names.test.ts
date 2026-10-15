@@ -60,6 +60,7 @@ describe("🟢 全身の表示名・説明（特典の保存位置は 🔶 U-17�
     for (const id of [31, 72, 83]) {
       expect(appearanceUnlockInformation(UNLOCKS[id])).toEqual({
         ja: UNLOCKS[id].ja, en: UNLOCKS[id].en, descriptionJa: UNLOCKS[id].effectJa,
+        descriptionEn: UNLOCKS[id].effectEn,
       });
     }
   });

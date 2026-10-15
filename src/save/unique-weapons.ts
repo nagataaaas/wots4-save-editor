@@ -5,7 +5,8 @@
 import { findSkillInfo } from './master/sect-data'
 import { WEAPON_IDS, weaponIdName } from './weapon-ids'
 
-const WEAPONS_BY_SKILL_NAME = new Map<string, string[]>()
+// 名前は使うときに今の言語で引く（画面の言語を切り替えられるので、読み込み時に名前で持たない）
+const WEAPONS_BY_SKILL_NAME = new Map<string, (typeof WEAPON_IDS)[number][]>()
 // 固有武器の6バイトの +4 は流派 ID 🟢（chunks/weapon-record）。その流派で戦ったときだけ武器の斬殺数が増えるので、固有技を覚えられるのはこの流派だけ
 const SECTS_BY_SKILL_NAME = new Map<string, number[]>()
 for (const option of WEAPON_IDS) {
@@ -13,7 +14,7 @@ for (const option of WEAPON_IDS) {
   if (!unique) continue
   const name = findSkillInfo(unique[0])?.nameJa
   if (!name) continue
-  WEAPONS_BY_SKILL_NAME.set(name, [...(WEAPONS_BY_SKILL_NAME.get(name) ?? []), weaponIdName(option)])
+  WEAPONS_BY_SKILL_NAME.set(name, [...(WEAPONS_BY_SKILL_NAME.get(name) ?? []), option])
   const sects = SECTS_BY_SKILL_NAME.get(name) ?? []
   if (!sects.includes(unique[2])) SECTS_BY_SKILL_NAME.set(name, [...sects, unique[2]])
 }
@@ -27,5 +28,5 @@ export function uniqueSkillSects(skillId: number): number[] {
 /** その技を使える固有武器の名前（✅ [U]）。見つからなければ空 */
 export function uniqueWeaponsForSkill(skillId: number): string[] {
   const name = findSkillInfo(skillId)?.nameJa
-  return name ? (WEAPONS_BY_SKILL_NAME.get(name) ?? []) : []
+  return name ? (WEAPONS_BY_SKILL_NAME.get(name) ?? []).map((option) => weaponIdName(option)) : []
 }

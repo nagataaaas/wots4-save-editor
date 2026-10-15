@@ -4,6 +4,7 @@ import { groupOptions, type OptionGroup, type SelectOption } from '@/components/
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { tr } from '@/lib/i18n'
 import { substringFilter } from '@/lib/search'
 import { cn } from '@/lib/utils'
 
@@ -11,14 +12,17 @@ import { cn } from '@/lib/utils'
  * 項目名と下の補足は呼び出し側が持つ、検索つきの選択欄。
  * 一覧は options の group でまとめる。見出しのないまとまりを区切り線で分けたいときは groups を渡す（options と同じ選択肢を並べる）
  */
-export function SearchSelectControl({ value, currentLabel, options, groups = groupOptions(options), disabled, searchPlaceholder = '検索', className, contentClassName, leading, onChange, ...rest }: {
+export function SearchSelectControl({ value, currentLabel, options, groups = groupOptions(options), disabled, searchPlaceholder = tr({ ja: '検索', en: 'Search' }), className, contentClassName, leading, onChange, ...rest }: {
   value: string | null; currentLabel?: string; options: readonly SelectOption[]; groups?: readonly OptionGroup[]; disabled?: boolean;
   searchPlaceholder?: string; className?: string; contentClassName?: string; leading?: ReactNode;
   'aria-label'?: string; onChange: (value: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const selected = options.find(o => o.value === value)
-  const text = value === null ? '未読み込み' : selected ? selected.selectedLabel ?? selected.label : `${currentLabel ?? '不明'}（現在の値）`
+  const current = currentLabel ?? tr({ ja: '不明', en: 'Unknown' })
+  const text = value === null ? tr({ ja: '未読み込み', en: 'Not loaded' })
+    : selected ? selected.selectedLabel ?? selected.label
+    : tr({ ja: `${current}（現在の値）`, en: `${current} (current value)` })
   return <Popover open={open} onOpenChange={setOpen}>
     <PopoverTrigger render={<Button variant="outline" role="combobox" aria-expanded={open}
       disabled={disabled || value === null || options.length === 0}
@@ -34,7 +38,7 @@ export function SearchSelectControl({ value, currentLabel, options, groups = gro
       <Command filter={substringFilter} defaultValue={value ?? undefined}>
         <CommandInput placeholder={searchPlaceholder} />
         <CommandList>
-          <CommandEmpty>見つかりません</CommandEmpty>
+          <CommandEmpty>{tr({ ja: '見つかりません', en: 'No matches' })}</CommandEmpty>
           {groups.map((g, i) => <Fragment key={g.name ?? `group-${i}`}>
             {i > 0 && <CommandSeparator />}
             <CommandGroup heading={g.name}>

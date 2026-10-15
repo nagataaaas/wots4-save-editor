@@ -1,5 +1,6 @@
 import { useContext } from 'react'
 import { errorMessage } from './error-message'
+import { tr } from './i18n'
 import { SaveContext } from './save-context'
 import { useScopedState } from './use-scoped-state'
 
@@ -24,7 +25,7 @@ export function useWrite(scope?: string | number) {
   const [message, setMessage] = useScopedState<NonNullable<WriteMessage>>(scope)
 
   function write<T>(mutate: (bytes: Uint8Array) => T): T {
-    if (!update) throw new Error('セーブファイルが読み込まれていません')
+    if (!update) throw new Error(tr({ ja: 'セーブファイルが読み込まれていません', en: 'No save file loaded' }))
     let result!: T
     update(bytes => { result = mutate(bytes) })
     return result

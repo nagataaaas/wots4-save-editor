@@ -17,7 +17,9 @@ import { readU16, readU8, writeF32, writeU16, writeU32, writeU8, readF32 } from 
 import { type EditOpts, NORMAL_EDIT_OPTS, type ViewStatus } from "./field";
 import { assertWritable, checkLayout } from "./layout";
 import { APPEARANCE_CURRENT_OFFSETS, HEIGHT_RATIOS } from "./appearance-current";
+import { tr, type Localized } from "@/lib/i18n";
 import {
+  BODY_KIND_LABELS,
   BODY_KINDS,
   findPart,
   findPerson,
@@ -44,7 +46,8 @@ export const PART_MODELS_REL = 4;
 export const PART_MODEL_BYTES = 2;
 
 export function partLayerOffset(kind: PartKind, layer: number): number {
-  if (!Number.isInteger(layer) || layer < 0 || layer >= LAYER_COUNT) throw new RangeError('指定できない層です');
+  if (!Number.isInteger(layer) || layer < 0 || layer >= LAYER_COUNT)
+    throw new RangeError(tr({ ja: '指定できない層です', en: 'Invalid layer' }));
   return partOffset(kind) + PART_MODELS_REL + layer * PART_MODEL_BYTES;
 }
 
@@ -63,17 +66,17 @@ export function partOffset(kind: PartKind): number {
  * 0＝なし・1＝金髪・2＝茶髪・3＝黒・4＝銀髪 ✅ [U] 2026-10-08、5＝赤 🔶 [U]（「たぶん赤」）。
  * 6〜9 は特典で選べる色の並び（赤の後ろ）からの推定 🔶（U-19）。10 以上は色がつかない ✅ [U]
  */
-export const HAIR_COLOR_NAMES: Readonly<Record<number, string>> = {
-  0: "なし",
-  1: "金髪",
-  2: "茶髪",
-  3: "黒",
-  4: "銀髪",
-  5: "赤",
-  6: "黄緑",
-  7: "ピンク",
-  8: "藍",
-  9: "紫",
+export const HAIR_COLOR_NAMES: Readonly<Record<number, Localized>> = {
+  0: { ja: "なし", en: "None" },
+  1: { ja: "金髪", en: "Blond" },
+  2: { ja: "茶髪", en: "Brown" },
+  3: { ja: "黒", en: "Black" },
+  4: { ja: "銀髪", en: "Silver" },
+  5: { ja: "赤", en: "Red" },
+  6: { ja: "黄緑", en: "Yellow-Green" },
+  7: { ja: "ピンク", en: "Pink" },
+  8: { ja: "藍", en: "Indigo" },
+  9: { ja: "紫", en: "Purple" },
 };
 /** 通常モードで書ける髪の色の範囲（主人公設定の一覧にある色）。0・10 以上は上級者モードだけ */
 export const HAIR_COLOR_MIN = 1;
@@ -111,7 +114,8 @@ const i16 = (u: number) => (u === 0xffff ? -1 : u);
 
 export function readAppearanceParts(bytes: Uint8Array): AppearancePartsView {
   const end = APPEARANCE_PARTS_OFFSETS.parts + PART_RECORD_SIZE * PART_KINDS.length;
-  if (bytes.length < end) throw new RangeError("ファイルが小さすぎて容姿を読めません");
+  if (bytes.length < end)
+    throw new RangeError(tr({ ja: "ファイルが小さすぎて容姿を読めません", en: "The file is too small to read the appearance" }));
   const parts = {} as Record<PartKind, PartValue>;
   for (const kind of PART_KINDS) {
     const offset = partOffset(kind);
@@ -143,6 +147,12 @@ function requireWritable(bytes: Uint8Array): AppearancePartsView {
 /** 0x3AADC の値をタイプの名前にする。0〜4 以外は null */
 export function bodyKindName(value: number): BodyKind | null {
   return BODY_KINDS[value] ?? null;
+}
+
+/** 0x3AADC の値の、今の言語の表示名。0〜4 以外は null */
+export function bodyKindLabel(value: number): string | null {
+  const kind = bodyKindName(value);
+  return kind === null ? null : tr(BODY_KIND_LABELS[kind]);
 }
 
 /**
@@ -184,19 +194,27 @@ export function validatePart(
   opts: EditOpts = NORMAL_EDIT_OPTS,
 ): string | null {
   if (id === -1)
-    return opts.advanced || NONE_ALLOWED[kind] ? null : "通常モードでは「なし」にできません";
+    return opts.advanced || NONE_ALLOWED[kind]
+      ? null
+      : tr({ ja: "通常モードでは「なし」にできません", en: "\"None\" is not allowed in normal mode" });
   const part = findPart(kind, id);
-  if (!part) return "部品の表にありません";
-  if (part.crash) return "この部品はロードでクラッシュします";
+  if (!part) return tr({ ja: "部品の表にありません", en: "Not in the parts list" });
+  if (part.crash) return tr({ ja: "この部品はロードでクラッシュします", en: "This part crashes the game on load" });
   if (opts.advanced) return null;
   const only = BODY_KIND_PARTS[heroBodyKind];
-  if (only)
+  if (only) {
+    const label = bodyKindLabel(heroBodyKind);
     return only[kind]?.includes(id)
       ? null
-      : `通常モードでは${bodyKindName(heroBodyKind)}用の部品だけ選べます`;
-  if (part.ja === "") return "名前のない部品は上級者モードでだけ選べます";
+      : tr({ ja: `通常モードでは${label}用の部品だけ選べます`, en: `In normal mode, only parts for ${label} can be chosen` });
+  }
+  if (part.ja === "")
+    return tr({ ja: "名前のない部品は上級者モードでだけ選べます", en: "Unnamed parts can only be chosen in Advanced mode" });
   if (part.gender !== null && part.gender !== bodyKindName(heroBodyKind))
-    return "通常モードでは主人公のタイプに合う部品だけ選べます";
+    return tr({
+      ja: "通常モードでは主人公のタイプに合う部品だけ選べます",
+      en: "In normal mode, only parts matching the player character's type can be chosen",
+    });
   return null;
 }
 
@@ -256,7 +274,10 @@ export function writeNude(bytes: Uint8Array, kind: "upper" | "lower"): void {
   assertWritable(bytes);
   const view = requireWritable(bytes);
   const p = nudePreset(view.bodyKind, kind);
-  if (!p) throw new RangeError("裸にできるのはタイプが男・女のときだけです");
+  if (!p)
+    throw new RangeError(
+      tr({ ja: "裸にできるのはタイプが男・女のときだけです", en: "Undressing is only possible when the type is Male or Female" }),
+    );
   writeU16(bytes, APPEARANCE_PARTS_OFFSETS.person, PERSON_CUSTOM);
   writePartRecord(bytes, kind, p.part, p.models);
 }
@@ -264,7 +285,10 @@ export function writeNude(bytes: Uint8Array, kind: "upper" | "lower"): void {
 /** その部品が「なし」のときの警告文（ユーザー判断 2026-10-08。止めない）。なければ null */
 export function partNoneWarning(kind: PartKind, id: number): string | null {
   return id === -1 && NONE_RISKY.includes(kind)
-    ? "「なし」にしていると、組み合わせによっては読み込めないかもしれません"
+    ? tr({
+        ja: "「なし」にしていると、組み合わせによっては読み込めないかもしれません",
+        en: "With \"None\", some combinations may make the save fail to load",
+      })
     : null;
 }
 
@@ -293,16 +317,22 @@ export function validateLayer(
   value: number,
   opts: EditOpts = NORMAL_EDIT_OPTS,
 ): string | null {
-  if (!opts.advanced) return "層の組み合わせは上級者モードでだけ変更できます";
+  if (!opts.advanced)
+    return tr({ ja: "層の組み合わせは上級者モードでだけ変更できます", en: "Layers can only be changed in Advanced mode" });
   if (!Number.isInteger(layer) || layer < 0 || layer >= LAYER_COUNT)
-    return "指定できない層です";
-  if (partId === -1) return "部品が「なし」のときは層を選べません。先に部品を選んでください";
+    return tr({ ja: "指定できない層です", en: "Invalid layer" });
+  if (partId === -1)
+    return tr({
+      ja: "部品が「なし」のときは層を選べません。先に部品を選んでください",
+      en: "Layers cannot be chosen while the part is \"None\". Choose a part first",
+    });
   const part = findPart(kind, partId);
-  if (!part) return `${PART_KIND_LABELS[kind]}の表にない部品です`;
+  const kindLabel = PART_KIND_LABELS[kind];
+  if (!part) return tr({ ja: `${kindLabel.ja}の表にない部品です`, en: `Not in the ${kindLabel.en.toLowerCase()} parts list` });
   const def = part.layers[layer];
-  if (!def) return `この部品には層${layer + 1}がありません`;
+  if (!def) return tr({ ja: `この部品には層${layer + 1}がありません`, en: `This part has no layer ${layer + 1}` });
   if (value === -1 || def.textures.includes(value)) return null;
-  return `層${layer + 1}（${def.mesh}）の色違いではありません`;
+  return tr({ ja: `層${layer + 1}（${def.mesh}）の色違いではありません`, en: `Not a color variant of layer ${layer + 1} (${def.mesh})` });
 }
 
 /**
@@ -332,9 +362,10 @@ export function layersCustomized(kind: PartKind, part: PartValue): boolean {
 }
 
 export function validateHairColor(value: number, opts: EditOpts = NORMAL_EDIT_OPTS): string | null {
-  if (!Number.isInteger(value) || value < 0 || value > 255) return "0〜255の整数を入力してください";
+  if (!Number.isInteger(value) || value < 0 || value > 255)
+    return tr({ ja: "0〜255の整数を入力してください", en: "Enter a whole number from 0 to 255" });
   if (!opts.advanced && (value < HAIR_COLOR_MIN || value > HAIR_COLOR_MAX))
-    return "通常モードでは名前のある色だけ選べます";
+    return tr({ ja: "通常モードでは名前のある色だけ選べます", en: "In normal mode, only named colors can be chosen" });
   return null;
 }
 
@@ -353,11 +384,18 @@ export function writeBodyKind(bytes: Uint8Array, value: number, opts: EditOpts =
   assertWritable(bytes);
   requireWritable(bytes);
   if (!opts.advanced)
-    throw new RangeError("タイプは上級者モードでだけ変更できます。通常は人物を選んでください");
+    throw new RangeError(
+      tr({
+        ja: "タイプは上級者モードでだけ変更できます。通常は人物を選んでください",
+        en: "The type can only be changed in Advanced mode. Normally, choose a character instead",
+      }),
+    );
   if (!Number.isInteger(value) || value < 0 || value > 255)
-    throw new RangeError("0〜255の整数を入力してください");
-  if (BODY_KIND_CRASH.includes(value))
-    throw new RangeError(`タイプ「${bodyKindName(value) ?? "不明"}」はロードでクラッシュします`);
+    throw new RangeError(tr({ ja: "0〜255の整数を入力してください", en: "Enter a whole number from 0 to 255" }));
+  if (BODY_KIND_CRASH.includes(value)) {
+    const label = bodyKindLabel(value) ?? tr({ ja: "不明", en: "Unknown" });
+    throw new RangeError(tr({ ja: `タイプ「${label}」はロードでクラッシュします`, en: `The type "${label}" crashes the game on load` }));
+  }
   writeU8(bytes, APPEARANCE_PARTS_OFFSETS.bodyKind, value);
 }
 
@@ -371,7 +409,7 @@ export function writePerson(bytes: Uint8Array, personId: number): void {
   assertWritable(bytes);
   const view = requireWritable(bytes);
   const person = findPerson(personId);
-  if (!person) throw new RangeError("人物の表にありません");
+  if (!person) throw new RangeError(tr({ ja: "人物の表にありません", en: "Not in the character list" }));
   const current = findPerson(view.person);
   const height = readF32(bytes, APPEARANCE_PARTS_OFFSETS.height);
   const ratio = current

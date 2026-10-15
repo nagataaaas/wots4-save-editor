@@ -13,6 +13,7 @@ import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { errorMessage } from '@/lib/error-message'
 import { readFileAsBytes } from '@/lib/file-io'
 import { formatOffset } from '@/lib/format'
+import { tr } from '@/lib/i18n'
 import { useSave } from '@/lib/save-context'
 import { useWrite } from '@/lib/use-write'
 import { WriteResult } from '@/components/write-error'
@@ -52,7 +53,7 @@ const LIST_LIMIT = 500
 /** 領域の色（RAW_REGIONS の並び順で順に割り当てる） */
 const REGION_TINTS = ['bg-sky-500/15', 'bg-emerald-500/15', 'bg-violet-500/15', 'bg-amber-500/15', 'bg-rose-500/15']
 
-const regionLabel = (region: RawRegion, offset: number) => `${region.label} ${positionInRegion(region, offset)}`
+const regionLabel = (region: RawRegion, offset: number) => `${tr(region.label)} ${positionInRegion(region, offset)}`
 const previewBytes = (bytes: Uint8Array | readonly number[], offset: number, length: number, limit = 8) =>
   Array.from(bytes.slice(offset, offset + Math.min(length, limit)), hex2).join(' ') + (length > limit ? ' …' : '')
 
@@ -136,13 +137,22 @@ function RawEditor({
         <AnchoredCard
           anchor={RAW_ANCHORS.hex}
           className="min-w-0"
-          title="16進表示"
+          title={tr({ ja: '16進表示', en: 'Hex view' })}
           extra={
-            <InfoTip offset={`0x0〜0x${(bytes.byteLength - 1).toString(16).toUpperCase()}（${bytes.byteLength.toLocaleString()} B）`}>
-              背景色は既知の領域（下の「領域の一覧」）、赤字は差分の基準と違うバイトです。クリックで選択し、矢印キー・PageUp/PageDown で移動できます。
+            <InfoTip offset={tr({
+              ja: `0x0〜0x${(bytes.byteLength - 1).toString(16).toUpperCase()}（${bytes.byteLength.toLocaleString()} B）`,
+              en: `0x0–0x${(bytes.byteLength - 1).toString(16).toUpperCase()} (${bytes.byteLength.toLocaleString()} B)`,
+            })}>
+              {tr({
+                ja: '背景色は既知の領域（下の「領域の一覧」）、赤字は差分の基準と違うバイトです。クリックで選択し、矢印キー・PageUp/PageDown で移動できます。',
+                en: 'Background colors mark known regions (see "Regions" below); red bytes differ from the comparison base. Click to select, and move with the arrow keys or PageUp/PageDown.',
+              })}
             </InfoTip>
           }
-          description="ファイル全体のバイト列です。右の欄は文字として読んだ表示です。"
+          description={tr({
+            ja: 'ファイル全体のバイト列です。右の欄は文字として読んだ表示です。',
+            en: 'The bytes of the whole file. The right column shows them read as text.',
+          })}
         >
           <CardContent className="flex flex-col gap-3">
             <JumpForm size={bytes.byteLength} onJump={goTo} />
@@ -162,9 +172,12 @@ function RawEditor({
 
       <CollapsibleCard
         anchor={RAW_ANCHORS.regions}
-        title="領域の一覧"
+        title={tr({ ja: '領域の一覧', en: 'Regions' })}
         // 終了が分からない領域は色分けしない
-        description="分かっている領域の一覧です。行をクリックすると、その位置へ移動します。"
+        description={tr({
+          ja: '分かっている領域の一覧です。行をクリックすると、その位置へ移動します。',
+          en: 'Known regions of the file. Click a row to jump to that position.',
+        })}
         contentClassName="overflow-x-auto"
       >
         <RegionTable onJump={goTo} />
@@ -181,12 +194,15 @@ function DiffCard({ bytes, base, diff, diffBase, onDiffBaseChange, compare, comp
   return (
     <AnchoredCard
       anchor={RAW_ANCHORS.diff}
-      title="差分"
+      title={tr({ ja: '差分', en: 'Differences' })}
       description={
         <>
-          読み込み時から変わった範囲を一覧します。
+          {tr({ ja: '読み込み時から変わった範囲を一覧します。', en: 'Lists the ranges changed since loading.' })}
           <br />
-          比較用のファイルを開くと、別のセーブとの違いも見られます。
+          {tr({
+            ja: '比較用のファイルを開くと、別のセーブとの違いも見られます。',
+            en: 'Open a comparison file to see differences from another save.',
+          })}
           {/* 時間で進む値などは操作と関係なく変わる */}
         </>
       }
@@ -194,11 +210,17 @@ function DiffCard({ bytes, base, diff, diffBase, onDiffBaseChange, compare, comp
       <CardContent className="flex flex-col gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label>基準</Label>
+            <Label>{tr({ ja: '基準', en: 'Base' })}</Label>
             <FilterSelect<DiffBase>
               options={[
-                { value: 'original', label: '読み込み時' },
-                { value: 'compare', label: compare ? `比較用：${compare.name}` : '比較用のファイル（未選択）', disabled: !compare },
+                { value: 'original', label: tr({ ja: '読み込み時', en: 'As loaded' }) },
+                {
+                  value: 'compare',
+                  label: compare
+                    ? tr({ ja: `比較用：${compare.name}`, en: `Comparison: ${compare.name}` })
+                    : tr({ ja: '比較用のファイル（未選択）', en: 'Comparison file (none selected)' }),
+                  disabled: !compare,
+                },
               ]}
               value={diffBase}
               onChange={onDiffBaseChange}
@@ -210,12 +232,17 @@ function DiffCard({ bytes, base, diff, diffBase, onDiffBaseChange, compare, comp
         {compareError && <p className="text-destructive text-xs">{compareError}</p>}
         {sizeMismatch && compare && (
           <p className="text-xs text-amber-600 dark:text-amber-400">
-            比較用のファイルのサイズ（{compare.bytes.byteLength.toLocaleString()} B）が今のファイルと違います。短いほうの長さまで比べています。
+            {tr({
+              ja: `比較用のファイルのサイズ（${compare.bytes.byteLength.toLocaleString()} B）が今のファイルと違います。短いほうの長さまで比べています。`,
+              en: `The comparison file's size (${compare.bytes.byteLength.toLocaleString()} B) differs from the current file. Compared up to the shorter length.`,
+            })}
           </p>
         )}
         <p className="text-muted-foreground text-xs">
-          違うバイト：{diff.total.toLocaleString()} B（{diff.ranges.length.toLocaleString()}
-          {diff.truncated ? ` 範囲まで表示。${LIST_LIMIT} 範囲を超えた分は省略` : ' 範囲'}）
+          {tr({
+            ja: `違うバイト：${diff.total.toLocaleString()} B（${diff.ranges.length.toLocaleString()}${diff.truncated ? ` 範囲まで表示。${LIST_LIMIT} 範囲を超えた分は省略` : ' 範囲'}）`,
+            en: `Differing bytes: ${diff.total.toLocaleString()} B (${diff.ranges.length.toLocaleString()} ${diff.ranges.length === 1 ? 'range' : 'ranges'}${diff.truncated ? ` shown; ranges beyond ${LIST_LIMIT} are omitted` : ''})`,
+          })}
         </p>
         <DiffList ranges={diff.ranges} base={base} bytes={bytes} onJump={onJump} />
       </CardContent>
@@ -245,13 +272,13 @@ function JumpForm({ size, onJump }: { size: number; onJump: (offset: number) => 
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="オフセット（例：0x36A8）"
+          placeholder={tr({ ja: 'オフセット（例：0x36A8）', en: 'Offset (e.g. 0x36A8)' })}
           className="w-56 font-mono"
-          aria-label="移動先のオフセット"
+          aria-label={tr({ ja: '移動先のオフセット', en: 'Offset to jump to' })}
           aria-invalid={error !== null}
         />
         <Button type="submit" variant="outline">
-          移動
+          {tr({ ja: '移動', en: 'Go' })}
         </Button>
       </div>
       {error && <p className="text-destructive text-xs">{error}</p>}
@@ -319,7 +346,7 @@ function HexView({
       ref={ref}
       tabIndex={0}
       role="grid"
-      aria-label="16進表示"
+      aria-label={tr({ ja: '16進表示', en: 'Hex view' })}
       onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
       onKeyDown={handleKeyDown}
       className="focus-visible:ring-ring/50 overflow-auto rounded-md border font-mono text-xs outline-none focus-visible:ring-[3px]"
@@ -370,7 +397,7 @@ const HexRow = memo(function HexRow({
     return (
       <span
         key={i}
-        title={`${formatOffset(i)}${region ? `　${regionLabel(region, i)}` : ''}`}
+        title={`${formatOffset(i)}${region ? `${tr({ ja: '　', en: ' ' })}${regionLabel(region, i)}` : ''}`}
         onClick={() => onSelect(i)}
         className={[
           'w-6 shrink-0 cursor-pointer text-center',
@@ -420,14 +447,14 @@ function SelectionCard({
   return (
     <AnchoredCard
       anchor={RAW_ANCHORS.byte}
-      searchLabel="選んだバイト"
+      searchLabel={tr({ ja: '選んだバイト', en: 'Selected byte' })}
       className="min-w-0"
       title={<span className="font-mono">{formatOffset(offset)}</span>}
       description={
         regions.length === 0
-          ? '既知の領域に入っていない位置です'
+          ? tr({ ja: '既知の領域に入っていない位置です', en: 'This position is not in a known region' })
           : regions.map((r) => (
-              <span key={`${r.start}-${r.chunk}-${r.label}`} className="block">
+              <span key={`${r.start}-${r.chunk}-${r.label.ja}`} className="block">
                 {regionLabel(r, offset)}
               </span>
             ))
@@ -442,7 +469,12 @@ function SelectionCard({
             </div>
           ))}
         </dl>
-        <p className="text-muted-foreground text-xs">複数バイトの値はリトルエンディアンで、選択中の位置から読んでいます。</p>
+        <p className="text-muted-foreground text-xs">
+          {tr({
+            ja: '複数バイトの値はリトルエンディアンで、選択中の位置から読んでいます。',
+            en: 'Multi-byte values are read little-endian from the selected position.',
+          })}
+        </p>
 
         <SelectionForm key={offset} bytes={bytes} offset={offset} advanced={advanced} />
       </CardContent>
@@ -467,7 +499,10 @@ function SelectionForm({ bytes, offset, advanced }: {
       setMessage({ error: true, text: r.error })
       return
     }
-    tryWrite((b) => writeRawBytes(b, offset, r.value), `${formatOffset(offset)} から ${r.value.length} B を書き換えました`)
+    tryWrite((b) => writeRawBytes(b, offset, r.value), tr({
+      ja: `${formatOffset(offset)} から ${r.value.length} B を書き換えました`,
+      en: `Wrote ${r.value.length} B from ${formatOffset(offset)}`,
+    }))
   }
 
   return (
@@ -478,7 +513,7 @@ function SelectionForm({ bytes, offset, advanced }: {
         submit()
       }}
     >
-      <Label htmlFor="raw-write">ここから上書き</Label>
+      <Label htmlFor="raw-write">{tr({ ja: 'ここから上書き', en: 'Overwrite from here' })}</Label>
       <div className="flex gap-2">
         <Input
           id="raw-write"
@@ -492,15 +527,23 @@ function SelectionForm({ bytes, offset, advanced }: {
           aria-invalid={error !== null}
         />
         <Button type="submit" variant="outline" disabled={!advanced}>
-          書き込む
+          {tr({ ja: '書き込む', en: 'Write' })}
         </Button>
       </div>
       {advanced ? (
         <p className="text-muted-foreground text-xs">
-          16進のバイト列（例：01 00 FF）を、選択中の位置から上書きします（最大 {RAW_WRITE_MAX} B）。値の意味は確かめないので、書いた値によってはゲームで読めなくなることがあります。
+          {tr({
+            ja: `16進のバイト列（例：01 00 FF）を、選択中の位置から上書きします（最大 ${RAW_WRITE_MAX} B）。値の意味は確かめないので、書いた値によってはゲームで読めなくなることがあります。`,
+            en: `Overwrites hex bytes (e.g. 01 00 FF) starting at the selected position (up to ${RAW_WRITE_MAX} B). The values are not checked, so some values may make the save unreadable in the game.`,
+          })}
         </p>
       ) : (
-        <p className="text-muted-foreground text-xs">サイドバーの上級者モードをオンにすると、バイト列を直接書き換えられます。</p>
+        <p className="text-muted-foreground text-xs">
+          {tr({
+            ja: 'サイドバーの上級者モードをオンにすると、バイト列を直接書き換えられます。',
+            en: 'Turn on Advanced Mode in the sidebar to edit bytes directly.',
+          })}
+        </p>
       )}
       <WriteResult message={message} />
     </form>
@@ -523,7 +566,7 @@ function CompareFileButton({ onOpen }: { onOpen: (file: File) => void }) {
         }}
       />
       <Button variant="outline" onClick={() => ref.current?.click()}>
-        比較用のファイルを開く
+        {tr({ ja: '比較用のファイルを開く', en: 'Open comparison file' })}
       </Button>
     </>
   )
@@ -540,18 +583,18 @@ function DiffList({
   bytes: Uint8Array
   onJump: (offset: number) => void
 }) {
-  if (ranges.length === 0) return <p className="text-muted-foreground text-sm">違いはありません。</p>
+  if (ranges.length === 0) return <p className="text-muted-foreground text-sm">{tr({ ja: '違いはありません。', en: 'No differences.' })}</p>
   // 長い範囲は先頭の数バイトだけ値を出す（previewBytes）
   return (
     <div className="max-h-80 overflow-auto rounded-md border">
       <table className="w-full text-xs">
         <thead className="bg-card text-muted-foreground sticky top-0">
           <tr className="border-b text-left">
-            <th className="px-2 py-1 font-normal">位置</th>
-            <th className="px-2 py-1 font-normal">長さ</th>
-            <th className="px-2 py-1 font-normal">基準</th>
-            <th className="px-2 py-1 font-normal">今</th>
-            <th className="px-2 py-1 font-normal">領域</th>
+            <th className="px-2 py-1 font-normal">{tr({ ja: '位置', en: 'Offset' })}</th>
+            <th className="px-2 py-1 font-normal">{tr({ ja: '長さ', en: 'Length' })}</th>
+            <th className="px-2 py-1 font-normal">{tr({ ja: '基準', en: 'Base' })}</th>
+            <th className="px-2 py-1 font-normal">{tr({ ja: '今', en: 'Now' })}</th>
+            <th className="px-2 py-1 font-normal">{tr({ ja: '領域', en: 'Region' })}</th>
           </tr>
         </thead>
         <tbody>
@@ -578,14 +621,18 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{ offsets: number[]; truncated: boolean } | null>(null)
-  const placeholder = SEARCH_KINDS.find((s) => s.kind === kind)?.placeholder
+  const placeholderText = SEARCH_KINDS.find((s) => s.kind === kind)?.placeholder
+  const placeholder = placeholderText && tr(placeholderText)
 
   return (
     <AnchoredCard
       anchor={RAW_ANCHORS.search}
-      title="検索"
+      title={tr({ ja: '検索', en: 'Search' })}
       // 今のバイト列（編集を含む）から探す。数値はリトルエンディアンのバイト列として探す
-      description="セーブの中から値や文字列を探せます。編集中の内容も対象です。"
+      description={tr({
+        ja: 'セーブの中から値や文字列を探せます。編集中の内容も対象です。',
+        en: 'Search the save for values or text, including unsaved edits.',
+      })}
     >
       <CardContent className="flex flex-col gap-3">
         <form
@@ -603,7 +650,7 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
           }}
         >
           <FilterSelect
-            options={SEARCH_KINDS.map((s) => ({ value: s.kind, label: s.label }))}
+            options={SEARCH_KINDS.map((s) => ({ value: s.kind, label: tr(s.label) }))}
             value={kind}
             onChange={(value) => {
               setKind(value)
@@ -611,18 +658,18 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
               setResult(null)
             }}
             className="w-44"
-            aria-label="検索の種類"
+            aria-label={tr({ ja: '検索の種類', en: 'Search type' })}
           />
           <Input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder={placeholder}
             className={`min-w-0 flex-1 basis-56 ${kind === 'utf16' ? '' : 'font-mono'}`}
-            aria-label="検索する値"
+            aria-label={tr({ ja: '検索する値', en: 'Value to search for' })}
             aria-invalid={error !== null}
           />
           <Button type="submit" variant="outline">
-            検索
+            {tr({ ja: '検索', en: 'Search' })}
           </Button>
         </form>
         {error && <p className="text-destructive text-xs">{error}</p>}
@@ -630,8 +677,11 @@ function SearchCard({ bytes, onJump }: { bytes: Uint8Array; onJump: (offset: num
           <>
             <p className="text-muted-foreground text-xs">
               {result.offsets.length === 0
-                ? '見つかりません。'
-                : `${result.offsets.length.toLocaleString()} 件${result.truncated ? `（${LIST_LIMIT} 件で打ち切り）` : ''}`}
+                ? tr({ ja: '見つかりません。', en: 'No matches.' })
+                : tr({
+                    ja: `${result.offsets.length.toLocaleString()} 件${result.truncated ? `（${LIST_LIMIT} 件で打ち切り）` : ''}`,
+                    en: `${result.offsets.length.toLocaleString()} ${result.offsets.length === 1 ? 'match' : 'matches'}${result.truncated ? ` (stopped at ${LIST_LIMIT})` : ''}`,
+                  })}
             </p>
             {result.offsets.length > 0 && (
               <div className="flex max-h-48 flex-wrap gap-1 overflow-auto">
@@ -664,9 +714,9 @@ function RegionTable({ onJump }: { onJump: (offset: number) => void }) {
     <table className="w-full text-xs">
       <thead className="text-muted-foreground">
         <tr className="border-b text-left">
-          <th className="px-2 py-1 font-normal">開始</th>
-          <th className="px-2 py-1 font-normal">終了</th>
-          <th className="px-2 py-1 font-normal">内容</th>
+          <th className="px-2 py-1 font-normal">{tr({ ja: '開始', en: 'Start' })}</th>
+          <th className="px-2 py-1 font-normal">{tr({ ja: '終了', en: 'End' })}</th>
+          <th className="px-2 py-1 font-normal">{tr({ ja: '内容', en: 'Contents' })}</th>
         </tr>
       </thead>
       <tbody>
@@ -678,8 +728,8 @@ function RegionTable({ onJump }: { onJump: (offset: number) => void }) {
             </td>
             <td className="px-2 py-1 font-mono">{r.end === null ? '—' : formatOffset(r.end)}</td>
             <td className="px-2 py-1">
-              {r.label}
-              {r.recordSize ? `（0x${r.recordSize.toString(16).toUpperCase()} B × ${((r.end ?? r.start) - r.start + 1) / r.recordSize} 件）` : ''}
+              {tr(r.label)}
+              {r.recordSize ? recordsText(r.recordSize, ((r.end ?? r.start) - r.start + 1) / r.recordSize) : ''}
             </td>
           </tr>
         ))}
@@ -688,9 +738,19 @@ function RegionTable({ onJump }: { onJump: (offset: number) => void }) {
   )
 }
 
-const PATCH_PLACEHOLDER = `0x3780 02 ff 00 11
+/** 領域の1件のバイト数と件数 */
+function recordsText(recordSize: number, count: number): string {
+  const size = `0x${recordSize.toString(16).toUpperCase()} B`
+  return tr({ ja: `（${size} × ${count} 件）`, en: ` (${size} × ${count} ${count === 1 ? 'record' : 'records'})` })
+}
+
+/** 行番号つきのエラー・警告 */
+const lineMessage = (line: number, message: string) => tr({ ja: `${line} 行目：${message}`, en: `Line ${line}: ${message}` })
+
+/** まとめて書き込む欄の例。言語で変わるので、描くときに作る */
+const patchPlaceholder = () => `0x3780 02 ff 00 11
 0x3790 01 ff
-# コメント（# または // 以降）と空行は無視します`
+${tr({ ja: '# コメント（# または // 以降）と空行は無視します', en: '# Comments (after # or //) and blank lines are ignored' })}`
 
 /** 「オフセット バイト列」を複数行まとめて書き込む（上級者モードのときだけ） */
 function PatchCard({
@@ -711,23 +771,35 @@ function PatchCard({
     if (!parsed || !canApply) return
     const { patches } = parsed
     const total = patches.reduce((n, p) => n + p.values.length, 0)
-    tryWrite((b) => applyPatches(b, patches), `${patches.length} 行（${total} B）を書き込みました`)
+    tryWrite((b) => applyPatches(b, patches), tr({
+      ja: `${patches.length} 行（${total} B）を書き込みました`,
+      en: `Wrote ${patches.length} ${patches.length === 1 ? 'line' : 'lines'} (${total} B)`,
+    }))
   }
 
   return (
     <AnchoredCard
       anchor={RAW_ANCHORS.bulkWrite}
-      title="まとめて書き込む"
+      title={tr({ ja: 'まとめて書き込む', en: 'Bulk write' })}
       extra={
         <InfoTip>
-          1行に「オフセット（16進、0x は省略可） バイト列（16進）」を書きます。オフセットの後の「:」とバイト間の空白は省略できます。範囲が重なる行は後の行の値が残ります。
+          {tr({
+            ja: '1行に「オフセット（16進、0x は省略可） バイト列（16進）」を書きます。オフセットの後の「:」とバイト間の空白は省略できます。範囲が重なる行は後の行の値が残ります。',
+            en: 'Write "offset (hex, 0x optional) bytes (hex)" on each line. The ":" after the offset and the spaces between bytes are optional. When lines overlap, the later line\'s values are kept.',
+          })}
         </InfoTip>
       }
       description={
         <>
-          オフセットとバイト列の組を貼り付けて、まとめて上書きできます。
+          {tr({
+            ja: 'オフセットとバイト列の組を貼り付けて、まとめて上書きできます。',
+            en: 'Paste pairs of offsets and bytes to overwrite them all at once.',
+          })}
           <br />
-          1行でも読めない行があれば、何も書き込みません。
+          {tr({
+            ja: '1行でも読めない行があれば、何も書き込みません。',
+            en: 'If any line cannot be read, nothing is written.',
+          })}
         </>
       }
     >
@@ -738,27 +810,25 @@ function PatchCard({
             setText(e.target.value)
             setMessage(null)
           }}
-          placeholder={PATCH_PLACEHOLDER}
+          placeholder={patchPlaceholder()}
           rows={6}
           spellCheck={false}
           className="font-mono text-xs"
-          aria-label="まとめて書き込むオフセットとバイト列"
+          aria-label={tr({ ja: 'まとめて書き込むオフセットとバイト列', en: 'Offsets and bytes to bulk write' })}
           aria-invalid={parsed !== null && parsed.errors.length > 0}
         />
 
         {parsed && parsed.errors.length > 0 && (
           <ul className="text-destructive flex flex-col gap-0.5 text-xs">
             {parsed.errors.map((e, i) => (
-              <li key={i}>{e.line > 0 ? `${e.line} 行目：${e.message}` : e.message}</li>
+              <li key={i}>{e.line > 0 ? lineMessage(e.line, e.message) : e.message}</li>
             ))}
           </ul>
         )}
         {parsed && parsed.warnings.length > 0 && (
           <ul className="flex flex-col gap-0.5 text-xs text-amber-600 dark:text-amber-400">
             {parsed.warnings.map((w, i) => (
-              <li key={i}>
-                {w.line} 行目：{w.message}
-              </li>
+              <li key={i}>{lineMessage(w.line, w.message)}</li>
             ))}
           </ul>
         )}
@@ -768,12 +838,12 @@ function PatchCard({
             <table className="w-full text-xs">
               <thead className="bg-card text-muted-foreground sticky top-0">
                 <tr className="border-b text-left">
-                  <th className="px-2 py-1 font-normal">行</th>
-                  <th className="px-2 py-1 font-normal">位置</th>
-                  <th className="px-2 py-1 font-normal">長さ</th>
-                  <th className="px-2 py-1 font-normal">今</th>
-                  <th className="px-2 py-1 font-normal">書く値</th>
-                  <th className="px-2 py-1 font-normal">領域</th>
+                  <th className="px-2 py-1 font-normal">{tr({ ja: '行', en: 'Line' })}</th>
+                  <th className="px-2 py-1 font-normal">{tr({ ja: '位置', en: 'Offset' })}</th>
+                  <th className="px-2 py-1 font-normal">{tr({ ja: '長さ', en: 'Length' })}</th>
+                  <th className="px-2 py-1 font-normal">{tr({ ja: '今', en: 'Now' })}</th>
+                  <th className="px-2 py-1 font-normal">{tr({ ja: '書く値', en: 'New value' })}</th>
+                  <th className="px-2 py-1 font-normal">{tr({ ja: '領域', en: 'Region' })}</th>
                 </tr>
               </thead>
               <tbody>
@@ -788,7 +858,7 @@ function PatchCard({
                       <td className="px-2 py-1 font-mono">{previewBytes(bytes, p.offset, p.values.length)}</td>
                       <td className={`px-2 py-1 font-mono ${same ? 'text-muted-foreground' : 'font-bold'}`}>
                         {previewBytes(p.values, 0, p.values.length)}
-                        {same && '（同じ）'}
+                        {same && tr({ ja: '（同じ）', en: ' (same)' })}
                       </td>
                       <td className="px-2 py-1">{region ? regionLabel(region, p.offset) : '—'}</td>
                     </tr>
@@ -801,13 +871,20 @@ function PatchCard({
 
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={apply} disabled={!canApply}>
-            まとめて書き込む
+            {tr({ ja: 'まとめて書き込む', en: 'Bulk write' })}
           </Button>
-          {!advanced && <p className="text-muted-foreground text-xs">サイドバーの上級者モードをオンにすると書き込めます。</p>}
+          {!advanced && (
+            <p className="text-muted-foreground text-xs">
+              {tr({ ja: 'サイドバーの上級者モードをオンにすると書き込めます。', en: 'Turn on Advanced Mode in the sidebar to write.' })}
+            </p>
+          )}
           <WriteResult message={message} />
         </div>
         <p className="text-muted-foreground text-xs">
-          値の意味は確かめずにそのまま書きます。書いた値によってはゲームで読めなくなることがあります。ダウンロードするまでファイルは変わりません（サイドバーの「保存」で書き出します）。
+          {tr({
+            ja: '値の意味は確かめずにそのまま書きます。書いた値によってはゲームで読めなくなることがあります。ダウンロードするまでファイルは変わりません（サイドバーの「保存」で書き出します）。',
+            en: 'Values are written as is, without checking their meaning. Some values may make the save unreadable in the game. The file does not change until you download it (use "Save" in the sidebar).',
+          })}
         </p>
       </CardContent>
     </AnchoredCard>

@@ -5,6 +5,7 @@ import {
 import { addLoaded, addSaved, clearAll, getBytes, getSnapshot } from '@/lib/history-db'
 import { SaveContext, type LoadedSave } from '@/lib/save-context'
 import { errorMessage } from '@/lib/error-message'
+import { tr } from '@/lib/i18n'
 import { countChangedBytes } from '@/lib/byte-diff'
 
 /**
@@ -34,7 +35,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
       setHistoryVersion((v) => v + 1)
       return true
     } catch (e) {
-      setError(`履歴に残せませんでした: ${errorMessage(e)}`)
+      setError(tr({ ja: `履歴に残せませんでした: ${errorMessage(e)}`, en: `Could not save to the history: ${errorMessage(e)}` }))
       return false
     }
   }, [])
@@ -71,7 +72,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
 
   const update =useCallback((mutator: (bytes: Uint8Array) => void) => {
     const save = saveRef.current
-    if (!save) throw new Error('セーブファイルが読み込まれていません')
+    if (!save) throw new Error(tr({ ja: 'セーブファイルが読み込まれていません', en: 'No save file loaded' }))
     const next = save.working.slice()
     mutator(next)
     assertSameSize(save.original, next)
@@ -120,7 +121,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
         handle: current?.name === snapshot.fileName ? current : null,
       })
     } catch (e) {
-      setError(`履歴から復元できませんでした: ${errorMessage(e)}`)
+      setError(tr({ ja: `履歴から復元できませんでした: ${errorMessage(e)}`, en: `Could not restore from the history: ${errorMessage(e)}` }))
     }
   }, [replaceSave])
 

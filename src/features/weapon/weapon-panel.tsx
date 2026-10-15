@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { tr } from "@/lib/i18n";
 import { charmSummary, weaponDisplayName, type NumberKey, type WeaponView } from "@/save/weapon";
 import { WeaponImage } from "./weapon-rows";
 
@@ -34,14 +35,20 @@ export function WeaponPanel({ weapon }: { weapon: WeaponView | null }) {
             <span />
           </div>
           <dl className="weapon-preview-stats">
-            {stat("攻撃力", num("attack"))}
-            {stat("耐久度", pair("durability", "durabilityMax"))}
-            {stat("斬殺数", num("kills"))}
-            {stat("質", pair("quality", "qualityMax"))}
+            {stat(tr({ ja: "攻撃力", en: "Strength" }), num("attack"))}
+            {stat(tr({ ja: "耐久度", en: "Durability" }), pair("durability", "durabilityMax"))}
+            {stat(tr({ ja: "斬殺数", en: "Kills" }), num("kills"))}
+            {stat(tr({ ja: "質", en: "Degradation" }), pair("quality", "qualityMax"))}
           </dl>
-          <ul className="weapon-preview-charms" aria-label="魅力">
+          <ul className="weapon-preview-charms" aria-label={tr({ ja: "魅力", en: "Charms" })}>
             {charms.map((label, slot) => (
-              <li key={slot} aria-label={`魅力 ${slot + 1}：${label === "---" ? "なし" : label}`}>
+              <li
+                key={slot}
+                aria-label={tr({
+                  ja: `魅力 ${slot + 1}：${label === "---" ? "なし" : label}`,
+                  en: `Charm ${slot + 1}: ${label === "---" ? "None" : label}`,
+                })}
+              >
                 <span>{label}</span>
               </li>
             ))}

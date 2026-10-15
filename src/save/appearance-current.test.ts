@@ -90,7 +90,7 @@ describe('現在の見た目（固定位置）', () => {
   })
 
   it('🟢 身長の選択肢は int32 LE（4 B）。0＝ふつう・1＝高い・2＝低い', () => {
-    expect(HEIGHT_CHOICES).toEqual(['ふつう', '高い', '低い'])
+    expect(HEIGHT_CHOICES.map((c) => c.ja)).toEqual(['ふつう', '高い', '低い'])
     const bytes = makeSave()
     bytes.set([2, 0, 0, 0], 0x4633c)
     expect(readAppearanceCurrent(bytes).heightChoice).toMatchObject({ offset: 0x4633c, value: 2, problem: null })

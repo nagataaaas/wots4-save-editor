@@ -1,3 +1,4 @@
+import { tr } from '@/lib/i18n'
 import type { readUtf16Fixed } from './binary'
 
 export type EditOpts = { advanced: boolean }
@@ -35,10 +36,17 @@ export function validateRange(value: number, spec: RangeSpec, opts: EditOpts): s
   const lo = opts.advanced ? systemMin : min
   const hi = opts.advanced ? systemMax : normalMax
   if (isNumber && value >= lo && value <= hi) return null
-  if (!integer && !isNumber) return '数値を入力してください'
-  const text = `${lo.toLocaleString()}〜${hi.toLocaleString()} の${integer ? '整数' : '数値'}を入力してください`
+  if (!integer && !isNumber) return tr({ ja: '数値を入力してください', en: 'Enter a number' })
+  const range = `${lo.toLocaleString()}〜${hi.toLocaleString()}`
+  const rangeEn = `${lo.toLocaleString()} to ${hi.toLocaleString()}`
+  const text = tr({
+    ja: `${range} の${integer ? '整数' : '数値'}を入力してください`,
+    en: `Enter a ${integer ? 'whole number' : 'number'} from ${rangeEn}`,
+  })
   const advancedAllows = isNumber && value >= systemMin && value <= systemMax
-  return !opts.advanced && advancedAllows ? `${text}（上級者モードでは範囲を超えて書けます）` : text
+  return !opts.advanced && advancedAllows
+    ? tr({ ja: `${text}（上級者モードでは範囲を超えて書けます）`, en: `${text} (Advanced mode allows values outside this range)` })
+    : text
 }
 
 export function hasControlChar(text: string): boolean {
@@ -46,16 +54,23 @@ export function hasControlChar(text: string): boolean {
   return false
 }
 
-export function validateText(text: string, maxChars: number, label = '名前'): string | null {
-  if (text.length === 0) return '名前が空です'
-  if (text.length > maxChars) return `${label}は${maxChars}文字までです（${text.length}文字）`
-  if (hasControlChar(text)) return '制御文字は使えません'
+/** label は画面に出す名前（今の言語のもの）。省くと「名前」 */
+export function validateText(text: string, maxChars: number, label = tr({ ja: '名前', en: 'Name' })): string | null {
+  if (text.length === 0) return tr({ ja: '名前が空です', en: 'The name is empty' })
+  if (text.length > maxChars) {
+    return tr({
+      ja: `${label}は${maxChars}文字までです（${text.length}文字）`,
+      en: `${label} can be up to ${maxChars} characters (${text.length} entered)`,
+    })
+  }
+  if (hasControlChar(text)) return tr({ ja: '制御文字は使えません', en: 'Control characters cannot be used' })
   return null
 }
 
+/** label は画面に出す名前（今の言語のもの） */
 export function fixedStringProblem(value: ReturnType<typeof readUtf16Fixed>, label: string): string | null {
-  if (!value.terminated) return `${label}の終わりが見つかりません`
-  if (!value.paddingClean) return `${label}の後ろに余計なデータがあります`
-  if (hasControlChar(value.text)) return `${label}に制御文字があります`
+  if (!value.terminated) return tr({ ja: `${label}の終わりが見つかりません`, en: `${label}: the end of the text was not found` })
+  if (!value.paddingClean) return tr({ ja: `${label}の後ろに余計なデータがあります`, en: `${label}: there is extra data after the text` })
+  if (hasControlChar(value.text)) return tr({ ja: `${label}に制御文字があります`, en: `${label} contains control characters` })
   return null
 }

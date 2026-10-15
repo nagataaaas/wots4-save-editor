@@ -5,6 +5,7 @@ import { LazyTip } from "@/components/lazy-tip";
 import { Badge } from "@/components/ui/badge";
 import { nextUnlockState } from "./unlock-state";
 import { UNLOCK_STATE_LABELS } from "@/save/unlocks";
+import { tr } from "@/lib/i18n";
 
 export function ItemInformation({
   name, category, description, offset, condition, children,
@@ -21,10 +22,12 @@ export function ItemInformation({
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-sm">{name}</span>
         <Badge variant="secondary" className="font-normal">{category}</Badge>
-        <InfoTip offset={offset}>{condition ? `取得条件：${condition}` : undefined}</InfoTip>
+        <InfoTip offset={offset}>
+          {condition ? tr({ ja: `取得条件：${condition}`, en: `How to obtain: ${condition}` }) : undefined}
+        </InfoTip>
         {children}
       </div>
-      <span className="text-muted-foreground text-xs">{description || "説明未登録"}</span>
+      <span className="text-muted-foreground text-xs">{description || tr({ ja: "説明未登録", en: "No description" })}</span>
     </div>
   );
 }
@@ -56,7 +59,7 @@ export function OwnershipStateButton({ owned, name, disabled, labels, onChange }
   return (
     <LazyTip
       className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-      aria-label={`${name}：${label}（クリックで切り替え）`}
+      aria-label={tr({ ja: `${name}：${label}（クリックで切り替え）`, en: `${name}: ${label} (click to toggle)` })}
       disabled={disabled}
       content={label}
       onClick={() => { if (!disabled) onChange(!owned); }}
@@ -77,7 +80,8 @@ export function UnlockStateButton({ value, name, disabled, onChange }: {
   onChange: (value: number) => void;
 }) {
   if (value === null) return <UnloadedStateButton />;
-  const label = UNLOCK_STATE_LABELS[value] ?? "不明";
+  const state = UNLOCK_STATE_LABELS[value];
+  const label = state ? tr(state) : tr({ ja: "不明", en: "Unknown" });
   const Icon = [Minus, LockKeyhole, Check][value] ?? CircleHelp;
   const iconColor = [
     "text-muted-foreground",
@@ -87,7 +91,7 @@ export function UnlockStateButton({ value, name, disabled, onChange }: {
   return (
     <LazyTip
       className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-      aria-label={`${name}：${label}（クリックで次の状態）`}
+      aria-label={tr({ ja: `${name}：${label}（クリックで次の状態）`, en: `${name}: ${label} (click for the next state)` })}
       disabled={disabled}
       content={label}
       onClick={() => { if (!disabled) onChange(nextUnlockState(value)); }}

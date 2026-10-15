@@ -9,6 +9,7 @@
 // 周回の終わりの +1（周回数・クリア回数・立ち去った回数）は新しい周回の書き込み（new-cycle.ts の startNewCycle）が行う。
 // クリア回数・立ち去った回数はここでは読むだけ。
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
+import { tr } from '@/lib/i18n'
 import { readU16, readU32, writeU32 } from './binary'
 import { validateRange, warningsOf, type EditOpts, type ViewStatus } from './field'
 import { assertWritable, checkLayout } from './layout'
@@ -39,7 +40,10 @@ export type CycleCountsView = ViewStatus & {
 }
 
 export function readCycleCounts(bytes: Uint8Array): CycleCountsView {
-  if (bytes.byteLength < GONE_COUNT_OFFSET + 4) throw new RangeError('ファイルが小さすぎて周回数を読めません')
+  if (bytes.byteLength < GONE_COUNT_OFFSET + 4)
+    throw new RangeError(
+      tr({ ja: 'ファイルが小さすぎて周回数を読めません', en: 'The file is too small to read the playthrough count' }),
+    )
   const playCount = readU32(bytes, PLAY_COUNT_OFFSET)
   const clears = [0, 1, 2, 3].map((d) => readU16(bytes, CLEAR_COUNTS_OFFSET + d * 2))
   return {
@@ -48,7 +52,12 @@ export function readCycleCounts(bytes: Uint8Array): CycleCountsView {
     clearTotal: clears.reduce((a, b) => a + b, 0),
     goneCount: readU32(bytes, GONE_COUNT_OFFSET),
     warnings: warningsOf(
-      playCount > PLAY_COUNT_MAX ? `周回数がゲームの上限（${PLAY_COUNT_MAX.toLocaleString()}）を超えています` : null,
+      playCount > PLAY_COUNT_MAX
+        ? tr({
+            ja: `周回数がゲームの上限（${PLAY_COUNT_MAX.toLocaleString()}）を超えています`,
+            en: `The playthrough count exceeds the game's limit (${PLAY_COUNT_MAX.toLocaleString()})`,
+          })
+        : null,
     ),
     problem: checkLayout(bytes),
   }

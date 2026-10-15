@@ -1,6 +1,7 @@
 // ブラウザのメモリ上でセーブファイルを読み書きするための入出力ヘルパー。
 // サーバーへは一切送信しない。読み込みは File → Uint8Array。
 // 書き出しは、File System Access API があるブラウザ（Chromium 系）では選んだファイルへの上書き、ないブラウザでは Blob のダウンロード。
+import { tr } from './i18n'
 
 /** ユーザーが選択したファイルをメモリに読み込む */
 export async function readFileAsBytes(file: File): Promise<Uint8Array> {
@@ -13,9 +14,10 @@ export async function readFileAsBytes(file: File): Promise<Uint8Array> {
  */
 export function assertSameSize(original: Uint8Array, edited: Uint8Array): void {
   if (original.byteLength !== edited.byteLength) {
-    throw new Error(
-      `ファイルサイズが変化しています（元: ${original.byteLength} B / 編集後: ${edited.byteLength} B）。書き出しを中止しました。`,
-    )
+    throw new Error(tr({
+      ja: `ファイルサイズが変化しています（元: ${original.byteLength} B / 編集後: ${edited.byteLength} B）。書き出しを中止しました。`,
+      en: `The file size has changed (original: ${original.byteLength} B / edited: ${edited.byteLength} B). Saving was cancelled.`,
+    }))
   }
 }
 
@@ -56,7 +58,7 @@ export function isPickerAbort(e: unknown): boolean {
 /** 開くファイルを選ばせる。あとで上書きできるようにハンドルも返す。取り消したら null */
 export async function pickFileToOpen(): Promise<{ file: File; handle: FileSystemFileHandle } | null> {
   const picker = pickerWindow()
-  if (!picker) throw new Error('このブラウザではファイルを直接開けません')
+  if (!picker) throw new Error(tr({ ja: 'このブラウザではファイルを直接開けません', en: 'This browser cannot open files directly' }))
   try {
     const [handle] = await picker.showOpenFilePicker({ multiple: false })
     return { file: await handle.getFile(), handle }
@@ -69,7 +71,7 @@ export async function pickFileToOpen(): Promise<{ file: File; handle: FileSystem
 /** 保存先を選ばせる。取り消したら null */
 export async function pickFileToSave(suggestedName: string): Promise<FileSystemFileHandle | null> {
   const picker = pickerWindow()
-  if (!picker) throw new Error('このブラウザでは保存先を選べません')
+  if (!picker) throw new Error(tr({ ja: 'このブラウザでは保存先を選べません', en: 'This browser cannot choose where to save' }))
   try {
     return await picker.showSaveFilePicker({ suggestedName })
   } catch (e) {

@@ -22,6 +22,7 @@
 // 🟢 名前のある相手が死んでいても、約束を止める判定はない。エディタでは警告だけ出す。
 //
 // 書くのは +0x04 が FFFFFFFF（約束なし）の枠だけ。ファイルサイズが 0x48BB0 のときだけ書く。
+import { tr, type Localized } from "@/lib/i18n";
 import { readU16 } from "./binary";
 import { type EditOpts } from "./field";
 import { assertWritable } from "./layout";
@@ -69,17 +70,28 @@ export function promiseRow(index: number): PromiseRow | undefined {
 
 export function requirePromisePartner(type: number): PromisePartner {
   const partner = promisePartner(type);
-  if (!partner) throw new RangeError("約束できる相手の種類ではありません");
+  if (!partner) throw new RangeError(NOT_A_PARTNER());
   return partner;
 }
 
+const NOT_A_PARTNER = () =>
+  tr({ ja: "約束できる相手の種類ではありません", en: "Not a partner type you can make a promise with" });
+
 /** 🟢 名前のある相手の種類と、約束に付随する注意。 */
 export const SPECIAL_PARTNERS = { mayu: 448, chika: 449, yuri: 450, laura: 454 } as const;
-export const PARTNER_NOTES: Readonly<Record<number, string>> = {
-  [SPECIAL_PARTNERS.mayu]: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
-  [SPECIAL_PARTNERS.chika]: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
-  [SPECIAL_PARTNERS.yuri]: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
-  [SPECIAL_PARTNERS.laura]: "読み込み直すとローラの印が消えるので、褒美が「掘り出し物」にならないことがあります",
+const TORTURE_PARTNER_NOTE: Localized = {
+  ja: "ゲームで約束すると、その人の拷問のポイントが 0 になります（ここでは 0 になりません）",
+  en: "Making the promise in the game resets her torture points to 0 (this editor does not reset them)",
+};
+/** 表示するときに tr() する */
+export const PARTNER_NOTES: Readonly<Record<number, Localized>> = {
+  [SPECIAL_PARTNERS.mayu]: TORTURE_PARTNER_NOTE,
+  [SPECIAL_PARTNERS.chika]: TORTURE_PARTNER_NOTE,
+  [SPECIAL_PARTNERS.yuri]: TORTURE_PARTNER_NOTE,
+  [SPECIAL_PARTNERS.laura]: {
+    ja: "読み込み直すとローラの印が消えるので、褒美が「掘り出し物」にならないことがあります",
+    en: 'Reloading clears Laura\'s mark, so the reward may not be "rare treasure"',
+  },
 };
 /** 🟢 初めの相手は女中（chunks/night-visit）。 */
 export const DEFAULT_PROMISE_PARTNER_TYPE = 0x25;
@@ -90,7 +102,8 @@ export function initialPromiseSpec(stage: number): PromiseSpec {
 export function layoutForPlace(place: number, current: number): number {
   const layouts = layoutsForPlace(place);
   const layout = layouts.includes(current) ? current : layouts[0];
-  if (layout === undefined) throw new RangeError("この場所で使える配置がありません");
+  if (layout === undefined)
+    throw new RangeError(tr({ ja: "この場所で使える配置がありません", en: "No layout can be used at this location" }));
   return layout;
 }
 
@@ -243,17 +256,24 @@ export function randomSpec(partner: PromisePartner, stage: number, rand: () => n
  */
 export function validateSpec(spec: PromiseSpec, stage: number, opts: EditOpts): string | null {
   const partner = promisePartner(spec.type);
-  if (!partner) return "約束できる相手の種類ではありません";
+  if (!partner) return NOT_A_PARTNER();
   const row = rowsFor(partner, stage, opts).find((r) => r.index === spec.row);
   if (!row)
     return opts.advanced || partner.row !== null
-      ? "この相手には使えない組です"
-      : "いまの段階より上の組です（上級者モードで選べます）";
+      ? tr({ ja: "この相手には使えない組です", en: "This set cannot be used for this partner" })
+      : tr({
+          ja: "いまの段階より上の組です（上級者モードで選べます）",
+          en: "This set is above the current level (available in Advanced mode)",
+        });
   const { place, layout } = specPlace(spec);
   if (place !== row.place || layout !== row.layout) {
-    if (!opts.advanced) return "この相手の組と違う場所・配置は、上級者モードでだけ選べます";
+    if (!opts.advanced)
+      return tr({
+        ja: "この相手の組と違う場所・配置は、上級者モードでだけ選べます",
+        en: "A location or layout different from this partner's set is only available in Advanced mode",
+      });
     if (!PLACE_LAYOUTS.some((p) => p.place === place && p.layout === layout))
-      return "その場所で使える配置ではありません";
+      return tr({ ja: "その場所で使える配置ではありません", en: "This layout cannot be used at that location" });
   }
   // 名前・見た目と声・年齢・血液型は種類とは別々に効く（✅ [U]）ので、約束の編集欄と同じ範囲で選べる。
   for (const field of ["name", "look", "age", "blood"] as const) {
@@ -266,7 +286,7 @@ export function validateSpec(spec: PromiseSpec, stage: number, opts: EditOpts): 
 /** 約束の枠の +0x00〜+0x29 */
 export function buildPromiseBytes(spec: PromiseSpec, day: number): Uint8Array {
   const row = promiseRow(spec.row);
-  if (!row) throw new RangeError("組の表にない行です");
+  if (!row) throw new RangeError(tr({ ja: "組の表にない行です", en: "This set is not in the list" }));
   const out = new Uint8Array(PROMISE_WRITE_LENGTH);
   out.set(row.bytes, 0);
   const { place, layout } = specPlace(spec);

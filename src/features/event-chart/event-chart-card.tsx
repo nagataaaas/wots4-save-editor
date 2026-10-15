@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { tr, type Localized } from "@/lib/i18n";
 import { SelectRow } from "@/components/select-row";
 import { CardContent } from "@/components/ui/card";
 import { AnchoredCard } from "@/components/anchored-card";
@@ -73,14 +74,14 @@ const STAGE_BOX_COLOR = "rgb(153 77 179 / 0.3)";
 /** 紫の箱の、枠の外側の余白。ゲームは枠の高さの 14/32 */
 const STAGE_BOX_PAD = Math.round((FRAME_H * 14) / 32);
 const TEXT_COLOR = "#3B2A2E";
-const ROUTE_COLORS: Readonly<Record<ChartRoute, { fill: string; stroke: string; label: string }>> =
+const ROUTE_COLORS: Readonly<Record<ChartRoute, { fill: string; stroke: string; label: Localized }>> =
   {
-    prajna: { fill: "#F7D3DC", stroke: "#D2557A", label: "攘夷" },
-    shogunate: { fill: "#D8EDC7", stroke: "#78A955", label: "幕府" },
-    foreigners: { fill: "#CFE4F1", stroke: "#5E9BC4", label: "外国" },
-    other: { fill: "#F3EBC2", stroke: "#C2A845", label: "共通・無所属" },
-    best: { fill: "#E6D6EF", stroke: "#9C6FB8", label: "真ルート" },
-    tutorial: { fill: "#EEEEEE", stroke: "#999999", label: "その他" },
+    prajna: { fill: "#F7D3DC", stroke: "#D2557A", label: { ja: "攘夷", en: "Prajnas" } },
+    shogunate: { fill: "#D8EDC7", stroke: "#78A955", label: { ja: "幕府", en: "Shogunate" } },
+    foreigners: { fill: "#CFE4F1", stroke: "#5E9BC4", label: { ja: "外国", en: "Foreigners" } },
+    other: { fill: "#F3EBC2", stroke: "#C2A845", label: { ja: "共通・無所属", en: "Common / Independent" } },
+    best: { fill: "#E6D6EF", stroke: "#9C6FB8", label: { ja: "真ルート", en: "True route" } },
+    tutorial: { fill: "#EEEEEE", stroke: "#999999", label: { ja: "その他", en: "Others" } },
   };
 const LEGEND_ROUTES: readonly ChartRoute[] = ["prajna", "shogunate", "foreigners", "other", "best"];
 const MASKED = { fill: "#7A7A7A", stroke: "#111111", text: "#D4D4D4" };
@@ -129,13 +130,27 @@ export function EventChartCard({
   return (
     <AnchoredCard
       anchor={anchor}
-      title="イベントチャート"
+      title={tr({ ja: "イベントチャート", en: "Event chart" })}
       description={
         <>
-          ゲーム内の「状況」のチャートを、セーブの内容から再現した図です。
-          {loaded ? "枠をクリックすると、そのイベントの状態を編集できます。" : "セーブを読み込むまでは、全部の枠を名前つきで描いています。"}
+          {tr({
+            ja: "ゲーム内の「状況」のチャートを、セーブの内容から再現した図です。",
+            en: "A reproduction of the in-game event chart, drawn from the save.",
+          })}
+          {loaded
+            ? tr({
+                ja: "枠をクリックすると、そのイベントの状態を編集できます。",
+                en: " Click a box to edit that event's state.",
+              })
+            : tr({
+                ja: "セーブを読み込むまでは、全部の枠を名前つきで描いています。",
+                en: " Until a save is loaded, every box is drawn with its name.",
+              })}
           <br />
-          緑の枠は引き受けた・成功したイベント、紫の箱は今の段階、赤い線は今の周回でたどった道です。
+          {tr({
+            ja: "緑の枠は引き受けた・成功したイベント、紫の箱は今の段階、赤い線は今の周回でたどった道です。",
+            en: "Green borders mark accepted or succeeded events, the purple box marks the current stage, and red lines show the path taken this playthrough.",
+          })}
           {/* 引き受けた・成功した枠か、チャートに名前を出す設定の枠は名前が出て、それ以外は「？？？」。
               失敗した枠と、後ろの段階に進んだのに何もしなかった時間帯の枠には失敗の印。
               紫の箱は今の段階と同じ段階の枠を囲む。真ルートに入っているときは真ルートの行の枠だけを囲み、当てはまる枠がなければ出ない。
@@ -145,7 +160,9 @@ export function EventChartCard({
               状態 03・04 = 引き受けた・成功、記録 04 = 名前を出す、状態 05 = 失敗、段階 0x0010、真ルート 0x378E、周回数 0x0B8C、イベントの状態 0x36A8＋添字、チャート表示の記録 0x3838＋添字。
               ❓ 真ルートの扱い・赤い線・緑の枠・紫の箱・カーソルの範囲は要ゲーム内確認 */}
           <br />
-          周回数 {counts ? counts.playCount.toLocaleString() : "—"}・クリア回数の合計{" "}
+          {tr({ ja: "周回数 ", en: "Playthroughs: " })}
+          {counts ? counts.playCount.toLocaleString() : "—"}
+          {tr({ ja: "・クリア回数の合計 ", en: " / Total clears: " })}
           {counts ? counts.clearTotal.toLocaleString() : "—"}
         </>
       }
@@ -157,16 +174,25 @@ export function EventChartCard({
           <div className="flex items-center gap-2">
             <Switch id="reveal-names" checked={revealNames} onCheckedChange={setRevealNames} />
             <Label htmlFor="reveal-names" className="text-xs">
-              隠れた名前を表示する
+              {tr({ ja: "隠れた名前を表示する", en: "Show hidden names" })}
             </Label>
           </div>
         </div>
         {loaded && cursorLimited(view) && (
           <p className="text-muted-foreground text-xs">
-            ゲームでは、カーソルは名前・進行中・失敗のどれかの枠のうち最も右の列（破線）より右へ動きません。
+            {tr({
+              ja: "ゲームでは、カーソルは名前・進行中・失敗のどれかの枠のうち最も右の列（破線）より右へ動きません。",
+              en: "In the game, the cursor can't move right of the rightmost column (dashed line) that has a named, in-progress or failed box.",
+            })}
             {view.scrollLocked
-              ? "まだ一度もクリアしていない（クリア回数の合計が 0）ので、左右のスクロールと縮小もできず、灰色の範囲はゲームの画面にほとんど入りません。"
-              : "クリアしたことがあるので、左右のスクロールと縮小で先の枠も見られます。"}
+              ? tr({
+                  ja: "まだ一度もクリアしていない（クリア回数の合計が 0）ので、左右のスクロールと縮小もできず、灰色の範囲はゲームの画面にほとんど入りません。",
+                  en: " Since you have never cleared the game (total clears is 0), you also can't scroll sideways or zoom out, so the gray area barely fits on the game screen.",
+                })
+              : tr({
+                  ja: "クリアしたことがあるので、左右のスクロールと縮小で先の枠も見られます。",
+                  en: " Since you have cleared the game before, you can scroll sideways and zoom out to see later boxes.",
+                })}
           </p>
         )}
         <ChartCanvas
@@ -200,7 +226,7 @@ function Legend() {
               className="inline-block h-3 w-5 rounded-sm border"
               style={{ background: c.fill, borderColor: c.stroke }}
             />
-            {c.label}
+            {tr(c.label)}
           </span>
         );
       })}
@@ -209,14 +235,14 @@ function Legend() {
           className="inline-block h-3 w-5 rounded-sm border"
           style={{ background: MASKED.fill, borderColor: MASKED.stroke }}
         />
-        ？？？
+        {tr({ ja: "？？？", en: "???" })}
       </span>
       <span className="flex items-center gap-1.5">
         <svg width={20} height={12} aria-hidden>
           <rect x={0.5} y={0.5} width={19} height={11} rx={2} fill="#fff" stroke="#999" />
           <line x1={1} y1={11} x2={19} y2={1} stroke={FAILED_COLOR} strokeWidth={1.5} />
         </svg>
-        失敗
+        {tr({ ja: "失敗", en: "Failed" })}
       </span>
       <span className="flex items-center gap-1.5">
         <svg width={20} height={12} aria-hidden>
@@ -231,11 +257,11 @@ function Legend() {
             strokeWidth={3}
           />
         </svg>
-        引き受けた・成功
+        {tr({ ja: "引き受けた・成功", en: "Accepted / succeeded" })}
       </span>
       <span className="flex items-center gap-1.5">
         <span className="inline-block h-3 w-5 rounded-sm" style={{ background: STAGE_BOX_COLOR }} />
-        今の段階
+        {tr({ ja: "今の段階", en: "Current stage" })}
       </span>
       <span className="flex items-center gap-1.5">
         <svg width={20} height={12} aria-hidden>
@@ -250,7 +276,7 @@ function Legend() {
             strokeDasharray="3 3"
           />
         </svg>
-        ゲームでは出ない
+        {tr({ ja: "ゲームでは出ない", en: "Not shown in the game" })}
       </span>
     </div>
   );
@@ -317,7 +343,7 @@ function ChartCanvas({
           height={HEIGHT}
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           role="img"
-          aria-label="イベントチャート"
+          aria-label={tr({ ja: "イベントチャート", en: "Event chart" })}
           style={{ background: BACKGROUND, display: "block" }}
         >
           {cursorX !== null && view.scrollLocked && (
@@ -427,7 +453,7 @@ function FrameShape({
   const y = frameY(frame.row);
   const w = FRAME_COL_PX;
   const name = frameName(frame);
-  const title = `${name}（${frameLookLabel(look)}）`;
+  const title = tr({ ja: `${name}（${frameLookLabel(look)}）`, en: `${name} (${frameLookLabel(look)})` });
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -480,7 +506,7 @@ function FrameShape({
   const masked = !look.named;
   const fill = masked ? MASKED.fill : color.fill;
   const stroke = masked ? MASKED.stroke : color.stroke;
-  const label = masked && !revealName ? "？？？" : name;
+  const label = masked && !revealName ? tr({ ja: "？？？", en: "???" }) : name;
 
   return (
     <g {...common}>
@@ -564,16 +590,16 @@ function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView 
         )}
       </div>
       <SelectRow
-        label="状態"
+        label={tr({ ja: "状態", en: "State" })}
         offset={EVENT_STATE_OFFSET + index}
         value={entry ? String(entry.state) : null}
         currentLabel={entry ? stateLabel(entry.state) : undefined}
-        options={stateOptions}
+        options={stateOptions()}
         problem={problem}
         onChange={(v) => update((b) => writeEventState(b, index, Number(v), { advanced }))}
       />
       <SelectRow
-        label="チャート表示"
+        label={tr({ ja: "チャート表示", en: "Chart display" })}
         offset={EVENT_RECORD_OFFSET + index}
         value={entry ? String(entry.record) : null}
         currentLabel={
@@ -583,12 +609,18 @@ function FrameEditor({ frame, events }: { frame: ChartFrame; events: EventsView 
         problem={problem}
         // 確度：名前の出方は FF と 04 で ✅。真ルートの枠が状態 04 以外・記録 FF で出ないのは ✅。
         // 🟢 周回の終わりに、記録が 04 でなければ状態の値で上書きされ、04 になった記録はその後変わらない
-        note={`周回をまたぐ記録（生きた証）。「名前を出す」にすると名前が出て、それ以外は引き受けた・成功のときだけ名前が出ます。真ルートのイベントは、これが「名前を出す」か、引き受けた・成功でないと枠ごと出ません（周回数が ${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら常に出る）。「名前を出す」にした記録は、次の周回以降も残ります`}
+        note={tr({
+          ja: `周回をまたぐ記録（生きた証）。「名前を出す」にすると名前が出て、それ以外は引き受けた・成功のときだけ名前が出ます。真ルートのイベントは、これが「名前を出す」か、引き受けた・成功でないと枠ごと出ません（周回数が ${PLAY_COUNT_REVEALS_BEST_ROUTE} 以上なら常に出る）。「名前を出す」にした記録は、次の周回以降も残ります`,
+          en: `A record kept across playthroughs (your legacy). With "Show the name" the name appears; otherwise it appears only when accepted or succeeded. True-route events don't appear at all unless this is "Show the name" or the event is accepted or succeeded (always shown at ${PLAY_COUNT_REVEALS_BEST_ROUTE} or more playthroughs). A record set to "Show the name" stays in later playthroughs`,
+        })}
         onChange={(v) => update((b) => writeEventRecord(b, index, Number(v), { advanced }))}
       />
       {shared && (
         <p className="text-muted-foreground text-xs">
-          このイベントはチャートにほかの枠も持ちます。値はイベントごとなので、どの枠も同じ値になります。
+          {tr({
+            ja: "このイベントはチャートにほかの枠も持ちます。値はイベントごとなので、どの枠も同じ値になります。",
+            en: "This event has other boxes on the chart too. The values are per event, so all its boxes share them.",
+          })}
         </p>
       )}
     </div>

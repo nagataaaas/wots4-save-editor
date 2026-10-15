@@ -23,7 +23,8 @@
 // [TS] の固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
 import { readU16, readU8, writeU16, writeU8 } from './binary'
 import { validateRange, type EditOpts, type ViewStatus } from './field'
-import { validateKnownValue } from './flags/byte-flag'
+import { tr, type Localized } from '@/lib/i18n'
+import { flagValues, localizedStrings, validateKnownValue } from './flags/byte-flag'
 import { assertWritable, checkLayout } from './layout'
 
 export const DATE_OFFSETS = {
@@ -46,7 +47,14 @@ export const UNPAID_SHOPS_OFFSET = 0x0018
 export const RESERVED_AREA = { start: 0x001c, end: 0x00dc } as const
 
 /** 0 はゲーム内で「昼」とも「朝」とも表示される（1日目は昼、2日目の始まりは朝 [U]） */
-export const TIME_SLOTS = ['昼（朝）', '夕', '夜'] as const
+const TIME_SLOT_LABELS: readonly Localized[] = [
+  { ja: '昼（朝）', en: 'Daytime (morning)' },
+  { ja: '夕', en: 'Evening' },
+  { ja: '夜', en: 'Night' },
+]
+
+/** 時間帯の名前。要素は読むたびに今の言語で返す */
+export const TIME_SLOTS = localizedStrings(TIME_SLOT_LABELS) as readonly [string, string, string]
 
 /**
  * 日数の正規の範囲。通常モードは 99 日目まで（[U] 2026-10-05 の要望）。上級者モードは 655 日目まで。
@@ -71,26 +79,56 @@ export type Stage = {
  * 🟢 段階の値の一覧。ラベルの 400 以降は、その段階で起きるイベントから付けた。
  * 実セーブで見たのは 0・100・110・120・200・400。ほかを書き込んだときのゲーム内の動作は ❓
  */
-export const STAGES: readonly Stage[] = [
-  { value: 0, label: '序章（周回の開始前）' },
-  { value: 100, label: '1日目 昼' },
-  { value: 110, label: '1日目 夕' },
-  { value: 120, label: '1日目 夜' },
-  { value: 200, label: '2日目 朝' },
-  { value: 210, label: '2日目 夕' },
-  { value: 220, label: '2日目 夜' },
-  { value: 300, label: '3日目 昼' },
-  { value: 310, label: '3日目 夕' },
-  { value: 320, label: '3日目 夜' },
-  { value: 400, label: '4日目以降（剣術大会の前）' },
-  { value: 410, label: '4日目以降（ローラの決意）' },
-  { value: 420, label: '4日目以降（ローラ奪還・士魂は屈せず）' },
-  { value: 500, label: '剣術大会のあと（闇黒の意志・大老武断など）' },
-  { value: 510, label: '剣術大会のあと（般若党壊滅・鬼怒川の魔手など）' },
-  { value: 520, label: '剣術大会のあと（剣客 茂呂茂・武人 琴吹光）' },
-  { value: 600, label: '鬼怒川の魔手のあと（夕暮れの船上・討ち入り）' },
-  { value: 999, label: '結末（エンディング）' },
-]
+export const STAGES: readonly Stage[] = flagValues([
+  { value: 0, label: { ja: '序章（周回の開始前）', en: 'Prologue (before the playthrough starts)' } },
+  { value: 100, label: { ja: '1日目 昼', en: 'Day 1 daytime' } },
+  { value: 110, label: { ja: '1日目 夕', en: 'Day 1 evening' } },
+  { value: 120, label: { ja: '1日目 夜', en: 'Day 1 night' } },
+  { value: 200, label: { ja: '2日目 朝', en: 'Day 2 morning' } },
+  { value: 210, label: { ja: '2日目 夕', en: 'Day 2 evening' } },
+  { value: 220, label: { ja: '2日目 夜', en: 'Day 2 night' } },
+  { value: 300, label: { ja: '3日目 昼', en: 'Day 3 daytime' } },
+  { value: 310, label: { ja: '3日目 夕', en: 'Day 3 evening' } },
+  { value: 320, label: { ja: '3日目 夜', en: 'Day 3 night' } },
+  { value: 400, label: { ja: '4日目以降（剣術大会の前）', en: 'Day 4 and later (before the Battle Tournament)' } },
+  { value: 410, label: { ja: '4日目以降（ローラの決意）', en: "Day 4 and later (Laura's Determination)" } },
+  {
+    value: 420,
+    label: {
+      ja: '4日目以降（ローラ奪還・士魂は屈せず）',
+      en: 'Day 4 and later (Rescuing Laura, The Fighting Spirit Never Dies)',
+    },
+  },
+  {
+    value: 500,
+    label: {
+      ja: '剣術大会のあと（闇黒の意志・大老武断など）',
+      en: 'After the Battle Tournament (A Dark Will, Chief Minister At War, etc.)',
+    },
+  },
+  {
+    value: 510,
+    label: {
+      ja: '剣術大会のあと（般若党壊滅・鬼怒川の魔手など）',
+      en: "After the Battle Tournament (Annihilation of the Prajnas, Kinugawa's Evil Influence, etc.)",
+    },
+  },
+  {
+    value: 520,
+    label: {
+      ja: '剣術大会のあと（剣客 茂呂茂・武人 琴吹光）',
+      en: 'After the Battle Tournament (Shigeru Moro, Swordsman / Hikaru Kotobuki, Military Man)',
+    },
+  },
+  {
+    value: 600,
+    label: {
+      ja: '鬼怒川の魔手のあと（夕暮れの船上・討ち入り）',
+      en: "After Kinugawa's Evil Influence (Twilight On Board, The Raid)",
+    },
+  },
+  { value: 999, label: { ja: '結末（エンディング）', en: 'Ending' } },
+])
 
 /** 序章（周回の開始前） */
 export const STAGE_PROLOGUE = 0
@@ -112,7 +150,8 @@ export type DateView = ViewStatus & {
 }
 
 export function readDate(bytes: Uint8Array): DateView {
-  if (bytes.byteLength < DATE_OFFSETS.dayIndex + 4) throw new RangeError('ファイルが小さすぎて日付を読めません')
+  if (bytes.byteLength < DATE_OFFSETS.dayIndex + 4)
+    throw new RangeError(tr({ ja: 'ファイルが小さすぎて日付を読めません', en: 'The file is too small to read the date' }))
   const layoutProblem = checkLayout(bytes)
   const stage = readU16(bytes, DATE_OFFSETS.dayTime)
   const slot = readU8(bytes, DATE_OFFSETS.slot)
@@ -121,13 +160,31 @@ export function readDate(bytes: Uint8Array): DateView {
   const day = dayIndex + 1
 
   let problem: string | null = null
-  if (slot >= TIME_SLOTS.length) problem = '時間帯が想定外の状態になっています'
-  else if (!(PENDING_VALUES as readonly number[]).includes(pending)) problem = '時間帯を進める保留量が想定外の状態になっています'
+  if (slot >= TIME_SLOTS.length)
+    problem = tr({ ja: '時間帯が想定外の状態になっています', en: 'The time of day is in an unexpected state' })
+  else if (!(PENDING_VALUES as readonly number[]).includes(pending))
+    problem = tr({
+      ja: '時間帯を進める保留量が想定外の状態になっています',
+      en: 'The queued time advance is in an unexpected state',
+    })
 
   const warnings: string[] = []
-  if (!stageOf(stage)) warnings.push('段階が一覧にない状態です')
-  if (pending !== 0) warnings.push('時間帯を進める保留量が入っています。エリア移動・ロードで時間帯が1つ進みます')
-  if (day > DAY_SEEN_MAX) warnings.push(`${DAY_SEEN_MAX}日目より後の値は確かめていません`)
+  if (!stageOf(stage))
+    warnings.push(tr({ ja: '段階が一覧にない状態です', en: 'The story stage is not in the list' }))
+  if (pending !== 0)
+    warnings.push(
+      tr({
+        ja: '時間帯を進める保留量が入っています。エリア移動・ロードで時間帯が1つ進みます',
+        en: 'A time advance is queued. The time of day will move forward one step when you change areas or load',
+      }),
+    )
+  if (day > DAY_SEEN_MAX)
+    warnings.push(
+      tr({
+        ja: `${DAY_SEEN_MAX}日目より後の値は確かめていません`,
+        en: `Days after Day ${DAY_SEEN_MAX} may not behave as expected in the game`,
+      }),
+    )
 
   return {
     dayIndex,
@@ -163,7 +220,8 @@ export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts:
   editable(bytes)
   const problem = validateDay(day, opts)
   if (problem) throw new RangeError(problem)
-  if (!Number.isInteger(slot) || slot < 0 || slot >= TIME_SLOTS.length) throw new RangeError('時間帯が範囲外です')
+  if (!Number.isInteger(slot) || slot < 0 || slot >= TIME_SLOTS.length)
+    throw new RangeError(tr({ ja: '時間帯が範囲外です', en: 'The time of day is out of range' }))
   writeU8(bytes, DATE_OFFSETS.slot, slot)
   writeU16(bytes, DATE_OFFSETS.dayIndex, day - 1)
 }
@@ -177,9 +235,14 @@ export function writeDayTime(bytes: Uint8Array, day: number, slot: number, opts:
 export function writeStage(bytes: Uint8Array, value: number): void {
   assertWritable(bytes)
   editable(bytes)
-  if (!stageOf(value)) throw new RangeError('一覧にない段階です')
+  if (!stageOf(value)) throw new RangeError(tr({ ja: '一覧にない段階です', en: 'This story stage is not in the list' }))
   if (value === STAGE_PROLOGUE)
-    throw new RangeError('序章にするときは「新しい周回を始める」か「難易度と主人公設定を行えるようにする」を使ってください')
+    throw new RangeError(
+      tr({
+        ja: '序章にするときは「新しい周回を始める」か「難易度と主人公設定を行えるようにする」を使ってください',
+        en: 'To go back to the prologue, use "New playthrough" or "Enable difficulty & Character Settings"',
+      }),
+    )
   writeU16(bytes, DATE_OFFSETS.dayTime, value)
 }
 
@@ -187,7 +250,13 @@ export function writeStage(bytes: Uint8Array, value: number): void {
 export function writePending(bytes: Uint8Array, value: number): void {
   assertWritable(bytes)
   editable(bytes)
-  const problem = validateKnownValue(value, PENDING_KNOWN, { advanced: false }, 0xff, '保留量は「なし」か「あり」のどちらかです')
+  const problem = validateKnownValue(
+    value,
+    PENDING_KNOWN,
+    { advanced: false },
+    0xff,
+    tr({ ja: '保留量は「なし」か「あり」のどちらかです', en: 'The queued time advance must be "None" or "Queued"' }),
+  )
   if (problem) throw new RangeError(problem)
   writeU8(bytes, DATE_OFFSETS.pending, value)
 }

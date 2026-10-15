@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { tr } from "@/lib/i18n";
 
 type LicenseEntry = (typeof import("virtual:third-party-licenses"))["default"][number];
 
@@ -37,7 +38,7 @@ export function LicensesDialog() {
         </DialogHeader>
         <div className="max-h-[60vh] overflow-auto">
           {licenses === null ? (
-            <p className="text-muted-foreground text-sm">読み込み中…</p>
+            <p className="text-muted-foreground text-sm">{tr({ ja: '読み込み中…', en: 'Loading…' })}</p>
           ) : (
             <ul className="flex flex-col gap-1">
               {licenses.map((l) => (
