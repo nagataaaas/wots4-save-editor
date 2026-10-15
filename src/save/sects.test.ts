@@ -7,8 +7,13 @@ import {
   SCROLL_HELD_OFFSET,
   SCROLL_HELD_SLOTS,
   SCROLL_STORED_OFFSET,
+  SCROLL_STORED_COUNT_OFFSET,
   SCROLL_STORED_SLOTS,
   SECT_COUNT_OFFSET,
+  acquireMissingSects,
+  acquireSect,
+  missingSects,
+  sheetStates,
   SECT_RECORDS_OFFSET,
   SKILL_POINTS_OFFSET,
   SKILL_STATE,
@@ -450,5 +455,120 @@ describe('技の操作の候補', () => {
   })
   it('🟢 俺流で使えるのは状態1・2だけ', () => {
     expect([0, 1, 2, 3, 255].map(isUsableInOreRyu)).toEqual([false, true, true, false, false])
+  })
+})
+
+describe('acquireSect', () => {
+  /** 🟢 久土井流剣術（ID 36、書の番号 442）。技の表 14 と、久土井上段（ID 25）と共有する技の表 3 */
+  const KUDOI = 36
+  const KUDOI_SCROLL = 442
+
+  /** 久土井流剣術の技を覚えさせ、流派の表に修練度などの入った行を足す */
+  function withKudoiUsed(): Uint8Array {
+    const b = makeSave()
+    learnSectSkills(b, KUDOI)
+    writeU16(b, SECT_COUNT_OFFSET, 3)
+    const rec = SECT_RECORDS_OFFSET + 2 * 16
+    writeI16(b, rec, KUDOI)
+    writeI16(b, rec + 2, 3000)
+    writeI16(b, rec + 4, 2)
+    writeI16(b, rec + 6, 40)
+    return b
+  }
+
+  it('🟢 持ち歩きの最初の空きに書を入れ、修練度・段・倒した数と覚えた技を 0 にする（要ゲーム内確認）', () => {
+    const b = withKudoiUsed()
+    acquireSect(b, KUDOI, 'held')
+    const at = SCROLL_HELD_OFFSET + SCROLL_SLOT_BYTES
+    expect(readI16(b, at)).toBe(KUDOI_SCROLL)
+    expect(readI16(b, at + 2)).toBe(-1)
+    expect([...b.subarray(at + 4, at + SCROLL_SLOT_BYTES)].every((v) => v === 0)).toBe(true)
+    const v = readSects(b)
+    expect(v.problem).toBeNull()
+    expect(ownedSectIds(v).has(KUDOI)).toBe(true)
+    expect(v.storedCount).toBe(0)
+    expect(v.records.find((r) => r.id === KUDOI)).toMatchObject({ mastery: 0, rank: 0, kills: 0 })
+    for (const sheetId of findSect(KUDOI)!.sheets) {
+      const sheet = findSkillSheet(sheetId)!
+      expect(sheetStates(v, sheetId).every((s) => s === 0)).toBe(true)
+      expect(v.sheetSlots.find((s) => s.sheetId === sheetId)?.count).toBe(0)
+      for (const s of sheet.skills) {
+        if (!isUniqueStanceSkill(sheet.stance, s.skillNo)) expect(v.stanceStates[sheet.stance][s.skillNo]).toBe(0)
+      }
+    }
+    // 持っている流派（鬼怒川流剣術）の技の表 29 は変えない
+    expect(countLearned(sheetStates(v, SHEET), LEARNED_BEFORE)).toBe(LEARNED_BEFORE.length)
+  })
+
+  it('🟢 道場の箪笥なら件数の位置に入れ、件数を +1 する', () => {
+    const b = makeSave()
+    writeI16(b, SCROLL_STORED_OFFSET, 487)
+    writeU16(b, SCROLL_STORED_COUNT_OFFSET, 1)
+    acquireSect(b, KUDOI, 'stored')
+    expect(readI16(b, SCROLL_STORED_OFFSET + SCROLL_SLOT_BYTES)).toBe(KUDOI_SCROLL)
+    expect(readU16(b, SCROLL_STORED_COUNT_OFFSET)).toBe(2)
+    expect(readI16(b, SCROLL_HELD_OFFSET + SCROLL_SLOT_BYTES)).toBe(-1)
+  })
+
+  it('🟢 構えごとの状態は、同じ構えのほかの技の表で覚えている技を残す', () => {
+    const b = makeSave()
+    // 鬼怒川流剣術（持っている）の技の表 29 と同じ構え（脇）の技の表を持つ、持っていない流派
+    const owned = ownedSectIds(readSects(b))
+    const sect = SECTS.find(
+      (s) => !s.hidden && s.scrollNo !== null && !owned.has(s.id) && s.sheets.some((id) => id !== SHEET && findSkillSheet(id)?.stance === STANCE),
+    )!
+    const sheetId = sect.sheets.find((id) => findSkillSheet(id)?.stance === STANCE)!
+    const shared = findSkillSheet(sheetId)!.skills.map((s) => s.skillNo).find((no) => LEARNED_BEFORE.includes(no))!
+    learnSheetSkills(b, sheetId, [shared])
+    acquireSect(b, sect.id, 'held')
+    const v = readSects(b)
+    expect(sheetStates(v, sheetId)[shared]).toBe(0)
+    expect(v.stanceStates[STANCE][shared]).toBe(1)
+  })
+
+  it('🟢 持っている流派と共有する技の表は変えない', () => {
+    // 「……」（ID 0）は技の表 15 を鬼怒川流剣術と共有する。上級者モードでだけ入手できる
+    const b = makeSave()
+    learnSheetSkills(b, 15, [0])
+    const before = readSects(b).sheetSlots.find((s) => s.sheetId === 15)!.states
+    expect(() => acquireSect(b, 0, 'held')).toThrow()
+    acquireSect(b, 0, 'held', { advanced: true })
+    expect(readSects(b).sheetSlots.find((s) => s.sheetId === 15)!.states).toEqual(before)
+  })
+
+  it('持っている流派・書にできない流派・空きがないときは拒否してバイト列を変えない', () => {
+    const b = makeSave()
+    const before = b.slice()
+    expect(() => acquireSect(b, 43, 'held')).toThrow(/もう持っています/)
+    expect(() => acquireSect(b, 51, 'stored')).toThrow(/もう持っています/)
+    expect(() => acquireSect(b, 25, 'held', { advanced: true })).toThrow(/流派の書にできません/)
+    expect(() => acquireSect(b, 9999, 'held')).toThrow()
+    expect(b).toEqual(before)
+
+    for (let i = 1; i < SCROLL_HELD_SLOTS; i++) writeI16(b, SCROLL_HELD_OFFSET + i * SCROLL_SLOT_BYTES, 487)
+    writeU16(b, SCROLL_STORED_COUNT_OFFSET, SCROLL_STORED_SLOTS)
+    for (let i = 0; i < SCROLL_STORED_SLOTS; i++) writeI16(b, SCROLL_STORED_OFFSET + i * SCROLL_SLOT_BYTES, 487)
+    const full = b.slice()
+    expect(() => acquireSect(b, KUDOI, 'held')).toThrow(/持ち歩きに空き/)
+    expect(() => acquireSect(b, KUDOI, 'stored')).toThrow(/箪笥に空き/)
+    expect(b).toEqual(full)
+  })
+
+  it('🟢 持っていない流派をすべて箪笥に入れる。持ち歩きに入りきらなければ何も書かない', () => {
+    const b = makeSave()
+    const missing = missingSects(readSects(b))
+    expect(missing.length).toBeGreaterThan(SCROLL_HELD_SLOTS)
+    expect(missing.every((s) => !s.hidden && s.scrollNo !== null)).toBe(true)
+
+    const before = b.slice()
+    expect(() => acquireMissingSects(b, 'held')).toThrow(/空きが足りません/)
+    expect(b).toEqual(before)
+
+    expect(acquireMissingSects(b, 'stored')).toBe(missing.length)
+    const v = readSects(b)
+    expect(v.problem).toBeNull()
+    expect(v.storedCount).toBe(missing.length)
+    expect(missingSects(v)).toEqual([])
+    expect(v.stored.slice(0, missing.length).map((s) => s.sect?.id)).toEqual(missing.map((s) => s.id))
   })
 })

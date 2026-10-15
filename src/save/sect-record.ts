@@ -60,6 +60,12 @@ export const scrollSlotCodec = {
     scrollSlotFields.writeField(bytes, offset, 'scrollNo', -1)
     scrollSlotFields.writeField(bytes, offset, 'customId', -1)
   },
+  /** 通常の流派の書を書く（+0x02 は −1、+0x04〜 は 0。🟢 chunks/sect-scrolls） */
+  writeScroll(bytes: Uint8Array, offset: number, scrollNo: number) {
+    if (!Number.isInteger(scrollNo) || scrollNo < 0 || scrollNo > I16_MAX) throw new RangeError(tr({ ja: '流派の書が範囲外です', en: 'Style book is out of range' }))
+    scrollSlotCodec.clear(bytes, offset)
+    scrollSlotFields.writeField(bytes, offset, 'scrollNo', scrollNo)
+  },
   writeCustom(bytes: Uint8Array, offset: number, id: number) {
     if (!Number.isInteger(id) || id < 0 || id > I16_MAX) throw new RangeError(tr({ ja: '流派が範囲外です', en: 'Style is out of range' }))
     scrollSlotCodec.clear(bytes, offset)

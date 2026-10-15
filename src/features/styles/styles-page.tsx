@@ -42,7 +42,10 @@ import {
   SHEET_STATES_OFFSET,
   SKILL_POINTS_MAX,
   SKILL_POINTS_OFFSET,
+  acquireMissingSects,
+  acquireSect,
   countLearned,
+  missingSects,
   forgetSheetSkill,
   learnSectSkills,
   isUniqueSkill,
@@ -56,6 +59,7 @@ import {
   sheetStates,
   writeSectValues,
   writeSkillPoints,
+  type ScrollPlace,
   type SectsView,
 } from "@/save/sects";
 import { STANCE_TAB_CLASS, readOnlyReason, skillTreeDescription } from "./sect-format";
@@ -114,6 +118,8 @@ function matchesPlace(filter: PlaceFilter, view: SectsView, owned: ReadonlySet<n
 
 export function StylesPage() {
   const { write: update } = useWrite();
+  // 「持っていない流派をすべて入手する」の結果
+  const { tryWrite: tryAcquire, message: acquireMessage } = useWrite();
   const { advanced } = useAdvancedMode();
   const [query, setQuery] = useState("");
   const [placeFilter, setPlaceFilter] = useState<PlaceFilter>("owned");
@@ -123,6 +129,12 @@ export function StylesPage() {
 
   // 未読み込みのときは view が null。流派の表から同じカードを描き、値を空・操作を無効にする
   const owned = view ? ownedSectIds(view) : null;
+  const missingCount = view ? missingSects(view).length : null;
+  const acquireAll = (place: ScrollPlace) =>
+    tryAcquire(
+      (b) => acquireMissingSects(b, place),
+      (n) => tr({ ja: `${n} 件の流派を入手しました`, en: n === 1 ? "Obtained 1 style" : `Obtained ${n} styles` }),
+    );
   const sects = SECTS.filter((s) => !s.hidden || advanced)
     .filter((s) => matchesSearch(query, [s.nameJa, s.nameEn]))
     // 置き場所はセーブから決まるので、未読み込みのときは絞り込まない
@@ -179,6 +191,26 @@ export function StylesPage() {
                 </Badge>
               );
             })}
+          </div>
+          {/* 流派の入手は 🟢 要ゲーム内確認（acquireMissingSects） */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span>
+              {tr({ ja: "持っていない流派：", en: "Styles not owned: " })}
+              {missingCount ?? "—"}
+            </span>
+            <Button variant="outline" size="sm" onClick={() => acquireAll("held")} disabled={readOnly || !missingCount}>
+              {tr({ ja: "すべて持ち歩きに入れる", en: "Add all to Style Library" })}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => acquireAll("stored")} disabled={readOnly || !missingCount}>
+              {tr({ ja: "すべて道場の箪笥に入れる", en: "Add all to Dojo shelf" })}
+            </Button>
+            <span className="text-muted-foreground text-xs">
+              {tr({
+                ja: "修練度と倒した数が 0、段が初段で、技を覚えていない状態で入手します。持ち歩きは 20 冊までです。",
+                en: "Styles are obtained at First rank, with mastery and kills at 0 and no moves learned. The Style Library holds up to 20 books.",
+              })}
+            </span>
+            <WriteResult message={acquireMessage} className="basis-full" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Input
@@ -252,6 +284,13 @@ function SectCard({
   const values: SectValues | null = rec ? { mastery: rec.mastery, rank: rec.rank, kills: rec.kills } : null;
   const writeValues = (v: SectValues) => update((b) => writeSectValues(b, sect.id, v));
   const name = sectName(sect);
+  const acquire = (place: ScrollPlace) =>
+    tryWrite(
+      (b) => acquireSect(b, sect.id, place, { advanced }),
+      place === "held"
+        ? tr({ ja: `${name} を持ち歩きに入れました`, en: `Added ${name} to the Style Library` })
+        : tr({ ja: `${name} を道場の箪笥に入れました`, en: `Added ${name} to the Dojo shelf` }),
+    );
   const uniqueMark = tr({ ja: "固有技がある流派です", en: "This style has unique moves" });
   // 英語の段の名前（Second など）は日本語より長いので欄を広げる
   const rankWidth = getLanguage() === "en" ? "w-[4em]" : "w-[2.5em]";
@@ -301,6 +340,25 @@ function SectCard({
       ))}
     >
       <div className="flex flex-col gap-4">
+        {/* 流派の入手は 🟢 要ゲーム内確認（acquireSect）。持っていない流派だけに出す */}
+        {sect.scrollNo !== null && places.length === 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm">{tr({ ja: "この流派を入手する：", en: "Obtain this style: " })}</span>
+            {(["held", "stored"] as const).map((place) => (
+              <Button key={place} variant="outline" size="sm" onClick={() => acquire(place)} disabled={readOnly}>
+                {place === "held"
+                  ? tr({ ja: "持ち歩きに入れる", en: "Add to Style Library" })
+                  : tr({ ja: "道場の箪笥に入れる", en: "Add to Dojo shelf" })}
+              </Button>
+            ))}
+            <span className="text-muted-foreground text-xs">
+              {tr({
+                ja: "修練度と倒した数が 0、段が初段で、技を覚えていない状態で入手します。",
+                en: "The style is obtained at First rank, with mastery and kills at 0 and no moves learned.",
+              })}
+            </span>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <Button
             onClick={() =>

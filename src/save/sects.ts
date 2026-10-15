@@ -448,6 +448,98 @@ export function writeSectValues(bytes: Uint8Array, sectId: number, v: SectValues
   sectRecordCodec.writeValues(bytes, rec.offset, v)
 }
 
+// 流派の入手。持っていない流派の書を、持ち歩きか道場の箪笥に、まだ使っていない状態で入れる。
+// 書の枠・件数の並びは 🟢（chunks/sect-scrolls）。ゲームで読めるかは要ゲーム内確認。
+
+export type ScrollPlace = ScrollSlot['place']
+
+/**
+ * 流派を入手できるか。できなければ理由を返す。
+ * 流派の書の番号がない流派は書にできない。主人公が手に入れられない流派（「……」）は上級者モードだけ 🟢
+ */
+export function acquireSectProblem(view: SectsView, sect: Sect, place: ScrollPlace, options: EditOpts = NORMAL_EDIT_OPTS): string | null {
+  if (sect.scrollNo === null) return tr({ ja: 'この流派は流派の書にできません', en: 'This style cannot be made into a style book' })
+  if (sect.hidden && !options.advanced) return tr({ ja: 'この流派は主人公が手に入れられません', en: 'The hero cannot obtain this style' })
+  if (ownedSectIds(view).has(sect.id)) return tr({ ja: 'この流派はもう持っています', en: 'You already have this style' })
+  if (place === 'held' && !view.held.some((s) => s.empty))
+    return tr({ ja: '持ち歩きに空きがありません', en: 'No free space in the Style Library' })
+  if (place === 'stored' && view.storedCount >= SCROLL_STORED_SLOTS)
+    return tr({ ja: '道場の箪笥に空きがありません', en: 'No free space on the Dojo shelf' })
+  return null
+}
+
+/**
+ * 持っていない流派を、まだ使っていない状態で入手する 🟢（要ゲーム内確認）。
+ * - 流派の書を、持ち歩きの最初の空き（ゲームが流派を手に入れたときと同じ）か箪笥の末尾に入れる。箪笥なら件数を +1
+ * - 流派の表の修練度・段・倒した数を 0 にする
+ * - その流派の技の表で覚えた技を 0 にする。持っているほかの流派と共有している技の表は変えない。
+ *   構えごとの状態は、同じ構えのほかの技の表で覚えていない技だけ 0 にする。固有技の構えごとの状態は残す
+ *   （装備したときに構えごとの状態から写る 🟢 chunks/skill-states「固有技」）
+ */
+export function acquireSect(bytes: Uint8Array, sectId: number, place: ScrollPlace, options: EditOpts = NORMAL_EDIT_OPTS): void {
+  assertWritable(bytes)
+  const sect = findSect(sectId)
+  if (!sect) throw new RangeError(tr({ ja: '知らない流派です', en: 'Unknown style' }))
+  const view = requireEditable(bytes)
+  applyAcquireSect(bytes, view, sect, place, options)
+}
+function applyAcquireSect(bytes: Uint8Array, view: SectsView, sect: Sect, place: ScrollPlace, options: EditOpts): void {
+  const problem = acquireSectProblem(view, sect, place, options)
+  if (problem) throw new RangeError(problem)
+  const slot = place === 'held' ? view.held.find((s) => s.empty) : view.stored[view.storedCount]
+  if (!slot?.empty) throw new RangeError(tr({ ja: '流派の書の並びが正しくありません', en: 'The style books are not in the expected order' }))
+  scrollSlotCodec.writeScroll(bytes, slot.offset, sect.scrollNo as number)
+  if (place === 'stored') writeU16(bytes, SCROLL_STORED_COUNT_OFFSET, view.storedCount + 1)
+
+  const rec = view.records.find((r) => r.id === sect.id)
+  if (rec) sectRecordCodec.writeValues(bytes, rec.offset, { mastery: 0, rank: 0, kills: 0 })
+
+  const owned = ownedSectIds(view)
+  const sharedSheets = new Set(SECTS.filter((s) => owned.has(s.id)).flatMap((s) => s.sheets))
+  for (const sheetId of sect.sheets) {
+    const sheet = findSkillSheet(sheetId)
+    if (!sheet || sharedSheets.has(sheetId)) continue
+    const slots = readSheetSlots(bytes)
+    const own = slots.find((s) => s.sheetId === sheetId)
+    if (!own) continue
+    const learnedNos = own.states.flatMap((v, no) => (isLearned(v) ? [no] : []))
+    writeSheetStates(bytes, own.offset, NO_STATES)
+    for (const no of learnedNos) {
+      if (isUniqueStanceSkill(sheet.stance, no)) continue
+      const elsewhere = slots.some(
+        (s) => s.sheetId !== sheetId && findSkillSheet(s.sheetId)?.stance === sheet.stance && isLearned(s.states[no]),
+      )
+      if (!elsewhere) writeU8(bytes, stanceStateOffset(sheet.stance, no), SKILL_STATE.notLearned)
+    }
+  }
+}
+
+/**
+ * 持っていない流派（主人公が手に入れられる流派だけ）をすべて、まだ使っていない状態で入手する（acquireSect）。
+ * 入る場所が足りなければ何も書かずに拒否する。入手した数を返す
+ */
+export function acquireMissingSects(bytes: Uint8Array, place: ScrollPlace): number {
+  assertWritable(bytes)
+  const view = requireEditable(bytes)
+  const targets = missingSects(view)
+  const free = place === 'held' ? view.held.filter((s) => s.empty).length : SCROLL_STORED_SLOTS - view.storedCount
+  if (targets.length > free)
+    throw new RangeError(
+      tr({
+        ja: `空きが足りません（${targets.length} 件に対して空きは ${free} 件）`,
+        en: `Not enough free space (${targets.length} styles, ${free} free)`,
+      }),
+    )
+  for (const sect of targets) applyAcquireSect(bytes, readSects(bytes), sect, place, NORMAL_EDIT_OPTS)
+  return targets.length
+}
+
+/** 持っていない流派のうち、主人公が手に入れられて流派の書にできるもの */
+export function missingSects(view: SectsView): Sect[] {
+  const owned = ownedSectIds(view)
+  return SECTS.filter((s) => !s.hidden && s.scrollNo !== null && !owned.has(s.id))
+}
+
 /** 腕前点のゲーム上の上限 🟢（chunks/styles。9999 で止まる） */
 export const SKILL_POINTS_MAX = 9999
 const U16_MAX = 0xffff
