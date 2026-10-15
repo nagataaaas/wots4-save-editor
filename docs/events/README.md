@@ -31,6 +31,8 @@ events/
 - 外部資料の略号：[A]・[F] は [../event.md](../event.md) の出典、[U] はユーザー自身の確認
 - 位置は `0x36AE`（通し番号 6）の形で書く。通し番号は [../save_format/README.md](../save_format/README.md) §3
 - 値・場面・関わるイベントだけを書き、どう調べたかは書かない
+- `summary` と、その英訳の `summary_en` は、エディタのイベントの一覧に出る（`pnpm gen:dataset` で表にする）。確度の記号・語（英語の unconfirmed・estimated なども）は書かない。
+  `summary_en` の人名・地名・勢力名はゲームの英語版の表記に揃える。`summary_en` がないイベントは、英語の画面でも `summary` を出す
 
 ### フラグの位置
 

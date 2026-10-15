@@ -16,6 +16,10 @@ summary: >-
   町の居酒屋で朱美から、茂呂が今夜港で外国商人から武器を受け取るという話を聞き、赤城に襲撃への加勢を頼まれる。
   引き受けるだけで成功し、戦闘・報酬はない。攘夷と敵対していると失敗する。
 
+summary_en: >-
+  At the bar in Town, Akemi tells you that Moro will receive weapons from a foreign merchant at the Harbor tonight, and Akagi asks you to join the attack.
+  Simply agreeing is a success, with no fighting or reward. If you are hostile with the Prajnas, it fails.
+
 timing:
   phase: 3日目 夕
   slot: 夕

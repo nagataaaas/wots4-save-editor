@@ -15,6 +15,10 @@ summary: >-
   代官所の前で待つローラに付き添い、代官所内で鬼怒川に公開処刑をやめるよう抗議する。鬼怒川はこれを宣戦布告とみなし、
   魔鱗組との戦闘になる。戦闘のあと、ローラを人質に取られて主人公は捕らえられる。
 
+summary_en: >-
+  Accompany Laura, who is waiting in front of the Magistrate's Office, and protest to Kinugawa inside to stop the public executions. Kinugawa takes this as a declaration of war, and a fight with the Demonscales follows.
+  After the fight, Laura is taken hostage and the hero is captured.
+
 timing:
   phase: 4日目以降（410）
   slot: なし

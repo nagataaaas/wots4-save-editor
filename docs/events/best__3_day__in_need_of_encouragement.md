@@ -16,6 +16,10 @@ summary: >-
   寿司屋に入ると、J.J が寿司屋の店主に弟子入りして寿司を握っている。J.J の寿司を食べたあと、御大老の命で J.J が「日本の伝統文化を汚した罪」で連行され、
   店主に J.J を助けてほしいと頼まれる。会話のみで戦闘はない。
 
+summary_en: >-
+  Entering the sushi shop, you find J.J. apprenticed to the owner and making sushi. After you eat J.J.'s sushi, he is taken away on the Chief Minister's orders for "the crime of defiling Japan's traditional culture,"
+  and the owner asks you to save J.J. Conversation only, with no fighting.
+
 timing:
   phase: 3日目 夕
   slot: なし

@@ -16,6 +16,10 @@ summary: >-
   大通りに大老 鬼怒川怨仙の行列が来る。娘に恥をかかせたと主人公が狙われ、赤城・小暮が加勢して琴吹・魔鱗組と戦う。
   戦いのあと鉄砲隊の一斉射撃で赤城が撃たれ、般若党は退く。
 
+summary_en: >-
+  The procession of Chief Minister Onsen Kinugawa arrives at the Main Plaza. The hero is targeted for shaming his daughter, and Akagi and Kogure join in to fight Kotobuki and the Demonscales.
+  After the fight, Akagi is shot in a volley from the riflemen and the Prajnas retreat.
+
 timing:
   phase: 1日目 夕
   slot: なし

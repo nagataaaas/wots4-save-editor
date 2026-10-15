@@ -16,6 +16,10 @@ summary: >-
   代官所で琴吹に、大老の指名で剣術大会に出てほしいと頼まれる。引き受けると外国・攘夷のルートが閉じ、幕府ルートが確定する。
   琴吹に斬りかかると失敗し、幕府ルートも閉じる。
 
+summary_en: >-
+  At the Magistrate's Office, Kotobuki asks you to enter the Battle Tournament on the Chief Minister's nomination. Accepting closes the Foreigner and Prajna routes and locks in the Shogunate route.
+  Attacking Kotobuki fails the event and also closes the Shogunate route.
+
 timing:
   phase: 4日目以降（剣術大会前）
   slot: 昼

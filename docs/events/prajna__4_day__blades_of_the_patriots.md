@@ -16,6 +16,10 @@ summary: >-
   神社で赤城が剣術大会に乗じて大老を討つ計画を話し、参加者の残る一枠を主人公に頼む。
   引き受けると成功し、幕府・外国のルートが閉じる。赤城たちに斬りかかると戦闘になり、失敗して攘夷ルートが閉じる。
 
+summary_en: >-
+  At the Shrine, Akagi explains a plan to strike down the Chief Minister during the Battle Tournament and asks the hero to take the last remaining entry. Agreeing is a success and closes the Shogunate and Foreigner routes.
+  Attacking Akagi and his men starts a fight, fails the event, and closes the Prajna route.
+
 timing:
   phase: 4日目以降（剣術大会前）
   slot: 昼

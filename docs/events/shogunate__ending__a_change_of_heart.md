@@ -16,6 +16,10 @@ summary: >-
   攘夷が一掃されて阿弥浜に留まる理由を失った鬼怒川は江戸へ帰り、阿弥浜は一気に近代化する。茂呂は財閥を築いて伯爵の称号を得て、主人公はその相談役になる。
   晩年の茂呂が、侍はもう必要なくなったから滅んだと語る場面で終わる。
 
+summary_en: >-
+  With the Prajnas wiped out and no reason left to stay in Amihama, Kinugawa returns to Edo, and Amihama rapidly modernizes. Moro builds a business empire and gains the title of count, and the hero becomes his advisor.
+  It ends with the aged Moro saying that the samurai died out because they were no longer needed.
+
 timing:
   phase: 結末
   slot: なし

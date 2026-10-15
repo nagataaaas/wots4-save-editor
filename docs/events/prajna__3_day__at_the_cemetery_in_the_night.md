@@ -16,6 +16,10 @@ summary: >-
   夜の墓場で、墓参りに来た朱美に会う。戦闘・報酬はない。朱美を送ると好感度が上がり、10 以上なら夜這いの約束ができるが、イベントは失敗扱いになる。
   送らなければ成功で終わる。
 
+summary_en: >-
+  At the Cemetery at night, you meet Akemi, who has come to visit a grave. There is no fighting or reward.
+  Walking Akemi home raises her affection, and at 10 or more you can make a night crawling appointment, but the event counts as a failure. If you don't walk her home, it ends as a success.
+
 timing:
   phase: 3日目 夜
   slot: 夜

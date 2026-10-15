@@ -16,6 +16,10 @@ summary: >-
   暗殺の翌日、死んだはずの鬼怒川が現れ、陰謀は失敗に終わったと告げる。暗殺した鬼怒川は影武者だった。
   「正義が必ず勝つとは限らない」という語りで終わる。
 
+summary_en: >-
+  The day after the assassination, Kinugawa, who should be dead, appears and announces that the plot has failed. The Kinugawa who was assassinated was a body double.
+  It ends with narration saying "Justice does not always prevail."
+
 timing:
   phase: 結末
   slot: なし

@@ -15,6 +15,9 @@ faction:
 summary: >-
   表彰台に上った優勝者たちが鬼怒川の罠にかかり、表彰台ごと釜茹でにされて周回が終わる。
 
+summary_en: >-
+  The winners who stepped up onto the podium fall into Kinugawa's trap and are boiled alive along with the podium, and the playthrough ends.
+
 timing:
   phase: 結末
   slot: なし

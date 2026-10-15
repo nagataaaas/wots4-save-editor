@@ -16,6 +16,10 @@ summary: >-
   大通りの剣術大会の会場で、ローラ・鬼怒川・茂呂・J.J. らが観覧するなか、琴吹が大会の決まり（籤で選んだ相手と戦い、
   先に一本取った者が勝ち、三回戦を勝ち抜けば魔鱗組の資格）を告げる。続けて各勢力の剣術大会の1回戦へ進む。
 
+summary_en: >-
+  At the Battle Tournament venue on the Main Plaza, with Laura, Kinugawa, Moro, J.J. and others watching, Kotobuki announces the rules (fight an opponent chosen by lot, the first to land a clean hit wins, and winning three rounds qualifies you to join the Demonscales).
+  It then moves on to the first round of each faction's Battle Tournament.
+
 timing:
   phase: 4日目以降（剣術大会前）
   slot: なし

@@ -16,6 +16,10 @@ summary: >-
   ローラに頼まれ、幕府から届く病院の運営資金（千両箱）の運搬を街道で護衛し、盗賊団を撃退する。
   護衛の隊長に千両箱を要求して奪うこともでき、その場合は失敗で病院が閉鎖になる。
 
+summary_en: >-
+  At Laura's request, guard the shipment of the Hospital's operating funds (a chest of gold coins) from the Shogunate along the Back Roads and fight off the bandits.
+  You can also demand the chest from the escort captain and take it, in which case the event fails and the Hospital closes.
+
 timing:
   phase: 2日目 昼
   slot: 昼

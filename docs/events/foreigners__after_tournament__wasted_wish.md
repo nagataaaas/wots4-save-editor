@@ -17,6 +17,10 @@ summary: >-
   大通りでの会談が決裂し、赤城・般若党（小暮が生きていれば小暮も）と、外国勢と組んで戦う。
   失敗の分岐はなく、戦闘が終わると鬼怒川の魔手に進む。
 
+summary_en: >-
+  At the Consulate, the Count is attacked by the Prajnas and dies. Laura entrusts you with a letter proposing a meeting with Akagi; deliver it to the Prajnas at the Shrine and report back, and the meeting on the Main Plaza breaks down,
+  so you join the Foreigners to fight Akagi and the Prajnas (and Kogure, if he is alive). There is no failure branch; when the fight ends, the story moves on to Kinugawa's Evil Influence.
+
 timing:
   phase: 剣術大会以降
   slot: なし

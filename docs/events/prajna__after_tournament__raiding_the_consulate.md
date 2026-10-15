@@ -17,6 +17,10 @@ summary: >-
   真実が成功していれば領事館で J.J と一騎打ち（または三対一）になり、倒すと武士の魂へ続く。
   真実が成功していなければ領事館でまだら・暗闇脳天と戦い、全員倒すと結末の熱き魂へ進む。
 
+summary_en: >-
+  At the Inn, Akagi reveals a plan to attack the British Consulate and set Britain against the Shogunate; after fighting British soldiers in Little Britain, you storm the Consulate.
+  If The Truth succeeded, you face J.J. at the Consulate in a duel (or three against one), and defeating him leads to The Samurai Spirit. If The Truth did not succeed, you fight Madara and the Black Masks at the Consulate, and defeating them all leads to the Fevered Spirits ending.
+
 timing:
   phase: 剣術大会以降（510）
   slot: 夕

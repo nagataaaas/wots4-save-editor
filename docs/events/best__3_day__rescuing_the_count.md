@@ -16,6 +16,10 @@ summary: >-
   代官所内の拷問部屋で三姉妹に拷問されている J.J（伯爵）を助け出す。人間豚5人との戦闘に勝つと、
   J.J は領事館を経て病院へ運ばれ、赤城と同じ病室で療養する。
 
+summary_en: >-
+  Rescue J.J. (the Count), who is being tortured by the Three Sisters in the Torture Chamber of the Magistrate's Office. Win the fight against five Human Pigs,
+  and J.J. is taken via the Consulate to the Hospital, where he recovers in the same room as Akagi.
+
 timing:
   phase: 3日目 夜
   slot: 夜

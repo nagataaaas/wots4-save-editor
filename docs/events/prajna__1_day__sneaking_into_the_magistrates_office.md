@@ -15,6 +15,10 @@ summary: >-
   神社で赤城に誘われ、般若党と代官所の蔵から武器を盗み出す。制限時間 3 分のあいだに武器の木箱を運び出した数で報酬が決まる。
   見張りに 3 回見つかると捕り方に囲まれて退却し、失敗になる。
 
+summary_en: >-
+  Invited by Akagi at the Shrine, you steal weapons from the storehouse of the Magistrate's Office with the Prajnas. The reward depends on how many weapon crates you carry out within the 3-minute time limit.
+  Being spotted by the guards 3 times gets you surrounded by officers and forces a retreat, failing the event.
+
 timing:
   phase: 1日目 夜
   slot: 夜

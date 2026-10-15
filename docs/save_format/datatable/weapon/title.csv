@@ -1,5 +1,5 @@
 id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
-362,0x016A,6A 01 00,人斬り,Assasin,CT,TS の定義値 00 6A 01 は誤り（U-2）
+362,0x016A,6A 01 00,人斬り,Assassin,CT,TS の定義値 00 6A 01 は誤り（U-2）
 363,0x016B,6B 01 01,狂事,Crazy Eyes,CT;TS,
 364,0x016C,6C 01 02,血河,Bloodbath,CT;TS,
 365,0x016D,6D 01 03,黄泉路,Road to Hell,CT;TS,
@@ -19,4 +19,4 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
 379,0x017B,7B 01 11,冷刃,Cold Steel,CT;TS,
 380,0x017C,7C 01 12,鬼神,Demon Lord,CT;TS,
 381,0x017D,7D 01 13,散華,Honor Kill,CT;TS,
-65535,0xFFFF,FF FF FF,銘なし,,CT,
+65535,0xFFFF,FF FF FF,銘なし,No signature,CT,

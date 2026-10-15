@@ -16,6 +16,10 @@ summary: >-
   琴吹・三姉妹・魔鱗組と、英国の大砲を携えて神社の洞窟（般若党の本拠）へ攻め込む。洞窟を進んで般若党を倒し、最深部で赤城と小暮を斬る。
   成功すると神社の門が閉じる。
 
+summary_en: >-
+  With Kotobuki, the Three Sisters and the Demonscales, you bring British cannons and storm the cave at the Shrine (the Prajna base). Fight through the cave defeating Prajnas, and cut down Akagi and Kogure at the deepest point.
+  Success closes the gate of the Shrine.
+
 timing:
   phase: 剣術大会以降
   slot: なし

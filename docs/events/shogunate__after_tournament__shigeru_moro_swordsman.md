@@ -16,6 +16,10 @@ summary: >-
   黒船の警備中、船内で茂呂が待ち構えている。鬼怒川は怪物だと説く茂呂と一騎打ちになり、倒すと茂呂は「鬼怒川を斬れ」と言い残して死ぬ。
   そのまま結末の破滅への道へ進む。
 
+summary_en: >-
+  While you are guarding the Black Ship, Moro is waiting inside. A duel begins with Moro, who argues that Kinugawa is a monster; defeated, Moro dies saying "Cut down Kinugawa."
+  It goes straight on to the Road to Ruin ending.
+
 timing:
   phase: 剣術大会以降
   slot: 夜

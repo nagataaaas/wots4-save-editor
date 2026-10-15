@@ -16,6 +16,10 @@ summary: >-
   領事館でローラに団子を食べに茶屋へ連れて行ってほしいと頼まれる。茶屋で絡んできた浪人を追い払い、仕返しに来た兄貴分の一味も退ける。
   最後にローラの好感度が 3 以上で外国と敵対していなければ別の場面になり、好感度が +3（それ以外は +1）される。命乞いすると所持金をすべて失う。
 
+summary_en: >-
+  At the Consulate, Laura asks you to take her to a teahouse for dumplings. At the teahouse you drive off a ronin who picks a fight, then repel his boss's gang when they come for revenge.
+  At the end, if Laura's affection is 3 or more and you are not hostile with the Foreigners, a different scene plays and her affection rises by 3 (otherwise by 1). Begging for your life loses all your funds.
+
 timing:
   phase: 2日目 夕
   slot: 夕

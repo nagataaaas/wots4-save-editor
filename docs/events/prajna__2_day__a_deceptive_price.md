@@ -16,6 +16,10 @@ summary: >-
   町の居酒屋で赤城に頼まれ、小暮と代官所へ向かい、剣崎らと戦う。一人で戦って剣崎を倒すと 1500 文、小暮と一緒に戦うと 500 文。
   断ると失敗になる。
 
+summary_en: >-
+  At Akagi's request at the bar in Town, you head to the Magistrate's Office with Kogure and fight Kenzaki and his men. Defeating Kenzaki by fighting alone earns 1500 mon; fighting together with Kogure earns 500 mon.
+  Refusing fails the event.
+
 timing:
   phase: 2日目 昼
   slot: 昼

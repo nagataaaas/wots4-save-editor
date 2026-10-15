@@ -16,6 +16,10 @@ summary: >-
   ローラに頼まれ、反対派の住人に占拠された病院を取り戻す。住人が雇った用心棒（条件によっては堂島）を倒したあと、住人を説得・金で納得させる・脅すのいずれかで病院を開設させる。
   どの決着でも病院は開設になるが、勢力の友好度とローラの好感度が上がるのは説得したときだけ。
 
+summary_en: >-
+  At Laura's request, take back the Hospital, which residents who oppose it have occupied. After defeating the bodyguard the residents hired (Dojima, under some conditions), get the Hospital opened by persuading the residents, paying them off, or threatening them.
+  The Hospital opens however it ends, but faction friendship and Laura's affection rise only if you persuade them.
+
 timing:
   phase: 2日目 昼
   slot: 昼

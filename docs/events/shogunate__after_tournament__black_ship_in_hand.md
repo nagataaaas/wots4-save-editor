@@ -16,6 +16,10 @@ summary: >-
   領事館で鬼怒川が攘夷の駆逐を報告し、製糸工場の建設と引き換えに黒船を貸してほしいとローラに頼む。ローラは承知し、黒船は幕府が借り受ける。
   主人公はその晩の黒船の警備を任される。会話のみ。
 
+summary_en: >-
+  At the Consulate, Kinugawa reports that the Prajnas have been driven out and asks Laura to lend him the Black Ship in exchange for building a silk mill. Laura agrees, and the Shogunate borrows the Black Ship.
+  The hero is put in charge of guarding the Black Ship that night. Conversation only.
+
 timing:
   phase: 剣術大会以降
   slot: 夕

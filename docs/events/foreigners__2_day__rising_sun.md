@@ -16,6 +16,10 @@ summary: >-
   港のカジノで J.J に誘われて博打を打っていると、赤城・小暮と般若党が殴り込んでくる。J.J に加勢して撃退すると成功し、
   外国の友好度が上がって攘夷と敵対する。カジノは開いたまま。
 
+summary_en: >-
+  While you gamble at the Casino at the Harbor at J.J.'s invitation, Akagi, Kogure and the Prajnas storm in. Help J.J. drive them off to succeed; friendship with the Foreigners rises and the Prajnas become hostile.
+  The Casino stays open.
+
 timing:
   phase: 2日目 夜
   slot: 夜

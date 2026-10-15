@@ -16,6 +16,10 @@ summary: >-
   阿弥浜へ向かう小舟の上で、船頭が町の様子を語るオープニング。会話の選択肢では操作説明が出るだけで、フラグは変わらない。
   周回の始めの準備として、鬼怒川怨仙の状態などの初期値もここで入る。
 
+summary_en: >-
+  The opening, in which a boatman describes the town on a small boat heading to Amihama. The conversation choices only show control instructions and change no flags.
+  To prepare for the start of the playthrough, starting values such as Onsen Kinugawa's state are also set here.
+
 timing:
   phase: 序章
   slot: 昼

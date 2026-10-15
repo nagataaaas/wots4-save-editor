@@ -16,6 +16,10 @@ summary: >-
   代官所に招かれ、代官の琴吹光・運上所頭取の茂呂茂・大老の娘の三姉妹と顔を合わせる。会話だけで成功になり、幕府の友好度が上がる。
   門番の前で武器を抜いて「黙れ！死にたいか！」と答えるか門番を斬ると、同心・岡っ引きとの百人斬りになり、失敗になる。
 
+summary_en: >-
+  Invited to the Magistrate's Office, you meet Magistrate Hikaru Kotobuki, head of customs Shigeru Moro, and the Chief Minister's daughters, the Three Sisters. Conversation alone is a success and raises friendship with the Shogunate.
+  Drawing your weapon in front of the gatekeeper and answering "Silence! Do you want to die?", or cutting down the gatekeeper, starts a hundred-man fight against constables and thief-takers and fails the event.
+
 timing:
   phase: 1日目 昼
   slot: 昼

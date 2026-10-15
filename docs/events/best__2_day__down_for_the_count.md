@@ -16,6 +16,10 @@ summary: >-
   カジノがなくなって退屈している J.J に、黒船の船長室で「刺激的なこと」を求められる。散歩に連れ出して港の寿司屋まで案内すると、J.J は寿司に感激して主人公を「最高の友」と呼ぶ。
   ほかのイベントと違い、船内に入っただけで始まり、断ったり案内が途切れたりしても、何度でもやり直せる。
 
+summary_en: >-
+  J.J., bored now that the Casino is gone, asks you for "something exciting" in the captain's cabin of the Black Ship. Take him for a walk to the sushi shop at the Harbor, and J.J., moved by the sushi, calls the hero his "best friend."
+  Unlike other events, it starts just by entering the ship, and you can retry it any number of times even if you refuse or the walk is cut short.
+
 timing:
   phase: 2日目 夕
   slot: なし

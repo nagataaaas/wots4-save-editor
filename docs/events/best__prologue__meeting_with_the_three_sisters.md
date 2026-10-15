@@ -16,6 +16,10 @@ summary: >-
   阿弥浜港争乱の3連戦の直後、鬼怒川三姉妹（万由・千佳・百合）が港に乗り込んできて戦闘になる。3人とも倒しきれず、一定まで削ると倒れて退散する。
   成功すると真ルートに入り、段階が1日目夕に飛ぶ。
 
+summary_en: >-
+  Right after the three battles of Amihama Harbor Skirmish, the Kinugawa Sisters (Mayu, Chika and Yuri) storm the Harbor and a fight begins. None of the three can be defeated outright; once worn down far enough, they fall and withdraw.
+  Success puts you on the true route and skips ahead to Day 1 evening.
+
 timing:
   phase: 序章
   slot: 昼

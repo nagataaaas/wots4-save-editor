@@ -16,6 +16,10 @@ summary: >-
   仮の名前は「ローラに付き添え」。公開処刑のあと、ローラが鬼怒川に抗議しに行くと言い出し、茂呂に同行を頼まれる会話だけの場面。
   イベントチャートに名前が出ない。始まった時点で成功になり、ローラの状態が変わる。
 
+summary_en: >-
+  Its working name is "Accompany Laura." A conversation-only scene after the public execution in which Laura says she will go protest to Kinugawa, and Moro asks you to go with her.
+  Its name does not appear on the event chart. It counts as a success as soon as it starts, and Laura's state changes.
+
 timing:
   phase: 4日目以降（410）
   slot: 夕

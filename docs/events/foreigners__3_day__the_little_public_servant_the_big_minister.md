@@ -15,6 +15,10 @@ summary: >-
   大老 鬼怒川怨仙の招きで代官所へ向かうローラの護衛を J.J から頼まれ、代官所で鬼怒川と三姉妹の手料理（鍋）の会食に同席する。
   戦闘はなく、会食を終えて領事館に戻ると成功。
 
+summary_en: >-
+  J.J. asks you to escort Laura to the Magistrate's Office at the invitation of Chief Minister Onsen Kinugawa, and there you join a dinner of hot pot cooked by Kinugawa and the Three Sisters.
+  There is no fighting; finish the dinner and return to the Consulate to succeed.
+
 timing:
   phase: 3日目 昼
   slot: 昼

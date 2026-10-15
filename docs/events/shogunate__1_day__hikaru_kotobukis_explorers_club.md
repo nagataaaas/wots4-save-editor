@@ -16,6 +16,10 @@ summary: >-
   琴吹光に誘われて謎の洞窟を探検し、最奥で酒盛りをしていた般若党と戦う。全滅させると成功で 1500 文。
   途中で帰る、女性主人公だけの「拙者は女だ」を選ぶ、琴吹に斬りかかるなどで失敗になる。
 
+summary_en: >-
+  Hikaru Kotobuki invites you to explore a mysterious cave, and in its depths you fight Prajnas who were holding a drinking party. Wipe them out to succeed and earn 1500 mon.
+  Going home midway, choosing "I am a woman" (female heroes only), attacking Kotobuki, and the like fail the event.
+
 timing:
   phase: 1日目 夕
   slot: 夕

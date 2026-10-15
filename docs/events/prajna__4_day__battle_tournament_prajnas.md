@@ -16,6 +16,10 @@ summary: >-
   攘夷側として出場した剣術大会の結果。チャートに名前の出ない記録で、対戦相手は 嘉門夫作 → チャールズ → メリンダ／斉藤一二三。
   3回戦の相手はメリンダの状態で決まる。メリンダに峰打ちで勝つとメリンダの峰打ちの点数が +5。
 
+summary_en: >-
+  The result of the Battle Tournament when you enter on the Prajnas' side. A record whose name does not appear on the chart; the opponents are Fusaku Kamon, then Charles, then Melinda / Hifumi Saitou.
+  The third-round opponent depends on Melinda's state. Beating Melinda with the back of your blade adds 5 to her back-of-the-blade count.
+
 timing:
   phase: 4日目以降（剣術大会）
   slot: 昼

@@ -242,5 +242,5 @@ export const ITEM_TABLE = {
   239: { "id_dec": 239, "name_ja": "お金袋特大", "name_en": "Money Bag (XL)", "reading": "お金袋特大", "kind": 0, "max_stack": 1, "use_action": 65535, "description_ja": "使うことでお金を手に入れることができる。", "description_en": "Use to obtain money." },
   240: { "id_dec": 240, "name_ja": "西洋医学の水", "name_en": "Western Medicine Water", "reading": "せいよういがくのみず", "kind": 3, "max_stack": 1, "use_action": 216, "description_ja": "西洋医学の結晶。命が200回復するがつま斬りゲージが減少する。", "description_en": "The pinnacle of Western medicine! Restores 200 life, but decreases the Spring Harvest gauge." },
   241: { "id_dec": 241, "name_ja": "疲無人参", "name_en": "Stamina Carrot", "reading": "つかれないにんじん", "kind": 3, "max_stack": 1, "use_action": 213, "description_ja": "疲れなくなる人参。２分間活力が減らなくなるが しばらくすると攻撃力が減少する。", "description_en": "A carrot that chases away exhaustion for some reason. Freezes your vitality so it won't decrease at all for 2 minutes, but lowers your strength after a short time has passed." },
-  65535: { "id_dec": 65535, "name_ja": "なし", "name_en": "", "reading": "", "kind": null, "max_stack": null, "use_action": null, "description_ja": "", "description_en": "" },
+  65535: { "id_dec": 65535, "name_ja": "なし", "name_en": "None", "reading": "", "kind": null, "max_stack": null, "use_action": null, "description_ja": "", "description_en": "" },
 } as const;

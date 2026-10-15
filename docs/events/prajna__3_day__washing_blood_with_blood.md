@@ -16,6 +16,10 @@ summary: >-
   神社で赤城から、魔鱗組と琴吹たちが志士狩りを始めたと聞かされ、町で琴吹・三姉妹・魔鱗組と戦う。琴吹と三姉妹を退けると成功し、1500 文。
   幕府の友好度が高いと琴吹に呼び止められ、答えしだいで幕府の側に寝返る（魔鱗組の力の成功になる）。
 
+summary_en: >-
+  At the Shrine, Akagi tells you that the Demonscales and Kotobuki's men have begun hunting down activists, and you fight Kotobuki, the Three Sisters and the Demonscales in Town. Fend off Kotobuki and the Three Sisters to succeed and earn 1500 mon.
+  If your friendship with the Shogunate is high, Kotobuki stops you, and based on your answer you defect to the Shogunate's side (counted as a success of The Might of the Demonscales).
+
 timing:
   phase: 3日目 昼
   slot: 昼

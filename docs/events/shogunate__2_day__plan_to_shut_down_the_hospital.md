@@ -17,6 +17,10 @@ summary: >-
   奪って「奪ってきたぞ」と報告すると病院は閉鎖、褒美は 3000 文。「残念だが盗賊に奪われた」と嘘をつくと千両箱の 5000 文が手に入るが幕府と敵対する。
   襲わずに一行を通すと病院は残り、500 文。
 
+summary_en: >-
+  The Three Sisters ask you to ambush the foreign party carrying the Hospital's operating funds (a chest of gold coins) and steal it. Steal it and report "I've taken it," and the Hospital closes, with a 3000 mon reward.
+  Lie that "Unfortunately, bandits took it" and you get the 5000 mon in the chest, but the Shogunate becomes hostile. Let the party pass without attacking and the Hospital remains, for 500 mon.
+
 timing:
   phase: 2日目 昼
   slot: 昼

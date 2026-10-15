@@ -16,6 +16,10 @@ summary: >-
   赤城の留守を預かる小暮のもとで、般若党が同志集めと武器の買い出しに出るが、刀ばかり大量に買い込んで金を使い果たす。
   そこへ魔鱗組が神社に攻め込み、小暮・般若党と一緒に戦う。勝つと般若党の仲間は小暮のもとを離れていく。
 
+summary_en: >-
+  With Kogure in charge while Akagi is away, the Prajnas go out to recruit comrades and buy weapons, but spend all their money on a huge pile of swords.
+  Then the Demonscales storm the Shrine, and you fight alongside Kogure and the Prajnas. After the victory, the Prajna members drift away from Kogure.
+
 timing:
   phase: 2日目 昼
   slot: なし

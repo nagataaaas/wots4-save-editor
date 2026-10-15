@@ -15,6 +15,10 @@ summary: >-
   居留地でローラに電信機の実験を見ないかと誘われ、茂呂と港で受信を待つ。届いた文字は「助けて」で、ローラを襲う般若党3人を茂呂と一緒に倒す。
   成功すると外国の友好度とローラの好感度が上がり、攘夷とは敵対する。
 
+summary_en: >-
+  In Little Britain, Laura invites you to watch a telegraph experiment, and you wait at the Harbor with Moro for a message. The message that arrives is "Help," and you defeat the three Prajnas attacking Laura together with Moro.
+  Success raises friendship with the Foreigners and Laura's affection, and makes the Prajnas hostile.
+
 timing:
   phase: 1日目 夕
   slot: 夕

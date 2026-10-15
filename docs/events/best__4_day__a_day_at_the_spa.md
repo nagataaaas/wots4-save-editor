@@ -16,6 +16,10 @@ summary: >-
   大通りの人だかりにいるローラに近づくと、鬼怒川が攘夷志士を釜茹でにする公開処刑を見せられる。
   会話だけで戦闘はない。ここから先は時間帯を挟まずに連続して進む。
 
+summary_en: >-
+  Approach Laura in the crowd on the Main Plaza, and Kinugawa shows you a public execution in which Prajna activists are boiled alive.
+  Conversation only, with no fighting. From here on, events continue back to back with no time period in between.
+
 timing:
   phase: 4日目以降（剣術大会前）
   slot: なし

@@ -16,6 +16,10 @@ summary: >-
   茂呂・伯爵と三人で神社の洞窟（般若党の本拠）に奇襲をかけ、般若党を倒して最深部で赤城と小暮を斬る。
   流れは般若党壊滅と同じで、味方が茂呂と伯爵になる。神社の門は閉じない。
 
+summary_en: >-
+  With Moro and the Count, the three of you launch a surprise attack on the cave at the Shrine (the Prajna base), defeat the Prajnas, and cut down Akagi and Kogure at the deepest point.
+  The flow is the same as Annihilation of the Prajnas, but your allies are Moro and the Count. The gate of the Shrine does not close.
+
 timing:
   phase: 剣術大会以降
   slot: なし

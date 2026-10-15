@@ -14,6 +14,10 @@ faction:
 summary: >-
   港の騒ぎが収まったあとの場面を見るだけのイベント。赤城が退き、琴吹が追い、ローラ・茂呂・J.J. が港に残る。戦闘・選択肢はない。
 
+summary_en: >-
+  An event where you only watch the scene after the uproar at the Harbor dies down. Akagi withdraws, Kotobuki pursues him, and Laura, Moro and J.J. remain at the Harbor.
+  There is no fighting and there are no choices.
+
 timing:
   phase: 1日目 昼
   slot: 昼

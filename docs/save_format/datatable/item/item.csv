@@ -241,4 +241,4 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,reading,kind,max_stack,use_action,de
 239,0x00EF,,お金袋特大,Money Bag (XL),お金袋特大,0,1,0xFFFF,使うことでお金を手に入れることができる。,Use to obtain money.,,0x17 と同じ名前
 240,0x00F0,,西洋医学の水,Western Medicine Water,せいよういがくのみず,3,1,0x00D8,西洋医学の結晶。命が200回復するがつま斬りゲージが減少する。,"The pinnacle of Western medicine! Restores 200 life, but decreases the Spring Harvest gauge.",,
 241,0x00F1,,疲無人参,Stamina Carrot,つかれないにんじん,3,1,0x00D5,疲れなくなる人参。２分間活力が減らなくなるが しばらくすると攻撃力が減少する。,"A carrot that chases away exhaustion for some reason. Freezes your vitality so it won't decrease at all for 2 minutes, but lowers your strength after a short time has passed.",,
-65535,0xFFFF,,なし,,,,,,,,TS,
+65535,0xFFFF,,なし,None,,,,,,,TS,

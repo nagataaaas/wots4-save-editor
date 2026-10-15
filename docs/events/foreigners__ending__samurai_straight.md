@@ -15,6 +15,10 @@ summary: >-
   侍が鬼怒川を追って江戸へ向かう結末。その後の侍を誰も知らないという語りのあと、スタッフロールが流れて周回が終わる。
   夕暮れの船上でローラと別れていたときは、語りに続きがつく。
 
+summary_en: >-
+  An ending in which the samurai heads for Edo after Kinugawa. After narration saying no one knows what became of the samurai, the staff roll plays and the playthrough ends.
+  If you parted from Laura in Twilight On Board, the narration goes on a little further.
+
 timing:
   phase: 結末
   slot: なし

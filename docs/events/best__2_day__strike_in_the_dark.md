@@ -16,6 +16,10 @@ summary: >-
   仲間の信頼を失った小暮が、結果で取り戻そうと茂呂を斬りに行く。夜の町で茂呂と小暮が向き合う場面で、どちらにつくか、止めるかを選ぶ。
   語学所が開いているときだけ出る「赤城のようになりたくないのか？」で小暮と戦い、倒しきらずに説得すると成功する。
 
+summary_en: >-
+  Kogure, having lost his comrades' trust, sets out to cut down Moro to win it back with results. When Moro and Kogure face off in the Town at night, you choose whose side to take or whether to stop them.
+  Choose "Don't you want to avoid ending up like Akagi?", which appears only while the Language School is open, to fight Kogure, and persuade him without finishing him off to succeed.
+
 timing:
   phase: 2日目 夜
   slot: 夜

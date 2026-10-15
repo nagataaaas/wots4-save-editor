@@ -16,6 +16,10 @@ summary: >-
   どの勢力にも属さずに出場した剣術大会の結果。チャートに名前の出ない記録で、対戦相手は 凶衛門 → 五兵衛とギンパチ → 堂島軍二／謎の女剣士／まだら／とぐろ。
   3回戦の相手は堂島・先生・朱美の状態で決まる。優勝すると表彰式からそのまま魔鱗組としての結末になる。
 
+summary_en: >-
+  The result of the Battle Tournament when you enter without belonging to any faction. A record whose name does not appear on the chart; the opponents are Kyouemon, then Gohee and Ginpachi, then Gunji Dojima / a mysterious swordswoman / Madara / Toguro.
+  The third-round opponent depends on the state of Dojima, Sensei and Akemi. Winning the tournament leads straight from the award ceremony to the As a Demonscale ending.
+
 timing:
   phase: 4日目以降（剣術大会）
   slot: 昼

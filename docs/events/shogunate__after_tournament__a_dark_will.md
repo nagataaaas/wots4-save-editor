@@ -16,6 +16,10 @@ summary: >-
   代官所の門前で三姉妹に招かれ、鬼怒川・琴吹・茂呂の話し合いに同席する。鬼怒川が英国の大砲で攘夷の残党を一掃すると言い出し、茂呂が席を立つ。
   茂呂に続いて席を立ち、鬼怒川を拒めば憂国の士へ、話を聞き続けるか鬼怒川に理解を示せば大老武断へ進む。
 
+summary_en: >-
+  Invited by the Three Sisters at the gate of the Magistrate's Office, you sit in on a meeting of Kinugawa, Kotobuki and Moro. Kinugawa proposes wiping out the remaining Prajnas with British cannons, and Moro walks out.
+  Follow Moro out and reject Kinugawa to go on to Patriots; keep listening or show understanding for Kinugawa to go on to Chief Minister At War.
+
 timing:
   phase: 剣術大会以降
   slot: なし

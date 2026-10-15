@@ -16,6 +16,10 @@ summary: >-
   ゲーム内では起きず、このイベントの状態はどの場面でも変わらない（未実装とみられる）。
   残っている内容は、夜の領事館でローラが流れた血と伯爵の死を嘆き、英国への帰還命令を告げたうえで、傍にいてほしいと主人公に頼む場面。
 
+summary_en: >-
+  It does not occur in the game, and this event's state never changes in any scene.
+  What remains is a scene at the Consulate at night in which Laura grieves over the bloodshed and the Count's death, tells of her orders to return to Britain, and asks the hero to stay by her side.
+
 timing:
   phase: 剣術大会以降
   slot: 夜

@@ -16,6 +16,10 @@ summary: >-
   港でローラが帰国の船に乗る場面に立ち会う。J.J が死んでいてメリンダが生きていれば、メリンダが「おまえのせいで公使様は失脚された」と海兵隊と襲ってくる。
   寿司屋の店主が死んでいるとき、メリンダが死んでいるときは戦闘なしで終わる。以後、居留地の門が閉じる。
 
+summary_en: >-
+  You witness Laura boarding the ship home at the Harbor. If J.J. is dead and Melinda is alive, Melinda attacks with the Royal Marines, saying "The ambassador lost her post because of you."
+  If the sushi shop owner is dead, or if Melinda is dead, it ends without a fight. Afterwards, the gate to Little Britain closes.
+
 timing:
   phase: 3日目 夕
   slot: なし

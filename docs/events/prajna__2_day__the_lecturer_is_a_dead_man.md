@@ -16,6 +16,10 @@ summary: >-
   神社で赤城に誘われ、町の語学所から出てきた講師を襲う。茂呂と捕り方が守る講師を斬ると語学所が閉じ、3000 文。
   講師に大通り側まで逃げられても成功になるが、語学所は開いたままで 500 文。攘夷の友好度が上がり、幕府・外国とは敵対する。
 
+summary_en: >-
+  Invited by Akagi at the Shrine, you attack the lecturer as he leaves the Language School in Town. Cut down the lecturer, who is guarded by Moro and officers, and the Language School closes and you earn 3000 mon.
+  If the lecturer escapes toward the Main Plaza it is still a success, but the Language School stays open and you earn 500 mon. Friendship with the Prajnas rises, and the Shogunate and the Foreigners become hostile.
+
 timing:
   phase: 2日目 夕
   slot: 夕

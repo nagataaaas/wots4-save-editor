@@ -16,6 +16,10 @@ summary: >-
   4日目以降の昼に、どこにいても始まる。瓦版売りが剣術大会の番付を売り歩く場面が流れ、その裏で3勢力それぞれの
   「友好ポイント − 対立ポイント」が 3 以上かを判定して、ルート分岐と大寄せ以降の門を決める。
 
+summary_en: >-
+  From Day 4 on, it starts in the daytime wherever you are. A scene plays of a news vendor selling the Battle Tournament rankings, while behind the scenes each of the three factions is checked for whether its "friendship points minus hostility points" is 3 or more,
+  which decides the route branches and the gates from this point on.
+
 timing:
   phase: 4日目以降（剣術大会前）
   slot: 昼

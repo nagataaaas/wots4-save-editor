@@ -16,6 +16,10 @@ summary: >-
   願い虚しくの大通りの戦闘のあと、大老・鬼怒川が現れ、伯爵を魔鱗組に襲わせたことを明かしてローラを殺そうとする。
   魔鱗組からローラを守り、15人倒すと領事館へ逃れて成功。ローラが倒れると失敗し、ローラは死亡、居留地の門が閉じる。
 
+summary_en: >-
+  After the fight on the Main Plaza in Wasted Wish, Chief Minister Kinugawa appears, reveals that he had the Demonscales attack the Count, and tries to kill Laura. Protect Laura from the Demonscales; defeat 15 of them and escape to the Consulate to succeed.
+  If Laura falls, the event fails, Laura dies, and the gate to Little Britain closes.
+
 timing:
   phase: 剣術大会以降（510）
   slot: 夕

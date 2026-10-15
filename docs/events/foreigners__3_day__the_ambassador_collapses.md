@@ -16,6 +16,10 @@ summary: >-
   領事館でローラが過労で倒れ、J.J に精のつく薬を買って来るよう頼まれる。町の薬屋で薬を受け取り、居留地へ戻ると般若党に襲われる。
   撃退して薬を届けると成功し、報酬 3000 文を受け取る。
 
+summary_en: >-
+  At the Consulate, Laura collapses from overwork, and J.J. asks you to buy her a restorative medicine. You pick up the medicine at the pharmacy in Town and are attacked by the Prajnas on the way back to Little Britain.
+  Fight them off and deliver the medicine to succeed and receive a 3000 mon reward.
+
 timing:
   phase: 3日目 夕
   slot: 夕

@@ -16,6 +16,10 @@ summary: >-
   洞窟から出た茂呂・伯爵・主人公を、琴吹が魔鱗組と大砲を連れて待ち構える。反逆者として三人を見逃せない琴吹と戦い、全員を倒す。
   琴吹は最後まで幕臣であったと伝えてくれと言い残して死に、伯爵が三人を領事館にかくまう。
 
+summary_en: >-
+  Kotobuki lies in wait with the Demonscales and cannons for Moro, the Count and the hero as they come out of the cave. You fight Kotobuki, who cannot let the three traitors go, and defeat them all.
+  Kotobuki dies asking that it be told he was a vassal of the Shogunate to the end, and the Count shelters the three at the Consulate.
+
 timing:
   phase: 剣術大会以降
   slot: 夜

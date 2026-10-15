@@ -16,6 +16,10 @@ summary: >-
   港で琴吹光の捕り物に加わるが、西洋人の密売人は治外法権を盾に逮捕を拒む。
   密売人を見逃せば 500 文、「悪は斬るべし！」→「斬った罪は全て被ろう…」で密売人と用心棒を斬れば 1500 文だが外国と敵対する。
 
+summary_en: >-
+  You join Hikaru Kotobuki's arrest at the Harbor, but the Western smuggler refuses arrest, citing extraterritoriality.
+  Let the smuggler go for 500 mon, or choose "Evil must be cut down!" → "I'll take all the blame for the killing..." to cut down the smuggler and his bodyguards for 1500 mon, which makes the Foreigners hostile.
+
 timing:
   phase: 1日目 夜
   slot: 夜

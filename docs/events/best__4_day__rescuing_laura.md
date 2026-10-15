@@ -16,6 +16,10 @@ summary: >-
   大通りの処刑台でローラの釜茹でを止める。魔鱗組、鬼怒川、魔鱗親衛隊と3回戦う。途中で赤城が駆けつけてローラを逃がし、
   最後は J.J・メリンダも加わる。鬼怒川は倒しても起き上がり、港へ逃げる。
 
+summary_en: >-
+  Stop Laura from being boiled alive on the execution stage at the Main Plaza. You fight three times: the Demonscales, Kinugawa, and the Demonscale Elite.
+  Midway, Akagi rushes in and helps Laura escape, and at the end J.J. and Melinda join too. Kinugawa gets back up even after being defeated and flees to the Harbor.
+
 timing:
   phase: 4日目以降（420）
   slot: 夜

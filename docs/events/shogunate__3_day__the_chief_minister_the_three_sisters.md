@@ -16,6 +16,10 @@ summary: >-
   鬼怒川怨仙に呼ばれて拝謁し、代官所の拷問塔（鬼怒川の「美の殿堂」）を案内される。戦闘はなく、会うだけで成功になり、幕府の友好度が上がる。
   以降、代官所の奥・拷問塔に入れるようになる。
 
+summary_en: >-
+  Summoned by Onsen Kinugawa for an audience, you are shown the torture tower of the Magistrate's Office (Kinugawa's "Hall of Beauty"). There is no fighting; just meeting him is a success and raises friendship with the Shogunate.
+  From then on, you can enter the back of the Magistrate's Office and the torture tower.
+
 timing:
   phase: 3日目 夕
   slot: 夕

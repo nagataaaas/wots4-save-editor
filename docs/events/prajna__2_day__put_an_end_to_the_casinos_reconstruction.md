@@ -16,6 +16,10 @@ summary: >-
   神社で赤城に誘われ、港で再建中のカジノを般若党と襲う。伯爵を退けるとカジノは閉じたままで 1500 文。
   般若党に斬りかかって伯爵の側に付くとカジノが再建され（開く）、伯爵から 3000 文を得るが失敗になる。
 
+summary_en: >-
+  Invited by Akagi at the Shrine, you raid the Casino being rebuilt at the Harbor with the Prajnas. Fend off the Count, and the Casino stays closed and you earn 1500 mon.
+  Attacking the Prajnas to side with the Count gets the Casino rebuilt (open) and earns 3000 mon from the Count, but fails the event.
+
 timing:
   phase: 2日目 夜
   slot: 夜

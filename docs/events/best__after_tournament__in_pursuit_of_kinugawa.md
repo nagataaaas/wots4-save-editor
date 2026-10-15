@@ -15,6 +15,10 @@ summary: >-
   逃げた鬼怒川を追って港へ向かい、待ち受ける敵と戦う。朱美に関わる条件が整っていれば三姉妹ととぐろが相手で、まだらが味方につく。
   整っていなければ『暗闇脳天』のとぐろ・まだらが相手になる。
 
+summary_en: >-
+  Chase the fleeing Kinugawa to the Harbor and fight the enemies lying in wait. If the conditions involving Akemi are met, your opponents are the Three Sisters and Toguro, and Madara joins your side.
+  If not, your opponents are Toguro and Madara of the Black Masks.
+
 timing:
   phase: 剣術大会以降
   slot: 昼

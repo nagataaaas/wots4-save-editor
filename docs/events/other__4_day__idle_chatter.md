@@ -15,6 +15,9 @@ faction:
 summary: >-
   町で町人たちが剣術大会の噂話をしている場面を見るだけのイベント。戦闘・選択肢はない。
 
+summary_en: >-
+  An event where you only watch townsfolk in Town gossiping about the Battle Tournament. There is no fighting and there are no choices.
+
 timing:
   phase: 4日目以降（剣術大会前）
   slot: 昼

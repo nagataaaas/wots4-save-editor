@@ -15,6 +15,9 @@ faction:
 summary: >-
   赤城を失った小暮が、怒りのやり場がないと主人公に一騎打ちを挑む。倒すと小暮は「これで赤城のもとへ行ける」と息絶える。
 
+summary_en: >-
+  Kogure, having lost Akagi and with nowhere to direct his rage, challenges the hero to a duel. When defeated, Kogure dies saying "Now I can go to Akagi."
+
 timing:
   phase: 2日目 昼
   slot: なし

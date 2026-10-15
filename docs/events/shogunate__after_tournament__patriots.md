@@ -16,6 +16,10 @@ summary: >-
   先に席を立った茂呂と合流し、攘夷の大将・副将の赤城と小暮を討てば鬼怒川が阿弥浜にいる理由がなくなり、江戸へ帰るはずだという策を聞く。
   伯爵が加わり、三人で神社の洞窟へ奇襲をかけることになる。会話のみ。
 
+summary_en: >-
+  You join Moro, who walked out first, and hear his plan: if you kill the Prajna leader and second-in-command, Akagi and Kogure, Kinugawa will have no reason to stay in Amihama and should return to Edo.
+  The Count joins, and the three of you decide to launch a surprise attack on the cave at the Shrine. Conversation only.
+
 timing:
   phase: 剣術大会以降
   slot: 昼

@@ -16,6 +16,10 @@ summary: >-
   幕府側として出場した剣術大会の結果。チャートに名前の出ない記録で、対戦相手は 細川 → 巣鴨 → まだら／とぐろ。
   3回戦の相手は朱美の状態で決まる。
 
+summary_en: >-
+  The result of the Battle Tournament when you enter on the Shogunate's side. A record whose name does not appear on the chart; the opponents are Hosokawa, then Sugamo, then Madara / Toguro.
+  The third-round opponent depends on Akemi's state.
+
 timing:
   phase: 4日目以降（剣術大会）
   slot: 昼

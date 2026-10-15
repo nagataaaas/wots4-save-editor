@@ -93,7 +93,7 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
   `kind` は種別 🟢：0＝道具、1＝料理（料理屋でその場で食べる）、2＝宿（梅・竹・松の間、入院）、3＝なし（手に入る経路がない。未使用とみられる）。
   `max_stack` は手持ちの1枠にまとめて持てる最大数 🟢（ほとんど 1。がらくた 10、お宝 5、鉄 999、コイン 9999、エサ 10、宿 0）。
   箪笥の枠はこの数を超えて入る（[U] sample）
-- `sect/sect.csv`：流派（全 110 件）🟢。`name_ja`・`name_en` はゲーム内の表記（「……」は主人公が手に入れられない流派。英語版で仮の名前の行は空欄）。
+- `sect/sect.csv`：流派（全 110 件）🟢。`name_ja`・`name_en` はゲーム内の表記（「……」は主人公が手に入れられない流派で、英語は「...」。英語版で仮の名前の行（久土井上段・鬼怒川中段）は、構えの英語名から付けた名前）。
   `stance` は構え（`sect/stance.csv`）、`slot` は構えの組（[styles](../chunks/styles/README.md) `0x18A00 + 2×slot`）、`sheet1`〜`sheet3` は技の表（`sect/skill-sheet.csv`。空欄はなし）、
   `thr1`〜`thr4` は弐段〜伍段になる修練度、`scroll_no` は流派の書の番号（[sect-scrolls](../chunks/sect-scrolls/README.md) +0x00。空欄は書がない）
 - `sect/stance.csv`：構え 0〜12 🟢。`slot` は構えの組（0 刀・1 槍・2 無手・3 拳銃・4 ライフル・5 二刀）
@@ -160,6 +160,11 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
   `person` が 0 の行の `name_ja` は、その見た目を使う町の人の種類の名前。`used_by` はその見た目を使う町の人の種類（`・` 区切り）、`sex` は見た目の性別
 - `place/start-location.csv`：開始地点（現在地、位置 0x13 の u8）。`crash` は 1＝クラッシュが報告されている値（選択肢に出さない）。
   `warning_ja` は選べるが注意が必要な値の注意書き（画面にそのまま出す）。0xC5 以降は未調査で表にない
+- 英語の列：日本語の列 `*_ja` の英語は、すぐ後ろの `*_en` に書く（英語版の表記があればそれ、なければ訳す。日本語が空の行は空欄）。
+  `name_*`・`description_*` のほか、`place/start-location.csv` の `warning_en`、`occupation/occupation.csv` の `client_en`、部品（`appearance/face.csv` など）の `alias_en`、
+  `sect/sheet-skill.csv` の `cond_en`、`sect/skill.csv` の `command_en`（弱 Weak・強 Strong・ガード Guard を「 + 」でつなぐ）、`accessory/accessory.csv` の `default_attachment_en`（`default_attachment_ja` は標準の取り付け先の名前）、
+  `npc/npc-look.csv` の `used_by_en`（`used_by` の種類ごとの英語を「, 」でつなぎ、同じ英語は1つにまとめる）。
+  `npc/night-visit-partner.csv`・`occupation/occupation.csv` の `note_en` は、`備考` から作る画面の注記（確度の入らない `備考` だけ）の英語
 - `source`（パーツ・銘・魅力・完成武器・アイテム）：出典。`CT`＝Cheat Engine テーブル、`TS`＝[TS] の定義、`U`＝ユーザーのゲーム内確認、`SE-BBS`＝PS3版の掲示板。複数あるときは `;` で区切る
 
 ## 2. CSV の列
@@ -172,7 +177,7 @@ CSV を直したら `pnpm gen:dataset` を実行する（生成物が古いと�
 | `id_hex`        | ID（`0x` 付きの16進）                                                                 |
 | `save_bytes_le` | セーブに書かれるバイト列（空白区切り、例：`6A 01 00`）。ID と1対1で自明なら空欄でよい |
 | `name_ja`       | 日本語名                                                                              |
-| `name_en`       | 英語名（刃・鍔・柄・銘・魅力は [CT] の表記のまま）                                    |
+| `name_en`       | 英語名（刃・鍔・柄・銘・魅力は [CT] の表記のまま。ただし銘 362 は英語版の表記 Assassin）。英語版にない名前（開始地点・夜の約束の配置・「なし」の行など）は日本語名から訳す。日本語名が空の行は空欄 |
 | `備考`          | 確定でない場合の確度と理由、U-n、同じIDに別の名前がある場合など                       |
 
 - 行は確定（✅）として扱う。確定でないものだけ、`備考` の先頭に確度の記号（🟢🟡🔶❓、`../README.md` §1.1）を書き、続けて何が怪しいかを書く

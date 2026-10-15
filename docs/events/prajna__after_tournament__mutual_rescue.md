@@ -16,6 +16,10 @@ summary: >-
   赤城・小暮らと代官所に斬り込み、魔鱗組の大将を倒して鍵を奪い、牢の同志を救い出して裏門から逃げる。
   逃げ延びると、留守の間に鬼怒川に神社を押さえられたと知り、般若党は旅籠へ移る。救えた同志の数で報酬が変わる。
 
+summary_en: >-
+  Storm the Magistrate's Office with Akagi, Kogure and the others, defeat the Demonscale General to take the key, free your comrades from the jail, and escape through the back gate.
+  Once you get away, you learn that Kinugawa seized the Shrine while you were gone, and the Prajnas move to the Inn. The reward depends on how many comrades you rescue.
+
 timing:
   phase: 剣術大会以降
   slot: 昼

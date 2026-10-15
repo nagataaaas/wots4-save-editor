@@ -15,6 +15,10 @@ summary: >-
   領事館でまだらと暗闇脳天を倒した般若党は、幕府の大軍に包囲される。降伏を拒んだ赤城たちは最後の一人まで戦って倒れ、
   その後の時代を語る後日談とスタッフロールで周回が終わる。
 
+summary_en: >-
+  The Prajnas who defeated Madara and the Black Masks at the Consulate are surrounded by a great Shogunate army. Refusing to surrender, Akagi and the others fight to the last man and fall,
+  and the playthrough ends with an epilogue about the era that followed and the staff roll.
+
 timing:
   phase: 結末
   slot: なし

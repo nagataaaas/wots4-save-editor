@@ -16,6 +16,10 @@ summary: >-
   鬼怒川に黒船を奪われ、主人公は単身で黒船に乗り込んで鬼怒川と1対1で戦う。倒された鬼怒川は「私の勝ちだ」と言い残し、
   港の仲間たちが黒船と主人公の姿を見て「武士の中の武士だ」とたたえる。
 
+summary_en: >-
+  Kinugawa seizes the Black Ship, and the hero boards it alone to fight Kinugawa one-on-one. The defeated Kinugawa's last words are "I have won,"
+  and the companions at the Harbor, seeing the Black Ship and the hero, praise him as "the samurai of samurai."
+
 timing:
   phase: 剣術大会以降
   slot: 昼

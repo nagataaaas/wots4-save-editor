@@ -16,6 +16,10 @@ summary: >-
   茂呂茂に頼まれ、港に着いた英国人講師を町の語学所まで護衛する。途中で赤城・小暮が率いる般若党に襲われる。
   講師を語学所まで送り届けると語学所が開設され 1500 文。講師が殺されると語学所は閉鎖のままで 500 文。
 
+summary_en: >-
+  At Shigeru Moro's request, escort the British lecturer who has arrived at the Harbor to the Language School in Town. On the way, Prajnas led by Akagi and Kogure attack.
+  Deliver the lecturer to the Language School and it opens, with 1500 mon. If the lecturer is killed, the Language School stays closed, with 500 mon.
+
 timing:
   phase: 2日目 夕
   slot: 夕

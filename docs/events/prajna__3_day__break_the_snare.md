@@ -16,6 +16,10 @@ summary: >-
   夜の港で、茂呂を襲う般若党を止めに入る。茂呂を斬らせずに赤城を3回説得すると罠だと気づかせられ、現れた魔鱗組と戦う。勝つと成功し、1500 文。茂呂は生き残る。
   説得に失敗して茂呂が斬られると、仕組まれた襲撃の後半（三姉妹・魔鱗組との戦闘）に変わる。
 
+summary_en: >-
+  At the Harbor at night, you step in to stop the Prajnas attacking Moro. Persuade Akagi 3 times without letting Moro be cut down to make him realize it is a trap, then fight the Demonscales who appear.
+  Win to succeed and earn 1500 mon; Moro survives. If persuasion fails and Moro is cut down, it turns into the second half of Planned Raid (the fight with the Three Sisters and the Demonscales).
+
 timing:
   phase: 3日目 夜
   slot: 夜

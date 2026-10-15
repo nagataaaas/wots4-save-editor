@@ -16,6 +16,10 @@ summary: >-
   撃たれた赤城が神社の奥で寝かされ、医者は手の施しようがないと言う。病院が開いていれば「英国の病院に連れて行こう」を選べ、赤城は手術で助かる（成功）。
   病院が閉じている、別の答えを選ぶ、赤城にとどめを刺す、のいずれかで赤城が死ぬ（失敗）。
 
+summary_en: >-
+  The wounded Akagi is laid down deep inside the Shrine, and the doctor says nothing can be done. If the Hospital is open, you can choose "Let's take him to the British hospital," and Akagi survives surgery (success).
+  If the Hospital is closed, you choose another answer, or you finish Akagi off, he dies (failure).
+
 timing:
   phase: 1日目 夜
   slot: 夜

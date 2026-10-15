@@ -15,6 +15,10 @@ summary: >-
   居留地でメリンダに声をかけられ、領事館で英国公使ローラと J.J に会う。護衛を頼まれて終わる会話だけのイベント。
   メリンダの前で抜刀すると、メリンダと海兵隊との戦闘になり、勝っても逃げても失敗になる。
 
+summary_en: >-
+  In Little Britain, Melinda calls out to you, and at the Consulate you meet the British ambassador Laura and J.J. A conversation-only event that ends with them asking you to act as a bodyguard.
+  Drawing your sword in front of Melinda starts a fight with Melinda and the Royal Marines, which fails the event whether you win or flee.
+
 timing:
   phase: 1日目 昼
   slot: 昼

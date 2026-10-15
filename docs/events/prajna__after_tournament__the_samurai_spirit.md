@@ -16,6 +16,10 @@ summary: >-
   J.J を倒した領事館に代官の琴吹が三姉妹と魔鱗組を連れて現れ、赤城と言い争ったのち戦闘になる。
   琴吹・万由・千佳・百合の4人を倒すと成功し、結末の攘夷の炎へ続く。
 
+summary_en: >-
+  At the Consulate where J.J. was defeated, Magistrate Kotobuki appears with the Three Sisters and the Demonscales, and after an argument with Akagi a fight breaks out.
+  Defeat Kotobuki, Mayu, Chika and Yuri to succeed and continue to The Flames of Prajna ending.
+
 timing:
   phase: 剣術大会以降（510）
   slot: 夕

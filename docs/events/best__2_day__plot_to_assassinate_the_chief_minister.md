@@ -16,6 +16,10 @@ summary: >-
   大通りで琴吹に大老暗殺の計画を打ち明けられ、準備ができたら代官所内の奥座敷に乗り込む。琴吹と、生きている小暮・茂呂・J.J・メリンダと一緒に
   鬼怒川と魔鱗組を倒す。倒した鬼怒川は影武者で、結末は大老は生きていたになる。
 
+summary_en: >-
+  On the Main Plaza, Kotobuki reveals a plan to assassinate the Chief Minister, and when you are ready you storm the inner chamber of the Magistrate's Office. With Kotobuki and whoever of Kogure, Moro, J.J. and Melinda is still alive,
+  you defeat Kinugawa and the Demonscales. The Kinugawa you defeat is a body double, and the ending becomes The Chief Minister Lived.
+
 timing:
   phase: 2日目 昼
   slot: なし

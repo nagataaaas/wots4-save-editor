@@ -16,6 +16,10 @@ summary: >-
   夜の墓場で、朱美が三姉妹と密談しているのを見る。朱美は幕府の側の者で、港の取引は般若党に茂呂を斬らせる罠だった。
   問い詰めると正体を現した朱美（まだら）と戦い、勝つと成功する（朱美はいなくなる）。見逃すと失敗し、朱美を送ると夜這いの約束ができることがある。
 
+summary_en: >-
+  At the Cemetery at night, you see Akemi meeting secretly with the Three Sisters. Akemi works for the Shogunate, and the deal at the Harbor was a trap to make the Prajnas kill Moro.
+  Confront her and you fight Akemi (Madara), who reveals her true identity; win to succeed (Akemi disappears). Letting her go fails the event, and walking Akemi home may let you make a night crawling appointment.
+
 timing:
   phase: 3日目 夜
   slot: 夜

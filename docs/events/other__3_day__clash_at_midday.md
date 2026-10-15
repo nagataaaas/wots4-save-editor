@@ -16,6 +16,10 @@ summary: >-
   町で赤城・小暮の般若党と、琴吹・三姉妹・魔鱗組がぶつかっている。赤城と琴吹の双方から声をかけられ、
   赤城に助太刀すると血で血を洗う戦い、琴吹に助太刀すると魔鱗組の力の戦闘になる。「ただの通りすがりだ」を選ぶと失敗。
 
+summary_en: >-
+  In Town, Akagi and Kogure's Prajnas are clashing with Kotobuki, the Three Sisters and the Demonscales. Both Akagi and Kotobuki call out to you: helping Akagi leads to the Washing Blood With Blood fight, and helping Kotobuki leads to The Might of the Demonscales fight.
+  Choosing "I'm just passing through" fails the event.
+
 timing:
   phase: 3日目 昼
   slot: 昼

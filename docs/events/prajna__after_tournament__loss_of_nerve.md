@@ -16,6 +16,10 @@ summary: >-
   神社で、鬼怒川を恐れて逃げ出す党員を赤城が追い払い、残った者で代官所を襲って囚われた同志を救うと告げる。
   主人公が「よし 早速出発だ！」を選ぶと成功し、そのまま同士救出が始まる。失敗はない。
 
+summary_en: >-
+  At the Shrine, Akagi drives off members who are fleeing in fear of Kinugawa and announces that those who remain will raid the Magistrate's Office to free their captured comrades.
+  Choosing "Right, let's set out at once!" is a success, and Mutual Rescue begins right away. There is no failure.
+
 timing:
   phase: 剣術大会以降
   slot: なし

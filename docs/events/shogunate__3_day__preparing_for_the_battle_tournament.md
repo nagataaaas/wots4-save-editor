@@ -16,6 +16,10 @@ summary: >-
   剣術大会の会場を突貫工事している茂呂茂に頼まれ、代わりに港の外国商人からボルトの箱を受け取りに行く。港で赤城・小暮に襲われ、退けると成功で 1500 文。
   断ると茂呂が自分で港へ向かい、その時間帯が終わると茂呂が死ぬ（幕府ルートに入れなくなる）。
 
+summary_en: >-
+  Shigeru Moro, rushing construction of the Battle Tournament venue, asks you to collect a box of bolts from a foreign merchant at the Harbor in his place. Akagi and Kogure attack at the Harbor; fend them off to succeed and earn 1500 mon.
+  If you refuse, Moro goes to the Harbor himself, and when that time period ends he dies (you can no longer enter the Shogunate route).
+
 timing:
   phase: 3日目 夜
   slot: 夜

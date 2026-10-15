@@ -16,6 +16,10 @@ summary: >-
   帰国するローラの船の上で、夕暮れの景色を前にローラが想いを打ち明ける。共に行くと答えれば海外雄飛の結末になる。
   「為すべき大儀が残っている」と断ると、主人公は船を降り、ローラは一人で去る。居留地の門が閉じ、討ち入りへ進む。
 
+summary_en: >-
+  On the ship taking Laura home, she confesses her feelings against the twilight scenery. Answer that you will go with her for the Setting Off to Foreign Lands ending.
+  Refuse with "I still have a great cause to fulfill," and the hero leaves the ship and Laura departs alone. The gate to Little Britain closes and the story moves on to The Raid.
+
 timing:
   phase: 鬼怒川の魔手以降（600）
   slot: 夕

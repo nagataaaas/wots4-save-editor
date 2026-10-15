@@ -16,6 +16,10 @@ summary: >-
   語学所で、茂呂に誘われて来た小暮と一緒に英語と地理の授業を受ける。そこへ御大老の命で語学所を取り潰しに来た一団が現れ、小暮と一緒に戦う。
   そのあと小暮は茂呂と語り合い、病院の赤城に「攘夷で本当に日本は救われるのか」と問いかける。
 
+summary_en: >-
+  At the Language School, you take English and geography lessons alongside Kogure, who came at Moro's invitation. A group sent by the Chief Minister to shut the school down appears, and you fight them with Kogure.
+  Afterwards Kogure talks with Moro, then asks Akagi at the Hospital, "Will driving out the foreigners really save Japan?"
+
 timing:
   phase: 3日目 昼
   slot: 昼

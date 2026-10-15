@@ -16,6 +16,10 @@ summary: >-
   三姉妹から英国人の病院の開業を邪魔するよう頼まれ、居留地の病院前で反対派の町人の側について海兵隊、続いてメリンダと戦う。
   成功すると病院は閉鎖のままで、褒美は「報酬だ」で 1500 文、「遊んでいこう」で拷問、無言なら幕府の友好度が 2 上がる。
 
+summary_en: >-
+  The Three Sisters ask you to disrupt the opening of the British hospital, and in front of the Hospital in Little Britain you side with the opposing townsfolk and fight the Royal Marines, then Melinda.
+  Success keeps the Hospital closed; for your reward, "Pay me" gives 1500 mon, "Let's have some fun" gets you tortured, and staying silent raises friendship with the Shogunate by 2.
+
 timing:
   phase: 2日目 昼
   slot: 昼

@@ -16,6 +16,10 @@ summary: >-
   数日後、鬼怒川は製糸工場の約束を反故にして兵器工場を作り、借りた黒船も返さずローラを領事館に閉じ込める。
   日本は鬼怒川の独裁の下で軍国主義へ進み、誰も滅亡に向かっていることに気づかなかった、と語られて終わる。
 
+summary_en: >-
+  A few days later, Kinugawa breaks his promise of a silk mill and builds a weapons factory instead, never returns the borrowed Black Ship, and confines Laura to the Consulate.
+  Japan heads toward militarism under Kinugawa's dictatorship, and it ends with narration that no one realized the country was heading for ruin.
+
 timing:
   phase: 結末
   slot: なし

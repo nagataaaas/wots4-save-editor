@@ -114,4 +114,4 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,reading,blade,sheath_x,guard,grip,we
 114,0x0072,,和泉守兼定,Izuminokami,いずみのかみかねさだ,0x0165,0x0162,0x015E,0x015D,0,,0x0333,1,,🟢 TS に定義なし,https://static.wikia.nocookie.net/wots/images/f/fd/Izuminokami.jpg/revision/latest
 115,0x0073,,活火山,Volcano,かつかざん,0x0166,0x0163,0x0160,0x015F,0,,0x0334,1,,🟢 TS に定義なし,https://static.wikia.nocookie.net/wots/images/b/bd/Volcano.jpg/revision/latest
 116,0x0074,,夜葬,Wildgrass,やそう,0x0168,0x0167,0x016A,0x0169,0,,0x0347,1,,🟢 TS に定義なし,https://static.wikia.nocookie.net/wots/images/a/a2/Wildgrass.jpg/revision/latest
-65535,0xFFFF,,自作,,,,,,,,,,,TS,自作武器の判定値,
+65535,0xFFFF,,自作,Custom,,,,,,,,,,TS,自作武器の判定値,

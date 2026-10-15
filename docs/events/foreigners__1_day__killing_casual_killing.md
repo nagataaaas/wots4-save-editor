@@ -15,6 +15,10 @@ summary: >-
   領事館で J.J に、辻斬りを逆に斬ってほしいと頼まれる。J.J と街道へ行き、襲ってくる辻斬り10人を全滅させると成功。
   J.J の前で抜刀して挑発すると、海兵隊との戦闘になり失敗する。
 
+summary_en: >-
+  At the Consulate, J.J. asks you to turn the tables on the casual killers and cut them down. Go to the Back Roads with J.J. and wipe out all ten casual killers who attack to succeed.
+  Drawing your sword in front of J.J. to provoke him starts a fight with the Royal Marines and fails the event.
+
 timing:
   phase: 1日目 夜
   slot: 夜

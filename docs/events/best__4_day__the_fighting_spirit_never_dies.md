@@ -16,6 +16,10 @@ summary: >-
   代官所内の拷問部屋で三姉妹に捕らわれる。朱美に関わる条件が整っていなければ三姉妹の拷問を3回受けたあと、丸腰で三姉妹と戦い、
   駆けつけた茂呂・小暮と三姉妹を倒す。整っていればまだらに助け出され、拷問も戦闘もない。
 
+summary_en: >-
+  You are held captive by the Three Sisters in the Torture Chamber of the Magistrate's Office. If the conditions involving Akemi are not met, you endure the Three Sisters' torture three times, then fight them unarmed and defeat them with Moro and Kogure, who rush to your aid.
+  If they are met, Madara rescues you, with no torture or fighting.
+
 timing:
   phase: 4日目以降（420）
   slot: 夜

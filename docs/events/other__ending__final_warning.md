@@ -16,6 +16,10 @@ summary: >-
   夜、とぐろが現れ「この地から去れ」と迫る。従えば阿弥浜を去って周回を終える。逆らい続けると、
   すべての勢力のルート分岐が 02 になり、阿弥浜に残って自由に過ごせる（以後イベントはない）。
 
+summary_en: >-
+  At night, Toguro appears and demands, "Leave this land." If you obey, you leave Amihama and the playthrough ends.
+  If you keep defying Toguro, every faction's route is closed and you stay in Amihama, free to spend your time as you like (no further events occur).
+
 timing:
   phase: 結末
   slot: 夜

@@ -16,6 +16,10 @@ summary: >-
   外国側として出場した剣術大会の結果。チャートに名前の出ない記録で、対戦相手は 江里香 → 鬼瓦 → 小暮。
   3回戦の相手はほかの勢力と違って分岐しない。
 
+summary_en: >-
+  The result of the Battle Tournament when you enter on the Foreigners' side. A record whose name does not appear on the chart; the opponents are Erika, then Onigawara, then Kogure.
+  Unlike the other factions, the third-round opponent does not change.
+
 timing:
   phase: 4日目以降（剣術大会）
   slot: 昼

@@ -1,11 +1,11 @@
 id_dec,id_hex,save_bytes_le,name_ja,name_en,source,備考
-0,0x0000,,会談の手紙,,U,表示のみ確認。セーブ可否・イベントでの使用は要ゲーム内確認（[U] 2026-10-05、U-14）
-41,0x0029,,くず鉄,,TS,
-42,0x002A,,卸し鉄,,TS,
-43,0x002B,,堂島鋼,,TS,
-44,0x002C,,緋緋色金,,TS,
-45,0x002D,,チップ,,SE-BBS,❓ U-12。PS3版の ID。Steam版で書くとセーブできなくなる（[U] 2026-10-04）
-46,0x002E,,木札,,SE-BBS,❓ U-12。PS3版の ID。Steam版で書くとセーブできなくなる（[U] 2026-10-04）
+0,0x0000,,会談の手紙,Meeting Invitation,U,表示のみ確認。セーブ可否・イベントでの使用は要ゲーム内確認（[U] 2026-10-05、U-14）
+41,0x0029,,くず鉄,Scrap Metal,TS,
+42,0x002A,,卸し鉄,Ground Metal,TS,
+43,0x002B,,堂島鋼,Dojima Steel,TS,
+44,0x002C,,緋緋色金,Hihiirokane,TS,
+45,0x002D,,チップ,Casino Chip,SE-BBS,❓ U-12。PS3版の ID。Steam版で書くとセーブできなくなる（[U] 2026-10-04）
+46,0x002E,,木札,Wooden Tag,SE-BBS,❓ U-12。PS3版の ID。Steam版で書くとセーブできなくなる（[U] 2026-10-04）
 237,0x00ED,,拷問部屋の鍵,Torture Chamber Key,,🟢 U-14。ゲーム内での表示・使用は要ゲーム内確認
 238,0x00EE,,謎の鍵,Mysterious Key,,🟢 U-14。3日目夜に領事館のローラの部屋の扉で1本使う。ゲーム内での表示・使用は要ゲーム内確認
-65535,0xFFFF,,なし,,TS,
+65535,0xFFFF,,なし,None,TS,

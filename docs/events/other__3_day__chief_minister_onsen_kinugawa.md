@@ -15,6 +15,10 @@ summary: >-
   大通りに大老の行列がやって来る。鬼怒川怨仙が琴吹に迎えられ、魔鱗組とともに治安回復に当たることと、翌日の剣術大会の開催を告げる。
   行列の前で刀を抜き「隙ありー！」と斬りかかると、魔鱗組・同心と戦闘になり失敗する。
 
+summary_en: >-
+  The Chief Minister's procession arrives at the Main Plaza. Onsen Kinugawa is welcomed by Kotobuki and announces that he will restore public order with the Demonscales, and that the Battle Tournament will be held the next day.
+  Drawing your sword in front of the procession and attacking with "An opening!" starts a fight with the Demonscales and constables and fails the event.
+
 timing:
   phase: 3日目 昼
   slot: なし

@@ -15,6 +15,10 @@ summary: >-
   閉じた神社の門に近づくと赤城に呼ばれ、洞窟の奥で般若党の志を聞かされる。町の居酒屋で女将の朱美を紹介されて終わる。
   戦闘・報酬はない。成功すると攘夷の友好度が上がる。般若党に斬りかかると戦闘になり、失敗する。
 
+summary_en: >-
+  When you approach the closed gate of the Shrine, Akagi calls you over, and deep in the cave he tells you of the Prajnas' aims. It ends with him introducing you to Akemi, the proprietress of the bar in Town.
+  There is no fighting or reward. Success raises friendship with the Prajnas. Attacking the Prajnas starts a fight and fails the event.
+
 timing:
   phase: 1日目 昼
   slot: 昼

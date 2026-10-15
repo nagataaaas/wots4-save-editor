@@ -16,6 +16,10 @@ summary: >-
   4日目以降の昼、領事館でローラと J.J（伯爵）に剣術大会への参加を誘われる。参加を決めると成功。
   断ればあとで返事をし直せる。大会前に伯爵へ斬りかかると、伯爵（とメリンダ）との戦闘になり失敗する。
 
+summary_en: >-
+  From Day 4 on, in the daytime, Laura and J.J. (the Count) invite you at the Consulate to enter the Battle Tournament. Deciding to enter is a success. If you refuse, you can give your answer again later.
+  Attacking the Count before the tournament starts a fight with the Count (and Melinda) and fails the event.
+
 timing:
   phase: 4日目以降（剣術大会前）
   slot: 昼

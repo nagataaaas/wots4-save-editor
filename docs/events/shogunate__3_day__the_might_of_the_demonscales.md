@@ -16,6 +16,10 @@ summary: >-
   鬼怒川の連れてきた魔鱗組に職を追われた岡っ引きたちの愚痴を聞いたあと、琴吹光・三姉妹の市中巡察に加わり、町で般若党と戦い、続いて赤城・小暮を退ける。
   成功で 1500 文。巡察の申し出に「貴様らの思い通りにはさせない」と答えると琴吹・魔鱗組と戦うことになり、鬼怒川の勧誘を断ると失敗。
 
+summary_en: >-
+  After hearing the complaints of thief-takers who lost their jobs to the Demonscales Kinugawa brought in, you join Hikaru Kotobuki and the Three Sisters on patrol, fight Prajnas in Town, and then fend off Akagi and Kogure. Success earns 1500 mon.
+  Answering the patrol offer with "I won't let you have your way" means fighting Kotobuki and the Demonscales, and turning down Kinugawa's recruitment fails the event.
+
 timing:
   phase: 3日目 昼
   slot: 昼

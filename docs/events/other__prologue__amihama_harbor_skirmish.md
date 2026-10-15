@@ -16,6 +16,10 @@ summary: >-
   港で般若党が英国海兵隊・幕府の同心ともめている騒ぎに加わる。チュートリアルの戦いのあと、赤城がローラを捕らえ、
   主人公の行動と選択肢で「赤城の手下と戦う」「琴吹と組んで赤城と戦う」「赤城と組んで琴吹と戦う」に分かれる。
 
+summary_en: >-
+  You join a commotion at the Harbor where the Prajnas are clashing with the British Royal Marines and the Shogunate's constables. After the tutorial fight, Akagi seizes Laura,
+  and based on the hero's actions and choices it branches into "fight Akagi's men," "team up with Kotobuki against Akagi," or "team up with Akagi against Kotobuki."
+
 timing:
   phase: 序章
   slot: 昼

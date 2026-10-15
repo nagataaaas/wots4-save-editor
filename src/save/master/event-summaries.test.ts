@@ -43,6 +43,20 @@ describe("イベントの概要", () => {
     expect(() => renderEventSummaries(["---\nevent_id: 7\nsummary: 要ゲーム内確認\n---\n"])).toThrow("確度");
   });
 
+  it("summary_en は折り返しを空白でつなぎ、英語の表に出す。英語の確度の語があれば生成を止める", () => {
+    const md = ["---", "event_id: 9", "summary: 概要", "", "summary_en: >-", "  First line.", "  Second line.", "---", ""].join("\n");
+    expect(parseEventSummary(md)).toEqual({ eventId: 9, summary: "概要", summaryEn: "First line. Second line." });
+    const out = renderEventSummaries([md, "---\nevent_id: 7\nsummary: 短い概要\n---\n"]);
+    expect(out).toContain('  9: "First line. Second line.",');
+    expect(out).not.toContain('  7: "",');
+    expect(() => renderEventSummaries(["---\nevent_id: 7\nsummary: 概要\nsummary_en: Unconfirmed result\n---\n"])).toThrow("確度");
+  });
+
+  it("全イベントに英語の概要がある", () => {
+    const parsed = Object.values(mds).map(parseEventSummary).filter((s) => s !== null);
+    expect(parsed.filter((s) => !s.summaryEn).map((s) => s.eventId)).toEqual([]);
+  });
+
   it("生成物が docs/events と同じ内容（落ちたら pnpm gen:dataset）", () => {
     const sorted = Object.keys(mds).sort().map((k) => mds[k]);
     expect(table["./event-summary-table.ts"].replace(/\r\n/g, "\n")).toBe(renderEventSummaries(sorted));

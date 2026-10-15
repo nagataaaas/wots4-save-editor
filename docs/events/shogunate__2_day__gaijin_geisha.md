@@ -16,6 +16,10 @@ summary: >-
   茂呂茂に頼まれ、旅籠で芸者遊びをする外国の要人を護衛する。宴席に般若党が斬り込んでくるので、要人を守って全滅させる。
   成功で 1500 文。要人が殺されると金はなく、友好度も変わらない。
 
+summary_en: >-
+  At Shigeru Moro's request, guard a foreign dignitary enjoying geisha entertainment at the Inn. Prajnas storm the banquet, so protect the dignitary and wipe them out.
+  Success earns 1500 mon. If the dignitary is killed, you get no money and friendship does not change.
+
 timing:
   phase: 2日目 夜
   slot: 夜

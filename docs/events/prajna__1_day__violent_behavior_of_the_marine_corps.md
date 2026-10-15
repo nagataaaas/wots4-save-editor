@@ -16,6 +16,10 @@ summary: >-
   町の居酒屋で酔った海兵隊が朱美に絡んでいる。止めに入ると店の外で海兵隊と戦い、勝つと駆けつけたメリンダが部下の無礼を詫びる。
   成功すると攘夷の友好度と朱美の好感度が上がり、1500文を得る。海兵隊の側に付くと赤城と戦うことになり失敗する。
 
+summary_en: >-
+  At the bar in Town, drunken Royal Marines are harassing Akemi. Step in and you fight the Marines outside; win, and Melinda rushes over to apologize for her men's rudeness.
+  Success raises friendship with the Prajnas and Akemi's affection, and earns 1500 mon. Siding with the Marines means fighting Akagi and fails the event.
+
 timing:
   phase: 1日目 夕
   slot: 夕

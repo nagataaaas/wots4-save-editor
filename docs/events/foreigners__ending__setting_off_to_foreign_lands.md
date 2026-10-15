@@ -15,6 +15,9 @@ summary: >-
   ローラと共に英国へ渡る結末。西洋と東洋の出会いが二人を結び、いつかこの国へ戻ってくることを語る語りのあと、
   スタッフロールが流れて周回が終わる。
 
+summary_en: >-
+  An ending in which you cross to Britain with Laura. After narration telling how the meeting of West and East bound the two together and that they will return to this country someday, the staff roll plays and the playthrough ends.
+
 timing:
   phase: 結末
   slot: なし

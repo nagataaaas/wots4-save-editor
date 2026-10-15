@@ -16,6 +16,10 @@ summary: >-
   港のカジノで、J.J の用心棒が借金を払えない客を脅している。用心棒2人を倒すと J.J が「今度はボクが相手になろう」と現れ、
   「ボクは自分が死ぬ方に賭ける」と言って戦い、J.J は死ぬ。
 
+summary_en: >-
+  At the Casino at the Harbor, J.J.'s bodyguards are threatening a customer who can't pay his debts. After you defeat the two bodyguards, J.J. appears saying "Now I'll be your opponent,"
+  declares "I'm betting on my own death," fights you, and dies.
+
 timing:
   phase: 2日目 夕
   slot: なし

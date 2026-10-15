@@ -15,6 +15,10 @@ summary: >-
   琴吹と三姉妹を倒した般若党を幕府の大軍が囲む。深手を負った赤城は主人公に攘夷の志を託して逃がし、仲間と幕軍へ突撃する。
   一か月後に英国艦隊が阿弥浜へ押し寄せ、主人公が赤城の遺志を継いだ男として語られる後日談とスタッフロールで周回が終わる。
 
+summary_en: >-
+  A great Shogunate army surrounds the Prajnas who defeated Kotobuki and the Three Sisters. The badly wounded Akagi entrusts the hero with the Prajna cause and lets him escape, then charges the Shogunate forces with his comrades.
+  A month later a British fleet descends on Amihama, and the playthrough ends with an epilogue telling of the hero as the man who carried on Akagi's will, followed by the staff roll.
+
 timing:
   phase: 結末
   slot: なし

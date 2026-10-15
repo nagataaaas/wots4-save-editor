@@ -16,6 +16,10 @@ summary: >-
   夜の港で、外国商人から武器を受け取る茂呂を般若党と襲い、茂呂を斬る。直後に三姉妹と魔鱗組が現れ、罠だったと分かる。
   三姉妹を退けると成功し、1500 文。茂呂は死ぬ。
 
+summary_en: >-
+  At the Harbor at night, you and the Prajnas attack Moro as he receives weapons from a foreign merchant, and cut him down. The Three Sisters and the Demonscales appear right after, revealing it was a trap.
+  Fend off the Three Sisters to succeed and earn 1500 mon. Moro dies.
+
 timing:
   phase: 3日目 夜
   slot: 夜

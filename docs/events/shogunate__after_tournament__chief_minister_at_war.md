@@ -16,6 +16,10 @@ summary: >-
   鬼怒川・三姉妹と領事館へ行き、ローラから黒船の大砲を買い取る交渉に立ち会う。会話のみ。
   ローラは大砲を譲り、黒船は大砲のない状態になる。
 
+summary_en: >-
+  Go to the Consulate with Kinugawa and the Three Sisters and witness negotiations to buy the Black Ship's cannons from Laura. Conversation only.
+  Laura hands over the cannons, leaving the Black Ship without them.
+
 timing:
   phase: 剣術大会以降
   slot: 昼

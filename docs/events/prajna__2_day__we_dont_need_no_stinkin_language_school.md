@@ -16,6 +16,10 @@ summary: >-
   神社で赤城に誘われ、港に着いた語学所の講師を襲う。護衛の琴吹・茂呂（メリンダが生きていればメリンダも）と戦い、講師を斬るか追い返すと成功し、語学所は閉じたままになる。
   攘夷の友好度が上がり、幕府・外国とは敵対する。
 
+summary_en: >-
+  Invited by Akagi at the Shrine, you attack the Language School's lecturer, who has arrived at the Harbor. Fight his escorts Kotobuki and Moro (and Melinda, if she is alive), and cut down or drive off the lecturer to succeed; the Language School stays closed.
+  Friendship with the Prajnas rises, and the Shogunate and the Foreigners become hostile.
+
 timing:
   phase: 2日目 夕
   slot: 夕

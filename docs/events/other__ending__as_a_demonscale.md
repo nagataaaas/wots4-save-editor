@@ -16,6 +16,9 @@ summary: >-
   表彰式で鬼怒川が勝者たちを魔鱗組に迎え入れ、周回が終わる。
   勢力側で優勝したときの表彰式（釜茹で侍）と違い、罠は出ない。
 
+summary_en: >-
+  At the award ceremony, Kinugawa welcomes the winners into the Demonscales and the playthrough ends. Unlike the award ceremony after winning on a faction's side (Boiled Samurai), there is no trap.
+
 timing:
   phase: 結末
   slot: なし

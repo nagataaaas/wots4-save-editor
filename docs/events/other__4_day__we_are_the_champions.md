@@ -16,6 +16,10 @@ summary: >-
   表彰式で、勝ち抜いた者たちに表彰台へ上がるよう告げられる。表彰台は鬼怒川の罠で、上がった者は釜茹でにされる。
   勢力の大会では、帰ろうとすると琴吹に呼び止められ、「辞退する…」を選ぶと罠を逃れて先へ進める。
 
+summary_en: >-
+  At the award ceremony, the winners are told to step up onto the podium. The podium is Kinugawa's trap, and those who step up are boiled alive.
+  In a faction's tournament, Kotobuki stops you as you try to leave, and choosing "I'll decline..." lets you escape the trap and move on.
+
 timing:
   phase: 4日目以降（剣術大会前）
   slot: 夕

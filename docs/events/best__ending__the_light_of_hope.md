@@ -16,6 +16,10 @@ summary: >-
   内乱の危機が去り、ローラが将軍に謁見して琴吹・茂呂ら仲間の無実を認めさせ、幕府・外国・攘夷の若者がそれぞれの道を歩む後日談が語られる。
   阿弥浜の海に昇る朝日に、無名の浪人を「希望の光」と重ねて終わる。
 
+summary_en: >-
+  The threat of civil war passes, Laura has an audience with the Shogun and gets Kotobuki, Moro and the other companions declared innocent, and an epilogue tells how the young people of the Shogunate, the Foreigners and the Prajnas each go their own way.
+  It ends with the nameless ronin likened to "the light of hope" as the sun rises over the sea of Amihama.
+
 timing:
   phase: 結末
   slot: なし

@@ -16,6 +16,10 @@ summary: >-
   代官所の門番に「御大老の御命 頂戴仕る」と告げて討ち入る。門前で同心・魔鱗組、中で琴吹、2階で三姉妹と戦う。
   三姉妹を倒すと成功し、鬼怒川を追って江戸へ向かう侍一直線の結末になる。
 
+summary_en: >-
+  Tell the gatekeeper of the Magistrate's Office "I have come for the Chief Minister's life" and storm in. You fight constables and Demonscales at the gate, Kotobuki inside, and the Three Sisters on the 2nd floor.
+  Defeating the Three Sisters is a success and leads to the Samurai Straight ending, in which you head for Edo after Kinugawa.
+
 timing:
   phase: 鬼怒川の魔手以降（600）
   slot: なし

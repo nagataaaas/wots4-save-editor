@@ -80,7 +80,7 @@ const APPEARANCE_PART = {
   layer_meshes: 'meshes',
   layer_textures: 'textures',
 } as const;
-const APPEARANCE_PART_FULL = { ...APPEARANCE_PART, alias_ja: S, crash: N, cloth_id: N, unlock_id: N, dlc: N } as const;
+const APPEARANCE_PART_FULL = { ...APPEARANCE_PART, alias_ja: S, alias_en: S, crash: N, cloth_id: N, unlock_id: N, dlc: N } as const;
 
 /**
  * 出す列の許可リスト（datatable からの相対パス → 列 → 種類）。コードから使う列だけを書く。
@@ -88,21 +88,21 @@ const APPEARANCE_PART_FULL = { ...APPEARANCE_PART, alias_ja: S, crash: N, cloth_
  */
 export const DATASET_COLUMNS: Readonly<Record<string, DatasetColumns>> = {
   'accessory/accessory.csv': {
-    ...NAMES, part: S, dlc: N, shop: N, menu_order: N, description_ja: S,
-    default_attachment_id: N,
+    ...NAMES, part: S, dlc: N, shop: N, menu_order: N, description_ja: S, description_en: S,
+    default_attachment_id: N, default_attachment_ja: S, default_attachment_en: S,
     default_position_x: N, default_position_y: N, default_position_z: N,
     default_rotation_x: N, default_rotation_y: N, default_rotation_z: N,
     default_size: N,
   },
-  'appearance/body.csv': { ...APPEARANCE_PART, alias_ja: S, crash: N },
-  'appearance/cloth.csv': { ...NAMES, category: S, dlc: N, description_ja: S },
+  'appearance/body.csv': { ...APPEARANCE_PART, alias_ja: S, alias_en: S, crash: N },
+  'appearance/cloth.csv': { ...NAMES, category: S, dlc: N, description_ja: S, description_en: S },
   'appearance/extra.csv': { ...APPEARANCE_PART, kind: S, cloth_id: N, unlock_id: N, dlc: N },
   'appearance/face.csv': APPEARANCE_PART_FULL,
   'appearance/feet.csv': APPEARANCE_PART_FULL,
   'appearance/hair.csv': APPEARANCE_PART_FULL,
   'appearance/lower.csv': APPEARANCE_PART_FULL,
   'appearance/upper.csv': APPEARANCE_PART_FULL,
-  'appearance/outfit.csv': { ...NAMES, description_ja: S, cloth_id: N, unlock_id: N },
+  'appearance/outfit.csv': { ...NAMES, description_ja: S, description_en: S, cloth_id: N, unlock_id: N },
   'appearance/person.csv': {
     ...NAMES, dlc: N, height: N,
     upper: N, lower: N, face: N, hair: N, body: N, feet: N, gauntlet: N, leggings: N, apron: N, cape: N,
@@ -114,51 +114,51 @@ export const DATASET_COLUMNS: Readonly<Record<string, DatasetColumns>> = {
   'item/item.csv': {
     ...NAMES, reading: S, kind: N, max_stack: N, use_action: N, description_ja: S, description_en: S,
   },
-  'item/valuable.csv': { name_ja: S },
+  'item/valuable.csv': NAMES,
   'npc/night-visit-count.csv': { npc: N },
   'npc/night-visit-partner.csv': {
-    name_ja: S, kind: S, sex: S, name_list: N, name: N, looks: 'hex-list',
-    age: N, age_random: N, blood: N, group: N, row: N,
+    ...NAMES, kind: S, sex: S, name_list: N, name: N, looks: 'hex-list',
+    age: N, age_random: N, blood: N, group: N, row: N, note_en: S,
   },
-  'npc/npc-look.csv': { name_ja: S, sex: S, used_by: S },
+  'npc/npc-look.csv': { ...NAMES, sex: S, used_by: S, used_by_en: S },
   'npc/npc-name.csv': { ...NAMES, sex: S },
-  'npc/pupil.csv': { name_ja: S, sex: S, point: N, name: N, looks: 'hex-list' },
+  'npc/pupil.csv': { ...NAMES, sex: S, point: N, name: N, looks: 'hex-list' },
   'npc/townsfolk-person.csv': { npc: N, second_npc: N, separator: S, suffix: S, group: S, display_order: N },
   'occupation/occupation.csv': {
-    ...NAMES, client_ja: S, type: S, alignment: S, reward: N, bonus: N, deadline_days: N,
+    ...NAMES, client_ja: S, client_en: S, type: S, alignment: S, reward: N, bonus: N, deadline_days: N, note_en: S,
   },
   'place/night-visit-layout.csv': {
-    name_ja: S, house: S, people: N, people_maybe: N, dog: N, futon: N, rival: N, doshin: N, okappiki: N,
+    ...NAMES, house: S, people: N, people_maybe: N, dog: N, futon: N, rival: N, doshin: N, okappiki: N,
   },
-  'place/night-visit-place.csv': { name_ja: S, layout: 'hex-list' },
-  'place/night-visit-row.csv': { save_bytes_le: 'bytes', name_ja: S, stage: N, group: N, place: N, layout: N },
-  'place/start-location.csv': { name_ja: S, crash: N, warning_ja: S },
+  'place/night-visit-place.csv': { ...NAMES, layout: 'hex-list' },
+  'place/night-visit-row.csv': { save_bytes_le: 'bytes', ...NAMES, stage: N, group: N, place: N, layout: N },
+  'place/start-location.csv': { ...NAMES, crash: N, warning_ja: S, warning_en: S },
   'sect/sect.csv': {
     ...NAMES, stance: N, slot: N, sheet1: N, sheet2: N, sheet3: N,
     thr1: N, thr2: N, thr3: N, thr4: N, scroll_no: N,
   },
   'sect/sheet-skill.csv': {
-    sheet: N, skill_no: N, skill_id: N, ...NAMES, cond: N, cond_ja: S, rank: N, points: N, parent: N,
+    sheet: N, skill_no: N, skill_id: N, ...NAMES, cond: N, cond_ja: S, cond_en: S, rank: N, points: N, parent: N,
   },
-  'sect/skill-sheet.csv': { stance: N, name_ja: S },
+  'sect/skill-sheet.csv': { stance: N, ...NAMES },
   'sect/skill.csv': {
-    name_ja: S, command: N, command_ja: S, defense_group: N, attack: N, points: N, attrs: 'attrs',
+    ...NAMES, command: N, command_ja: S, command_en: S, defense_group: N, attack: N, points: N, attrs: 'attrs',
   },
   'sect/stance-skill.csv': {
     stance: N, skill_no: N, skill_id: N, ...NAMES, first: N, next: 'numbers', prev: 'numbers',
   },
   'sect/stance.csv': { ...NAMES, slot: N },
-  'unlock/unlock.csv': { ...NAMES, category: S, condition_ja: S, effect_ja: S },
+  'unlock/unlock.csv': { ...NAMES, category: S, condition_ja: S, condition_en: S, effect_ja: S, effect_en: S },
   'weapon/blade.csv': { save_bytes_le: 'bytes', ...NAMES, sheath_x: N },
-  'weapon/blade-special.csv': { name_ja: S },
-  'weapon/charm.csv': { name_ja: S },
+  'weapon/blade-special.csv': NAMES,
+  'weapon/charm.csv': NAMES,
   'weapon/complete.csv': {
     ...NAMES, reading: S, blade: N, sheath_x: N, guard: N, grip: N, weapon_type: N,
     unique_bytes: 'bytes-6', name_no: N, flag_22: N, image_url: S,
   },
-  'weapon/grip.csv': { save_bytes_le: 'bytes', name_ja: S },
-  'weapon/guard.csv': { save_bytes_le: 'bytes', name_ja: S },
-  'weapon/title.csv': { save_bytes_le: 'bytes', name_ja: S },
+  'weapon/grip.csv': { save_bytes_le: 'bytes', ...NAMES },
+  'weapon/guard.csv': { save_bytes_le: 'bytes', ...NAMES },
+  'weapon/title.csv': { save_bytes_le: 'bytes', ...NAMES },
 };
 
 function listValue(kind: ListKind, text: string): unknown {
@@ -223,7 +223,10 @@ const CERTAINTY_COLUMNS = new Set(["備考", "status"]);
 /** from 列の値を、確度を含まない文字列としてそのまま出す（含んでいたら生成を止める） */
 type DerivedColumn = { name: string; from: string };
 
-/** 確度の入る列から作る列（datatable からの相対パス → 列）。画面で使うものだけ */
+/**
+ * 確度の入る列から作る列（datatable からの相対パス → 列）。画面で使うものだけ。
+ * 英語（note_en）は CSV の列にあり、DATASET_COLUMNS から出す
+ */
 const DERIVED_COLUMNS: Readonly<Record<string, readonly DerivedColumn[]>> = {
   // 選択肢のラベルに添える注記（「夜這い用の姿」など）
   "npc/night-visit-partner.csv": [{ name: "note_ja", from: "備考" }],

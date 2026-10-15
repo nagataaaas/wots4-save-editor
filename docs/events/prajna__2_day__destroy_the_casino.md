@@ -16,6 +16,10 @@ summary: >-
   神社で赤城に誘われ、港のカジノを般若党と襲う。カジノの主の伯爵と用心棒4人を退けるとカジノが閉じ、1500 文。
   戦闘の前に般若党に斬りかかると伯爵の側に付いたことになり、カジノは残って失敗する。
 
+summary_en: >-
+  Invited by Akagi at the Shrine, you raid the Casino at the Harbor with the Prajnas. Fend off the Count, who owns the Casino, and his four bodyguards, and the Casino closes and you earn 1500 mon.
+  Attacking the Prajnas before the fight puts you on the Count's side; the Casino remains and the event fails.
+
 timing:
   phase: 2日目 夜
   slot: 夜

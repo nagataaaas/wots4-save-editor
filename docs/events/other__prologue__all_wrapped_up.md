@@ -15,6 +15,10 @@ summary: >-
   般若党に簀巻きにされて道に転がされた主人公が、通りかかった堂島に助けを求める。
   手持ちの武器をすべて差し出すと助かり、断ったり黙っていたりすると馬車に轢かれてゲームオーバーになる。
 
+summary_en: >-
+  Rolled up in a straw mat by the Prajnas and left lying in the road, the hero begs Dojima, who is passing by, for help.
+  Hand over all your weapons and you are saved; refuse or stay silent and you are run over by a carriage for a game over.
+
 timing:
   phase: 序章
   slot: 昼

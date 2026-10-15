@@ -16,6 +16,10 @@ summary: >-
   夜の港で、閉鎖されたカジノを建て直している J.J に見物に誘われる。再建を妨げに来た赤城・小暮と般若党を撃退すると成功し、
   カジノが再開する。外国の友好度が上がり、攘夷と敵対する。
 
+summary_en: >-
+  At the Harbor at night, J.J., who is rebuilding the closed Casino, invites you to watch. Repel Akagi, Kogure and the Prajnas who come to stop the rebuilding to succeed, and the Casino reopens.
+  Friendship with the Foreigners rises and the Prajnas become hostile.
+
 timing:
   phase: 2日目 夜
   slot: 夜

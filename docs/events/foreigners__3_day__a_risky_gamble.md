@@ -15,6 +15,10 @@ summary: >-
   J.J に誘われて大通りに建った剣術大会の闘技場を見に行き、鬼怒川と三姉妹に出会う。J.J は主人公の優勝に自分の命を賭け、鬼怒川は三姉妹を賭ける。
   会話だけで終われば成功。鬼怒川に「隙あり！」を選ぶと、J.J とともに琴吹・魔鱗組と戦闘になる。
 
+summary_en: >-
+  J.J. invites you to see the Battle Tournament arena built on the Main Plaza, where you meet Kinugawa and the Three Sisters. J.J. bets his own life on the hero winning, and Kinugawa bets the Three Sisters.
+  Ending with conversation only is a success. Choosing "An opening!" against Kinugawa starts a fight against Kotobuki and the Demonscales alongside J.J.
+
 timing:
   phase: 3日目 夜
   slot: 夜
