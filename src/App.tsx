@@ -12,9 +12,14 @@ import { sections, type SectionId } from '@/features/sections'
 import { AdvancedModeProvider } from '@/lib/advanced-mode-provider'
 import { formatHash, parseHash, type Route } from '@/lib/route'
 import { SaveProvider } from '@/lib/save-provider'
+import { LanguageSwitch } from '@/components/language-switch'
+import { getLanguage, tr } from '@/lib/i18n'
+import { translateRoute } from '@/features/search-index'
+import { useLanguage } from '@/lib/language-context'
 
 const DEFAULT_SECTION: SectionId = 'hero'
 export default function App() {
+  const { lang } = useLanguage()
   // 開いた時点の URL のハッシュ（#/画面/箱/~/欄）の画面を開き、その箱を開いてスクロールする
   const [initial] = useState(() => parseHash(window.location.hash))
   const [active, setActive] = useState<SectionId>(initial?.section ?? DEFAULT_SECTION)
@@ -40,15 +45,40 @@ export default function App() {
     })
   }, [])
 
+  /**
+   * 欄の名前が別の言語で書かれたリンク（日本語で開いたときのリンクを英語で開いたなど）は、今の言語の欄の名前に読み替えて開き直し、
+   * ハッシュも書き換える。読み替えるまでは箱まで移る
+   */
+  const openTranslated = useCallback(
+    (route: Route) => {
+      if (!route.field?.length) return
+      void translateRoute(route, getLanguage())
+        .then((translated) => {
+          if (translated.field?.join('/') === route.field?.join('/')) return
+          if (window.location.hash !== formatHash(route)) return
+          window.history.replaceState(window.history.state, '', formatHash(translated))
+          open(translated)
+        })
+        .catch(() => {})
+    },
+    [open],
+  )
+
+  useEffect(() => {
+    if (initial) openTranslated(initial)
+  }, [initial, openTranslated])
+
   // ハッシュを書き換えたとき・戻る／進むで、その画面と箱を開く（go が pushState で書いたときは hashchange は起きない）
   useEffect(() => {
     const onHashChange = () => {
       const route = parseHash(window.location.hash)
-      if (route) open(route)
+      if (!route) return
+      open(route)
+      openTranslated(route)
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
-  }, [open])
+  }, [open, openTranslated])
 
   const navigation = useMemo(
     () => ({
@@ -69,7 +99,8 @@ export default function App() {
       <NavigationTargets>
       <SaveProvider>
         <AdvancedModeProvider>
-          <TooltipProvider>
+          {/* 言語を変えたら描き直す。tr() の結果を useMemo やモジュールの外に残している所も、今の言語で作り直す */}
+          <TooltipProvider key={lang}>
             <SidebarProvider>
               <AppSidebar active={active} onSelect={(id) => navigation.go(id)} />
               <SidebarInset className="min-w-0">
@@ -77,11 +108,11 @@ export default function App() {
                   <SidebarTrigger className="-ml-1" />
                   <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-center" />
                   <h1 className="font-semibold">
-                    {section.folder && <span className="text-muted-foreground font-normal">{section.folder} / </span>}
-                    {section.label}
+                    {section.folder && <span className="text-muted-foreground font-normal">{tr(section.folder)} / </span>}
+                    {tr(section.label)}
                   </h1>
                   <SearchDialog />
-
+                  <LanguageSwitch />
                 </header>
                 <div className={`mx-auto w-full p-4 ${section.wide ? 'min-w-0' : 'max-w-5xl'}`}>
                   <NoSaveNotice />

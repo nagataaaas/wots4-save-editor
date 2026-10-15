@@ -27,6 +27,7 @@ import { Switch } from '@/components/ui/switch'
 import { isFolder, sectionGroups, type SectionFolder, type SectionId } from '@/features/sections'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
 import { canWriteToFile } from '@/lib/file-io'
+import { tr } from '@/lib/i18n'
 import { useSave } from '@/lib/save-context'
 
 type Props = {
@@ -38,24 +39,24 @@ export function AppSidebar({ active, onSelect }: Props) {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="px-2 pt-1 text-base font-bold">侍道4 セーブエディタ</div>
+        <div className="px-2 pt-1 text-base font-bold">{tr({ ja: '侍道4 セーブエディタ', en: 'Way of the Samurai 4 Save Editor' })}</div>
         <FilePanel />
       </SidebarHeader>
       <SidebarSeparator />
       <SidebarContent>
         {sectionGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+          <SidebarGroup key={group.label.ja}>
+            <SidebarGroupLabel>{tr(group.label)}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((node) =>
                   isFolder(node) ? (
-                    <FolderItem key={node.label} folder={node} active={active} onSelect={onSelect} />
+                    <FolderItem key={node.label.ja} folder={node} active={active} onSelect={onSelect} />
                   ) : (
                     <SidebarMenuItem key={node.id}>
                       <SidebarMenuButton isActive={node.id === active} onClick={() => onSelect(node.id)}>
                         <node.icon />
-                        <span>{node.label}</span>
+                        <span>{tr(node.label)}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ),
@@ -94,7 +95,7 @@ function FolderItem({ folder, active, onSelect }: { folder: SectionFolder } & Pr
     <Collapsible open={open} onOpenChange={setOpen} render={<SidebarMenuItem />}>
       <CollapsibleTrigger render={<SidebarMenuButton isActive={!open && containsActive} />}>
         <folder.icon />
-        <span>{folder.label}</span>
+        <span>{tr(folder.label)}</span>
         <ChevronRight className={`ml-auto transition-transform ${open ? 'rotate-90' : ''}`} />
       </CollapsibleTrigger>
       <CollapsibleContent>
@@ -105,7 +106,7 @@ function FolderItem({ folder, active, onSelect }: { folder: SectionFolder } & Pr
                 render={<button type="button" className="w-full" onClick={() => onSelect(s.id)} />}
                 isActive={s.id === active}
               >
-                <span>{s.label}</span>
+                <span>{tr(s.label)}</span>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
           ))}
@@ -139,7 +140,7 @@ function FilePanel() {
       />
       <Button size="sm" onClick={() => (writable ? void openFile() : inputRef.current?.click())}>
         <FileUp />
-        ファイルを開く
+        {tr({ ja: 'ファイルを開く', en: 'Open File' })}
       </Button>
       {save ? (
         <div className="text-muted-foreground flex items-baseline justify-between gap-2 text-xs">
@@ -150,8 +151,11 @@ function FilePanel() {
         </div>
       ) : (
         <p className="text-muted-foreground text-xs">
-          S4-DATA_00〜04 を選択。ファイルはブラウザ内でのみ処理されます。
-          {writable && '「上書き」で、開いたファイルに直接書き込みます。'}
+          {tr({
+            ja: 'S4-DATA_00〜04 を選択。ファイルはブラウザ内でのみ処理されます。',
+            en: 'Choose S4-DATA_00 to 04. Files are processed only inside your browser. ',
+          })}
+          {writable && tr({ ja: '「上書き」で、開いたファイルに直接書き込みます。', en: '"Overwrite" writes directly to the opened file.' })}
         </p>
       )}
       <div className="grid grid-cols-2 gap-2">
@@ -169,15 +173,17 @@ function FilePanel() {
           }
         >
           {overwrite ? <Save /> : <Download />}
-          {overwrite ? '上書き' : '保存'}
+          {overwrite ? tr({ ja: '上書き', en: 'Overwrite' }) : tr({ ja: '保存', en: 'Save' })}
         </Button>
       </div>
       {save && (
         <div className="text-muted-foreground flex flex-col text-xs">
           <span className={unsavedBytes > 0 ? 'font-medium text-amber-600 dark:text-amber-400' : undefined}>
-            {unsavedBytes > 0 ? `未保存の変更：${unsavedBytes.toLocaleString()} B` : '保存済み'}
+            {unsavedBytes > 0
+              ? tr({ ja: `未保存の変更：${unsavedBytes.toLocaleString()} B`, en: `Unsaved changes: ${unsavedBytes.toLocaleString()} B` })
+              : tr({ ja: '保存済み', en: 'Saved' })}
           </span>
-          <span>読み込み時からの変更：{changedBytes.toLocaleString()} B</span>
+          <span>{tr({ ja: `読み込み時からの変更：${changedBytes.toLocaleString()} B`, en: `Changed since loading: ${changedBytes.toLocaleString()} B` })}</span>
         </div>
       )}
       {error && (
@@ -199,14 +205,20 @@ function AdvancedModeSwitch() {
     >
       <div className="flex items-center justify-between gap-2">
         <Label htmlFor="advanced-mode" className="text-xs">
-          上級者モード
+          {tr({ ja: '上級者モード', en: 'Advanced Mode' })}
         </Label>
         <Switch id="advanced-mode" checked={advanced} onCheckedChange={setAdvanced} />
       </div>
       <p className="text-muted-foreground text-xs">
         {advanced
-          ? 'ゲーム上の範囲を超える値も書けます。データ破損のおそれがあるので、バックアップを取ってから試してください'
-          : 'オンにすると、ゲーム上の範囲を超える値もシステム上の範囲まで書けます'}
+          ? tr({
+              ja: 'ゲーム上の範囲を超える値も書けます。データ破損のおそれがあるので、バックアップを取ってから試してください',
+              en: 'Values beyond the in-game range can be written. This may corrupt your save, so make a backup before trying.',
+            })
+          : tr({
+              ja: 'オンにすると、ゲーム上の範囲を超える値もシステム上の範囲まで書けます',
+              en: 'When on, values beyond the in-game range can be written, up to what the file format allows.',
+            })}
       </p>
     </div>
   )

@@ -1,3 +1,4 @@
+import type { Localized } from '@/lib/i18n'
 import { Binary, ClipboardList, Globe, Moon, Package, ScrollText, Shirt, Store, Sword, User, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
@@ -31,7 +32,7 @@ export type SectionId =
 
 export type Section = {
   id: SectionId
-  label: string
+  label: Localized
   /** 横に長い画面。本文の幅の上限（max-w-5xl）を外す */
   wide?: boolean
 }
@@ -41,7 +42,7 @@ export type TopSection = Section & { icon: LucideIcon }
 
 /** サイドバーで子項目をまとめる親項目（それ自体は画面を持たない。子項目はアイコンなし） */
 export type SectionFolder = {
-  label: string
+  label: Localized
   icon: LucideIcon
   sections: Section[]
 }
@@ -49,7 +50,7 @@ export type SectionFolder = {
 export type SectionNode = TopSection | SectionFolder
 
 export type SectionGroup = {
-  label: string
+  label: Localized
   items: SectionNode[]
 }
 
@@ -59,98 +60,98 @@ export function isFolder(node: SectionNode): node is SectionFolder {
 
 export const sectionGroups: SectionGroup[] = [
   {
-    label: '編集',
+    label: { ja: '編集', en: 'Edit' },
     items: [
       {
-        label: '主人公',
+        label: { ja: '主人公', en: 'Hero' },
         icon: User,
         sections: [
           // money・player-name・stats・vitals（所持金・侍点・名前・活力・HP）、date-location（現在地・難易度・主人公設定のやり直し）
-          { id: 'hero', label: '基本情報' },
+          { id: 'hero', label: { ja: '基本情報', en: 'Basics' } },
           // appearance（現在の見た目・人物・顔・髪型・服）、accessories（装着10枠・位置・回転・大きさ・俺のおしゃれ）。俺のおしゃれは 🟢 要ゲーム内確認
-          { id: 'hero-appearance', label: '容姿' },
+          { id: 'hero-appearance', label: { ja: '容姿', en: 'Appearance' } },
           // stats（侍評価・行動の回数・称号の回数・プレイ時間・移動距離・斬殺数・人物ごとの痛手）。🟢 要ゲーム内確認
-          { id: 'records', label: '侍評価・記録' },
+          { id: 'records', label: { ja: '侍評価・記録', en: 'Evaluation & Records' } },
         ],
       },
       {
-        label: '武器',
+        label: { ja: '武器', en: 'Weapons' },
         icon: Sword,
         sections: [
           // weapon-record（帯刀 3本）、belt-state（帯刀の状態）
-          { id: 'belt', label: '帯刀' },
+          { id: 'belt', label: { ja: '帯刀', en: 'Equipped' } },
           // weapon-record（武器袋 10本）
-          { id: 'weapon-bag', label: '武器袋' },
+          { id: 'weapon-bag', label: { ja: '武器袋', en: 'Weapon Sack' } },
           // weapon-record（武器箪笥 200本と、本数と容量）。本数と容量は 🟢
-          { id: 'weapon-chest', label: '刀箪笥' },
+          { id: 'weapon-chest', label: { ja: '刀箪笥', en: 'Weapon Chest' } },
         ],
       },
       {
-        label: '道具',
+        label: { ja: '道具', en: 'Items' },
         icon: Package,
         sections: [
           // items（手持ち 8 B × 10件）
-          { id: 'tools', label: '所持' },
+          { id: 'tools', label: { ja: '所持', en: 'Inventory' } },
           // items（箪笥の通常アイテム 8 B × 80件）
-          { id: 'chest', label: '箪笥' },
+          { id: 'chest', label: { ja: '箪笥', en: 'Chest' } },
           // items（貴重品 8 B × 10件。[TS] は先頭4件＝製錬用の鉄のみ編集）
-          { id: 'valuables', label: '重要品' },
+          { id: 'valuables', label: { ja: '重要品', en: 'Key Items' } },
         ],
       },
       {
-        label: '容姿・特典',
+        label: { ja: '容姿・特典', en: 'Appearance & Unlocks' },
         icon: Shirt,
         sections: [
           // accessories（所持フラグ 1 B × 158）
-          { id: 'accessories', label: '装飾品' },
+          { id: 'accessories', label: { ja: '装飾品', en: 'Accessories' } },
           // appearance の服と unlocks の顔・髪型など。🔶 U-17
-          { id: 'appearance', label: '容姿' },
+          { id: 'appearance', label: { ja: '容姿', en: 'Appearance' } },
           // unlocks（特典の状態）。🔶 U-17
-          { id: 'unlocks', label: '特典解除' },
+          { id: 'unlocks', label: { ja: '特典解除', en: 'Unlocks' } },
         ],
       },
       {
-        label: '世界',
+        label: { ja: '世界', en: 'World' },
         icon: Globe,
         sections: [
           // difficulty・date-location・gates・facilities（難易度・治安・周回、段階・日数・時間帯、門・柵、施設）。一部 🔶
-          { id: 'world', label: '阿弥浜' },
+          { id: 'world', label: { ja: '阿弥浜', en: 'Amihama' } },
           // factions・characters・townsfolk・best-route（勢力の退場、人物の状態、町の人の生死、NPCイベントフラグ）。一部 🔶
-          { id: 'npc', label: 'NPC' },
+          { id: 'npc', label: { ja: 'NPC', en: 'NPCs' } },
           // event-chart・best-route・factions・scenario-flags（イベントチャート〈真ルート・一括設定〉、勢力の状態、イベント関連フラグ）。一部 🔶
-          { id: 'event-chart', label: 'イベント', wide: true },
+          { id: 'event-chart', label: { ja: 'イベント', en: 'Events' }, wide: true },
           // dojo（道場の評判・弟子の名簿・道場破り）。🟢 要ゲーム内確認
-          { id: 'dojo', label: '道場' },
+          { id: 'dojo', label: { ja: '道場', en: 'Dojo' } },
         ],
       },
       {
-        label: '流派',
+        label: { ja: '流派', en: 'Styles' },
         icon: ScrollText,
         sections: [
           // skill-states（構えごとの技の一覧と覚え状況）。覚え状況 ✅ [U]、固有技の状態 3 は 🟢
-          { id: 'skills', label: '技一覧' },
+          { id: 'skills', label: { ja: '技一覧', en: 'Moves' } },
           // styles・skill-states・sect-scrolls（技の覚え状況・修練度・段）。技の覚え状況 ✅ [U]、修練度・段 🟢
-          { id: 'styles', label: '流派一覧' },
+          { id: 'styles', label: { ja: '流派一覧', en: 'Style List' } },
           // custom-style・belt-copy（俺流の技の表）。🟢 要ゲーム内確認
-          { id: 'ore-ryu', label: '俺流' },
+          { id: 'ore-ryu', label: { ja: '俺流', en: 'My Style' } },
         ],
       },
       // occupation・townsfolk（なりわいのフラグ）状態の表・クリア数・連続なりわいの進み具合
-      { id: 'occupation', label: 'なりわい', icon: ClipboardList },
+      { id: 'occupation', label: { ja: 'なりわい', en: 'Missions' }, icon: ClipboardList },
       // night-visit（夜の約束の場所・人物と、夜這いの記録）。一部 🔶
-      { id: 'yobai', label: '夜這い', icon: Moon },
+      { id: 'yobai', label: { ja: '夜這い', en: 'Night Crawling' }, icon: Moon },
       // market-weapons（持ち去られた武器・道具・部品。読み取り専用）。🟢
-      { id: 'circulating', label: '流通', icon: Store },
+      { id: 'circulating', label: { ja: '流通', en: 'Reclamation' }, icon: Store },
     ],
   },
   {
-    label: '解析',
+    label: { ja: '解析', en: 'Analysis' },
     // ファイル全体の16進表示（README §3 の領域で色分け）・差分・検索。書き換えは上級者モードのみ
-    items: [{ id: 'raw', label: '生データ', icon: Binary }],
+    items: [{ id: 'raw', label: { ja: '生データ', en: 'Raw Data' }, icon: Binary }],
   },
 ]
 
 /** 画面を持つ項目と、属する親項目のラベル */
-export const sections: (Section & { folder?: string })[] = sectionGroups.flatMap((g) =>
-  g.items.flatMap((node): (Section & { folder?: string })[] => (isFolder(node) ? node.sections.map((s) => ({ ...s, folder: node.label })) : [node])),
+export const sections: (Section & { folder?: Localized })[] = sectionGroups.flatMap((g) =>
+  g.items.flatMap((node): (Section & { folder?: Localized })[] => (isFolder(node) ? node.sections.map((s) => ({ ...s, folder: node.label })) : [node])),
 )

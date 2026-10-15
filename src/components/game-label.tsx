@@ -1,3 +1,4 @@
+import { getLanguage, tr } from "@/lib/i18n";
 import type { ExactlyOne } from "@/lib/exactly-one";
 import { labelOf } from "@/save/master/labels";
 import type { EventLabelId, ItemLabelId, Language, NpcLabelId, OccupationLabelId } from "@/save/master/label-types";
@@ -16,9 +17,9 @@ export type GameLabelProps = ExactlyOne<LabelTarget> & {
 };
 
 export function GameLabel(props: GameLabelProps) {
-  const { lang = "ja", fallback, className } = props;
+  const { lang = getLanguage(), fallback, className } = props;
   const ref = labelRefOf(props);
-  const text = ref ? labelOf(ref, lang, fallback) : (fallback ?? "不明");
+  const text = ref ? labelOf(ref, lang, fallback) : (fallback ?? tr({ ja: "不明", en: "Unknown" }));
   return <span className={className}>{text}</span>;
 }
 

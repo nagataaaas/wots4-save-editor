@@ -1,14 +1,16 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { collectSearchEntries } from './search-index-collect'
-import { itemsForMode, searchItems, toSearchItems, type SearchItem } from './search-index'
+import { itemsForMode, searchItems, toSearchItems, translateRouteField, type SearchItem } from './search-index'
 import { sections } from './sections'
 import { matchField } from '@/lib/route'
 import { searchKey } from '@/lib/search-collector'
 import { EVENTS_LINKS } from './scenario/anchors'
 
-const entries = collectSearchEntries(renderToStaticMarkup)
-const items = toSearchItems(entries)
+const entries = collectSearchEntries(renderToStaticMarkup, 'ja')
+const items = toSearchItems(entries, 'ja')
+const entriesEn = collectSearchEntries(renderToStaticMarkup, 'en')
+const itemsEn = toSearchItems(entriesEn, 'en')
 const crumbs = (i: SearchItem) => i.crumbs.join(' > ')
 
 describe('検索の索引', () => {
@@ -32,7 +34,25 @@ describe('検索の索引', () => {
   })
 
   it('画面で読む索引のファイルが、今の画面から集めた名前と同じ（違えば pnpm test -u で作り直す）', async () => {
-    await expect(`${JSON.stringify(entries, null, 1)}\n`).toMatchFileSnapshot('./search-index.generated.json')
+    await expect(`${JSON.stringify(entries, null, 1)}\n`).toMatchFileSnapshot('./search-index.ja.generated.json')
+    await expect(`${JSON.stringify(entriesEn, null, 1)}\n`).toMatchFileSnapshot('./search-index.en.generated.json')
+  })
+
+  it('日本語と英語の索引は、同じ箱・欄が同じ順に並ぶ（リンクの欄の名前の読み替えに使う）', () => {
+    const shape = (e: (typeof entries)[number]) => ({ section: e.section, anchor: e.anchor, box: e.box, advanced: e.advanced, depth: e.path.length })
+    expect(entriesEn.map(shape)).toEqual(entries.map(shape))
+  })
+
+  it('別の言語の欄の名前で書いたリンクを、今の言語の欄の名前に読み替える', () => {
+    const indexes = { ja: entries, en: entriesEn }
+    const ja = items.find((i) => crumbs(i) === '主人公 > 基本情報 > HP・活力・つま斬り > HP > 現在')!
+    const en = itemsEn[items.indexOf(ja)]
+    expect(en.field).not.toEqual(ja.field)
+    const route = { section: ja.section, anchor: ja.anchor, field: ja.field }
+    expect(translateRouteField(route, 'en', indexes)).toEqual({ ...route, field: en.field })
+    expect(translateRouteField({ ...route, field: en.field }, 'ja', indexes)).toEqual(route)
+    // 今の言語で合うものはそのまま
+    expect(translateRouteField(route, 'ja', indexes)).toBe(route)
   })
 
   it('画面・箱・欄の名前をパンくずつきで拾う', () => {
@@ -78,6 +98,9 @@ describe('検索の索引', () => {
   it('名前に確度・内部の値を含めない（AGENTS.md「UI に確度を出さない」「UI には使う人が気にすることだけを書く」）', () => {
     const banned = /✅|🟢|🟡|🔶|❓|未確認|要ゲーム内確認|確認済み|未検証|推測|推定|確度|判定待ち|U-[0-9]+|D-[0-9]+|0x[0-9a-f]/i
     for (const i of items) expect(crumbs(i)).not.toMatch(banned)
+    const bannedEn = /unconfirmed|unverified|not verified|estimated|guess|speculat|certainty|\bpending\b/i
+    for (const i of itemsEn) expect(crumbs(i)).not.toMatch(banned)
+    for (const i of itemsEn) expect(crumbs(i)).not.toMatch(bannedEn)
   })
 })
 

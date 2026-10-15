@@ -1,6 +1,8 @@
 import { sections, type SectionId } from '@/features/sections'
 import type { SearchEntry } from '@/lib/search-collector'
 import { normalizeForSearch } from '@/lib/search'
+import { getLanguage, trIn, type Language } from '@/lib/i18n'
+import { matchField, type Route } from '@/lib/route'
 
 /** 検索の1件。選ぶと go(section, anchor, field) で飛ぶ（URL も #/section/anchor/~/field… になる） */
 export type SearchItem = {
@@ -17,21 +19,26 @@ export type SearchItem = {
   advanced: boolean
 }
 
-/** 集めた名前（search-index.generated.json）に、画面そのものと、フォルダ・画面の名前のパンくずを足す */
-export function toSearchItems(entries: readonly SearchEntry[]): SearchItem[] {
-  const items: SearchItem[] = []
+/** 欄の、いちばん内側の箱より内側の名前の並び（URL に書く Route の field）を返す関数 */
+function relativeFields(entries: readonly SearchEntry[]): (e: SearchEntry) => string[] {
   // 箱の anchor → 箱の名前までのパンくず。欄のパンくずからこれを除いたものを URL に書く
   const boxCrumbs = new Map<string, string[]>()
   for (const e of entries) if (e.box) boxCrumbs.set(`${e.section}${e.anchor}`, [...e.path, e.label])
-  const relative = (e: SearchEntry) => {
+  return (e) => {
     const box = boxCrumbs.get(`${e.section}${e.anchor}`) ?? []
     const inside = box.every((b, i) => e.path[i] === b) ? e.path.slice(box.length) : e.path
     return [...inside, e.label]
   }
+}
+
+/** 集めた名前（search-index.{lang}.generated.json）に、画面そのものと、フォルダ・画面の名前のパンくずを足す */
+export function toSearchItems(entries: readonly SearchEntry[], lang: Language = getLanguage()): SearchItem[] {
+  const items: SearchItem[] = []
+  const relative = relativeFields(entries)
   const add = (section: SectionId, anchor: string, field: string[] | null, crumbs: string[], advanced = false) =>
     items.push({ section, anchor, field, crumbs, normalized: crumbs.map(normalizeForSearch), advanced })
   for (const s of sections) {
-    const head = s.folder ? [s.folder, s.label] : [s.label]
+    const head = s.folder ? [trIn(s.folder, lang), trIn(s.label, lang)] : [trIn(s.label, lang)]
     add(s.id, '', null, head)
     for (const e of entries)
       if (e.section === s.id)
@@ -45,13 +52,50 @@ export function itemsForMode(items: readonly SearchItem[], advanced: boolean): r
   return advanced ? items : items.filter((i) => !i.advanced)
 }
 
-let cache: Promise<SearchItem[]> | null = null
+const entriesCache: Partial<Record<Language, Promise<SearchEntry[]>>> = {}
+const itemsCache: Partial<Record<Language, Promise<SearchItem[]>>> = {}
 
-/** 検索を初めて開いたときに読み、あとは使い回す */
-export function loadSearchIndex(): Promise<SearchItem[]> {
-  cache ??= import('./search-index.generated.json').then((m) => toSearchItems(m.default as SearchEntry[]))
-  cache.catch(() => (cache = null))
-  return cache
+function loadEntries(lang: Language): Promise<SearchEntry[]> {
+  const loaded = (entriesCache[lang] ??= (
+    lang === 'en' ? import('./search-index.en.generated.json') : import('./search-index.ja.generated.json')
+  ).then((m) => m.default as SearchEntry[]))
+  loaded.catch(() => delete entriesCache[lang])
+  return loaded
+}
+
+/** 今の言語の索引。検索を初めて開いたときに読み、あとは使い回す */
+export function loadSearchIndex(lang: Language = getLanguage()): Promise<SearchItem[]> {
+  const loaded = (itemsCache[lang] ??= loadEntries(lang).then((entries) => toSearchItems(entries, lang)))
+  loaded.catch(() => delete itemsCache[lang])
+  return loaded
+}
+
+/**
+ * 欄の URL（#/画面/箱/~/欄…）の欄の名前を lang の言語に読み替える。
+ * 欄の名前は画面の言語で書くので、別の言語のリンクを開くと欄が見つからない。
+ * lang の索引に合う欄がなく、ほかの言語の索引に合う欄があれば、同じ位置の lang の欄の名前にする（言語ごとの索引は同じ順に並ぶ）
+ */
+export function translateRouteField(route: Route, lang: Language, indexes: Readonly<Record<Language, readonly SearchEntry[]>>): Route {
+  const field = route.field
+  if (!field?.length) return route
+  const find = (entries: readonly SearchEntry[]) =>
+    matchField(entries.filter((e) => !e.box && e.section === route.section), route.anchor, field)
+  if (find(indexes[lang])) return route
+  for (const other of Object.keys(indexes) as Language[]) {
+    if (other === lang) continue
+    const found = find(indexes[other])
+    if (!found) continue
+    const target = indexes[lang][indexes[other].indexOf(found)]
+    if (target) return { ...route, field: relativeFields(indexes[lang])(target) }
+  }
+  return route
+}
+
+/** translateRouteField を、索引を読んでから行う */
+export async function translateRoute(route: Route, lang: Language = getLanguage()): Promise<Route> {
+  if (!route.field?.length) return route
+  const [ja, en] = await Promise.all([loadEntries('ja'), loadEntries('en')])
+  return translateRouteField(route, lang, { ja, en })
 }
 
 const crumbsKey = (crumbs: readonly string[]) => crumbs.join('\u001f')

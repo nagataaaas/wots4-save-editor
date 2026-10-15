@@ -1,6 +1,7 @@
 // 人物・イベント・アイテム・なりわいの表示名を ID から引く。
 // 名前の文字列はマスター（datatable の CSV）にだけ持ち、画面やほかのモジュールは種別ごとの LabelId で参照する。
 // マスターのモジュール（*-names.ts・chart-nodes.ts）はこのモジュールを読み込まない（循環させない）。
+import { getLanguage, tr } from "@/lib/i18n";
 import { CHART_NODE_OWN_LABELS, type ChartNodeEntry } from "./chart-nodes";
 import { EVENT_TABLE } from "./dataset/event";
 import { ITEM_TABLE } from "./dataset/item";
@@ -33,7 +34,7 @@ export function findLabel(ref: LabelRef): LocalizedLabel | undefined {
   }
 }
 
-export function labelOf(ref: LabelRef, lang: Language = "ja", fallback?: string): string {
+export function labelOf(ref: LabelRef, lang: Language = getLanguage(), fallback?: string): string {
   const label = findLabel(ref);
   if (!label) return fallback ?? unknownLabel(ref);
   return label[lang] || label.ja;
@@ -41,7 +42,7 @@ export function labelOf(ref: LabelRef, lang: Language = "ja", fallback?: string)
 
 /** 表にない ID の表示。ID は画面に出さない（生の値は「生データ」画面で見る） */
 export function unknownLabel(_ref: LabelRef): string {
-  return "不明";
+  return tr({ ja: "不明", en: "Unknown" });
 }
 
 /** 検索に使う語（日本語・英語・読み）。表にない ID は空 */
@@ -50,10 +51,10 @@ export function labelKeywords(ref: LabelRef): string[] {
   return label ? [label.ja, label.en, label.reading ?? ""].filter((k) => k !== "") : [];
 }
 
-export const itemLabel = (id: ItemLabelId, lang: Language = "ja"): string => labelOf({ kind: "item", id }, lang);
-export const eventLabel = (id: EventLabelId, lang: Language = "ja"): string => labelOf({ kind: "event", id }, lang);
-export const npcLabel = (id: NpcLabelId, lang: Language = "ja"): string => labelOf({ kind: "npc", id }, lang);
-export const occupationLabel = (id: OccupationLabelId, lang: Language = "ja"): string =>
+export const itemLabel = (id: ItemLabelId, lang: Language = getLanguage()): string => labelOf({ kind: "item", id }, lang);
+export const eventLabel = (id: EventLabelId, lang: Language = getLanguage()): string => labelOf({ kind: "event", id }, lang);
+export const npcLabel = (id: NpcLabelId, lang: Language = getLanguage()): string => labelOf({ kind: "npc", id }, lang);
+export const occupationLabel = (id: OccupationLabelId, lang: Language = getLanguage()): string =>
   labelOf({ kind: "occupation", id }, lang);
 
 type NameTable = Readonly<Record<number, { readonly name_ja: string }>>;
@@ -81,7 +82,7 @@ export const nameOf = {
 export function chartNodeLabel(
   node: Pick<ChartNodeEntry, "id" | "labelId">,
   fallback = "不明",
-  lang: Language = "ja",
+  lang: Language = getLanguage(),
 ): string {
   const own = CHART_NODE_OWN_LABELS.get(node.id);
   if (own) return own[lang] || own.ja;
