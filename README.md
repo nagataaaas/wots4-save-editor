@@ -59,3 +59,10 @@ pnpm test    # テスト（Vitest）
 pnpm lint    # Lint（oxlint）
 pnpm build   # dist/ に静的ファイルを出力
 ```
+
+## 謝辞
+
+セーブの構造やゲーム内のデータを調べるにあたって、次の先行の調査・資料を参考にしました。ありがとうございます。
+
+- [tarotshogun/WayOfTheSamurai4SaveEditor](https://github.com/tarotshogun/WayOfTheSamurai4SaveEditor) — 侍道4（Steam版）のセーブエディタ
+- [侍道4 攻略@wiki](https://w.atwiki.jp/samuraidou4/) — イベント・アイテム・武器などの攻略情報
