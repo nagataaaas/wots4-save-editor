@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ChevronRight, Download, FileUp } from 'lucide-react'
+import { ChevronRight, Download, FileUp, Save } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -26,6 +26,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { isFolder, sectionGroups, type SectionFolder, type SectionId } from '@/features/sections'
 import { useAdvancedMode } from '@/lib/advanced-mode-context'
+import { canWriteToFile } from '@/lib/file-io'
 import { useSave } from '@/lib/save-context'
 
 type Props = {
@@ -117,8 +118,12 @@ function FolderItem({ folder, active, onSelect }: { folder: SectionFolder } & Pr
 /** セーブファイルの読み込み・書き出し */
 function FilePanel() {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { save, error, changedBytes, unsavedBytes, load, downloadEdited } = useSave()
+  const { save, error, changedBytes, unsavedBytes, load, openFile, saveEdited } = useSave()
   const dirty = save !== null && unsavedBytes > 0
+  // 選んだファイルへ直接書けるブラウザでは、開いたファイルに上書きする。
+  // 上書き先がない版（別の名前の版を復元したときなど）は「保存」で保存先を選ばせる
+  const writable = canWriteToFile()
+  const overwrite = save ? save.handle !== null : writable
 
   return (
     <div className="flex flex-col gap-2 p-2">
@@ -132,7 +137,7 @@ function FilePanel() {
           e.target.value = ''
         }}
       />
-      <Button size="sm" onClick={() => inputRef.current?.click()}>
+      <Button size="sm" onClick={() => (writable ? void openFile() : inputRef.current?.click())}>
         <FileUp />
         ファイルを開く
       </Button>
@@ -144,7 +149,10 @@ function FilePanel() {
           <span className="shrink-0">{save.original.byteLength.toLocaleString()} B</span>
         </div>
       ) : (
-        <p className="text-muted-foreground text-xs">S4-DATA_00〜04 を選択。ファイルはブラウザ内でのみ処理されます。</p>
+        <p className="text-muted-foreground text-xs">
+          S4-DATA_00〜04 を選択。ファイルはブラウザ内でのみ処理されます。
+          {writable && '「上書き」で、開いたファイルに直接書き込みます。'}
+        </p>
       )}
       <div className="grid grid-cols-2 gap-2">
         <RestoreDialog />
@@ -153,15 +161,15 @@ function FilePanel() {
           size="sm"
           variant={dirty ? 'default' : 'outline'}
           disabled={!save}
-          onClick={downloadEdited}
+          onClick={() => void saveEdited()}
           className={
             dirty
               ? 'bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:text-black dark:hover:bg-amber-400'
               : undefined
           }
         >
-          <Download />
-          保存
+          {overwrite ? <Save /> : <Download />}
+          {overwrite ? '上書き' : '保存'}
         </Button>
       </div>
       {save && (

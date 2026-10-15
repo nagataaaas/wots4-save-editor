@@ -32,7 +32,7 @@ function render<T>(hook: () => T): T {
   return hook()
 }
 function load(bytes = new Uint8Array(4), loadId = 1) {
-  state.context!.save = { name: '合成セーブ', original: bytes.slice(), working: bytes, saved: bytes.slice(), loadId, sessionId: null }
+  state.context!.save = { name: '合成セーブ', original: bytes.slice(), working: bytes, saved: bytes.slice(), loadId, sessionId: null, handle: null }
 }
 
 beforeEach(() => {
@@ -40,7 +40,7 @@ beforeEach(() => {
   state.cursor = 0
   state.context = {
     save: null, error: null, changedBytes: 0, unsavedBytes: 0, historyVersion: 0,
-    load: async () => {}, restore: async () => {}, clearHistory: async () => {}, downloadEdited: () => {},
+    load: async () => {}, restore: async () => {}, clearHistory: async () => {}, saveEdited: async () => {}, openFile: async () => {},
     update: mutate => {
       const save = state.context!.save
       if (!save) throw new Error('セーブファイルが読み込まれていません')

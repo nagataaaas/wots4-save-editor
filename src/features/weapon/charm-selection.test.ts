@@ -11,7 +11,7 @@ import { charmSelectionKey, charmSelections, expandCharmSelections } from "./cha
 function renderEditor(weapon: WeaponView, advanced: boolean) {
   const ctx: SaveContextValue = {
     save: null, error: null, changedBytes: 0, unsavedBytes: 0,
-    load: async () => {}, update: () => {}, downloadEdited: () => {},
+    load: async () => {}, update: () => {}, saveEdited: async () => {}, openFile: async () => {},
     restore: async () => {}, clearHistory: async () => {}, historyVersion: 0,
   };
   return renderToStaticMarkup(createElement(SaveContext.Provider, { value: ctx },

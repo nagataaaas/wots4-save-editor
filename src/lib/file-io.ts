@@ -1,5 +1,6 @@
 // ブラウザのメモリ上でセーブファイルを読み書きするための入出力ヘルパー。
-// サーバーへは一切送信しない。読み込みは File → Uint8Array、書き出しは Blob のダウンロード。
+// サーバーへは一切送信しない。読み込みは File → Uint8Array。
+// 書き出しは、File System Access API があるブラウザ（Chromium 系）では選んだファイルへの上書き、ないブラウザでは Blob のダウンロード。
 
 /** ユーザーが選択したファイルをメモリに読み込む */
 export async function readFileAsBytes(file: File): Promise<Uint8Array> {
@@ -28,4 +29,64 @@ export function downloadBytes(bytes: Uint8Array, fileName: string): void {
   a.click()
   // クリック直後に revoke するとダウンロードが始まらないブラウザがあるため遅らせる
   setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+
+// File System Access API のうち使うもの。TypeScript の DOM の型には picker がないので、ここで宣言する
+type FilePickerWindow = {
+  showOpenFilePicker: (options?: { multiple?: false }) => Promise<FileSystemFileHandle[]>
+  showSaveFilePicker: (options?: { suggestedName?: string }) => Promise<FileSystemFileHandle>
+}
+
+function pickerWindow(): FilePickerWindow | null {
+  return typeof window !== 'undefined' && 'showOpenFilePicker' in window && 'showSaveFilePicker' in window
+    ? (window as unknown as FilePickerWindow)
+    : null
+}
+
+/** 選んだファイルへ直接上書きできるブラウザか */
+export function canWriteToFile(): boolean {
+  return pickerWindow() !== null
+}
+
+/** ファイル選択を取り消したときの例外か。取り消しはエラーとして出さない */
+export function isPickerAbort(e: unknown): boolean {
+  return e instanceof DOMException && e.name === 'AbortError'
+}
+
+/** 開くファイルを選ばせる。あとで上書きできるようにハンドルも返す。取り消したら null */
+export async function pickFileToOpen(): Promise<{ file: File; handle: FileSystemFileHandle } | null> {
+  const picker = pickerWindow()
+  if (!picker) throw new Error('このブラウザではファイルを直接開けません')
+  try {
+    const [handle] = await picker.showOpenFilePicker({ multiple: false })
+    return { file: await handle.getFile(), handle }
+  } catch (e) {
+    if (isPickerAbort(e)) return null
+    throw e
+  }
+}
+
+/** 保存先を選ばせる。取り消したら null */
+export async function pickFileToSave(suggestedName: string): Promise<FileSystemFileHandle | null> {
+  const picker = pickerWindow()
+  if (!picker) throw new Error('このブラウザでは保存先を選べません')
+  try {
+    return await picker.showSaveFilePicker({ suggestedName })
+  } catch (e) {
+    if (isPickerAbort(e)) return null
+    throw e
+  }
+}
+
+/** ハンドルのファイルをバイト列で丸ごと上書きする。書き込みの許可はブラウザが確認する */
+export async function writeBytesToFile(handle: FileSystemFileHandle, bytes: Uint8Array): Promise<void> {
+  const writable = await handle.createWritable()
+  try {
+    await writable.write(bytes as Uint8Array<ArrayBuffer>)
+    await writable.close()
+  } catch (e) {
+    // close しなければ元のファイルは変わらない
+    await writable.abort().catch(() => {})
+    throw e
+  }
 }

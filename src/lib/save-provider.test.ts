@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LoadedSave, SaveContextValue } from './save-context'
 import { SaveProvider } from './save-provider'
 import { addLoaded, addSaved, clearAll, getBytes, getSnapshot } from './history-db'
@@ -66,7 +66,7 @@ describe('SaveProvider の同期更新', () => {
     expect(edited.changedBytes).toBe(1)
     expect(edited.unsavedBytes).toBe(1)
     expect(edited.save?.working[1]).toBe(5)
-    edited.downloadEdited()
+    await edited.saveEdited()
     expect(provider().unsavedBytes).toBe(0)
   })
   it('同じ描画の update を2回呼んでも、両方の変更が残る', async () => {
@@ -102,7 +102,7 @@ describe('SaveProvider の同期更新', () => {
     await loading
     expect(state.save?.sessionId).toBe(8)
     expect(state.save?.working[2]).toBe(3)
-    ctx.downloadEdited()
+    await ctx.saveEdited()
     expect(downloadBytes).toHaveBeenCalledWith(new Uint8Array([0, 0, 3, 0]), 'S4-DATA_00')
     expect(addSaved).toHaveBeenCalledWith(8, state.save?.working)
     expect(state.save?.saved).toBe(state.save?.working)
@@ -129,7 +129,7 @@ describe('SaveProvider の失敗後の続き', () => {
     await ctx.load(file())
     ctx.update(b => { b[0] = 1 })
     vi.mocked(downloadBytes).mockImplementationOnce(() => { throw new Error('ダウンロード失敗') })
-    ctx.downloadEdited()
+    await ctx.saveEdited()
     expect(addSaved).not.toHaveBeenCalled()
     expect(state.save?.saved).toEqual(new Uint8Array(4))
     expect(provider().error).toBe('ダウンロード失敗')
@@ -143,7 +143,7 @@ describe('SaveProvider の失敗後の続き', () => {
     await ctx.clearHistory()
     expect(state.save?.sessionId).toBe(7)
     expect(provider().error).toContain('消去失敗')
-    ctx.downloadEdited()
+    await ctx.saveEdited()
     expect(addSaved).toHaveBeenCalledWith(7, state.save?.working)
   })
 
@@ -152,7 +152,103 @@ describe('SaveProvider の失敗後の続き', () => {
     await ctx.load(file())
     await ctx.clearHistory()
     expect(state.save?.sessionId).toBeNull()
-    ctx.downloadEdited()
+    await ctx.saveEdited()
     expect(addSaved).not.toHaveBeenCalled()
+  })
+})
+
+describe('SaveProvider の上書き（File System Access API）', () => {
+  /** createWritable に書いた内容を残すハンドル */
+  const handle = (name: string, fail = false) => {
+    const written: Uint8Array[] = []
+    const h = {
+      name,
+      getFile: async () => file(name),
+      createWritable: async () => ({
+        write: async (b: Uint8Array) => {
+          if (fail) throw new Error('書き込み失敗')
+          written.push(b.slice())
+        },
+        close: async () => {},
+        abort: async () => {},
+      }),
+    } as unknown as FileSystemFileHandle
+    return { h, written }
+  }
+  const stubPickers = (open: FileSystemFileHandle, save?: FileSystemFileHandle | null) => {
+    const showSaveFilePicker = vi.fn(async () => {
+      if (save === null) throw new DOMException('取り消し', 'AbortError')
+      return save
+    })
+    vi.stubGlobal('window', {
+      showOpenFilePicker: async () => [open],
+      showSaveFilePicker,
+    })
+    return showSaveFilePicker
+  }
+  afterEach(() => { vi.unstubAllGlobals() })
+
+  it('ファイル選択で開いたら、保存でそのファイルに上書きし、ダウンロードしない', async () => {
+    const opened = handle('S4-DATA_02')
+    stubPickers(opened.h)
+    const ctx = provider()
+    await ctx.openFile()
+    expect(state.save?.handle).toBe(opened.h)
+    ctx.update(b => { b[3] = 4 })
+    await ctx.saveEdited()
+    expect(opened.written).toEqual([new Uint8Array([0, 0, 0, 4])])
+    expect(downloadBytes).not.toHaveBeenCalled()
+    expect(state.save?.saved).toBe(state.save?.working)
+    expect(addSaved).toHaveBeenCalledWith(7, state.save?.working)
+  })
+
+  it('上書き先がなければ保存先を選ばせ、そのあとは選んだファイルに上書きする。取り消したら何もしない', async () => {
+    const chosen = handle('別名')
+    const showSaveFilePicker = stubPickers(handle('未使用').h, null)
+    const ctx = provider()
+    await ctx.load(file())
+    ctx.update(b => { b[0] = 1 })
+    await ctx.saveEdited()
+    expect(showSaveFilePicker).toHaveBeenCalledTimes(1)
+    expect(provider().error).toBeNull()
+    expect(state.save?.saved).toEqual(new Uint8Array(4))
+    expect(addSaved).not.toHaveBeenCalled()
+
+    showSaveFilePicker.mockResolvedValueOnce(chosen.h)
+    await ctx.saveEdited()
+    expect(chosen.written).toEqual([new Uint8Array([1, 0, 0, 0])])
+    expect(state.save?.handle).toBe(chosen.h)
+    expect(state.save?.name).toBe('別名')
+    ctx.update(b => { b[1] = 2 })
+    await ctx.saveEdited()
+    expect(showSaveFilePicker).toHaveBeenCalledTimes(2)
+    expect(chosen.written[1]).toEqual(new Uint8Array([1, 2, 0, 0]))
+    expect(downloadBytes).not.toHaveBeenCalled()
+  })
+
+  it('上書きに失敗したら、保存済みにせず、履歴にも保存した版を残さない', async () => {
+    const failing = handle('S4-DATA_00', true)
+    stubPickers(failing.h)
+    const ctx = provider()
+    await ctx.openFile()
+    ctx.update(b => { b[0] = 1 })
+    await ctx.saveEdited()
+    expect(provider().error).toBe('書き込み失敗')
+    expect(state.save?.saved).toEqual(new Uint8Array(4))
+    expect(addSaved).not.toHaveBeenCalled()
+  })
+
+  it('復元した版が開いているファイルと同じ名前なら上書き先を残し、違う名前なら外す', async () => {
+    const opened = handle('S4-DATA_00')
+    stubPickers(opened.h)
+    const ctx = provider()
+    await ctx.openFile()
+    vi.mocked(getSnapshot).mockResolvedValueOnce({ fileName: 'S4-DATA_00', sessionId: 10 } as Awaited<ReturnType<typeof getSnapshot>>)
+    vi.mocked(getBytes).mockResolvedValue(new Uint8Array(4))
+    await ctx.restore(11)
+    expect(state.save?.handle).toBe(opened.h)
+    vi.mocked(getSnapshot).mockResolvedValueOnce({ fileName: 'S4-DATA_01', sessionId: 12 } as Awaited<ReturnType<typeof getSnapshot>>)
+    await ctx.restore(13)
+    expect(state.save?.handle).toBeNull()
   })
 })

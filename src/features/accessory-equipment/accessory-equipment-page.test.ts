@@ -12,9 +12,9 @@ import { HeroAppearancePage } from '@/features/hero/hero-appearance-page'
 
 function render(bytes: Uint8Array | null, advanced = false) {
   const ctx: SaveContextValue = {
-    save: bytes ? { name: 'synthetic', original: bytes.slice(), working: bytes, saved: bytes.slice(), loadId: 1, sessionId: null } : null,
+    save: bytes ? { name: 'synthetic', original: bytes.slice(), working: bytes, saved: bytes.slice(), loadId: 1, sessionId: null, handle: null } : null,
     error: null, changedBytes: 0, unsavedBytes: 0,
-    load: async () => {}, update: () => {}, downloadEdited: () => {},
+    load: async () => {}, update: () => {}, saveEdited: async () => {}, openFile: async () => {},
     restore: async () => {}, clearHistory: async () => {}, historyVersion: 0,
   }
   return renderToStaticMarkup(createElement(SaveContext.Provider, { value: ctx },

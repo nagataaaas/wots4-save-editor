@@ -1,11 +1,16 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
-import { assertSameSize, downloadBytes, readFileAsBytes } from '@/lib/file-io'
+import {
+  assertSameSize, canWriteToFile, downloadBytes, pickFileToOpen, pickFileToSave, readFileAsBytes, writeBytesToFile,
+} from '@/lib/file-io'
 import { addLoaded, addSaved, clearAll, getBytes, getSnapshot } from '@/lib/history-db'
 import { SaveContext, type LoadedSave } from '@/lib/save-context'
 import { errorMessage } from '@/lib/error-message'
 import { countChangedBytes } from '@/lib/byte-diff'
 
-/** 読み込んだセーブをメモリ上に保持し、画面全体に共有する。読み込み時と保存のたびに履歴（IndexedDB）へ残す */
+/**
+ * 読み込んだセーブをメモリ上に保持し、画面全体に共有する。読み込み時と保存のたびに履歴（IndexedDB）へ残す。
+ * 保存は、開いたファイルへの上書き（File System Access API）か、使えないブラウザではダウンロード
+ */
 export function SaveProvider({ children }: { children: ReactNode }) {
   const [save, setSave] = useState<LoadedSave | null>(null)
   const saveRef = useRef<LoadedSave | null>(null)
@@ -22,18 +27,6 @@ export function SaveProvider({ children }: { children: ReactNode }) {
   const changedBytes = useMemo(() => (save ? countChangedBytes(save.original, save.working) : 0), [save])
   const unsavedBytes = useMemo(() => (save ? countChangedBytes(save.saved, save.working) : 0), [save])
 
-  /** 失敗したらエラーを出して false を返す。続きは true のときだけ行う */
-  const run = useCallback((action: () => void): boolean => {
-    setError(null)
-    try {
-      action()
-      return true
-    } catch (e) {
-      setError(errorMessage(e))
-      return false
-    }
-  }, [])
-
   /** 履歴に残す。失敗してもエラーを出すだけで、編集は続けられる。残せたかを返す */
   const record = useCallback(async (action: () => Promise<void>): Promise<boolean> => {
     try {
@@ -46,7 +39,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const load = useCallback(async (file: File) => {
+  const load = useCallback(async (file: File, handle: FileSystemFileHandle | null = null) => {
     setError(null)
     let original: Uint8Array
     try {
@@ -56,7 +49,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
       return
     }
     const loadId = ++loadSeq.current
-    replaceSave({ name: file.name, original, working: original.slice(), saved: original, loadId, sessionId: null })
+    replaceSave({ name: file.name, original, working: original.slice(), saved: original, loadId, sessionId: null, handle })
     await record(async () => {
       const sessionId = await addLoaded(file.name, original)
       // 履歴に残すあいだに別のファイルを読み込んでいたら、そちらには紐づけない
@@ -64,7 +57,19 @@ export function SaveProvider({ children }: { children: ReactNode }) {
     })
   }, [record, replaceSave])
 
-  const update = useCallback((mutator: (bytes: Uint8Array) => void) => {
+  const openFile = useCallback(async () => {
+    setError(null)
+    let picked: Awaited<ReturnType<typeof pickFileToOpen>>
+    try {
+      picked = await pickFileToOpen()
+    } catch (e) {
+      setError(errorMessage(e))
+      return
+    }
+    if (picked) await load(picked.file, picked.handle)
+  }, [load])
+
+  const update =useCallback((mutator: (bytes: Uint8Array) => void) => {
     const save = saveRef.current
     if (!save) throw new Error('セーブファイルが読み込まれていません')
     const next = save.working.slice()
@@ -73,26 +78,38 @@ export function SaveProvider({ children }: { children: ReactNode }) {
     replaceSave({ ...save, working: next })
   }, [replaceSave])
 
-  const downloadEdited = useCallback(() => {
+  const saveEdited = useCallback(async () => {
     const save = saveRef.current
     if (!save) return
-    const downloaded = run(() => {
-      assertSameSize(save.original, save.working)
-      downloadBytes(save.working, save.name)
-      // working は update のたびに新しい配列に差し替わるので、参照をそのまま保存済みとして持てる
-      replaceSave({ ...save, saved: save.working })
-    })
-    // ダウンロードできなかった版は、保存した版として履歴に残さない
-    if (!downloaded) return
-    const { sessionId, working } = save
+    setError(null)
+    // working は update のたびに新しい配列に差し替わるので、書き出す版の参照をそのまま保存済みとして持てる
+    const { working, loadId, sessionId } = save
+    let handle = save.handle
+    try {
+      assertSameSize(save.original, working)
+      if (!handle && canWriteToFile()) {
+        handle = await pickFileToSave(save.name)
+        if (!handle) return
+      }
+      if (handle) await writeBytesToFile(handle, working)
+      else downloadBytes(working, save.name)
+    } catch (e) {
+      // 書き出せなかった版は、保存した版として履歴に残さない
+      setError(errorMessage(e))
+      return
+    }
+    // 書き出しを待つあいだに続けた編集は残し、別のファイルを読み込んでいたらそちらは変えない
+    replaceSave((prev) => (prev?.loadId === loadId ? { ...prev, saved: working, handle, name: handle?.name ?? prev.name } : prev))
     if (sessionId !== null) void record(() => addSaved(sessionId, working))
-  }, [record, replaceSave, run])
+  }, [record, replaceSave])
 
   const restore = useCallback(async (id: number) => {
     setError(null)
     try {
       const snapshot = await getSnapshot(id)
       const [bytes, original] = await Promise.all([getBytes(id), getBytes(snapshot.sessionId)])
+      // 開いているファイルと同じ名前の版なら、そのファイルに上書きできるままにする。別の名前なら上書き先を持たない
+      const current = saveRef.current?.handle ?? null
       replaceSave({
         name: snapshot.fileName,
         original,
@@ -100,6 +117,7 @@ export function SaveProvider({ children }: { children: ReactNode }) {
         saved: bytes,
         loadId: ++loadSeq.current,
         sessionId: snapshot.sessionId,
+        handle: current?.name === snapshot.fileName ? current : null,
       })
     } catch (e) {
       setError(`履歴から復元できませんでした: ${errorMessage(e)}`)
@@ -114,8 +132,8 @@ export function SaveProvider({ children }: { children: ReactNode }) {
   }, [record, replaceSave])
 
   const value = useMemo(() => ({
-    save, error, changedBytes, unsavedBytes, load, update, downloadEdited, restore, clearHistory, historyVersion,
-  }), [save, error, changedBytes, unsavedBytes, load, update, downloadEdited, restore, clearHistory, historyVersion])
+    save, error, changedBytes, unsavedBytes, load, openFile, update, saveEdited, restore, clearHistory, historyVersion,
+  }), [save, error, changedBytes, unsavedBytes, load, openFile, update, saveEdited, restore, clearHistory, historyVersion])
 
   return (
     <SaveContext.Provider

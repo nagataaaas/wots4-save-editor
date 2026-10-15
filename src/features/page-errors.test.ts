@@ -19,7 +19,7 @@ function render(section: SectionId, save: LoadedSave | null) {
   const context: SaveContextValue = {
     save, error: null, changedBytes: 0, unsavedBytes: 0, historyVersion: 0,
     load: async () => {}, restore: async () => {}, clearHistory: async () => {},
-    downloadEdited: () => {}, update: vi.fn(),
+    saveEdited: async () => {}, openFile: async () => {}, update: vi.fn(),
   }
   const page = pages[section]!
   const collector: SearchCollector = { section, entries: [], seen: new Set() }
@@ -41,7 +41,7 @@ describe('読み込みエラーでも画面の枠を残す', () => {
       expect(unloaded.html).not.toContain('読み込めません')
       expect(unloaded.html).not.toContain('セーブファイルが読み込まれていません')
       const bytes = new Uint8Array(1)
-      const invalid = render(section, { name: '合成セーブ', working: bytes, original: bytes, saved: bytes, loadId: 1, sessionId: null })
+      const invalid = render(section, { name: '合成セーブ', working: bytes, original: bytes, saved: bytes, loadId: 1, sessionId: null, handle: null })
       expect(invalid.html).toContain('読み込めません')
       // セーブの読取失敗で、画面内のカードや検索対象の欄を消さない。
       expect(invalid.boxes).toEqual(unloaded.boxes)
@@ -50,7 +50,7 @@ describe('読み込みエラーでも画面の枠を残す', () => {
   }
   it('容姿の特典は読取エラーを一度だけ出す', () => {
     const bytes = new Uint8Array(1)
-    const { html } = render('appearance', { name: '合成セーブ', working: bytes, original: bytes, saved: bytes, loadId: 1, sessionId: null })
+    const { html } = render('appearance', { name: '合成セーブ', working: bytes, original: bytes, saved: bytes, loadId: 1, sessionId: null, handle: null })
     expect(html.match(/読み込めません/g)).toHaveLength(1)
     expect(html).toContain('顔・髪型などの特典')
     expect(html).toContain('服')
