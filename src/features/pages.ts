@@ -19,6 +19,7 @@ import { ValuablesPage } from '@/features/valuables/valuables-page'
 import { WeaponBagPage } from '@/features/weapon-bag/weapon-bag-page'
 import { WeaponChestPage } from '@/features/weapon-chest/weapon-chest-page'
 import { YobaiPage } from '@/features/yobai/yobai-page'
+import { TemplatesPage } from '@/features/templates/templates-page'
 import type { SectionId } from '@/features/sections'
 
 /** 各項目の画面。サイドバーの項目（SectionId）を足したら、ここにも足す（抜けは型で分かる） */
@@ -45,5 +46,6 @@ export const pages: Record<SectionId, ComponentType> = {
   'ore-ryu': OreRyuPage,
   skills: SkillsPage,
   circulating: MarketWeaponsPage,
+  templates: TemplatesPage,
   raw: RawPage,
 }

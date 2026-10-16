@@ -4099,22 +4099,6 @@
  },
  {
   "section": "event-chart",
-  "anchor": "scene-templates",
-  "path": [],
-  "label": "Scene presets",
-  "box": true
- },
- {
-  "section": "event-chart",
-  "anchor": "scene-templates",
-  "path": [
-   "Scene presets"
-  ],
-  "label": "Right before the Battle Tournament",
-  "box": false
- },
- {
-  "section": "event-chart",
   "anchor": "factions",
   "path": [],
   "label": "Factions",
@@ -8918,5 +8902,82 @@
   "path": [],
   "label": "Grips",
   "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [],
+  "label": "Right before the Battle Tournament",
+  "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [
+   "Right before the Battle Tournament"
+  ],
+  "label": "Shogunate",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [
+   "Right before the Battle Tournament"
+  ],
+  "label": "Foreigners",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [
+   "Right before the Battle Tournament"
+  ],
+  "label": "Prajnas",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [
+   "Right before the Battle Tournament"
+  ],
+  "label": "Independent",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "missions",
+  "path": [],
+  "label": "Missions",
+  "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "missions",
+  "path": [
+   "Missions"
+  ],
+  "label": "Four Samurai Lords vs. Yakuza Quartet",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "missions",
+  "path": [
+   "Missions"
+  ],
+  "label": "The Amihama Eight",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "missions",
+  "path": [
+   "Missions"
+  ],
+  "label": "The Amihama Eight (duel with the commander)",
+  "box": false
  }
 ]

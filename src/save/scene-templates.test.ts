@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { readU16 } from './binary'
 import { TS_SAVE_SIZE } from './layout'
 import { NEW_CYCLE_KEEP_FLAGS } from './new-cycle'
-import { SCENE_TEMPLATE_GROUPS, applyTournamentEve, type TournamentSide } from './scene-templates'
+import { SCENE_TEMPLATE_GROUPS, applyMissionEve, applyTournamentEve, type MissionScene, type TournamentSide } from './scene-templates'
 
 const A = 0x36a8
 const FLAGS = { start: 0x374e, end: 0x3837 }
@@ -86,6 +86,68 @@ describe('applyTournamentEve', () => {
     expect(() => applyTournamentEve(new Uint8Array(0x100), 'shogunate')).toThrow()
   })
 
+})
+
+// なりわい：❓ 要ゲーム内確認。書く値は 🟢（四天王の話・最終なりわいの値、受注中の表の並び、戦いに出る人）。
+// 208 の最終戦の変数（21・40・2）は 🔶（ふだんは指揮官から話しかける）
+describe('applyMissionEve', () => {
+  const TABLE = { start: 0x45f4e, end: 0x4626e }
+  const PEOPLE = [0x0618, 0x0630, 0x063c, 0x0648, 0x0654, 0x0660, 0x066c, 0x0678, 0x0684, 0x0690]
+
+  /** 4日目（経過日数 3）の夕、受注中の表に別のなりわいが2件、207・208 の状態の表は FFFF、戦いに出る人は死亡 */
+  function makeMissionSave(): Uint8Array {
+    const b = makeSave()
+    b.set([0x90, 0x01, 0x00, 0x06, 0x01], 0x0010)
+    b.set([0x03, 0x00], 0x0bd8)
+    b.fill(0, TABLE.start, TABLE.end)
+    b.set([0x0d, 0x00, 0, 0, 0x01, 0x00, 0x00, 0x03], TABLE.start)
+    b.set([0x2d, 0x00, 0, 0, 0x02, 0x00, 0x02, 0x05], TABLE.start + 16)
+    b.set([0xff, 0xff, 0xff, 0xff], 0x3542)
+    for (const at of PEOPLE) b[at] = 1
+    return b
+  }
+
+  it.each<[MissionScene, number[], number, number[]]>([
+    // 場面、受注中の表の1件目、四天王の話・最終なりわい、現在地
+    ['lords-vs-quartet', [0xcf, 0, 0, 0, 3, 0, 1, 0xff, 0, 0, 0, 0, 0, 0, 0, 0], 0x15, [14, 2]],
+    ['amihama-eight', [0xd0, 0, 0, 0, 3, 0, 1, 0xff, 0, 0, 0, 0, 0, 0, 0, 0], 0x10, [60, 20]],
+    ['amihama-eight-commander', [0xd0, 0, 0, 0, 3, 0, 1, 0xff, 21, 40, 2, 0, 0, 0, 0, 0], 0x10, [60, 20]],
+  ])('%s：受注中の表をこの1件だけにし、なりわいのフラグ・人物・現在地を書く', (scene, entry, location, lords) => {
+    const b = makeMissionSave()
+    applyMissionEve(b, scene)
+    expect([...b.subarray(TABLE.start, TABLE.start + 16)]).toEqual(entry)
+    expect(b.subarray(TABLE.start + 16, TABLE.end).every((v) => v === 0)).toBe(true)
+    expect([...b.subarray(0x0120, 0x0124)]).toEqual([101, 100, 101, 100])
+    expect([b[0x0135], b[0x0136]]).toEqual(lords)
+    for (const at of PEOPLE) expect(b[at]).toBe(0)
+    expect(b[0x0013]).toBe(location)
+  })
+
+  it('状態の表は FFFF のときだけ 0 にし、クリア回数は残す', () => {
+    const b = makeMissionSave()
+    applyMissionEve(b, 'lords-vs-quartet')
+    expect(readU16(b, 0x3542)).toBe(0)
+    b.set([0x05, 0x00], 0x3544)
+    applyMissionEve(b, 'amihama-eight')
+    expect(readU16(b, 0x3544)).toBe(5)
+  })
+
+  it('物語の進み具合・日付など、ほかの位置は変えない', () => {
+    const before = makeMissionSave()
+    const b = before.slice()
+    applyMissionEve(b, 'amihama-eight-commander')
+    const allowed = (at: number) =>
+      (at >= TABLE.start && at < TABLE.end) ||
+      [0x0013, 0x0120, 0x0121, 0x0122, 0x0123, 0x0135, 0x0136, 0x3544, 0x3545, ...PEOPLE].includes(at)
+    for (let at = 0; at < b.length; at++) if (!allowed(at)) expect(b[at]).toBe(before[at])
+  })
+
+  it('サイズの違うファイルには書かない', () => {
+    expect(() => applyMissionEve(new Uint8Array(0x100), 'amihama-eight')).toThrow()
+  })
+})
+
+describe('SCENE_TEMPLATE_GROUPS', () => {
   it('画面に出すテンプレの id は重ならない', () => {
     const ids = SCENE_TEMPLATE_GROUPS.flatMap((g) => g.templates.map((t) => t.id))
     expect(new Set(ids).size).toBe(ids.length)

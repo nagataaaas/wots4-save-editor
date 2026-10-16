@@ -9,7 +9,6 @@ import { readEvents } from "@/save/scenario-events";
 import { EventChartCard } from "@/features/event-chart/event-chart-card";
 import { FactionCard } from "./faction-card";
 import { EventFlagsCard } from "./event-flags-card";
-import { SceneTemplatesCard } from "./scene-templates-card";
 import { BestRouteRow, BulkEventsPanel } from "./event-controls";
 
 const readChart = (b: Uint8Array) => ({
@@ -20,7 +19,7 @@ const readChart = (b: Uint8Array) => ({
 });
 
 /**
- * 世界 / イベント：イベントチャート（真ルート・一括設定つき）、場面のテンプレ、勢力の状態、イベント関連フラグ（ユーザー判断 2026-10-11）
+ * 世界 / イベント：イベントチャート（真ルート・一括設定つき）、勢力の状態、イベント関連フラグ（ユーザー判断 2026-10-11）
  * 確度：どれもセーブの差分から推定（docs: event-chart・best-route・factions・scenario-flags）。
  * イベントの失敗（05）・未到達（FF）、チャート表示、真ルート、勢力の友好度 +・−・敵対状態は ✅ 書き換えの反映を確認。
  * そのほかは ❓ 要ゲーム内確認
@@ -39,7 +38,6 @@ export function EventsPage() {
         top={<BestRouteRow sisters={view?.events.entries[BEST_ROUTE_EVENT_INDEX]?.state ?? null} />}
         bottom={<BulkEventsPanel problem={view?.events.problem ?? null} disabled={!view} />}
       />
-      <SceneTemplatesCard />
       <FactionCard />
       <EventFlagsCard />
     </div>

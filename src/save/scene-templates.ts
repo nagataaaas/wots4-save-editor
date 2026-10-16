@@ -9,10 +9,25 @@
 //   ✅ [U] 2026-10-16 書き込んだセーブをロードし、会場で剣術大会が始まった（4つとも同じ書き方）
 //   🟢 開始条件：剣術大会開催（46）が未到達、大寄せ（41）≥ 4、0x378D = 1、段階 400、会場にいる。
 //      どの勢力の大会になるかは 42〜45 のどれが 04 か（42 → 43 → 44 → 45 の順に見る）
-import { writeU16, writeU8 } from './binary'
+//
+// なりわい（四天王 対 四人組・阿弥浜八人衆・阿弥浜八人衆の最終戦）：
+//   ❓ 要ゲーム内確認（ユーザー判断 2026-10-16 で、確かめる前に画面に出す）。物語の進み具合には触れず、なりわいの値だけを書く。
+//   🟢 戦いの相手はなりわいの標的としてだけ出る。地域に入ったとき、受注中の表のうち、なりわいの場所＝今の地域のものを1つ選んで出す。
+//      同じ地域のなりわいを複数受けていると1つしか選ばれないので、受注中の表は 207／208 の1件だけにする。
+//      戦いの処理は連続なりわいのフラグ 4〜7・9 を読まない（話の流れに合わせて終えた値にする）。段階・期限の条件はない。
+//   🔶 ロードしたその地域で標的が出るか（ゲームは地図で移動したときに出す）。現在地は戦いの場所にする（ユーザー判断 2026-10-16）
+//   ❓ 標的が死亡のビットを見るか。戦いに出る人の死亡のビットは 0 にする
+import { readU16, writeU16, writeU8 } from './binary'
 import { assertWritable } from './layout'
 import { HERO_OFFSETS } from './hero'
-import { DATE_OFFSETS, DAY_TIME_AFTER_DAY3 } from './scenario-date'
+import { DATE_OFFSETS, DAY_TIME_AFTER_DAY3, readDate } from './scenario-date'
+import {
+  OCCUPATION_ACCEPTED_OFFSET,
+  OCCUPATION_ACCEPTED_TABLE_END,
+  OCCUPATION_NOT_APPEARED,
+  occupationStateOffset,
+} from './occupation'
+import { occupationFlagOffset, personOffset } from './townsfolk'
 import { EVENT_COUNT, EVENT_RECORD_OFFSET, EVENT_STATE_OFFSET, EVENT_STATE_VALUES } from './scenario-events'
 import { FACTION_TABLE_OFFSET, ROUTE_JUDGE_OFFSET, ROUTE_NONE_OFFSET, ROUTE_THRESHOLD } from './factions'
 import { NEW_CYCLE_KEEP_FLAGS } from './new-cycle'
@@ -81,13 +96,16 @@ const TOURNAMENT_SIDES: Record<TournamentSide, { event: number; faction: number 
 export type SceneTemplate = {
   id: string
   label: Localized
+  /** 当てたあとゲームで何をすればよいか */
+  note: Localized
   apply: (bytes: Uint8Array) => void
 }
 
 export type SceneTemplateGroup = {
   id: string
   label: Localized
-  note: Localized
+  /** 何を書き換え、何を残すか */
+  description: Localized
   templates: readonly SceneTemplate[]
 }
 
@@ -146,20 +164,153 @@ export function applyTournamentEve(bytes: Uint8Array, side: TournamentSide): voi
   writeU8(bytes, HERO_OFFSETS.location, LOCATION_MAIN_PLAZA)
 }
 
-/** 画面に出すテンプレ。ゲームで確かめたものだけを載せる */
+/** 🟢 なりわいの ID（datatable/occupation） */
+export const MISSION = {
+  /** 四天王 対 四人組（場所：墓場） */
+  lordsVsQuartet: 207,
+  /** 阿弥浜八人衆（場所：街道） */
+  amihamaEight: 208,
+} as const
+
+/** 🟢 なりわいのフラグの番号（chunks/townsfolk） */
+const OCC_FLAG = {
+  /** 連続なりわい 野戸仏・小鳩・泥棒さん・おっつぁん。終えた値（101＝虎鉄・大蛇に合言葉を伝えた、100＝終えた） */
+  series: [
+    { flag: 4, value: 101 },
+    { flag: 5, value: 100 },
+    { flag: 6, value: 101 },
+    { flag: 7, value: 100 },
+  ],
+  /** 四天王の話 */
+  lords: 25,
+  /** 最終なりわいと熊神の病気 */
+  final: 26,
+} as const
+
+/** 🟢 四天王の話・最終なりわいの値 */
+const LORDS_OFFERED_207 = 14
+const LORDS_OKAMI_CAME = 60
+/** 治療していない（10 未満なら女将が来ず、四人組と戦う） */
+const FINAL_UNTREATED = 2
+const FINAL_ACCEPTED_208 = 20
+
+/** 🟢 戦いに出る人の人物番号：親分（女将）・小鳩・泥棒さん（大蛇）・熊神・虎鉄・霧鮫・緋横・鈴目・百舌・指揮官 */
+const MISSION_PEOPLE: readonly number[] = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111]
+
+/** 🟢 受注中のなりわいの表の1件（16 B）：+0 ID、+4 受注した日、+6 時間帯、+7 期限の日数（FF なし）、+8〜+15 なりわいの変数 0〜7 */
+const ACCEPTED_ENTRY = { id: 0, day: 4, slot: 6, deadline: 7, vars: 8 } as const
+/** 🟢 207・208 は期限なし */
+const NO_DEADLINE = 0xff
+
+/** ✅ 開始地点（datatable/place/start-location.csv） */
+const LOCATION_CEMETERY = 0x15
+const LOCATION_BACK_ROADS = 0x10
+
+/**
+ * 208 の変数 0〜2（🟢）。変数 0 は場面の進み具合、変数 1 はその段で倒した数、変数 2 は段（0〜2、40人で次の段）。
+ * start：合流の前（0〜2 なら霧鮫の「四人組と合流せよ！」から。3 にすると侵略者の場面を飛ばすので使わない）
+ * commander：240人を倒し終え、全員が指揮官の前に集まった（変数 0＝21）。🔶 ふだんは指揮官から話しかけるので、自分から話しかけて一騎打ちになるか
+ */
+const AMIHAMA_EIGHT_VARS = { start: [0, 0, 0], commander: [21, 40, 2] } as const
+
+export type MissionScene = 'lords-vs-quartet' | 'amihama-eight' | 'amihama-eight-commander'
+
+/**
+ * なりわいの戦いの直前：連続なりわいを終えた値にし、四天王の話・最終なりわいの値、戦いに出る人の生死、
+ * 受注中の表（このなりわい1件だけ）、状態の表（FFFF のときだけ 0）、現在地（戦いの場所）を書く
+ */
+export function applyMissionEve(bytes: Uint8Array, scene: MissionScene): void {
+  assertWritable(bytes)
+  const date = readDate(bytes)
+  if (date.problem) throw new RangeError(date.problem)
+  const isLords = scene === 'lords-vs-quartet'
+  const id = isLords ? MISSION.lordsVsQuartet : MISSION.amihamaEight
+
+  for (const { flag, value } of OCC_FLAG.series) writeU8(bytes, occupationFlagOffset(flag), value)
+  writeU8(bytes, occupationFlagOffset(OCC_FLAG.lords), isLords ? LORDS_OFFERED_207 : LORDS_OKAMI_CAME)
+  writeU8(bytes, occupationFlagOffset(OCC_FLAG.final), isLords ? FINAL_UNTREATED : FINAL_ACCEPTED_208)
+  // 🟢 人物のレコードはビット0（死亡）だけが使われる
+  for (const p of MISSION_PEOPLE) writeU8(bytes, personOffset(p), 0)
+
+  bytes.fill(0, OCCUPATION_ACCEPTED_OFFSET, OCCUPATION_ACCEPTED_TABLE_END)
+  const at = OCCUPATION_ACCEPTED_OFFSET
+  writeU16(bytes, at + ACCEPTED_ENTRY.id, id)
+  // 受注した日・時間帯は今の値（ゲームの受注と同じ）。期限がないので戦いには関わらない
+  writeU16(bytes, at + ACCEPTED_ENTRY.day, date.dayIndex)
+  writeU8(bytes, at + ACCEPTED_ENTRY.slot, date.slot)
+  writeU8(bytes, at + ACCEPTED_ENTRY.deadline, NO_DEADLINE)
+  if (!isLords) {
+    const vars = scene === 'amihama-eight-commander' ? AMIHAMA_EIGHT_VARS.commander : AMIHAMA_EIGHT_VARS.start
+    vars.forEach((v, i) => writeU8(bytes, at + ACCEPTED_ENTRY.vars + i, v))
+  }
+  // 状態の表は周回をまたぐクリア回数なので、FFFF（まだ出ていない）のときだけ 0 にする
+  const state = occupationStateOffset(id)
+  if (readU16(bytes, state) === OCCUPATION_NOT_APPEARED) writeU16(bytes, state, 0)
+
+  writeU8(bytes, HERO_OFFSETS.location, isLords ? LOCATION_CEMETERY : LOCATION_BACK_ROADS)
+}
+
+/** 画面に出すテンプレ */
 export const SCENE_TEMPLATE_GROUPS: readonly SceneTemplateGroup[] = [
   {
     id: 'tournament',
     label: { ja: '剣術大会直前', en: 'Right before the Battle Tournament' },
-    note: {
-      ja: '4日目の昼、大通りから始まります。剣術大会の会場の受付で参加を選ぶと、選んだ側の剣術大会が始まります。',
-      en: 'You start on the Main Plaza at midday on day 4. Choose to enter at the tournament grounds reception, and the Battle Tournament for the chosen side begins.',
+    description: {
+      ja: '今の周回のイベントの進み具合・勢力の状態・門や柵・人物の生死・日付・現在地を、剣術大会までの決まった道筋に置き換えます。武器・道具・お金・主人公・町の人・なりわい・夜這いはそのままです。',
+      en: "Replaces this playthrough's event progress, faction status, gates and fences, who is alive, the date and the location with a set path up to the Battle Tournament. Weapons, items, money, your character, townsfolk, missions and night crawling are left as they are.",
+    },
+    templates: (
+      [
+        ['shogunate', { ja: '幕府', en: 'Shogunate' }],
+        ['foreigners', { ja: '外国', en: 'Foreigners' }],
+        ['prajnas', { ja: '攘夷', en: 'Prajnas' }],
+        ['independent', { ja: '根無し草', en: 'Independent' }],
+      ] as const
+    ).map(([side, label]) => ({
+      id: `tournament-${side}`,
+      label,
+      note: {
+        ja: `4日目の昼、大通りから始まります。剣術大会の会場の受付で参加を選ぶと、${label.ja}の側で剣術大会が始まります。`,
+        en: `You start on the Main Plaza at midday on day 4. Choose to enter at the tournament grounds reception, and the Battle Tournament begins on the ${label.en} side.`,
+      },
+      apply: (b: Uint8Array) => applyTournamentEve(b, side),
+    })),
+  },
+  {
+    id: 'missions',
+    label: { ja: 'なりわい', en: 'Missions' },
+    description: {
+      ja: '連続なりわいを4つとも終えた状態にし、侍四天王の話を進め、なりわいをそれ1つだけ受けた状態にします。ほかに受けているなりわいは外れます。戦いに出る人は生きている状態にします。物語の進み具合・日付はそのままです。',
+      en: 'Marks all four mission series as finished, advances the Four Samurai Lords story, and leaves only this mission accepted. Any other accepted missions are dropped. The people in the fight are set as alive. Story progress and the date are left as they are.',
     },
     templates: [
-      { id: 'tournament-shogunate', label: { ja: '幕府', en: 'Shogunate' }, apply: (b) => applyTournamentEve(b, 'shogunate') },
-      { id: 'tournament-foreigners', label: { ja: '外国', en: 'Foreigners' }, apply: (b) => applyTournamentEve(b, 'foreigners') },
-      { id: 'tournament-prajnas', label: { ja: '攘夷', en: 'Prajnas' }, apply: (b) => applyTournamentEve(b, 'prajnas') },
-      { id: 'tournament-independent', label: { ja: '根無し草', en: 'Independent' }, apply: (b) => applyTournamentEve(b, 'independent') },
+      {
+        id: 'mission-lords-vs-quartet',
+        label: { ja: '四天王 対 四人組', en: 'Four Samurai Lords vs. Yakuza Quartet' },
+        note: {
+          ja: '墓場から始まります。小鳩に話しかけ、百舌が来たらもう一度話しかけて「いざ尋常に！」を選ぶと、四人組との戦いになります。熊神は治療していない状態です。',
+          en: 'You start at the Cemetery. Talk to Kobato, and when Mozu arrives, talk to him again and choose to fight to begin the battle with the Yakuza Quartet. Kumagami has not been treated.',
+        },
+        apply: (b) => applyMissionEve(b, 'lords-vs-quartet'),
+      },
+      {
+        id: 'mission-amihama-eight',
+        label: { ja: '阿弥浜八人衆', en: 'The Amihama Eight' },
+        note: {
+          ja: '街道から始まります。霧鮫の「四人組と合流せよ！」のあと、小鳩に2回話しかけて「準備はよろしいか」を選ぶと、侵略者との戦いになります。先生・堂島は、師範代・鍛冶屋になっていて生きていれば加わります。',
+          en: 'You start on the Back Roads. After Kirizame says "Link up with the Yakuza Quartet!", talk to Kobato twice and choose "Prepare yourselves!" to begin the battle with the invaders. Sensei and Dojima join if they are alive and have become the acting master of your dojo and the smith.',
+        },
+        apply: (b) => applyMissionEve(b, 'amihama-eight'),
+      },
+      {
+        id: 'mission-amihama-eight-commander',
+        label: { ja: '阿弥浜八人衆（指揮官との一騎打ち）', en: 'The Amihama Eight (duel with the commander)' },
+        note: {
+          ja: '街道から始まります。侵略者を倒し終え、全員が指揮官の前に集まった状態です。指揮官に話しかけると一騎打ちになります。',
+          en: 'You start on the Back Roads, with the invaders already defeated and everyone gathered in front of the commander. Talk to the commander to begin the duel.',
+        },
+        apply: (b) => applyMissionEve(b, 'amihama-eight-commander'),
+      },
     ],
   },
 ]

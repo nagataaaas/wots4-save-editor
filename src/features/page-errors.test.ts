@@ -12,7 +12,7 @@ import { PageBanner } from '@/components/page-banner'
 const affected: SectionId[] = [
   'hero', 'hero-appearance', 'records', 'belt', 'weapon-bag', 'weapon-chest',
   'tools', 'chest', 'valuables', 'accessories', 'appearance', 'unlocks',
-  'world', 'npc', 'event-chart', 'dojo', 'occupation', 'yobai', 'styles', 'ore-ryu', 'skills', 'circulating',
+  'world', 'npc', 'event-chart', 'dojo', 'occupation', 'yobai', 'styles', 'ore-ryu', 'skills', 'circulating', 'templates',
 ]
 
 function render(section: SectionId, save: LoadedSave | null) {

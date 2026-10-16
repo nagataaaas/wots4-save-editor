@@ -4099,22 +4099,6 @@
  },
  {
   "section": "event-chart",
-  "anchor": "scene-templates",
-  "path": [],
-  "label": "場面のテンプレ",
-  "box": true
- },
- {
-  "section": "event-chart",
-  "anchor": "scene-templates",
-  "path": [
-   "場面のテンプレ"
-  ],
-  "label": "剣術大会直前",
-  "box": false
- },
- {
-  "section": "event-chart",
   "anchor": "factions",
   "path": [],
   "label": "勢力の状態",
@@ -8918,5 +8902,82 @@
   "path": [],
   "label": "柄",
   "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [],
+  "label": "剣術大会直前",
+  "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [
+   "剣術大会直前"
+  ],
+  "label": "幕府",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [
+   "剣術大会直前"
+  ],
+  "label": "外国",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [
+   "剣術大会直前"
+  ],
+  "label": "攘夷",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "tournament",
+  "path": [
+   "剣術大会直前"
+  ],
+  "label": "根無し草",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "missions",
+  "path": [],
+  "label": "なりわい",
+  "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "missions",
+  "path": [
+   "なりわい"
+  ],
+  "label": "四天王 対 四人組",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "missions",
+  "path": [
+   "なりわい"
+  ],
+  "label": "阿弥浜八人衆",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "missions",
+  "path": [
+   "なりわい"
+  ],
+  "label": "阿弥浜八人衆（指揮官との一騎打ち）",
+  "box": false
  }
 ]

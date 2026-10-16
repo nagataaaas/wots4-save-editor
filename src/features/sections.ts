@@ -1,5 +1,5 @@
 import type { Localized } from '@/lib/i18n'
-import { Binary, ClipboardList, Globe, Moon, Package, ScrollText, Shirt, Store, Sword, User, type LucideIcon } from 'lucide-react'
+import { Binary, ClipboardList, Globe, LayoutTemplate, Moon, Package, ScrollText, Shirt, Store, Sword, User, type LucideIcon } from 'lucide-react'
 
 // サイドバーに並べる編集機能の一覧。
 // 各領域の確度は docs/save_format/README.md §3 と各 chunk を参照。
@@ -28,6 +28,7 @@ export type SectionId =
   | 'ore-ryu'
   | 'skills'
   | 'circulating'
+  | 'templates'
   | 'raw'
 
 export type Section = {
@@ -142,6 +143,8 @@ export const sectionGroups: SectionGroup[] = [
       { id: 'yobai', label: { ja: '夜這い', en: 'Night Crawling' }, icon: Moon },
       // market-weapons（持ち去られた武器・道具・部品。読み取り専用）。🟢
       { id: 'circulating', label: { ja: '流通', en: 'Reclamation' }, icon: Store },
+      // scene-templates（決まった戦いの直前に書き換える）。剣術大会直前は ✅ [U]、なりわいは ❓ 要ゲーム内確認
+      { id: 'templates', label: { ja: 'テンプレート', en: 'Presets' }, icon: LayoutTemplate },
     ],
   },
   {

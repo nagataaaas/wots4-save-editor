@@ -17,8 +17,8 @@ export const changelog: ChangelogEntry[] = [
     date: '2026-10-16',
     items: [
       {
-        ja: 'イベント：「場面のテンプレ」を足しました。剣術大会の直前（幕府・外国・攘夷・根無し草）から遊べるように、物語の進み具合を書き換えられます',
-        en: 'Events: added "Scene presets". You can rewrite the story progress to play from right before the Battle Tournament (Shogunate, Foreigners, Prajnas or Independent)',
+        ja: '「テンプレート」の画面を足しました。剣術大会の直前（幕府・外国・攘夷・根無し草）と、なりわいの「四天王 対 四人組」「阿弥浜八人衆」（指揮官との一騎打ちの直前も）から遊べるように、セーブを書き換えられます',
+        en: 'Added the Presets screen. You can rewrite the save to play from right before the Battle Tournament (Shogunate, Foreigners, Prajnas or Independent), or the missions "Four Samurai Lords vs. Yakuza Quartet" and "The Amihama Eight" (including right before the duel with the commander)',
       },
       {
         ja: 'NPCイベントフラグ：「鍛冶屋の後継者イベント・鍛冶屋の状態」の選択肢を増やし、踏み倒したあとの状態の名前を直しました（踏み倒した直後と、店をやめられたあとを分けました）',
