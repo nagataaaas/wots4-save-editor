@@ -14,6 +14,15 @@ export type ChangelogEntry = {
 /** 新しい日付が先 */
 export const changelog: ChangelogEntry[] = [
   {
+    date: '2026-10-16',
+    items: [
+      {
+        ja: 'NPCイベントフラグ：「鍛冶屋の後継者イベント・鍛冶屋の状態」の選択肢を増やし、踏み倒したあとの状態の名前を直しました（踏み倒した直後と、店をやめられたあとを分けました）',
+        en: 'NPC event flags: added more choices to "Smithy successor event & smithy status" and fixed the names of the states after skipping payment (right after skipping, and after the smith quits the shop)',
+      },
+    ],
+  },
+  {
     date: '2026-10-15',
     items: [
       {

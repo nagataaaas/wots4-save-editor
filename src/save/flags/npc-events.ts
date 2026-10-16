@@ -45,11 +45,32 @@ const PHOTOGRAPHER = { ja: nameOf.npc(159), en: en(159) };
 const SUCCESSOR: Localized = { ja: "後継者イベント", en: "Successor event" };
 const SMITH_STATE: Localized = { ja: "鍛冶屋の状態", en: "Smithy status" };
 
-/** ✅ [U] 2026-10-06：0x0127 の値（書き換えで確認） */
+/**
+ * 0x0127 の値。
+ * ✅ [U] 2026-10-06：0・10・20・30・40・50・60・61・69・70・81・110・119 は書き換えで確認。
+ * ✅ [U] 2026-10-16：おやじから踏み倒した直後に殺すと 109 のまま残る（実セーブ）。
+ * 🟢 書かれる場面（docs/save_format/chunks/townsfolk「鍛冶屋の状態」）：
+ *   1 周回後の堂島の鍛冶屋で初めて話した、27・28 墓場の堂島との会話の途中、80 説得のあとおやじにお礼を言われた、
+ *   82・83 堂島の代でおやじが死んだ・堂島がそれを話した、90 説得のあと（70 以上）に堂島が死んだ、
+ *   99 後継者の話を断った・堂島が先に死んでいた、109・119 踏み倒した直後、110・120 そのあと話して店をやめられた。
+ *   120 は堂島の死亡ではない（堂島の死亡は 0x0264 で、ここには書かれない）🟢
+ *   21〜26（墓場の堂島との雑談の途中、選択肢ごとに 1 ずつ進む 🟢）は選択肢に出さない（ユーザー判断 2026-10-16）
+ */
 export const SMITH_STATES: readonly FlagValue[] = flagValues([
   { value: 0, label: { ja: "未会話", en: "Not talked yet" }, group: SUCCESSOR },
+  {
+    value: 1,
+    label: { ja: `${DOJIMA.ja}の鍛冶屋で${DOJIMA.ja}と初めて話した`, en: `Talked to ${DOJIMA.en} at his smithy for the first time` },
+    group: SMITH_STATE,
+  },
   { value: 10, label: { ja: "「そろそろやめる」という会話を聞いた", en: 'Heard him say he will quit soon' }, group: SUCCESSOR },
   { value: 20, label: { ja: `堂島を探してくる`, en: `Go find ${DOJIMA.en}` }, group: SUCCESSOR },
+  {
+    value: 27,
+    label: { ja: `${DOJIMA.ja}に「親方が探していたぞ」と言った`, en: `Told ${DOJIMA.en} the smith was looking for him` },
+    group: SUCCESSOR,
+  },
+  { value: 28, label: { ja: `${DOJIMA.ja}に「鍛冶屋を継げ」と言った`, en: `Told ${DOJIMA.en} to take over the smithy` }, group: SUCCESSOR },
   {
     value: 30,
     label: { ja: `鍛冶屋を継げ → 堂島の意志は固かった`, en: `Told him to take over the smithy → ${DOJIMA.en} would not budge` },
@@ -65,10 +86,52 @@ export const SMITH_STATES: readonly FlagValue[] = flagValues([
     label: { ja: `堂島の説得に成功した（堂島が鍛冶屋を継ぐ）`, en: `Persuaded ${DOJIMA.en} (${DOJIMA.en} takes over the smithy)` },
     group: SUCCESSOR,
   },
+  {
+    value: 80,
+    label: { ja: `${SMITH.ja}のおやじにお礼を言われた（おやじは引退）`, en: `The old smith thanked you (he retires)` },
+    group: SUCCESSOR,
+  },
+  {
+    value: 90,
+    label: { ja: `${DOJIMA.ja}が死に、おやじは店を続けられない`, en: `${DOJIMA.en} died; the old smith can't keep the shop` },
+    group: SUCCESSOR,
+  },
+  {
+    value: 99,
+    label: { ja: "後継者の話を断った・終わった（おやじの鍛冶屋のまま）", en: "Turned down or ended the successor talk (the old smith keeps the shop)" },
+    group: SUCCESSOR,
+  },
   { value: 81, label: { ja: `鍛冶屋が${DOJIMA.ja}`, en: `${DOJIMA.en} runs the smithy` }, group: SMITH_STATE },
-  { value: 110, label: { ja: `${SMITH.ja}のおやじから踏み倒した`, en: `Skipped paying the old smith` }, group: SMITH_STATE },
-  { value: 119, label: { ja: `${DOJIMA.ja}から踏み倒した`, en: `Skipped paying ${DOJIMA.en}` }, group: SMITH_STATE },
-  { value: 120, label: { ja: `${DOJIMA.ja}が死亡`, en: `${DOJIMA.en} is dead` }, group: SMITH_STATE },
+  {
+    value: 82,
+    label: { ja: `鍛冶屋が${DOJIMA.ja}・おやじが死んだ`, en: `${DOJIMA.en} runs the smithy; the old smith died` },
+    group: SMITH_STATE,
+  },
+  {
+    value: 83,
+    label: { ja: `鍛冶屋が${DOJIMA.ja}・おやじの死を聞いた`, en: `${DOJIMA.en} runs the smithy; heard the old smith died` },
+    group: SMITH_STATE,
+  },
+  {
+    value: 109,
+    label: { ja: `${SMITH.ja}のおやじから踏み倒した直後（おやじが怒っている）`, en: `Just skipped paying the old smith (he is angry)` },
+    group: SMITH_STATE,
+  },
+  {
+    value: 110,
+    label: { ja: `踏み倒したため、おやじが店をやめた`, en: `The old smith quit the shop because you skipped paying` },
+    group: SMITH_STATE,
+  },
+  {
+    value: 119,
+    label: { ja: `${DOJIMA.ja}から踏み倒した直後（${DOJIMA.ja}が怒っている）`, en: `Just skipped paying ${DOJIMA.en} (he is angry)` },
+    group: SMITH_STATE,
+  },
+  {
+    value: 120,
+    label: { ja: `踏み倒したため、${DOJIMA.ja}が店をやめた`, en: `${DOJIMA.en} quit the shop because you skipped paying` },
+    group: SMITH_STATE,
+  },
 ]);
 
 /** 鍛冶屋 */

@@ -216,9 +216,14 @@ describe("NPCイベントフラグ chunks/townsfolk", () => {
     expect(offsets(NPC_OTHER_FLAGS)).toEqual([16, 23, 24].map(occupationFlagOffset));
   });
 
-  it("✅ [U] 0x0127 の値。踏み倒しの差分で見た 110 も表にある", () => {
-    expect(SMITH_STATES.map((s) => s.value)).toEqual([0, 10, 20, 30, 40, 50, 60, 61, 69, 70, 81, 110, 119, 120]);
-    expect(SMITH_STATES.find((s) => s.value === 0x6e)?.label).toBe("鍛冶屋のおやじから踏み倒した");
+  it("0x0127 の値（✅ [U] 書き換え・実セーブ、ほかの値と書かれる場面は 🟢。21〜26 は出さない）", () => {
+    expect(SMITH_STATES.map((s) => s.value).sort((a, b) => a - b)).toEqual([
+      0, 1, 10, 20, 27, 28, 30, 40, 50, 60, 61, 69, 70, 80, 81, 82, 83, 90, 99, 109, 110, 119, 120,
+    ]);
+    // ✅ [U] 2026-10-16：踏み倒した直後に殺すと 109 のまま。🟢 110・120 は踏み倒したあとに話して店をやめられたとき
+    expect(SMITH_STATES.find((s) => s.value === 109)?.label).toBe("鍛冶屋のおやじから踏み倒した直後（おやじが怒っている）");
+    expect(SMITH_STATES.find((s) => s.value === 110)?.label).toBe("踏み倒したため、おやじが店をやめた");
+    expect(SMITH_STATES.find((s) => s.value === 120)?.label).toBe("踏み倒したため、堂島が店をやめた");
     expect(byOffset(0x0132).label).toBe("堂島が鍛冶屋");
     expect(valuesOf(byOffset(0x0132))).toEqual([0, 1]);
   });
