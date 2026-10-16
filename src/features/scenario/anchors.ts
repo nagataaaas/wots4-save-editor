@@ -21,6 +21,7 @@ export const NPC_ANCHORS = {
 /** 世界 / イベント */
 export const EVENTS_ANCHORS = {
   chart: 'chart',
+  templates: 'scene-templates',
   factions: { card: 'factions', routeJudge: 'post-tournament-route' },
   flags: 'event-flags',
 } as const

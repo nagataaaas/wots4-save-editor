@@ -4099,6 +4099,22 @@
  },
  {
   "section": "event-chart",
+  "anchor": "scene-templates",
+  "path": [],
+  "label": "場面のテンプレ",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "scene-templates",
+  "path": [
+   "場面のテンプレ"
+  ],
+  "label": "剣術大会直前",
+  "box": false
+ },
+ {
+  "section": "event-chart",
   "anchor": "factions",
   "path": [],
   "label": "勢力の状態",

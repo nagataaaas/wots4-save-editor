@@ -17,6 +17,10 @@ export const changelog: ChangelogEntry[] = [
     date: '2026-10-16',
     items: [
       {
+        ja: 'イベント：「場面のテンプレ」を足しました。剣術大会の直前（幕府・外国・攘夷・根無し草）から遊べるように、物語の進み具合を書き換えられます',
+        en: 'Events: added "Scene presets". You can rewrite the story progress to play from right before the Battle Tournament (Shogunate, Foreigners, Prajnas or Independent)',
+      },
+      {
         ja: 'NPCイベントフラグ：「鍛冶屋の後継者イベント・鍛冶屋の状態」の選択肢を増やし、踏み倒したあとの状態の名前を直しました（踏み倒した直後と、店をやめられたあとを分けました）',
         en: 'NPC event flags: added more choices to "Smithy successor event & smithy status" and fixed the names of the states after skipping payment (right after skipping, and after the smith quits the shop)',
       },

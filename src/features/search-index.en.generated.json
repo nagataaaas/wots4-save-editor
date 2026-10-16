@@ -4099,6 +4099,22 @@
  },
  {
   "section": "event-chart",
+  "anchor": "scene-templates",
+  "path": [],
+  "label": "Scene presets",
+  "box": true
+ },
+ {
+  "section": "event-chart",
+  "anchor": "scene-templates",
+  "path": [
+   "Scene presets"
+  ],
+  "label": "Right before the Battle Tournament",
+  "box": false
+ },
+ {
+  "section": "event-chart",
   "anchor": "factions",
   "path": [],
   "label": "Factions",
