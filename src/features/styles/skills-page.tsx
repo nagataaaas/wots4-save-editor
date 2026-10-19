@@ -15,10 +15,9 @@ import { useSaveView } from "@/lib/use-save-view";
 import { useWrite } from "@/lib/use-write";
 import { PageBanner } from "@/components/page-banner";
 import { WriteResult } from "@/components/write-error";
-import { tr, type Localized } from "@/lib/i18n";
+import { tr } from "@/lib/i18n";
 import {
   SECTS,
-  SLOT_LABELS,
   STANCES,
   commandLabel,
   sectName,
@@ -42,7 +41,7 @@ import {
   showStanceSkillInOreRyu,
   stanceSkillSheets,
 } from "@/save/sects";
-import { STANCE_TAB_CLASS, attrLabel, skillTreeDescription } from "./sect-format";
+import { STANCE_ROWS, STANCE_TAB_CLASS, attrLabel, skillTreeDescription } from "./sect-format";
 import { SkillAttrs, SkillCommandCells, SkillTreeName, SkillTreeRows, StateBadge, type SkillTreeRowContext } from "./sect-ui";
 import { SkillActionButtons } from "./skill-action-buttons";
 import {
@@ -73,16 +72,6 @@ function filterOptions() {
   const sort = (Object.keys(SKILL_SORT_LABELS) as SkillSort[]).map((value) => ({ value, label: tr(SKILL_SORT_LABELS[value]) }));
   return { command, attr, kind, sort };
 }
-
-/** タブの段：刀の構え（構えの組 0）と、それ以外（構えの組の順 🟢：槍・無手・拳銃・ライフル・二刀）。key は段の識別子 */
-const STANCE_ROWS: { key: string; label: Localized; stances: typeof STANCES }[] = [
-  { key: "sword", label: SLOT_LABELS[0], stances: STANCES.filter((s) => s.slot === 0) },
-  {
-    key: "other",
-    label: { ja: `${SLOT_LABELS[0].ja}以外`, en: "Other" },
-    stances: STANCES.filter((s) => s.slot !== 0).toSorted((a, b) => a.slot - b.slot || a.id - b.id),
-  },
-];
 
 /** 構えの技 1 つが入っている技の表・流派 */
 type Row = {

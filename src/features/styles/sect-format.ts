@@ -1,7 +1,7 @@
 import type { ParseResult } from "@/components/field-row";
 import { tr, type Localized } from "@/lib/i18n";
 import { parseInteger } from "@/lib/parse";
-import { skillAttrLabel } from "@/save/master/sect-data";
+import { SLOT_LABELS, STANCES, skillAttrLabel } from "@/save/master/sect-data";
 import { SKILL_STATE, type SkillState } from "@/save/sects";
 
 /** 技の状態の表示 🟢（chunks/skill-states）。上位技を覚えた元の技（learnedParent）は習得済と同じ表示にし、上位技との関係は技の並びで示す */
@@ -46,3 +46,13 @@ export const skillTreeDescription = (): string =>
     ja: "続けて出す技は字下げして並べます（前の技が複数ある技は、それぞれの下に出します）。上位技（⇧）は元の技と左の帯でまとめます。",
     en: "Follow-up moves are indented (a move with several preceding moves appears under each of them). Upgraded moves (⇧) are grouped with their base move by the bar on the left.",
   });
+
+/** 構えを並べる段：刀の構え（構えの組 0）と、それ以外（構えの組の順 🟢：槍・無手・拳銃・ライフル・二刀）。key は段の識別子 */
+export const STANCE_ROWS: { key: string; label: Localized; stances: typeof STANCES }[] = [
+  { key: "sword", label: SLOT_LABELS[0], stances: STANCES.filter((s) => s.slot === 0) },
+  {
+    key: "other",
+    label: { ja: `${SLOT_LABELS[0].ja}以外`, en: "Other" },
+    stances: STANCES.filter((s) => s.slot !== 0).toSorted((a, b) => a.slot - b.slot || a.id - b.id),
+  },
+];

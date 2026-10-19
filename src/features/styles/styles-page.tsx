@@ -29,6 +29,7 @@ import {
   sectName,
   sheetSkillTree,
   slotLabel,
+  stanceName,
   stanceNameById,
   type Sect,
   type SkillSheet,
@@ -62,7 +63,7 @@ import {
   type ScrollPlace,
   type SectsView,
 } from "@/save/sects";
-import { STANCE_TAB_CLASS, readOnlyReason, skillTreeDescription } from "./sect-format";
+import { STANCE_ROWS, STANCE_TAB_CLASS, readOnlyReason, skillTreeDescription } from "./sect-format";
 import {
   IntField,
   RankField,
@@ -124,6 +125,8 @@ export function StylesPage() {
   const [query, setQuery] = useState("");
   const [placeFilter, setPlaceFilter] = useState<PlaceFilter>("owned");
   const [uniqueOnly, setUniqueOnly] = useState(false);
+  // 構えの絞り込み。null はすべての構え
+  const [stance, setStance] = useState<number | null>(null);
 
   const { view, error: readError, problem, readOnly } = useSaveView(readSects);
 
@@ -135,11 +138,13 @@ export function StylesPage() {
       (b) => acquireMissingSects(b, place),
       (n) => tr({ ja: `${n} 件の流派を入手しました`, en: n === 1 ? "Obtained 1 style" : `Obtained ${n} styles` }),
     );
-  const sects = SECTS.filter((s) => !s.hidden || advanced)
+  // 構えのほかの条件で絞り込んだ流派。構えのボタンの件数はここから数える
+  const baseSects = SECTS.filter((s) => !s.hidden || advanced)
     .filter((s) => matchesSearch(query, [s.nameJa, s.nameEn]))
     // 置き場所はセーブから決まるので、未読み込みのときは絞り込まない
     .filter((s) => !view || !owned || matchesPlace(placeFilter, view, owned, s.id))
     .filter((s) => !uniqueOnly || sectHasUniqueSkill(s));
+  const sects = stance === null ? baseSects : baseSects.filter((s) => sectHasStance(s, stance));
 
   return (
     <div className="flex flex-col gap-4">
@@ -235,11 +240,12 @@ export function StylesPage() {
               {tr({ ja: `${sects.length} 件`, en: sects.length === 1 ? "1 style" : `${sects.length} styles` })}
             </span>
           </div>
+          <StanceFilter sects={baseSects} value={stance} onChange={setStance} />
         </CardContent>
       </AnchoredCard>
 
       {sects.map((sect) => (
-        <SectCard key={sect.id} sect={sect} view={view} readOnly={readOnly} />
+        <SectCard key={sect.id} sect={sect} view={view} readOnly={readOnly} stance={stance} />
       ))}
       {sects.length === 0 && (
         <p className="text-muted-foreground text-sm">{tr({ ja: "条件に合う流派がありません。", en: "No styles match." })}</p>
@@ -250,15 +256,65 @@ export function StylesPage() {
 
 const skillNosOf = (sheet: SkillSheet) => sheet.skills.map((s) => s.skillNo);
 
+/** 流派にその構えの技の表があるか */
+const sectHasStance = (sect: Sect, stance: number): boolean => sect.sheets.some((id) => findSkillSheet(id)?.stance === stance);
+
+/**
+ * 構えの絞り込み。技の画面の構えのタブと同じ 2 段（刀・刀以外）に並べる。
+ * 選んだ構えをもう一度押すと解除する。数はほかの条件に合う流派のうち、その構えを持つ流派の数
+ */
+function StanceFilter({
+  sects,
+  value,
+  onChange,
+}: {
+  sects: readonly Sect[];
+  value: number | null;
+  onChange: (stance: number | null) => void;
+}) {
+  return (
+    <div className="bg-muted flex flex-col gap-1.5 rounded-lg p-2" role="group" aria-label={tr({ ja: "構えで絞り込み", en: "Filter by stance" })}>
+      {STANCE_ROWS.map((row) => (
+        <div key={row.key} className="flex items-center gap-2">
+          <span className="text-muted-foreground w-12 shrink-0 pl-1 text-xs font-medium">{tr(row.label)}</span>
+          <div className="grid flex-1 grid-cols-3 gap-1 sm:grid-cols-4 lg:grid-cols-7">
+            {row.stances.map((s) => {
+              const on = value === s.id;
+              const hits = sects.filter((sect) => sectHasStance(sect, s.id)).length;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  aria-pressed={on}
+                  data-active={on ? "" : undefined}
+                  disabled={!on && hits === 0}
+                  onClick={() => onChange(on ? null : s.id)}
+                  className={`${STANCE_TAB_CLASS} flex w-full items-center justify-between gap-1.5 rounded-md border py-1 text-sm font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50`}
+                >
+                  {stanceName(s)}
+                  <span className="text-xs font-normal tabular-nums opacity-70">{tr({ ja: `${hits}件`, en: String(hits) })}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SectCard({
   sect,
   view,
   readOnly,
+  stance,
 }: {
   sect: Sect;
   /** null はセーブ未読み込み */
   view: SectsView | null;
   readOnly: boolean;
+  /** 構えで絞り込んでいるときは、その構えのタブを開く。null は絞り込みなし */
+  stance: number | null;
 }) {
   const { advanced } = useAdvancedMode();
   // ボタンの書き込みの結果は、このカードの「技を全部習得する」の下に出す（欄の書き込みのエラーは欄に出る）
@@ -417,7 +473,11 @@ function SectCard({
         </div>
 
         {/* 構え（技の表）ごとにタブで切り替える。技の表が 1 つならタブは出さない */}
-        <Tabs defaultValue={String(sheets[0]?.sheet.id)}>
+        {/* 構えの絞り込みを変えたら、選んだ構えのタブを開き直す */}
+        <Tabs
+          key={stance ?? "all"}
+          defaultValue={String((sheets.find((s) => s.sheet.stance === stance) ?? sheets[0])?.sheet.id)}
+        >
           {sheets.length > 1 && (
             <TabsList className="h-auto gap-1.5 p-1.5 group-data-horizontal/tabs:h-auto">
               {sheets.map(({ sheet, states }) => (

@@ -20,6 +20,10 @@ export const changelog: ChangelogEntry[] = [
         ja: 'なりわい：受注中のなりわいを選ぶと、期限のあるなりわいも期限のないものとして書いていたのを直しました。前に受けていたなりわいの途中の状態も残さないようにしました',
         en: 'Missions: fixed accepting a mission with a time limit so it is no longer written as having no limit. The in-progress state of the previously accepted mission is no longer left behind',
       },
+      {
+        ja: '流派一覧：技の画面と同じように、構えで流派を絞り込めるようにしました。絞り込むと、各流派はその構えの技を開いて出します',
+        en: 'Style List: you can now filter styles by stance, as on the Moves screen. Each style then opens on the moves for that stance',
+      },
     ],
   },
   {
