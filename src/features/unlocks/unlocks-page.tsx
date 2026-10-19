@@ -547,12 +547,11 @@ export function UnlocksPage() {
           <UnlockStateRows rows={rows} view={view} readOnly={readOnly} advanced={advanced} write={write} />
         </CardContent>
       </AnchoredCard>
-      {/* 各特典の 1 B だけを書き換える。値は 0〜2 の範囲。
-          ❓ ライフルの免許以外の書き込み後の反映は要ゲーム内確認。装飾品の所持フラグと連動するかは ❓ */}
+      {/* 🟢 取得時には箪笥の拡張・装飾品の付与も行う。 */}
       <p className="text-muted-foreground text-xs">
         {tr({
-          ja: "装飾品の特典を取得済みにしても、装飾品の所持は変わりません。所持は「装飾品」の画面で切り替えます。",
-          en: "Setting an accessory unlock to Obtained does not change accessory ownership. Toggle ownership on the Accessories screen.",
+          ja: "特典を取得済みにすると、武器箪笥の拡張や装飾品の入手も反映します。未取得・非表示に戻しても、箪笥の容量や装飾品の所持は元に戻りません。",
+          en: "Setting a bonus to Obtained also expands the Weapon Chest or grants its accessory. Changing it back to Not obtained or Hidden does not reduce chest capacity or remove accessories.",
         })}
       </p>
     </div>

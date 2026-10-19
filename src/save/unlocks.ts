@@ -12,12 +12,13 @@
 //   0x3AB79 に 0x40 を書くと容姿に近藤のセットが出た（✅ [U] 2026-10-06）。ほかの番号は 🟢（ゲーム内では未確認）
 //
 // 特典解除の状態（chunks/unlocks）：
-//   🔶 U-17 106 B の状態列。0＝非表示、1＝表示中・未取得、2＝取得済み。
+//   🟢 105 B の状態列。0＝非表示、1＝表示中・未取得、2＝取得済み。
 //   ✅ [U] 2026-10-07 番号 0〜15 はゲーム内表示と一致。101（ライフルの免許）は 2 の書き込みで取得可能になった。
 //   それ以外の並び・書き込みは 🔶 U-17。固定位置を採用（ユーザー判断 2026-10-07）。
 //
 // 固定オフセットで読み、ファイルサイズが 0x48BB0 のときだけ編集を許可する。
-import { readU8, writeU8 } from "./binary";
+import { readI8, readU8, writeU8 } from "./binary";
+import { CAPACITY_MAX, CAPACITY_MIN, WEAPON_CHEST_CAPACITY } from "./weapon-chest";
 import { warningsOf, type EditOpts, type ViewStatus } from "./field";
 import { validateKnownValue } from "./flags/byte-flag";
 import { assertWritable, checkLayout } from "./layout";
@@ -149,9 +150,14 @@ export function writeAppearanceBits(bytes: Uint8Array, bits: readonly number[], 
 
 // ---------------------------------------------------------------- 特典解除
 
-export const UNLOCK_COUNT = 106;
+export const UNLOCK_COUNT = 105;
 /** 🔶 U-17：固定位置。差分：01 copy 5→6（番号31）。 */
 export const UNLOCK_STATES_OFFSET = 0x43318;
+// 🟢 特典85〜99が付与する装飾品。添字は特典番号から85を引いた値。
+const ACCESSORY_UNLOCK_FIRST = 85;
+const UNLOCK_ACCESSORY_IDS = [77, 78, 89, 92, 93, 79, 80, 81, 153, 90, 94, 95, 96, 68, 82] as const;
+// 🟢 箪笥の特典0〜3は容量（10本単位）へ加算する。取得解除では容量を減らさない。
+const WEAPON_CHEST_UNLOCK_INCREMENTS = [3, 4, 5, 6] as const;
 // ✅ [U] 2026-10-07 番号31「J.J. の顔」はゲーム内で解除した前後の差分で対応を確認。書き込みの反映は 🔶 U-17。
 // ✅ [U] 2026-10-07 番号101（ライフルの免許）は値 2 の書き込みによる反映をゲーム内で確認。
 
@@ -192,7 +198,7 @@ export function writeUnlockState(bytes: Uint8Array, index: number, value: number
   assertWritable(bytes);
   if (!Number.isInteger(index) || index < 0 || index >= UNLOCK_COUNT) throw new RangeError(tr({ ja: "特典が範囲外です", en: "The unlock is out of range" }));
   assertValue(value, UNLOCK_STATE_VALUES, opts); // 🔶 U-17：3 以上は上級者モードだけ
-  writeU8(bytes, UNLOCK_STATES_OFFSET + index, value);
+  writeValidatedUnlockStates(bytes, [index], value);
 }
 
 /** indexes の特典の状態をまとめて書く（0〜2） */
@@ -201,5 +207,37 @@ export function writeUnlockStates(bytes: Uint8Array, indexes: readonly number[],
   assertValue(value, UNLOCK_STATE_VALUES, { advanced: false });
   for (const i of indexes)
     if (!Number.isInteger(i) || i < 0 || i >= UNLOCK_COUNT) throw new RangeError(tr({ ja: "特典が範囲外です", en: "The unlock is out of range" }));
-  for (const i of indexes) writeU8(bytes, UNLOCK_STATES_OFFSET + i, value);
+  writeValidatedUnlockStates(bytes, indexes, value);
+}
+
+/** 🟢 入力の検証後に呼ぶ。関連する書き込みも、容量の検証を済ませてからまとめて行う。 */
+function writeValidatedUnlockStates(bytes: Uint8Array, indexes: readonly number[], value: number): void {
+  const uniqueIndexes = [...new Set(indexes)];
+  let capacityIncrement = 0;
+  if (value === 2) {
+    for (const index of uniqueIndexes) {
+      if (index < WEAPON_CHEST_UNLOCK_INCREMENTS.length && readU8(bytes, UNLOCK_STATES_OFFSET + index) !== 2)
+        capacityIncrement += WEAPON_CHEST_UNLOCK_INCREMENTS[index];
+    }
+  }
+
+  let expandedCapacity: number | null = null;
+  if (capacityIncrement > 0) {
+    const capacity = readI8(bytes, WEAPON_CHEST_CAPACITY);
+    if (capacity < CAPACITY_MIN || capacity > CAPACITY_MAX)
+      throw new RangeError(tr({
+        ja: "武器箪笥の容量が想定外のため特典を解除できません。武器の画面で容量を直してください",
+        en: "Cannot unlock this bonus because the Weapon Chest capacity is unexpected. Correct its capacity on the Weapons screen.",
+      }));
+    expandedCapacity = Math.min(CAPACITY_MAX, capacity + capacityIncrement);
+  }
+
+  if (expandedCapacity !== null) writeU8(bytes, WEAPON_CHEST_CAPACITY, expandedCapacity);
+  for (const index of uniqueIndexes) {
+    writeU8(bytes, UNLOCK_STATES_OFFSET + index, value);
+    if (value !== 2) continue;
+    const accessoryId = UNLOCK_ACCESSORY_IDS[index - ACCESSORY_UNLOCK_FIRST];
+    // 所持済みの特典も再指定で装飾品を補える。容量の再加算とは分ける。
+    if (accessoryId !== undefined) writeU8(bytes, ACCESSORY_FLAGS_OFFSET + accessoryId, 1);
+  }
 }

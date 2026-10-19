@@ -104,4 +104,3 @@ id_dec,id_hex,save_bytes_le,name_ja,name_en,category,condition_ja,condition_en,e
 102,0x66,,二刀流の免許,Dual Arms License,免許,人物問わず　1000人 殺す,Kill 1000 people.,二刀流が使えるようになる,Allows for use of dual arms styles.,🔶 保存位置の番号との対応は未確認（U-17）
 103,0x67,,忍者二刀の免許,Shinobi Dual Arms License,免許,とぐろを倒す　（難易度問わず）,Defeat Toguro on any difficulty level.,忍者二刀が使えるようになる,Allows for use of shinobi dual arms styles.,🔶 保存位置の番号との対応は未確認（U-17）
 104,0x68,,大老の銃,Chief Minister's Gun,その他,「熱き魂」の結末を迎える,"Achieve ending ""Fevered Spirits.""",大老の銃「鬼ケ島」が落し物屋で売られるようになる,"Chief Minister's gun ""Ogre Isle"" can be purchased from the Lost & Found.",🔶 保存位置の番号との対応は未確認（U-17）
-105,0x69,,ローラの人形,Laura's Doll,装飾品,ローラの夜這いに成功する,Conquer Laura in night crawling.,装飾品 ローラの人形が選択可能になる,"Allows for use of the ""Laura's Doll"" accessory during character customization.",🔶 保存位置の番号との対応は未確認（U-17）

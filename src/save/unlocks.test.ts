@@ -30,6 +30,7 @@ const UNLOCK_SEEN: Record<number, number> = {
 
 function makeSave(size = TS_SAVE_SIZE, unlockOffset = 0x43318): Uint8Array {
   const b = new Uint8Array(size);
+  writeU8(b, 0x129f6, 2);
   for (const id of OWNED) writeU8(b, ACCESSORY_FLAGS_OFFSET + id, 1);
   writeU8(b, 0x3ab79, 0xc0);
   writeU8(b, 0x3ab7a, 0x03);
@@ -143,15 +144,15 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     for (const value of [3, 255]) {
       const b = makeSave();
       const before = b.slice();
-      writeUnlockState(b, 105, value, { advanced: true });
-      expect(diffOffsets(before, b)).toEqual([0x43318 + 105]);
-      expect(readUnlockStates(b).values[105]).toBe(value);
+      writeUnlockState(b, 104, value, { advanced: true });
+      expect(diffOffsets(before, b)).toEqual([0x43318 + 104]);
+      expect(readUnlockStates(b).values[104]).toBe(value);
       expect(b.length).toBe(before.length);
     }
     for (const value of [-1, 256, 1.5, NaN]) {
       const b = makeSave();
       const before = b.slice();
-      expect(() => writeUnlockState(b, 105, value, { advanced: true })).toThrow();
+      expect(() => writeUnlockState(b, 104, value, { advanced: true })).toThrow();
       expect(b).toEqual(before);
     }
   });
@@ -168,7 +169,7 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
 
   it("✅ [U] 先頭16件はゲーム内表示と一致する状態列から読む", () => {
     const v = readUnlockStates(makeSave());
-    expect(v.values.length).toBe(106);
+    expect(v.values.length).toBe(105);
     expect(v.values.slice(0, 16)).toEqual([2, 2, 2, 0, 2, 2, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0]);
     expect(Object.fromEntries(v.values.flatMap((x, i) => (x ? [[i, x]] : [])))).toEqual(UNLOCK_SEEN);
     expect((v.warnings.join('。') || null)).toBeNull();
@@ -195,13 +196,14 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
     expect(readUnlockStates(ambiguous).problem).toBeNull();
     const before = ambiguous.slice();
     writeUnlockState(ambiguous, 3, 2, { advanced: false });
-    expect(diffOffsets(before, ambiguous)).toEqual([0x4331b]);
+    expect(diffOffsets(before, ambiguous)).toEqual([0x129f6, 0x4331b]);
+    expect(ambiguous[0x129f6]).toBe(8);
   });
 
   it("🔶 U-17 サイズ・境界・状態値の検証に落ちたら書き込まない", () => {
     for (const bytes of [new Uint8Array(16), makeSave(TS_SAVE_SIZE + 4)]) {
       const before = bytes.slice();
-      if (bytes.length < 0x43318 + 106) expect(() => readUnlockStates(bytes)).toThrow(RangeError);
+      if (bytes.length < 0x43318 + 105) expect(() => readUnlockStates(bytes)).toThrow(RangeError);
       else expect(readUnlockStates(bytes).problem).not.toBeNull();
       expect(() => writeUnlockState(bytes, 0, 2, { advanced: false })).toThrow();
       expect(bytes).toEqual(before);
@@ -226,20 +228,102 @@ describe("特典解除の状態 chunks/unlocks（🔶 U-17）", () => {
 
   it("1 B だけを書き、書き戻すと元に戻る（往復）", () => {
     const orig = makeSave();
+    orig[0x43318 + 104] = 0;
     const b = orig.slice();
-    writeUnlockState(b, 105, 2, { advanced: false });
-    expect(diffOffsets(orig, b)).toEqual([0x43318 + 105]);
-    writeUnlockState(b, 105, 0, { advanced: false });
+    writeUnlockState(b, 104, 2, { advanced: false });
+    expect(diffOffsets(orig, b)).toEqual([0x43318 + 104]);
+    writeUnlockState(b, 104, 0, { advanced: false });
     expect(b).toEqual(orig);
   });
 
   it("通常モードは 0〜2。まとめて書いても範囲の外は変えない", () => {
     const b = makeSave();
     expect(() => writeUnlockState(b, 0, 3, { advanced: false })).toThrow();
-    writeUnlockStates(b, Array.from({ length: 106 }, (_, i) => i), 2);
+    writeUnlockStates(b, Array.from({ length: 105 }, (_, i) => i), 2);
     expect(readUnlockStates(b).values.every((x) => x === 2)).toBe(true);
-    expect(b[0x43318 + 106]).toBe(0);
+    expect(b[0x43318 + 105]).toBe(0);
     expect(b[0x43318 + 128]).toBe(3);
     expect(b[0x3ab9b]).toBe(0x00);
+  });
+});
+
+describe("🟢 特典取得に伴う容量と装飾品の更新", () => {
+  function emptySave(): Uint8Array {
+    const bytes = new Uint8Array(TS_SAVE_SIZE);
+    bytes[0x129f6] = 2;
+    bytes[0x43318 + 105] = 0x7b;
+    return bytes;
+  }
+
+  it.each([[0, 5], [1, 6], [2, 7], [3, 8]])("箪笥の特典%iは新しい取得で容量を%iにする", (id, capacity) => {
+    const bytes = emptySave();
+    const before = bytes.slice();
+    writeUnlockState(bytes, id, 2, { advanced: false });
+    expect(bytes[0x129f6]).toBe(capacity);
+    expect(diffOffsets(before, bytes)).toEqual([0x129f6, 0x43318 + id]);
+    const obtained = bytes.slice();
+    writeUnlockState(bytes, id, 2, { advanced: false });
+    expect(bytes).toEqual(obtained);
+    writeUnlockState(bytes, id, 0, { advanced: false });
+    expect(bytes[0x129f6]).toBe(capacity);
+  });
+
+  it("重複と取得済みを除いて一括拡張し、上限200本に収める", () => {
+    const bytes = emptySave();
+    writeUnlockStates(bytes, [0, 0, 1, 2, 3], 2);
+    expect(bytes[0x129f6]).toBe(20);
+    const obtained = bytes.slice();
+    writeUnlockStates(bytes, [0, 1, 2, 3], 2);
+    expect(bytes).toEqual(obtained);
+    bytes[0x129f6] = 19;
+    bytes[0x43318 + 3] = 1;
+    writeUnlockState(bytes, 3, 2, { advanced: false });
+    expect(bytes[0x129f6]).toBe(20);
+  });
+
+  it.each([77, 78, 89, 92, 93, 79, 80, 81, 153, 90, 94, 95, 96, 68, 82].map((accessoryId, index) => [85 + index, accessoryId]))(
+    "特典%iは装飾品%iだけを付与し、取得状態を戻しても所持を維持する", (id, accessoryId) => {
+      const bytes = emptySave();
+      const before = bytes.slice();
+      writeUnlockState(bytes, id, 2, { advanced: false });
+      expect(diffOffsets(before, bytes)).toEqual([0x3902 + accessoryId, 0x43318 + id]);
+      writeUnlockState(bytes, id, 1, { advanced: false });
+      expect(bytes[0x3902 + accessoryId]).toBe(1);
+      // 以前の編集で状態だけ取得済みの場合も、装飾品を補える。
+      bytes[0x43318 + id] = 2;
+      bytes[0x3902 + accessoryId] = 0;
+      writeUnlockState(bytes, id, 2, { advanced: false });
+      expect(bytes[0x3902 + accessoryId]).toBe(1);
+    },
+  );
+
+  it("全特典の一括取得でも侍点と隣接領域・サイズを保ち、再実行は同じバイト列になる", () => {
+    const bytes = emptySave();
+    bytes[0xb3c] = 123;
+    writeUnlockStates(bytes, Array.from({ length: 105 }, (_, id) => id), 2);
+    expect(bytes[0x129f6]).toBe(20);
+    expect(bytes[0x3902 + 153]).toBe(1);
+    expect(bytes[0x43318 + 105]).toBe(0x7b);
+    expect(bytes[0xb3c]).toBe(123);
+    expect(bytes.length).toBe(TS_SAVE_SIZE);
+    const obtained = bytes.slice();
+    writeUnlockStates(bytes, Array.from({ length: 105 }, (_, id) => id), 2);
+    expect(bytes).toEqual(obtained);
+  });
+
+  it("範囲外ID・不正容量では一括操作の全バイトを変更しない", () => {
+    for (const indexes of [[85, 105], [85, -1], [85, 1.5]]) {
+      const bytes = emptySave();
+      const before = bytes.slice();
+      expect(() => writeUnlockStates(bytes, indexes, 2)).toThrow();
+      expect(bytes).toEqual(before);
+    }
+    for (const capacity of [0, 1, 21, 255]) {
+      const bytes = emptySave();
+      bytes[0x129f6] = capacity;
+      const before = bytes.slice();
+      expect(() => writeUnlockStates(bytes, [85, 0], 2)).toThrow();
+      expect(bytes).toEqual(before);
+    }
   });
 });

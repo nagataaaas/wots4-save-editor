@@ -27,6 +27,15 @@ export const changelog: ChangelogEntry[] = [
     ],
   },
   {
+    date: '2026-10-17',
+    items: [
+      {
+        ja: '特典を取得済みにしたとき、武器箪笥の拡張や装飾品の入手も反映するようにしました。特典の一覧を105件に直しました',
+        en: 'Setting a bonus to Obtained now also expands the Weapon Chest or grants its accessory. Corrected the unlock list to 105 entries',
+      },
+    ],
+  },
+  {
     date: '2026-10-16',
     items: [
       {

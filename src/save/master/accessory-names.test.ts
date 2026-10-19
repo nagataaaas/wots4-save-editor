@@ -91,8 +91,9 @@ describe("🟢 装飾品 datatable/accessory/accessory.csv", () => {
 });
 
 describe("特典解除 datatable/unlock/unlock.csv（先頭16件・31 ✅ [U]、残り 🔶 U-17）", () => {
-  it("番号 0〜105 の106件", () => {
-    expect(UNLOCKS.map((u) => u.id)).toEqual(Array.from({ length: 106 }, (_, i) => i));
+  it("🟢 番号 0〜104 の105件", () => {
+    expect(UNLOCKS.map((u) => u.id)).toEqual(Array.from({ length: 105 }, (_, i) => i));
+    expect(UNLOCKS[93]).toMatchObject({ ja: "ローラの人形", category: "装飾品" });
   });
 
   it("要所の名前と分類", () => {
