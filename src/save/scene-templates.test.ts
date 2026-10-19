@@ -5,7 +5,15 @@ import { describe, expect, it } from 'vitest'
 import { readU16 } from './binary'
 import { TS_SAVE_SIZE } from './layout'
 import { NEW_CYCLE_KEEP_FLAGS } from './new-cycle'
-import { SCENE_TEMPLATE_GROUPS, applyMissionEve, applyTournamentEve, type MissionScene, type TournamentSide } from './scene-templates'
+import {
+  SCENE_TEMPLATE_GROUPS,
+  applyMissionEve,
+  applyTournamentEve,
+  applyTrueRouteEve,
+  type MissionScene,
+  type TournamentSide,
+  type TrueRouteScene,
+} from './scene-templates'
 
 const A = 0x36a8
 const FLAGS = { start: 0x374e, end: 0x3837 }
@@ -144,6 +152,52 @@ describe('applyMissionEve', () => {
 
   it('サイズの違うファイルには書かない', () => {
     expect(() => applyMissionEve(new Uint8Array(0x100), 'amihama-eight')).toThrow()
+  })
+})
+
+// 真ルート：🔶 書き込んだセーブをゲームで確かめていない。書く値の根拠は 🟢（三姉妹見参〜84 の書く値、85・86 の開始条件）
+describe('applyTrueRouteEve', () => {
+  /** ローラの決意の前の、0 以外の値（残すフラグを除く） */
+  const BEFORE_NONZERO: Record<number, number> = {
+    [A + 0]: 4, [A + 1]: 4,
+    ...Object.fromEntries([70, 71, 72, 73, 75, 77, 78, 79, 81, 82, 84].map((n) => [A + n, 4])),
+    0x374e: 3, 0x3757: 2, 0x3758: 3,
+    0x3762: 1, 0x3763: 1, 0x3769: 1, 0x376b: 1, 0x377d: 1, 0x377e: 1, 0x377f: 1,
+    0x378d: 2, 0x378e: 1, 0x379f: 1, 0x37a2: 2, 0x37aa: 2, 0x37b2: 1, 0x37b3: 1, 0x37c7: 1,
+  }
+  const AFTER_NONZERO: Record<number, number> = { ...BEFORE_NONZERO, [A + 85]: 4, [A + 86]: 4, 0x37ae: 2 }
+
+  it.each<[TrueRouteScene, Record<number, number>, number[]]>([
+    // 場面、0 以外の値、[段階 u16 + 保留量・現在地・時間帯]
+    ['laura-determination', BEFORE_NONZERO, [0x9a, 0x01, 0x00, 0x12, 0x01]],
+    ['after-sisters', AFTER_NONZERO, [0xa4, 0x01, 0x00, 0x14, 0x02]],
+  ])('%s：決まった道筋の値になる（まだらが味方の値は 0、ほかの残すフラグは残す）', (scene, nonzero, date) => {
+    const before = makeSave()
+    before[0x3760] = 1
+    const b = before.slice()
+    applyTrueRouteEve(b, scene)
+    const keep = new Set(NEW_CYCLE_KEEP_FLAGS)
+    for (let at = A; at <= FLAGS.end; at++) {
+      if (at === 0x3760) expect(b[at]).toBe(0)
+      else if (keep.has(at)) expect(b[at]).toBe(before[at])
+      else expect(b[at], `0x${at.toString(16)}`).toBe(nonzero[at] ?? 0)
+    }
+    expect([...b.subarray(0x0010, 0x0015)]).toEqual(date)
+    expect(readU16(b, 0x0bd8)).toBe(3)
+  })
+
+  it('ほかの位置は変えず、2回当てても同じ結果になる', () => {
+    const before = makeSave()
+    const b = before.slice()
+    applyTrueRouteEve(b, 'after-sisters')
+    for (let at = 0; at < b.length; at++) if (!writable(at)) expect(b[at]).toBe(before[at])
+    const twice = b.slice()
+    applyTrueRouteEve(twice, 'after-sisters')
+    expect(twice).toEqual(b)
+  })
+
+  it('サイズの違うファイルには書かない', () => {
+    expect(() => applyTrueRouteEve(new Uint8Array(0x100), 'laura-determination')).toThrow()
   })
 })
 

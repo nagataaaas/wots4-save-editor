@@ -17,6 +17,10 @@ export const changelog: ChangelogEntry[] = [
     date: '2026-10-19',
     items: [
       {
+        ja: 'テンプレート：真ルートの「ローラの決意の前」（三姉妹と戦うイベントが始まる前）と「三姉妹戦の直後」を足しました',
+        en: "Presets: added the true-route scenes \"Before Laura's Determination\" (before the event with the fight against the three sisters) and \"Right after the fight with the three sisters\"",
+      },
+      {
         ja: 'なりわい：受注中のなりわいを選ぶと、期限のあるなりわいも期限のないものとして書いていたのを直しました。前に受けていたなりわいの途中の状態も残さないようにしました',
         en: 'Missions: fixed accepting a mission with a time limit so it is no longer written as having no limit. The in-progress state of the previously accepted mission is no longer left behind',
       },

@@ -8979,5 +8979,30 @@
   ],
   "label": "阿弥浜八人衆（指揮官との一騎打ち）",
   "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "true-route",
+  "path": [],
+  "label": "真ルート",
+  "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "true-route",
+  "path": [
+   "真ルート"
+  ],
+  "label": "ローラの決意の前",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "true-route",
+  "path": [
+   "真ルート"
+  ],
+  "label": "三姉妹戦の直後",
+  "box": false
  }
 ]

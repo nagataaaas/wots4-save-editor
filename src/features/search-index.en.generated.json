@@ -8979,5 +8979,30 @@
   ],
   "label": "The Amihama Eight (duel with the commander)",
   "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "true-route",
+  "path": [],
+  "label": "True route",
+  "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "true-route",
+  "path": [
+   "True route"
+  ],
+  "label": "Before Laura's Determination",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "true-route",
+  "path": [
+   "True route"
+  ],
+  "label": "Right after the fight with the three sisters",
+  "box": false
  }
 ]

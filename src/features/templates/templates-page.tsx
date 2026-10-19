@@ -16,11 +16,12 @@ import { TEMPLATE_ANCHORS } from "./anchors";
 const GROUP_OFFSETS: Record<keyof typeof TEMPLATE_ANCHORS, number> = {
   tournament: EVENT_STATE_OFFSET,
   missions: OCCUPATION_ACCEPTED_OFFSET,
+  "true-route": EVENT_STATE_OFFSET,
 };
 
 /**
  * テンプレート（scene-templates.ts）。決まった戦いの直前から遊べるように、セーブを書き換える。
- * 剣術大会直前は ✅ [U] 2026-10-16。なりわいの3つは ✅ [U] 2026-10-19
+ * 剣術大会直前は ✅ [U] 2026-10-16。なりわいの3つは ✅ [U] 2026-10-19。真ルートの2つは 🔶（ゲームで確かめていない）
  */
 export function TemplatesPage() {
   const { view, error: readError } = useSaveView(readDate);
@@ -61,6 +62,19 @@ function TemplateRow({ template, offset, disabled, problem }: { template: SceneT
       error={message?.error ? message.text : null}
     >
       <p className="text-muted-foreground text-sm">{tr(template.note)}</p>
+      {template.caution && (
+        <p className="text-sm text-amber-600 dark:text-amber-400">
+          ⚠ {tr(template.caution.text)}
+          {template.caution.link && (
+            <>
+              {" "}
+              <a href={template.caution.link.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                {tr(template.caution.link.label)}
+              </a>
+            </>
+          )}
+        </p>
+      )}
       <ActionButton
         size="sm"
         disabled={disabled}

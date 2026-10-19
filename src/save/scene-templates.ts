@@ -32,6 +32,7 @@ import { occupationFlagOffset, personOffset } from './townsfolk'
 import { EVENT_COUNT, EVENT_RECORD_OFFSET, EVENT_STATE_OFFSET, EVENT_STATE_VALUES } from './scenario-events'
 import { FACTION_TABLE_OFFSET, ROUTE_JUDGE_OFFSET, ROUTE_NONE_OFFSET, ROUTE_THRESHOLD } from './factions'
 import { NEW_CYCLE_KEEP_FLAGS } from './new-cycle'
+import { MADARA_ALLY_OFFSET } from './flags/event-flags'
 import type { Localized } from '@/lib/i18n'
 
 /** 🟢 シナリオのフラグ（通し番号 166〜399） */
@@ -99,6 +100,8 @@ export type SceneTemplate = {
   label: Localized
   /** 当てたあとゲームで何をすればよいか */
   note: Localized
+  /** 遊ぶときの注意（起きることと、その避け方） */
+  caution?: { text: Localized; link?: { href: string; label: Localized } }
   apply: (bytes: Uint8Array) => void
 }
 
@@ -251,6 +254,101 @@ export function applyMissionEve(bytes: Uint8Array, scene: MissionScene): void {
   writeU8(bytes, HERO_OFFSETS.location, isLords ? LOCATION_CEMETERY : LOCATION_BACK_ROADS)
 }
 
+/**
+ * 真ルート（ローラの決意・士魂は屈せず）。🔶 書き込んだセーブをゲームで確かめていない。
+ * 🟢 三姉妹との戦いは士魂は屈せず（86）の後半（拷問3回と処刑台の場面のあと、丸腰で戦い、茂呂・小暮が加わる）。
+ *    ローラの決意（85）から三姉妹戦まで続けて起き、間にセーブできる時点がないので、直前はローラの決意の開始前にする。
+ * 🟢 直後は 86 = 4・夜・段階 420・代官所の牢屋（地域 20）。ここでだけ茂呂・小暮がついてくる場面が始まり、出口へ進むとローラ奪還（87）へ続く。
+ * 🟢 三姉妹見参（70）から 84 までの正規の道筋（赤城が死なず、カジノの開いていない筋）を書く。起きないイベント（74・76・80・83、
+ *    28・41）は 00。勢力のルート分岐と大寄せの門・柵は 0、拷問塔の扉は周回の始めの 1 のまま。
+ * 施設（病院・カジノ）は周回をまたいで残る値なので書かない（ユーザー判断 2026-10-19）。85〜87 は読まない（🟢）
+ */
+const TRUE_ROUTE = {
+  /** 🟢 序章の大砲。三姉妹見参の前提 */
+  prologueCannon: 0x379f,
+  /** 🟢 真ルート（1）。85・86 の開始条件 */
+  trueRoute: 0x378e,
+  /** 🟢 三姉妹見参が書く（黒船・甲板に入れない） */
+  blackShipClosed: 0x376b,
+  /** 🟢 三姉妹見参が書く（大寄せの前の門） */
+  earlyGates: [0x377d, 0x377e, 0x377f],
+  /** 🟢 伯爵に刺激をが書く（❓ 意味） */
+  afterCountTease: 0x3769,
+  /** 🟢 再起の望みが書く（❓ 意味） */
+  afterRevival: [0x37b2, 0x37b3, 0x37c7],
+  /** 🟢 まだらが味方。1 だと三姉妹との戦いがなくなるので 0 にする（周回をまたいで残る値で、resetProgress では消えない） */
+  madaraAlly: MADARA_ALLY_OFFSET,
+  /** 🟢 拷問の回数。3回目のあとの値は 2（このあと読まれない） */
+  tortureCount: 0x37ae,
+} as const
+
+/** 🟢 イベント状態 A の添字：三姉妹見参・お早い到着・再起の望み・将の器・伯爵に刺激を・闇討ち・学問のすすめ・刺激が欲しい・伯爵救出・人間湯通しの恐怖・84 */
+const TRUE_ROUTE_EVENTS: readonly number[] = [70, 71, 72, 73, 75, 77, 78, 79, 81, 82, 84]
+const EVENT_LAURA = 85
+const EVENT_SPIRIT = 86
+
+/** 🟢 人物の状態：赤城 3（療養中）、ローラ 2（代官所へ向かった）、J.J 3（療養中）。ローラ奪還で赤城・J.J は 0 に戻る */
+const TRUE_ROUTE_PEOPLE: readonly (readonly [number, number])[] = [
+  [0x374e, 3],
+  [0x3757, 2],
+  [0x3758, 3],
+]
+
+/** 🟢 段階 410（ローラの決意）・420（ローラの決意の成功から） */
+const STAGE_LAURA = 410
+const STAGE_SPIRIT = 420
+/** ✅ 時間帯 夕・夜 */
+const SLOT_EVENING = 1
+const SLOT_NIGHT = 2
+/** ✅ 開始地点（datatable/place/start-location.csv）：代官所・門の外（地域 18）、代官所・牢屋（地域 20） */
+const LOCATION_MAGISTRATE_GATE = 0x12
+const LOCATION_MAGISTRATE_JAIL = 0x14
+
+export type TrueRouteScene = 'laura-determination' | 'after-sisters'
+
+/** 🟢 牢屋から再開すると、真ルートの結末（鬼怒川を倒した直後）で落ちる。非公式パッチで直る */
+const UNOFFICIAL_PATCH_URL = 'https://github.com/nagataaaas/wots4-unofficial-patch'
+
+/**
+ * 真ルートの場面：ローラの決意の開始前（代官所の門の外、4日目の夕）か、三姉妹を倒した直後（代官所の牢屋、4日目の夜）。
+ * 🔶 経過日数は寄り道しない場合の 4日目（開始条件に日数はない）
+ */
+export function applyTrueRouteEve(bytes: Uint8Array, scene: TrueRouteScene): void {
+  assertWritable(bytes)
+  const after = scene === 'after-sisters'
+  resetProgress(bytes)
+
+  // 序章の終わり（🟢 三姉妹見参で 0x378D = 2 になり、通常の 1〜3日目のイベントが出なくなる）
+  succeed(bytes, EVENT.samuraiOnBoard)
+  succeed(bytes, EVENT.harborSkirmish)
+  writeU8(bytes, TRUE_ROUTE.prologueCannon, 1)
+  writeU8(bytes, FLAG.afterPrologue, 2)
+  writeU8(bytes, FLAG.tutorial, TUTORIAL_NO_ADVICE)
+  writeU8(bytes, TRUE_ROUTE.trueRoute, 1)
+  writeU8(bytes, TRUE_ROUTE.blackShipClosed, 1)
+  for (const p of TRUE_ROUTE.earlyGates) writeU8(bytes, p, 1)
+
+  for (const n of TRUE_ROUTE_EVENTS) succeed(bytes, n)
+  for (const [p, v] of TRUE_ROUTE_PEOPLE) writeU8(bytes, p, v)
+  writeU8(bytes, TRUE_ROUTE.afterCountTease, 1)
+  for (const p of TRUE_ROUTE.afterRevival) writeU8(bytes, p, 1)
+  // 将の器が書く（🟢 般若党が町に出ない）
+  writeU8(bytes, FLAG.prajnaBase, 2)
+  writeU8(bytes, TRUE_ROUTE.madaraAlly, 0)
+
+  if (after) {
+    succeed(bytes, EVENT_LAURA)
+    succeed(bytes, EVENT_SPIRIT)
+    writeU8(bytes, TRUE_ROUTE.tortureCount, 2)
+  }
+
+  writeU16(bytes, DATE_OFFSETS.dayTime, after ? STAGE_SPIRIT : STAGE_LAURA)
+  writeU8(bytes, DATE_OFFSETS.pending, 0)
+  writeU8(bytes, DATE_OFFSETS.slot, after ? SLOT_NIGHT : SLOT_EVENING)
+  writeU16(bytes, DATE_OFFSETS.dayIndex, DAY_INDEX_DAY4)
+  writeU8(bytes, HERO_OFFSETS.location, after ? LOCATION_MAGISTRATE_JAIL : LOCATION_MAGISTRATE_GATE)
+}
+
 /** 画面に出すテンプレ */
 export const SCENE_TEMPLATE_GROUPS: readonly SceneTemplateGroup[] = [
   {
@@ -311,6 +409,41 @@ export const SCENE_TEMPLATE_GROUPS: readonly SceneTemplateGroup[] = [
           en: 'You start on the Back Roads, with the invaders already defeated and everyone gathered in front of the commander. Talk to the commander to begin the duel.',
         },
         apply: (b) => applyMissionEve(b, 'amihama-eight-commander'),
+      },
+    ],
+  },
+  {
+    id: 'true-route',
+    label: { ja: '真ルート', en: 'True route' },
+    description: {
+      ja: '今の周回のイベントの進み具合・人物の状態・門や柵・日付・現在地を、三姉妹見参から真ルートを進んだ決まった道筋に置き換えます。武器・道具・お金・主人公・町の人・なりわい・夜這い・施設はそのままです。',
+      en: "Replaces this playthrough's event progress, character status, gates and fences, the date and the location with a set path along the true route from Meeting with the Three Sisters. Weapons, items, money, your character, townsfolk, missions, night crawling and facilities are left as they are.",
+    },
+    templates: [
+      {
+        id: 'true-route-laura-determination',
+        label: { ja: 'ローラの決意の前', en: "Before Laura's Determination" },
+        note: {
+          ja: '三姉妹と戦うイベントが始まる前の状態です。4日目の夕方、代官所の門の外から始まります。門の前のローラに近づき「一緒に行こう」を選ぶと、代官所の中での戦い・拷問のあとに、三姉妹との戦いになります。途中でセーブはできません。',
+          en: "The state before the event with the fight against the three sisters begins. You start outside the Magistrate's Office gate on the evening of day 4. Approach Laura in front of the gate and choose to go with her; after a fight inside the office and the torture, you fight the three sisters. You cannot save along the way.",
+        },
+        apply: (b) => applyTrueRouteEve(b, 'laura-determination'),
+      },
+      {
+        id: 'true-route-after-sisters',
+        label: { ja: '三姉妹戦の直後', en: 'Right after the fight with the three sisters' },
+        note: {
+          ja: '三姉妹を倒した直後、4日目の夜、代官所の牢屋から始まります。茂呂・小暮がついてきます。出口の方へ進むと、ローラ奪還が始まります。',
+          en: "You start in the Magistrate's Office jail on the night of day 4, right after defeating the three sisters. Moro and Kogure follow you. Head toward the exit to begin Rescuing Laura.",
+        },
+        caution: {
+          text: {
+            ja: '牢屋から始めたセーブでは、真ルートの結末（鬼怒川を倒した直後）でゲームが落ちます。非公式パッチ（unofficial_patch）を入れると落ちなくなります。',
+            en: 'With a save that starts in the jail, the game crashes at the true-route ending (right after defeating Kinugawa). Installing the unofficial patch (unofficial_patch) fixes this.',
+          },
+          link: { href: UNOFFICIAL_PATCH_URL, label: { ja: '非公式パッチ（GitHub）', en: 'Unofficial patch (GitHub)' } },
+        },
+        apply: (b) => applyTrueRouteEve(b, 'after-sisters'),
       },
     ],
   },
