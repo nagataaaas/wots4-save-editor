@@ -24,14 +24,9 @@ export const changelog: ChangelogEntry[] = [
         ja: '流派一覧：技の画面と同じように、構えで流派を絞り込めるようにしました。絞り込むと、各流派はその構えの技を開いて出します',
         en: 'Style List: you can now filter styles by stance, as on the Moves screen. Each style then opens on the moves for that stance',
       },
-    ],
-  },
-  {
-    date: '2026-10-17',
-    items: [
       {
-        ja: '特典を取得済みにしたとき、武器箪笥の拡張や装飾品の入手も反映するようにしました。特典の一覧を105件に直しました',
-        en: 'Setting a bonus to Obtained now also expands the Weapon Chest or grants its accessory. Corrected the unlock list to 105 entries',
+        ja: '特典解除：特典を取得済みにしたとき、武器箪笥の拡張や装飾品の入手も反映するようにしました。特典の一覧を105件に直しました',
+        en: 'Unlocks: setting a bonus to Obtained now also expands the Weapon Chest or grants its accessory. Corrected the unlock list to 105 entries',
       },
     ],
   },
