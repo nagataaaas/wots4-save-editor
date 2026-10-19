@@ -284,6 +284,7 @@ const TRUE_ROUTE = {
 
 /** 🟢 イベント状態 A の添字：三姉妹見参・お早い到着・再起の望み・将の器・伯爵に刺激を・闇討ち・学問のすすめ・刺激が欲しい・伯爵救出・人間湯通しの恐怖・84 */
 const TRUE_ROUTE_EVENTS: readonly number[] = [70, 71, 72, 73, 75, 77, 78, 79, 81, 82, 84]
+const EVENT_SISTERS_MEET = 70
 const EVENT_LAURA = 85
 const EVENT_SPIRIT = 86
 
@@ -310,15 +311,23 @@ export type TrueRouteScene = 'laura-determination' | 'after-sisters'
 const UNOFFICIAL_PATCH_URL = 'https://github.com/nagataaaas/wots4-unofficial-patch'
 
 /**
- * 真ルートの場面：ローラの決意の開始前（代官所の門の外、4日目の夕）か、三姉妹を倒した直後（代官所の牢屋、4日目の夜）。
- * 🔶 経過日数は寄り道しない場合の 4日目（開始条件に日数はない）
+ * 🟢 船上の侍（周回の始め）が無条件に書き、resetProgress で 0 になる値：鬼怒川の状態 2、代官所の門（牢屋の周り）を閉じる条件 1。
+ * 剣術大会直前・なりわいのテンプレ（ゲームで確かめた書き方）には足していない
  */
-export function applyTrueRouteEve(bytes: Uint8Array, scene: TrueRouteScene): void {
-  assertWritable(bytes)
-  const after = scene === 'after-sisters'
-  resetProgress(bytes)
+const CYCLE_START_FLAGS: readonly (readonly [number, number])[] = [
+  [0x3756, 2],
+  [0x37c1, 1],
+  [0x37c2, 1],
+]
 
-  // 序章の終わり（🟢 三姉妹見参で 0x378D = 2 になり、通常の 1〜3日目のイベントが出なくなる）
+function writeCycleStartFlags(bytes: Uint8Array): void {
+  for (const [p, v] of CYCLE_START_FLAGS) writeU8(bytes, p, v)
+}
+
+/** 周回の進み具合を初期化し、序章から三姉妹見参（70）の成功までを書く（🟢 三姉妹見参で 0x378D = 2 になり、通常の 1〜3日目のイベントが出なくなる） */
+function writeTrueRouteStart(bytes: Uint8Array): void {
+  resetProgress(bytes)
+  writeCycleStartFlags(bytes)
   succeed(bytes, EVENT.samuraiOnBoard)
   succeed(bytes, EVENT.harborSkirmish)
   writeU8(bytes, TRUE_ROUTE.prologueCannon, 1)
@@ -327,6 +336,17 @@ export function applyTrueRouteEve(bytes: Uint8Array, scene: TrueRouteScene): voi
   writeU8(bytes, TRUE_ROUTE.trueRoute, 1)
   writeU8(bytes, TRUE_ROUTE.blackShipClosed, 1)
   for (const p of TRUE_ROUTE.earlyGates) writeU8(bytes, p, 1)
+  succeed(bytes, EVENT_SISTERS_MEET)
+}
+
+/**
+ * 真ルートの場面：ローラの決意の開始前（代官所の門の外、4日目の夕）か、三姉妹を倒した直後（代官所の牢屋、4日目の夜）。
+ * 🔶 経過日数は寄り道しない場合の 4日目（開始条件に日数はない）
+ */
+export function applyTrueRouteEve(bytes: Uint8Array, scene: TrueRouteScene): void {
+  assertWritable(bytes)
+  const after = scene === 'after-sisters'
+  writeTrueRouteStart(bytes)
 
   for (const n of TRUE_ROUTE_EVENTS) succeed(bytes, n)
   for (const [p, v] of TRUE_ROUTE_PEOPLE) writeU8(bytes, p, v)
@@ -347,6 +367,171 @@ export function applyTrueRouteEve(bytes: Uint8Array, scene: TrueRouteScene): voi
   writeU8(bytes, DATE_OFFSETS.slot, after ? SLOT_NIGHT : SLOT_EVENING)
   writeU16(bytes, DATE_OFFSETS.dayIndex, DAY_INDEX_DAY4)
   writeU8(bytes, HERO_OFFSETS.location, after ? LOCATION_MAGISTRATE_JAIL : LOCATION_MAGISTRATE_GATE)
+}
+
+/**
+ * 斬り殺せる戦い（ふだん斬り殺せない重要人物を、その戦いの間だけ斬り殺せる）の直前。🔶 書き込んだセーブをゲームで確かめていない。
+ * 出典：chunks/characters/reserch/2026-10-19_killable-battles.md、docs/events の各イベントの開始条件と書く値。
+ * 剣術大会のあとの3つのルートは剣術大会直前の書き方（✅）に、その先の道筋を足す。真ルートは三姉妹見参から道筋を書く。
+ * 斬れる人の人物の状態（0x374E〜）は 0（生存）にし、町の人のレコードの死亡のビットも 0 にする（なりわいのテンプレと同じ）。
+ * 🔶 経過日数は寄り道しない場合の日（どの開始条件にも日数はない 🟢）。堂島（0x375A）は道筋では 1 になりうるが、どの戦いも読まないので 0 のまま
+ */
+type KillableBase = { route: 'tournament'; side: TournamentSide } | { route: 'true' }
+
+type KillableSpec = {
+  base: KillableBase
+  /** イベント状態 A の添字と値 */
+  events: Readonly<Record<number, number>>
+  /** シナリオのフラグの位置と値 */
+  flags: Readonly<Record<number, number>>
+  stage: number
+  slot: number
+  dayIndex: number
+  location: number
+  /** 斬れる人の人物番号（町の人のレコード）。死亡のビットを 0 にする */
+  people: readonly number[]
+}
+
+/** 🟢 人物番号（chunks/townsfolk） */
+const P = { akagi: 10, kogure: 11, kotobuki: 13, moro: 14, mayu: 15, chika: 16, yuri: 17, kinugawa: 18, laura: 19, jj: 20, melinda: 21 } as const
+const SISTERS = [P.mayu, P.chika, P.yuri]
+
+const S = EVENT_STATE_VALUES.success
+
+export type KillableScene =
+  | 'consulate-raid'
+  | 'wasted-wish'
+  | 'the-raid'
+  | 'three-kataneers'
+  | 'prajna-annihilation'
+  | 'praying-for-recovery'
+  | 'assassination-plot'
+
+/** 🟢 各場面の値（開始条件と、道筋の各イベントで書かれる値） */
+const KILLABLE_SCENES: Record<KillableScene, KillableSpec> = {
+  // 攘夷：領事館斬り込み（62）→ 武士の魂（63）。開始条件：段階 510、62 ≤ 2、同士救出 58 = 4、0x378B = 1、旅籠（地域 15）。
+  // 真実（38）= 4 だと J.J と戦って武士の魂へ続く（4 でないとまだらと戦い、結末に入って 63 は起きない）。
+  // 62 = 2 は「準備をしてくる…」で保留した値で、旅籠の赤城の前で問いから始まる（🔶 ロード直後に問いが出るか）
+  'consulate-raid': {
+    base: { route: 'tournament', side: 'prajnas' },
+    events: { 35: S, 38: S, 46: S, 49: S, 51: S, 57: S, 58: S, 62: 2 },
+    // 真実が書く朱美 1、同士救出が書く 0x3778・0x37A2 = 1、勝ち抜いた試合数 3、3回戦でメリンダに勝った 1
+    flags: { 0x3750: 1, 0x3778: 1, 0x37a2: 1, 0x37ab: 3, 0x37f8: 1 },
+    stage: 510,
+    slot: 1,
+    dayIndex: 3,
+    location: 0x0f,
+    people: [P.melinda, P.jj, P.kotobuki, ...SISTERS],
+  },
+  // 外国：願い虚しく（56）→ 鬼怒川の魔手（61）。61 はロードから始まらず、56 の大通りの戦いから続けて起きる。
+  // 開始条件：段階 500、56 ≤ 3、0x378A = 1、領事館内（地域 11）。56 = 3（手紙を預かった）・0x37A3 = 2（手紙を届けた）でローラへの報告の場面になる
+  // （🔶 0x37A3 を書くのは神社の門番とみる）。J.J は 56 の導入で死ぬ（0x3758 = 1）
+  'wasted-wish': {
+    base: { route: 'tournament', side: 'foreigners' },
+    events: { 46: S, 48: S, 51: S, 56: 3 },
+    flags: { 0x3758: 1, 0x37a3: 2, 0x37ab: 3 },
+    stage: 500,
+    slot: 0,
+    dayIndex: 4,
+    location: 0x0b,
+    people: [P.akagi, P.kogure, P.laura, P.melinda],
+  },
+  // 外国：討ち入り（69）。開始条件：段階 600、69 ≤ 3、夕暮れの船上 68 = 5（または 61 = 5）、0x378A = 1、代官所の門の外（地域 18）。
+  // ローラを守りきり、夕暮れの船上で断った筋（68 = 5）。琴吹の状態が 1 だと琴吹が出ない
+  'the-raid': {
+    base: { route: 'tournament', side: 'foreigners' },
+    events: { 46: S, 48: S, 51: S, 56: S, 61: S, 68: 5 },
+    // 居留地の門・外国の退場・0x37A4 は夕暮れの船上が書く
+    flags: { 0x3758: 1, 0x3764: 1, 0x3790: 1, 0x37a3: 2, 0x37a4: 2, 0x37ab: 3 },
+    stage: 600,
+    slot: 1,
+    dayIndex: 5,
+    location: 0x12,
+    people: [P.kotobuki, ...SISTERS],
+  },
+  // 幕府：三匹で斬る（64）→ 武人 琴吹光（66）。開始条件：段階 510、64 ≤ 0、憂国の士 55 = 4、0x3789 = 1、神社（地域 4）。
+  // 神社の柵は戦いの場面が開ける（大寄せの値のままでよい）。🔶 港から始めて神社へ移る（神社から始めたときに柵が開くかを確かめていない）
+  'three-kataneers': {
+    base: { route: 'tournament', side: 'shogunate' },
+    events: { 46: S, 47: S, 51: S, 53: S, 55: S },
+    // 勝ち抜いた試合数 3、3回戦でまだらに勝った 1
+    flags: { 0x37ab: 3, 0x37f7: 1 },
+    stage: 510,
+    slot: 1,
+    dayIndex: 4,
+    location: 0x01,
+    people: [P.akagi, P.kogure, P.kotobuki],
+  },
+  // 幕府：般若党壊滅（59）。開始条件：段階 510、59 ≤ 0、大老武断 54 = 4、0x3789 = 1、神社（地域 4）。0x37C0 = 1 は大老武断が書く（黒船の大砲を譲った）
+  'prajna-annihilation': {
+    base: { route: 'tournament', side: 'shogunate' },
+    events: { 46: S, 47: S, 51: S, 53: S, 54: S },
+    flags: { 0x37ab: 3, 0x37c0: 1, 0x37f7: 1 },
+    stage: 510,
+    slot: 1,
+    dayIndex: 4,
+    location: 0x01,
+    people: [P.akagi, P.kogure],
+  },
+  // 真ルート：再起の望み（72）。お早い到着（71）から続けて起き、72 = 3 のときだけ、ロードしたあと小暮に近づくと選択肢が出る（72 = 0 では始まらない）。
+  // 開始条件：段階 120、72 ≤ 3、0x378E = 1、神社（地域 4）。赤城を攻撃すると赤城が死に、小暮との一騎打ちになる
+  'praying-for-recovery': {
+    base: { route: 'true' },
+    events: { 71: S, 72: 3 },
+    flags: {},
+    stage: 120,
+    slot: 2,
+    dayIndex: 0,
+    location: 0x04,
+    people: [P.akagi, P.kogure],
+  },
+  // 真ルート：大老暗殺計画（83）。開始条件：段階 200〜400、83 ≤ 3、三姉妹見参 70 = 4、0x378E = 2、大通り（地域 13）。
+  // 味方の小暮・茂呂・J.J・メリンダは状態が 0 のときだけ出る。4人とも生きたまま 0x378E = 2 になるのは、寿司屋の店主が死んでいて
+  // 傷心の帰国船（80）を戦いなしで成功させる筋だけ（J.J のところへは行かない）。寿司屋（0x37F9）は 83 が読まないので書かない。
+  // 🔶 83 = 0 では大通りに入ったときに導入の場面になる（ロードで起きるか）
+  'assassination-plot': {
+    base: { route: 'true' },
+    events: { 71: S, 72: S, 73: S, 77: S, 78: S, 80: S },
+    // 赤城 3（療養中）。再起の望み・将の器・傷心の帰国船が書く値
+    flags: {
+      0x374e: 3,
+      0x3764: 1,
+      0x378e: 2,
+      0x3790: 1,
+      0x37a2: 2,
+      0x37a4: 2,
+      0x37b2: 1,
+      0x37b3: 1,
+      0x37c7: 1,
+    },
+    stage: 320,
+    slot: 2,
+    dayIndex: 2,
+    location: 0x0d,
+    people: [P.kinugawa, P.kogure, P.moro, P.jj, P.melinda],
+  },
+}
+
+/** 斬り殺せる戦いの直前にする */
+export function applyKillableEve(bytes: Uint8Array, scene: KillableScene): void {
+  assertWritable(bytes)
+  const spec = KILLABLE_SCENES[scene]
+  if (spec.base.route === 'tournament') {
+    applyTournamentEve(bytes, spec.base.side)
+    writeCycleStartFlags(bytes)
+  } else {
+    writeTrueRouteStart(bytes)
+  }
+  for (const [n, v] of Object.entries(spec.events)) writeU8(bytes, EVENT_STATE_OFFSET + Number(n), v)
+  for (const [p, v] of Object.entries(spec.flags)) writeU8(bytes, Number(p), v)
+  // 🟢 人物のレコードはビット0（死亡）だけが使われる
+  for (const p of spec.people) writeU8(bytes, personOffset(p), 0)
+
+  writeU16(bytes, DATE_OFFSETS.dayTime, spec.stage)
+  writeU8(bytes, DATE_OFFSETS.pending, 0)
+  writeU8(bytes, DATE_OFFSETS.slot, spec.slot)
+  writeU16(bytes, DATE_OFFSETS.dayIndex, spec.dayIndex)
+  writeU8(bytes, HERO_OFFSETS.location, spec.location)
 }
 
 /** 画面に出すテンプレ */
@@ -444,6 +629,79 @@ export const SCENE_TEMPLATE_GROUPS: readonly SceneTemplateGroup[] = [
           link: { href: UNOFFICIAL_PATCH_URL, label: { ja: '非公式パッチ（GitHub）', en: 'Unofficial patch (GitHub)' } },
         },
         apply: (b) => applyTrueRouteEve(b, 'after-sisters'),
+      },
+    ],
+  },
+  {
+    id: 'killable',
+    label: { ja: '斬り殺せる戦い', en: 'Battles where key characters can be killed' },
+    description: {
+      ja: 'ふだん斬り殺せない人物を、その戦いの間だけ斬り殺せる場面です。今の周回のイベントの進み具合・人物の状態・門や柵・日付・現在地を、その戦いまでの決まった道筋に置き換え、斬れる人物は生きている状態にします。武器・道具・お金・主人公・なりわい・夜這い・施設はそのままです。なりわいの依頼主たちは「なりわい」の場面で、三姉妹・とぐろ・まだら・鬼怒川は「真ルート」の「ローラの決意の前」から続く戦いで斬れます。',
+      en: "Scenes where characters who normally cannot be killed can be killed during that battle. Replaces this playthrough's event progress, character status, gates and fences, the date and the location with a set path up to that battle, and sets the killable characters as alive. Weapons, items, money, your character, missions, night crawling and facilities are left as they are. Mission clients can be killed in the Missions scenes, and the three sisters, Toguro, Madara and Kinugawa in the battles that follow \"Before Laura's Determination\" in True route.",
+    },
+    templates: [
+      {
+        id: 'killable-consulate-raid',
+        label: { ja: '領事館斬り込み → 武士の魂（攘夷）', en: 'Raiding the Consulate → The Samurai Spirit (Prajnas)' },
+        note: {
+          ja: 'メリンダ・J.J・琴吹・万由・千佳・百合を斬れます。剣術大会のあと、夕方の大通り・旅籠から始まります。赤城の前へ歩いて「いつでも行ける…」を選ぶと、居留地の戦い（メリンダ）、J.J との戦い、琴吹・三姉妹との戦いと続きます。問いが出ないときは、大通りへ出て旅籠に入り直してください。',
+          en: 'You can kill Melinda, J.J., Kotobuki, Mayu, Chika and Yuri. You start at the Main Plaza inn in the evening after the Battle Tournament. Walk up to Akagi and say you are ready to go; the fight in Little Britain (Melinda), the fight with J.J., and the fight with Kotobuki and the three sisters follow. If Akagi does not ask, go out to the Main Plaza and enter the inn again.',
+        },
+        apply: (b) => applyKillableEve(b, 'consulate-raid'),
+      },
+      {
+        id: 'killable-wasted-wish',
+        label: { ja: '願い虚しく → 鬼怒川の魔手（外国）', en: "Wasted Wish → Kinugawa's Evil Influence (Foreigners)" },
+        note: {
+          ja: '赤城・小暮と、味方のローラ・メリンダを斬れます。剣術大会のあと、昼の領事館内から始まります。ローラに近づいて報告すると、夕方の大通りで赤城・小暮との戦い（後半から斬れます）、続けて鬼怒川の魔手になります。ローラが倒れると、討ち入りへ進む筋になります。',
+          en: "You can kill Akagi and Kogure, and your allies Laura and Melinda. You start inside the Consulate at midday after the Battle Tournament. Approach Laura to report, and the fight with Akagi and Kogure on the Main Plaza in the evening begins (they can be killed in the second half), followed by Kinugawa's Evil Influence. If Laura falls, the story heads toward The Raid.",
+        },
+        apply: (b) => applyKillableEve(b, 'wasted-wish'),
+      },
+      {
+        id: 'killable-the-raid',
+        label: { ja: '討ち入り（外国）', en: 'The Raid (Foreigners)' },
+        note: {
+          ja: '琴吹・万由・千佳・百合を斬れます。ローラを見送ったあと、夕方の代官所の門の外から始まります。門番に「御大老の御命 頂戴仕る」と答えると門前の戦いになり、中で琴吹、2階で三姉妹と戦います。',
+          en: "You can kill Kotobuki, Mayu, Chika and Yuri. You start outside the Magistrate's Office gate in the evening, after seeing Laura off. Tell the gatekeeper you have come for the Chief Minister's life to begin the fight at the gate; then you fight Kotobuki inside and the three sisters upstairs.",
+        },
+        apply: (b) => applyKillableEve(b, 'the-raid'),
+      },
+      {
+        id: 'killable-three-kataneers',
+        label: { ja: '三匹で斬る → 武人 琴吹光（幕府）', en: 'The Three Kataneers → Hikaru Kotobuki, Military Man (Shogunate)' },
+        note: {
+          ja: '赤城・小暮・琴吹を斬れます。剣術大会のあと、夕方の港から始まります。神社へ移ると始まり、洞窟の奥で赤城・小暮と戦ったあと、その夜に琴吹と戦います。',
+          en: 'You can kill Akagi, Kogure and Kotobuki. You start at the Harbor in the evening after the Battle Tournament. Go to the Shrine to begin; after fighting Akagi and Kogure deep in the cave, you fight Kotobuki that night.',
+        },
+        apply: (b) => applyKillableEve(b, 'three-kataneers'),
+      },
+      {
+        id: 'killable-prajna-annihilation',
+        label: { ja: '般若党壊滅（幕府）', en: 'Annihilation of the Prajnas (Shogunate)' },
+        note: {
+          ja: '赤城・小暮を斬れます。剣術大会のあと、夕方の港から始まります。神社へ移ると始まり、洞窟の奥で赤城・小暮と戦います。',
+          en: 'You can kill Akagi and Kogure. You start at the Harbor in the evening after the Battle Tournament. Go to the Shrine to begin, and fight Akagi and Kogure deep in the cave.',
+        },
+        apply: (b) => applyKillableEve(b, 'prajna-annihilation'),
+      },
+      {
+        id: 'killable-praying-for-recovery',
+        label: { ja: '再起の望み（真ルート）', en: 'Praying for Recovery (True route)' },
+        note: {
+          ja: 'けがをした赤城と、小暮を斬れます。1日目の夜、神社から始まります。赤城を攻撃すると赤城が死に、小暮との一騎打ちになります。',
+          en: 'You can kill the wounded Akagi and Kogure. You start at the Shrine on the night of day 1. Attack Akagi, and after he dies you duel Kogure.',
+        },
+        apply: (b) => applyKillableEve(b, 'praying-for-recovery'),
+      },
+      {
+        id: 'killable-assassination-plot',
+        label: { ja: '大老暗殺計画（真ルート）', en: 'Plot to Assassinate the Chief Minister (True route)' },
+        note: {
+          ja: '鬼怒川（影武者）と、味方の小暮・茂呂・J.J・メリンダを斬れます。3日目の夜、大通りから始まります。琴吹が計画を打ち明けたあと、もう一度近づいて「全て整った！」を選ぶと、代官所の奥座敷で戦いになります。打ち明けの場面が始まらないときは、近くの建物に入って出直してください。',
+          en: "You can kill Kinugawa (a body double), and your allies Kogure, Moro, J.J. and Melinda. You start on the Main Plaza on the night of day 3. After Kotobuki reveals the plan, approach him again and say everything is ready to fight in the inner room of the Magistrate's Office. If he does not reveal the plan, enter a nearby building and come back out.",
+        },
+        apply: (b) => applyKillableEve(b, 'assassination-plot'),
       },
     ],
   },

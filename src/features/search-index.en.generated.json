@@ -9004,5 +9004,75 @@
   ],
   "label": "Right after the fight with the three sisters",
   "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [],
+  "label": "Battles where key characters can be killed",
+  "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "Battles where key characters can be killed"
+  ],
+  "label": "Raiding the Consulate → The Samurai Spirit (Prajnas)",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "Battles where key characters can be killed"
+  ],
+  "label": "Wasted Wish → Kinugawa's Evil Influence (Foreigners)",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "Battles where key characters can be killed"
+  ],
+  "label": "The Raid (Foreigners)",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "Battles where key characters can be killed"
+  ],
+  "label": "The Three Kataneers → Hikaru Kotobuki, Military Man (Shogunate)",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "Battles where key characters can be killed"
+  ],
+  "label": "Annihilation of the Prajnas (Shogunate)",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "Battles where key characters can be killed"
+  ],
+  "label": "Praying for Recovery (True route)",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "Battles where key characters can be killed"
+  ],
+  "label": "Plot to Assassinate the Chief Minister (True route)",
+  "box": false
  }
 ]

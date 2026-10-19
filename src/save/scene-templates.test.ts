@@ -7,9 +7,11 @@ import { TS_SAVE_SIZE } from './layout'
 import { NEW_CYCLE_KEEP_FLAGS } from './new-cycle'
 import {
   SCENE_TEMPLATE_GROUPS,
+  applyKillableEve,
   applyMissionEve,
   applyTournamentEve,
   applyTrueRouteEve,
+  type KillableScene,
   type MissionScene,
   type TournamentSide,
   type TrueRouteScene,
@@ -161,7 +163,8 @@ describe('applyTrueRouteEve', () => {
   const BEFORE_NONZERO: Record<number, number> = {
     [A + 0]: 4, [A + 1]: 4,
     ...Object.fromEntries([70, 71, 72, 73, 75, 77, 78, 79, 81, 82, 84].map((n) => [A + n, 4])),
-    0x374e: 3, 0x3757: 2, 0x3758: 3,
+    0x374e: 3, 0x3756: 2, 0x3757: 2, 0x3758: 3,
+    0x37c1: 1, 0x37c2: 1,
     0x3762: 1, 0x3763: 1, 0x3769: 1, 0x376b: 1, 0x377d: 1, 0x377e: 1, 0x377f: 1,
     0x378d: 2, 0x378e: 1, 0x379f: 1, 0x37a2: 2, 0x37aa: 2, 0x37b2: 1, 0x37b3: 1, 0x37c7: 1,
   }
@@ -198,6 +201,99 @@ describe('applyTrueRouteEve', () => {
 
   it('サイズの違うファイルには書かない', () => {
     expect(() => applyTrueRouteEve(new Uint8Array(0x100), 'laura-determination')).toThrow()
+  })
+})
+
+// 斬り殺せる戦い：🔶 書き込んだセーブをゲームで確かめていない。書く値の根拠は 🟢（各イベントの開始条件と、道筋で書かれる値）
+describe('applyKillableEve', () => {
+  /** 周回の始めに書かれる値（剣術大会直前のテンプレには入れていない） */
+  const CYCLE_START = { 0x3756: 2, 0x37c1: 1, 0x37c2: 1 }
+
+  /** 剣術大会直前（✅）の書き込みのうち、0x36A8〜0x3837 の 0 以外の値 */
+  function tournamentNonzero(side: TournamentSide): Record<number, number> {
+    const b = makeSave()
+    applyTournamentEve(b, side)
+    const keep = new Set(NEW_CYCLE_KEEP_FLAGS)
+    const out: Record<number, number> = {}
+    for (let at = A; at <= FLAGS.end; at++) if (!keep.has(at) && b[at] !== 0) out[at] = b[at]
+    return out
+  }
+
+  const ev = (entries: Record<number, number>) => Object.fromEntries(Object.entries(entries).map(([n, v]) => [A + Number(n), v]))
+  /** 三姉妹見参までの真ルートの値 */
+  const TRUE_START = {
+    ...ev({ 0: 4, 1: 4, 70: 4 }),
+    0x3762: 1, 0x3763: 1, 0x376b: 1, 0x377d: 1, 0x377e: 1, 0x377f: 1, 0x378d: 2, 0x378e: 1, 0x379f: 1, 0x37aa: 2,
+  }
+
+  it.each<[KillableScene, () => Record<number, number>, number[], number, number[]]>([
+    // 場面、0x36A8〜0x3837 の 0 以外の値、[段階 u16・保留量・現在地・時間帯]、経過日数、死亡のビットを消す人物番号
+    [
+      'consulate-raid',
+      () => ({ ...tournamentNonzero('prajnas'), ...ev({ 35: 4, 38: 4, 46: 4, 49: 4, 51: 4, 57: 4, 58: 4, 62: 2 }), 0x3750: 1, 0x3778: 1, 0x37a2: 1, 0x37ab: 3, 0x37f8: 1 }),
+      [0xfe, 0x01, 0, 0x0f, 1], 3, [21, 20, 13, 15, 16, 17],
+    ],
+    [
+      'wasted-wish',
+      () => ({ ...tournamentNonzero('foreigners'), ...ev({ 46: 4, 48: 4, 51: 4, 56: 3 }), 0x3758: 1, 0x37a3: 2, 0x37ab: 3 }),
+      [0xf4, 0x01, 0, 0x0b, 0], 4, [10, 11, 19, 21],
+    ],
+    [
+      'the-raid',
+      () => ({ ...tournamentNonzero('foreigners'), ...ev({ 46: 4, 48: 4, 51: 4, 56: 4, 61: 4, 68: 5 }), 0x3758: 1, 0x3764: 1, 0x3790: 1, 0x37a3: 2, 0x37a4: 2, 0x37ab: 3 }),
+      [0x58, 0x02, 0, 0x12, 1], 5, [13, 15, 16, 17],
+    ],
+    [
+      'three-kataneers',
+      () => ({ ...tournamentNonzero('shogunate'), ...ev({ 46: 4, 47: 4, 51: 4, 53: 4, 55: 4 }), 0x37ab: 3, 0x37f7: 1 }),
+      [0xfe, 0x01, 0, 0x01, 1], 4, [10, 11, 13],
+    ],
+    [
+      'prajna-annihilation',
+      () => ({ ...tournamentNonzero('shogunate'), ...ev({ 46: 4, 47: 4, 51: 4, 53: 4, 54: 4 }), 0x37ab: 3, 0x37c0: 1, 0x37f7: 1 }),
+      [0xfe, 0x01, 0, 0x01, 1], 4, [10, 11],
+    ],
+    [
+      'praying-for-recovery',
+      () => ({ ...TRUE_START, ...ev({ 71: 4, 72: 3 }) }),
+      [0x78, 0x00, 0, 0x04, 2], 0, [10, 11],
+    ],
+    [
+      'assassination-plot',
+      () => ({
+        ...TRUE_START, ...ev({ 71: 4, 72: 4, 73: 4, 77: 4, 78: 4, 80: 4 }),
+        0x374e: 3, 0x3764: 1, 0x378e: 2, 0x3790: 1, 0x37a2: 2, 0x37a4: 2, 0x37b2: 1, 0x37b3: 1, 0x37c7: 1,
+      }),
+      [0x40, 0x01, 0, 0x0d, 2], 2, [18, 11, 14, 20, 21],
+    ],
+  ])('%s：決まった道筋の値・日付・現在地を書き、斬れる人の死亡のビットを消す', (scene, nonzero, date, day, people) => {
+    const before = makeSave()
+    const b = before.slice()
+    applyKillableEve(b, scene)
+    const expected: Record<number, number> = { ...nonzero(), ...CYCLE_START }
+    const keep = new Set(NEW_CYCLE_KEEP_FLAGS)
+    for (let at = A; at <= FLAGS.end; at++) {
+      if (keep.has(at)) expect(b[at]).toBe(before[at])
+      else expect(b[at], `0x${at.toString(16)}`).toBe(expected[at] ?? 0)
+    }
+    expect([...b.subarray(0x0010, 0x0015)]).toEqual(date)
+    expect(readU16(b, 0x0bd8)).toBe(day)
+    const personAt = (p: number) => 0x015c + 12 * p
+    for (const p of people) expect(b[personAt(p)]).toBe(0)
+    const allowed = new Set(people.map(personAt))
+    for (let at = 0; at < b.length; at++) if (!writable(at) && !allowed.has(at)) expect(b[at]).toBe(before[at])
+  })
+
+  it('2回当てても同じ結果になる', () => {
+    const once = makeSave()
+    applyKillableEve(once, 'the-raid')
+    const twice = once.slice()
+    applyKillableEve(twice, 'the-raid')
+    expect(twice).toEqual(once)
+  })
+
+  it('サイズの違うファイルには書かない', () => {
+    expect(() => applyKillableEve(new Uint8Array(0x100), 'consulate-raid')).toThrow()
   })
 })
 

@@ -5,4 +5,5 @@ export const TEMPLATE_ANCHORS = {
   tournament: 'tournament',
   missions: 'missions',
   'true-route': 'true-route',
+  killable: 'killable',
 } as const

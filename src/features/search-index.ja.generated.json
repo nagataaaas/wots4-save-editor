@@ -9004,5 +9004,75 @@
   ],
   "label": "三姉妹戦の直後",
   "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [],
+  "label": "斬り殺せる戦い",
+  "box": true
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "斬り殺せる戦い"
+  ],
+  "label": "領事館斬り込み → 武士の魂（攘夷）",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "斬り殺せる戦い"
+  ],
+  "label": "願い虚しく → 鬼怒川の魔手（外国）",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "斬り殺せる戦い"
+  ],
+  "label": "討ち入り（外国）",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "斬り殺せる戦い"
+  ],
+  "label": "三匹で斬る → 武人 琴吹光（幕府）",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "斬り殺せる戦い"
+  ],
+  "label": "般若党壊滅（幕府）",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "斬り殺せる戦い"
+  ],
+  "label": "再起の望み（真ルート）",
+  "box": false
+ },
+ {
+  "section": "templates",
+  "anchor": "killable",
+  "path": [
+   "斬り殺せる戦い"
+  ],
+  "label": "大老暗殺計画（真ルート）",
+  "box": false
  }
 ]

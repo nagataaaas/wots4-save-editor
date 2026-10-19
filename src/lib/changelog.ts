@@ -17,6 +17,10 @@ export const changelog: ChangelogEntry[] = [
     date: '2026-10-19',
     items: [
       {
+        ja: 'テンプレート：ふだん斬り殺せない人物を斬り殺せる戦いの直前を7つ足しました（領事館斬り込み・願い虚しく・討ち入り・三匹で斬る・般若党壊滅・再起の望み・大老暗殺計画）',
+        en: 'Presets: added seven scenes right before battles where characters who normally cannot be killed can be killed (Raiding the Consulate, Wasted Wish, The Raid, The Three Kataneers, Annihilation of the Prajnas, Praying for Recovery, Plot to Assassinate the Chief Minister)',
+      },
+      {
         ja: 'テンプレート：真ルートの「ローラの決意の前」（三姉妹と戦うイベントが始まる前）と「三姉妹戦の直後」を足しました',
         en: "Presets: added the true-route scenes \"Before Laura's Determination\" (before the event with the fight against the three sisters) and \"Right after the fight with the three sisters\"",
       },
