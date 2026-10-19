@@ -7,14 +7,22 @@ export function DeveloperContact() {
   return (
     <div className="flex items-center justify-between gap-2 pl-2">
       <div className="flex min-w-0 flex-col">
-        <span className="text-muted-foreground text-[10px] leading-tight">{tr({ ja: "開発者", en: "Developer" })}</span>
+        <span className="text-muted-foreground text-[10px] leading-tight">
+          {tr({ ja: "開発", en: "Developed By" })}
+        </span>
         <span className="truncate text-sm font-medium">nagataaaas</span>
       </div>
       <div className="flex items-center">
-        <ContactLink href="https://x.com/nagataaaas" label={tr({ ja: "X（@nagataaaas）", en: "X (@nagataaaas)" })}>
+        <ContactLink
+          href="https://x.com/nagataaaas"
+          label={tr({ ja: "X（@nagataaaas）", en: "X (@nagataaaas)" })}
+        >
           <XIcon />
         </ContactLink>
-        <ContactLink href="https://github.com/nagataaaas" label={tr({ ja: "GitHub（nagataaaas）", en: "GitHub (nagataaaas)" })}>
+        <ContactLink
+          href="https://github.com/nagataaaas"
+          label={tr({ ja: "GitHub（nagataaaas）", en: "GitHub (nagataaaas)" })}
+        >
           <GitHubIcon />
         </ContactLink>
       </div>
@@ -37,7 +45,15 @@ export function RepositoryLink() {
   );
 }
 
-function ContactLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
+function ContactLink({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <Button
       variant="ghost"
