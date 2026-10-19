@@ -1,7 +1,8 @@
 // 合成したバイト列でテストする（sample/ は解析専用で、テストには使わない。ユーザー判断 2026-10-05）。
 // 受注中の情報（chunks/occupation）：
 //   ✅ 0x45F4E ID・0x45F52 受注した日（経過日数）・0x45F54 受注した時間帯（1日目昼・2日目昼・2日目夜の「今宵の虎徹は」の受注の差分 2026-10-07）
-//   🔶 0x45F55 受注中だけ FF。✅ FFFF の状態は受注で 0 になる（受注の差分 2026-10-06）
+//   🟢 0x45F55 期限の日数の写し（FF＝期限なし。✅ 期限なしの 171・209〜212 の受注で FF）、0x45F50・0x45F56〜0x45F5D は受注で 0。
+//   ❓ 期限のあるなりわい（3 など）を受注したときの値はゲームでは見ていない。✅ FFFF の状態は受注で 0 になる（受注の差分 2026-10-06）
 // 受注で書くなりわいのフラグは 🟢（✅ 野戸仏の1件目 171 で番号 4＝11、汁部 209 で番号 27＝1）。外すときの値は 🔶。
 // 固定オフセットで読む。書き込みの反映は要ゲーム内確認。
 import { describe, expect, it } from 'vitest'
@@ -48,7 +49,19 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     expect(() => writeSeriesState(makeSave(), [{ flag: 4, value: 255 }], 171, { advanced: false })).toThrow()
   })
   it('✅ 受注中の情報の位置', () => {
-    expect(ACCEPT_OFFSETS).toEqual({ id: 0x45f4e, day: 0x45f52, slot: 0x45f54, active: 0x45f55 })
+    expect(ACCEPT_OFFSETS).toEqual({ id: 0x45f4e, day: 0x45f52, slot: 0x45f54, deadline: 0x45f55 })
+  })
+
+  it('🟢 0x45F55 には期限の日数を書く（期限なしは FF）。前の受注のなりわいの変数は 0 に戻す', () => {
+    const b = makeSave()
+    b.fill(0x77, 0x45f4e, 0x45f5e)
+    acceptOccupation(b, 3)
+    // 天誅（3）は期限 3 日
+    expect([...b.subarray(0x45f4e, 0x45f5e)]).toEqual([3, 0, 0, 0, 1, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0])
+    acceptOccupation(b, 209)
+    expect(readAccepted(b)).toMatchObject({ id: 209, deadline: 0xff })
+    releaseOccupation(b)
+    expect(b.subarray(0x45f4e, 0x45f5e).every((v) => v === 0)).toBe(true)
   })
 
   it('🟢 連続なりわいは n 件目の受注で n1。小鳩・おっつぁんの8件目は書かず 80、おっつぁんの 203・206 は 61・80', () => {
@@ -96,12 +109,12 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     expect(decodeSeriesValue(8, 100)).toEqual({ kind: 'other' })
   })
 
-  it('✅ 基本のなりわいの受注は、ID・今の日・時間帯・FF と、FFFF の記録を 0 にするだけ', () => {
+  it('✅ 基本のなりわいの受注は、ID・今の日・時間帯・期限（🟢）と、FFFF の記録を 0 にするだけ', () => {
     const before = makeSave()
     const after = before.slice()
     acceptOccupation(after, 3)
     expect(diffOffsets(before, after)).toEqual([stateOffset(3), stateOffset(3) + 1, 0x45f4e, 0x45f52, 0x45f54, 0x45f55])
-    expect(readAccepted(after)).toMatchObject({ id: 3, day: 1, slot: 2, active: 0xff, problem: null })
+    expect(readAccepted(after)).toMatchObject({ id: 3, day: 1, slot: 2, deadline: 3, problem: null })
     expect(after[stateOffset(3)]).toBe(0)
   })
 
@@ -123,7 +136,7 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     acceptOccupation(after, 172)
     releaseOccupation(after)
     expect(diffOffsets(before, after)).toEqual([stateOffset(172), stateOffset(172) + 1])
-    expect(readAccepted(after)).toMatchObject({ id: 0, day: 0, slot: 0, active: 0 })
+    expect(readAccepted(after)).toMatchObject({ id: 0, day: 0, slot: 0, deadline: 0 })
   })
 
   it('連続なりわいの欄から：依頼済みを選ぶと受注し、ほかの値を選ぶとその連続なりわいの受注だけを外す', () => {
@@ -137,7 +150,7 @@ describe('なりわいの受注 0x45F4E〜0x45F55 chunks/occupation', () => {
     // 同じ連続なりわいを「依頼する前」にすると、受注中の情報だけを 0 にする（選んだ値はそのまま）
     writeSeriesState(b, [{ flag: 4, value: 40 }], undefined, { advanced: false })
     expect(b[flagOffset(4)]).toBe(40)
-    expect(readAccepted(b)).toMatchObject({ id: 0, day: 0, slot: 0, active: 0 })
+    expect(readAccepted(b)).toMatchObject({ id: 0, day: 0, slot: 0, deadline: 0 })
   })
 
   it('表にない ID、日付が読めないセーブ、ファイルサイズが違うセーブには書かない', () => {

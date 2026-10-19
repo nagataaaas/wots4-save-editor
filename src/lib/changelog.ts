@@ -14,6 +14,15 @@ export type ChangelogEntry = {
 /** 新しい日付が先 */
 export const changelog: ChangelogEntry[] = [
   {
+    date: '2026-10-19',
+    items: [
+      {
+        ja: 'なりわい：受注中のなりわいを選ぶと、期限のあるなりわいも期限のないものとして書いていたのを直しました。前に受けていたなりわいの途中の状態も残さないようにしました',
+        en: 'Missions: fixed accepting a mission with a time limit so it is no longer written as having no limit. The in-progress state of the previously accepted mission is no longer left behind',
+      },
+    ],
+  },
+  {
     date: '2026-10-16',
     items: [
       {

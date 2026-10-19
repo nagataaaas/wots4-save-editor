@@ -3,7 +3,8 @@
 //   0x45F4E u16  受注中のなりわいの ID（受注していなければ 0）✅
 //   0x45F52 u16  受注した日（経過日数 0x0BD8 と同じ数え方）✅（1日目昼・2日目昼・2日目夜の受注の差分 2026-10-07）
 //   0x45F54 u8   受注した時間帯（0x0014 と同じ）✅（同上。2＝夜を確認、1＝夕は未観察）
-//   0x45F55 u8   受注中だけ FF 🔶
+//   0x45F55 u8   なりわいの期限の日数の写し（FF＝期限なし）🟢。✅ 期限なしの 171・209〜212 の受注で FF
+//   0x45F50 u16 は 0、0x45F56〜0x45F5D はなりわいの中で使う変数 0〜7。受注で 0 にする 🟢（1件 16 B。chunks/occupation）
 //   状態の表 0x33A4 + ID×2 は、FFFF なら受注で 0 になる ✅（受注の差分 2026-10-06）
 //
 // 受注のとき、連続なりわいの依頼主はなりわいのフラグ（0x011C + 番号）にも書く（🟢。ACCEPT_RULES）。
@@ -36,12 +37,15 @@ export const ACCEPT_OFFSETS = {
   day: 0x45f52,
   /** u8 ✅ 受注した時間帯 */
   slot: 0x45f54,
-  /** u8 🔶 受注中だけ FF */
-  active: 0x45f55,
+  /** u8 🟢 期限の日数（FF＝期限なし） */
+  deadline: 0x45f55,
 } as const;
 
-/** 🔶 受注中の印 */
-export const ACCEPT_ACTIVE = 0xff;
+/** 🟢 受注中のなりわい1件の大きさ（ID・0・日・時間帯・期限・変数 0〜7） */
+const ACCEPT_ENTRY_BYTES = 16;
+
+/** 🟢 期限なし */
+export const ACCEPT_NO_DEADLINE = 0xff;
 
 /** なりわいのフラグ（番号）に書く値 */
 export type FlagWrite = { flag: number; value: number };
@@ -126,11 +130,11 @@ export type AcceptedView = ViewStatus & {
   id: number;
   day: number;
   slot: number;
-  active: number;
+  deadline: number;
 };
 
 export function readAccepted(bytes: Uint8Array): AcceptedView {
-  if (bytes.byteLength < ACCEPT_OFFSETS.active + 1) throw new RangeError(
+  if (bytes.byteLength < ACCEPT_OFFSETS.id + ACCEPT_ENTRY_BYTES) throw new RangeError(
       tr({ ja: "ファイルが小さすぎて受注中のなりわいを読めません", en: "The file is too small to read the accepted mission" }),
     );
   return {
@@ -138,7 +142,7 @@ export function readAccepted(bytes: Uint8Array): AcceptedView {
     id: readU16(bytes, ACCEPT_OFFSETS.id),
     day: readU16(bytes, ACCEPT_OFFSETS.day),
     slot: readU8(bytes, ACCEPT_OFFSETS.slot),
-    active: readU8(bytes, ACCEPT_OFFSETS.active),
+    deadline: readU8(bytes, ACCEPT_OFFSETS.deadline),
     problem: readOccupations(bytes).problem ?? readTownsfolk(bytes).problem,
   };
 }
@@ -152,22 +156,20 @@ function writeFlags(bytes: Uint8Array, writes: readonly FlagWrite[], opts: EditO
   for (const w of writes) writeFlag(bytes, occupationFlag(w.flag), w.value, opts);
 }
 
-/** 受注中の情報（4か所）だけを 0 にする。フラグには触らない */
+/** 受注中の情報（1件目の 16 B）だけを 0 にする。フラグには触らない */
 function clearAccepted(bytes: Uint8Array): void {
-  writeU16(bytes, ACCEPT_OFFSETS.id, 0);
-  writeU16(bytes, ACCEPT_OFFSETS.day, 0);
-  writeU8(bytes, ACCEPT_OFFSETS.slot, 0);
-  writeU8(bytes, ACCEPT_OFFSETS.active, 0);
+  bytes.fill(0, ACCEPT_OFFSETS.id, ACCEPT_OFFSETS.id + ACCEPT_ENTRY_BYTES);
 }
 
 /**
  * id のなりわいを、今の日・時間帯に受注したことにする。
  * ほかのなりわいを受注中なら、先にそのなりわいの onRelease を書いて外す。
- * 書くのは onAccept のフラグ、受注中の情報、状態の表（FFFF のときだけ 0）
+ * 書くのは onAccept のフラグ、受注中の情報（1件目の 16 B。期限は表の期限の日数、なりわいの変数は 0）、状態の表（FFFF のときだけ 0）
  */
 export function acceptOccupation(bytes: Uint8Array, id: number): void {
   assertEditable(bytes);
-  if (!occupationById(id)) throw new RangeError(tr({ ja: `表にないなりわいです`, en: "This mission is not in the list" }));
+  const entry = occupationById(id);
+  if (!entry) throw new RangeError(tr({ ja: `表にないなりわいです`, en: "This mission is not in the list" }));
   const date = readDate(bytes);
   if (date.problem)
     throw new RangeError(
@@ -182,10 +184,11 @@ export function acceptOccupation(bytes: Uint8Array, id: number): void {
   writeFlags(bytes, acceptRuleOf(id).onAccept);
   const stateOffset = occupationStateOffset(id);
   if (readU16(bytes, stateOffset) === OCCUPATION_NOT_APPEARED) writeU16(bytes, stateOffset, 0);
+  clearAccepted(bytes);
   writeU16(bytes, ACCEPT_OFFSETS.id, id);
   writeU16(bytes, ACCEPT_OFFSETS.day, date.dayIndex);
   writeU8(bytes, ACCEPT_OFFSETS.slot, date.slot);
-  writeU8(bytes, ACCEPT_OFFSETS.active, ACCEPT_ACTIVE);
+  writeU8(bytes, ACCEPT_OFFSETS.deadline, entry.deadlineDays ?? ACCEPT_NO_DEADLINE);
 }
 
 /** 受注を外す。受注中のなりわいの onRelease を書き、受注中の情報を 0 にする */
