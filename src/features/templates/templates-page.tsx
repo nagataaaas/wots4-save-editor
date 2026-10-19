@@ -20,7 +20,7 @@ const GROUP_OFFSETS: Record<keyof typeof TEMPLATE_ANCHORS, number> = {
 
 /**
  * テンプレート（scene-templates.ts）。決まった戦いの直前から遊べるように、セーブを書き換える。
- * 剣術大会直前は ✅ [U] 2026-10-16。なりわいの3つは ❓ 要ゲーム内確認（ユーザー判断 2026-10-16 で先に出す）
+ * 剣術大会直前は ✅ [U] 2026-10-16。なりわいの3つは ✅ [U] 2026-10-19
  */
 export function TemplatesPage() {
   const { view, error: readError } = useSaveView(readDate);

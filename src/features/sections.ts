@@ -143,7 +143,7 @@ export const sectionGroups: SectionGroup[] = [
       { id: 'yobai', label: { ja: '夜這い', en: 'Night Crawling' }, icon: Moon },
       // market-weapons（持ち去られた武器・道具・部品。読み取り専用）。🟢
       { id: 'circulating', label: { ja: '流通', en: 'Reclamation' }, icon: Store },
-      // scene-templates（決まった戦いの直前に書き換える）。剣術大会直前は ✅ [U]、なりわいは ❓ 要ゲーム内確認
+      // scene-templates（決まった戦いの直前に書き換える）。剣術大会直前・なりわいとも ✅ [U]
       { id: 'templates', label: { ja: 'テンプレート', en: 'Presets' }, icon: LayoutTemplate },
     ],
   },
